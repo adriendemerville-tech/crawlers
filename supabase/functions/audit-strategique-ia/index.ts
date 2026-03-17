@@ -5,6 +5,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 // Fonction pour générer un résumé promptable depuis le rapport stratégique
 function generateStrategicPromptSummary(title: string, description: string, priority: string): string {

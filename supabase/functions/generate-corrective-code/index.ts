@@ -3,6 +3,7 @@ import { trackTokenUsage, trackEdgeFunctionError } from '../_shared/tokenTracker
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 // ══════════════════════════════════════════════════════════════
 // INTERFACES - ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO Protocol

@@ -3567,6 +3567,9 @@ export type Database = {
           domain: string
           google_connection_id: string | null
           id: string
+          identity_confidence: number | null
+          identity_enriched_at: string | null
+          identity_source: string | null
           last_audit_at: string | null
           last_sov_update: string | null
           last_widget_ping: string | null
@@ -3588,6 +3591,9 @@ export type Database = {
           domain: string
           google_connection_id?: string | null
           id?: string
+          identity_confidence?: number | null
+          identity_enriched_at?: string | null
+          identity_source?: string | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
@@ -3609,6 +3615,9 @@ export type Database = {
           domain?: string
           google_connection_id?: string | null
           id?: string
+          identity_confidence?: number | null
+          identity_enriched_at?: string | null
+          identity_source?: string | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null

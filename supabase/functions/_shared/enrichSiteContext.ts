@@ -5,6 +5,8 @@
  * target_audience, commercial_area), this helper asks an LLM to deduce them
  * from the domain name alone, then persists the result.
  * 
+ * v2: Added confidence scoring algorithm
+ * 
  * Uses Lovable AI Gateway (preferred) or OpenRouter as fallback.
  */
 
@@ -13,13 +15,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
-interface SiteContext {
+// Re-enrichment window: don't re-enrich if enriched less than 7 days ago
+const RE_ENRICH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000
+
+export interface SiteContext {
   market_sector?: string
   products_services?: string
   target_audience?: string
   commercial_area?: string
   company_size?: string
   site_name?: string
+  address?: string
+  identity_confidence?: number
+  identity_source?: string
+  identity_enriched_at?: string
 }
 
 interface EnrichResult {
@@ -28,10 +37,69 @@ interface EnrichResult {
 }
 
 /**
- * Check if a site needs enrichment (all key fields are empty)
+ * ─── Confidence Algorithm ────────────────────────────────────────────
+ * 
+ * Score 0–100 based on:
+ *   - Field completeness (0–50 pts): 10 pts per filled key field (5 fields max)
+ *   - Source quality (0–30 pts): user_manual=30, llm_verified=20, llm_auto=10, none=0
+ *   - Freshness (0–20 pts): <7d=20, <30d=15, <90d=10, <180d=5, else=0
  */
-function needsEnrichment(site: Record<string, unknown>): boolean {
-  return !site.market_sector && !site.products_services && !site.target_audience
+export function calculateConfidence(site: Record<string, unknown>): number {
+  let score = 0
+
+  // 1. Field completeness (10 pts each, max 50)
+  const keyFields = ['market_sector', 'products_services', 'target_audience', 'commercial_area', 'company_size']
+  for (const f of keyFields) {
+    if (site[f] && typeof site[f] === 'string' && (site[f] as string).trim().length > 2) {
+      score += 10
+    }
+  }
+
+  // 2. Source quality (max 30)
+  const source = (site.identity_source as string) || 'none'
+  if (source === 'user_manual') score += 30
+  else if (source === 'llm_verified') score += 20
+  else if (source === 'llm_auto') score += 10
+
+  // 3. Freshness (max 20)
+  const enrichedAt = site.identity_enriched_at as string | null
+  if (enrichedAt) {
+    const ageMs = Date.now() - new Date(enrichedAt).getTime()
+    const days = ageMs / (24 * 60 * 60 * 1000)
+    if (days < 7) score += 20
+    else if (days < 30) score += 15
+    else if (days < 90) score += 10
+    else if (days < 180) score += 5
+  }
+
+  return Math.min(100, score)
+}
+
+/**
+ * Check if a site needs enrichment
+ * - All key fields empty → needs initial enrichment
+ * - LLM-sourced + older than RE_ENRICH_INTERVAL → needs refresh
+ */
+function needsEnrichment(site: Record<string, unknown>): 'full' | 'refresh' | false {
+  const hasFields = !!(site.market_sector || site.products_services || site.target_audience)
+  
+  if (!hasFields) return 'full'
+
+  // If source is LLM and enrichment is stale, do a soft refresh
+  const source = (site.identity_source as string) || 'none'
+  const enrichedAt = site.identity_enriched_at as string | null
+  
+  if (source === 'user_manual') return false // Never overwrite user data
+  
+  if (enrichedAt) {
+    const age = Date.now() - new Date(enrichedAt).getTime()
+    if (age > RE_ENRICH_INTERVAL_MS) return 'refresh'
+  } else if (hasFields && source !== 'user_manual') {
+    // Has fields but no enriched_at → legacy data, mark for refresh
+    return 'refresh'
+  }
+
+  return false
 }
 
 /**
@@ -40,13 +108,24 @@ function needsEnrichment(site: Record<string, unknown>): boolean {
 async function inferContextFromDomain(
   domain: string,
   siteName: string,
+  existingContext?: SiteContext,
 ): Promise<SiteContext | null> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY')
   const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
   if (!lovableKey && !openrouterKey) return null
 
-  const prompt = `Analyse le domaine "${domain}" (nom du site : "${siteName || domain}").
+  // If we have existing context, ask LLM to verify/improve it
+  const existingHint = existingContext?.market_sector
+    ? `\n\nContexte existant (à vérifier et améliorer si nécessaire) :
+- Secteur: ${existingContext.market_sector || '?'}
+- Produits/Services: ${existingContext.products_services || '?'}
+- Cible: ${existingContext.target_audience || '?'}
+- Zone: ${existingContext.commercial_area || '?'}
+- Taille: ${existingContext.company_size || '?'}`
+    : ''
+
+  const prompt = `Analyse le domaine "${domain}" (nom du site : "${siteName || domain}").${existingHint}
 
 Déduis les informations suivantes sur cette entreprise/ce site web. Sois précis et concret.
 
@@ -142,41 +221,70 @@ Si tu ne connais pas un champ, mets une valeur générique raisonnable basée su
 
 /**
  * Main enrichment function: checks if site needs enrichment, calls LLM, persists result.
- * Returns the (possibly enriched) site context.
+ * Returns the (possibly enriched) site context with confidence score.
+ * 
+ * @param site - The tracked_sites row (must include id, domain, site_name, and context fields)
+ * @param forceRefresh - Force re-enrichment even if data is fresh
  */
 export async function ensureSiteContext(
   site: Record<string, unknown>,
+  forceRefresh = false,
 ): Promise<SiteContext> {
-  // If already enriched, return existing context
-  if (!needsEnrichment(site)) {
-    return {
-      market_sector: site.market_sector as string | undefined,
-      products_services: site.products_services as string | undefined,
-      target_audience: site.target_audience as string | undefined,
-      commercial_area: site.commercial_area as string | undefined,
-      company_size: site.company_size as string | undefined,
-      site_name: site.site_name as string | undefined,
-    }
+  const enrichmentType = forceRefresh ? 'refresh' : needsEnrichment(site)
+
+  // Build current context
+  const currentContext: SiteContext = {
+    market_sector: site.market_sector as string | undefined,
+    products_services: site.products_services as string | undefined,
+    target_audience: site.target_audience as string | undefined,
+    commercial_area: site.commercial_area as string | undefined,
+    company_size: site.company_size as string | undefined,
+    site_name: site.site_name as string | undefined,
+    address: site.address as string | undefined,
+    identity_confidence: site.identity_confidence as number | undefined,
+    identity_source: site.identity_source as string | undefined,
+    identity_enriched_at: site.identity_enriched_at as string | undefined,
+  }
+
+  // If no enrichment needed, just recalculate confidence and return
+  if (!enrichmentType) {
+    currentContext.identity_confidence = calculateConfidence(site)
+    return currentContext
   }
 
   const domain = (site.domain as string) || ''
   const siteName = (site.site_name as string) || ''
   const siteId = site.id as string
 
-  console.log(`[enrich-site] 🔍 ${domain} needs enrichment, calling LLM...`)
+  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, calling LLM...`)
 
-  const inferred = await inferContextFromDomain(domain, siteName)
+  const inferred = await inferContextFromDomain(
+    domain,
+    siteName,
+    enrichmentType === 'refresh' ? currentContext : undefined,
+  )
 
   if (!inferred) {
     console.warn(`[enrich-site] ❌ Could not enrich ${domain}`)
-    return {
-      market_sector: site.market_sector as string | undefined,
-      products_services: site.products_services as string | undefined,
-      target_audience: site.target_audience as string | undefined,
-      commercial_area: site.commercial_area as string | undefined,
-      company_size: site.company_size as string | undefined,
-      site_name: site.site_name as string | undefined,
-    }
+    currentContext.identity_confidence = calculateConfidence(site)
+    return currentContext
+  }
+
+  // Determine source: if this is a refresh of existing LLM data, mark as verified
+  const previousSource = (site.identity_source as string) || 'none'
+  const newSource = enrichmentType === 'refresh' && previousSource === 'llm_auto'
+    ? 'llm_verified'
+    : 'llm_auto'
+
+  // Merge: for refresh, only overwrite empty fields (don't destroy user edits)
+  const merged: SiteContext = {
+    market_sector: (enrichmentType === 'full' ? inferred.market_sector : (currentContext.market_sector || inferred.market_sector)),
+    products_services: (enrichmentType === 'full' ? inferred.products_services : (currentContext.products_services || inferred.products_services)),
+    target_audience: (enrichmentType === 'full' ? inferred.target_audience : (currentContext.target_audience || inferred.target_audience)),
+    commercial_area: (enrichmentType === 'full' ? inferred.commercial_area : (currentContext.commercial_area || inferred.commercial_area)),
+    company_size: (enrichmentType === 'full' ? inferred.company_size : (currentContext.company_size || inferred.company_size)),
+    site_name: inferred.site_name && (!siteName || siteName === domain) ? inferred.site_name : siteName,
+    address: currentContext.address,
   }
 
   // Persist enriched data to tracked_sites
@@ -186,39 +294,42 @@ export async function ensureSiteContext(
       const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, serviceKey)
 
-      const updatePayload: Record<string, string> = {}
-      if (inferred.market_sector) updatePayload.market_sector = inferred.market_sector
-      if (inferred.products_services) updatePayload.products_services = inferred.products_services
-      if (inferred.target_audience) updatePayload.target_audience = inferred.target_audience
-      if (inferred.commercial_area) updatePayload.commercial_area = inferred.commercial_area
-      if (inferred.company_size) updatePayload.company_size = inferred.company_size
-      if (inferred.site_name && (!siteName || siteName === domain)) {
-        updatePayload.site_name = inferred.site_name
+      const updatePayload: Record<string, unknown> = {
+        identity_enriched_at: new Date().toISOString(),
+        identity_source: newSource,
+      }
+      if (merged.market_sector) updatePayload.market_sector = merged.market_sector
+      if (merged.products_services) updatePayload.products_services = merged.products_services
+      if (merged.target_audience) updatePayload.target_audience = merged.target_audience
+      if (merged.commercial_area) updatePayload.commercial_area = merged.commercial_area
+      if (merged.company_size) updatePayload.company_size = merged.company_size
+      if (merged.site_name && merged.site_name !== domain) {
+        updatePayload.site_name = merged.site_name
       }
 
-      if (Object.keys(updatePayload).length > 0) {
-        const { error } = await supabase
-          .from('tracked_sites')
-          .update(updatePayload)
-          .eq('id', siteId)
+      // Calculate confidence on the merged result
+      const confidenceInput = { ...site, ...updatePayload }
+      const confidence = calculateConfidence(confidenceInput)
+      updatePayload.identity_confidence = confidence
 
-        if (error) {
-          console.error(`[enrich-site] DB update error for ${domain}:`, error)
-        } else {
-          console.log(`[enrich-site] 💾 ${domain} identity card saved`)
-        }
+      const { error } = await supabase
+        .from('tracked_sites')
+        .update(updatePayload)
+        .eq('id', siteId)
+
+      if (error) {
+        console.error(`[enrich-site] DB update error for ${domain}:`, error)
+      } else {
+        console.log(`[enrich-site] 💾 ${domain} identity card saved (confidence: ${confidence}, source: ${newSource})`)
       }
+
+      merged.identity_confidence = confidence
+      merged.identity_source = newSource
+      merged.identity_enriched_at = updatePayload.identity_enriched_at as string
     } catch (err) {
       console.error(`[enrich-site] Persist error:`, err)
     }
   }
 
-  return {
-    market_sector: inferred.market_sector || (site.market_sector as string | undefined),
-    products_services: inferred.products_services || (site.products_services as string | undefined),
-    target_audience: inferred.target_audience || (site.target_audience as string | undefined),
-    commercial_area: inferred.commercial_area || (site.commercial_area as string | undefined),
-    company_size: inferred.company_size || (site.company_size as string | undefined),
-    site_name: inferred.site_name || (site.site_name as string | undefined),
-  }
+  return merged
 }

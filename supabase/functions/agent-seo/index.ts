@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 /**
  * Agent SEO Autonome v1

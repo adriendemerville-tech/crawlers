@@ -4,6 +4,8 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { getSiteContext, extractDomain as extractDomainHelper } from '../_shared/getSiteContext.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 interface LLMProvider {
   id: string;
@@ -47,8 +49,8 @@ interface LLMResponse {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Prompts traduits par langue avec 5 niveaux de sentiment (descriptions améliorées)
-const llmPrompts: Record<Language, (domain: string) => string> = {
-  fr: (domain) => `Tu analyses le site web/marque "${domain}". Réponds à ces questions au format JSON :
+const llmPrompts: Record<Language, (domain: string, siteContext?: string) => string> = {
+  fr: (domain, siteContext) => `Tu analyses le site web/marque "${domain}".${siteContext ? `\n\nContexte vérifié sur ce site :\n${siteContext}` : ''}\nRéponds à ces questions au format JSON :
 
 1. Connais-tu ce site web/cette marque ? (cited: true/false)
 2. Quel est ton sentiment général sur ce site ? Choisis EXACTEMENT l'une de ces 5 valeurs :
@@ -72,7 +74,7 @@ IMPORTANT : Réponds UNIQUEMENT avec du JSON valide, sans texte avant ou après.
   "coreValueMatch": boolean,
   "hallucinations": ["string"] ou []
 }`,
-  en: (domain) => `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
+  en: (domain, siteContext) => `You are analyzing the website/brand "${domain}".${siteContext ? `\n\nVerified context about this site:\n${siteContext}` : ''}\nAnswer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
 2. What is your overall sentiment about this site? Choose EXACTLY one of these 5 values:
@@ -96,7 +98,7 @@ IMPORTANT: Respond ONLY with valid JSON, no text before or after. Exact format:
   "coreValueMatch": boolean,
   "hallucinations": ["string"] or []
 }`,
-  es: (domain) => `Estás analizando el sitio web/marca "${domain}". Responde a estas preguntas en formato JSON:
+  es: (domain, siteContext) => `Estás analizando el sitio web/marca "${domain}".${siteContext ? `\n\nContexto verificado sobre este sitio:\n${siteContext}` : ''}\nResponde a estas preguntas en formato JSON:
 
 1. ¿Conoces este sitio web/marca? (cited: true/false)
 2. ¿Cuál es tu sentimiento general sobre este sitio? Elige EXACTAMENTE uno de estos 5 valores:
@@ -127,10 +129,11 @@ async function queryLLM(
   model: string,
   domain: string,
   lang: Language,
-  correctionContext: string = ''
+  correctionContext: string = '',
+  siteContextStr: string = ''
 ): Promise<LLMResponse> {
   const t = getLLMTranslations(lang);
-  const prompt = llmPrompts[lang](domain) + correctionContext;
+  const prompt = llmPrompts[lang](domain, siteContextStr) + correctionContext;
 
   try {
     // Individual 8s timeout per LLM to prevent one slow provider from blocking all
@@ -268,13 +271,34 @@ Deno.serve(async (req) => {
     const correctionContext = correction ? `\n\nIMPORTANT CORRECTION FROM THE SITE OWNER: "${correction}". Take this into account in your analysis.` : '';
     console.log(`Analyzing LLM visibility for: ${domain}${correction ? ' (with user correction)' : ''}`);
 
+    // ── Fetch site identity card (enriches if needed) ──
+    let siteContextStr = '';
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      const ctx = await getSiteContext(supabase, { domain });
+      if (ctx) {
+        const parts: string[] = [];
+        if (ctx.market_sector) parts.push(`Secteur: ${ctx.market_sector}`);
+        if (ctx.products_services) parts.push(`Produits/Services: ${ctx.products_services}`);
+        if (ctx.target_audience) parts.push(`Cible: ${ctx.target_audience}`);
+        if (ctx.commercial_area) parts.push(`Zone: ${ctx.commercial_area}`);
+        if (parts.length > 0) siteContextStr = parts.join('\n');
+        console.log(`[check-llm] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+      }
+    } catch (e) {
+      console.warn('[check-llm] Could not fetch site context:', e);
+    }
+
     // Query all LLMs with staggered delays to avoid 429 rate limiting
     const citationPromises = LLM_PROVIDERS.map(async (provider, index) => {
       // Stagger requests by 250ms each to avoid overwhelming OpenRouter
       await delay(index * 250);
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
-      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext);
+      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext, siteContextStr);
       const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
 
       return {

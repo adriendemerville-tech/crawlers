@@ -6,6 +6,7 @@
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
