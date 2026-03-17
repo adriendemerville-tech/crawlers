@@ -483,22 +483,26 @@ export function MyReports() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="space-y-2">
-              {/* Folders */}
-              <SortableContext
-                items={folders.map(f => `folder-${f.id}`)}
-                strategy={verticalListSortingStrategy}
-              >
-                {folders.map((folder) => (
-                  <SortableFolderItem
-                    key={folder.id}
-                    folder={folder}
-                    onOpen={() => navigateToFolder(folder.id)}
-                    onDelete={() => handleDeleteFolder(folder.id)}
-                    translations={t}
-                  />
-                ))}
-              </SortableContext>
+            <div className="space-y-4">
+              {/* Folders - desktop icon grid */}
+              {folders.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  <SortableContext
+                    items={folders.map(f => `folder-${f.id}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {folders.map((folder) => (
+                      <SortableFolderItem
+                        key={folder.id}
+                        folder={folder}
+                        onOpen={() => navigateToFolder(folder.id)}
+                        onDelete={() => handleDeleteFolder(folder.id)}
+                        translations={t}
+                      />
+                    ))}
+                  </SortableContext>
+                </div>
+              )}
 
               {/* Reports */}
               <SortableContext
