@@ -1043,20 +1043,27 @@ export function CocoonForceGraph3D({
       </Canvas>
 
       {/* Progressive vignette fade */}
-      {!isDayMode && (
-        <div
-          className="absolute inset-0 pointer-events-none z-[1]"
-          style={{
-            background: `
-              radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
-              linear-gradient(to top, #06060e 0%, transparent 4%),
-              linear-gradient(to bottom, #06060e 0%, transparent 4%),
-              linear-gradient(to left, #06060e 0%, transparent 3.3%),
-              linear-gradient(to right, #06060e 0%, transparent 3.3%)
-            `,
-          }}
-        />
-      )}
+      {!isDayMode && (() => {
+        const base = { r: 6, g: 6, b: 14 };
+        const r = Math.min(255, Math.max(0, Math.round(base.r + bgWarmth * 3)));
+        const g = Math.min(255, Math.max(0, Math.round(base.g + Math.abs(bgWarmth) * 0.5)));
+        const b = Math.min(255, Math.max(0, Math.round(base.b - bgWarmth * 2)));
+        const vc = `rgb(${r},${g},${b})`;
+        return (
+          <div
+            className="absolute inset-0 pointer-events-none z-[1]"
+            style={{
+              background: `
+                radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, ${vc} 100%),
+                linear-gradient(to top, ${vc} 0%, transparent 4%),
+                linear-gradient(to bottom, ${vc} 0%, transparent 4%),
+                linear-gradient(to left, ${vc} 0%, transparent 3.3%),
+                linear-gradient(to right, ${vc} 0%, transparent 3.3%)
+              `,
+            }}
+          />
+        );
+      })()}
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
