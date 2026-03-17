@@ -172,6 +172,7 @@ export function MyCorrectiveCodes() {
     } finally {
       setVerifyLoading(false);
     }
+  };
 
 
   const fetchCodes = async () => {
