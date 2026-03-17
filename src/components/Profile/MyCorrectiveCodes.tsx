@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface CorrectiveCodeFix {
   id: string;
