@@ -886,14 +886,16 @@ export function SmartConfigurator({
     prevAvailableCountRef.current = availableFixes.length;
   }, [availableFixes, isOpen, generatedCode]);
 
-  // Toggle a fix
+  // Toggle a fix — locked once code has been generated
+  const isCodeLocked = !!generatedCode;
   const toggleFix = useCallback((fixId: string) => {
+    if (isCodeLocked) return;
     setFixConfigs(prev => 
       prev.map(fix => 
         fix.id === fixId ? { ...fix, enabled: !fix.enabled } : fix
       )
     );
-  }, []);
+  }, [isCodeLocked]);
 
   // Update fix data
   const updateFixData = useCallback((fixId: string, data: Record<string, any>) => {
