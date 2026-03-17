@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+  const supabase = getServiceClient()
 
   try {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()

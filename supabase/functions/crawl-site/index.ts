@@ -276,6 +276,7 @@ Deno.serve(async (req) => {
     console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
 
     // Trigger the worker immediately (fire-and-forget with logging)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     fireAndLog(
       fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
         method: 'POST',

@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+    const supabase = getServiceClient()
 
     // Get user profile for GSC + GA4 tokens
     const { data: profile } = await supabase

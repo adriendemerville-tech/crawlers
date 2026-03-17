@@ -397,7 +397,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = getServiceClient()
 
     const AUDIT_TYPE_TO_FUNCTION: Record<string, string> = {
       'technical': 'audit-expert-seo',

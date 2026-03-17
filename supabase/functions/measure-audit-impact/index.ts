@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+    const supabase = getServiceClient()
 
     // Find snapshots due for measurement
     const { data: pendingSnapshots, error: fetchErr } = await supabase

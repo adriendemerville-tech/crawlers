@@ -286,7 +286,7 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     try {
       const body = await new Response(req.body).json().catch(() => ({}));
       if (body.audit_id) {
-        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        const supabase = getServiceClient();
         await supabase.from('pdf_audits').update({ status: 'error', error_message: error.message }).eq('id', body.audit_id);
       }
     } catch {}

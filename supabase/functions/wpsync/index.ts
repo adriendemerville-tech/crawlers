@@ -48,10 +48,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-      const anonClient = createClient(Deno.env.get('SUPABASE_URL') || '', anonKey, {
-        global: { headers: { Authorization: authHeader } }
-      });
+      const anonClient = getUserClient(authHeader);
       const { data: userData, error: userError } = await anonClient.auth.getUser();
       if (userError || !userData?.user?.id) {
         return new Response(

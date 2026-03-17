@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     console.log(`Checking profile for user: ${user.id}`);
 
     // Use service_role client for DB operations to bypass RLS
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
 
     // Check if profile exists
     const { data: existingProfile, error: profileCheckError } = await supabase

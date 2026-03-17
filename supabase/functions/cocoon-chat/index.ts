@@ -19,10 +19,7 @@ serve(async (req) => {
     let siteIdentityBlock = '';
     try {
       if (domain || trackedSiteId) {
-        const supabase = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
+        const supabase = getServiceClient();
         const ctx = await getSiteContext(supabase, trackedSiteId ? { trackedSiteId } : { domain });
         if (ctx) {
           const parts: string[] = [];

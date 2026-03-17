@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = getServiceClient()
     const body = await req.json().catch(() => ({}))
     const siteBaseUrl = body.base_url || 'https://crawlers.lovable.app'
 
