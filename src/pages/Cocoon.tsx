@@ -192,6 +192,8 @@ export default function Cocoon() {
   const [is3DMode, setIs3DMode] = useState(true);
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
+  const [bgWarmth, setBgWarmth] = useState(0);
+  const [linkThickness, setLinkThickness] = useState(1);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
