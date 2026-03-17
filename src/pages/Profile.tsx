@@ -230,46 +230,45 @@ export default function Profile() {
                 )}
               </TabsList>
 
-
-              <TabsContent value="wallet">
-                <MyWallet />
-              </TabsContent>
-
-              <TabsContent value="tracking">
-                <MyTracking />
-              </TabsContent>
-
-              {!isProUser && (
-                <TabsContent value="settings">
-                  <ProfileSettings />
+              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                <TabsContent value="wallet">
+                  <MyWallet />
                 </TabsContent>
-              )}
 
-              <TabsContent value="reports">
-                <MyReports />
-              </TabsContent>
-
-              <TabsContent value="action-plans">
-                <MyActionPlans />
-              </TabsContent>
-
-              <TabsContent value="corrective-codes">
-                <MyCorrectiveCodes />
-              </TabsContent>
-
-              {isProUser && (
-                <TabsContent value="crawls">
-                  <MyCrawls />
+                <TabsContent value="tracking">
+                  <MyTracking />
                 </TabsContent>
-              )}
 
+                {!isProUser && (
+                  <TabsContent value="settings">
+                    <ProfileSettings />
+                  </TabsContent>
+                )}
 
-
-              {hasAdminAccess && (
-                <TabsContent value="admin">
-                  <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
+                <TabsContent value="reports">
+                  <MyReports />
                 </TabsContent>
-              )}
+
+                <TabsContent value="action-plans">
+                  <MyActionPlans />
+                </TabsContent>
+
+                <TabsContent value="corrective-codes">
+                  <MyCorrectiveCodes />
+                </TabsContent>
+
+                {isProUser && (
+                  <TabsContent value="crawls">
+                    <MyCrawls />
+                  </TabsContent>
+                )}
+
+                {hasAdminAccess && (
+                  <TabsContent value="admin">
+                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
+                  </TabsContent>
+                )}
+              </Suspense>
             </Tabs>
 
             <div className="flex justify-end mt-8">
