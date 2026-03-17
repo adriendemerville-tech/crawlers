@@ -412,25 +412,26 @@ export function MyInjectedScripts() {
                                 <Eye className="w-3 h-3" />
                                 {t.viewScript}
                               </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-3 text-[10px] gap-1.5 w-full"
-                              onClick={(e) => { e.stopPropagation(); handleTest(rule); }}
-                              disabled={isTesting}
-                            >
-                              {isTesting ? (
-                                <>
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                  {t.testing}
-                                </>
-                              ) : (
-                                <>
-                                  <Rocket className="w-3 h-3" />
-                                  {t.test}
-                                </>
-                              )}
-                            </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-3 text-[10px] gap-1.5 flex-1"
+                                onClick={(e) => { e.stopPropagation(); handleTest(rule); }}
+                                disabled={isTesting}
+                              >
+                                {isTesting ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    {t.testing}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Rocket className="w-3 h-3" />
+                                    {t.test}
+                                  </>
+                                )}
+                              </Button>
+                            </div>
 
                             {result && (
                               <div className="flex items-center gap-3">
