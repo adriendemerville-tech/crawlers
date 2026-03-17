@@ -720,9 +720,16 @@ Deno.serve(async (req) => {
 
       const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
-      // Reduced batch size from 20 to 8 to avoid CPU timeout kills
-      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), 8);
+      
+      // Dynamic batch size based on average HTML weight from first page probe
+      const probeSize = firstPageResult?.html_size_bytes || 0;
+      const dynamicMax = probeSize > 250_000 ? 3 : probeSize > 100_000 ? 5 : 8;
+      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), dynamicMax);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
+      
+      if (alreadyProcessed === 0) {
+        console.log(`[Worker] Job ${job.id}: dynamic batch=${dynamicMax} (probe ${Math.round(probeSize/1024)}KB)`);
+      }
 
       console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
 
