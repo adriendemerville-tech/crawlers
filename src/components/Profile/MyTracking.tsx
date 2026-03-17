@@ -1756,9 +1756,10 @@ export function MyTracking() {
             onClose={() => {
               setIsArchitectOpen(false);
               setArchitectSiteId(null);
+              setArchitectAuditResult(null);
             }}
-            technicalResult={null}
-            strategicResult={null}
+            technicalResult={architectAuditResult}
+            strategicResult={architectAuditResult?.strategicAnalysis ? architectAuditResult : null}
             siteUrl={`https://${archSite.domain}`}
             siteName={archSite.site_name || archSite.domain}
             activeSiteId={archSite.id}
