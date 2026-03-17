@@ -272,6 +272,12 @@ export default function Profile() {
                 </TabsContent>
               )}
 
+              {isProUser && (
+                <TabsContent value="cocoon">
+                  <CocoonTab />
+                </TabsContent>
+              )}
+
 
               {hasAdminAccess && (
                 <TabsContent value="admin">
