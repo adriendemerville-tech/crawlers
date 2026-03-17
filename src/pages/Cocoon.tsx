@@ -778,34 +778,6 @@ export default function Cocoon() {
                   <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
                 <span className="text-[9px] sm:text-xs ml-auto hidden sm:inline text-white/30">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
-                <a
-                  href={(() => {
-                    const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
-                    return domain ? `https://crawlers.fr/site-crawl?url=${encodeURIComponent(domain)}` : 'https://crawlers.fr/site-crawl';
-                  })()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto sm:ml-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border bg-[#a855f7]/10 border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20"
-                >
-                  <FileText className="w-2.5 h-2.5" />
-                  <span className="hidden sm:inline">{t.crawlMulti}</span>
-                  <ExternalLink className="w-2 h-2" />
-                </a>
-                <a
-                  href={(() => {
-                    const nodeUrl = selectedNode?.url;
-                    const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
-                    const urlParam = nodeUrl || domain;
-                    return urlParam ? `/audit-expert?url=${encodeURIComponent(urlParam)}` : '/audit-expert';
-                  })()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-0.5 sm:ml-1 bg-[#3b82f6]/10 border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20"
-                >
-                  <Search className="w-2.5 h-2.5" />
-                  <span className="hidden sm:inline">{t.auditExpert}</span>
-                  <ExternalLink className="w-2 h-2" />
-                </a>
               </div>
             );
           })()}
