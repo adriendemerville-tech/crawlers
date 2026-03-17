@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     console.log(`📥 Received Stripe event: ${event.type}`);
 
     // Initialize Supabase admin client
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     // Handle the checkout.session.completed event
     if (event.type === "checkout.session.completed") {

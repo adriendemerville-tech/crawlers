@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     // Get the user's profile to find their Stripe subscription
-    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "");
+    const serviceClient = getServiceClient();
 
     const { data: profile } = await serviceClient
       .from('profiles')

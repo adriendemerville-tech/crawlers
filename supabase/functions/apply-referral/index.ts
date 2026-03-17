@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     const code = referral_code.trim().toUpperCase();
 
     // Service client for privileged operations
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
 
     // 1. Get current user profile
     const { data: myProfile, error: profileErr } = await supabase

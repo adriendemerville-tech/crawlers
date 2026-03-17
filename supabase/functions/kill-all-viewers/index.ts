@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     }
 
     // Only admin (creator) can execute this
-    const serviceClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const serviceClient = getServiceClient();
     const { data: roles } = await serviceClient
       .from('user_roles')
       .select('role')
