@@ -56,8 +56,9 @@ export default function SharedReportRedirect() {
       const ref = searchParams.get('ref');
       if (ref) {
         try {
-          await supabase.functions.invoke('track-share-click', {
+          await supabase.functions.invoke('share-actions', {
             body: {
+              action: 'track-click',
               report_id: shareId,
               referrer_id: ref,
               visitor_ip: await getVisitorIP(),
