@@ -159,6 +159,34 @@ Deno.serve(async (req) => {
 // AI PAYLOAD GENERATION PER RULE TYPE
 // ══════════════════════════════════════════════════════════════
 
+// ── Intent-aware prompt strategies ──
+const INTENT_STRATEGIES: Record<string, { focus: string; schemaHint: string; tone: string }> = {
+  transactional: {
+    focus: 'conversion, appels à l\'action, prix, offres, garanties, avis clients',
+    schemaHint: 'Product, Offer, AggregateRating',
+    tone: 'persuasif et orienté action',
+  },
+  commercial: {
+    focus: 'comparaison, avantages concurrentiels, témoignages, études de cas, ROI',
+    schemaHint: 'Product, Review, AggregateRating',
+    tone: 'expert et rassurant',
+  },
+  informational: {
+    focus: 'éducation, expertise E-E-A-T, définitions, guides, données factuelles',
+    schemaHint: 'Article, HowTo, FAQPage',
+    tone: 'pédagogique et autoritaire',
+  },
+  navigational: {
+    focus: 'identité de marque, coordonnées, structure du site, maillage interne',
+    schemaHint: 'Organization, WebSite, BreadcrumbList',
+    tone: 'clair et structuré',
+  },
+};
+
+function getIntentStrategy(intent: string) {
+  return INTENT_STRATEGIES[intent] || INTENT_STRATEGIES.informational;
+}
+
 async function generatePayloadForRule(
   rule: {
     id: string;
@@ -172,6 +200,7 @@ async function generatePayloadForRule(
 ): Promise<Record<string, any> | null> {
   const payloadType = rule.payload_type;
   const existingData = rule.payload_data || {};
+  const pageIntent = (existingData._intent as string) || 'informational';
 
   // Static payload types don't need AI generation
   const STATIC_TYPES = ['BreadcrumbList', 'GLOBAL_FIXES'];
@@ -194,11 +223,12 @@ async function generatePayloadForRule(
   const domain = site.domain;
   const siteConfig = (site.current_config as Record<string, any>) || {};
   const siteName = siteConfig.site_name || domain;
+  const strategy = getIntentStrategy(pageIntent);
 
-  // Generate payload based on type
+  // Generate payload based on type + intent
   switch (payloadType) {
     case 'FAQPage':
-      return await generateFAQPayload(domain, siteName, rule.url_pattern, lovableApiKey);
+      return await generateFAQPayload(domain, siteName, rule.url_pattern, lovableApiKey, strategy, pageIntent);
     case 'Organization':
       return generateOrganizationPayload(domain, siteName, existingData);
     case 'LocalBusiness':
@@ -208,7 +238,7 @@ async function generatePayloadForRule(
     case 'Product':
       return generateProductPayload(domain, siteName, existingData);
     case 'HTML_INJECTION':
-      return await generateHTMLPayload(domain, siteName, rule.url_pattern, existingData, lovableApiKey);
+      return await generateHTMLPayload(domain, siteName, rule.url_pattern, existingData, lovableApiKey, strategy, pageIntent);
     default:
       return null;
   }
