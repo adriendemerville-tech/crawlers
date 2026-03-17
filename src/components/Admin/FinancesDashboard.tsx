@@ -20,7 +20,7 @@ import {
   Gauge,
   Server,
 } from 'lucide-react';
-import { } from 'date-fns';
+import { subDays } from 'date-fns';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
@@ -84,6 +84,39 @@ export function FinancesDashboard() {
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
 
+  // Dedicated fetch for financial events (bypass shared cache limit)
+  const fetchFinancialEvents = useCallback(async () => {
+    const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+    const PAGE_SIZE = 1000;
+    const MAX_PAGES = 50; // Up to 50k financial events
+
+    const fetchAllByType = async (eventType: string) => {
+      let all: typeof sharedAllEvents = [];
+      let page = 0;
+      while (page < MAX_PAGES) {
+        const { data, error } = await supabase
+          .from('analytics_events')
+          .select('event_type, url, created_at, user_id, event_data')
+          .eq('event_type', eventType)
+          .gte('created_at', thirtyDaysAgo)
+          .order('created_at', { ascending: false })
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        if (error || !data || data.length === 0) break;
+        all = all.concat(data as typeof sharedAllEvents);
+        if (data.length < PAGE_SIZE) break;
+        page++;
+      }
+      return all;
+    };
+
+    const [tokenEvents, paidApiEvents] = await Promise.all([
+      fetchAllByType('ai_token_usage'),
+      fetchAllByType('paid_api_call'),
+    ]);
+
+    return { tokenEvents, paidApiEvents };
+  }, []);
+
   // Trigger shared fetch on mount
   useEffect(() => { fetchEvents(); }, []);
 
@@ -98,9 +131,8 @@ export function FinancesDashboard() {
 
     try {
 
-      // Token usage
-      const tokenEvents = allEvents.filter(e => e.event_type === 'ai_token_usage');
-      const paidApiEvents = allEvents.filter(e => e.event_type === 'paid_api_call');
+      // Fetch ALL financial events directly (not from shared cache)
+      const { tokenEvents, paidApiEvents } = await fetchFinancialEvents();
 
       const byFunction: Record<string, { tokens: number; calls: number; model?: string }> = {};
       const byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }> = {};
