@@ -140,7 +140,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
 
       {/* Report Button */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex justify-center py-6">
-        <Button onClick={onReportClick} size="lg" className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+        <Button onClick={onReportClick} size="lg" className="gap-3 text-white px-8 py-6 text-base font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5" style={{ background: 'linear-gradient(180deg, hsl(225, 60%, 38%) 0%, hsl(225, 65%, 25%) 100%)', boxShadow: '0 4px 14px -3px hsla(225, 70%, 20%, 0.5), inset 0 1px 0 hsla(225, 60%, 55%, 0.3), 0 1px 3px hsla(225, 70%, 15%, 0.4)' }}>
           <FileDown className="h-5 w-5" />
           {t.viewReport}
         </Button>
