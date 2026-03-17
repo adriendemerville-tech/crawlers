@@ -318,16 +318,21 @@ export function MyCorrectiveCodes() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
-                  if (injectableSites.length > 0) {
-                    setPlugSiteId(injectableSites[0].id);
-                  }
-                  setShowPlugModal(true);
-                }}>
-                  <Plug className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`h-8 w-8 shrink-0 ${plugConnected ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}`}
+                  onClick={() => {
+                    if (injectableSites.length > 0) {
+                      setPlugSiteId(injectableSites[0].id);
+                    }
+                    setShowPlugModal(true);
+                  }}
+                >
+                  <Plug className={`h-4 w-4 ${plugConnected ? 'text-emerald-500' : ''}`} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Plug</TooltipContent>
+              <TooltipContent>{plugConnected ? (language === 'fr' ? 'Branché' : 'Connected') : 'Plug'}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
