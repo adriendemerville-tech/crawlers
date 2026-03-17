@@ -15,8 +15,7 @@ import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracke
  * 5. Triggers recalculate_reliability()
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Singleton client via _shared/supabaseClient.ts
 
 // ─── Fetch GSC clicks for a domain (last 28 days) ──────────────
 async function fetchGscClicks(accessToken: string, domain: string): Promise<number | null> {
