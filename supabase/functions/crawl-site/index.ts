@@ -118,6 +118,11 @@ Deno.serve(async (req) => {
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     const isUnlimited = isAdmin === true;
 
+    // Admins: no page cap
+    if (isUnlimited) {
+      pageLimit = Math.min(maxPages, 500);
+    }
+
     // ── Fair Use Policy ──────────────────────────────────────
     // Pro Agency: 5 000 pages/month included, then pay-as-you-go
     // Free users: always pay credits
