@@ -449,11 +449,8 @@ export function MyTracking() {
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
       const llmOverallScore = llmData?.data?.overallScore ?? null;
       
-      // Compute SEO crawlability score from check-crawlers (% of AI bots allowed)
-      const botResults = crawlersData?.data?.bots || crawlersData?.data?.results || crawlersData?.results || [];
-      const seoScore = botResults.length > 0
-        ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
-        : null;
+      // Real SEO score from PageSpeed Insights SEO category (0-100)
+      const seoScore = psiData?.data?.mobile?.scores?.seo ?? psiData?.data?.scores?.seo ?? null;
 
       // Extract PageSpeed performance scores (mobile + desktop)
       const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
@@ -631,20 +628,17 @@ export function MyTracking() {
 
     // Fire all 5 calls independently
     const calls = [
-      // 1. Crawlers → SEO score
+      // 1. Crawlers → raw data only (SEO score now comes from PSI)
       supabase.functions.invoke('check-crawlers', { body: { url } }).then((res) => {
         const crawlersData = res.data;
-        const botResults = crawlersData?.data?.bots || crawlersData?.data?.results || crawlersData?.results || [];
-        currentSeoScore = botResults.length > 0
-          ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
-          : null;
         rawAccumulator.crawlersData = crawlersData?.data || crawlersData;
       }).catch(console.error),
 
-      // 2. PageSpeed → Performance (mobile + desktop)
+      // 2. PageSpeed → Performance (mobile + desktop) + SEO score
       supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }).then((res) => {
         const psiData = res.data;
         currentPerformance = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+        currentSeoScore = psiData?.data?.mobile?.scores?.seo ?? psiData?.data?.scores?.seo ?? null;
         rawAccumulator.psiData = psiData?.data;
         rawAccumulator.performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
       }).catch(console.error),
@@ -1149,9 +1143,8 @@ export function MyTracking() {
                       performanceDesktop: psiDualRefresh,
                       seoScore: async () => {
                         if (!currentSite) return;
-                        const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
-                        const bots = res.data?.data?.results || res.data?.results || [];
-                        const score = bots.length > 0 ? Math.round((bots.filter((b: any) => b.status === 'allowed').length / bots.length) * 100) : null;
+                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language, dual: true } });
+                        const score = res.data?.data?.mobile?.scores?.seo ?? res.data?.data?.scores?.seo ?? null;
                         if (score !== null) toast.success(`${t.seoScore}: ${score}%`);
                         if (currentSite) await runStreamingAudit(currentSite);
                       },
