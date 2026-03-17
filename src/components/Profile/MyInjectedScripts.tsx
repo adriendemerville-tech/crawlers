@@ -292,12 +292,6 @@ export function MyInjectedScripts() {
 
   return (
     <>
-      <div className="flex justify-end mb-2">
-        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-          {language === 'fr' ? 'Rafraîchir' : 'Refresh'}
-        </Button>
-      </div>
       <div className="space-y-2">
         {/* Validated corrective codes */}
         {validatedCodes.length > 0 && (
