@@ -20,7 +20,7 @@ import {
   Gauge,
   Server,
 } from 'lucide-react';
-import { } from 'date-fns';
+import { subDays } from 'date-fns';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
