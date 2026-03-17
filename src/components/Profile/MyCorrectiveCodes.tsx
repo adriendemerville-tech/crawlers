@@ -96,6 +96,7 @@ export function MyCorrectiveCodes() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [rollbackSites, setRollbackSites] = useState<{ id: string; domain: string }[]>([]);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
