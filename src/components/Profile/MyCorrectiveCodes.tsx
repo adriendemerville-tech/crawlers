@@ -90,7 +90,7 @@ const translations = {
 };
 
 export function MyCorrectiveCodes() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
@@ -103,7 +103,9 @@ export function MyCorrectiveCodes() {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyResults, setVerifyResults] = useState<any>(null);
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string }[]>([]);
+  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string; api_key?: string; current_config?: any }[]>([]);
+  const [showPlugModal, setShowPlugModal] = useState(false);
+  const [plugSiteId, setPlugSiteId] = useState<string | null>(null);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
