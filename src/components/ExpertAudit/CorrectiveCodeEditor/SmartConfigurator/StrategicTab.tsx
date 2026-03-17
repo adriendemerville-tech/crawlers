@@ -12,6 +12,7 @@ interface StrategicTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onUpdateData: (fixId: string, data: Record<string, any>) => void;
+  disabled?: boolean;
 }
 
 const strategicIcons: Record<string, React.ElementType> = {
