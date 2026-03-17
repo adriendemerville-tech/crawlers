@@ -361,7 +361,8 @@ export function MyInjectedScripts() {
                     return (
                       <div
                         key={rule.id}
-                        className="rounded-lg border bg-muted/20 p-3 space-y-2"
+                        className={`rounded-lg border p-3 space-y-2 cursor-pointer transition-colors ${selectedRuleId === rule.id ? 'bg-accent/40 border-primary/30' : 'bg-muted/20 hover:bg-muted/40'}`}
+                        onClick={() => setSelectedRuleId(prev => prev === rule.id ? null : rule.id)}
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="text-[9px] font-mono shrink-0">
@@ -391,7 +392,8 @@ export function MyInjectedScripts() {
                               variant="outline"
                               size="sm"
                               className="h-6 px-2.5 text-[10px] gap-1"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 const preview = getPayloadPreview(rule);
                                 if (preview) {
                                   setViewingScript({
@@ -406,11 +408,17 @@ export function MyInjectedScripts() {
                               <Eye className="w-3 h-3" />
                               {t.viewScript}
                             </Button>
+                          </div>
+                        </div>
+
+                        {/* Test button + results: only visible when card is selected */}
+                        {selectedRuleId === rule.id && (
+                          <div className="pt-2 border-t border-border/50 space-y-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 px-2.5 text-[10px] gap-1"
-                              onClick={() => handleTest(rule)}
+                              className="h-7 px-3 text-[10px] gap-1.5 w-full"
+                              onClick={(e) => { e.stopPropagation(); handleTest(rule); }}
                               disabled={isTesting}
                             >
                               {isTesting ? (
@@ -425,35 +433,35 @@ export function MyInjectedScripts() {
                                 </>
                               )}
                             </Button>
-                          </div>
-                        </div>
 
-                        {result && (
-                          <div className="flex items-center gap-3 pt-1 border-t border-border/50">
-                            <div className="flex items-center gap-1 text-[10px]">
-                              {result.arrived ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              ) : (
-                                <XCircle className="w-3.5 h-3.5 text-destructive" />
-                              )}
-                              <span className={result.arrived ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
-                                {result.arrived ? t.arrived : t.notArrived}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px]">
-                              {result.deployed ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              ) : (
-                                <XCircle className="w-3.5 h-3.5 text-destructive" />
-                              )}
-                              <span className={result.deployed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
-                                {result.deployed ? t.deploying : t.deployFail}
-                              </span>
-                            </div>
-                            {result.stale && (
-                              <div className="flex items-center gap-1 text-[10px]">
-                                <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
-                                <span className="text-yellow-600 dark:text-yellow-400">{t.stale}</span>
+                            {result && (
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1 text-[10px]">
+                                  {result.arrived ? (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <XCircle className="w-3.5 h-3.5 text-destructive" />
+                                  )}
+                                  <span className={result.arrived ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
+                                    {result.arrived ? t.arrived : t.notArrived}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px]">
+                                  {result.deployed ? (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <XCircle className="w-3.5 h-3.5 text-destructive" />
+                                  )}
+                                  <span className={result.deployed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
+                                    {result.deployed ? t.deploying : t.deployFail}
+                                  </span>
+                                </div>
+                                {result.stale && (
+                                  <div className="flex items-center gap-1 text-[10px]">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
+                                    <span className="text-yellow-600 dark:text-yellow-400">{t.stale}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
