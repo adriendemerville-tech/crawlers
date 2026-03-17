@@ -428,10 +428,13 @@ export function MyReports() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-end">
-          <Button onClick={() => setShowNewFolderDialog(true)} size="sm" className="gap-2">
-            <FolderPlus className="h-4 w-4" />
-            {t.createFolder}
-          </Button>
+          <button
+            onClick={() => setShowNewFolderDialog(true)}
+            className="p-2 rounded-lg text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/60 transition-colors"
+            title={t.createFolder}
+          >
+            <FolderPlus className="h-5 w-5" />
+          </button>
         </div>
       </CardHeader>
       <CardContent>
@@ -480,22 +483,26 @@ export function MyReports() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="space-y-2">
-              {/* Folders */}
-              <SortableContext
-                items={folders.map(f => `folder-${f.id}`)}
-                strategy={verticalListSortingStrategy}
-              >
-                {folders.map((folder) => (
-                  <SortableFolderItem
-                    key={folder.id}
-                    folder={folder}
-                    onOpen={() => navigateToFolder(folder.id)}
-                    onDelete={() => handleDeleteFolder(folder.id)}
-                    translations={t}
-                  />
-                ))}
-              </SortableContext>
+            <div className="space-y-4">
+              {/* Folders - desktop icon grid */}
+              {folders.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  <SortableContext
+                    items={folders.map(f => `folder-${f.id}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {folders.map((folder) => (
+                      <SortableFolderItem
+                        key={folder.id}
+                        folder={folder}
+                        onOpen={() => navigateToFolder(folder.id)}
+                        onDelete={() => handleDeleteFolder(folder.id)}
+                        translations={t}
+                      />
+                    ))}
+                  </SortableContext>
+                </div>
+              )}
 
               {/* Reports */}
               <SortableContext
@@ -518,9 +525,9 @@ export function MyReports() {
 
             <DragOverlay>
               {activeFolder && (
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-card shadow-lg">
-                  <FolderOpen className="h-5 w-5 text-primary" />
-                  <span className="font-medium">{activeFolder.name}</span>
+                <div className="flex flex-col items-center gap-1 w-20 p-2 rounded-lg bg-card shadow-lg">
+                  <FolderOpen className="h-10 w-10 text-muted-foreground/70 fill-muted-foreground/10" />
+                  <span className="text-xs text-muted-foreground truncate w-full text-center">{activeFolder.name}</span>
                 </div>
               )}
               {activeReport && (
