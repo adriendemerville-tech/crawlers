@@ -47,6 +47,8 @@ interface SiteContext {
 }
 
 // ─── Dynamic prompt sequence builder ─────────────────────────────────────────
+// IMPORTANT: Iterations 1-3 MUST match calculate-llm-visibility prompts exactly
+// for score coherence between Benchmark and Depth analyses.
 
 function buildPromptSequence(
   serviceDesc: string,
@@ -56,40 +58,46 @@ function buildPromptSequence(
   const isFr = lang === 'fr'
   const isEs = lang === 'es'
 
-  // Phase 1 — Generic need
-  const p1 = isFr
-    ? `Je cherche ${serviceDesc}. Quelles sont les meilleures solutions disponibles ? Donne-moi un panorama complet avec les noms exacts des entreprises ou outils.`
+  const products = ctx.products_services || serviceDesc
+  const area = ctx.commercial_area || ''
+  const sector = ctx.market_sector || ''
+  const target = ctx.target_audience || ''
+
+  // ═══ Iterations 1-3: SAME as calculate-llm-visibility ═══
+  // These must produce identical prompts so scores are coherent
+
+  // Iteration 1 — Initial prompt (same as visibility's first prompt)
+  const p1 = products
+    ? (area
+      ? (isFr ? `Je cherche ${products} ${area}, qu'est-ce que tu me conseilles ?`
+        : isEs ? `Busco ${products} ${area}, ¿qué me recomiendas?`
+        : `I'm looking for ${products} ${area}, what do you recommend?`)
+      : (isFr ? `Je cherche ${products}, qu'est-ce que tu me conseilles ?`
+        : isEs ? `Busco ${products}, ¿qué me recomiendas?`
+        : `I'm looking for ${products}, what do you recommend?`))
+    : sector
+    ? (isFr ? `Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`
+      : isEs ? `¿Cómo funciona ${sector}? ¿Qué herramientas o servicios existen?`
+      : `How does ${sector} work? What tools or services exist?`)
+    : (isFr ? `Je cherche un bon prestataire pour ${serviceDesc}, tu connais ?`
+      : isEs ? `Busco un buen proveedor para ${serviceDesc}, ¿conoces alguno?`
+      : `I'm looking for a good provider for ${serviceDesc}, do you know any?`)
+
+  // Iteration 2 — Follow-up asking for alternatives (same as visibility)
+  const p2 = isFr
+    ? "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?"
     : isEs
-    ? `Busco ${serviceDesc}. ¿Cuáles son las mejores soluciones disponibles? Dame un panorama completo con los nombres exactos de empresas o herramientas.`
-    : `I'm looking for ${serviceDesc}. What are the best solutions available? Give me a complete overview with exact company or tool names.`
+    ? "Ok gracias, ¿pero no tienes otros nombres? ¿Alternativas menos conocidas quizás?"
+    : "Ok thanks, but don't you have other names? Maybe lesser-known alternatives?"
 
-  // Phase 2 — Use case / profession (adapts to target_audience or sector)
-  const audience = ctx.target_audience || ctx.market_sector
-  const p2 = audience
-    ? (isFr
-      ? `Plus spécifiquement, pour un profil "${audience}", quels outils ou prestataires sont les plus adaptés ? Cite des noms précis.`
-      : isEs
-      ? `Más específicamente, para un perfil "${audience}", ¿qué herramientas o proveedores son más adecuados? Cita nombres precisos.`
-      : `More specifically, for a "${audience}" profile, which tools or providers are most suitable? Name them precisely.`)
-    : (isFr
-      ? `Quels profils de clients utilisent ces solutions ? Y a-t-il des outils spécialisés par métier ? Cite des noms.`
-      : isEs
-      ? `¿Qué perfiles de clientes usan estas soluciones? ¿Hay herramientas especializadas por profesión? Cita nombres.`
-      : `What client profiles use these solutions? Are there tools specialized by profession? Name them.`)
+  // Iteration 3 — Follow-up asking for niche players (same as visibility)
+  const p3 = isFr
+    ? "Et dans les solutions plus spécialisées ou de niche, tu connais d'autres acteurs ?"
+    : isEs
+    ? "¿Y en soluciones más especializadas o de nicho, conoces otros actores?"
+    : "And among more specialized or niche solutions, do you know other players?"
 
-  // Phase 3 — Features & differentiators (adapts to products_services)
-  const features = ctx.products_services
-  const p3 = features
-    ? (isFr
-      ? `Je cherche particulièrement des fonctionnalités comme : ${features}. Quels acteurs proposent ça ? Compare-les.`
-      : isEs
-      ? `Busco particularmente funcionalidades como: ${features}. ¿Qué actores ofrecen eso? Compáralos.`
-      : `I'm particularly looking for features like: ${features}. Which players offer this? Compare them.`)
-    : (isFr
-      ? `En termes de fonctionnalités avancées et de différenciation, quels acteurs se démarquent vraiment ? Lesquels sont innovants ?`
-      : isEs
-      ? `En cuanto a funcionalidades avanzadas y diferenciación, ¿qué actores se destacan realmente? ¿Cuáles son innovadores?`
-      : `In terms of advanced features and differentiation, which players truly stand out? Which ones are innovative?`)
+  // ═══ Iterations 4-7: DEPTH-ONLY deeper probing ═══
 
   // Phase 4 — Budget & pricing (adapts to company_size)
   const size = ctx.company_size
