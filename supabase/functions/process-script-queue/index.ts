@@ -249,10 +249,11 @@ async function generateFAQPayload(
   domain: string,
   siteName: string,
   urlPattern: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  strategy: { focus: string; schemaHint: string; tone: string },
+  intent: string
 ): Promise<Record<string, any>> {
   if (!apiKey) {
-    // Fallback: generic FAQ
     return {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -261,11 +262,6 @@ async function generateFAQPayload(
           '@type': 'Question',
           name: `Qu'est-ce que ${siteName} ?`,
           acceptedAnswer: { '@type': 'Answer', text: `${siteName} est un service disponible sur ${domain}.` },
-        },
-        {
-          '@type': 'Question',
-          name: `Comment contacter ${siteName} ?`,
-          acceptedAnswer: { '@type': 'Answer', text: `Visitez ${domain} pour nous contacter.` },
         },
       ],
     };
@@ -284,11 +280,11 @@ async function generateFAQPayload(
         messages: [
           {
             role: 'system',
-            content: 'Tu génères des FAQ SEO Schema.org pour des sites web. Réponds UNIQUEMENT en JSON valide, sans markdown.',
+            content: `Tu génères des FAQ SEO Schema.org pour des sites web. L'intent de cette page est "${intent}". Adapte le ton (${strategy.tone}) et les sujets abordés (${strategy.focus}). Réponds UNIQUEMENT en JSON valide, sans markdown.`,
           },
           {
             role: 'user',
-            content: `Génère une FAQPage JSON-LD avec 3-5 questions pertinentes pour la section \\"${section}\\" du site \\"${siteName}\\" (${domain}). Les questions doivent être naturelles et les réponses factuelles (50-80 mots). Format: {\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"FAQPage\\",\\"mainEntity\\":[{\\"@type\\":\\"Question\\",\\"name\\":\\"...\\",\\"acceptedAnswer\\":{\\"@type\\":\\"Answer\\",\\"text\\":\\"...\\"}}]}`,
+            content: `Génère une FAQPage JSON-LD avec 3-5 questions pertinentes pour la section "${section}" du site "${siteName}" (${domain}). Intent: ${intent} → les questions doivent être orientées ${strategy.focus}. Format: {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"...","acceptedAnswer":{"@type":"Answer","text":"..."}}]}`,
           },
         ],
         temperature: 0.6,
@@ -308,7 +304,6 @@ async function generateFAQPayload(
     return JSON.parse(content);
   } catch (err) {
     console.error('[process-script-queue] FAQ AI error:', err);
-    // Fallback
     return {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
