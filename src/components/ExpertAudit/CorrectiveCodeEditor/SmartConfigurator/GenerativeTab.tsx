@@ -8,6 +8,7 @@ interface GenerativeTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onUpdateData: (fixId: string, data: Record<string, any>) => void;
+  disabled?: boolean;
 }
 
 const GENERATIVE_ICONS: Record<string, React.ReactNode> = {
@@ -17,7 +18,7 @@ const GENERATIVE_ICONS: Record<string, React.ReactNode> = {
   fix_pagespeed_suite: <Zap className="w-4 h-4" />,
 };
 
-export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
+export function GenerativeTab({ fixes, onToggle, disabled }: GenerativeTabProps) {
   const generativeFixes = fixes.filter(f => f.category === 'generative');
 
   if (generativeFixes.length === 0) {
@@ -76,6 +77,7 @@ export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
             <Switch
               checked={fix.enabled}
               onCheckedChange={() => onToggle(fix.id)}
+              disabled={disabled}
               className="data-[state=checked]:bg-emerald-500 scale-75"
             />
           </div>

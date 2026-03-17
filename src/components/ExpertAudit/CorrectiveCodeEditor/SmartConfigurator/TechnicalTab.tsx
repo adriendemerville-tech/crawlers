@@ -13,6 +13,7 @@ interface TechnicalTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onRequestAuth?: () => void;
+  disabled?: boolean;
 }
 
 const categoryIcons = {
@@ -64,7 +65,7 @@ const priorityConfig = {
   },
 };
 
-export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabProps) {
+export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: TechnicalTabProps) {
   const { user } = useAuth();
   const { openMode } = useFreemiumMode();
   const isAnonymousFreemium = openMode && !user;
@@ -177,7 +178,7 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabPro
                         <Switch
                           checked={fix.enabled}
                           onCheckedChange={() => onToggle(fix.id)}
-                          disabled={isLocked}
+                          disabled={isLocked || disabled}
                           className="data-[state=checked]:bg-violet-600 scale-75"
                         />
                       )}

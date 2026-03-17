@@ -886,14 +886,16 @@ export function SmartConfigurator({
     prevAvailableCountRef.current = availableFixes.length;
   }, [availableFixes, isOpen, generatedCode]);
 
-  // Toggle a fix
+  // Toggle a fix — locked once code has been generated
+  const isCodeLocked = !!generatedCode;
   const toggleFix = useCallback((fixId: string) => {
+    if (isCodeLocked) return;
     setFixConfigs(prev => 
       prev.map(fix => 
         fix.id === fixId ? { ...fix, enabled: !fix.enabled } : fix
       )
     );
-  }, []);
+  }, [isCodeLocked]);
 
   // Update fix data
   const updateFixData = useCallback((fixId: string, data: Record<string, any>) => {
@@ -1430,7 +1432,7 @@ export function SmartConfigurator({
 
               <ScrollArea className="flex-1 min-h-0">
                 <TabsContent forceMount value="technical" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
-                  <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} onRequestAuth={() => { setShowConnectSiteModal(true); }} />
+                  <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} onRequestAuth={() => { setShowConnectSiteModal(true); }} disabled={isCodeLocked} />
                 </TabsContent>
 
                 <TabsContent forceMount value="strategic" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
@@ -1438,6 +1440,7 @@ export function SmartConfigurator({
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}
+                    disabled={isCodeLocked}
                   />
                 </TabsContent>
 
@@ -1446,6 +1449,7 @@ export function SmartConfigurator({
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}
+                    disabled={isCodeLocked}
                   />
                 </TabsContent>
 

@@ -12,6 +12,7 @@ interface StrategicTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onUpdateData: (fixId: string, data: Record<string, any>) => void;
+  disabled?: boolean;
 }
 
 const strategicIcons: Record<string, React.ElementType> = {
@@ -22,7 +23,7 @@ const strategicIcons: Record<string, React.ElementType> = {
   inject_local_business: MapPin,
 };
 
-export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProps) {
+export function StrategicTab({ fixes, onToggle, onUpdateData, disabled }: StrategicTabProps) {
   const [openCards, setOpenCards] = useState<string[]>([]);
 
   // Filter only strategic fixes
@@ -243,6 +244,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
               <Checkbox
                 checked={fix.enabled}
                 onCheckedChange={() => handleCheckboxChange(fix)}
+                disabled={disabled}
                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 scale-90"
               />
             </div>
