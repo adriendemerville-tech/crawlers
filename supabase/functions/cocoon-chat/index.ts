@@ -11,9 +11,32 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, context, analysisMode, language } = await req.json();
+    const { messages, context, analysisMode, language, domain, trackedSiteId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // ── Fetch site identity card ──
+    let siteIdentityBlock = '';
+    try {
+      if (domain || trackedSiteId) {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+        const ctx = await getSiteContext(supabase, trackedSiteId ? { trackedSiteId } : { domain });
+        if (ctx) {
+          const parts: string[] = [];
+          if (ctx.market_sector) parts.push(`Secteur: ${ctx.market_sector}`);
+          if (ctx.products_services) parts.push(`Produits/Services: ${ctx.products_services}`);
+          if (ctx.target_audience) parts.push(`Cible: ${ctx.target_audience}`);
+          if (ctx.commercial_area) parts.push(`Zone commerciale: ${ctx.commercial_area}`);
+          if (parts.length > 0) siteIdentityBlock = `\n\nCarte d'identité du site (fiabilité: ${ctx.identity_confidence || 0}/100) :\n${parts.join('\n')}`;
+          console.log(`[cocoon-chat] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+        }
+      }
+    } catch (e) {
+      console.warn('[cocoon-chat] Could not fetch site context:', e);
+    }
 
     const langInstruction = language === 'en'
       ? 'You MUST reply entirely in English.'
@@ -24,6 +47,7 @@ serve(async (req) => {
     const basePrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
 
 ${langInstruction}
+${siteIdentityBlock}
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
