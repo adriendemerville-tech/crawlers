@@ -189,9 +189,13 @@ export default function Profile() {
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex-1 gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.myReports}</span>
+                <TabsTrigger value="action-plans" className="flex-1 gap-2">
+                  <CheckSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.actionPlans}</span>
+                </TabsTrigger>
+                <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
+                  <Code2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="crawls"
@@ -202,13 +206,9 @@ export default function Profile() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                <TabsTrigger value="action-plans" className="flex-1 gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.actionPlans}</span>
-                </TabsTrigger>
-                <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
-                  <Code2 className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.correctiveCodes}</span>
+                <TabsTrigger value="reports" className="flex-1 gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.myReports}</span>
                 </TabsTrigger>
                 {!isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
