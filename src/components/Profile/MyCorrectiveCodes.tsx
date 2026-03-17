@@ -106,6 +106,7 @@ export function MyCorrectiveCodes() {
   const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string; api_key?: string; current_config?: any }[]>([]);
   const [showPlugModal, setShowPlugModal] = useState(false);
   const [plugSiteId, setPlugSiteId] = useState<string | null>(null);
+  const [plugConnected, setPlugConnected] = useState(false);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
@@ -317,16 +318,21 @@ export function MyCorrectiveCodes() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
-                  if (injectableSites.length > 0) {
-                    setPlugSiteId(injectableSites[0].id);
-                  }
-                  setShowPlugModal(true);
-                }}>
-                  <Plug className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`h-8 w-8 shrink-0 ${plugConnected ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}`}
+                  onClick={() => {
+                    if (injectableSites.length > 0) {
+                      setPlugSiteId(injectableSites[0].id);
+                    }
+                    setShowPlugModal(true);
+                  }}
+                >
+                  <Plug className={`h-4 w-4 ${plugConnected ? 'text-emerald-500' : ''}`} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Plug</TooltipContent>
+              <TooltipContent>{plugConnected ? (language === 'fr' ? 'Branché' : 'Connected') : 'Plug'}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -563,6 +569,7 @@ export function MyCorrectiveCodes() {
                   siteDomain={site.domain}
                   siteApiKey={profile?.api_key || site.api_key || ''}
                   hasConfig={!!(site.current_config && typeof site.current_config === 'object' && Object.keys(site.current_config).length > 0)}
+                  onConnectionSuccess={() => setPlugConnected(true)}
                 />
               );
             })()}
