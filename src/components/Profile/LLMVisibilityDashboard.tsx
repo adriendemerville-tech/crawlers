@@ -216,7 +216,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
                     const score = scoreMap.get(llmName)?.get(week);
                     const hasScore = score != null;
                     return (
-                      <td key={week} className="text-center py-1.5 px-1">
+                      <td key={week} className="text-center pb-1.5 pl-1.5 pr-0 pt-0">
                         <div
                           className={`inline-flex items-center justify-center min-w-[48px] rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
                             hasScore ? cellBg(score) : 'bg-muted/30 text-muted-foreground/50'
