@@ -72,6 +72,43 @@ export function StrategicResultsSection({
   onReportClick, onHallucinationCorrectionComplete, onCompetitorCorrectionComplete,
   onNewAudit, onStrategicAudit, onForceRefresh,
 }: Props) {
+  const { user } = useAuth();
+  const [maillageData, setMaillageData] = useState<MaillageData | null>(null);
+
+  // Fetch semantic_nodes for maillage analysis
+  useEffect(() => {
+    if (!user || !result.domain) return;
+    const domain = (result.domain || url).replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+
+    (async () => {
+      try {
+        // Find tracked_site for this domain
+        const { data: site } = await supabase
+          .from('tracked_sites')
+          .select('id')
+          .ilike('domain', `%${domain}%`)
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!site) return;
+
+        const { data: nodes } = await supabase
+          .from('semantic_nodes' as any)
+          .select('page_authority, internal_links_in, internal_links_out, similarity_edges, depth')
+          .eq('tracked_site_id', site.id)
+          .eq('user_id', user.id)
+          .limit(200);
+
+        if (nodes && nodes.length > 0) {
+          setMaillageData(computeMaillageData(nodes));
+        }
+      } catch (e) {
+        console.warn('[StrategicResults] Could not load maillage data:', e);
+      }
+    })();
+  }, [user, result.domain, url]);
+
   return (
     <StrategicErrorBoundary onReset={onNewAudit}>
       <motion.div
