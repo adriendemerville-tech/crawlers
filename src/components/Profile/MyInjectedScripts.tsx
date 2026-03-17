@@ -199,6 +199,13 @@ export function MyInjectedScripts() {
     setLoading(false);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+    toast.success(language === 'fr' ? 'Liste rafraîchie' : 'List refreshed');
+  };
+
   const toggleSite = (siteId: string) => {
     setExpandedSites(prev => {
       const next = new Set(prev);
