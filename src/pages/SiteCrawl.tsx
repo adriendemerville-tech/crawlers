@@ -1315,7 +1315,12 @@ export default function SiteCrawl() {
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {page.has_schema_org && <Badge variant="secondary" className="text-[10px]">Schema.org ✓</Badge>}
-                              {page.has_canonical && <Badge variant="secondary" className="text-[10px]">Canonical ✓</Badge>}
+                              {page.has_canonical && (() => {
+                                const hasCanonicalMismatch = Array.isArray(page.issues) && page.issues.includes('canonical_mismatch');
+                                return hasCanonicalMismatch
+                                  ? <Badge className="text-[10px] bg-amber-500/10 text-amber-500 border-amber-500/20">Canonical ⚠</Badge>
+                                  : <Badge variant="secondary" className="text-[10px]">Canonical ✓</Badge>;
+                              })()}
                               {page.has_og && <Badge variant="secondary" className="text-[10px]">OpenGraph ✓</Badge>}
                               {!page.has_schema_org && <Badge variant="destructive" className="text-[10px]">Schema.org ✗</Badge>}
                               {!page.has_canonical && <Badge variant="destructive" className="text-[10px]">Canonical ✗</Badge>}
