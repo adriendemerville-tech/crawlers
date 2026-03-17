@@ -514,7 +514,7 @@ function Links({
               color={color}
               transparent
               opacity={opacity}
-              lineWidth={isSelectedLink ? 1.5 : 0.5}
+              lineWidth={isSelectedLink ? 1.5 * linkThickness : 0.5 * linkThickness}
             />
           );
         })}
