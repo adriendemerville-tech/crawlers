@@ -393,10 +393,10 @@ async function runDepthConversation(
   ]
 
   const anglesLabels = isFr
-    ? ['Besoin générique', 'Cas d\'usage', 'Fonctionnalités', 'Budget', 'Géographie', 'Niche', 'Exhaustif']
+    ? ['Besoin générique', 'Alternatives', 'Niche / spécialisé', 'Budget', 'Géographie', 'Niche profond', 'Exhaustif']
     : isEs
-    ? ['Necesidad genérica', 'Caso de uso', 'Funcionalidades', 'Presupuesto', 'Geografía', 'Nicho', 'Exhaustivo']
-    : ['Generic need', 'Use case', 'Features', 'Budget', 'Geography', 'Niche', 'Exhaustive']
+    ? ['Necesidad genérica', 'Alternativas', 'Nicho / especializado', 'Presupuesto', 'Geografía', 'Nicho profundo', 'Exhaustivo']
+    : ['Generic need', 'Alternatives', 'Niche / specialized', 'Budget', 'Geography', 'Deep niche', 'Exhaustive']
 
   const anglesTested: string[] = []
   let lastAssistantContent = ''
