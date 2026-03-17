@@ -2467,7 +2467,7 @@ Deno.serve(async (req) => {
         // Local competitor — skip in content mode (SERP competitors handled by LLM)
         !isContentMode && context.locationCode
           ? withDeadline(
-              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain),
+              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx),
               20_000, 'local_competitor'
             )
           : Promise.resolve(null),
