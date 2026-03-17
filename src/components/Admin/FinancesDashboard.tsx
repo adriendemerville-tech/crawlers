@@ -88,7 +88,7 @@ export function FinancesDashboard() {
   const fetchFinancialEvents = useCallback(async () => {
     const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
     const PAGE_SIZE = 1000;
-    const MAX_PAGES = 50; // Up to 50k financial events
+    const MAX_PAGES = 10; // Cap at 10k events to avoid browser freeze
 
     const fetchAllByType = async (eventType: string) => {
       let all: typeof sharedAllEvents = [];
