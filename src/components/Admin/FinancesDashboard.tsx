@@ -88,7 +88,7 @@ export function FinancesDashboard() {
   const fetchFinancialEvents = useCallback(async () => {
     const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
     const PAGE_SIZE = 1000;
-    const MAX_PAGES = 50; // Up to 50k financial events
+    const MAX_PAGES = 10; // Cap at 10k events to avoid browser freeze
 
     const fetchAllByType = async (eventType: string) => {
       let all: typeof sharedAllEvents = [];
@@ -606,6 +606,7 @@ export function FinancesDashboard() {
               <p className="text-xs font-medium text-muted-foreground">Détail par fonction</p>
               {Object.entries(tokenUsage.byFunction)
                 .sort(([, a], [, b]) => b.tokens - a.tokens)
+                .slice(0, 30)
                 .map(([fn, data]) => (
                   <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted/30">
                     <div className="flex items-center gap-2">
