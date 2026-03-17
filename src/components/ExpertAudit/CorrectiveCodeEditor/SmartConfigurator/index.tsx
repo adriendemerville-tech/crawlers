@@ -1572,10 +1572,7 @@ export function SmartConfigurator({
                           Vérification...
                         </>
                       ) : applySuccess ? (
-                        <>
-                          <Check className="w-3 h-3" />
-                          Injecté !
-                        </>
+                        <>Injecté</>
                       ) : (
                         <>
                           <Upload className="w-3 h-3" />
