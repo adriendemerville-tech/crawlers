@@ -397,8 +397,6 @@ export function MyInjectedScripts() {
               {isExpanded && (
                 <CardContent className="pt-0 pb-3 px-3 space-y-2">
                   {rules.map(rule => {
-                    const result = testResults[rule.id];
-                    const isTesting = testingId === rule.id;
 
                     return (
                       <div
