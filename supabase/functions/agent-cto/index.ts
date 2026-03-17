@@ -129,7 +129,7 @@ function mapFunctionToAuditType(functionName: string): string {
 
 // ─── Agent config check ──────────────────────────────────────────────
 async function isAgentEnabled(): Promise<boolean> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const supabase = getServiceClient()
   const { data } = await supabase
     .from('system_config')
     .select('value')
