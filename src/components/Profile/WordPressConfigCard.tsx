@@ -116,7 +116,7 @@ interface WordPressConfigCardProps {
   onConnectionSuccess?: () => void;
 }
 
-export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig }: WordPressConfigCardProps) {
+export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
