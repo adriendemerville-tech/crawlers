@@ -13,6 +13,7 @@ interface TechnicalTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onRequestAuth?: () => void;
+  disabled?: boolean;
 }
 
 const categoryIcons = {
