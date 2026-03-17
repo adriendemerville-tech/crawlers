@@ -109,7 +109,7 @@ export function SecurityZone({
 
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mt-2">
               <p className="text-amber-700 dark:text-amber-300">
-                <strong>🔄 Rollback :</strong> Vous pouvez annuler la dernière injection à tout moment depuis <strong>Mon Profil → Mes Sites</strong> en cliquant sur le bouton rouge « Rollback ». La configuration précédente sera restaurée instantanément.
+                <strong>🔄 Rollback :</strong> Vous pouvez annuler la dernière injection à tout moment depuis <strong>Console → Mes Codes</strong> en cliquant sur le bouton « Rollback ». La configuration précédente sera restaurée instantanément. Vous pouvez aussi <strong>tester l'injection</strong> en un clic pour vérifier que le script est bien déployé sur vos pages.
               </p>
             </div>
           </div>
