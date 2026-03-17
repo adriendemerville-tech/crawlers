@@ -246,6 +246,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         const json = await res.json();
         if (json.status === 'ok') {
           toast.success(t3(language, 'Connexion réussie !', 'Connection successful!', '¡Conexión exitosa!'));
+          onConnectionSuccess?.();
         } else {
           toast.error(t3(language, 'Le plugin ne répond pas.', 'Plugin not responding.', 'El plugin no responde.'));
         }
