@@ -380,8 +380,32 @@ export function MyInjectedScripts() {
                           </Badge>
                         </div>
 
-                        {/* Hover actions: eye + toggle */}
+                        {/* Hover actions: test + eye + toggle */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            disabled={testingId === rule.id}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setTestingId(rule.id);
+                              try {
+                                const { data, error } = await supabase.functions.invoke('verify-injection', {
+                                  body: { tracked_site_id: rule.domain_id },
+                                });
+                                if (error) throw error;
+                                const ok = data?.summary?.all_injected;
+                                toast[ok ? 'success' : 'warning'](data?.summary?.verdict || (ok ? '✓' : '✗'));
+                              } catch {
+                                toast.error(language === 'fr' ? 'Erreur de test' : 'Test error');
+                              } finally {
+                                setTestingId(null);
+                              }
+                            }}
+                          >
+                            {testingId === rule.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" />}
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
