@@ -123,6 +123,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [testingGtm, setTestingGtm] = useState(false);
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
