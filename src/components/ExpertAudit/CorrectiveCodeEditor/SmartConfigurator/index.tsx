@@ -1149,6 +1149,39 @@ export function SmartConfigurator({
         } as any)
         .eq('id', siteId)
         .eq('user_id', user.id);
+
+      // Also upsert a GLOBAL_FIXES rule in site_script_rules so serve-client-script can serve it
+      if (config.corrective_script && typeof config.corrective_script === 'string') {
+        // Check if a GLOBAL_FIXES rule already exists for this site
+        const { data: existingRule } = await supabase
+          .from('site_script_rules')
+          .select('id')
+          .eq('domain_id', siteId)
+          .eq('url_pattern', 'GLOBAL')
+          .eq('payload_type', 'GLOBAL_FIXES')
+          .maybeSingle();
+
+        const rulePayload = {
+          domain_id: siteId,
+          user_id: user.id,
+          url_pattern: 'GLOBAL',
+          payload_type: 'GLOBAL_FIXES',
+          payload_data: { script: config.corrective_script },
+          is_active: true,
+        };
+
+        if (existingRule) {
+          await supabase
+            .from('site_script_rules')
+            .update({ payload_data: { script: config.corrective_script }, is_active: true } as any)
+            .eq('id', existingRule.id);
+        } else {
+          await supabase
+            .from('site_script_rules')
+            .insert(rulePayload as any);
+        }
+        console.log('[Architecte] GLOBAL_FIXES rule synced for site', siteId);
+      }
     } catch (err) {
       console.error('Error saving config to site:', err);
     }
