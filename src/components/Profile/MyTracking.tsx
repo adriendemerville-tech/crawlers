@@ -1143,9 +1143,8 @@ export function MyTracking() {
                       performanceDesktop: psiDualRefresh,
                       seoScore: async () => {
                         if (!currentSite) return;
-                        const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
-                        const bots = res.data?.data?.results || res.data?.results || [];
-                        const score = bots.length > 0 ? Math.round((bots.filter((b: any) => b.status === 'allowed').length / bots.length) * 100) : null;
+                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language, dual: true } });
+                        const score = res.data?.data?.mobile?.scores?.seo ?? res.data?.data?.scores?.seo ?? null;
                         if (score !== null) toast.success(`${t.seoScore}: ${score}%`);
                         if (currentSite) await runStreamingAudit(currentSite);
                       },
