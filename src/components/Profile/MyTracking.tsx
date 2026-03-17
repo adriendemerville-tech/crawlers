@@ -196,6 +196,8 @@ export function MyTracking() {
   // Architect modal state
   const [architectSiteId, setArchitectSiteId] = useState<string | null>(null);
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
+  const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
+  const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   
   // WordPress connection state
   const [wpConnectSiteId, setWpConnectSiteId] = useState<string | null>(null);
