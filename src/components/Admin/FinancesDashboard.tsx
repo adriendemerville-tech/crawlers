@@ -488,151 +488,51 @@ export function FinancesDashboard() {
         </CardContent>
       </Card>
 
-      {/* Token Usage Card */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-primary" />
-                Consommation Tokens IA (30j)
-              </CardTitle>
-              <CardDescription>Tokens envoyés vers les services IA payants</CardDescription>
+      {/* Token summary (lightweight) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Tokens totaux</CardTitle>
+            <Cpu className="h-3.5 w-3.5 text-primary" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{tokenUsage.totalTokens.toLocaleString('fr-FR')}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{tokenUsage.callCount} appels IA</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Coût LLM</CardTitle>
+            <Brain className="h-3.5 w-3.5 text-amber-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
+              {tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-primary">
-                {tokenUsage.totalTokens.toLocaleString('fr-FR')}
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <p className="text-xs text-muted-foreground">{tokenUsage.callCount} appels IA</p>
-                {tokenUsage.totalEstimatedCost > 0 && (
-                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    ~{tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-xs text-muted-foreground">Tokens input</p>
-              <p className="text-lg font-semibold">{tokenUsage.promptTokens.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-xs text-muted-foreground">Tokens output</p>
-              <p className="text-lg font-semibold">{tokenUsage.completionTokens.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Zap className="h-3 w-3" /> Appels API payants
-              </p>
-              <p className="text-lg font-semibold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé LLM</p>
-              <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                {tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
-              </p>
-            </div>
-          </div>
-
-          {/* Per-API-service breakdown */}
-          {Object.keys(tokenUsage.byApiService).length > 0 && (
-            <div className="space-y-2 mb-4">
-              <p className="text-xs font-medium text-muted-foreground">Détail par service API externe</p>
-              {Object.entries(tokenUsage.byApiService)
-                .sort(([, a], [, b]) => b.calls - a.calls)
-                .map(([service, data]) => (
-                  <div key={service} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold capitalize">{service}</span>
-                      <span className="text-xs font-medium text-muted-foreground">{data.calls} appels</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(data.byEndpoint).sort(([, a], [, b]) => b - a).slice(0, 5).map(([endpoint, count]) => (
-                        <span key={endpoint} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                          {endpoint.split('/').pop()} ×{count}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {/* Per-model breakdown */}
-          {Object.keys(tokenUsage.byModel).length > 0 && (
-            <div className="space-y-2 mb-4">
-              <p className="text-xs font-medium text-muted-foreground">Détail par modèle</p>
-              {Object.entries(tokenUsage.byModel)
-                .sort(([, a], [, b]) => b.estimatedCost - a.estimatedCost)
-                .map(([model, data]) => {
-                  const pricing = MODEL_PRICING[model];
-                  const label = pricing?.label || model;
-                  const costPercent = tokenUsage.totalEstimatedCost > 0
-                    ? (data.estimatedCost / tokenUsage.totalEstimatedCost * 100)
-                    : 0;
-                  return (
-                    <div key={model} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold">{label}</span>
-                          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{model}</span>
-                        </div>
-                        <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                          {data.estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>{data.calls} appels</span>
-                        <span>↑ {data.promptTokens.toLocaleString('fr-FR')} in</span>
-                        <span>↓ {data.completionTokens.toLocaleString('fr-FR')} out</span>
-                        <span className="ml-auto font-medium">{costPercent.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}% du coût</span>
-                      </div>
-                      <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-amber-500/70 transition-all" style={{ width: `${Math.min(100, costPercent)}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
-
-          {/* Per-function breakdown */}
-          {Object.keys(tokenUsage.byFunction).length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Détail par fonction</p>
-              {Object.entries(tokenUsage.byFunction)
-                .sort(([, a], [, b]) => b.tokens - a.tokens)
-                .slice(0, 30)
-                .map(([fn, data]) => (
-                  <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted/30">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono">{fn}</span>
-                      {data.model && data.model !== 'unknown' && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                          {MODEL_PRICING[data.model]?.label || data.model}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-muted-foreground">{data.calls} appels</span>
-                      <span className="font-semibold text-primary">{data.tokens.toLocaleString('fr-FR')} tokens</span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {tokenUsage.callCount === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Aucune donnée de consommation IA enregistrée sur cette période.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Estimation 30j</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Appels API payants</CardTitle>
+            <Zap className="h-3.5 w-3.5 text-violet-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Services externes</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Fly.io Rendus</CardTitle>
+            <Server className="h-3.5 w-3.5 text-emerald-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">~{tokenUsage.flyEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
