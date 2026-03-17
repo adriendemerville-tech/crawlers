@@ -718,6 +718,13 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd,
       hasCaseStudies,
       caseStudySignals,
+      // Internal linking (maillage)
+      internalLinksCount,
+      externalLinksCount,
+      totalLinksCount,
+      internalLinkRatio,
+      uniqueInternalPaths,
+      orphanRisk,
       // ═══ MISPLACED STRUCTURAL TAGS DETECTION ═══
       misplacedHeadTags: (() => {
         const misplaced: string[] = [];
