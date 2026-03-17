@@ -533,6 +533,48 @@ export function FinancesDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* LLM Model Breakdown */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Brain className="h-4 w-4 text-primary" />
+            Consommation par modèle LLM (30j)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {(() => {
+            const models = Object.entries(tokenUsage.byModel)
+              .sort(([, a], [, b]) => b.totalTokens - a.totalTokens);
+            if (models.length === 0) return <p className="text-sm text-muted-foreground">Aucune donnée</p>;
+            const maxTokens = Math.max(...models.map(([, m]) => m.totalTokens), 1);
+            return models.map(([modelKey, data]) => {
+              const label = MODEL_PRICING[modelKey]?.label || modelKey;
+              const pct = (data.totalTokens / maxTokens) * 100;
+              return (
+                <div key={modelKey}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium truncate max-w-[40%]">{label}</span>
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span>{data.calls} appels</span>
+                      <span className="font-mono">{data.totalTokens.toLocaleString('fr-FR')} tok</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        {data.estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </CardContent>
+      </Card>
     </div>
   );
 }
