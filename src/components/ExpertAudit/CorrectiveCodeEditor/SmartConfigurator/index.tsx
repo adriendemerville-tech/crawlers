@@ -1331,7 +1331,7 @@ export function SmartConfigurator({
 
   return (
     <>
-    <Dialog open={isReady} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
           {/* Title - left aligned */}
@@ -1347,7 +1347,15 @@ export function SmartConfigurator({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Preloading is now handled by delaying Dialog open — no overlay needed */}
+        {/* Preloading overlay */}
+        {isPreloading && (
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+              <span className="text-sm text-muted-foreground">Chargement de l'Architecte…</span>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
