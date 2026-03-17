@@ -23,7 +23,7 @@ const strategicIcons: Record<string, React.ElementType> = {
   inject_local_business: MapPin,
 };
 
-export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProps) {
+export function StrategicTab({ fixes, onToggle, onUpdateData, disabled }: StrategicTabProps) {
   const [openCards, setOpenCards] = useState<string[]>([]);
 
   // Filter only strategic fixes
