@@ -314,8 +314,8 @@ export function MyCorrectiveCodes() {
               </div>
             ) : (
               <div className="space-y-3">
-                {codes.map((code) => {
-                  const isValidated = validatedIds.has(code.id);
+                {codes.filter(c => !validatedIds.has(c.id)).map((code) => {
+                  const isValidated = false;
                   const isValidating = validatingId === code.id;
 
                   return (
