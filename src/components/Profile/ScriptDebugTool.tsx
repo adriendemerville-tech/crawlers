@@ -32,7 +32,7 @@ const translations = {
   en: {
     title: 'Widget Diagnostic',
     description: 'Checks script configuration and API keys for each site',
-    runDiag: 'Run diagnostic',
+    runDiag: 'Diagnostic',
     running: 'Analyzing…',
     copyReport: 'Copy report',
     copied: 'Report copied!',
