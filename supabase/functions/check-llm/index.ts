@@ -129,10 +129,11 @@ async function queryLLM(
   model: string,
   domain: string,
   lang: Language,
-  correctionContext: string = ''
+  correctionContext: string = '',
+  siteContextStr: string = ''
 ): Promise<LLMResponse> {
   const t = getLLMTranslations(lang);
-  const prompt = llmPrompts[lang](domain) + correctionContext;
+  const prompt = llmPrompts[lang](domain, siteContextStr) + correctionContext;
 
   try {
     // Individual 8s timeout per LLM to prevent one slow provider from blocking all
