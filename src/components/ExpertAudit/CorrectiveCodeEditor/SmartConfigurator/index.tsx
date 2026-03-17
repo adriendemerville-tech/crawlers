@@ -147,6 +147,7 @@ export function SmartConfigurator({
   const [registryRecommendations, setRegistryRecommendations] = useState<any[]>([]);
   const [strategicRoadmap, setStrategicRoadmap] = useState<any[]>([]);
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
+  const [activeTab, setActiveTab] = useState('technical');
   const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string>(initialCode);
