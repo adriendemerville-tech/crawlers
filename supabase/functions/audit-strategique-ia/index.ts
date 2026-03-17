@@ -2371,7 +2371,8 @@ Deno.serve(async (req) => {
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
     let founderInfo: FounderInfo;
-    let localCompetitorData: { name: string; url: string; rank: number } | null = null;
+    let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
+    let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
     let gmbData: GMBData | null = null;
     let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
 
