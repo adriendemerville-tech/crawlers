@@ -300,7 +300,7 @@ export function Header() {
               </Button>
             </Link>
           )}
-          {isProfilePage && isAgencyPro && (
+          {isProfilePage && (
             <Link to="/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                 <Network className="h-4 w-4" />
