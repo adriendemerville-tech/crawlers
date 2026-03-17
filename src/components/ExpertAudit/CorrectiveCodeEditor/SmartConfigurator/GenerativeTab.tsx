@@ -18,7 +18,7 @@ const GENERATIVE_ICONS: Record<string, React.ReactNode> = {
   fix_pagespeed_suite: <Zap className="w-4 h-4" />,
 };
 
-export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
+export function GenerativeTab({ fixes, onToggle, disabled }: GenerativeTabProps) {
   const generativeFixes = fixes.filter(f => f.category === 'generative');
 
   if (generativeFixes.length === 0) {
