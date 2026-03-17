@@ -74,7 +74,7 @@ IMPORTANT : Réponds UNIQUEMENT avec du JSON valide, sans texte avant ou après.
   "coreValueMatch": boolean,
   "hallucinations": ["string"] ou []
 }`,
-  en: (domain) => `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
+  en: (domain, siteContext) => `You are analyzing the website/brand "${domain}".${siteContext ? `\n\nVerified context about this site:\n${siteContext}` : ''}\nAnswer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
 2. What is your overall sentiment about this site? Choose EXACTLY one of these 5 values:
