@@ -3559,12 +3559,18 @@ export type Database = {
         Row: {
           address: string | null
           api_key: string
+          brand_name: string | null
           business_type: string | null
+          cms_platform: string | null
           commercial_area: string | null
           company_size: string | null
+          competitors: Json | null
           created_at: string
           current_config: Json
           domain: string
+          founding_year: number | null
+          gmb_city: string | null
+          gmb_presence: boolean | null
           google_connection_id: string | null
           id: string
           identity_confidence: number | null
@@ -3575,20 +3581,29 @@ export type Database = {
           last_widget_ping: string | null
           market_sector: string | null
           previous_config: Json
+          primary_language: string | null
           products_services: string | null
+          siren_siret: string | null
           site_name: string
+          social_profiles: Json | null
           target_audience: string | null
           user_id: string
         }
         Insert: {
           address?: string | null
           api_key?: string
+          brand_name?: string | null
           business_type?: string | null
+          cms_platform?: string | null
           commercial_area?: string | null
           company_size?: string | null
+          competitors?: Json | null
           created_at?: string
           current_config?: Json
           domain: string
+          founding_year?: number | null
+          gmb_city?: string | null
+          gmb_presence?: boolean | null
           google_connection_id?: string | null
           id?: string
           identity_confidence?: number | null
@@ -3599,20 +3614,29 @@ export type Database = {
           last_widget_ping?: string | null
           market_sector?: string | null
           previous_config?: Json
+          primary_language?: string | null
           products_services?: string | null
+          siren_siret?: string | null
           site_name?: string
+          social_profiles?: Json | null
           target_audience?: string | null
           user_id: string
         }
         Update: {
           address?: string | null
           api_key?: string
+          brand_name?: string | null
           business_type?: string | null
+          cms_platform?: string | null
           commercial_area?: string | null
           company_size?: string | null
+          competitors?: Json | null
           created_at?: string
           current_config?: Json
           domain?: string
+          founding_year?: number | null
+          gmb_city?: string | null
+          gmb_presence?: boolean | null
           google_connection_id?: string | null
           id?: string
           identity_confidence?: number | null
@@ -3623,8 +3647,11 @@ export type Database = {
           last_widget_ping?: string | null
           market_sector?: string | null
           previous_config?: Json
+          primary_language?: string | null
           products_services?: string | null
+          siren_siret?: string | null
           site_name?: string
+          social_profiles?: Json | null
           target_audience?: string | null
           user_id?: string
         }
