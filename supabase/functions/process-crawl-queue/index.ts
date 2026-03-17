@@ -625,7 +625,7 @@ Deno.serve(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
   const renderingKey = Deno.env.get('RENDERING_API_KEY') || null;
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = getServiceClient();
 
   const WATCHDOG_MS = 120_000;
   const startTime = Date.now();

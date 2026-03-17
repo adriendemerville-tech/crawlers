@@ -274,10 +274,7 @@ Deno.serve(async (req) => {
     // ── Fetch site identity card (enriches if needed) ──
     let siteContextStr = '';
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
+      const supabase = getServiceClient();
       const ctx = await getSiteContext(supabase, { domain });
       if (ctx) {
         const parts: string[] = [];
