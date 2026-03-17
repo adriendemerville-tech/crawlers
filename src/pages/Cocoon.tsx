@@ -748,28 +748,7 @@ export default function Cocoon() {
             )}
 
 
-            {/* Controls — right side */}
-            {nodes.length > 0 && (
-              <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-4 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
-                {/* Contrast Slider */}
-                <div className="flex flex-col items-center gap-1.5">
-                  <SlidersHorizontal className="w-3 h-3 text-white/40" />
-                  <div className="h-24">
-                    <Slider
-                      orientation="vertical"
-                      min={50}
-                      max={200}
-                      step={5}
-                      value={[graphContrast]}
-                      onValueChange={([v]) => setGraphContrast(v)}
-                      className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
-                      thumbLabel="Contraste"
-                    />
-                  </div>
-                  <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
-                </div>
-              </div>
-            )}
+            {/* Controls moved to header settings popover */}
 
             {/* Side Panel */}
             {selectedNode && (
