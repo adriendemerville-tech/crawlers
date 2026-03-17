@@ -113,6 +113,7 @@ interface WordPressConfigCardProps {
   siteDomain: string;
   siteApiKey: string;
   hasConfig: boolean;
+  onConnectionSuccess?: () => void;
 }
 
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig }: WordPressConfigCardProps) {
