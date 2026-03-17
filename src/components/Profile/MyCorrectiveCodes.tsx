@@ -64,7 +64,7 @@ const translations = {
     validatedToast: 'Thanks! Script validated and added to the proven library.',
     validateError: 'Error validating',
     tabScripts: 'Scripts',
-    tabHistory: 'History',
+    tabInjection: 'Injection',
     tabDebug: 'Diagnostic',
   },
   es: {
