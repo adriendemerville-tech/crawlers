@@ -528,6 +528,48 @@ export function MyCorrectiveCodes() {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Plug Modal */}
+    <Dialog open={showPlugModal} onOpenChange={setShowPlugModal}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        {injectableSites.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Plug className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">{language === 'fr' ? 'Aucun site ajouté' : 'No sites added'}</p>
+            <p className="text-sm mt-1">{language === 'fr' ? 'Ajoutez un site depuis "Mes sites" pour le brancher.' : 'Add a site from "My sites" to connect it.'}</p>
+          </div>
+        ) : (
+          <>
+            {injectableSites.length > 1 && (
+              <div className="mb-4">
+                <Select value={plugSiteId || ''} onValueChange={setPlugSiteId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'fr' ? 'Sélectionner un site' : 'Select a site'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {injectableSites.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.domain}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {(() => {
+              const site = injectableSites.find(s => s.id === plugSiteId);
+              if (!site) return null;
+              return (
+                <WordPressConfigCard
+                  siteId={site.id}
+                  siteDomain={site.domain}
+                  siteApiKey={profile?.api_key || site.api_key || ''}
+                  hasConfig={!!(site.current_config && typeof site.current_config === 'object' && Object.keys(site.current_config).length > 0)}
+                />
+              );
+            })()}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
