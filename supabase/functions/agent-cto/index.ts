@@ -496,7 +496,7 @@ Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournie
 
     const { content, tokens } = await callLLM(systemPrompt, userPrompt)
 
-    trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', tokens.input, tokens.output).catch(() => {})
+    trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
 
     const analysis = parseAgentResponse(content, evidenceBasis)
 
