@@ -386,29 +386,6 @@ export function MyInjectedScripts() {
                           <span className="text-[10px] text-muted-foreground">
                             {format(new Date(rule.updated_at), 'dd MMM yyyy HH:mm', { locale: dateLocale })}
                           </span>
-
-                          <div className="flex items-center gap-1.5 ml-auto">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-2.5 text-[10px] gap-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const preview = getPayloadPreview(rule);
-                                if (preview) {
-                                  setViewingScript({
-                                    title: `${PAYLOAD_TYPE_LABELS[rule.payload_type] || rule.payload_type} — ${rule.url_pattern}`,
-                                    code: preview,
-                                  });
-                                } else {
-                                  toast.info(language === 'fr' ? 'Aucun contenu disponible' : 'No content available');
-                                }
-                              }}
-                            >
-                              <Eye className="w-3 h-3" />
-                              {t.viewScript}
-                            </Button>
-                          </div>
                         </div>
 
                         {/* Test button + results: only visible when card is selected */}
