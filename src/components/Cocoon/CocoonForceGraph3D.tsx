@@ -1037,6 +1037,8 @@ export function CocoonForceGraph3D({
           rawNodes={nodes}
           isDayMode={isDayMode}
           colorIntensity={colorIntensity}
+          bgWarmth={bgWarmth}
+          linkThickness={linkThickness}
         />
       </Canvas>
 
