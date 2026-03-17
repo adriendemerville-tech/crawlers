@@ -1175,6 +1175,7 @@ export function SmartConfigurator({
   const [shakeInject, setShakeInject] = useState(false);
   const [injectRejected, setInjectRejected] = useState(false);
   const [connectionMethod, setConnectionMethod] = useState<'wordpress' | 'widget' | null>(null);
+  const [siteConnected, setSiteConnected] = useState<'wordpress' | 'widget' | false | null>(null); // null = checking
 
   // Verify site connectivity via WordPress plugin OR GTM widget
   const verifySiteConnected = useCallback(async (): Promise<'wordpress' | 'widget' | false> => {
@@ -1224,6 +1225,17 @@ export function SmartConfigurator({
       return false;
     }
   }, [user, siteDomain]);
+
+  // Auto-check site connectivity on mount
+  useEffect(() => {
+    if (user && siteDomain) {
+      setSiteConnected(null);
+      verifySiteConnected().then(result => {
+        setSiteConnected(result);
+        if (result) setConnectionMethod(result);
+      });
+    }
+  }, [user, siteDomain, verifySiteConnected]);
 
   // Apply modifications via update-config + persist to tracked_sites
   const handleApplyToWordPress = useCallback(async () => {
@@ -1440,15 +1452,27 @@ export function SmartConfigurator({
               </ToggleGroup>
 
               {/* Connect site button - centered */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowConnectSiteModal(true)}
-                className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
-              >
-                <Cable className="w-3 h-3" />
-                Brancher mon site
-              </Button>
+              {siteConnected ? (
+                <Badge className="gap-1.5 text-xs h-7 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15 cursor-default">
+                  <Cable className="w-3 h-3" />
+                  Branché {siteConnected === 'wordpress' ? '(WordPress)' : '(GTM)'}
+                </Badge>
+              ) : siteConnected === null ? (
+                <Badge variant="outline" className="gap-1.5 text-xs h-7 text-muted-foreground border-dashed">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Vérification...
+                </Badge>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowConnectSiteModal(true)}
+                  className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                >
+                  <Cable className="w-3 h-3" />
+                  Brancher mon site
+                </Button>
+              )}
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
