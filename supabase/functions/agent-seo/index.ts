@@ -14,8 +14,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
  * - Pages interdites: /, /audit-expert, /site-crawl, /audit-compare, /console
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+// Singleton client via _shared/supabaseClient.ts
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
 
 // ─── Allowed targets ─────────────────────────────────────────────────
