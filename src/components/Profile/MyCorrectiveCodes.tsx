@@ -155,6 +155,25 @@ export function MyCorrectiveCodes() {
     }
   };
 
+  const handleVerifyInjection = async (siteId: string) => {
+    setVerifyLoading(true);
+    setVerifyResults(null);
+    setVerifyDialogOpen(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-injection', {
+        body: { tracked_site_id: siteId },
+      });
+      if (error) throw error;
+      setVerifyResults(data);
+    } catch (err) {
+      console.error('Verify injection error:', err);
+      toast.error(language === 'fr' ? 'Erreur lors de la vérification' : 'Verification error');
+      setVerifyDialogOpen(false);
+    } finally {
+      setVerifyLoading(false);
+    }
+
+
   const fetchCodes = async () => {
     if (!user) return;
 
