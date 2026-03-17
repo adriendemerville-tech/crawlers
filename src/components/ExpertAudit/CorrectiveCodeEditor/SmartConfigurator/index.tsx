@@ -1313,6 +1313,18 @@ export function SmartConfigurator({
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
   const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
 
+  // When opened from "Mes sites" (activeSiteId + no live audit), default to the tab with most fixes
+  const defaultTab = useMemo(() => {
+    if (!activeSiteId || technicalResult) return 'technical';
+    // Count ALL fixes per tab (not just enabled)
+    const techAll = fixConfigs.filter(f => !['strategic', 'generative'].includes(f.category)).length;
+    const stratAll = fixConfigs.filter(f => f.category === 'strategic').length;
+    const genAll = fixConfigs.filter(f => f.category === 'generative').length;
+    if (stratAll >= techAll && stratAll >= genAll) return 'strategic';
+    if (genAll >= techAll && genAll >= stratAll) return 'generative';
+    return 'technical';
+  }, [activeSiteId, technicalResult, fixConfigs]);
+
   // Calculate dynamic price based on enabled fixes
   // Base: 3€ minimum (all basic fixes included), 12€ maximum
   // ONLY Strategic and Generative fixes increase the price
