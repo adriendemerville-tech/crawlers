@@ -125,6 +125,14 @@ export interface ExpertInsights {
   linkProfile: LinkProfile;
   jsonLdValidation: JsonLdValidation;
   brokenLinks?: BrokenLinksAnalysis;
+  internalLinking?: {
+    internalLinksCount: number;
+    externalLinksCount: number;
+    totalLinksCount: number;
+    internalLinkRatio: number;
+    uniqueInternalPaths: number;
+    orphanRisk: boolean;
+  };
 }
 
 export interface AuditMeta {

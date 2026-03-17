@@ -165,6 +165,13 @@ interface HtmlAnalysis {
   // Case studies
   hasCaseStudies?: boolean;
   caseStudySignals?: number;
+  // Internal linking (maillage)
+  internalLinksCount?: number;
+  externalLinksCount?: number;
+  totalLinksCount?: number;
+  internalLinkRatio?: number;
+  uniqueInternalPaths?: number;
+  orphanRisk?: boolean; // page has < 3 internal links
   // Misplaced structural tags (outside <head>)
   misplacedHeadTags?: string[];
 }
@@ -603,6 +610,39 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     const hasSocialLinks = socialLinksCount > 0;
     const hasLinkedInLinks = linkedInLinksCount > 0;
 
+    // ═══ INTERNAL LINKING (MAILLAGE) ═══
+    const allHrefs = html.match(/<a\s[^>]*href=["']([^"'#]*?)["'][^>]*>/gi) || [];
+    let internalLinksCount = 0;
+    let externalLinksCount = 0;
+    const internalPathsSet = new Set<string>();
+    const pageDomain = (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
+    for (const tag of allHrefs) {
+      const hrefMatch = tag.match(/href=["']([^"'#]*?)["']/i);
+      if (!hrefMatch || !hrefMatch[1]) continue;
+      const href = hrefMatch[1].trim();
+      if (!href || href === '/' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) continue;
+      if (href.startsWith('/') || href.startsWith('#')) {
+        internalLinksCount++;
+        internalPathsSet.add(href.split('?')[0].split('#')[0]);
+      } else {
+        try {
+          const linkHost = new URL(href).hostname.replace(/^www\./, '');
+          if (linkHost === pageDomain) {
+            internalLinksCount++;
+            internalPathsSet.add(new URL(href).pathname);
+          } else {
+            externalLinksCount++;
+          }
+        } catch {
+          externalLinksCount++;
+        }
+      }
+    }
+    const totalLinksCount = internalLinksCount + externalLinksCount;
+    const internalLinkRatio = totalLinksCount > 0 ? Math.round((internalLinksCount / totalLinksCount) * 100) : 0;
+    const uniqueInternalPaths = internalPathsSet.size;
+    const orphanRisk = internalLinksCount < 3;
+
     // ═══ CASE STUDIES DETECTION ═══
     const caseStudyPatterns = [
       /(?:étude[s]?\s+de\s+cas|case\s+stud(?:y|ies))/gi,
@@ -678,6 +718,13 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd,
       hasCaseStudies,
       caseStudySignals,
+      // Internal linking (maillage)
+      internalLinksCount,
+      externalLinksCount,
+      totalLinksCount,
+      internalLinkRatio,
+      uniqueInternalPaths,
+      orphanRisk,
       // ═══ MISPLACED STRUCTURAL TAGS DETECTION ═══
       misplacedHeadTags: (() => {
         const misplaced: string[] = [];
@@ -855,6 +902,12 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd: false,
       hasCaseStudies: false,
       caseStudySignals: 0,
+      internalLinksCount: 0,
+      externalLinksCount: 0,
+      totalLinksCount: 0,
+      internalLinkRatio: 0,
+      uniqueInternalPaths: 0,
+      orphanRisk: true,
       misplacedHeadTags: [],
       darkSocial: { ogTitle: '', ogDescription: '', ogImage: '', twitterCard: '', score: 0 },
       freshnessSignals: { score: 0, label: 'stale' as const, lastModifiedDate: null, hasCurrentYearMention: false, currentYearFound: null },
@@ -1879,6 +1932,75 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
   
+  // ═══ INTERNAL LINKING (MAILLAGE) ═══
+  const internalLinks = htmlAnalysis.internalLinksCount || 0;
+  const externalLinks = htmlAnalysis.externalLinksCount || 0;
+  const uniquePaths = htmlAnalysis.uniqueInternalPaths || 0;
+
+  if (internalLinks < 3) {
+    recommendations.push({
+      id: 'orphan-page-risk',
+      priority: 'critical',
+      category: 'technique',
+      icon: '🔴',
+      title: `Page quasi-orpheline : seulement ${internalLinks} lien(s) interne(s) détecté(s)`,
+      description: `Cette page ne contient que ${internalLinks} lien(s) interne(s) vers d'autres pages du site. C'est un signal fort de mauvais maillage : les moteurs de recherche et les IA auront du mal à comprendre la place de cette page dans l'architecture du site.`,
+      weaknesses: [
+        `Seulement ${internalLinks} lien(s) interne(s) détecté(s)`,
+        "Risque de page orpheline pour les crawlers",
+        "Les IA ne peuvent pas contextualiser cette page dans le site",
+        "Impact négatif sur le PageRank interne"
+      ],
+      fixes: [
+        "Ajouter au minimum 5-10 liens internes pertinents vers des pages clés",
+        "Créer un maillage contextuel avec des ancres descriptives (pas de 'cliquez ici')",
+        "Lier vers les pages pilier (services, catégories, ressources)",
+        "Ajouter un bloc 'Articles connexes' ou 'Pages associées' en bas de page"
+      ]
+    });
+  } else if (internalLinks < 10 && (htmlAnalysis.wordCount || 0) > 500) {
+    recommendations.push({
+      id: 'weak-internal-linking',
+      priority: 'important',
+      category: 'technique',
+      icon: '🟠',
+      title: `Maillage interne faible : ${internalLinks} liens internes pour ${htmlAnalysis.wordCount} mots`,
+      description: `Le ratio maillage/contenu est faible. Pour une page de ${htmlAnalysis.wordCount} mots, on recommande au moins 10-15 liens internes pour maximiser le crawl budget et distribuer l'autorité.`,
+      weaknesses: [
+        `${internalLinks} liens internes pour un contenu de ${htmlAnalysis.wordCount} mots`,
+        `Seulement ${uniquePaths} destinations internes uniques`,
+        "Distribution d'autorité sous-optimale",
+      ],
+      fixes: [
+        "Viser un ratio de 1 lien interne pour 100-150 mots de contenu",
+        "Varier les ancres : inclure des mots-clés longue traîne",
+        "Lier vers les pages transactionnelles et les contenus complémentaires",
+        "Utiliser des ancres contextuelles riches plutôt que génériques"
+      ]
+    });
+  }
+
+  if (externalLinks === 0 && (htmlAnalysis.wordCount || 0) > 300) {
+    recommendations.push({
+      id: 'no-external-links',
+      priority: 'optional',
+      category: 'contenu',
+      icon: '🟡',
+      title: 'Aucun lien externe : risque de contenu « fermé »',
+      description: 'Aucun lien sortant vers des sources externes n\'a été détecté. Les moteurs et les IA valorisent les pages qui citent des sources fiables, études et références tierces.',
+      weaknesses: [
+        "Aucun lien externe sortant détecté",
+        "Perception de contenu auto-référencé",
+        "Les IA préfèrent les contenus qui citent des sources"
+      ],
+      fixes: [
+        "Ajouter 2-5 liens vers des sources d'autorité (études, rapports, documentation)",
+        "Citer des experts du domaine avec des liens vers leurs profils",
+        "Référencer des données officielles (INSEE, Google, études sectorielles)"
+      ]
+    });
+  }
+
   // ═══ LLMS.TXT CHECK ═══
   if (llmsTxtAnalysis && !llmsTxtAnalysis.exists) {
     recommendations.push({
