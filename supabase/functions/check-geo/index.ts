@@ -990,9 +990,74 @@ Deno.serve(async (req) => {
       details: canonicalDetails
     });
 
-    // =========================================================================
-    // CALCUL DU SCORE FINAL AVEC PONDÉRATION PAR FIABILITÉ
-    // =========================================================================
+    // Factor 9: Intent in Title & First Sentence (5 points)
+    let intentScore = 0;
+    let intentDetails = '';
+    let intentStatus: 'good' | 'warning' | 'error' = 'error';
+    
+    if (isSPAWithLimitedContent) {
+      intentScore = 3;
+      intentDetails = '⚠️ SPA détecté — analyse limitée sans rendu JS';
+      intentStatus = 'warning';
+    } else {
+      if (intentResult.found) {
+        intentScore = 5;
+        intentDetails = `Intention détectée dans le titre et la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'good';
+      } else if (intentResult.inTitle || intentResult.inH1) {
+        intentScore = 3;
+        intentDetails = `Intention dans le titre mais absente de la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'warning';
+      } else {
+        intentScore = 0;
+        intentDetails = 'Aucune cohérence d\'intention détectée entre le titre et le contenu';
+        intentStatus = 'error';
+      }
+    }
+    
+    factors.push({
+      id: 'intent-in-title',
+      name: t.factors.intentInTitle.name,
+      description: t.factors.intentInTitle.description,
+      score: intentScore,
+      maxScore: 5,
+      status: intentStatus,
+      recommendation: intentScore < 5 ? t.factors.intentInTitle.recommendation : undefined,
+      details: intentDetails
+    });
+
+    // Factor 10: FAQ or Summary at Top (5 points)
+    let faqScore = 0;
+    let faqStatus: 'good' | 'warning' | 'error' = 'error';
+    
+    if (isSPAWithLimitedContent) {
+      faqScore = 3;
+      faqStatus = 'warning';
+    } else {
+      if (faqResult.hasFaq && faqResult.hasSummary) {
+        faqScore = 5;
+        faqStatus = 'good';
+      } else if (faqResult.hasFaq || faqResult.hasSummary) {
+        faqScore = 3;
+        faqStatus = 'warning';
+      } else {
+        faqScore = 0;
+        faqStatus = 'error';
+      }
+    }
+    
+    factors.push({
+      id: 'faq-or-summary',
+      name: t.factors.faqOrSummary.name,
+      description: t.factors.faqOrSummary.description,
+      score: faqScore,
+      maxScore: 5,
+      status: faqStatus,
+      recommendation: faqScore < 5 ? t.factors.faqOrSummary.recommendation : undefined,
+      details: isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : faqResult.details
+    });
+
+
     const rawTotalScore = factors.reduce((sum, f) => sum + f.score, 0);
     
     // Si le self-audit a détecté des problèmes, on pondère le score
