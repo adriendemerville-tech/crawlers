@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -174,18 +174,6 @@ export default function Profile() {
             transition={{ duration: 0.5 }}
           >
 
-            {/* Header with Cocoon button */}
-            <div className="flex items-center justify-end mb-4">
-              {isProUser && (
-                <Button variant="outline" asChild className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
-                  <Link to="/cocoon">
-                    <Network className="h-4 w-4 text-amber-500" />
-                    <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">BETA</span>
-                    <span className="text-amber-500 font-semibold">Cocoon</span>
-                  </Link>
-                </Button>
-              )}
-            </div>
 
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">

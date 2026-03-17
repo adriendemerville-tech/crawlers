@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -274,6 +274,15 @@ export function Header() {
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Book className="h-4 w-4" />
                 <span className="text-sm">{lexiqueLabels[language]}</span>
+              </Button>
+            </Link>
+          )}
+          {isProfilePage && isAgencyPro && (
+            <Link to="/cocoon">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                <Network className="h-4 w-4" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                <span className="text-sm font-semibold">Cocoon</span>
               </Button>
             </Link>
           )}
