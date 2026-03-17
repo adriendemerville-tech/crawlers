@@ -569,6 +569,7 @@ export function MyCorrectiveCodes() {
                   siteDomain={site.domain}
                   siteApiKey={profile?.api_key || site.api_key || ''}
                   hasConfig={!!(site.current_config && typeof site.current_config === 'object' && Object.keys(site.current_config).length > 0)}
+                  onConnectionSuccess={() => setPlugConnected(true)}
                 />
               );
             })()}
