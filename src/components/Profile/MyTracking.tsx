@@ -933,7 +933,6 @@ export function MyTracking() {
                   <TabsList className="w-full flex flex-wrap h-auto gap-1">
                     {sites.map(site => (
                       <TabsTrigger key={site.id} value={site.id} className="gap-2 text-xs sm:text-sm">
-                        <Globe className="h-3 w-3" />
                         {site.domain}
                         {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin" />}
                       </TabsTrigger>
@@ -947,9 +946,6 @@ export function MyTracking() {
                   {/* Site header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Globe className="h-5 w-5 text-primary" />
-                      </div>
                       <div>
                         <h3 className="font-semibold text-lg">{currentSite.domain}</h3>
                         <p className="text-xs text-muted-foreground">
