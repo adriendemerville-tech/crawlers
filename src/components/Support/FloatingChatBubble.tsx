@@ -109,6 +109,7 @@ export function FloatingChatBubble() {
 
   if (isMobile) return null;
   if (location.pathname === '/cocoon') return null;
+  if (location.pathname === '/') return null;
 
   return (
     <>
