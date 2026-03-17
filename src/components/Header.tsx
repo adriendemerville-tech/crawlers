@@ -303,7 +303,7 @@ export function Header() {
           {isProfilePage && (
             <Link to="/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                <Network className="h-4 w-4" />
+                
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
                 <span className="text-sm font-semibold">Cocoon</span>
               </Button>
