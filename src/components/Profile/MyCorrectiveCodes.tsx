@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { MyScriptRulesHistory } from './MyScriptRulesHistory';
+import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';
 
 interface CorrectiveCodeFix {
