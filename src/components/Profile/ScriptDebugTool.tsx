@@ -21,7 +21,7 @@ const translations = {
     running: 'Analyse en cours…',
     copyReport: 'Copier le rapport',
     copied: 'Rapport copié !',
-    noDomains: 'Aucun site suivi. Ajoutez un site dans "Mes Sites" pour utiliser le diagnostic.',
+    noDomains: 'Aucun site branché. Branchez un site dans "Mes Sites" pour utiliser le diagnostic.',
     checkApiKey: 'Clé API profil',
     checkSiteExists: 'Site enregistré',
     checkWidgetPing: 'Widget connecté',
