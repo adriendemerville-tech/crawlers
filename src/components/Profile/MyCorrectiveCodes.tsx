@@ -98,6 +98,10 @@ export function MyCorrectiveCodes() {
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [rollbackSites, setRollbackSites] = useState<{ id: string; domain: string }[]>([]);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyResults, setVerifyResults] = useState<any>(null);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string }[]>([]);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
