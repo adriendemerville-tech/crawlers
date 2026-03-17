@@ -844,12 +844,31 @@ function isNonCompetitorDomain(domain: string): boolean {
 }
 
 async function findLocalCompetitor(
-  domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr'
-): Promise<{ name: string; url: string; rank: number } | null> {
+  domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr',
+  siteContext?: Record<string, unknown> | null,
+): Promise<{ name: string; url: string; rank: number; score?: number }[] | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
-  let city = '';
-  if (pageContentContext) {
+  // ── 1. IDENTITY CARD FIRST: return known competitors if available ──
+  if (siteContext?.competitors && Array.isArray(siteContext.competitors) && (siteContext.competitors as string[]).length > 0) {
+    console.log(`🎯 Concurrents connus (carte d'identité): ${(siteContext.competitors as string[]).join(', ')}`);
+    // Return identity card competitors as top-priority results
+    return (siteContext.competitors as string[]).slice(0, 3).map((c: string, i: number) => ({
+      name: c, url: '', rank: 0, score: 100 - i,
+    }));
+  }
+
+  // ── 2. BUILD SMART QUERIES based on business_type ──
+  const businessType = (siteContext?.business_type as string) || '';
+  const brandName = (siteContext?.brand_name as string) || '';
+  const commercialArea = (siteContext?.commercial_area as string) || '';
+  const gmb = siteContext?.gmb_presence === true;
+  const gmbCity = (siteContext?.gmb_city as string) || '';
+  const productsServices = (siteContext?.products_services as string) || '';
+
+  // Extract city from content (legacy fallback)
+  let city = gmbCity || commercialArea || '';
+  if (!city && pageContentContext) {
     const cityPatterns = [
       /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
       /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
@@ -863,81 +882,104 @@ async function findLocalCompetitor(
     }
   }
 
-  // Use first 2-3 meaningful words from sector for a focused SERP query
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
-  const localQuery = city ? `${sectorWords} ${city}` : sectorWords;
-  console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
+  const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
+
+  // Build query list based on business type
+  const queries: string[] = [];
+  switch (businessType.toLowerCase()) {
+    case 'local':
+    case 'artisan':
+      queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
+      if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
+      break;
+    case 'e-commerce':
+    case 'ecommerce':
+      queries.push(`${productWords || sectorWords} acheter en ligne`);
+      if (brandName) queries.push(`${brandName} alternative`);
+      break;
+    case 'saas':
+      queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
+      queries.push(`meilleur ${sectorWords} outil`);
+      break;
+    case 'media':
+    case 'blog':
+      queries.push(`${sectorWords} blog référence`);
+      break;
+    default:
+      // Vitrine / unknown — geo if available, else generic
+      queries.push(city ? `${sectorWords} ${city}` : sectorWords);
+      if (brandName) queries.push(`${brandName} vs`);
+      break;
+  }
+
+  // Deduplicate and limit to 2 queries (API cost control)
+  const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
+  console.log(`🏙️ Recherche concurrents (${businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
+
+  // ── 3. MULTI-QUERY SERP FETCH ──
+  const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+  const isValidCompetitor = (item: any) => {
+    const d = item.domain.toLowerCase().replace(/^www\./, '');
+    if (d.includes(cleanDomain) || cleanDomain.includes(d)) return false;
+    if (isNonCompetitorDomain(d)) return false;
+    return true;
+  };
+
+  // Score map: domain → { name, url, rank, score }
+  const scoreMap = new Map<string, { name: string; url: string; rank: number; score: number }>();
 
   try {
-    const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{
-        keyword: localQuery, location_code: locationCode, language_code: languageCode,
-        depth: 20, se_domain: seDomain,
-      }]),
-    });
+    for (const query of uniqueQueries) {
+      const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify([{
+          keyword: query, location_code: locationCode, language_code: languageCode,
+          depth: 20, se_domain: seDomain,
+        }]),
+      });
 
-    if (!response.ok) {
-      await response.text();
-      return null;
-    }
-    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic/local');
+      if (!response.ok) { await response.text(); continue; }
+      trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic/competitor');
 
-    const data = await response.json();
-    const items = data.tasks?.[0]?.result?.[0]?.items;
-    if (!items || !Array.isArray(items)) return null;
+      const data = await response.json();
+      const items = data.tasks?.[0]?.result?.[0]?.items;
+      if (!items || !Array.isArray(items)) continue;
 
-    const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-    const organicResults = items.filter((item: any) => item.type === 'organic' && item.domain && item.url);
-    
-    // A valid competitor must: (1) not be the target, (2) not be a media/directory/aggregator
-    const isValidCompetitor = (item: any) => {
-      const d = item.domain.toLowerCase().replace(/^www\./, '');
-      if (d.includes(cleanDomain) || cleanDomain.includes(d)) return false; // self
-      if (isNonCompetitorDomain(d)) return false; // media/directory
-      return true;
-    };
+      const organicResults = items.filter((item: any) => item.type === 'organic' && item.domain && item.url);
 
-    const targetIdx = organicResults.findIndex((item: any) => {
-      const d = item.domain.toLowerCase().replace(/^www\./, '');
-      return d.includes(cleanDomain) || cleanDomain.includes(d);
-    });
+      for (const item of organicResults) {
+        if (!isValidCompetitor(item)) continue;
+        const d = item.domain.toLowerCase().replace(/^www\./, '');
+        const existing = scoreMap.get(d);
+        const rankScore = Math.max(0, 21 - (item.rank_absolute || item.rank_group || 20));
 
-    let competitor: any = null;
-
-    if (targetIdx === -1) {
-      // Target not found in SERP — take first valid competitor
-      competitor = organicResults.find(isValidCompetitor);
-    } else if (targetIdx === 0) {
-      // Target is #1 — take next valid competitor
-      competitor = organicResults.find((item: any, idx: number) => idx > targetIdx && isValidCompetitor(item));
-    } else {
-      // Target is ranked — find closest valid competitor above
-      for (let i = targetIdx - 1; i >= 0; i--) {
-        if (isValidCompetitor(organicResults[i])) { competitor = organicResults[i]; break; }
-      }
-      // Fallback: closest below
-      if (!competitor) {
-        for (let i = targetIdx + 1; i < organicResults.length; i++) {
-          if (isValidCompetitor(organicResults[i])) { competitor = organicResults[i]; break; }
+        if (existing) {
+          // Appeared in multiple SERPs → bonus
+          existing.score += rankScore + 10;
+        } else {
+          scoreMap.set(d, {
+            name: item.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || item.domain,
+            url: item.url,
+            rank: item.rank_absolute || item.rank_group || 0,
+            score: rankScore,
+          });
         }
       }
     }
 
-    if (competitor) {
-      const result = {
-        name: competitor.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || competitor.domain,
-        url: competitor.url,
-        rank: competitor.rank_absolute || competitor.rank_group || 0,
-      };
-      console.log(`✅ Concurrent local: "${result.name}" position ${result.rank} (domain: ${competitor.domain})`);
-      return result;
+    if (scoreMap.size === 0) {
+      console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs');
+      return null;
     }
-    console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs');
-    return null;
+
+    // ── 4. SORT BY SCORE and return top 3 ──
+    const sorted = [...scoreMap.values()].sort((a, b) => b.score - a.score).slice(0, 3);
+    console.log(`✅ Top concurrents: ${sorted.map(c => `"${c.name}" (score:${c.score}, pos:${c.rank})`).join(', ')}`);
+    return sorted;
   } catch (error) {
-    console.error('❌ Erreur concurrent local:', error);
+    console.error('❌ Erreur recherche concurrents:', error);
     return null;
   }
 }
