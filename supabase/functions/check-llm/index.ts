@@ -49,8 +49,8 @@ interface LLMResponse {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Prompts traduits par langue avec 5 niveaux de sentiment (descriptions améliorées)
-const llmPrompts: Record<Language, (domain: string) => string> = {
-  fr: (domain) => `Tu analyses le site web/marque "${domain}". Réponds à ces questions au format JSON :
+const llmPrompts: Record<Language, (domain: string, siteContext?: string) => string> = {
+  fr: (domain, siteContext) => `Tu analyses le site web/marque "${domain}".${siteContext ? `\n\nContexte vérifié sur ce site :\n${siteContext}` : ''}\nRéponds à ces questions au format JSON :
 
 1. Connais-tu ce site web/cette marque ? (cited: true/false)
 2. Quel est ton sentiment général sur ce site ? Choisis EXACTEMENT l'une de ces 5 valeurs :
