@@ -634,9 +634,13 @@ const Index = () => {
             </p>
             <Link
               to="/observatoire"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(180deg, hsl(225, 60%, 38%) 0%, hsl(225, 65%, 25%) 100%)',
+                boxShadow: '0 4px 14px -3px hsla(225, 70%, 20%, 0.5), inset 0 1px 0 hsla(225, 60%, 55%, 0.3), 0 1px 3px hsla(225, 70%, 15%, 0.4)',
+              }}
             >
-              📊 {language === 'fr' ? "Consulter l'Observatoire" : language === 'es' ? 'Consultar el Observatorio' : 'View the Observatory'}
+              {language === 'fr' ? "Consulter l'Observatoire" : language === 'es' ? 'Consultar el Observatorio' : 'View the Observatory'}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
