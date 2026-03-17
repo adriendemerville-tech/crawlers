@@ -946,9 +946,6 @@ export function MyTracking() {
                   {/* Site header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Globe className="h-5 w-5 text-primary" />
-                      </div>
                       <div>
                         <h3 className="font-semibold text-lg">{currentSite.domain}</h3>
                         <p className="text-xs text-muted-foreground">
