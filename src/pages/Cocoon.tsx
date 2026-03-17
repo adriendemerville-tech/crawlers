@@ -618,7 +618,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className="flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-6 sm:pt-8 lg:pt-12 pb-12 sm:pb-14 lg:pb-20 min-h-0">
+        <main className={`flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-6 sm:pt-8 lg:pt-12 min-h-0 ${isFullscreen ? 'pb-12 sm:pb-14 lg:pb-20' : 'pb-4 sm:pb-6 lg:pb-8'}`}>
           <div className="h-full rounded-xl overflow-hidden border relative border-[hsl(263,70%,20%)]" style={{ filter: `contrast(${graphContrast}%) brightness(${50 + graphContrast / 2}%)` }}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
