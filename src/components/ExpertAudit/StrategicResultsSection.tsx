@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -11,8 +12,11 @@ import { StrategicInsights } from './StrategicInsights';
 import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { ActionPlan } from './ActionPlan';
 import { AEOScoreCard } from './AEOScoreCard';
+import { MaillageIPRCard, computeMaillageData, type MaillageData } from './MaillageIPRCard';
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   result: ExpertAuditResult;
