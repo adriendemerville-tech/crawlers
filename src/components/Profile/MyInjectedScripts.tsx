@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Loader2, CheckCircle2, XCircle, AlertTriangle, Rocket, ChevronDown, ChevronRight, Eye, Code2 } from 'lucide-react';
+import { Globe, Loader2, CheckCircle2, XCircle, AlertTriangle, Rocket, ChevronDown, ChevronRight, Eye, Code2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -138,6 +138,7 @@ export function MyInjectedScripts() {
   const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
   const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
@@ -196,6 +197,13 @@ export function MyInjectedScripts() {
     }
 
     setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+    toast.success(language === 'fr' ? 'Liste rafraîchie' : 'List refreshed');
   };
 
   const toggleSite = (siteId: string) => {
@@ -279,6 +287,12 @@ export function MyInjectedScripts() {
 
   return (
     <>
+      <div className="flex justify-end mb-2">
+        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+          {language === 'fr' ? 'Rafraîchir' : 'Refresh'}
+        </Button>
+      </div>
       <div className="space-y-2">
         {/* Validated corrective codes */}
         {validatedCodes.length > 0 && (

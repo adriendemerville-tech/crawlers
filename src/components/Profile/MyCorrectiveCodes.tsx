@@ -345,15 +345,15 @@ export function MyCorrectiveCodes() {
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="scripts" className="w-full">
+        <Tabs defaultValue="injection" className="w-full">
           <TabsList className="mb-3 h-8">
-            <TabsTrigger value="scripts" className="text-xs gap-1.5 h-7">
-              <Code2 className="w-3 h-3" />
-              {t.tabScripts}
-            </TabsTrigger>
             <TabsTrigger value="injection" className="text-xs gap-1.5 h-7">
               <Rocket className="w-3 h-3" />
               {t.tabInjection}
+            </TabsTrigger>
+            <TabsTrigger value="scripts" className="text-xs gap-1.5 h-7">
+              <Code2 className="w-3 h-3" />
+              {t.tabScripts}
             </TabsTrigger>
             <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
               <Bug className="w-3 h-3" />
