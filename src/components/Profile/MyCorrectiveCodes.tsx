@@ -467,5 +467,79 @@ export function MyCorrectiveCodes() {
         </Tabs>
       </CardContent>
     </Card>
+
+    <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5" />
+            {language === 'fr' ? 'Vérification de l\'injection' : 'Injection Verification'}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {verifyLoading ? (
+            <div className="flex flex-col items-center py-8 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {language === 'fr' ? 'Analyse des pages en cours…' : 'Analyzing pages…'}
+              </p>
+            </div>
+          ) : verifyResults ? (
+            <>
+              <div className={`flex items-center gap-2 p-3 rounded-lg border ${
+                verifyResults.summary?.all_injected
+                  ? 'bg-emerald-500/10 border-emerald-500/30'
+                  : verifyResults.summary?.found > 0
+                    ? 'bg-amber-500/10 border-amber-500/30'
+                    : 'bg-destructive/10 border-destructive/30'
+              }`}>
+                {verifyResults.summary?.all_injected ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : verifyResults.summary?.found > 0 ? (
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-destructive shrink-0" />
+                )}
+                <span className="text-sm font-medium">{verifyResults.summary?.verdict}</span>
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {verifyResults.results?.map((r: any, i: number) => (
+                  <div key={i} className="flex items-start gap-2 p-2.5 rounded border bg-card text-xs">
+                    {r.found ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{r.url}</p>
+                      <p className="text-muted-foreground">
+                        {r.found
+                          ? `${language === 'fr' ? 'Détecté' : 'Found'}: ${r.method === 'sdk_tag' ? 'SDK tag' : 'Inline script'}`
+                          : r.error || (language === 'fr' ? 'Script non détecté' : 'Script not found')
+                        }
+                      </p>
+                      {r.snippet_preview && (
+                        <code className="block mt-1 text-[10px] text-muted-foreground bg-muted p-1 rounded truncate">
+                          {r.snippet_preview.substring(0, 120)}
+                        </code>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      {r.status || '—'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                {verifyResults.summary?.checked} {language === 'fr' ? 'page(s) vérifiée(s)' : 'page(s) checked'}
+              </p>
+            </>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
