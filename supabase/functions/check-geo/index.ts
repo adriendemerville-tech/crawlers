@@ -350,15 +350,33 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   imagesWithAlt: number;
   imagesTotal: number;
   wordCount: number;
+  h1Text: string;
+  titleText: string;
+  firstParagraphText: string;
 } {
   if (!doc) {
-    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0 };
+    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', firstParagraphText: '' };
   }
 
   // H1 count
   const h1Elements = doc.querySelectorAll('h1');
   const h1Count = h1Elements.length;
   const hasH1 = h1Count >= 1;
+  const h1Text = h1Count > 0 ? (h1Elements[0] as Element).textContent?.trim() || '' : '';
+
+  // Title tag
+  const titleEl = doc.querySelector('title');
+  const titleText = titleEl?.textContent?.trim() || '';
+
+  // First paragraph text
+  const body = doc.querySelector('body');
+  let firstParagraphText = '';
+  if (body) {
+    const firstP = body.querySelector('p');
+    if (firstP) {
+      firstParagraphText = firstP.textContent?.trim() || '';
+    }
+  }
 
   // All headings
   const allHeadings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -374,17 +392,143 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   });
 
   // Word count from body
-  const body = doc.querySelector('body');
   let wordCount = 0;
   if (body) {
-    // Supprimer scripts et styles
     const clone = body.cloneNode(true) as Element;
     clone.querySelectorAll('script, style, noscript').forEach((el: Element) => el.remove());
     const text = clone.textContent || '';
     wordCount = text.split(/\s+/).filter(w => w.length > 2).length;
   }
 
-  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount };
+  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, firstParagraphText };
+}
+
+// ============================================================================
+// DÉTECTION INTENTION DANS LE TITRE + PREMIÈRE PHRASE
+// ============================================================================
+
+function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphText: string, metaDescription?: string): {
+  found: boolean;
+  inTitle: boolean;
+  inH1: boolean;
+  inFirstSentence: boolean;
+  detectedKeywords: string[];
+} {
+  // Extract likely intent keywords from the title (longest meaningful words)
+  const combinedTitle = `${titleText} ${h1Text}`.toLowerCase();
+  const titleWords = combinedTitle.split(/[\s\-–—:|,]+/).filter(w => w.length >= 4);
+  
+  // Remove common stopwords
+  const stopwords = new Set(['pour', 'dans', 'avec', 'plus', 'votre', 'notre', 'cette', 'comment', 'tout', 'what', 'your', 'this', 'that', 'with', 'from', 'about', 'como', 'para', 'todo', 'best', 'guide', 'complete']);
+  const keywords = [...new Set(titleWords.filter(w => !stopwords.has(w)))].slice(0, 5);
+  
+  if (keywords.length === 0) {
+    return { found: false, inTitle: false, inH1: false, inFirstSentence: false, detectedKeywords: [] };
+  }
+
+  const firstSentence = firstParagraphText.toLowerCase();
+  const title = titleText.toLowerCase();
+  const h1 = h1Text.toLowerCase();
+
+  // Check if at least 2 keywords from title appear in first paragraph
+  const matchesInFirst = keywords.filter(kw => firstSentence.includes(kw));
+  const inFirstSentence = matchesInFirst.length >= Math.min(2, keywords.length);
+  
+  const inTitle = keywords.some(kw => title.includes(kw));
+  const inH1 = keywords.some(kw => h1.includes(kw));
+
+  return {
+    found: (inTitle || inH1) && inFirstSentence,
+    inTitle,
+    inH1,
+    inFirstSentence,
+    detectedKeywords: matchesInFirst.length > 0 ? matchesInFirst : keywords.slice(0, 3),
+  };
+}
+
+// ============================================================================
+// DÉTECTION FAQ OU RÉSUMÉ EN DÉBUT D'ARTICLE
+// ============================================================================
+
+function analyzeFaqOrSummary(doc: ReturnType<DOMParser['parseFromString']>, structuredDataTypes: string[]): {
+  hasFaq: boolean;
+  hasSummary: boolean;
+  hasFaqSchema: boolean;
+  details: string;
+} {
+  if (!doc) {
+    return { hasFaq: false, hasSummary: false, hasFaqSchema: false, details: '' };
+  }
+
+  const body = doc.querySelector('body');
+  if (!body) {
+    return { hasFaq: false, hasSummary: false, hasFaqSchema: false, details: '' };
+  }
+
+  // Check for FAQ Schema.org type
+  const hasFaqSchema = structuredDataTypes.some(t => t.toLowerCase().includes('faq'));
+
+  // Check for FAQ patterns in the DOM
+  let hasFaq = hasFaqSchema;
+  if (!hasFaq) {
+    // Look for FAQ-like elements: details/summary, .faq, #faq, or FAQ headings in the top portion
+    const faqSelectors = ['details', '.faq', '#faq', '[class*="faq"]', '[id*="faq"]', '.accordion', '[class*="accordion"]'];
+    for (const sel of faqSelectors) {
+      if (body.querySelector(sel)) {
+        hasFaq = true;
+        break;
+      }
+    }
+  }
+
+  // Look for FAQ heading in top section
+  if (!hasFaq) {
+    const headings = body.querySelectorAll('h2, h3');
+    for (let i = 0; i < Math.min(headings.length, 5); i++) {
+      const text = (headings[i] as Element).textContent?.toLowerCase() || '';
+      if (text.includes('faq') || text.includes('questions fréquentes') || text.includes('frequently asked') || text.includes('preguntas frecuentes')) {
+        hasFaq = true;
+        break;
+      }
+    }
+  }
+
+  // Check for TL;DR / summary at the top
+  let hasSummary = false;
+  const summaryPatterns = ['tl;dr', 'tldr', 'en résumé', 'en bref', 'résumé', 'summary', 'key takeaways', 'points clés', 'in brief', 'en resumen', 'puntos clave'];
+  
+  // Check first few elements of the body for summary-like content
+  const earlyElements = body.querySelectorAll('p, div, blockquote, section');
+  for (let i = 0; i < Math.min(earlyElements.length, 10); i++) {
+    const text = (earlyElements[i] as Element).textContent?.toLowerCase() || '';
+    const classAttr = (earlyElements[i] as Element).getAttribute('class')?.toLowerCase() || '';
+    const idAttr = (earlyElements[i] as Element).getAttribute('id')?.toLowerCase() || '';
+    
+    if (summaryPatterns.some(p => text.includes(p) || classAttr.includes(p) || idAttr.includes(p))) {
+      hasSummary = true;
+      break;
+    }
+  }
+
+  // Also check for summary in headings
+  if (!hasSummary) {
+    const headings = body.querySelectorAll('h2, h3');
+    for (let i = 0; i < Math.min(headings.length, 3); i++) {
+      const text = (headings[i] as Element).textContent?.toLowerCase() || '';
+      if (summaryPatterns.some(p => text.includes(p))) {
+        hasSummary = true;
+        break;
+      }
+    }
+  }
+
+  let details = '';
+  if (hasFaq && hasSummary) details = 'FAQ + Résumé détectés';
+  else if (hasFaq) details = hasFaqSchema ? 'FAQ détectée (+ Schema FAQPage)' : 'FAQ détectée';
+  else if (hasSummary) details = 'Résumé/TL;DR détecté';
+  else details = 'Ni FAQ ni résumé détecté';
+
+  return { hasFaq, hasSummary, hasFaqSchema, details };
 }
 
 // ============================================================================
