@@ -17,7 +17,7 @@ const translations = {
   fr: {
     title: 'Diagnostic Widget',
     description: 'Vérifie la configuration du script et les clés API pour chaque site',
-    runDiag: 'Lancer le diagnostic',
+    runDiag: 'Diagnostic',
     running: 'Analyse en cours…',
     copyReport: 'Copier le rapport',
     copied: 'Rapport copié !',
@@ -32,7 +32,7 @@ const translations = {
   en: {
     title: 'Widget Diagnostic',
     description: 'Checks script configuration and API keys for each site',
-    runDiag: 'Run diagnostic',
+    runDiag: 'Diagnostic',
     running: 'Analyzing…',
     copyReport: 'Copy report',
     copied: 'Report copied!',
@@ -47,7 +47,7 @@ const translations = {
   es: {
     title: 'Diagnóstico Widget',
     description: 'Verifica la configuración del script y las claves API de cada sitio',
-    runDiag: 'Ejecutar diagnóstico',
+    runDiag: 'Diagnóstico',
     running: 'Analizando…',
     copyReport: 'Copiar informe',
     copied: '¡Informe copiado!',
@@ -244,8 +244,9 @@ export function ScriptDebugTool() {
             </Button>
           )}
           <Button
+            variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 gap-1.5 text-xs border-primary text-primary bg-transparent hover:bg-primary/10"
             onClick={runDiagnostic}
             disabled={running}
           >
