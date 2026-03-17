@@ -283,7 +283,7 @@ export function MyInjectedScripts() {
   if (!hasContent) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <Rocket className="h-12 w-12 mx-auto mb-4 opacity-30" />
+        <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
         <p className="font-medium">{t.empty}</p>
         <p className="text-sm mt-1">{t.emptyDesc}</p>
       </div>
