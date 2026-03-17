@@ -760,16 +760,16 @@ Deno.serve(async (req) => {
 
     const factors: GeoFactor[] = [];
 
-    // Factor 1: AI Bots Access (20 points)
-    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 20);
+    // Factor 1: AI Bots Access (15 points)
+    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 15);
     factors.push({
       id: 'ai-bots',
       name: t.factors.aiBots.name,
       description: t.factors.aiBots.description,
       score: aiBotScore,
-      maxScore: 20,
-      status: aiBotScore >= 18 ? 'good' : aiBotScore >= 10 ? 'warning' : 'error',
-      recommendation: aiBotScore < 20 
+      maxScore: 15,
+      status: aiBotScore >= 13 ? 'good' : aiBotScore >= 8 ? 'warning' : 'error',
+      recommendation: aiBotScore < 15 
         ? t.factors.aiBots.recommendation(aiBotsResult.blocked.join(', '))
         : undefined,
       details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
