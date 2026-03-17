@@ -74,6 +74,10 @@ const translations = {
     viewScript: 'Voir le script',
     validatedCodes: 'Codes correctifs validés',
     scriptContent: 'Contenu du script',
+    activate: 'Réactiver',
+    deactivate: 'Désactiver',
+    activated: 'Script réactivé',
+    deactivated: 'Script désactivé',
   },
   en: {
     empty: 'No injected scripts',
