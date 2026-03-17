@@ -262,7 +262,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent"
+                className="gap-1.5 text-violet-500 hover:text-violet-400 hover:bg-transparent"
               >
                 <Sparkles className="h-4 w-4" />
                 <span className="text-sm">Audit</span>
