@@ -91,12 +91,13 @@ async function getSiteRules(apiKey: string, callerDomain: string | null, req: Re
   if (profile && callerDomain) {
     // Find the tracked_site matching this user + caller domain
     const normalizedDomain = callerDomain.replace(/^www\./, '');
-    const { data: site } = await supabase
+    const { data: sites } = await supabase
       .from('tracked_sites')
       .select('id, domain, user_id, current_config')
       .eq('user_id', profile.user_id)
       .or(`domain.eq.${normalizedDomain},domain.eq.www.${normalizedDomain}`)
-      .maybeSingle();
+      .limit(1);
+    const site = sites?.[0] || null;
 
     if (site) {
       return await buildCacheEntry(supabase, site, cacheKey, now);
