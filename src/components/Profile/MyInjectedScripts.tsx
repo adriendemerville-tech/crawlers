@@ -150,7 +150,7 @@ export function MyInjectedScripts() {
   const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
