@@ -525,9 +525,9 @@ export function MyReports() {
 
             <DragOverlay>
               {activeFolder && (
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-card shadow-lg">
-                  <FolderOpen className="h-5 w-5 text-primary" />
-                  <span className="font-medium">{activeFolder.name}</span>
+                <div className="flex flex-col items-center gap-1 w-20 p-2 rounded-lg bg-card shadow-lg">
+                  <FolderOpen className="h-10 w-10 text-muted-foreground/70 fill-muted-foreground/10" />
+                  <span className="text-xs text-muted-foreground truncate w-full text-center">{activeFolder.name}</span>
                 </div>
               )}
               {activeReport && (
