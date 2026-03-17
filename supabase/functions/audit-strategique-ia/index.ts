@@ -2424,6 +2424,16 @@ Deno.serve(async (req) => {
 
       const context = detectBusinessContext(domain, pageContentContext);
 
+      // ── Fetch site identity card for enriched competitor search ──
+      let siteIdentityCtx: Record<string, unknown> | null = null;
+      try {
+        const sbService = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        siteIdentityCtx = await getSiteContext(sbService, { domain: domainWithoutWww, userId });
+        if (siteIdentityCtx) console.log(`📇 Carte d'identité chargée (confiance: ${siteIdentityCtx.identity_confidence || 0})`);
+      } catch (e) {
+        console.warn(`⚠️ Carte d'identité non disponible:`, e);
+      }
+
       // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
