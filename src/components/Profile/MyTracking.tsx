@@ -449,11 +449,8 @@ export function MyTracking() {
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
       const llmOverallScore = llmData?.data?.overallScore ?? null;
       
-      // Compute SEO crawlability score from check-crawlers (% of AI bots allowed)
-      const botResults = crawlersData?.data?.bots || crawlersData?.data?.results || crawlersData?.results || [];
-      const seoScore = botResults.length > 0
-        ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
-        : null;
+      // Real SEO score from PageSpeed Insights SEO category (0-100)
+      const seoScore = psiData?.data?.mobile?.scores?.seo ?? psiData?.data?.scores?.seo ?? null;
 
       // Extract PageSpeed performance scores (mobile + desktop)
       const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
