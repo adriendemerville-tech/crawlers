@@ -168,7 +168,7 @@ export default function Profile() {
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-4 max-w-5xl">
+        <main className="flex-1 container mx-auto px-4 py-2 max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
