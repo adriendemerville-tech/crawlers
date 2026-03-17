@@ -640,8 +640,8 @@ const Index = () => {
         {/* Contextual CTA → Audit Expert after scan */}
         {hasResults && (
           <section className="py-8 px-4">
-            <div className="mx-auto max-w-2xl rounded-2xl border-2 border-amber-400/60 bg-gradient-to-r from-primary/5 via-amber-500/5 to-primary/5 p-6 sm:p-8 text-center shadow-lg shadow-amber-500/5">
-              <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-3">
+            <div className="mx-auto max-w-2xl rounded-2xl border-2 border-[#3b82f6]/40 bg-gradient-to-r from-[#3b82f6]/5 via-primary/5 to-[#3b82f6]/5 p-6 sm:p-8 text-center shadow-lg shadow-[#3b82f6]/5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6]/10 border border-[#3b82f6]/30 px-3 py-1 text-xs font-semibold text-[#3b82f6] dark:text-[#60a5fa] mb-3">
                 <Crown className="h-3.5 w-3.5" />
                 {language === 'fr' ? 'Aller plus loin' : language === 'es' ? 'Ir más allá' : 'Go further'}
               </div>
