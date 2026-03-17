@@ -1572,10 +1572,7 @@ export function SmartConfigurator({
                           Vérification...
                         </>
                       ) : applySuccess ? (
-                        <>
-                          <Check className="w-3 h-3" />
-                          Injecté !
-                        </>
+                        <>Injecté</>
                       ) : (
                         <>
                           <Upload className="w-3 h-3" />
@@ -1584,14 +1581,14 @@ export function SmartConfigurator({
                       )}
                     </Button>
                     </motion.div>
-                    {applySuccess && connectionMethod && (
+                    {applySuccess && (
                       <motion.span
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
                         className="text-xs font-medium text-emerald-500 whitespace-nowrap"
                       >
-                        ✅ Injecté via {connectionMethod === 'wordpress' ? 'WordPress' : 'GTM Widget'}
+                        Injecté
                       </motion.span>
                     )}
                   </>
