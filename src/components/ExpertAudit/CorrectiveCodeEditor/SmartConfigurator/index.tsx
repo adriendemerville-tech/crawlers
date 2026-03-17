@@ -1175,6 +1175,7 @@ export function SmartConfigurator({
   const [shakeInject, setShakeInject] = useState(false);
   const [injectRejected, setInjectRejected] = useState(false);
   const [connectionMethod, setConnectionMethod] = useState<'wordpress' | 'widget' | null>(null);
+  const [siteConnected, setSiteConnected] = useState<'wordpress' | 'widget' | false | null>(null); // null = checking
 
   // Verify site connectivity via WordPress plugin OR GTM widget
   const verifySiteConnected = useCallback(async (): Promise<'wordpress' | 'widget' | false> => {
