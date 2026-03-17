@@ -1020,19 +1020,18 @@ export function MyTracking() {
                         className="gap-1.5"
                         onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(`https://${currentSite.domain}`)}&from=sites`)}
                       >
-                        <Search className="h-3.5 w-3.5" />
                         {language === 'fr' ? 'Auditer' : language === 'es' ? 'Auditar' : 'Audit'}
                       </Button>
                       {latestStats && (
                         <Button 
                           size="sm" 
-                          className="gap-1.5"
+                          variant="outline"
+                          className="gap-1.5 border-[#a78bfa]/40 text-[#a78bfa] bg-transparent hover:bg-[#a78bfa]/10 hover:text-[#a78bfa]"
                           onClick={() => {
                             setArchitectSiteId(currentSite.id);
                             setIsArchitectOpen(true);
                           }}
                         >
-                          <Wrench className="h-3.5 w-3.5" />
                           {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
                         </Button>
                       )}
