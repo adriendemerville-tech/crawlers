@@ -479,36 +479,6 @@ export function MyInjectedScripts() {
                               </Button>
                             </div>
 
-                            {result && (
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1 text-[10px]">
-                                  {result.arrived ? (
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                  ) : (
-                                    <XCircle className="w-3.5 h-3.5 text-destructive" />
-                                  )}
-                                  <span className={result.arrived ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
-                                    {result.arrived ? t.arrived : t.notArrived}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px]">
-                                  {result.deployed ? (
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                  ) : (
-                                    <XCircle className="w-3.5 h-3.5 text-destructive" />
-                                  )}
-                                  <span className={result.deployed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
-                                    {result.deployed ? t.deploying : t.deployFail}
-                                  </span>
-                                </div>
-                                {result.stale && (
-                                  <div className="flex items-center gap-1 text-[10px]">
-                                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
-                                    <span className="text-yellow-600 dark:text-yellow-400">{t.stale}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
