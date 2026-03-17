@@ -246,9 +246,9 @@ export function MyCorrectiveCodes() {
               <Code2 className="w-3 h-3" />
               {t.tabScripts}
             </TabsTrigger>
-            <TabsTrigger value="history" className="text-xs gap-1.5 h-7">
-              <History className="w-3 h-3" />
-              {t.tabHistory}
+            <TabsTrigger value="injection" className="text-xs gap-1.5 h-7">
+              <Rocket className="w-3 h-3" />
+              {t.tabInjection}
             </TabsTrigger>
             <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
               <Bug className="w-3 h-3" />
