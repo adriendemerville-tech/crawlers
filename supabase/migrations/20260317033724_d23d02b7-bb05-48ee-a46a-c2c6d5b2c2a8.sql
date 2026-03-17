@@ -1,0 +1,1 @@
+ALTER TABLE tracked_sites ADD COLUMN IF NOT EXISTS legal_structure text;
