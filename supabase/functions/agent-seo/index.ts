@@ -380,7 +380,7 @@ Deno.serve(async (req) => {
     const { error: logError } = await supabase.from('seo_agent_logs').insert(logEntry)
     if (logError) console.error('[AGENT-SEO] Log error:', logError)
 
-    await trackTokenUsage('agent-seo', 'google/gemini-2.5-flash', tokens.input, tokens.output).catch(() => {})
+    await trackTokenUsage('agent-seo', 'google/gemini-2.5-flash', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
 
     console.log(`[AGENT-SEO] ✅ ${target.slug} — score ${scoreBefore.overall} → ${estimatedScoreAfter} (confiance: ${confidence}%)`)
 
