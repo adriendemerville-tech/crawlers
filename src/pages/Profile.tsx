@@ -177,7 +177,7 @@ export default function Profile() {
 
 
             <FreeTrialBanner />
-            <Tabs defaultValue={initialTab} className="space-y-6">
+            <Tabs defaultValue={initialTab} className="space-y-2">
               <TabsList className="w-full flex">
                 {isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
