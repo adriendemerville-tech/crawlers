@@ -21,8 +21,6 @@ Deno.serve(async (req) => {
   const ipCheck = checkIpRate(clientIp, 'crawl-site', 5, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
 
   if (!firecrawlKey) {
@@ -31,7 +29,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = getServiceClient();
 
   try {
     const { 
