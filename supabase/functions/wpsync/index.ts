@@ -7,10 +7,11 @@ const corsHeaders = {
 };
 
 function getSupabase() {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-  if (!supabaseUrl || !serviceKey) return null;
-  return createClient(supabaseUrl, serviceKey);
+  try {
+    return getServiceClient();
+  } catch {
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
