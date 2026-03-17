@@ -707,6 +707,8 @@ function SceneContent({
   rawNodes,
   isDayMode,
   colorIntensity,
+  bgWarmth = 0,
+  linkThickness = 1,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -726,8 +728,23 @@ function SceneContent({
   rawNodes: SemanticNode[];
   isDayMode: boolean;
   colorIntensity: number;
+  bgWarmth?: number;
+  linkThickness?: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
+
+  // Compute background color based on warmth (-10 to 10)
+  const bgColor = useMemo(() => {
+    if (isDayMode) return "#f5f5f0";
+    // Base: #06060e (very dark blue-black)
+    // Warmth > 0 → shift toward warm (add red/reduce blue)
+    // Warmth < 0 → shift toward cool (add blue)
+    const base = { r: 6, g: 6, b: 14 };
+    const r = Math.min(255, Math.max(0, base.r + bgWarmth * 3));
+    const g = Math.min(255, Math.max(0, base.g + Math.abs(bgWarmth) * 0.5));
+    const b = Math.min(255, Math.max(0, base.b - bgWarmth * 2));
+    return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+  }, [bgWarmth, isDayMode]);
 
    return (
     <>
@@ -738,8 +755,8 @@ function SceneContent({
       <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Background */}
-      <color attach="background" args={[isDayMode ? "#f5f5f0" : "#06060e"]} />
-      <fog attach="fog" args={[isDayMode ? "#f5f5f0" : "#06060e", 150, 500]} />
+      <color attach="background" args={[bgColor]} />
+      <fog attach="fog" args={[bgColor, 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
@@ -757,6 +774,7 @@ function SceneContent({
         particlesEnabled={particlesEnabled}
         customParticleColors={customParticleColors}
         spreadScale={spreadScale}
+        linkThickness={linkThickness}
       />
 
       {/* Nodes */}
