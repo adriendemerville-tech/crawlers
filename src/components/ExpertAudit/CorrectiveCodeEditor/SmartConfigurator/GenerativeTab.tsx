@@ -77,6 +77,7 @@ export function GenerativeTab({ fixes, onToggle, disabled }: GenerativeTabProps)
             <Switch
               checked={fix.enabled}
               onCheckedChange={() => onToggle(fix.id)}
+              disabled={disabled}
               className="data-[state=checked]:bg-emerald-500 scale-75"
             />
           </div>

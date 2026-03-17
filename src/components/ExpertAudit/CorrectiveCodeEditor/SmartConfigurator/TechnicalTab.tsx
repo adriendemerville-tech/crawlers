@@ -178,7 +178,7 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
                         <Switch
                           checked={fix.enabled}
                           onCheckedChange={() => onToggle(fix.id)}
-                          disabled={isLocked}
+                          disabled={isLocked || disabled}
                           className="data-[state=checked]:bg-violet-600 scale-75"
                         />
                       )}

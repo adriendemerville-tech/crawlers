@@ -244,6 +244,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData, disabled }: Strate
               <Checkbox
                 checked={fix.enabled}
                 onCheckedChange={() => handleCheckboxChange(fix)}
+                disabled={disabled}
                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 scale-90"
               />
             </div>
