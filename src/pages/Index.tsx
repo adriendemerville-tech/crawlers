@@ -65,6 +65,7 @@ const Index = () => {
   const [isPageSpeedLoading, setIsPageSpeedLoading] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [hideLeadmagnet, setHideLeadmagnet] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [firstAnalysisDone, setFirstAnalysisDone] = useState(false);
   const { toast } = useToast();
