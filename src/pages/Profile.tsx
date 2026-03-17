@@ -10,15 +10,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/Header';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-import { MyReports } from '@/components/Profile/MyReports';
-import { MyActionPlans } from '@/components/Profile/MyActionPlans';
-import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
-import { MyWallet } from '@/components/Profile/MyWallet';
-import { MyTracking } from '@/components/Profile/MyTracking';
-import { MyCrawls } from '@/components/Profile/MyCrawls';
-
-import { AdminDashboard } from '@/components/Admin';
-import { ProfileSettings } from '@/components/Profile/ProfileSettings';
+const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
+const MyActionPlans = lazy(() => import('@/components/Profile/MyActionPlans').then(m => ({ default: m.MyActionPlans })));
+const MyCorrectiveCodes = lazy(() => import('@/components/Profile/MyCorrectiveCodes').then(m => ({ default: m.MyCorrectiveCodes })));
+const MyWallet = lazy(() => import('@/components/Profile/MyWallet').then(m => ({ default: m.MyWallet })));
+const MyTracking = lazy(() => import('@/components/Profile/MyTracking').then(m => ({ default: m.MyTracking })));
+const MyCrawls = lazy(() => import('@/components/Profile/MyCrawls').then(m => ({ default: m.MyCrawls })));
+const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
+const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
@@ -231,46 +230,45 @@ export default function Profile() {
                 )}
               </TabsList>
 
-
-              <TabsContent value="wallet">
-                <MyWallet />
-              </TabsContent>
-
-              <TabsContent value="tracking">
-                <MyTracking />
-              </TabsContent>
-
-              {!isProUser && (
-                <TabsContent value="settings">
-                  <ProfileSettings />
+              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                <TabsContent value="wallet">
+                  <MyWallet />
                 </TabsContent>
-              )}
 
-              <TabsContent value="reports">
-                <MyReports />
-              </TabsContent>
-
-              <TabsContent value="action-plans">
-                <MyActionPlans />
-              </TabsContent>
-
-              <TabsContent value="corrective-codes">
-                <MyCorrectiveCodes />
-              </TabsContent>
-
-              {isProUser && (
-                <TabsContent value="crawls">
-                  <MyCrawls />
+                <TabsContent value="tracking">
+                  <MyTracking />
                 </TabsContent>
-              )}
 
+                {!isProUser && (
+                  <TabsContent value="settings">
+                    <ProfileSettings />
+                  </TabsContent>
+                )}
 
-
-              {hasAdminAccess && (
-                <TabsContent value="admin">
-                  <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
+                <TabsContent value="reports">
+                  <MyReports />
                 </TabsContent>
-              )}
+
+                <TabsContent value="action-plans">
+                  <MyActionPlans />
+                </TabsContent>
+
+                <TabsContent value="corrective-codes">
+                  <MyCorrectiveCodes />
+                </TabsContent>
+
+                {isProUser && (
+                  <TabsContent value="crawls">
+                    <MyCrawls />
+                  </TabsContent>
+                )}
+
+                {hasAdminAccess && (
+                  <TabsContent value="admin">
+                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
+                  </TabsContent>
+                )}
+              </Suspense>
             </Tabs>
 
             <div className="flex justify-end mt-8">

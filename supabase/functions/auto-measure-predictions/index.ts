@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
@@ -15,8 +15,7 @@ import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracke
  * 5. Triggers recalculate_reliability()
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Singleton client via _shared/supabaseClient.ts
 
 // ─── Fetch GSC clicks for a domain (last 28 days) ──────────────
 async function fetchGscClicks(accessToken: string, domain: string): Promise<number | null> {
@@ -141,7 +140,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+  const supabase = getServiceClient()
 
   try {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()

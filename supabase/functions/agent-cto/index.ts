@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
@@ -18,8 +18,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
  */
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+// Supabase client via _shared/supabaseClient.ts (singleton)
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface ReliabilityProfile {
@@ -129,7 +128,7 @@ function mapFunctionToAuditType(functionName: string): string {
 
 // ─── Agent config check ──────────────────────────────────────────────
 async function isAgentEnabled(): Promise<boolean> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const supabase = getServiceClient()
   const { data } = await supabase
     .from('system_config')
     .select('value')
@@ -361,7 +360,7 @@ Deno.serve(async (req) => {
 
     // ─── Mode: Cache Health Check ─────────────────────────────────
     if (body.action === 'cache_health_check') {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const supabase = getServiceClient()
       const report = await checkCacheHealth(supabase)
 
       console.log(`[AGENT-CTO] 🏥 Cache health: ${report.status} — ${report.total_entries} entries, ${report.anomalies.length} anomalies`)
@@ -397,7 +396,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = getServiceClient()
 
     const AUDIT_TYPE_TO_FUNCTION: Record<string, string> = {
       'technical': 'audit-expert-seo',

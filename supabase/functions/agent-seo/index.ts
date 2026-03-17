@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
@@ -14,8 +14,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
  * - Pages interdites: /, /audit-expert, /site-crawl, /audit-compare, /console
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+// Singleton client via _shared/supabaseClient.ts
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
 
 // ─── Allowed targets ─────────────────────────────────────────────────
@@ -299,7 +298,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = getServiceClient()
     const body = await req.json().catch(() => ({}))
     const siteBaseUrl = body.base_url || 'https://crawlers.lovable.app'
 

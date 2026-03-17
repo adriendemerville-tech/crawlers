@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse } from '../_shared/fairUse.ts';
@@ -21,8 +21,6 @@ Deno.serve(async (req) => {
   const ipCheck = checkIpRate(clientIp, 'crawl-site', 5, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
 
   if (!firecrawlKey) {
@@ -31,7 +29,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = getServiceClient();
 
   try {
     const { 
@@ -91,25 +89,22 @@ Deno.serve(async (req) => {
       console.warn(`[${domain}] Indexed pages pre-scan failed (non-blocking):`, e);
     }
 
-    // ── Fair Use check ──
-    const fairUse = await checkFairUse(userId, 'crawl_site', 'free'); // planType checked below
-    // We'll refine after fetching profile
+    // ── Fetch profile + admin role in parallel (single round-trip) ──
+    const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('plan_type, subscription_status, crawl_pages_this_month, crawl_month_reset')
+        .eq('user_id', userId)
+        .single(),
+      supabase.rpc('has_role', { _user_id: userId, _role: 'admin' }),
+    ]);
 
-    // Check if user is Pro Agency or Admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan_type, subscription_status, crawl_pages_this_month, crawl_month_reset')
-      .eq('user_id', userId)
-      .single();
-
-    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
-
-    // Re-check fair use with actual plan type
+    // ── Fair Use check (single call with real plan type) ──
     const isProAgencyPlan = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     if (!isAdmin) {
-      const realFairUse = await checkFairUse(userId, 'crawl_site', isProAgencyPlan ? 'agency_pro' : 'free');
-      if (!realFairUse.allowed) {
-        return new Response(JSON.stringify({ success: false, error: realFairUse.reason }), {
+      const fairUse = await checkFairUse(userId, 'crawl_site', isProAgencyPlan ? 'agency_pro' : 'free');
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
           status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -281,6 +276,7 @@ Deno.serve(async (req) => {
     console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
 
     // Trigger the worker immediately (fire-and-forget with logging)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     fireAndLog(
       fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
         method: 'POST',

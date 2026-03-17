@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -28,15 +28,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
 
     if (!openrouterKey) {
       throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getServiceClient();
 
     // 1. Get record
     const { data: audit, error: auditError } = await supabase
@@ -288,7 +286,7 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     try {
       const body = await new Response(req.body).json().catch(() => ({}));
       if (body.audit_id) {
-        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        const supabase = getServiceClient();
         await supabase.from('pdf_audits').update({ status: 'error', error_message: error.message }).eq('id', body.audit_id);
       }
     } catch {}

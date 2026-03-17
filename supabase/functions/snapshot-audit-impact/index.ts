@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
@@ -10,8 +10,7 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
  * and schedules future measurements at T+30, T+60, T+90.
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Singleton client via _shared/supabaseClient.ts
 
 // ─── GSC helpers ──────────────────────────────────────────────────────
 async function refreshGscToken(supabase: any, userId: string, clientId: string, clientSecret: string, refreshToken: string): Promise<string | null> {
@@ -272,7 +271,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+    const supabase = getServiceClient()
 
     // Get user profile for GSC + GA4 tokens
     const { data: profile } = await supabase

@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
@@ -15,14 +15,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    
-    // Use anon client with user token to verify identity
-    const anonClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    // Use user client to verify identity
+    const anonClient = getUserClient(authHeader);
 
     const token = authHeader.replace('Bearer ', '');
     const { data: userData, error: userError } = await anonClient.auth.getUser(token);
@@ -39,7 +33,7 @@ Deno.serve(async (req) => {
     console.log(`Checking profile for user: ${user.id}`);
 
     // Use service_role client for DB operations to bypass RLS
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
 
     // Check if profile exists
     const { data: existingProfile, error: profileCheckError } = await supabase
