@@ -127,6 +127,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
 
   const [tree, setTree] = useState<FolderNode[]>([]);
   const [totalUrls, setTotalUrls] = useState(0);
