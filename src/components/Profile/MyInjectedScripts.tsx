@@ -150,7 +150,7 @@ export function MyInjectedScripts() {
   const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
@@ -353,14 +353,12 @@ export function MyInjectedScripts() {
               {isExpanded && (
                 <CardContent className="pt-0 pb-3 px-3 space-y-2">
                   {rules.map(rule => {
-
                     return (
                       <div
                         key={rule.id}
-                        className={`rounded-lg border p-3 space-y-2 cursor-pointer transition-colors ${selectedRuleId === rule.id ? 'bg-accent/40 border-primary/30' : 'bg-muted/20 hover:bg-muted/40'}`}
-                        onClick={() => setSelectedRuleId(prev => prev === rule.id ? null : rule.id)}
+                        className="group rounded-lg border p-3 bg-muted/20 hover:bg-muted/40 transition-colors flex items-center gap-2"
                       >
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
                           <Badge variant="outline" className="text-[9px] font-mono shrink-0">
                             {t.version}{rule.version}
                           </Badge>
@@ -370,6 +368,9 @@ export function MyInjectedScripts() {
                           <span className="text-[10px] font-medium text-foreground">
                             {PAYLOAD_TYPE_LABELS[rule.payload_type] || rule.payload_type}
                           </span>
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            {format(new Date(rule.updated_at), 'dd MMM yyyy', { locale: dateLocale })}
+                          </span>
                           <Badge
                             variant={rule.is_active ? 'default' : 'outline'}
                             className={`text-[9px] ml-auto ${rule.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'text-muted-foreground'}`}
@@ -378,61 +379,43 @@ export function MyInjectedScripts() {
                           </Badge>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(rule.updated_at), 'dd MMM yyyy HH:mm', { locale: dateLocale })}
-                          </span>
+                        {/* Hover actions: eye + toggle */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const preview = getPayloadPreview(rule);
+                              if (preview) {
+                                setViewingScript({
+                                  title: `${PAYLOAD_TYPE_LABELS[rule.payload_type] || rule.payload_type} — ${rule.url_pattern}`,
+                                  code: preview,
+                                });
+                              } else {
+                                toast.info(language === 'fr' ? 'Aucun contenu disponible' : 'No content available');
+                              }
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-7 w-7 ${rule.is_active ? 'text-destructive hover:text-destructive' : 'text-emerald-600 hover:text-emerald-700'}`}
+                            onClick={(e) => { e.stopPropagation(); handleToggleActive(rule); }}
+                            disabled={togglingId === rule.id}
+                          >
+                            {togglingId === rule.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : rule.is_active ? (
+                              <PowerOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Power className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
                         </div>
-
-                        {/* Test button + results: only visible when card is selected */}
-                        {selectedRuleId === rule.id && (
-                          <div className="pt-2 border-t border-border/50 space-y-2">
-                            <div className="flex items-center gap-1.5">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-3 text-[10px] gap-1.5 flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const preview = getPayloadPreview(rule);
-                                  if (preview) {
-                                    setViewingScript({
-                                      title: `${PAYLOAD_TYPE_LABELS[rule.payload_type] || rule.payload_type} — ${rule.url_pattern}`,
-                                      code: preview,
-                                    });
-                                  } else {
-                                    toast.info(language === 'fr' ? 'Aucun contenu disponible' : 'No content available');
-                                  }
-                                }}
-                              >
-                                <Eye className="w-3 h-3" />
-                                {t.viewScript}
-                              </Button>
-                              <Button
-                                variant={rule.is_active ? 'outline' : 'default'}
-                                size="sm"
-                                className={`h-7 px-3 text-[10px] gap-1.5 flex-1 ${rule.is_active ? 'text-destructive border-destructive/30 hover:bg-destructive/10' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-                                onClick={(e) => { e.stopPropagation(); handleToggleActive(rule); }}
-                                disabled={togglingId === rule.id}
-                              >
-                                {togglingId === rule.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : rule.is_active ? (
-                                  <>
-                                    <PowerOff className="w-3 h-3" />
-                                    {t.deactivate}
-                                  </>
-                                ) : (
-                                  <>
-                                    <Power className="w-3 h-3" />
-                                    {t.activate}
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-
-                          </div>
-                        )}
                       </div>
                     );
                   })}
