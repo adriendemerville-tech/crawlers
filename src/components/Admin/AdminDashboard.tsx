@@ -20,6 +20,7 @@ import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
+import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
