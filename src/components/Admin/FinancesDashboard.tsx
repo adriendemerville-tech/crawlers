@@ -606,6 +606,7 @@ export function FinancesDashboard() {
               <p className="text-xs font-medium text-muted-foreground">Détail par fonction</p>
               {Object.entries(tokenUsage.byFunction)
                 .sort(([, a], [, b]) => b.tokens - a.tokens)
+                .slice(0, 30)
                 .map(([fn, data]) => (
                   <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted/30">
                     <div className="flex items-center gap-2">
