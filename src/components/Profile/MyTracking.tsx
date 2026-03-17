@@ -913,10 +913,7 @@ export function MyTracking() {
       {/* Active crawl progress banner */}
       <ActiveCrawlBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-end pb-2">
-          <Button variant="outline" size="icon" onClick={() => setShowAddModal(true)} aria-label={t.addSite} className="h-9 w-9 shrink-0">
-            <Plus className="h-4 w-4" />
-          </Button>
+        <CardHeader className="pb-2 pt-3 px-4">
         </CardHeader>
         <CardContent>
           {sites.length === 0 ? (
@@ -930,19 +927,30 @@ export function MyTracking() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Site selector tabs */}
-              {sites.length > 1 && (
-                <Tabs value={selectedSite || ''} onValueChange={setSelectedSite}>
-                  <TabsList className="w-full flex flex-wrap h-auto gap-1">
-                    {sites.map(site => (
-                      <TabsTrigger key={site.id} value={site.id} className="gap-2 text-xs sm:text-sm">
-                        {site.domain}
-                        {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin" />}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              )}
+              {/* Site selector tabs + add button */}
+              <div className="flex items-center gap-2">
+                {sites.length > 1 ? (
+                  <Tabs value={selectedSite || ''} onValueChange={setSelectedSite} className="flex-1 min-w-0">
+                    <TabsList className="w-full flex flex-wrap h-auto gap-1">
+                      {sites.map(site => (
+                        <TabsTrigger key={site.id} value={site.id} className="gap-2 text-xs sm:text-sm">
+                          {site.domain}
+                          {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin" />}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                ) : (
+                  <div className="flex-1" />
+                )}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  aria-label={t.addSite}
+                  className="shrink-0 h-7 w-7 rounded-md border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
 
               {currentSite && (
                 <div className="space-y-6">
