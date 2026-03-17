@@ -331,8 +331,8 @@ function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit, onClos
   const handlePurchase = async (packageId: string) => {
     setLoadingPkg(packageId);
     try {
-      const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: { package_type: packageId },
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: { action: 'credit-checkout', package_type: packageId },
       });
       if (error) throw error;
       if (data?.url) {
