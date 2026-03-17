@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle } from 'lucide-react';
+import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,6 +123,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [testingGtm, setTestingGtm] = useState(false);
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
@@ -489,6 +490,55 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
               )}
             </span>
           </div>
+
+          {/* Test GTM connection */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            disabled={testingGtm}
+            onClick={async () => {
+              setTestingGtm(true);
+              try {
+                const { data } = await supabase
+                  .from('tracked_sites')
+                  .select('last_widget_ping')
+                  .eq('id', siteId)
+                  .maybeSingle();
+
+                if (data?.last_widget_ping) {
+                  const pingDate = new Date(data.last_widget_ping);
+                  const diffH = (Date.now() - pingDate.getTime()) / 3600000;
+                  if (diffH < 24) {
+                    toast.success(t3(language,
+                      `Connexion GTM active — dernier ping il y a ${diffH < 1 ? 'moins d\'1h' : Math.round(diffH) + 'h'}`,
+                      `GTM connection active — last ping ${diffH < 1 ? 'less than 1h ago' : Math.round(diffH) + 'h ago'}`,
+                      `Conexión GTM activa — último ping hace ${diffH < 1 ? 'menos de 1h' : Math.round(diffH) + 'h'}`
+                    ));
+                  } else {
+                    toast.warning(t3(language,
+                      `Dernier ping GTM il y a ${Math.round(diffH)}h — vérifiez que le snippet est bien installé.`,
+                      `Last GTM ping ${Math.round(diffH)}h ago — verify the snippet is installed.`,
+                      `Último ping GTM hace ${Math.round(diffH)}h — verifique que el snippet esté instalado.`
+                    ));
+                  }
+                } else {
+                  toast.error(t3(language,
+                    'Aucun ping GTM détecté. Installez le snippet et visitez votre site.',
+                    'No GTM ping detected. Install the snippet and visit your site.',
+                    'No se detectó ping GTM. Instale el snippet y visite su sitio.'
+                  ));
+                }
+              } catch {
+                toast.error(t3(language, 'Erreur lors du test', 'Test error', 'Error en la prueba'));
+              } finally {
+                setTestingGtm(false);
+              }
+            }}
+          >
+            {testingGtm ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {t3(language, 'Tester la connexion GTM', 'Test GTM connection', 'Probar conexión GTM')}
+          </Button>
         </div>
       </div>
 
