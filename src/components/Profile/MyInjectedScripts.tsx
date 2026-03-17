@@ -391,6 +391,27 @@ export function MyInjectedScripts() {
                         {/* Test button + results: only visible when card is selected */}
                         {selectedRuleId === rule.id && (
                           <div className="pt-2 border-t border-border/50 space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-3 text-[10px] gap-1.5 flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const preview = getPayloadPreview(rule);
+                                  if (preview) {
+                                    setViewingScript({
+                                      title: `${PAYLOAD_TYPE_LABELS[rule.payload_type] || rule.payload_type} — ${rule.url_pattern}`,
+                                      code: preview,
+                                    });
+                                  } else {
+                                    toast.info(language === 'fr' ? 'Aucun contenu disponible' : 'No content available');
+                                  }
+                                }}
+                              >
+                                <Eye className="w-3 h-3" />
+                                {t.viewScript}
+                              </Button>
                             <Button
                               variant="outline"
                               size="sm"
