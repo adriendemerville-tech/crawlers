@@ -226,44 +226,6 @@ export function MyInjectedScripts() {
     });
   };
 
-  const handleTest = async (rule: ScriptRule) => {
-    setTestingId(rule.id);
-    try {
-      const { data } = await supabase
-        .from('site_script_rules')
-        .select('telemetry_last_ping, generation_status, generation_error')
-        .eq('id', rule.id)
-        .maybeSingle();
-
-      if (!data) {
-        toast.error(t.resultNotArrived);
-        setTestResults(prev => ({ ...prev, [rule.id]: { arrived: false, deployed: false, stale: false } }));
-        return;
-      }
-
-      const ping = data.telemetry_last_ping;
-      const arrived = !!ping;
-      const stale = arrived && (Date.now() - new Date(ping!).getTime()) > 24 * 3600 * 1000;
-      const deployed = data.generation_status === 'done' && !data.generation_error;
-
-      setTestResults(prev => ({ ...prev, [rule.id]: { arrived, deployed, stale } }));
-
-      if (!arrived) {
-        toast.error(t.resultNotArrived);
-      } else if (stale) {
-        toast.warning(t.resultStale);
-      } else if (!deployed) {
-        toast.error(t.resultDeployFail);
-      } else {
-        toast.success(`${t.resultArrived} · ${t.resultDeployOk}`);
-      }
-    } catch (err) {
-      console.error('[InjectedScripts] Test error:', err);
-      toast.error('Erreur lors du test');
-    } finally {
-      setTestingId(null);
-    }
-  };
 
   const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
 
