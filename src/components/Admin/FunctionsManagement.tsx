@@ -37,6 +37,9 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   'GSC & GA4': [
     'gsc-auth', 'fetch-ga4-data',
   ],
+  'Google My Business': [
+    'gmb-actions',
+  ],
   'Paiement & Abonnement': [
     'create-checkout', 'create-credit-checkout', 'create-subscription-session',
     'create-customer-portal', 'stripe-webhook', 'apply-affiliate', 'apply-referral',
