@@ -88,6 +88,7 @@ const translations = {
     credits: 'créditos',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
+    signup: 'Registrarse',
     back: 'Volver',
     comparatif: 'Comparativa',
   },
