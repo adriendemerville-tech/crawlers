@@ -59,6 +59,7 @@ export function UserManagement() {
   const [actionFilter, setActionFilter] = useState<string | null>(null);
   const [userIdsByAction, setUserIdsByAction] = useState<Set<string>>(new Set());
   const [actionFilterLoading, setActionFilterLoading] = useState(false);
+  const [personaFilter, setPersonaFilter] = useState<string | null>(null);
 
   const fetchAllRoles = async () => {
     const { data } = await supabase
