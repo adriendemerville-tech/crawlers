@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,9 @@ const translations = {
     statusRunning: 'En cours',
     statusFailed: 'Échoué',
     statusPending: 'En attente',
+    indexRatio: 'Ratio Index / Noindex',
+    indexed: 'Indexées',
+    noindex: 'Noindex',
   },
   en: {
     title: 'Multi-Page Audits',
@@ -69,6 +73,9 @@ const translations = {
     statusRunning: 'Running',
     statusFailed: 'Failed',
     statusPending: 'Pending',
+    indexRatio: 'Index / Noindex Ratio',
+    indexed: 'Indexed',
+    noindex: 'Noindex',
   },
   es: {
     title: 'Auditorías Multi-Páginas',
@@ -88,6 +95,9 @@ const translations = {
     statusRunning: 'En curso',
     statusFailed: 'Fallido',
     statusPending: 'Pendiente',
+    indexRatio: 'Ratio Index / Noindex',
+    indexed: 'Indexadas',
+    noindex: 'Noindex',
   },
 };
 
@@ -122,6 +132,8 @@ export function MyCrawls() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SiteCrawl | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [indexHistory, setIndexHistory] = useState<any[]>([]);
 
   const fetchCrawls = async () => {
     if (!user) return;
@@ -135,6 +147,9 @@ export function MyCrawls() {
 
       if (error) throw error;
       setCrawls(data || []);
+      if (data && data.length > 0 && !selectedDomain) {
+        setSelectedDomain(data[0].domain);
+      }
     } catch (error) {
       console.error('Error fetching crawls:', error);
     } finally {
@@ -145,6 +160,52 @@ export function MyCrawls() {
   useEffect(() => {
     fetchCrawls();
   }, [user]);
+
+  // Fetch index history for selected domain
+  useEffect(() => {
+    if (!user || !selectedDomain) return;
+    supabase
+      .from('crawl_index_history')
+      .select('*')
+      .eq('domain', selectedDomain)
+      .eq('user_id', user.id)
+      .order('week_start_date', { ascending: true })
+      .limit(20)
+      .then(({ data }) => {
+        setIndexHistory(data || []);
+      });
+  }, [user, selectedDomain]);
+
+  // Group crawls by domain
+  const domains = useMemo(() => {
+    const domainSet = new Set(crawls.map(c => c.domain));
+    return Array.from(domainSet);
+  }, [crawls]);
+
+  const filteredCrawls = useMemo(() => {
+    if (!selectedDomain) return crawls;
+    return crawls.filter(c => c.domain === selectedDomain);
+  }, [crawls, selectedDomain]);
+
+  // Build chart data from crawl history for this domain (even without crawl_index_history)
+  const chartData = useMemo(() => {
+    if (indexHistory.length > 0) {
+      return indexHistory.map(h => ({
+        week: h.week_start_date,
+        indexed: h.indexed_count,
+        noindex: h.noindex_count,
+      }));
+    }
+    // Fallback: derive from completed crawls for this domain
+    return filteredCrawls
+      .filter(c => c.status === 'completed')
+      .reverse()
+      .map(c => ({
+        week: new Date(c.created_at).toISOString().slice(0, 10),
+        indexed: c.crawled_pages,
+        noindex: 0,
+      }));
+  }, [indexHistory, filteredCrawls]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -198,64 +259,125 @@ export function MyCrawls() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {crawls.map((crawl) => (
-              <div
-                key={crawl.id}
-                className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
-              >
-                <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
-                  <Globe className="h-5 w-5 text-purple-500" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium truncate">{crawl.domain}</p>
-                    {getStatusBadge(crawl.status, t)}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      {crawl.crawled_pages}/{crawl.total_pages} {t.pages}
-                    </span>
-                    {crawl.avg_score !== null && (
-                      <span className={`flex items-center gap-1 font-semibold ${getScoreColor(crawl.avg_score)}`}>
-                        <TrendingUp className="h-3 w-3" />
-                        {t.score}: {Math.round(crawl.avg_score)}/200
-                      </span>
-                    )}
-                    <span className="text-xs">
-                      {new Date(crawl.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {crawl.status === 'completed' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/site-crawl?view=${crawl.id}`)}
+          <div className="flex gap-4">
+            {/* Vertical domain sidebar */}
+            {domains.length > 0 && (
+              <div className="flex flex-col gap-1 shrink-0 w-36">
+                {domains.map(domain => {
+                  const domainCrawls = crawls.filter(c => c.domain === domain);
+                  const latestScore = domainCrawls.find(c => c.avg_score)?.avg_score;
+                  return (
+                    <button
+                      key={domain}
+                      onClick={() => setSelectedDomain(domain)}
+                      className={`flex flex-col gap-0.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                        selectedDomain === domain
+                          ? 'bg-primary/10 text-primary border border-primary/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                      }`}
                     >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      {t.viewReport}
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                    onClick={() => setDeleteTarget(crawl)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                      <span className="text-xs font-medium truncate flex items-center gap-1.5">
+                        <Globe className="h-3 w-3 shrink-0" />
+                        {domain.replace(/^www\./, '')}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {domainCrawls.length} crawl{domainCrawls.length > 1 ? 's' : ''}
+                        {latestScore && <span className={` ml-1 ${getScoreColor(latestScore)}`}>{Math.round(latestScore)}/200</span>}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            ))}
+            )}
+
+            {/* Main content */}
+            <div className="flex-1 min-w-0 space-y-4">
+              {/* Index/Noindex weekly chart */}
+              {chartData.length > 1 && (
+                <Card className="border">
+                  <CardHeader className="pb-2 pt-3 px-4">
+                    <CardTitle className="text-sm">{t.indexRatio}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-2 pb-3">
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="week" tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                        <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                        <Tooltip
+                          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                          labelStyle={{ fontWeight: 600 }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                        <Line type="monotone" dataKey="indexed" name={t.indexed} stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="noindex" name={t.noindex} stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Crawl list */}
+              <div className="space-y-3">
+                {filteredCrawls.map((crawl) => (
+                  <div
+                    key={crawl.id}
+                    className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+                  >
+                    <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
+                      <Globe className="h-5 w-5 text-purple-500" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium truncate">{crawl.domain}</p>
+                        {getStatusBadge(crawl.status, t)}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          {crawl.crawled_pages}/{crawl.total_pages} {t.pages}
+                        </span>
+                        {crawl.avg_score !== null && (
+                          <span className={`flex items-center gap-1 font-semibold ${getScoreColor(crawl.avg_score)}`}>
+                            <TrendingUp className="h-3 w-3" />
+                            {t.score}: {Math.round(crawl.avg_score)}/200
+                          </span>
+                        )}
+                        <span className="text-xs">
+                          {new Date(crawl.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {crawl.status === 'completed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/site-crawl?view=${crawl.id}`)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          {t.viewReport}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(crawl)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
