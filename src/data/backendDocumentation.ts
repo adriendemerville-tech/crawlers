@@ -155,6 +155,15 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`prompt_registry\` | Registre des prompts versionnés | \`function_name\`, \`prompt_text\`, \`version\`, \`is_champion\` |
 | \`hallucination_corrections\` | Corrections d'hallucinations | \`url\`, \`original_values\`, \`corrected_values\`, \`discrepancies\` |
 
+### Google My Business (GMB)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`gmb_locations\` | Liaison tracked_site ↔ fiche GMB | \`tracked_site_id\`, \`location_name\`, \`place_id\`, \`address\`, \`phone\`, \`hours\` (JSON) |
+| \`gmb_reviews\` | Avis Google récupérés | \`gmb_location_id\`, \`google_review_id\`, \`star_rating\`, \`comment\`, \`reply_comment\`, \`is_flagged\` |
+| \`gmb_posts\` | Publications GMB | \`gmb_location_id\`, \`post_type\` (STANDARD/EVENT/OFFER), \`summary\`, \`status\`, \`published_at\` |
+| \`gmb_performance\` | Stats hebdomadaires | \`gmb_location_id\`, \`week_start_date\`, \`search_views\`, \`maps_views\`, \`website_clicks\`, \`phone_calls\`, \`avg_rating\` |
+
 ### Agence (Marque Blanche)
 
 | Table | Description | Colonnes clés |
