@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
+import { PersonaGate, type PersonaType } from '@/components/PersonaGate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
