@@ -1087,6 +1087,69 @@ export type Database = {
         }
         Relationships: []
       }
+      crawl_index_history: {
+        Row: {
+          crawl_id: string | null
+          created_at: string
+          dataforseo_indexed_count: number | null
+          domain: string
+          gsc_indexed_count: number | null
+          id: string
+          indexed_count: number
+          noindex_count: number
+          sitemap_count: number | null
+          total_pages: number
+          tracked_site_id: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          crawl_id?: string | null
+          created_at?: string
+          dataforseo_indexed_count?: number | null
+          domain: string
+          gsc_indexed_count?: number | null
+          id?: string
+          indexed_count?: number
+          noindex_count?: number
+          sitemap_count?: number | null
+          total_pages?: number
+          tracked_site_id?: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          crawl_id?: string | null
+          created_at?: string
+          dataforseo_indexed_count?: number | null
+          domain?: string
+          gsc_indexed_count?: number | null
+          id?: string
+          indexed_count?: number
+          noindex_count?: number
+          sitemap_count?: number | null
+          total_pages?: number
+          tracked_site_id?: string | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_index_history_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "site_crawls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crawl_index_history_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crawl_jobs: {
         Row: {
           completed_at: string | null
@@ -1184,7 +1247,9 @@ export type Database = {
           id: string
           images_total: number | null
           images_without_alt: number | null
+          index_source: string | null
           internal_links: number | null
+          is_indexable: boolean | null
           issues: Json | null
           meta_description: string | null
           path: string
@@ -1222,7 +1287,9 @@ export type Database = {
           id?: string
           images_total?: number | null
           images_without_alt?: number | null
+          index_source?: string | null
           internal_links?: number | null
+          is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
           path?: string
@@ -1260,7 +1327,9 @@ export type Database = {
           id?: string
           images_total?: number | null
           images_without_alt?: number | null
+          index_source?: string | null
           internal_links?: number | null
+          is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
           path?: string
