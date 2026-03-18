@@ -153,6 +153,7 @@ export function RegistrationGate() {
               <InlineAuthForm 
                 defaultMode="signup" 
                 onSuccess={handleAuthSuccess}
+                showPersonaGate
               />
             </motion.div>
           </motion.div>

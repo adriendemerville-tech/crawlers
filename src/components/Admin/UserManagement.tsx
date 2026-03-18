@@ -369,6 +369,37 @@ export function UserManagement() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={personaFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0">
+                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : '👤'}
+                {personaFilter || 'Persona'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par persona</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {[
+                { id: 'entrepreneur', label: '🏢 Entrepreneur' },
+                { id: 'seo_pro', label: '🔍 SEO/SIO' },
+                { id: 'marketing', label: '📣 Marketing' },
+              ].map((p) => (
+                <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
+                  {personaFilter === p.id ? `✓ ${p.label}` : p.label}
+                </DropdownMenuItem>
+              ))}
+              {personaFilter && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setPersonaFilter(null)} className="gap-2 text-muted-foreground">
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {loading ? (
