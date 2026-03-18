@@ -341,7 +341,7 @@ export function MyCrawls() {
                     className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
                   >
                     <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
-                      <Globe className="h-5 w-5 text-purple-500" />
+                      <Bug className="h-5 w-5 text-purple-500" />
                     </div>
 
                     <div className="flex-1 min-w-0">
