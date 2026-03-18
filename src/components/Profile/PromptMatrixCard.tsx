@@ -7,38 +7,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check, FlaskConical } from 'lucide-react';
+import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check, FlaskConical, Search, Play, Loader2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // ── Types ──────────────────────────────────────────────────────
 
+/** Audit axes that map to Crawlers functions */
+export type AuditAxis = 'technique' | 'semantique' | 'eeat' | 'geo' | 'maillage' | 'contenu' | 'backlinks' | 'performance';
+
 interface ColumnMapping {
   prompt: string;
-  llm_name: string;
+  poids?: string;
+  axe?: string;
+  seuil_bon?: string;
+  seuil_moyen?: string;
+  seuil_mauvais?: string;
+  llm_name?: string;
   score?: string;
   brand_found?: string;
-  position?: string;
-  response_text?: string;
-  date?: string;
 }
 
 interface MatrixRow {
   prompt: string;
-  llm_name: string;
+  poids: number;
+  axe: AuditAxis;
+  seuil_bon: number;
+  seuil_moyen: number;
+  seuil_mauvais: number;
+  llm_name?: string;
   score?: number;
   brand_found?: boolean;
-  position?: number;
-  response_text?: string;
-  date?: string;
+  is_default_poids: boolean;
+  is_default_axe: boolean;
+  is_default_seuils: boolean;
   [key: string]: unknown;
-}
-
-interface CrawlersData {
-  llm_visibility: Array<{ llm_name: string; score_percentage: number; week_start_date: string }>;
-  llm_depth: Array<{ llm_name: string; prompt_text: string; response_summary: string; iteration: number }>;
-  llm_test_executions: Array<{ llm_name: string; prompt_tested: string; brand_found: boolean; iteration_found: number | null; response_text: string | null }>;
 }
 
 interface PromptMatrixCardProps {
@@ -47,81 +52,136 @@ interface PromptMatrixCardProps {
   domain: string;
 }
 
-// ── Semantic columns the user can map to ──
+// ── Default values from Crawlers scoring system ──
+const DEFAULT_WEIGHTS: Record<AuditAxis, number> = {
+  technique: 20,
+  semantique: 20,
+  eeat: 15,
+  geo: 15,
+  maillage: 10,
+  contenu: 10,
+  backlinks: 10,
+  performance: 20,
+};
+
+const DEFAULT_SEUILS = { bon: 70, moyen: 40, mauvais: 0 };
+
+const AXIS_LABELS: Record<AuditAxis, string> = {
+  technique: 'Technique',
+  semantique: 'Sémantique',
+  eeat: 'E-E-A-T',
+  geo: 'GEO',
+  maillage: 'Maillage',
+  contenu: 'Contenu',
+  backlinks: 'Backlinks',
+  performance: 'Performance',
+};
+
+const AXIS_COLORS: Record<AuditAxis, string> = {
+  technique: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  semantique: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20',
+  eeat: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+  geo: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  maillage: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+  contenu: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
+  backlinks: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20',
+  performance: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
+};
+
+// ── Semantic columns for CSV mapping ──
 const MAPPABLE_COLUMNS = [
-  { key: 'prompt', label: 'Prompt', required: true },
-  { key: 'llm_name', label: 'Nom du LLM', required: true },
+  { key: 'prompt', label: 'Prompt / Critère', required: true },
+  { key: 'poids', label: 'Poids (coefficient)', required: false },
+  { key: 'axe', label: 'Axe d\'audit (technique, GEO...)', required: false },
+  { key: 'seuil_bon', label: 'Seuil Bon (0-100)', required: false },
+  { key: 'seuil_moyen', label: 'Seuil Moyen (0-100)', required: false },
+  { key: 'seuil_mauvais', label: 'Seuil Mauvais (0-100)', required: false },
+  { key: 'llm_name', label: 'Nom du LLM', required: false },
   { key: 'score', label: 'Score (0-100)', required: false },
   { key: 'brand_found', label: 'Marque trouvée (oui/non)', required: false },
-  { key: 'position', label: 'Position / Itération', required: false },
-  { key: 'response_text', label: 'Texte de réponse', required: false },
-  { key: 'date', label: 'Date', required: false },
 ];
 
-// ── Mock data for demo ──
-const MOCK_LLMS = ['ChatGPT', 'Gemini', 'Claude', 'Perplexity', 'Mistral'];
-const MOCK_PROMPTS = [
-  'Meilleur outil SEO pour PME',
-  'Comment améliorer son référencement local',
-  'Audit technique SEO gratuit',
-  'Quel CMS choisir pour le SEO',
-  'Stratégie de netlinking efficace',
-  'Optimiser la vitesse de chargement',
-  'Recherche de mots-clés longue traîne',
-  'Comment analyser ses backlinks',
-];
-
-function generateMockData(): { rows: MatrixRow[]; crawlers: CrawlersData } {
-  const rows: MatrixRow[] = [];
-  MOCK_PROMPTS.forEach(prompt => {
-    const llms = MOCK_LLMS.slice(0, 3 + Math.floor(Math.random() * 3));
-    llms.forEach(llm => {
-      rows.push({
-        prompt,
-        llm_name: llm,
-        score: Math.round(20 + Math.random() * 80),
-        brand_found: Math.random() > 0.4,
-        position: Math.floor(1 + Math.random() * 5),
-        date: '2026-03-' + String(1 + Math.floor(Math.random() * 15)).padStart(2, '0'),
-      });
-    });
-  });
-
-  const crawlers: CrawlersData = {
-    llm_visibility: MOCK_LLMS.map(llm => ({
-      llm_name: llm,
-      score_percentage: Math.round(30 + Math.random() * 60),
-      week_start_date: '2026-03-10',
-    })),
-    llm_depth: MOCK_PROMPTS.slice(0, 4).flatMap(p =>
-      MOCK_LLMS.slice(0, 3).map(llm => ({
-        llm_name: llm,
-        prompt_text: p,
-        response_summary: `Réponse simulée pour "${p}" par ${llm}`,
-        iteration: Math.floor(1 + Math.random() * 4),
-      }))
-    ),
-    llm_test_executions: MOCK_PROMPTS.slice(0, 5).flatMap(p =>
-      MOCK_LLMS.slice(0, 3).map(llm => ({
-        llm_name: llm,
-        prompt_tested: p,
-        brand_found: Math.random() > 0.35,
-        iteration_found: Math.random() > 0.3 ? Math.floor(1 + Math.random() * 3) : null,
-        response_text: null,
-      }))
-    ),
-  };
-  return { rows, crawlers };
+// ── Auto-detect axis from prompt text ──
+function detectAxis(prompt: string): AuditAxis {
+  const lower = prompt.toLowerCase();
+  if (/core web vital|lcp|cls|fid|ttfb|fcp|vitesse|speed|chargement|performance/.test(lower)) return 'performance';
+  if (/technique|html|meta|balise|canonical|hreflang|robots|sitemap|redirect|404|301/.test(lower)) return 'technique';
+  if (/schema\.org|json-ld|sémantique|structured|données structurées|opengraph|microdata/.test(lower)) return 'semantique';
+  if (/e-?e-?a-?t|auteur|expertise|autorité|confiance|author|trust/.test(lower)) return 'eeat';
+  if (/geo|llms\.txt|citab|faq|ia génér|generative|llm|chatgpt|gemini|perplexity/.test(lower)) return 'geo';
+  if (/maillage|lien interne|internal link|profondeur|crawl depth|pagerank/.test(lower)) return 'maillage';
+  if (/contenu|content|mot-clé|keyword|texte|rédaction|longue traîne/.test(lower)) return 'contenu';
+  if (/backlink|netlinking|domaine référent|referring|autorité domaine|DA/.test(lower)) return 'backlinks';
+  return 'technique'; // fallback
 }
 
+// ── Normalize axis string from CSV ──
+function normalizeAxis(raw: string): AuditAxis | null {
+  const lower = raw.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const map: Record<string, AuditAxis> = {
+    'technique': 'technique', 'technical': 'technique', 'tech': 'technique',
+    'semantique': 'semantique', 'semantic': 'semantique', 'sem': 'semantique',
+    'eeat': 'eeat', 'e-e-a-t': 'eeat', 'eat': 'eeat',
+    'geo': 'geo', 'aeo': 'geo', 'generative': 'geo', 'llm': 'geo',
+    'maillage': 'maillage', 'linking': 'maillage', 'internal': 'maillage',
+    'contenu': 'contenu', 'content': 'contenu',
+    'backlinks': 'backlinks', 'backlink': 'backlinks', 'netlinking': 'backlinks',
+    'performance': 'performance', 'perf': 'performance', 'speed': 'performance', 'vitesse': 'performance',
+  };
+  return map[lower] || null;
+}
 
+// ── Mock data for demo ──
+const MOCK_PROMPTS_DATA: Array<{ prompt: string; axe: AuditAxis; poids: number }> = [
+  { prompt: 'Vérifier la présence du fichier llms.txt', axe: 'geo', poids: 20 },
+  { prompt: 'Analyser la structure des données JSON-LD', axe: 'semantique', poids: 18 },
+  { prompt: 'Évaluer les Core Web Vitals (LCP, CLS)', axe: 'performance', poids: 22 },
+  { prompt: 'Vérifier les balises H1-H6 et canonical', axe: 'technique', poids: 15 },
+  { prompt: 'Analyser les signaux E-E-A-T de l\'auteur', axe: 'eeat', poids: 12 },
+  { prompt: 'Mesurer la citabilité du contenu par les LLMs', axe: 'geo', poids: 18 },
+  { prompt: 'Audit du maillage interne et profondeur', axe: 'maillage', poids: 10 },
+  { prompt: 'Analyse des backlinks et domaines référents', axe: 'backlinks', poids: 8 },
+  { prompt: 'Qualité et pertinence du contenu principal', axe: 'contenu', poids: 14 },
+  { prompt: 'FAQ structurée avec balisage schema.org', axe: 'geo', poids: 16 },
+];
+
+function generateMockData(): MatrixRow[] {
+  return MOCK_PROMPTS_DATA.map(p => ({
+    prompt: p.prompt,
+    poids: p.poids,
+    axe: p.axe,
+    seuil_bon: 70,
+    seuil_moyen: 40,
+    seuil_mauvais: 0,
+    is_default_poids: false,
+    is_default_axe: false,
+    is_default_seuils: true,
+  }));
+}
+
+// ── Default badge component ──
+function DefaultBadge({ label }: { label: string }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="text-[8px] px-1 py-0 border-dashed border-amber-500/50 text-amber-600 dark:text-amber-400 ml-1 cursor-help">
+            défaut
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs max-w-[200px]">
+          {label} — valeur par défaut de Crawlers (non spécifiée dans le CSV)
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrixCardProps) {
-  const [imports, setImports] = useState<Array<{ id: string; file_name: string; row_count: number; created_at: string; column_mapping: ColumnMapping; raw_data: MatrixRow[] }>>([]);
-  const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
-  const [crawlersData, setCrawlersData] = useState<CrawlersData | null>(null);
+  const [matrixRows, setMatrixRows] = useState<MatrixRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'client' | 'compare' | 'weighted'>('client');
+  const [hasImport, setHasImport] = useState(false);
+  const [importFileName, setImportFileName] = useState('');
 
   // Mapping dialog state
   const [showMappingDialog, setShowMappingDialog] = useState(false);
@@ -130,94 +190,65 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
   const [pendingFileName, setPendingFileName] = useState('');
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
+  // URL audit state
+  const [auditUrl, setAuditUrl] = useState('');
+  const [auditing, setAuditing] = useState(false);
+  const [auditResults, setAuditResults] = useState<Record<number, { score: number; details: string }> | null>(null);
+
   // Filters
-  const [filterLLM, setFilterLLM] = useState<string>('all');
+  const [filterAxe, setFilterAxe] = useState<string>('all');
   const [filterQuery, setFilterQuery] = useState('');
-  const [sortField, setSortField] = useState<string>('prompt');
+  const [sortField, setSortField] = useState<string>('axe');
   const [sortAsc, setSortAsc] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
 
   // ── Load demo data ──
   const loadDemoData = useCallback(() => {
-    const { rows, crawlers } = generateMockData();
-    setImports([{
-      id: 'demo',
-      file_name: 'demo-simulation.csv',
-      row_count: rows.length,
-      created_at: new Date().toISOString(),
-      column_mapping: { prompt: 'prompt', llm_name: 'llm_name', score: 'score', brand_found: 'brand_found', position: 'position', date: 'date' },
-      raw_data: rows,
-    }]);
-    setSelectedImportId('demo');
-    setCrawlersData(crawlers);
+    setMatrixRows(generateMockData());
+    setHasImport(true);
+    setImportFileName('demo-simulation.csv');
     setDemoMode(true);
     setLoading(false);
   }, []);
 
-  // ── Fetch existing imports + Crawlers data ──
+  // ── Fetch existing import ──
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [importsRes, visRes, depthRes, execRes] = await Promise.all([
-        supabase
-          .from('prompt_matrix_imports' as any)
-          .select('id, file_name, row_count, created_at, column_mapping, raw_data')
-          .eq('tracked_site_id', trackedSiteId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('llm_visibility_scores')
-          .select('llm_name, score_percentage, week_start_date')
-          .eq('tracked_site_id', trackedSiteId)
-          .order('week_start_date', { ascending: false })
-          .limit(100),
-        supabase
-          .from('llm_depth_conversations')
-          .select('llm_name, prompt_text, response_summary, iteration')
-          .eq('tracked_site_id', trackedSiteId)
-          .limit(200),
-        supabase
-          .from('llm_test_executions')
-          .select('llm_name, prompt_tested, brand_found, iteration_found, response_text')
-          .eq('tracked_site_id', trackedSiteId)
-          .limit(200),
-      ]);
+      const { data } = await supabase
+        .from('prompt_matrix_imports' as any)
+        .select('id, file_name, row_count, created_at, column_mapping, raw_data')
+        .eq('tracked_site_id', trackedSiteId)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (importsRes.data) {
-        const typed = (importsRes.data as any[]).map(d => ({
-          id: d.id as string,
-          file_name: d.file_name as string,
-          row_count: d.row_count as number,
-          created_at: d.created_at as string,
-          column_mapping: d.column_mapping as ColumnMapping,
-          raw_data: d.raw_data as MatrixRow[],
-        }));
-        setImports(typed);
-        if (typed.length > 0 && !selectedImportId) {
-          setSelectedImportId(typed[0].id);
-        }
+      if (data && (data as any[]).length > 0) {
+        const imp = (data as any[])[0];
+        setMatrixRows(imp.raw_data as MatrixRow[]);
+        setHasImport(true);
+        setImportFileName(imp.file_name as string);
+      } else {
+        setMatrixRows([]);
+        setHasImport(false);
+        setImportFileName('');
       }
-
-      setCrawlersData({
-        llm_visibility: (visRes.data || []) as CrawlersData['llm_visibility'],
-        llm_depth: (depthRes.data || []) as CrawlersData['llm_depth'],
-        llm_test_executions: (execRes.data || []) as CrawlersData['llm_test_executions'],
-      });
     } catch (err) {
       console.error('PromptMatrix fetch error:', err);
     } finally {
       setLoading(false);
     }
-  }, [trackedSiteId, selectedImportId]);
+  }, [trackedSiteId]);
 
   useEffect(() => { if (!demoMode) fetchData(); }, [fetchData, demoMode]);
 
   const exitDemoMode = useCallback(() => {
     setDemoMode(false);
-    setImports([]);
-    setSelectedImportId(null);
-    setCrawlersData(null);
-  }, []);
-
+    setMatrixRows([]);
+    setHasImport(false);
+    setImportFileName('');
+    setAuditResults(null);
+    fetchData();
+  }, [fetchData]);
 
   // ── CSV Upload handler ──
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,13 +280,15 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         const autoMap: Record<string, string> = {};
         headers.forEach(h => {
           const lower = h.toLowerCase().trim();
-          if (/prompt|question|query|requête/i.test(lower)) autoMap.prompt = h;
+          if (/prompt|question|query|requête|critère|criteria/i.test(lower)) autoMap.prompt = h;
+          if (/poids|weight|coefficient|coeff|pondéra/i.test(lower)) autoMap.poids = h;
+          if (/axe|axis|module|catégorie|category|type/i.test(lower)) autoMap.axe = h;
+          if (/seuil.*bon|threshold.*good|bon|good/i.test(lower) && !/moyen|mauvais/i.test(lower)) autoMap.seuil_bon = h;
+          if (/seuil.*moyen|threshold.*medium|moyen|medium|average/i.test(lower)) autoMap.seuil_moyen = h;
+          if (/seuil.*mauvais|threshold.*bad|mauvais|bad|poor/i.test(lower)) autoMap.seuil_mauvais = h;
           if (/llm|model|modèle|engine/i.test(lower)) autoMap.llm_name = h;
           if (/score|note|rating/i.test(lower)) autoMap.score = h;
           if (/brand|marque|found|trouvé/i.test(lower)) autoMap.brand_found = h;
-          if (/position|rank|iteration/i.test(lower)) autoMap.position = h;
-          if (/response|réponse|answer|text/i.test(lower)) autoMap.response_text = h;
-          if (/date|timestamp|time/i.test(lower)) autoMap.date = h;
         });
         setColumnMapping(autoMap);
         setShowMappingDialog(true);
@@ -264,24 +297,73 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         toast.error(`Erreur de parsing : ${err.message}`);
       },
     });
-
-    // Reset input
     e.target.value = '';
   }, []);
 
-  // ── Confirm mapping & save ──
+  // ── Confirm mapping & save (replaces previous import) ──
   const handleConfirmMapping = useCallback(async () => {
-    if (!columnMapping.prompt || !columnMapping.llm_name) {
-      toast.error('Les colonnes "Prompt" et "Nom du LLM" sont obligatoires.');
+    if (!columnMapping.prompt) {
+      toast.error('La colonne "Prompt / Critère" est obligatoire.');
       return;
     }
 
-    // Transform raw CSV rows using the mapping
     const mappedRows: MatrixRow[] = csvRawRows.map(row => {
+      const prompt = row[columnMapping.prompt] || '';
+      if (!prompt.trim()) return null;
+
+      // Parse poids
+      let poids = DEFAULT_WEIGHTS.technique;
+      let is_default_poids = true;
+      if (columnMapping.poids && row[columnMapping.poids]) {
+        const parsed = parseFloat(row[columnMapping.poids]);
+        if (!isNaN(parsed)) { poids = parsed; is_default_poids = false; }
+      }
+
+      // Parse axe
+      let axe: AuditAxis = detectAxis(prompt);
+      let is_default_axe = true;
+      if (columnMapping.axe && row[columnMapping.axe]) {
+        const normalized = normalizeAxis(row[columnMapping.axe]);
+        if (normalized) { axe = normalized; is_default_axe = false; }
+      }
+
+      // If poids was default, use the axis default weight
+      if (is_default_poids) poids = DEFAULT_WEIGHTS[axe];
+
+      // Parse seuils
+      let seuil_bon = DEFAULT_SEUILS.bon;
+      let seuil_moyen = DEFAULT_SEUILS.moyen;
+      let seuil_mauvais = DEFAULT_SEUILS.mauvais;
+      let is_default_seuils = true;
+
+      if (columnMapping.seuil_bon && row[columnMapping.seuil_bon]) {
+        const v = parseFloat(row[columnMapping.seuil_bon]);
+        if (!isNaN(v)) { seuil_bon = v; is_default_seuils = false; }
+      }
+      if (columnMapping.seuil_moyen && row[columnMapping.seuil_moyen]) {
+        const v = parseFloat(row[columnMapping.seuil_moyen]);
+        if (!isNaN(v)) { seuil_moyen = v; is_default_seuils = false; }
+      }
+      if (columnMapping.seuil_mauvais && row[columnMapping.seuil_mauvais]) {
+        const v = parseFloat(row[columnMapping.seuil_mauvais]);
+        if (!isNaN(v)) { seuil_mauvais = v; is_default_seuils = false; }
+      }
+
       const mapped: MatrixRow = {
-        prompt: row[columnMapping.prompt] || '',
-        llm_name: row[columnMapping.llm_name] || '',
+        prompt,
+        poids,
+        axe,
+        seuil_bon,
+        seuil_moyen,
+        seuil_mauvais,
+        is_default_poids,
+        is_default_axe,
+        is_default_seuils,
       };
+
+      if (columnMapping.llm_name && row[columnMapping.llm_name]) {
+        mapped.llm_name = row[columnMapping.llm_name];
+      }
       if (columnMapping.score && row[columnMapping.score]) {
         mapped.score = parseFloat(row[columnMapping.score]) || undefined;
       }
@@ -289,17 +371,9 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         const val = row[columnMapping.brand_found].toLowerCase();
         mapped.brand_found = ['oui', 'yes', 'true', '1', 'vrai'].includes(val);
       }
-      if (columnMapping.position && row[columnMapping.position]) {
-        mapped.position = parseInt(row[columnMapping.position]) || undefined;
-      }
-      if (columnMapping.response_text) {
-        mapped.response_text = row[columnMapping.response_text] || undefined;
-      }
-      if (columnMapping.date) {
-        mapped.date = row[columnMapping.date] || undefined;
-      }
+
       return mapped;
-    }).filter(r => r.prompt && r.llm_name);
+    }).filter(Boolean) as MatrixRow[];
 
     if (mappedRows.length === 0) {
       toast.error('Aucune ligne valide trouvée après le mapping.');
@@ -307,6 +381,12 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     }
 
     try {
+      // Delete previous imports for this site (replace behavior)
+      await supabase
+        .from('prompt_matrix_imports' as any)
+        .delete()
+        .eq('tracked_site_id', trackedSiteId);
+
       const { error } = await supabase
         .from('prompt_matrix_imports' as any)
         .insert({
@@ -321,101 +401,121 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
 
       if (error) throw error;
 
-      toast.success(`${mappedRows.length} lignes importées depuis ${pendingFileName}`);
+      toast.success(`${mappedRows.length} critères importés depuis ${pendingFileName} (import précédent remplacé)`);
       setShowMappingDialog(false);
+      setAuditResults(null);
       fetchData();
     } catch (err: any) {
       toast.error(`Erreur d'import : ${err.message}`);
     }
   }, [columnMapping, csvRawRows, pendingFileName, trackedSiteId, userId, domain, fetchData]);
 
-  // ── Delete import ──
-  const handleDeleteImport = useCallback(async (importId: string) => {
-    const { error } = await supabase
-      .from('prompt_matrix_imports' as any)
-      .delete()
-      .eq('id', importId);
-    if (error) {
-      toast.error('Erreur de suppression');
-    } else {
-      toast.success('Import supprimé');
-      if (selectedImportId === importId) setSelectedImportId(null);
-      fetchData();
+  // ── Launch audit on URL ──
+  const handleLaunchAudit = useCallback(async () => {
+    if (!auditUrl.trim()) {
+      toast.error('Veuillez saisir une URL à auditer');
+      return;
     }
-  }, [selectedImportId, fetchData]);
 
-  // ── Current data ──
-  const selectedImport = imports.find(i => i.id === selectedImportId);
-  const clientRows = selectedImport?.raw_data || [];
+    let normalizedUrl = auditUrl.trim();
+    if (!/^https?:\/\//i.test(normalizedUrl)) normalizedUrl = `https://${normalizedUrl}`;
 
-  // ── Unique LLMs ──
-  const uniqueLLMs = useMemo(() => {
-    const set = new Set<string>();
-    clientRows.forEach(r => set.add(r.llm_name));
-    crawlersData?.llm_test_executions.forEach(r => set.add(r.llm_name));
-    crawlersData?.llm_depth.forEach(r => set.add(r.llm_name));
-    return Array.from(set).sort();
-  }, [clientRows, crawlersData]);
+    setAuditing(true);
+    setAuditResults(null);
 
-  // ── Merged data for comparison / weighted ──
-  const mergedRows = useMemo(() => {
-    if (!crawlersData) return clientRows.map(r => ({ ...r, source: 'client' as const, crawlers_score: undefined as number | undefined, crawlers_brand_found: undefined as boolean | undefined, weighted_score: r.score }));
+    try {
+      // Build the custom prompt matrix payload
+      const matrixPayload = matrixRows.map((row, idx) => ({
+        index: idx,
+        prompt: row.prompt,
+        poids: row.poids,
+        axe: row.axe,
+        seuil_bon: row.seuil_bon,
+        seuil_moyen: row.seuil_moyen,
+        seuil_mauvais: row.seuil_mauvais,
+      }));
 
-    const crawlersMap = new Map<string, { score?: number; brand_found?: boolean; position?: number }>();
-    crawlersData.llm_test_executions.forEach(exec => {
-      const key = `${exec.prompt_tested.toLowerCase().trim()}::${exec.llm_name.toLowerCase().trim()}`;
-      crawlersMap.set(key, {
-        brand_found: exec.brand_found,
-        position: exec.iteration_found ?? undefined,
+      // Store in prompt_deployments for the audit to pick up
+      const sessionId = crypto.randomUUID();
+      const { error: deployError } = await supabase
+        .from('prompt_deployments')
+        .insert({
+          tracked_site_id: trackedSiteId,
+          user_id: userId,
+          target_type: 'onsite',
+          prompt_text: JSON.stringify(matrixPayload),
+          prompt_label: `matrix-audit-${sessionId}`,
+          api_used: 'prompt-matrix-audit',
+          llm_model: 'gemini-2.5-flash',
+          source_csv_filename: importFileName,
+          estimated_cost_eur: 0,
+        });
+
+      if (deployError) throw deployError;
+
+      // Invoke the audit function with the matrix session
+      const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
+        body: {
+          url: normalizedUrl,
+          toolsData: null,
+          promptMatrixSessionId: `matrix-audit-${sessionId}`,
+          lang: 'fr',
+        },
       });
-    });
 
-    // Add visibility scores by LLM
-    const latestVisibility = new Map<string, number>();
-    crawlersData.llm_visibility.forEach(v => {
-      const k = v.llm_name.toLowerCase().trim();
-      if (!latestVisibility.has(k)) latestVisibility.set(k, v.score_percentage);
-    });
+      if (error) throw error;
 
-    return clientRows.map(row => {
-      const key = `${row.prompt.toLowerCase().trim()}::${row.llm_name.toLowerCase().trim()}`;
-      const crawlerMatch = crawlersMap.get(key);
-      const visScore = latestVisibility.get(row.llm_name.toLowerCase().trim());
-      const crawlers_score = crawlerMatch ? (crawlerMatch.brand_found ? (visScore ?? 75) : (visScore ?? 25)) : visScore;
-      const crawlers_brand_found = crawlerMatch?.brand_found;
-
-      let weighted_score = row.score;
-      if (row.score !== undefined && crawlers_score !== undefined) {
-        weighted_score = Math.round(row.score * 0.5 + crawlers_score * 0.5);
-      } else if (crawlers_score !== undefined) {
-        weighted_score = crawlers_score;
+      // Parse results and map back to rows
+      if (data?.scores || data?.result) {
+        const scores = data.scores || data.result?.scores || {};
+        const results: Record<number, { score: number; details: string }> = {};
+        matrixRows.forEach((row, idx) => {
+          const axeScore = scores[row.axe];
+          if (axeScore !== undefined) {
+            results[idx] = {
+              score: typeof axeScore === 'number' ? axeScore : parseFloat(axeScore) || 0,
+              details: data.result?.recommendations?.[row.axe] || '',
+            };
+          }
+        });
+        setAuditResults(results);
+        toast.success('Audit terminé avec vos prompts personnalisés');
+      } else {
+        toast.info('Audit lancé — les résultats seront affinés avec les données Crawlers');
       }
+    } catch (err: any) {
+      console.error('Matrix audit error:', err);
+      toast.error(`Erreur d'audit : ${err.message || 'Erreur inconnue'}`);
+    } finally {
+      setAuditing(false);
+    }
+  }, [auditUrl, matrixRows, trackedSiteId, userId]);
 
-      return {
-        ...row,
-        source: 'client' as const,
-        crawlers_score,
-        crawlers_brand_found,
-        weighted_score,
-      };
-    });
-  }, [clientRows, crawlersData]);
+  // ── Unique axes ──
+  const uniqueAxes = useMemo(() => {
+    const set = new Set<AuditAxis>();
+    matrixRows.forEach(r => set.add(r.axe));
+    return Array.from(set).sort();
+  }, [matrixRows]);
+
+  // ── Total weight ──
+  const totalWeight = useMemo(() => matrixRows.reduce((sum, r) => sum + r.poids, 0), [matrixRows]);
 
   // ── Filtered + sorted ──
   const displayRows = useMemo(() => {
-    let rows = viewMode === 'client' ? clientRows.map(r => ({ ...r, source: 'client' as const, crawlers_score: undefined as number | undefined, crawlers_brand_found: undefined as boolean | undefined, weighted_score: r.score })) : mergedRows;
+    let rows = [...matrixRows];
 
-    if (filterLLM !== 'all') {
-      rows = rows.filter(r => r.llm_name === filterLLM);
+    if (filterAxe !== 'all') {
+      rows = rows.filter(r => r.axe === filterAxe);
     }
     if (filterQuery) {
       const q = filterQuery.toLowerCase();
-      rows = rows.filter(r => r.prompt.toLowerCase().includes(q) || r.llm_name.toLowerCase().includes(q));
+      rows = rows.filter(r => r.prompt.toLowerCase().includes(q) || r.axe.toLowerCase().includes(q));
     }
 
     rows.sort((a, b) => {
-      const aVal = a[sortField as keyof typeof a];
-      const bVal = b[sortField as keyof typeof b];
+      const aVal = a[sortField as keyof MatrixRow];
+      const bVal = b[sortField as keyof MatrixRow];
       if (aVal === undefined || aVal === null) return 1;
       if (bVal === undefined || bVal === null) return -1;
       const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal as string) : (aVal as number) - (bVal as number);
@@ -423,7 +523,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     });
 
     return rows;
-  }, [clientRows, mergedRows, viewMode, filterLLM, filterQuery, sortField, sortAsc]);
+  }, [matrixRows, filterAxe, filterQuery, sortField, sortAsc]);
 
   const toggleSort = (field: string) => {
     if (sortField === field) setSortAsc(!sortAsc);
@@ -434,10 +534,9 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     sortField === field ? (sortAsc ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />
   );
 
-  const scoreColor = (score?: number) => {
-    if (score === undefined) return '';
-    if (score >= 70) return 'text-emerald-600 dark:text-emerald-400';
-    if (score >= 40) return 'text-amber-600 dark:text-amber-400';
+  const scoreColor = (score: number, row: MatrixRow) => {
+    if (score >= row.seuil_bon) return 'text-emerald-600 dark:text-emerald-400';
+    if (score >= row.seuil_moyen) return 'text-amber-600 dark:text-amber-400';
     return 'text-rose-600 dark:text-rose-400';
   };
 
@@ -469,14 +568,22 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                 Matrice de Prompts
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
               </CardTitle>
-              <CardDescription>Importez votre matrice CSV et comparez avec les données Crawlers</CardDescription>
+              <CardDescription>
+                Importez vos critères d'audit personnalisés (prompts, poids, axes, seuils) et auditez n'importe quelle URL
+              </CardDescription>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
+              {hasImport && (
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <FileSpreadsheet className="h-3 w-3" />
+                  {importFileName} ({matrixRows.length})
+                </Badge>
+              )}
               <label className="cursor-pointer">
                 <Button variant="outline" size="sm" className="gap-1.5" asChild>
                   <span>
                     <Upload className="h-3.5 w-3.5" />
-                    Importer CSV
+                    {hasImport ? 'Remplacer CSV' : 'Importer CSV'}
                   </span>
                 </Button>
                 <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
@@ -485,38 +592,15 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Import selector */}
-          {imports.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground">Import :</span>
-              {imports.map(imp => (
-                <div key={imp.id} className="flex items-center gap-1">
-                  <Badge
-                    variant={selectedImportId === imp.id ? 'default' : 'outline'}
-                    className="cursor-pointer text-xs"
-                    onClick={() => setSelectedImportId(imp.id)}
-                  >
-                    {imp.file_name} ({imp.row_count} lignes)
-                  </Badge>
-                  {!demoMode && (
-                    <button onClick={() => handleDeleteImport(imp.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-           {/* No data state */}
-          {imports.length === 0 && !demoMode && (
+          {/* No data state */}
+          {!hasImport && !demoMode && (
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center space-y-3">
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto" />
               <div>
                 <p className="text-sm font-medium">Aucune matrice importée</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Importez un fichier CSV contenant vos prompts, LLMs et résultats.
-                  <br />Format libre — vous mapperez vos colonnes après l'upload.
+                  Importez un CSV avec vos prompts, poids et axes d'audit.
+                  <br />Les colonnes manquantes seront complétées par les valeurs par défaut de Crawlers.
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2">
@@ -534,6 +618,16 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   Données simulées
                 </Button>
               </div>
+              {/* Expected format info */}
+              <div className="mt-4 text-left max-w-md mx-auto bg-muted/30 rounded-lg p-3 space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Colonnes attendues :</p>
+                <ul className="text-[11px] text-muted-foreground space-y-0.5">
+                  <li><strong>prompt</strong> — critère ou question d'audit <span className="text-destructive">*</span></li>
+                  <li><strong>poids</strong> — coefficient (défaut : poids Crawlers par axe)</li>
+                  <li><strong>axe</strong> — technique, semantique, eeat, geo, maillage, contenu, backlinks, performance</li>
+                  <li><strong>seuil_bon / seuil_moyen / seuil_mauvais</strong> — seuils personnalisés (défaut : 70/40/0)</li>
+                </ul>
+              </div>
             </div>
           )}
 
@@ -550,141 +644,170 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
             </div>
           )}
 
-          {/* Data view */}
-          {selectedImport && (
-            <>
-              {/* View mode tabs */}
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="space-y-3">
-                <TabsList className="grid grid-cols-3 w-full max-w-md">
-                  <TabsTrigger value="client" className="gap-1.5 text-xs">
-                    <Eye className="h-3.5 w-3.5" />
-                    Données Client
-                  </TabsTrigger>
-                  <TabsTrigger value="compare" className="gap-1.5 text-xs">
-                    <GitCompare className="h-3.5 w-3.5" />
-                    Comparaison
-                  </TabsTrigger>
-                  <TabsTrigger value="weighted" className="gap-1.5 text-xs">
-                    <Blend className="h-3.5 w-3.5" />
-                    Pondéré
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Filters */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher un prompt..."
-                      value={filterQuery}
-                      onChange={e => setFilterQuery(e.target.value)}
-                      className="h-8 w-48 text-xs"
-                    />
-                  </div>
-                  <Select value={filterLLM} onValueChange={setFilterLLM}>
-                    <SelectTrigger className="h-8 w-40 text-xs">
-                      <SelectValue placeholder="Tous les LLMs" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les LLMs</SelectItem>
-                      {uniqueLLMs.map(llm => (
-                        <SelectItem key={llm} value={llm}>{llm}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-[10px] text-muted-foreground ml-auto">
-                    {displayRows.length} résultat{displayRows.length > 1 ? 's' : ''}
+          {/* URL Audit field */}
+          {hasImport && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Auditer une URL avec vos critères</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="https://example.com/page-a-auditer"
+                  value={auditUrl}
+                  onChange={e => setAuditUrl(e.target.value)}
+                  className="h-9 text-sm flex-1"
+                  onKeyDown={e => e.key === 'Enter' && !auditing && handleLaunchAudit()}
+                />
+                <Button
+                  size="sm"
+                  className="gap-1.5 h-9"
+                  onClick={handleLaunchAudit}
+                  disabled={auditing || !auditUrl.trim()}
+                >
+                  {auditing ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Audit en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3.5 w-3.5" />
+                      Lancer l'audit
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {matrixRows.length} critères × {uniqueAxes.length} axes — Poids total : {totalWeight.toFixed(0)}
+                {matrixRows.some(r => r.is_default_poids || r.is_default_axe || r.is_default_seuils) && (
+                  <span className="ml-2">
+                    <Info className="h-3 w-3 inline text-amber-500 mr-0.5" />
+                    Certaines valeurs utilisent les défauts Crawlers
                   </span>
-                </div>
+                )}
+              </p>
+            </div>
+          )}
 
-                {/* Table */}
-                <div className="rounded-md border overflow-auto max-h-[500px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('prompt')}>
-                          <div className="flex items-center gap-1">Prompt <SortIcon field="prompt" /></div>
-                        </TableHead>
-                        <TableHead className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('llm_name')}>
-                          <div className="flex items-center gap-1">LLM <SortIcon field="llm_name" /></div>
-                        </TableHead>
+          {/* Data table */}
+          {hasImport && (
+            <>
+              {/* Filters */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un critère..."
+                    value={filterQuery}
+                    onChange={e => setFilterQuery(e.target.value)}
+                    className="h-8 w-48 text-xs"
+                  />
+                </div>
+                <Select value={filterAxe} onValueChange={setFilterAxe}>
+                  <SelectTrigger className="h-8 w-40 text-xs">
+                    <SelectValue placeholder="Tous les axes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les axes</SelectItem>
+                    {uniqueAxes.map(axe => (
+                      <SelectItem key={axe} value={axe}>{AXIS_LABELS[axe]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  {displayRows.length} critère{displayRows.length > 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {/* Table */}
+              <div className="rounded-md border overflow-auto max-h-[500px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('prompt')}>
+                        <div className="flex items-center gap-1">Critère <SortIcon field="prompt" /></div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('axe')}>
+                        <div className="flex items-center gap-1">Axe <SortIcon field="axe" /></div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none whitespace-nowrap text-right" onClick={() => toggleSort('poids')}>
+                        <div className="flex items-center gap-1 justify-end">Poids <SortIcon field="poids" /></div>
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap text-center">Seuils</TableHead>
+                      {auditResults && (
                         <TableHead className="cursor-pointer select-none whitespace-nowrap text-right" onClick={() => toggleSort('score')}>
-                          <div className="flex items-center gap-1 justify-end">Score Client <SortIcon field="score" /></div>
+                          <div className="flex items-center gap-1 justify-end">Score <SortIcon field="score" /></div>
                         </TableHead>
-                        <TableHead className="whitespace-nowrap text-center">Marque</TableHead>
-                        {(viewMode === 'compare' || viewMode === 'weighted') && (
-                          <>
-                            <TableHead className="cursor-pointer select-none whitespace-nowrap text-right" onClick={() => toggleSort('crawlers_score')}>
-                              <div className="flex items-center gap-1 justify-end">Score Crawlers <SortIcon field="crawlers_score" /></div>
-                            </TableHead>
-                            <TableHead className="whitespace-nowrap text-center">Marque Crawlers</TableHead>
-                          </>
-                        )}
-                        {viewMode === 'weighted' && (
-                          <TableHead className="cursor-pointer select-none whitespace-nowrap text-right" onClick={() => toggleSort('weighted_score')}>
-                            <div className="flex items-center gap-1 justify-end">Score Pondéré <SortIcon field="weighted_score" /></div>
-                          </TableHead>
-                        )}
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayRows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={auditResults ? 5 : 4} className="text-center text-muted-foreground py-8">
+                          Aucun résultat
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {displayRows.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={viewMode === 'weighted' ? 7 : viewMode === 'compare' ? 6 : 4} className="text-center text-muted-foreground py-8">
-                            Aucun résultat
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        displayRows.map((row, i) => (
+                    ) : (
+                      displayRows.map((row, i) => {
+                        const rowIndex = matrixRows.indexOf(row);
+                        const result = auditResults?.[rowIndex];
+                        return (
                           <TableRow key={i}>
-                            <TableCell className="max-w-[300px] truncate text-xs" title={row.prompt}>{row.prompt}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-[10px]">{row.llm_name}</Badge>
+                            <TableCell className="max-w-[300px] truncate text-xs" title={row.prompt}>
+                              {row.prompt}
                             </TableCell>
-                            <TableCell className={`text-right font-mono text-sm ${scoreColor(row.score)}`}>
-                              {row.score !== undefined ? row.score : '—'}
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border ${AXIS_COLORS[row.axe]}`}>
+                                  {AXIS_LABELS[row.axe]}
+                                </Badge>
+                                {row.is_default_axe && <DefaultBadge label="Axe" />}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              <div className="flex items-center justify-end gap-1">
+                                {row.poids}
+                                {row.is_default_poids && <DefaultBadge label="Poids" />}
+                              </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              {row.brand_found === true && <Check className="h-4 w-4 text-emerald-500 mx-auto" />}
-                              {row.brand_found === false && <X className="h-4 w-4 text-rose-400 mx-auto" />}
-                              {row.brand_found === undefined && <span className="text-muted-foreground text-xs">—</span>}
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{row.seuil_bon}</span>
+                                <span className="text-[10px] text-muted-foreground">/</span>
+                                <span className="text-[10px] text-amber-600 dark:text-amber-400">{row.seuil_moyen}</span>
+                                <span className="text-[10px] text-muted-foreground">/</span>
+                                <span className="text-[10px] text-rose-600 dark:text-rose-400">{row.seuil_mauvais}</span>
+                                {row.is_default_seuils && <DefaultBadge label="Seuils" />}
+                              </div>
                             </TableCell>
-                            {(viewMode === 'compare' || viewMode === 'weighted') && (
-                              <>
-                                <TableCell className={`text-right font-mono text-sm ${scoreColor(row.crawlers_score)}`}>
-                                  {row.crawlers_score !== undefined ? row.crawlers_score.toFixed(0) : '—'}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {row.crawlers_brand_found === true && <Check className="h-4 w-4 text-emerald-500 mx-auto" />}
-                                  {row.crawlers_brand_found === false && <X className="h-4 w-4 text-rose-400 mx-auto" />}
-                                  {row.crawlers_brand_found === undefined && <span className="text-muted-foreground text-xs">—</span>}
-                                </TableCell>
-                              </>
-                            )}
-                            {viewMode === 'weighted' && (
-                              <TableCell className={`text-right font-bold font-mono text-sm ${scoreColor(row.weighted_score)}`}>
-                                {row.weighted_score !== undefined ? row.weighted_score : '—'}
+                            {auditResults && (
+                              <TableCell className={`text-right font-mono text-sm font-bold ${result ? scoreColor(result.score, row) : ''}`}>
+                                {result ? result.score.toFixed(0) : '—'}
                               </TableCell>
                             )}
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-                {/* Legend */}
-                {viewMode === 'weighted' && (
-                  <p className="text-[10px] text-muted-foreground">
-                    Score pondéré = 50% score client + 50% score Crawlers. Les lignes sans correspondance Crawlers utilisent le score client ou la visibilité LLM globale.
-                  </p>
-                )}
-                {viewMode === 'compare' && (
-                  <p className="text-[10px] text-muted-foreground">
-                    La colonne "Score Crawlers" utilise les données LLM Visibility et LLM Test Executions pour le même domaine. Le matching se fait par prompt × LLM.
-                  </p>
-                )}
-              </Tabs>
+              {/* Weight summary by axis */}
+              <div className="flex flex-wrap gap-2">
+                {uniqueAxes.map(axe => {
+                  const axeRows = matrixRows.filter(r => r.axe === axe);
+                  const axeWeight = axeRows.reduce((s, r) => s + r.poids, 0);
+                  const pct = totalWeight > 0 ? ((axeWeight / totalWeight) * 100).toFixed(0) : '0';
+                  return (
+                    <div key={axe} className={`rounded px-2 py-1 text-[10px] border ${AXIS_COLORS[axe]}`}>
+                      {AXIS_LABELS[axe]}: {axeRows.length} critères — {pct}%
+                    </div>
+                  );
+                })}
+              </div>
             </>
           )}
         </CardContent>
@@ -701,16 +824,17 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Associez vos colonnes CSV aux champs attendus. Seuls "Prompt" et "Nom du LLM" sont obligatoires.
+              Associez vos colonnes CSV aux champs Crawlers. Seul "Prompt" est obligatoire — le reste sera complété par les valeurs par défaut.
             </p>
             <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              Aperçu : <strong>{csvRawRows.length}</strong> lignes, <strong>{csvHeaders.length}</strong> colonnes détectées
+              Aperçu : <strong>{csvRawRows.length}</strong> lignes, <strong>{csvHeaders.length}</strong> colonnes
+              {hasImport && <span className="text-amber-600 dark:text-amber-400 ml-2">⚠ L'import précédent sera remplacé</span>}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[300px] overflow-auto">
               {MAPPABLE_COLUMNS.map(col => (
                 <div key={col.key} className="flex items-center gap-3">
-                  <span className="text-sm w-44 shrink-0">
+                  <span className="text-sm w-52 shrink-0">
                     {col.label}
                     {col.required && <span className="text-destructive ml-0.5">*</span>}
                   </span>
@@ -727,7 +851,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                       <SelectValue placeholder="— Non mappé —" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">— Non mappé —</SelectItem>
+                      <SelectItem value="__none__">— Non mappé (défaut Crawlers) —</SelectItem>
                       {csvHeaders.map(h => (
                         <SelectItem key={h} value={h}>{h}</SelectItem>
                       ))}
@@ -737,8 +861,8 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
               ))}
             </div>
 
-            {/* Preview first 3 rows */}
-            {csvRawRows.length > 0 && columnMapping.prompt && columnMapping.llm_name && (
+            {/* Preview */}
+            {csvRawRows.length > 0 && columnMapping.prompt && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">Aperçu (3 premières lignes) :</p>
                 <div className="rounded border overflow-auto max-h-32">
@@ -746,16 +870,16 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-xs">Prompt</TableHead>
-                        <TableHead className="text-xs">LLM</TableHead>
-                        {columnMapping.score && <TableHead className="text-xs">Score</TableHead>}
+                        {columnMapping.poids && <TableHead className="text-xs">Poids</TableHead>}
+                        {columnMapping.axe && <TableHead className="text-xs">Axe</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {csvRawRows.slice(0, 3).map((row, i) => (
                         <TableRow key={i}>
                           <TableCell className="text-xs truncate max-w-[200px]">{row[columnMapping.prompt]}</TableCell>
-                          <TableCell className="text-xs">{row[columnMapping.llm_name]}</TableCell>
-                          {columnMapping.score && <TableCell className="text-xs">{row[columnMapping.score]}</TableCell>}
+                          {columnMapping.poids && <TableCell className="text-xs">{row[columnMapping.poids] || <span className="text-amber-500 italic">défaut</span>}</TableCell>}
+                          {columnMapping.axe && <TableCell className="text-xs">{row[columnMapping.axe] || <span className="text-amber-500 italic">auto</span>}</TableCell>}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -766,9 +890,9 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setShowMappingDialog(false)}>Annuler</Button>
-              <Button size="sm" onClick={handleConfirmMapping} disabled={!columnMapping.prompt || !columnMapping.llm_name} className="gap-1.5">
+              <Button size="sm" onClick={handleConfirmMapping} disabled={!columnMapping.prompt} className="gap-1.5">
                 <Check className="h-3.5 w-3.5" />
-                Importer {csvRawRows.length} lignes
+                Importer {csvRawRows.length} critères
               </Button>
             </div>
           </div>
