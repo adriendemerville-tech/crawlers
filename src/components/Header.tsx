@@ -49,7 +49,7 @@ const translations = {
     settings: 'Paramètres',
     myReports: 'Mes rapports',
     actionPlans: 'Plans d\'action',
-    correctiveCodes: 'Codes correctifs',
+    correctiveCodes: '<Scripts>',
     wallet: 'Mon Portefeuille',
     credits: 'crédits',
     logout: 'Déconnexion',
