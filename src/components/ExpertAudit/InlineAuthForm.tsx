@@ -103,15 +103,6 @@ interface InlineAuthFormProps {
 
 export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaGate = false }: InlineAuthFormProps) {
   const [personaSelected, setPersonaSelected] = useState<boolean>(!showPersonaGate || !!sessionStorage.getItem('pending_persona_type'));
-  
-  const handlePersonaSelect = (persona: PersonaType) => {
-    sessionStorage.setItem('pending_persona_type', persona);
-    setPersonaSelected(true);
-  };
-
-  if (!personaSelected) {
-    return <PersonaGate onSelect={handlePersonaSelect} />;
-  }
   const [isLogin, setIsLogin] = useState(defaultMode === 'login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,6 +115,15 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
   const t = translations[language] || translations.fr;
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
   const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  const handlePersonaSelect = (persona: PersonaType) => {
+    sessionStorage.setItem('pending_persona_type', persona);
+    setPersonaSelected(true);
+  };
+
+  if (!personaSelected) {
+    return <PersonaGate onSelect={handlePersonaSelect} />;
+  }
 
   const checkEmailExists = useCallback(async (email: string) => {
     if (!email || !email.includes('@') || email.length < 5) {
