@@ -76,6 +76,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating profile for ${firstName} ${lastName} (${user.email})`);
 
+    const personaType = metadata.persona_type || null;
+
     const { error: insertError } = await supabase
       .from('profiles')
       .insert({
@@ -84,6 +86,7 @@ Deno.serve(async (req) => {
         last_name: lastName || '',
         email: user.email || '',
         avatar_url: metadata.avatar_url || metadata.picture || null,
+        ...(personaType ? { persona_type: personaType } : {}),
       });
 
     if (insertError) {

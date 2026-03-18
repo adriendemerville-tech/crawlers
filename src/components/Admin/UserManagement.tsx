@@ -32,6 +32,7 @@ interface UserProfile {
   email: string;
   credits_balance: number;
   plan_type: string;
+  persona_type: string | null;
   created_at: string;
   updated_at: string;
   affiliate_code_used?: string | null;
