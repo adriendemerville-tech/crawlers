@@ -22,6 +22,7 @@ interface SerpKpiBannerProps {
   previousIndexedPages?: number | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  hideAvgPosition?: boolean;
 }
 
 const translations = {
@@ -119,7 +120,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
   );
 }
 
-export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefreshing }: SerpKpiBannerProps) {
+export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefreshing, hideAvgPosition }: SerpKpiBannerProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
 
