@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bug, ExternalLink, Loader2, RefreshCw, Trash2, Globe, FileText, TrendingUp } from 'lucide-react';
+import { Bug, ExternalLink, Loader2, RefreshCw, Trash2, FileText, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -276,8 +276,7 @@ export function MyCrawls() {
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                       }`}
                     >
-                      <span className="text-xs font-medium truncate flex items-center gap-1.5">
-                        <Globe className="h-3 w-3 shrink-0" />
+                      <span className="text-xs font-medium truncate">
                         {domain.replace(/^www\./, '')}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
@@ -295,8 +294,25 @@ export function MyCrawls() {
               {/* Index/Noindex weekly chart */}
               {chartData.length > 1 && (
                 <Card className="border">
-                  <CardHeader className="pb-2 pt-3 px-4">
+                  <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between">
                     <CardTitle className="text-sm">{t.indexRatio}</CardTitle>
+                    <button
+                      onClick={() => {
+                        if (!user || !selectedDomain) return;
+                        supabase
+                          .from('crawl_index_history')
+                          .select('*')
+                          .eq('domain', selectedDomain)
+                          .eq('user_id', user.id)
+                          .order('week_start_date', { ascending: true })
+                          .limit(20)
+                          .then(({ data }) => setIndexHistory(data || []));
+                      }}
+                      className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      title={t.refresh}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
                   </CardHeader>
                   <CardContent className="px-2 pb-3">
                     <ResponsiveContainer width="100%" height={160}>
@@ -325,7 +341,7 @@ export function MyCrawls() {
                     className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
                   >
                     <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
-                      <Globe className="h-5 w-5 text-purple-500" />
+                      <Bug className="h-5 w-5 text-purple-500" />
                     </div>
 
                     <div className="flex-1 min-w-0">
