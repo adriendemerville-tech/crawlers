@@ -15,18 +15,21 @@ const translations = {
     entrepreneur: 'Entrepreneur / Dirigeant',
     seo_pro: 'Expert SEO / SIO',
     marketing: 'Responsable Audience / Marketing',
+    ecommerce: 'Boutique ecommerce',
   },
   en: {
     question: 'To personalize your Crawlers experience, what is your profile?',
     entrepreneur: 'Entrepreneur / Executive',
     seo_pro: 'SEO / SIO Expert',
     marketing: 'Audience / Marketing Manager',
+    ecommerce: 'Ecommerce store',
   },
   es: {
     question: 'Para personalizar tu experiencia Crawlers, ¿cuál es tu perfil?',
     entrepreneur: 'Emprendedor / Directivo',
     seo_pro: 'Experto SEO / SIO',
     marketing: 'Responsable de Audiencia / Marketing',
+    ecommerce: 'Tienda ecommerce',
   },
 };
 
