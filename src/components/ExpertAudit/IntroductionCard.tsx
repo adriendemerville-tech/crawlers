@@ -29,7 +29,7 @@ const translations = {
   },
   en: {
     technicalTitle: 'Technical SEO Analysis',
-    strategicTitle: 'Strategic AI Analysis',
+    strategicTitle: 'What does AI think it knows about me?',
     presentation: 'Site Presentation',
     strengths: 'Key Strengths',
     improvement: 'Priority Improvement Area',
