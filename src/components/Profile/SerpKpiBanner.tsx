@@ -22,6 +22,7 @@ interface SerpKpiBannerProps {
   previousIndexedPages?: number | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  hideAvgPosition?: boolean;
 }
 
 const translations = {
