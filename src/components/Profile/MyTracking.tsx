@@ -1529,6 +1529,7 @@ export function MyTracking() {
                   <SerpKpiBanner 
                     data={latestSerpData}
                     previousIndexedPages={previousIndexedPages}
+                    hideAvgPosition={!!gscData}
                     onRefresh={async () => {
                       if (!currentSite || !user || refreshingSerp) return;
                       setRefreshingSerp(true);
