@@ -269,6 +269,10 @@ interface CrawlPage {
   has_schema_org: boolean;
   has_canonical: boolean;
   has_og: boolean;
+  has_noindex: boolean;
+  has_nofollow: boolean;
+  is_indexable: boolean;
+  index_source: string;
   issues: string[];
   content_hash?: string | null;
   schema_org_types?: string[];
@@ -446,6 +450,7 @@ export default function SiteCrawl() {
   const [phase, setPhase] = useState('');
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'score_asc' | 'score_desc' | 'path'>('score_asc');
+  const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'noindex'>('all');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
@@ -601,11 +606,20 @@ export default function SiteCrawl() {
   }, [url]);
 
   // #8: useMemo for expensive computations (MUST be before early returns)
-  const sortedPages = useMemo(() => [...pages].sort((a, b) => {
+  const filteredPages = useMemo(() => {
+    if (indexFilter === 'indexed') return pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex'));
+    if (indexFilter === 'noindex') return pages.filter(p => p.is_indexable === false || (p.issues || []).includes('noindex'));
+    return pages;
+  }, [pages, indexFilter]);
+
+  const sortedPages = useMemo(() => [...filteredPages].sort((a, b) => {
     if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
     if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
     return a.path.localeCompare(b.path);
-  }), [pages, sortBy]);
+  }), [filteredPages, sortBy]);
+
+  const indexedCount = useMemo(() => pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex')).length, [pages]);
+  const noindexCount = useMemo(() => pages.length - indexedCount, [pages, indexedCount]);
 
   const issueStats = useMemo(() => pages.reduce<Record<string, number>>((acc, p) => {
     (p.issues || []).forEach((issue: string) => {
@@ -1243,18 +1257,43 @@ export default function SiteCrawl() {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5 text-muted-foreground" />
-                      {t.crawledPages} ({pages.length})
+                      {t.crawledPages} ({filteredPages.length})
                     </CardTitle>
-                    <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                      <SelectTrigger className="w-44">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="score_asc">{t.sortScoreAsc}</SelectItem>
-                        <SelectItem value="score_desc">{t.sortScoreDesc}</SelectItem>
-                        <SelectItem value="path">{t.sortPath}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      {/* Index/Noindex toggle */}
+                      <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+                        <button
+                          onClick={() => setIndexFilter(indexFilter === 'noindex' ? 'indexed' : 'noindex')}
+                          className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                            indexFilter === 'indexed' || indexFilter === 'all'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          ✓ Index ({indexedCount})
+                        </button>
+                        <button
+                          onClick={() => setIndexFilter(indexFilter === 'indexed' ? 'noindex' : 'indexed')}
+                          className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                            indexFilter === 'noindex'
+                              ? 'bg-destructive/15 text-destructive'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          ✗ Noindex ({noindexCount})
+                        </button>
+                      </div>
+                      <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                        <SelectTrigger className="w-44">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="score_asc">{t.sortScoreAsc}</SelectItem>
+                          <SelectItem value="score_desc">{t.sortScoreDesc}</SelectItem>
+                          <SelectItem value="path">{t.sortPath}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
