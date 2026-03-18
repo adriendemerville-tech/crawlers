@@ -920,31 +920,36 @@ export function MyTracking() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Site selector tabs + add button */}
-              <div className="flex items-center gap-2">
-                {sites.length > 1 ? (
-                  <Tabs value={selectedSite || ''} onValueChange={setSelectedSite} className="flex-1 min-w-0">
-                    <TabsList className="w-full flex flex-wrap h-auto gap-1">
-                      {sites.map(site => (
-                        <TabsTrigger key={site.id} value={site.id} className="gap-2 text-xs sm:text-sm">
-                          {site.domain}
-                          {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin" />}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                ) : (
-                  <div className="flex-1" />
-                )}
+            <div className="flex gap-4">
+              {/* Vertical site sidebar */}
+              <div className="flex flex-col gap-1 shrink-0 w-36">
+                {sites.map(site => (
+                  <button
+                    key={site.id}
+                    onClick={() => setSelectedSite(site.id)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+                      selectedSite === site.id
+                        ? 'bg-primary/10 text-primary border border-primary/20'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                    }`}
+                  >
+                    <Globe className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                    {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
+                  </button>
+                ))}
                 <button
                   onClick={() => setShowAddModal(true)}
                   aria-label={t.addSite}
-                  className="shrink-0 h-7 w-7 rounded-md border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
+                  <span>{t.addSite}</span>
                 </button>
               </div>
+
+              {/* Main content */}
+              <div className="flex-1 min-w-0">
 
               {currentSite && (
                 <div className="space-y-6">
