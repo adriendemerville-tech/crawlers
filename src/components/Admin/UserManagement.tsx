@@ -372,7 +372,7 @@ export function UserManagement() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant={personaFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0">
-                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : personaFilter === 'ecommerce' ? '🛒' : '👤'}
+                
                 {personaFilter || 'Persona'}
                 <ChevronDown className="h-3 w-3" />
               </Button>
