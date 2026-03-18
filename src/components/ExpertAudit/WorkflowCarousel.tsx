@@ -15,7 +15,7 @@ const translations = {
   fr: {
     step1Title: 'Audit Technique SEO',
     step1Desc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
-    step2Title: 'Audit Stratégique IA',
+    step2Title: 'Audit Stratégique GEO',
     step2Desc: 'Analyse de positionnement, citabilité LLM, stratégie GEO-SEO, étude de la concurrence et des mots-clés.',
     step3Title: 'Architecte Génératif',
     step3Desc: 'Recevez le code JSON-LD optimisé pour votre site.',
@@ -32,7 +32,7 @@ const translations = {
   en: {
     step1Title: 'Technical SEO Audit',
     step1Desc: 'Performance, SEO, security, Core Web Vitals. Score out of 200.',
-    step2Title: 'Strategic AI Audit',
+    step2Title: 'Strategic GEO Audit',
     step2Desc: 'Positioning analysis, LLM citability, GEO-SEO strategy, competitor and keyword research.',
     step3Title: 'Generative Architect',
     step3Desc: 'Get optimized JSON-LD code for your site.',
@@ -49,7 +49,7 @@ const translations = {
   es: {
     step1Title: 'Auditoría Técnica SEO',
     step1Desc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
-    step2Title: 'Auditoría Estratégica IA',
+    step2Title: 'Auditoría Estratégica GEO',
     step2Desc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO-SEO, estudio de competencia y palabras clave.',
     step3Title: 'Arquitecto Generativo',
     step3Desc: 'Reciba el código JSON-LD optimizado para su sitio.',

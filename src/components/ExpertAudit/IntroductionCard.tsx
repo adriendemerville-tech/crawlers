@@ -20,7 +20,7 @@ interface IntroductionCardProps {
 const translations = {
   fr: {
     technicalTitle: 'Analyse Technique SEO',
-    strategicTitle: 'Analyse Stratégique IA',
+    strategicTitle: 'Qu\'est ce que l\'IA pense savoir de moi ?',
     presentation: 'Présentation du site',
     strengths: 'Points forts identifiés',
     improvement: 'Axe d\'amélioration prioritaire',
@@ -29,7 +29,7 @@ const translations = {
   },
   en: {
     technicalTitle: 'Technical SEO Analysis',
-    strategicTitle: 'Strategic AI Analysis',
+    strategicTitle: 'What does AI think it knows about me?',
     presentation: 'Site Presentation',
     strengths: 'Key Strengths',
     improvement: 'Priority Improvement Area',
@@ -38,7 +38,7 @@ const translations = {
   },
   es: {
     technicalTitle: 'Análisis Técnico SEO',
-    strategicTitle: 'Análisis Estratégico IA',
+    strategicTitle: '¿Qué cree saber la IA sobre mí?',
     presentation: 'Presentación del sitio',
     strengths: 'Puntos fuertes identificados',
     improvement: 'Área de mejora prioritaria',

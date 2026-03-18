@@ -131,7 +131,7 @@ const translations = {
     subtitlePart3: 'adapté à vos besoins.',
     technicalTitle: 'Audit Technique SEO',
     technicalDesc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
-    strategicTitle: 'Audit Stratégique IA',
+    strategicTitle: 'Audit Stratégique GEO',
     strategicDesc: 'Analyse de positionnement, citabilité LLM, stratégie GEO 2026.',
     placeholder: '',
     launch: 'Démarrer',
@@ -148,7 +148,7 @@ const translations = {
     generatedAt: 'Audit généré le',
     or: 'ou',
     viewReport: 'Rapport',
-    strategicSectionTitle: 'Audit stratégique SEO/GEO',
+    strategicSectionTitle: 'Audit stratégique GEO',
     strategicSectionDesc: 'Résultats détaillés de GPT-4, Claude et Gemini.',
     generateCode: 'Générer Code Correctif',
     newAudit: 'Nouvel Audit',
@@ -163,7 +163,7 @@ const translations = {
     subtitlePart3: 'tailored to your needs.',
     technicalTitle: 'Technical SEO Audit',
     technicalDesc: 'Performance, SEO, security, Core Web Vitals. Score out of 200 points.',
-    strategicTitle: 'Strategic AI Audit',
+    strategicTitle: 'Strategic GEO Audit',
     strategicDesc: 'Positioning analysis, LLM citability, GEO 2026 strategy.',
     placeholder: '',
     launch: 'Start',
@@ -195,7 +195,7 @@ const translations = {
     subtitlePart3: 'adaptado a tus necesidades.',
     technicalTitle: 'Auditoría Técnica SEO',
     technicalDesc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
-    strategicTitle: 'Auditoría Estratégica IA',
+    strategicTitle: 'Auditoría Estratégica GEO',
     strategicDesc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO 2026.',
     placeholder: '',
     launch: 'Iniciar',
@@ -577,7 +577,7 @@ export function ExpertAuditDashboard() {
     if (!isAuthenticated || !reportResult) return;
 
     const reportType = mode === 'technical' ? 'seo_technical' : 'seo_strategic';
-    const title = `${mode === 'technical' ? 'Audit Technique' : 'Audit Stratégique'} - ${reportResult.domain}`;
+    const title = `${mode === 'technical' ? 'Audit Technique SEO' : 'Audit Stratégique GEO'} - ${reportResult.domain}`;
     
     await saveReport({
       reportType: reportType as any,
