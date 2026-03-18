@@ -961,6 +961,21 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Internal Links In/Out** | Nombre de liens internes entrants et sortants par page, extraits du crawl multi-pages. |
 | **Cluster ID** | Regroupement thématique automatique des pages par similarité sémantique (TF-IDF + analyse IA). |
 | **Page Authority** | Score d'autorité interne calculé par l'algorithme PageRank adapté au maillage interne du site. |
+
+---
+
+## Indicateurs GMB (Google My Business)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Search Views** | Nombre de fois où la fiche apparaît dans les résultats de recherche Google (Business Profile Performance API). |
+| **Maps Views** | Nombre de fois où la fiche apparaît dans Google Maps. |
+| **Website Clicks** | Nombre de clics vers le site web depuis la fiche GMB. |
+| **Direction Requests** | Nombre de demandes d'itinéraire vers l'établissement. |
+| **Phone Calls** | Nombre d'appels téléphoniques initiés depuis la fiche. |
+| **Avg Rating** | Note moyenne des avis Google (1-5 étoiles). |
+| **Review Volume** | Nombre total d'avis et tendance (nouveaux avis / semaine). |
+| **Photo Views** | Nombre de vues des photos publiées sur la fiche. |
 `,
   },
 ];
