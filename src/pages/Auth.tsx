@@ -227,11 +227,7 @@ export default function Auth() {
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
-    const { error, data: signUpData } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
-    // Save persona_type to profile if signup succeeded and persona was selected
-    if (!error && selectedPersona && signUpData?.user?.id) {
-      await supabase.from('profiles').update({ persona_type: selectedPersona }).eq('id', signUpData.user.id);
-    }
+    const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
     if (error) {
