@@ -143,23 +143,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
     return <PersonaGate onSelect={handlePersonaSelect} />;
   }
 
-  const checkEmailExists = useCallback(async (email: string) => {
-    if (!email || !email.includes('@') || email.length < 5) {
-      setExistingUser(false);
-      return;
-    }
-    try {
-      const { data } = await supabase.functions.invoke('auth-actions', { body: { action: 'check-email', email } });
-      setExistingUser(data?.exists === true);
-    } catch {
-      setExistingUser(false);
-    }
-  }, []);
 
-  const debouncedEmailCheck = useCallback((email: string) => {
-    if (emailCheckTimerRef.current) clearTimeout(emailCheckTimerRef.current);
-    emailCheckTimerRef.current = setTimeout(() => checkEmailExists(email), 500);
-  }, [checkEmailExists]);
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {
