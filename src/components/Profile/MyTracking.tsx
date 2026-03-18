@@ -31,6 +31,36 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type D
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Sortable sidebar button for drag-and-drop site reordering
+function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
+  id: string; label: string; isActive: boolean; isRefreshing: boolean; onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: 'grab',
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+        isActive
+          ? 'bg-primary/10 text-primary border border-primary/20'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+      }`}
+    >
+      <span className="truncate">{label}</span>
+      {isRefreshing && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
+    </button>
+  );
+}
+
 
 const translations = {
   fr: {
