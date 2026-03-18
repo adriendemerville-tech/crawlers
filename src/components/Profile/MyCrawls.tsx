@@ -294,8 +294,25 @@ export function MyCrawls() {
               {/* Index/Noindex weekly chart */}
               {chartData.length > 1 && (
                 <Card className="border">
-                  <CardHeader className="pb-2 pt-3 px-4">
+                  <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between">
                     <CardTitle className="text-sm">{t.indexRatio}</CardTitle>
+                    <button
+                      onClick={() => {
+                        if (!user || !selectedDomain) return;
+                        supabase
+                          .from('crawl_index_history')
+                          .select('*')
+                          .eq('domain', selectedDomain)
+                          .eq('user_id', user.id)
+                          .order('week_start_date', { ascending: true })
+                          .limit(20)
+                          .then(({ data }) => setIndexHistory(data || []));
+                      }}
+                      className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      title={t.refresh}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
                   </CardHeader>
                   <CardContent className="px-2 pb-3">
                     <ResponsiveContainer width="100%" height={160}>
