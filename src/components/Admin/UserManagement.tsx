@@ -372,7 +372,7 @@ export function UserManagement() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant={personaFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0">
-                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : '👤'}
+                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : personaFilter === 'ecommerce' ? '🛒' : '👤'}
                 {personaFilter || 'Persona'}
                 <ChevronDown className="h-3 w-3" />
               </Button>
@@ -384,6 +384,7 @@ export function UserManagement() {
                 { id: 'entrepreneur', label: '🏢 Entrepreneur' },
                 { id: 'seo_pro', label: '🔍 SEO/SIO' },
                 { id: 'marketing', label: '📣 Marketing' },
+                { id: 'ecommerce', label: '🛒 Ecommerce' },
               ].map((p) => (
                 <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
                   {personaFilter === p.id ? `✓ ${p.label}` : p.label}

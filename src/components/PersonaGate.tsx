@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Search, Megaphone, Loader2 } from 'lucide-react';
+import { Briefcase, Search, Megaphone, ShoppingBag, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export type PersonaType = 'entrepreneur' | 'seo_pro' | 'marketing';
+export type PersonaType = 'entrepreneur' | 'seo_pro' | 'marketing' | 'ecommerce';
 
 interface PersonaGateProps {
   onSelect: (persona: PersonaType) => void;
@@ -15,18 +15,21 @@ const translations = {
     entrepreneur: 'Entrepreneur / Dirigeant',
     seo_pro: 'Expert SEO / SIO',
     marketing: 'Responsable Audience / Marketing',
+    ecommerce: 'Boutique ecommerce',
   },
   en: {
     question: 'To personalize your Crawlers experience, what is your profile?',
     entrepreneur: 'Entrepreneur / Executive',
     seo_pro: 'SEO / SIO Expert',
     marketing: 'Audience / Marketing Manager',
+    ecommerce: 'Ecommerce store',
   },
   es: {
     question: 'Para personalizar tu experiencia Crawlers, ¿cuál es tu perfil?',
     entrepreneur: 'Emprendedor / Directivo',
     seo_pro: 'Experto SEO / SIO',
     marketing: 'Responsable de Audiencia / Marketing',
+    ecommerce: 'Tienda ecommerce',
   },
 };
 
@@ -34,6 +37,7 @@ const personas: { id: PersonaType; icon: typeof Briefcase; gradient: string }[] 
   { id: 'entrepreneur', icon: Briefcase, gradient: 'from-violet-600 to-violet-400' },
   { id: 'seo_pro', icon: Search, gradient: 'from-violet-500 to-amber-400' },
   { id: 'marketing', icon: Megaphone, gradient: 'from-amber-500 to-amber-300' },
+  { id: 'ecommerce', icon: ShoppingBag, gradient: 'from-emerald-500 to-teal-400' },
 ];
 
 export function PersonaGate({ onSelect }: PersonaGateProps) {
