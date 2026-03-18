@@ -606,11 +606,20 @@ export default function SiteCrawl() {
   }, [url]);
 
   // #8: useMemo for expensive computations (MUST be before early returns)
-  const sortedPages = useMemo(() => [...pages].sort((a, b) => {
+  const filteredPages = useMemo(() => {
+    if (indexFilter === 'indexed') return pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex'));
+    if (indexFilter === 'noindex') return pages.filter(p => p.is_indexable === false || (p.issues || []).includes('noindex'));
+    return pages;
+  }, [pages, indexFilter]);
+
+  const sortedPages = useMemo(() => [...filteredPages].sort((a, b) => {
     if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
     if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
     return a.path.localeCompare(b.path);
-  }), [pages, sortBy]);
+  }), [filteredPages, sortBy]);
+
+  const indexedCount = useMemo(() => pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex')).length, [pages]);
+  const noindexCount = useMemo(() => pages.length - indexedCount, [pages, indexedCount]);
 
   const issueStats = useMemo(() => pages.reduce<Record<string, number>>((acc, p) => {
     (p.issues || []).forEach((issue: string) => {
