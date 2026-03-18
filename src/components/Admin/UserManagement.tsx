@@ -182,7 +182,8 @@ export function UserManagement() {
       user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesAction = !actionFilter || userIdsByAction.has(user.user_id);
-    return matchesSearch && matchesAction;
+    const matchesPersona = !personaFilter || user.persona_type === personaFilter;
+    return matchesSearch && matchesAction && matchesPersona;
   });
 
   const handleAddCredits = async (amount: number) => {
