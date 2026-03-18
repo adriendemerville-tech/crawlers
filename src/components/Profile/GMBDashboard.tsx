@@ -400,7 +400,7 @@ function PostsTab() {
 
 // ─── Info Tab ──────────────────────────────────────────────────
 
-function InfoTab() {
+function InfoTab({ location }: { location: typeof SIMULATED_LOCATIONS[0] }) {
   return (
     <div className="space-y-4">
       <Card>
@@ -408,7 +408,7 @@ function InfoTab() {
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Store className="h-4 w-4" />
             Informations de l'établissement
-            {SIMULATED_INFO.verified && (
+            {location.verified && (
               <Badge variant="secondary" className="text-[10px] gap-1 bg-green-500/10 text-green-600">
                 <CheckCircle2 className="h-3 w-3" />
                 Vérifié
@@ -420,27 +420,27 @@ function InfoTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Nom</label>
-              <Input value={SIMULATED_INFO.name} readOnly className="text-sm" />
+              <Input value={location.name} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Catégorie</label>
-              <Input value={SIMULATED_INFO.category} readOnly className="text-sm" />
+              <Input value={location.category} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />Adresse</label>
-              <Input value={SIMULATED_INFO.address} readOnly className="text-sm" />
+              <Input value={location.address} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />Téléphone</label>
-              <Input value={SIMULATED_INFO.phone} readOnly className="text-sm" />
+              <Input value={location.phone} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" />Site web</label>
-              <Input value={SIMULATED_INFO.website} readOnly className="text-sm" />
+              <Input value={location.website} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><Image className="h-3 w-3" />Photos</label>
-              <Input value={`${SIMULATED_INFO.photos_count} photos publiées`} readOnly className="text-sm" />
+              <Input value={`${location.photos_count} photos publiées`} readOnly className="text-sm" />
             </div>
           </div>
         </CardContent>
@@ -455,13 +455,13 @@ function InfoTab() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Object.entries(SIMULATED_INFO.hours).map(([day, hours]) => (
+            {Object.entries(location.hours).map(([day, hours]) => (
               <div key={day} className="flex items-center justify-between text-sm">
                 <span className="font-medium w-24">{day}</span>
                 {hours ? (
                   <span className="text-muted-foreground">{hours.open} — {hours.close}</span>
                 ) : (
-                  <span className="text-red-500 text-xs">Fermé</span>
+                  <span className="text-destructive text-xs">Fermé</span>
                 )}
               </div>
             ))}
@@ -509,6 +509,11 @@ function PhotosTab() {
 export function GMBDashboard() {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState('stats');
+  const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
+
+  const locations = SIMULATED_LOCATIONS;
+  const activeLocation = locations.find(l => l.id === selectedLocationId) || locations[0];
+  const showSidebar = locations.length > 1;
 
   return (
     <div className="space-y-4">
@@ -525,66 +530,94 @@ export function GMBDashboard() {
         </div>
       </div>
 
-      {/* Business summary card */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Store className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold">{SIMULATED_INFO.name}</h3>
-                {SIMULATED_INFO.verified && (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" />{SIMULATED_INFO.address}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center gap-1">
-                <span className="text-2xl font-bold">4.3</span>
-                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-              </div>
-              <p className="text-[10px] text-muted-foreground">47 avis Google</p>
-            </div>
+      <div className="flex gap-4">
+        {/* Location sidebar — only shown when 2+ locations */}
+        {showSidebar && (
+          <div className="flex flex-col gap-1 shrink-0 w-40">
+            {locations.map(loc => (
+              <button
+                key={loc.id}
+                onClick={() => setSelectedLocationId(loc.id)}
+                className={`flex flex-col gap-0.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                  selectedLocationId === loc.id
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                }`}
+              >
+                <span className="text-xs font-medium truncate">{loc.name.split('—').pop()?.trim() || loc.name}</span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Star className="h-2.5 w-2.5 text-yellow-500 fill-yellow-500" />
+                  {loc.avg_rating} · {loc.reviews_count} avis
+                </span>
+              </button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-5 h-9">
-          <TabsTrigger value="stats" className="text-xs gap-1">
-            <BarChart3 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Stats</span>
-          </TabsTrigger>
-          <TabsTrigger value="reviews" className="text-xs gap-1">
-            <MessageSquare className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Avis</span>
-          </TabsTrigger>
-          <TabsTrigger value="posts" className="text-xs gap-1">
-            <Megaphone className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Posts</span>
-          </TabsTrigger>
-          <TabsTrigger value="info" className="text-xs gap-1">
-            <Store className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Infos</span>
-          </TabsTrigger>
-          <TabsTrigger value="photos" className="text-xs gap-1">
-            <Image className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Photos</span>
-          </TabsTrigger>
-        </TabsList>
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Business summary card */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Store className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{activeLocation.name}</h3>
+                    {activeLocation.verified && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{activeLocation.address}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    <span className="text-2xl font-bold">{activeLocation.avg_rating}</span>
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{activeLocation.reviews_count} avis Google</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="stats"><StatsTab /></TabsContent>
-        <TabsContent value="reviews"><ReviewsTab /></TabsContent>
-        <TabsContent value="posts"><PostsTab /></TabsContent>
-        <TabsContent value="info"><InfoTab /></TabsContent>
-        <TabsContent value="photos"><PhotosTab /></TabsContent>
-      </Tabs>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full grid grid-cols-5 h-9">
+              <TabsTrigger value="stats" className="text-xs gap-1">
+                <BarChart3 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Stats</span>
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className="text-xs gap-1">
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Avis</span>
+              </TabsTrigger>
+              <TabsTrigger value="posts" className="text-xs gap-1">
+                <Megaphone className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Posts</span>
+              </TabsTrigger>
+              <TabsTrigger value="info" className="text-xs gap-1">
+                <Store className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Infos</span>
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="text-xs gap-1">
+                <Image className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Photos</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="stats"><StatsTab /></TabsContent>
+            <TabsContent value="reviews"><ReviewsTab /></TabsContent>
+            <TabsContent value="posts"><PostsTab /></TabsContent>
+            <TabsContent value="info"><InfoTab location={activeLocation} /></TabsContent>
+            <TabsContent value="photos"><PhotosTab /></TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
