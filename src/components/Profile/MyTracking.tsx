@@ -812,7 +812,20 @@ export function MyTracking() {
   const currentSite = sites.find(s => s.id === selectedSite);
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
-  
+
+  // DnD sensors for sidebar reordering
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleSiteDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setSites(prev => {
+      const oldIdx = prev.findIndex(s => s.id === active.id);
+      const newIdx = prev.findIndex(s => s.id === over.id);
+      if (oldIdx === -1 || newIdx === -1) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  }, []);
+
   // Extract performance scores from raw_data
   const getPerformanceScore = (entry: StatsEntry) => {
     const raw = entry as any;
