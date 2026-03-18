@@ -195,7 +195,7 @@ const translations = {
     subtitlePart3: 'adaptado a tus necesidades.',
     technicalTitle: 'Auditoría Técnica SEO',
     technicalDesc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
-    strategicTitle: 'Auditoría Estratégica IA',
+    strategicTitle: 'Auditoría Estratégica GEO',
     strategicDesc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO 2026.',
     placeholder: '',
     launch: 'Iniciar',
