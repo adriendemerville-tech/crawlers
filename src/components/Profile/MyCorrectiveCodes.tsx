@@ -18,6 +18,38 @@ import { ScriptDebugTool } from './ScriptDebugTool';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { WordPressConfigCard } from './WordPressConfigCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable sidebar button for drag-and-drop domain reordering
+function SortableDomainButton({ id, label, isActive, onClick }: {
+  id: string; label: string; isActive: boolean; onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: 'grab',
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={`text-left text-xs px-3 py-2 rounded-md truncate transition-colors ${
+        isActive
+          ? 'bg-primary text-primary-foreground font-medium'
+          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 interface CorrectiveCodeFix {
   id: string;
