@@ -273,6 +273,12 @@ export default function Profile() {
                   </TabsContent>
                 )}
 
+                {isProUser && (
+                  <TabsContent value="gmb">
+                    <GMBDashboard />
+                  </TabsContent>
+                )}
+
                 {hasAdminAccess && (
                   <TabsContent value="admin">
                     <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
