@@ -16,6 +16,7 @@ const MyCorrectiveCodes = lazy(() => import('@/components/Profile/MyCorrectiveCo
 const MyWallet = lazy(() => import('@/components/Profile/MyWallet').then(m => ({ default: m.MyWallet })));
 const MyTracking = lazy(() => import('@/components/Profile/MyTracking').then(m => ({ default: m.MyTracking })));
 const MyCrawls = lazy(() => import('@/components/Profile/MyCrawls').then(m => ({ default: m.MyCrawls })));
+const GMBDashboard = lazy(() => import('@/components/Profile/GMBDashboard').then(m => ({ default: m.GMBDashboard })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
