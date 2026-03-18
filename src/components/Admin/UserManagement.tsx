@@ -381,10 +381,10 @@ export function UserManagement() {
               <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par persona</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {[
-                { id: 'entrepreneur', label: '🏢 Entrepreneur' },
-                { id: 'seo_pro', label: '🔍 SEO/SIO' },
-                { id: 'marketing', label: '📣 Marketing' },
-                { id: 'ecommerce', label: '🛒 Ecommerce' },
+                { id: 'entrepreneur', label: 'Entrepreneur' },
+                { id: 'seo_pro', label: 'SEO/SIO' },
+                { id: 'marketing', label: 'Marketing' },
+                { id: 'ecommerce', label: 'Ecommerce' },
               ].map((p) => (
                 <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
                   {personaFilter === p.id ? `✓ ${p.label}` : p.label}
