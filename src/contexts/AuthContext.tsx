@@ -156,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Create profile after successful signup
     if (data.user) {
+      const personaType = sessionStorage.getItem('pending_persona_type');
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -163,7 +164,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           first_name: firstName,
           last_name: lastName,
           email: email,
+          ...(personaType ? { persona_type: personaType } : {}),
         });
+      if (personaType) sessionStorage.removeItem('pending_persona_type');
 
       if (profileError) {
         console.error('Error creating profile:', profileError);

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
+import { PersonaGate, type PersonaType } from '@/components/PersonaGate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -97,9 +98,11 @@ const translations = {
 interface InlineAuthFormProps {
   defaultMode?: 'login' | 'signup';
   onSuccess?: () => void;
+  showPersonaGate?: boolean;
 }
 
-export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuthFormProps) {
+export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaGate = false }: InlineAuthFormProps) {
+  const [personaSelected, setPersonaSelected] = useState<boolean>(!showPersonaGate || !!sessionStorage.getItem('pending_persona_type'));
   const [isLogin, setIsLogin] = useState(defaultMode === 'login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +133,17 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     if (emailCheckTimerRef.current) clearTimeout(emailCheckTimerRef.current);
     emailCheckTimerRef.current = setTimeout(() => checkEmailExists(email), 500);
   }, [checkEmailExists]);
+  
+  const handlePersonaSelect = (persona: PersonaType) => {
+    sessionStorage.setItem('pending_persona_type', persona);
+    setPersonaSelected(true);
+  };
+
+  if (!personaSelected) {
+    return <PersonaGate onSelect={handlePersonaSelect} />;
+  }
+
+
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {

@@ -32,6 +32,7 @@ interface UserProfile {
   email: string;
   credits_balance: number;
   plan_type: string;
+  persona_type: string | null;
   created_at: string;
   updated_at: string;
   affiliate_code_used?: string | null;
@@ -58,6 +59,7 @@ export function UserManagement() {
   const [actionFilter, setActionFilter] = useState<string | null>(null);
   const [userIdsByAction, setUserIdsByAction] = useState<Set<string>>(new Set());
   const [actionFilterLoading, setActionFilterLoading] = useState(false);
+  const [personaFilter, setPersonaFilter] = useState<string | null>(null);
 
   const fetchAllRoles = async () => {
     const { data } = await supabase
@@ -180,7 +182,8 @@ export function UserManagement() {
       user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesAction = !actionFilter || userIdsByAction.has(user.user_id);
-    return matchesSearch && matchesAction;
+    const matchesPersona = !personaFilter || user.persona_type === personaFilter;
+    return matchesSearch && matchesAction && matchesPersona;
   });
 
   const handleAddCredits = async (amount: number) => {
@@ -366,6 +369,37 @@ export function UserManagement() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={personaFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0">
+                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : '👤'}
+                {personaFilter || 'Persona'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par persona</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {[
+                { id: 'entrepreneur', label: '🏢 Entrepreneur' },
+                { id: 'seo_pro', label: '🔍 SEO/SIO' },
+                { id: 'marketing', label: '📣 Marketing' },
+              ].map((p) => (
+                <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
+                  {personaFilter === p.id ? `✓ ${p.label}` : p.label}
+                </DropdownMenuItem>
+              ))}
+              {personaFilter && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setPersonaFilter(null)} className="gap-2 text-muted-foreground">
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {loading ? (
@@ -379,6 +413,7 @@ export function UserManagement() {
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Persona</TableHead>
                   <TableHead className="text-center">Crédits</TableHead>
                   <TableHead>Inscrit le</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -387,7 +422,7 @@ export function UserManagement() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
@@ -415,6 +450,15 @@ export function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.persona_type ? (
+                          <Badge variant="outline" className="text-xs">
+                            {user.persona_type === 'entrepreneur' ? '🏢 Entrepreneur' : user.persona_type === 'seo_pro' ? '🔍 SEO/SIO' : user.persona_type === 'marketing' ? '📣 Marketing' : user.persona_type}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Badge variant={user.credits_balance > 0 ? 'default' : 'secondary'}>
                           {user.credits_balance}
