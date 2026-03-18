@@ -970,10 +970,10 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.7.0',
-  lastUpdated: '2026-03-17',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
-  totalEdgeFunctions: 90,
-  totalTables: '40+',
-  totalLinesOfCode: '140 000+',
+  version: '1.8.0',
+  lastUpdated: '2026-03-18',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB',
+  totalEdgeFunctions: 91,
+  totalTables: '45+',
+  totalLinesOfCode: '145 000+',
 };
