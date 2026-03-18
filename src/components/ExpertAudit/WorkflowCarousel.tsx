@@ -32,7 +32,7 @@ const translations = {
   en: {
     step1Title: 'Technical SEO Audit',
     step1Desc: 'Performance, SEO, security, Core Web Vitals. Score out of 200.',
-    step2Title: 'Strategic AI Audit',
+    step2Title: 'Strategic GEO Audit',
     step2Desc: 'Positioning analysis, LLM citability, GEO-SEO strategy, competitor and keyword research.',
     step3Title: 'Generative Architect',
     step3Desc: 'Get optimized JSON-LD code for your site.',
