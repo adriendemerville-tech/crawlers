@@ -96,6 +96,7 @@ export function MyCorrectiveCodes() {
   const t = translations[language];
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
