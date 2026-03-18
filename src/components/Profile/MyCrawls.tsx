@@ -276,8 +276,7 @@ export function MyCrawls() {
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                       }`}
                     >
-                      <span className="text-xs font-medium truncate flex items-center gap-1.5">
-                        <Globe className="h-3 w-3 shrink-0" />
+                      <span className="text-xs font-medium truncate">
                         {domain.replace(/^www\./, '')}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
