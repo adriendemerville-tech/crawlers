@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, ElementType } from 'react';
+import { useState, useEffect, useCallback, useMemo, ElementType, useRef } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
