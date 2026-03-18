@@ -384,6 +384,7 @@ export function UserManagement() {
                 { id: 'entrepreneur', label: '🏢 Entrepreneur' },
                 { id: 'seo_pro', label: '🔍 SEO/SIO' },
                 { id: 'marketing', label: '📣 Marketing' },
+                { id: 'ecommerce', label: '🛒 Ecommerce' },
               ].map((p) => (
                 <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
                   {personaFilter === p.id ? `✓ ${p.label}` : p.label}

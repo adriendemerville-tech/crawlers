@@ -37,6 +37,7 @@ const personas: { id: PersonaType; icon: typeof Briefcase; gradient: string }[] 
   { id: 'entrepreneur', icon: Briefcase, gradient: 'from-violet-600 to-violet-400' },
   { id: 'seo_pro', icon: Search, gradient: 'from-violet-500 to-amber-400' },
   { id: 'marketing', icon: Megaphone, gradient: 'from-amber-500 to-amber-300' },
+  { id: 'ecommerce', icon: ShoppingBag, gradient: 'from-emerald-500 to-teal-400' },
 ];
 
 export function PersonaGate({ onSelect }: PersonaGateProps) {
