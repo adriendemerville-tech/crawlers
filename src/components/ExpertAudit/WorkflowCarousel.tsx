@@ -15,7 +15,7 @@ const translations = {
   fr: {
     step1Title: 'Audit Technique SEO',
     step1Desc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
-    step2Title: 'Audit Stratégique IA',
+    step2Title: 'Audit Stratégique GEO',
     step2Desc: 'Analyse de positionnement, citabilité LLM, stratégie GEO-SEO, étude de la concurrence et des mots-clés.',
     step3Title: 'Architecte Génératif',
     step3Desc: 'Recevez le code JSON-LD optimisé pour votre site.',
