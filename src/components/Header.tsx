@@ -352,7 +352,7 @@ export function Header() {
               </Button>
             ) : (
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" asChild>
-                <Link to="/auth">Sign in</Link>
+                <Link to="/auth?mode=signup">{t.signup}</Link>
               </Button>
             )
           )}
