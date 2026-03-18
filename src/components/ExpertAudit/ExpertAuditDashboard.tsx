@@ -131,7 +131,7 @@ const translations = {
     subtitlePart3: 'adapté à vos besoins.',
     technicalTitle: 'Audit Technique SEO',
     technicalDesc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
-    strategicTitle: 'Audit Stratégique IA',
+    strategicTitle: 'Audit Stratégique GEO',
     strategicDesc: 'Analyse de positionnement, citabilité LLM, stratégie GEO 2026.',
     placeholder: '',
     launch: 'Démarrer',
