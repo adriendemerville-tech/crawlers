@@ -933,7 +933,6 @@ export function MyTracking() {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                     }`}
                   >
-                    <Globe className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
                     {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
                   </button>
