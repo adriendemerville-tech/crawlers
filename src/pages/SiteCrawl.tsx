@@ -794,6 +794,14 @@ export default function SiteCrawl() {
         {!isUnlimitedUser && (
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
+            {/* Back to home arrow */}
+            <button
+              onClick={() => navigate('/')}
+              className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-sm">{language === 'fr' ? 'Retour' : language === 'es' ? 'Volver' : 'Back'}</span>
+            </button>
             <Card className="relative z-10 w-full max-w-lg mx-4 border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
               <div className="absolute top-0 left-0">
                 <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-3 py-1 text-xs font-bold gap-1.5 shadow-lg">
