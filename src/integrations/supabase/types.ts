@@ -1660,6 +1660,230 @@ export type Database = {
           },
         ]
       }
+      gmb_locations: {
+        Row: {
+          address: string | null
+          attributes: Json | null
+          category: string | null
+          created_at: string
+          hours: Json | null
+          id: string
+          location_name: string
+          phone: string | null
+          place_id: string | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          attributes?: Json | null
+          category?: string | null
+          created_at?: string
+          hours?: Json | null
+          id?: string
+          location_name: string
+          phone?: string | null
+          place_id?: string | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          attributes?: Json | null
+          category?: string | null
+          created_at?: string
+          hours?: Json | null
+          id?: string
+          location_name?: string
+          phone?: string | null
+          place_id?: string | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_locations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: true
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmb_performance: {
+        Row: {
+          avg_rating: number | null
+          created_at: string
+          direction_requests: number | null
+          gmb_location_id: string
+          id: string
+          maps_views: number | null
+          measured_at: string
+          phone_calls: number | null
+          photo_views: number | null
+          search_views: number | null
+          total_reviews: number | null
+          user_id: string
+          website_clicks: number | null
+          week_start_date: string
+        }
+        Insert: {
+          avg_rating?: number | null
+          created_at?: string
+          direction_requests?: number | null
+          gmb_location_id: string
+          id?: string
+          maps_views?: number | null
+          measured_at?: string
+          phone_calls?: number | null
+          photo_views?: number | null
+          search_views?: number | null
+          total_reviews?: number | null
+          user_id: string
+          website_clicks?: number | null
+          week_start_date: string
+        }
+        Update: {
+          avg_rating?: number | null
+          created_at?: string
+          direction_requests?: number | null
+          gmb_location_id?: string
+          id?: string
+          maps_views?: number | null
+          measured_at?: string
+          phone_calls?: number | null
+          photo_views?: number | null
+          search_views?: number | null
+          total_reviews?: number | null
+          user_id?: string
+          website_clicks?: number | null
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_performance_gmb_location_id_fkey"
+            columns: ["gmb_location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmb_posts: {
+        Row: {
+          call_to_action: Json | null
+          created_at: string
+          gmb_location_id: string
+          id: string
+          media_url: string | null
+          post_type: string
+          published_at: string | null
+          status: string | null
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_to_action?: Json | null
+          created_at?: string
+          gmb_location_id: string
+          id?: string
+          media_url?: string | null
+          post_type?: string
+          published_at?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_to_action?: Json | null
+          created_at?: string
+          gmb_location_id?: string
+          id?: string
+          media_url?: string | null
+          post_type?: string
+          published_at?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_posts_gmb_location_id_fkey"
+            columns: ["gmb_location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmb_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          gmb_location_id: string
+          google_review_id: string | null
+          id: string
+          is_flagged: boolean | null
+          reply_comment: string | null
+          reply_updated_at: string | null
+          review_created_at: string | null
+          reviewer_name: string | null
+          reviewer_photo_url: string | null
+          star_rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          gmb_location_id: string
+          google_review_id?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          reply_comment?: string | null
+          reply_updated_at?: string | null
+          review_created_at?: string | null
+          reviewer_name?: string | null
+          reviewer_photo_url?: string | null
+          star_rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          gmb_location_id?: string
+          google_review_id?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          reply_comment?: string | null
+          reply_updated_at?: string | null
+          review_created_at?: string | null
+          reviewer_name?: string | null
+          reviewer_photo_url?: string | null
+          star_rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_reviews_gmb_location_id_fkey"
+            columns: ["gmb_location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_connections: {
         Row: {
           access_token: string
