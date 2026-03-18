@@ -96,6 +96,7 @@ export function MyCorrectiveCodes() {
   const t = translations[language];
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
@@ -299,168 +300,222 @@ export function MyCorrectiveCodes() {
     );
   }
 
+  // Extract unique domains from codes
+  const domainMap = new Map<string, CorrectiveCode[]>();
+  codes.forEach(code => {
+    try {
+      const domain = new URL(code.url.startsWith('http') ? code.url : `https://${code.url}`).hostname.replace(/^www\./, '');
+      if (!domainMap.has(domain)) domainMap.set(domain, []);
+      domainMap.get(domain)!.push(code);
+    } catch {
+      const fallback = code.url;
+      if (!domainMap.has(fallback)) domainMap.set(fallback, []);
+      domainMap.get(fallback)!.push(code);
+    }
+  });
+  const domains = Array.from(domainMap.keys()).sort();
+  const activeDomain = selectedDomain && domainMap.has(selectedDomain) ? selectedDomain : (domains[0] || null);
+  const filteredCodes = activeDomain ? (domainMap.get(activeDomain) || []) : codes;
+
   return (
     <>
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardDescription>{t.description}</CardDescription>
-        <div className="flex items-center gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" onClick={() => { fetchCodes(); fetchInjectableSites(); toast.success(language === 'fr' ? 'Actualisé' : 'Refreshed'); }}>
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{language === 'fr' ? 'Actualiser' : 'Refresh'}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`h-8 w-8 shrink-0 ${plugConnected ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}`}
-                  onClick={() => {
-                    if (injectableSites.length > 0) {
-                      setPlugSiteId(injectableSites[0].id);
-                    }
-                    setShowPlugModal(true);
-                  }}
-                >
-                  <Plug className={`h-4 w-4 ${plugConnected ? 'text-emerald-500' : ''}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{plugConnected ? (language === 'fr' ? 'Branché' : 'Connected') : 'Plug'}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+    <div className="flex gap-3">
+      {/* Vertical domain sidebar */}
+      {domains.length > 0 && (
+        <div className="hidden sm:flex flex-col gap-1 min-w-[140px] max-w-[180px] shrink-0">
+          {domains.map(domain => (
+            <button
+              key={domain}
+              onClick={() => setSelectedDomain(domain)}
+              className={`text-left text-xs px-3 py-2 rounded-md truncate transition-colors ${
+                activeDomain === domain
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {domain}
+            </button>
+          ))}
         </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="injection" className="w-full">
-          <TabsList className="mb-3 h-8">
-            <TabsTrigger value="injection" className="text-xs gap-1.5 h-7">
-              <Rocket className="w-3 h-3" />
-              {t.tabInjection}
-            </TabsTrigger>
-            <TabsTrigger value="scripts" className="text-xs gap-1.5 h-7">
-              <Code2 className="w-3 h-3" />
-              {t.tabScripts}
-            </TabsTrigger>
-            <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
-              <Bug className="w-3 h-3" />
-              {t.tabDebug}
-            </TabsTrigger>
-          </TabsList>
+      )}
 
-          <TabsContent value="scripts">
-            {codes.filter(c => !validatedIds.has(c.id)).length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="font-medium">{t.empty}</p>
-                <p className="text-sm mt-1">{t.emptyDesc}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {codes.filter(c => !validatedIds.has(c.id)).map((code) => {
-                  const isValidated = false;
-                  const isValidating = validatingId === code.id;
+      {/* Main content */}
+      <Card className="flex-1 min-w-0">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          {/* Mobile domain selector */}
+          {domains.length > 1 && (
+            <div className="sm:hidden w-full mb-2">
+              <Select value={activeDomain || ''} onValueChange={setSelectedDomain}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {domains.map(d => (
+                    <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <CardDescription>{t.description}</CardDescription>
+          <div className="flex items-center gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" onClick={() => { fetchCodes(); fetchInjectableSites(); toast.success(language === 'fr' ? 'Actualisé' : 'Refreshed'); }}>
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{language === 'fr' ? 'Actualiser' : 'Refresh'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={`h-8 w-8 shrink-0 ${plugConnected ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' : ''}`}
+                    onClick={() => {
+                      if (injectableSites.length > 0) {
+                        setPlugSiteId(injectableSites[0].id);
+                      }
+                      setShowPlugModal(true);
+                    }}
+                  >
+                    <Plug className={`h-4 w-4 ${plugConnected ? 'text-emerald-500' : ''}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{plugConnected ? (language === 'fr' ? 'Branché' : 'Connected') : 'Plug'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="injection" className="w-full">
+            <TabsList className="mb-3 h-8">
+              <TabsTrigger value="injection" className="text-xs gap-1.5 h-7">
+                <Rocket className="w-3 h-3" />
+                {t.tabInjection}
+              </TabsTrigger>
+              <TabsTrigger value="scripts" className="text-xs gap-1.5 h-7">
+                <Code2 className="w-3 h-3" />
+                {t.tabScripts}
+              </TabsTrigger>
+              <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
+                <Bug className="w-3 h-3" />
+                {t.tabDebug}
+              </TabsTrigger>
+            </TabsList>
 
-                  return (
-                    <div
-                      key={code.id}
-                      className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium truncate">{code.title}</h4>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
-                          </span>
+            <TabsContent value="scripts">
+              {filteredCodes.filter(c => !validatedIds.has(c.id)).length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p className="font-medium">{t.empty}</p>
+                  <p className="text-sm mt-1">{t.emptyDesc}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredCodes.filter(c => !validatedIds.has(c.id)).map((code) => {
+                    const isValidated = false;
+                    const isValidating = validatingId === code.id;
+
+                    return (
+                      <div
+                        key={code.id}
+                        className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium truncate">{code.title}</h4>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <ExternalLink className="h-3 w-3" />
+                            <span className="truncate max-w-[200px]">{code.url}</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1">
+                            {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
+                              >
+                                {fix.label}
+                              </Badge>
+                            ))}
+                            {code.fixes_applied.length > 4 && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                +{code.fixes_applied.length - 4}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                          <ExternalLink className="h-3 w-3" />
-                          <span className="truncate max-w-[200px]">{code.url}</span>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1">
-                          {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
+
+                        <div className="flex items-center gap-1 ml-4">
+                          {isValidated ? (
+                            <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                              <Check className="w-3 h-3" /> {t.validated}
+                            </Badge>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                              onClick={() => validateCode(code)}
+                              disabled={isValidating}
+                              aria-label={t.itWorks}
                             >
-                              {fix.label}
-                            </Badge>
-                          ))}
-                          {code.fixes_applied.length > 4 && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              +{code.fixes_applied.length - 4}
-                            </Badge>
+                              <ThumbsUp className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">{t.itWorks}</span>
+                            </Button>
                           )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 ml-4">
-                        {isValidated ? (
-                          <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
-                            <Check className="w-3 h-3" /> {t.validated}
-                          </Badge>
-                        ) : (
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-                            onClick={() => validateCode(code)}
-                            disabled={isValidating}
-                            aria-label={t.itWorks}
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteCode(code.id)}
+                            aria-label="Supprimer le code"
                           >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">{t.itWorks}</span>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteCode(code.id)}
-                          aria-label="Supprimer le code"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
-                          onClick={() => copyCode(code)}
-                          aria-label="Copier le code"
-                        >
-                          {copiedId === code.id ? (
-                            <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
-                          ) : (
-                            <Copy className="h-4 w-4" aria-hidden="true" />
-                          )}
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            onClick={() => copyCode(code)}
+                            aria-label="Copier le code"
+                          >
+                            {copiedId === code.id ? (
+                              <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+                            ) : (
+                              <Copy className="h-4 w-4" aria-hidden="true" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
 
-          <TabsContent value="injection">
-            <MyInjectedScripts />
-          </TabsContent>
+            <TabsContent value="injection">
+              <MyInjectedScripts />
+            </TabsContent>
 
-          <TabsContent value="debug">
-            <ScriptDebugTool />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            <TabsContent value="debug">
+              <ScriptDebugTool />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
 
     <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
       <DialogContent className="max-w-lg">
