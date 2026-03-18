@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bug, ExternalLink, Loader2, RefreshCw, Trash2, Globe, FileText, TrendingUp } from 'lucide-react';
+import { Bug, ExternalLink, Loader2, RefreshCw, Trash2, FileText, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
