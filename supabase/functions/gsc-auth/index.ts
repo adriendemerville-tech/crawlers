@@ -194,13 +194,18 @@ Deno.serve(async (req) => {
     if (action === 'login') {
       // state carries user_id + frontend origin for the GET callback redirect
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
+      // Build scopes dynamically based on enabled features
+      const scopes = ['https://www.googleapis.com/auth/webmasters.readonly'];
+      if (ga4Enabled) scopes.push('https://www.googleapis.com/auth/analytics.readonly');
+      // Always include GTM scope for 1-click tag deployment
+      scopes.push('https://www.googleapis.com/auth/tagmanager.edit.containers');
+      scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
+
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: REDIRECT_URI,
         response_type: 'code',
-        scope: ga4Enabled
-          ? 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly'
-          : 'https://www.googleapis.com/auth/webmasters.readonly',
+        scope: scopes.join(' '),
         access_type: 'offline',
         prompt: 'consent',
         state: stateValue,

@@ -130,6 +130,13 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   const [codeCopied, setCodeCopied] = useState(false);
   const [gtmSnippetCopied, setGtmSnippetCopied] = useState(false);
 
+  // GTM API deploy state
+  const [gtmDeploying, setGtmDeploying] = useState(false);
+  const [gtmContainers, setGtmContainers] = useState<Array<{ account_name: string; containers: Array<{ name: string; path: string; public_id: string }> }>>([]);
+  const [gtmShowPicker, setGtmShowPicker] = useState(false);
+  const [gtmLoadingContainers, setGtmLoadingContainers] = useState(false);
+  const [gtmDeployed, setGtmDeployed] = useState(false);
+
   // GA4 admin-only state
   const [ga4Enabled, setGa4Enabled] = useState(false);
   const [ga4Loading, setGa4Loading] = useState(false);
@@ -448,37 +455,138 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </div>
           </div>
 
-          {/* Step 2: Where to paste */}
+          {/* Step 2: Auto-deploy via GTM API OR manual paste */}
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground">
-              {t3(language, '2. Collez-le dans…', '2. Paste it in…', '2. Péguelo en…')}
+              {t3(language, '2. Déployez automatiquement ou manuellement', '2. Deploy automatically or manually', '2. Despliegue automático o manual')}
             </p>
-            <div className="space-y-2">
-              <div className="rounded-md border border-dashed p-2.5 space-y-1">
-                <p className="text-xs font-medium">Google Tag Manager</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {t3(language,
-                    'Nouvelle balise → HTML personnalisée → Collez le code → Déclencheur : All Pages',
-                    'New tag → Custom HTML → Paste code → Trigger: All Pages',
-                    'Nueva etiqueta → HTML personalizado → Pegue el código → Activador: All Pages'
-                  )}
-                </p>
+            
+            {/* 1-Click GTM Deploy */}
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded bg-amber-500/20 flex items-center justify-center">
+                  <Plug className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold">{t3(language, 'Déploiement 1-clic via GTM', '1-Click GTM Deploy', 'Despliegue 1-clic GTM')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t3(language, 'Connectez votre GTM pour installer automatiquement', 'Connect your GTM to auto-install', 'Conecte su GTM para instalar automáticamente')}</p>
+                </div>
               </div>
-              <div className="rounded-md border border-dashed p-2.5 space-y-1">
-                <p className="text-xs font-medium">
-                  {t3(language, 'Injection directe', 'Direct injection', 'Inyección directa')}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {t3(language,
-                    'Collez le snippet juste avant la balise ',
-                    'Paste the snippet just before the ',
-                    'Pegue el snippet justo antes de la etiqueta '
+
+              {gtmDeployed ? (
+                <Badge className="gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <Check className="w-3 h-3" /> {t3(language, 'Tag déployé dans GTM', 'Tag deployed in GTM', 'Tag desplegado en GTM')}
+                </Badge>
+              ) : gtmShowPicker && gtmContainers.length > 0 ? (
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {gtmContainers.map((account) =>
+                    account.containers.map((c) => (
+                      <Button
+                        key={c.path}
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-xs gap-2 h-8"
+                        disabled={gtmDeploying}
+                        onClick={async () => {
+                          setGtmDeploying(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('gtm-actions', {
+                              body: { action: 'deploy-tag', user_id: user?.id, site_id: siteId, container_path: c.path },
+                            });
+                            if (error) throw error;
+                            if (data?.error) throw new Error(data.error);
+                            setGtmDeployed(true);
+                            setGtmShowPicker(false);
+                            toast.success(t3(language, `Tag Crawlers déployé dans "${c.name}" !`, `Crawlers tag deployed to "${c.name}"!`, `¡Tag Crawlers desplegado en "${c.name}"!`));
+                            onConnectionSuccess?.();
+                          } catch (err: any) {
+                            toast.error(err.message || 'Deployment failed');
+                          } finally {
+                            setGtmDeploying(false);
+                          }
+                        }}
+                      >
+                        {gtmDeploying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Code className="w-3 h-3" />}
+                        {account.account_name} → {c.name} ({c.public_id})
+                      </Button>
+                    ))
                   )}
-                  <code className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">&lt;/head&gt;</code>
-                  {t3(language, ' de votre site.', ' tag of your site.', ' de su sitio.')}
-                </p>
-              </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                  disabled={gtmLoadingContainers}
+                  onClick={async () => {
+                    setGtmLoadingContainers(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('gtm-actions', {
+                        body: { action: 'list-containers', user_id: user?.id },
+                      });
+                      if (error) throw error;
+                      if (data?.code === 'NO_GOOGLE_TOKEN') {
+                        toast.error(t3(language, 'Connectez d\'abord votre compte Google (GSC)', 'Connect your Google account (GSC) first', 'Conecte primero su cuenta de Google (GSC)'));
+                        return;
+                      }
+                      if (data?.code === 'GTM_SCOPE_MISSING') {
+                        toast.error(t3(language, 'Reconnectez votre compte Google pour activer les permissions GTM', 'Reconnect your Google account to enable GTM permissions', 'Reconecte su cuenta de Google para activar los permisos GTM'));
+                        return;
+                      }
+                      if (data?.error) throw new Error(data.error);
+                      setGtmContainers(data.accounts || []);
+                      if ((data.accounts || []).length === 0) {
+                        toast.info(t3(language, 'Aucun conteneur GTM trouvé sur ce compte Google', 'No GTM containers found on this Google account', 'No se encontraron contenedores GTM en esta cuenta de Google'));
+                      } else {
+                        setGtmShowPicker(true);
+                      }
+                    } catch (err: any) {
+                      toast.error(err.message || 'Failed to list GTM containers');
+                    } finally {
+                      setGtmLoadingContainers(false);
+                    }
+                  }}
+                >
+                  {gtmLoadingContainers ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
+                  {t3(language, 'Connecter GTM', 'Connect GTM', 'Conectar GTM')}
+                </Button>
+              )}
             </div>
+
+            {/* Manual fallback */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="manual" className="border-b-0">
+                <AccordionTrigger className="text-[11px] text-muted-foreground py-1.5 hover:no-underline">
+                  {t3(language, 'Ou installation manuelle…', 'Or manual installation…', 'O instalación manual…')}
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2 pt-1">
+                  <div className="rounded-md border border-dashed p-2.5 space-y-1">
+                    <p className="text-xs font-medium">Google Tag Manager</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t3(language,
+                        'Nouvelle balise → HTML personnalisée → Collez le code → Déclencheur : All Pages',
+                        'New tag → Custom HTML → Paste code → Trigger: All Pages',
+                        'Nueva etiqueta → HTML personalizado → Pegue el código → Activador: All Pages'
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-dashed p-2.5 space-y-1">
+                    <p className="text-xs font-medium">
+                      {t3(language, 'Injection directe', 'Direct injection', 'Inyección directa')}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t3(language,
+                        'Collez le snippet juste avant la balise ',
+                        'Paste the snippet just before the ',
+                        'Pegue el snippet justo antes de la etiqueta '
+                      )}
+                      <code className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">&lt;/head&gt;</code>
+                      {t3(language, ' de votre site.', ' tag of your site.', ' de su sitio.')}
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
 
           {/* Info box */}
