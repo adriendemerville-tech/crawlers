@@ -372,7 +372,7 @@ export function UserManagement() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant={personaFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0">
-                {personaFilter === 'entrepreneur' ? '🏢' : personaFilter === 'seo_pro' ? '🔍' : personaFilter === 'marketing' ? '📣' : personaFilter === 'ecommerce' ? '🛒' : '👤'}
+                
                 {personaFilter || 'Persona'}
                 <ChevronDown className="h-3 w-3" />
               </Button>
@@ -381,10 +381,10 @@ export function UserManagement() {
               <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par persona</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {[
-                { id: 'entrepreneur', label: '🏢 Entrepreneur' },
-                { id: 'seo_pro', label: '🔍 SEO/SIO' },
-                { id: 'marketing', label: '📣 Marketing' },
-                { id: 'ecommerce', label: '🛒 Ecommerce' },
+                { id: 'entrepreneur', label: 'Entrepreneur' },
+                { id: 'seo_pro', label: 'SEO/SIO' },
+                { id: 'marketing', label: 'Marketing' },
+                { id: 'ecommerce', label: 'Ecommerce' },
               ].map((p) => (
                 <DropdownMenuItem key={p.id} onClick={() => setPersonaFilter(personaFilter === p.id ? null : p.id)}>
                   {personaFilter === p.id ? `✓ ${p.label}` : p.label}
@@ -454,7 +454,7 @@ export function UserManagement() {
                       <TableCell>
                         {user.persona_type ? (
                           <Badge variant="outline" className="text-xs">
-                            {user.persona_type === 'entrepreneur' ? '🏢 Entrepreneur' : user.persona_type === 'seo_pro' ? '🔍 SEO/SIO' : user.persona_type === 'marketing' ? '📣 Marketing' : user.persona_type}
+                            {user.persona_type === 'entrepreneur' ? 'Entrepreneur' : user.persona_type === 'seo_pro' ? 'SEO/SIO' : user.persona_type === 'marketing' ? 'Marketing' : user.persona_type === 'ecommerce' ? 'Ecommerce' : user.persona_type}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs">—</span>
