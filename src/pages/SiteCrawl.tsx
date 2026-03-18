@@ -450,6 +450,7 @@ export default function SiteCrawl() {
   const [phase, setPhase] = useState('');
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'score_asc' | 'score_desc' | 'path'>('score_asc');
+  const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'noindex'>('all');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
