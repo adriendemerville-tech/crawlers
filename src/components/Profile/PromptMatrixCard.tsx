@@ -458,7 +458,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         body: {
           url: normalizedUrl,
           toolsData: null,
-          promptMatrixSessionId: sessionId,
+          promptMatrixSessionId: `matrix-audit-${sessionId}`,
           lang: 'fr',
         },
       });
