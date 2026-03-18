@@ -71,6 +71,7 @@ const translations = {
     credits: 'credits',
     logout: 'Log out',
     login: 'Log in',
+    signup: 'Sign up',
     back: 'Back',
     comparatif: 'Pricing',
   },
