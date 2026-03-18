@@ -52,41 +52,138 @@ Deno.serve(async (req) => {
     const domain = new URL(normalizedUrl).hostname;
     let pageLimit = Math.min(maxPages, 20);
 
-    // ── Pre-scan: cap to indexed pages count (DataForSEO) ──
+    // ── Step 1: Count pages from sitemap ──
+    let sitemapPageCount: number | null = null;
     try {
-      const dataforseoUser = Deno.env.get('DATAFORSEO_LOGIN');
-      const dataforseoPass = Deno.env.get('DATAFORSEO_PASSWORD');
-      if (dataforseoUser && dataforseoPass) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const serpRes = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify([{
-            keyword: `site:${domain.replace(/^www\./, '')}`,
-            language_code: 'fr',
-            location_code: 2250,
-            device: 'desktop',
-            depth: 1,
-          }]),
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        const serpData = await serpRes.json();
-        const indexedPages = serpData?.tasks?.[0]?.result?.[0]?.se_results_count;
-        if (indexedPages && indexedPages > 0) {
-          const cappedLimit = Math.min(pageLimit, indexedPages);
-          if (cappedLimit < pageLimit) {
-            console.log(`[${domain}] Indexed pages cap: ${indexedPages} → limiting from ${pageLimit} to ${cappedLimit}`);
-            pageLimit = cappedLimit;
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const controller1 = new AbortController();
+      const timeout1 = setTimeout(() => controller1.abort(), 15000);
+      const sitemapRes = await fetch(`${supabaseUrl}/functions/v1/fetch-sitemap-tree`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ domain }),
+        signal: controller1.signal,
+      });
+      clearTimeout(timeout1);
+      if (sitemapRes.ok) {
+        const sitemapData = await sitemapRes.json();
+        if (sitemapData.totalUrls > 0) {
+          sitemapPageCount = sitemapData.totalUrls;
+          console.log(`[${domain}] Sitemap: ${sitemapPageCount} pages found`);
+        }
+      }
+    } catch (e) {
+      console.warn(`[${domain}] Sitemap pre-scan failed (non-blocking):`, e);
+    }
+
+    // ── Step 2: Check GSC for indexed pages (if user connected) ──
+    let gscIndexedCount: number | null = null;
+    try {
+      const { data: googleConn } = await supabase
+        .from('google_connections')
+        .select('access_token, refresh_token, token_expiry')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (googleConn?.access_token) {
+        // Try GSC site:domain query via search analytics
+        const cleanDomain = domain.replace(/^www\./, '');
+        const siteUrl = `sc-domain:${cleanDomain}`;
+        const gscController = new AbortController();
+        const gscTimeout = setTimeout(() => gscController.abort(), 10000);
+        
+        const gscRes = await fetch(
+          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${googleConn.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              startDate: new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
+              endDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
+              dimensions: ['page'],
+              rowLimit: 1,
+            }),
+            signal: gscController.signal,
+          }
+        );
+        clearTimeout(gscTimeout);
+        
+        if (gscRes.ok) {
+          // The responseAggregationType gives us indexed page count indirectly
+          // Use a simpler approach: count distinct pages via sitemaps API
+          const gscSitemapRes = await fetch(
+            `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/sitemaps`,
+            { headers: { 'Authorization': `Bearer ${googleConn.access_token}` } }
+          );
+          if (gscSitemapRes.ok) {
+            const gscSitemapData = await gscSitemapRes.json();
+            const sitemaps = gscSitemapData.sitemap || [];
+            let totalIndexed = 0;
+            for (const sm of sitemaps) {
+              totalIndexed += sm.contents?.reduce((sum: number, c: any) => sum + (c.indexed || 0), 0) || 0;
+            }
+            if (totalIndexed > 0) {
+              gscIndexedCount = totalIndexed;
+              console.log(`[${domain}] GSC indexed: ${gscIndexedCount} pages`);
+            }
           }
         }
       }
     } catch (e) {
-      console.warn(`[${domain}] Indexed pages pre-scan failed (non-blocking):`, e);
+      console.warn(`[${domain}] GSC indexed pages check failed (non-blocking):`, e);
+    }
+
+    // ── Step 3: Fall back to DataForSEO if no GSC data ──
+    let dataforseoIndexedCount: number | null = null;
+    if (gscIndexedCount === null) {
+      try {
+        const dataforseoUser = Deno.env.get('DATAFORSEO_LOGIN');
+        const dataforseoPass = Deno.env.get('DATAFORSEO_PASSWORD');
+        if (dataforseoUser && dataforseoPass) {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          const serpRes = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify([{
+              keyword: `site:${domain.replace(/^www\./, '')}`,
+              language_code: 'fr',
+              location_code: 2250,
+              device: 'desktop',
+              depth: 1,
+            }]),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          const serpData = await serpRes.json();
+          const indexedPages = serpData?.tasks?.[0]?.result?.[0]?.se_results_count;
+          if (indexedPages && indexedPages > 0) {
+            dataforseoIndexedCount = indexedPages;
+            console.log(`[${domain}] DataForSEO indexed: ${dataforseoIndexedCount} pages`);
+          }
+        }
+      } catch (e) {
+        console.warn(`[${domain}] DataForSEO pre-scan failed (non-blocking):`, e);
+      }
+    }
+
+    // Use best available indexed count to cap page limit
+    const bestIndexedCount = gscIndexedCount || dataforseoIndexedCount;
+    if (bestIndexedCount && bestIndexedCount > 0) {
+      const cappedLimit = Math.min(pageLimit, bestIndexedCount);
+      if (cappedLimit < pageLimit) {
+        console.log(`[${domain}] Indexed pages cap: ${bestIndexedCount} → limiting from ${pageLimit} to ${cappedLimit}`);
+        pageLimit = cappedLimit;
+      }
     }
 
     // ── Fetch profile + admin role in parallel (single round-trip) ──
