@@ -577,7 +577,7 @@ export function ExpertAuditDashboard() {
     if (!isAuthenticated || !reportResult) return;
 
     const reportType = mode === 'technical' ? 'seo_technical' : 'seo_strategic';
-    const title = `${mode === 'technical' ? 'Audit Technique' : 'Audit Stratégique'} - ${reportResult.domain}`;
+    const title = `${mode === 'technical' ? 'Audit Technique SEO' : 'Audit Stratégique GEO'} - ${reportResult.domain}`;
     
     await saveReport({
       reportType: reportType as any,

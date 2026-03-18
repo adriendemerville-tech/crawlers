@@ -38,7 +38,7 @@ const translations = {
   },
   es: {
     technicalTitle: 'Análisis Técnico SEO',
-    strategicTitle: 'Análisis Estratégico IA',
+    strategicTitle: '¿Qué cree saber la IA sobre mí?',
     presentation: 'Presentación del sitio',
     strengths: 'Puntos fuertes identificados',
     improvement: 'Área de mejora prioritaria',

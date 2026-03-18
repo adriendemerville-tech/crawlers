@@ -49,7 +49,7 @@ const translations = {
   es: {
     step1Title: 'Auditoría Técnica SEO',
     step1Desc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
-    step2Title: 'Auditoría Estratégica IA',
+    step2Title: 'Auditoría Estratégica GEO',
     step2Desc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO-SEO, estudio de competencia y palabras clave.',
     step3Title: 'Arquitecto Generativo',
     step3Desc: 'Reciba el código JSON-LD optimizado para su sitio.',
