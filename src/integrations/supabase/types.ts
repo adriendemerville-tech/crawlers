@@ -2321,6 +2321,7 @@ export type Database = {
           gsc_token_expiry: string | null
           id: string
           last_name: string
+          persona_type: string | null
           plan_type: string
           referral_code: string | null
           referred_by: string | null
@@ -2357,6 +2358,7 @@ export type Database = {
           gsc_token_expiry?: string | null
           id?: string
           last_name: string
+          persona_type?: string | null
           plan_type?: string
           referral_code?: string | null
           referred_by?: string | null
@@ -2393,6 +2395,7 @@ export type Database = {
           gsc_token_expiry?: string | null
           id?: string
           last_name?: string
+          persona_type?: string | null
           plan_type?: string
           referral_code?: string | null
           referred_by?: string | null
