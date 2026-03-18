@@ -282,8 +282,20 @@ export default function Auth() {
     // Don't set loading to false here - the redirect will handle that
   };
 
+  const handlePersonaSelect = (persona: PersonaType) => {
+    setSelectedPersona(persona);
+    sessionStorage.setItem('pending_persona_type', persona);
+    setShowPersonaGate(false);
+    setIsLogin(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+      <AnimatePresence>
+        {showPersonaGate && !user && (
+          <PersonaGate onSelect={handlePersonaSelect} />
+        )}
+      </AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
