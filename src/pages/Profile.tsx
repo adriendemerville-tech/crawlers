@@ -91,7 +91,7 @@ const translations = {
     settings: 'Configuración',
     myReports: 'Informes',
     actionPlans: 'Planes de Acción',
-    correctiveCodes: 'Códigos Correctivos',
+    correctiveCodes: '<Scripts>',
     wallet: 'Billetera',
     tracking: 'Mis sitios',
     firstName: 'Nombre',

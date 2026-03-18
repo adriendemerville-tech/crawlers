@@ -81,7 +81,7 @@ const translations = {
     settings: 'Configuración',
     myReports: 'Mis informes',
     actionPlans: 'Planes de acción',
-    correctiveCodes: 'Códigos correctivos',
+    correctiveCodes: '<Scripts>',
     wallet: 'Mi Billetera',
     credits: 'créditos',
     logout: 'Cerrar sesión',
