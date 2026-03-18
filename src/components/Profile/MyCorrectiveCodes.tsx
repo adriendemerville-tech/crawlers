@@ -346,30 +346,44 @@ export function MyCorrectiveCodes() {
       domainMap.get(fallback)!.push(code);
     }
   });
-  const domains = Array.from(domainMap.keys()).sort();
+  const rawDomains = Array.from(domainMap.keys()).sort();
+  // Maintain order: use domainOrder if set, otherwise raw sorted
+  const domains = domainOrder.length > 0
+    ? [...domainOrder.filter(d => rawDomains.includes(d)), ...rawDomains.filter(d => !domainOrder.includes(d))]
+    : rawDomains;
   const activeDomain = selectedDomain && domainMap.has(selectedDomain) ? selectedDomain : (domains[0] || null);
   const filteredCodes = activeDomain ? (domainMap.get(activeDomain) || []) : codes;
+
+  const domainDndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleDomainDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = domains.indexOf(active.id as string);
+    const newIdx = domains.indexOf(over.id as string);
+    if (oldIdx === -1 || newIdx === -1) return;
+    setDomainOrder(arrayMove(domains, oldIdx, newIdx));
+  };
 
   return (
     <>
     <div className="flex gap-3">
-      {/* Vertical domain sidebar */}
+      {/* Vertical domain sidebar with drag-and-drop */}
       {domains.length > 0 && (
-        <div className="hidden sm:flex flex-col gap-1 min-w-[140px] max-w-[180px] shrink-0">
-          {domains.map(domain => (
-            <button
-              key={domain}
-              onClick={() => setSelectedDomain(domain)}
-              className={`text-left text-xs px-3 py-2 rounded-md truncate transition-colors ${
-                activeDomain === domain
-                  ? 'bg-primary text-primary-foreground font-medium'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              {domain}
-            </button>
-          ))}
-        </div>
+        <DndContext sensors={domainDndSensors} collisionDetection={closestCenter} onDragEnd={handleDomainDragEnd}>
+          <SortableContext items={domains} strategy={verticalListSortingStrategy}>
+            <div className="hidden sm:flex flex-col gap-1 min-w-[140px] max-w-[180px] shrink-0">
+              {domains.map(domain => (
+                <SortableDomainButton
+                  key={domain}
+                  id={domain}
+                  label={domain}
+                  isActive={activeDomain === domain}
+                  onClick={() => setSelectedDomain(domain)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Main content */}
