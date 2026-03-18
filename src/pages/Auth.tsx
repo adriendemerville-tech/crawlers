@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { PersonaGate, type PersonaType } from '@/components/PersonaGate';
+import { AnimatePresence } from 'framer-motion';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -112,16 +114,19 @@ const translations = {
 };
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode');
+  const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
+  const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
+  const [showPersonaGate, setShowPersonaGate] = useState(initialMode === 'signup');
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
@@ -277,8 +282,20 @@ export default function Auth() {
     // Don't set loading to false here - the redirect will handle that
   };
 
+  const handlePersonaSelect = (persona: PersonaType) => {
+    setSelectedPersona(persona);
+    sessionStorage.setItem('pending_persona_type', persona);
+    setShowPersonaGate(false);
+    setIsLogin(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+      <AnimatePresence>
+        {showPersonaGate && !user && (
+          <PersonaGate onSelect={handlePersonaSelect} />
+        )}
+      </AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

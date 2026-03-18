@@ -54,6 +54,7 @@ const translations = {
     credits: 'crédits',
     logout: 'Déconnexion',
     login: 'Connexion',
+    signup: "S'inscrire",
     back: 'Retour',
     comparatif: 'Comparatif',
   },
@@ -70,6 +71,7 @@ const translations = {
     credits: 'credits',
     logout: 'Log out',
     login: 'Log in',
+    signup: 'Sign up',
     back: 'Back',
     comparatif: 'Pricing',
   },
@@ -86,6 +88,7 @@ const translations = {
     credits: 'créditos',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
+    signup: 'Registrarse',
     back: 'Volver',
     comparatif: 'Comparativa',
   },
@@ -349,7 +352,7 @@ export function Header() {
               </Button>
             ) : (
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" asChild>
-                <Link to="/auth">Sign in</Link>
+                <Link to="/auth?mode=signup">{t.signup}</Link>
               </Button>
             )
           )}
@@ -479,12 +482,19 @@ export function Header() {
                 </DropdownMenu>
               </div>
             ) : (
-              <Link to="/auth" aria-label={t.login}>
-                <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
-                  <LogIn className="h-4 w-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">{t.login}</span>
-                </Button>
-              </Link>
+              <div className="flex items-center gap-1.5">
+                <Link to="/auth?mode=signup">
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                    {t.signup}
+                  </Button>
+                </Link>
+                <Link to="/auth" aria-label={t.login}>
+                  <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
+                    <LogIn className="h-4 w-4" aria-hidden="true" />
+                    <span className="hidden sm:inline">{t.login}</span>
+                  </Button>
+                </Link>
+              </div>
             )
           )}
         </div>
