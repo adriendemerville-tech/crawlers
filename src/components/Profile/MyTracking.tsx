@@ -1414,7 +1414,7 @@ export function MyTracking() {
                           </div>
 
                           {/* GSC KPI summary */}
-                          <div className="grid grid-cols-3 gap-3">
+                          <div className="grid grid-cols-4 gap-3">
                             <div className="rounded-lg border bg-card p-3 space-y-1">
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <MousePointerClick className="h-3 w-3" />
@@ -1435,6 +1435,17 @@ export function MyTracking() {
                                 {language === 'fr' ? 'Position moy.' : 'Avg. position'}
                               </div>
                               <p className="text-lg font-semibold">{gscData.avg_position.toFixed(1)}</p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MousePointerClick className="h-3 w-3" />
+                                CTR
+                              </div>
+                              <p className="text-lg font-semibold">
+                                {gscData.total_impressions > 0
+                                  ? ((gscData.total_clicks / gscData.total_impressions) * 100).toFixed(1) + '%'
+                                  : '—'}
+                              </p>
                             </div>
                           </div>
 
