@@ -380,6 +380,7 @@ export function UserManagement() {
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Persona</TableHead>
                   <TableHead className="text-center">Crédits</TableHead>
                   <TableHead>Inscrit le</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
