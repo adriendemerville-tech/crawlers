@@ -269,6 +269,10 @@ interface CrawlPage {
   has_schema_org: boolean;
   has_canonical: boolean;
   has_og: boolean;
+  has_noindex: boolean;
+  has_nofollow: boolean;
+  is_indexable: boolean;
+  index_source: string;
   issues: string[];
   content_hash?: string | null;
   schema_org_types?: string[];
