@@ -441,14 +441,13 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         .from('prompt_deployments')
         .insert({
           tracked_site_id: trackedSiteId,
-          client_id: userId,
-          session_id: sessionId,
+          user_id: userId,
           target_type: 'onsite',
           prompt_text: JSON.stringify(matrixPayload),
-          status: 'pending',
+          prompt_label: `matrix-audit-${sessionId}`,
           api_used: 'prompt-matrix-audit',
-          model_used: 'gemini-2.5-flash',
-          tokens_used: 0,
+          llm_model: 'gemini-2.5-flash',
+          source_csv_filename: importFileName,
           estimated_cost_eur: 0,
         });
 
