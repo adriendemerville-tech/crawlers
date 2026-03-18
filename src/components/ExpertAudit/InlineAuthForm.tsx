@@ -98,9 +98,20 @@ const translations = {
 interface InlineAuthFormProps {
   defaultMode?: 'login' | 'signup';
   onSuccess?: () => void;
+  showPersonaGate?: boolean;
 }
 
-export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuthFormProps) {
+export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaGate = false }: InlineAuthFormProps) {
+  const [personaSelected, setPersonaSelected] = useState<boolean>(!showPersonaGate || !!sessionStorage.getItem('pending_persona_type'));
+  
+  const handlePersonaSelect = (persona: PersonaType) => {
+    sessionStorage.setItem('pending_persona_type', persona);
+    setPersonaSelected(true);
+  };
+
+  if (!personaSelected) {
+    return <PersonaGate onSelect={handlePersonaSelect} />;
+  }
   const [isLogin, setIsLogin] = useState(defaultMode === 'login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
