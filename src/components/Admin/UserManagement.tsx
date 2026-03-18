@@ -454,7 +454,7 @@ export function UserManagement() {
                       <TableCell>
                         {user.persona_type ? (
                           <Badge variant="outline" className="text-xs">
-                            {user.persona_type === 'entrepreneur' ? '🏢 Entrepreneur' : user.persona_type === 'seo_pro' ? '🔍 SEO/SIO' : user.persona_type === 'marketing' ? '📣 Marketing' : user.persona_type}
+                            {user.persona_type === 'entrepreneur' ? 'Entrepreneur' : user.persona_type === 'seo_pro' ? 'SEO/SIO' : user.persona_type === 'marketing' ? 'Marketing' : user.persona_type === 'ecommerce' ? 'Ecommerce' : user.persona_type}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs">—</span>
