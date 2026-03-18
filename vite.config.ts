@@ -225,11 +225,12 @@ export default defineConfig(({ mode }) => ({
       'react',
       'react-dom',
       'react-router-dom',
+      'recharts',
+      'lodash',
     ],
     // Exclude heavy deps from pre-bundling to reduce initial load
     exclude: [
       'framer-motion',
-      'recharts',
       'jspdf',
       'jspdf-autotable',
     ],
