@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  85 fonctions serverless déployées sur ~30 PoPs           │
+│  85+ fonctions serverless déployées sur ~30 PoPs          │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -154,6 +154,15 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`cto_agent_logs\` | Logs de l'Agent CTO | \`function_analyzed\`, \`decision\`, \`confidence_score\`, \`proposed_change\` |
 | \`prompt_registry\` | Registre des prompts versionnés | \`function_name\`, \`prompt_text\`, \`version\`, \`is_champion\` |
 | \`hallucination_corrections\` | Corrections d'hallucinations | \`url\`, \`original_values\`, \`corrected_values\`, \`discrepancies\` |
+
+### Google My Business (GMB)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`gmb_locations\` | Liaison tracked_site ↔ fiche GMB | \`tracked_site_id\`, \`location_name\`, \`place_id\`, \`address\`, \`phone\`, \`hours\` (JSON) |
+| \`gmb_reviews\` | Avis Google récupérés | \`gmb_location_id\`, \`google_review_id\`, \`star_rating\`, \`comment\`, \`reply_comment\`, \`is_flagged\` |
+| \`gmb_posts\` | Publications GMB | \`gmb_location_id\`, \`post_type\` (STANDARD/EVENT/OFFER), \`summary\`, \`status\`, \`published_at\` |
+| \`gmb_performance\` | Stats hebdomadaires | \`gmb_location_id\`, \`week_start_date\`, \`search_views\`, \`maps_views\`, \`website_clicks\`, \`phone_calls\`, \`avg_rating\` |
 
 ### Agence (Marque Blanche)
 
@@ -952,6 +961,21 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Internal Links In/Out** | Nombre de liens internes entrants et sortants par page, extraits du crawl multi-pages. |
 | **Cluster ID** | Regroupement thématique automatique des pages par similarité sémantique (TF-IDF + analyse IA). |
 | **Page Authority** | Score d'autorité interne calculé par l'algorithme PageRank adapté au maillage interne du site. |
+
+---
+
+## Indicateurs GMB (Google My Business)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Search Views** | Nombre de fois où la fiche apparaît dans les résultats de recherche Google (Business Profile Performance API). |
+| **Maps Views** | Nombre de fois où la fiche apparaît dans Google Maps. |
+| **Website Clicks** | Nombre de clics vers le site web depuis la fiche GMB. |
+| **Direction Requests** | Nombre de demandes d'itinéraire vers l'établissement. |
+| **Phone Calls** | Nombre d'appels téléphoniques initiés depuis la fiche. |
+| **Avg Rating** | Note moyenne des avis Google (1-5 étoiles). |
+| **Review Volume** | Nombre total d'avis et tendance (nouveaux avis / semaine). |
+| **Photo Views** | Nombre de vues des photos publiées sur la fiche. |
 `,
   },
 ];
@@ -961,10 +985,10 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.7.0',
-  lastUpdated: '2026-03-17',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
-  totalEdgeFunctions: 90,
-  totalTables: '40+',
-  totalLinesOfCode: '140 000+',
+  version: '1.8.0',
+  lastUpdated: '2026-03-18',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB',
+  totalEdgeFunctions: 91,
+  totalTables: '45+',
+  totalLinesOfCode: '145 000+',
 };
