@@ -20,7 +20,7 @@ interface IntroductionCardProps {
 const translations = {
   fr: {
     technicalTitle: 'Analyse Technique SEO',
-    strategicTitle: 'Analyse Stratégique IA',
+    strategicTitle: 'Qu\'est ce que l\'IA pense savoir de moi ?',
     presentation: 'Présentation du site',
     strengths: 'Points forts identifiés',
     improvement: 'Axe d\'amélioration prioritaire',
