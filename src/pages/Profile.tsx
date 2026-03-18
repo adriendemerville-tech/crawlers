@@ -61,7 +61,7 @@ const translations = {
     settings: 'Settings',
     myReports: 'Reports',
     actionPlans: 'Action Plans',
-    correctiveCodes: 'Corrective Codes',
+    correctiveCodes: '<Scripts>',
     wallet: 'Wallet',
     tracking: 'My Sites',
     firstName: 'First Name',
