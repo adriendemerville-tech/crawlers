@@ -130,6 +130,13 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   const [codeCopied, setCodeCopied] = useState(false);
   const [gtmSnippetCopied, setGtmSnippetCopied] = useState(false);
 
+  // GTM API deploy state
+  const [gtmDeploying, setGtmDeploying] = useState(false);
+  const [gtmContainers, setGtmContainers] = useState<Array<{ account_name: string; containers: Array<{ name: string; path: string; public_id: string }> }>>([]);
+  const [gtmShowPicker, setGtmShowPicker] = useState(false);
+  const [gtmLoadingContainers, setGtmLoadingContainers] = useState(false);
+  const [gtmDeployed, setGtmDeployed] = useState(false);
+
   // GA4 admin-only state
   const [ga4Enabled, setGa4Enabled] = useState(false);
   const [ga4Loading, setGa4Loading] = useState(false);
