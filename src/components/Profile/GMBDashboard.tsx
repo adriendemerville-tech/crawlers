@@ -16,6 +16,51 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 
 // ─── Simulated Data ────────────────────────────────────────────
 
+const SIMULATED_LOCATIONS = [
+  {
+    id: 'loc-1',
+    name: 'Mon Entreprise — Paris',
+    address: '12 Rue de la Paix, 75002 Paris',
+    category: 'Agence de communication',
+    phone: '+33 1 23 45 67 89',
+    website: 'https://mon-entreprise.fr',
+    avg_rating: 4.3,
+    reviews_count: 47,
+    verified: true,
+    photos_count: 24,
+    hours: {
+      Lundi: { open: '09:00', close: '18:00' },
+      Mardi: { open: '09:00', close: '18:00' },
+      Mercredi: { open: '09:00', close: '18:00' },
+      Jeudi: { open: '09:00', close: '18:00' },
+      Vendredi: { open: '09:00', close: '17:00' },
+      Samedi: { open: '10:00', close: '13:00' },
+      Dimanche: null as { open: string; close: string } | null,
+    },
+  },
+  {
+    id: 'loc-2',
+    name: 'Mon Entreprise — Lyon',
+    address: '8 Place Bellecour, 69002 Lyon',
+    category: 'Agence de communication',
+    phone: '+33 4 78 12 34 56',
+    website: 'https://mon-entreprise.fr/lyon',
+    avg_rating: 4.6,
+    reviews_count: 23,
+    verified: true,
+    photos_count: 12,
+    hours: {
+      Lundi: { open: '09:00', close: '18:00' },
+      Mardi: { open: '09:00', close: '18:00' },
+      Mercredi: { open: '09:00', close: '18:00' },
+      Jeudi: { open: '09:00', close: '18:00' },
+      Vendredi: { open: '09:00', close: '17:00' },
+      Samedi: null as { open: string; close: string } | null,
+      Dimanche: null as { open: string; close: string } | null,
+    },
+  },
+];
+
 const SIMULATED_PERFORMANCE = (() => {
   const now = new Date();
   return Array.from({ length: 12 }, (_, i) => {
@@ -50,25 +95,6 @@ const SIMULATED_POSTS = [
   { id: '2', post_type: 'EVENT', summary: '📅 Journée portes ouvertes le 22 mars. Réductions exclusives de -20% sur tout le magasin.', status: 'published', published_at: '2026-03-10T10:00:00Z' },
   { id: '3', post_type: 'OFFER', summary: '🔥 Offre spéciale : -15% avec le code SPRING26 jusqu\'au 31 mars.', status: 'draft', published_at: null },
 ];
-
-const SIMULATED_INFO = {
-  name: 'Mon Entreprise',
-  address: '12 Rue de la Paix, 75002 Paris, France',
-  phone: '+33 1 23 45 67 89',
-  website: 'https://mon-entreprise.fr',
-  category: 'Agence de communication',
-  hours: {
-    Lundi: { open: '09:00', close: '18:00' },
-    Mardi: { open: '09:00', close: '18:00' },
-    Mercredi: { open: '09:00', close: '18:00' },
-    Jeudi: { open: '09:00', close: '18:00' },
-    Vendredi: { open: '09:00', close: '17:00' },
-    Samedi: { open: '10:00', close: '13:00' },
-    Dimanche: null as { open: string; close: string } | null,
-  },
-  photos_count: 24,
-  verified: true,
-};
 
 // ─── Subcomponents ─────────────────────────────────────────────
 
