@@ -148,7 +148,7 @@ const translations = {
     generatedAt: 'Audit généré le',
     or: 'ou',
     viewReport: 'Rapport',
-    strategicSectionTitle: 'Audit stratégique SEO/GEO',
+    strategicSectionTitle: 'Audit stratégique GEO',
     strategicSectionDesc: 'Résultats détaillés de GPT-4, Claude et Gemini.',
     generateCode: 'Générer Code Correctif',
     newAudit: 'Nouvel Audit',
