@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Search, Megaphone, Loader2 } from 'lucide-react';
+import { Briefcase, Search, Megaphone, ShoppingBag, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export type PersonaType = 'entrepreneur' | 'seo_pro' | 'marketing';
