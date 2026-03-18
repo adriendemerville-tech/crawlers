@@ -392,6 +392,9 @@ Deno.serve(async (req) => {
       jobId: job.id,
       totalPages: urls.length,
       status: 'queued',
+      sitemapPageCount,
+      gscIndexedCount,
+      dataforseoIndexedCount,
       message: `${urls.length} pages découvertes — audit en file d'attente`,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
