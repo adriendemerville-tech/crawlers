@@ -54,6 +54,7 @@ const translations = {
     credits: 'crédits',
     logout: 'Déconnexion',
     login: 'Connexion',
+    signup: "S'inscrire",
     back: 'Retour',
     comparatif: 'Comparatif',
   },
