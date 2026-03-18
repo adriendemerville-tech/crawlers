@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, ElementType } from 'react';
+import { useState, useEffect, useCallback, useMemo, ElementType, useRef } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,39 @@ import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashbo
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable sidebar button for drag-and-drop site reordering
+function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
+  id: string; label: string; isActive: boolean; isRefreshing: boolean; onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: 'grab',
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+        isActive
+          ? 'bg-primary/10 text-primary border border-primary/20'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+      }`}
+    >
+      <span className="truncate">{label}</span>
+      {isRefreshing && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
+    </button>
+  );
+}
 
 
 const translations = {
@@ -809,7 +842,20 @@ export function MyTracking() {
   const currentSite = sites.find(s => s.id === selectedSite);
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
-  
+
+  // DnD sensors for sidebar reordering
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleSiteDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setSites(prev => {
+      const oldIdx = prev.findIndex(s => s.id === active.id);
+      const newIdx = prev.findIndex(s => s.id === over.id);
+      if (oldIdx === -1 || newIdx === -1) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  }, []);
+
   // Extract performance scores from raw_data
   const getPerformanceScore = (entry: StatsEntry) => {
     const raw = entry as any;
@@ -921,31 +967,31 @@ export function MyTracking() {
             </div>
           ) : (
             <div className="flex gap-4">
-              {/* Vertical site sidebar */}
-              <div className="flex flex-col gap-1 shrink-0 w-36">
-                {sites.map(site => (
-                  <button
-                    key={site.id}
-                    onClick={() => setSelectedSite(site.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
-                      selectedSite === site.id
-                        ? 'bg-primary/10 text-primary border border-primary/20'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-                    }`}
-                  >
-                    <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
-                    {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin shrink-0" />}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  aria-label={t.addSite}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>{t.addSite}</span>
-                </button>
-              </div>
+              {/* Vertical site sidebar with drag-and-drop */}
+              <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleSiteDragEnd}>
+                <SortableContext items={sites.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                  <div className="flex flex-col gap-1 shrink-0 w-36">
+                    {sites.map(site => (
+                      <SortableSiteButton
+                        key={site.id}
+                        id={site.id}
+                        label={site.domain.replace(/^www\./, '')}
+                        isActive={selectedSite === site.id}
+                        isRefreshing={refreshingSites.has(site.id)}
+                        onClick={() => setSelectedSite(site.id)}
+                      />
+                    ))}
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      aria-label={t.addSite}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>{t.addSite}</span>
+                    </button>
+                  </div>
+                </SortableContext>
+              </DndContext>
 
               {/* Main content */}
               <div className="flex-1 min-w-0">
