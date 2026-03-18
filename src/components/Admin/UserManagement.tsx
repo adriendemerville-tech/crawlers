@@ -417,6 +417,15 @@ export function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.persona_type ? (
+                          <Badge variant="outline" className="text-xs">
+                            {user.persona_type === 'entrepreneur' ? '🏢 Entrepreneur' : user.persona_type === 'seo_pro' ? '🔍 SEO/SIO' : user.persona_type === 'marketing' ? '📣 Marketing' : user.persona_type}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Badge variant={user.credits_balance > 0 ? 'default' : 'secondary'}>
                           {user.credits_balance}
