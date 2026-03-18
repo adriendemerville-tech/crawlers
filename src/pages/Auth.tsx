@@ -114,16 +114,19 @@ const translations = {
 };
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode');
+  const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
+  const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
+  const [showPersonaGate, setShowPersonaGate] = useState(initialMode === 'signup');
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
