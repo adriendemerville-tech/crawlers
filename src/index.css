@@ -135,7 +135,6 @@
 
   /* CSS Containment for performance - prevent layout thrashing */
   /* Cards and isolated components */
-  [data-radix-popper-content-wrapper],
   [data-radix-scroll-area-viewport],
   .card,
   [class*="CardContent"],
@@ -146,7 +145,6 @@
   /* Strict containment for modals/dialogs */
   [data-radix-dialog-content],
   [data-radix-alert-dialog-content],
-  [data-radix-popover-content],
   [role="dialog"] {
     contain: strict;
   }
