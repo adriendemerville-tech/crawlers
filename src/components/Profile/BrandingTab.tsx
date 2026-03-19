@@ -170,6 +170,11 @@ export function BrandingTab() {
   const [logoUrl, setLogoUrl] = useState(profile?.agency_logo_url || '');
   const [primaryColor, setPrimaryColor] = useState(profile?.agency_primary_color || '#7c3aed');
   const [brandName, setBrandName] = useState(profile?.agency_brand_name || '');
+  const [brandFont, setBrandFont] = useState((profile as any)?.agency_brand_font || '');
+  const [brandFontSize, setBrandFontSize] = useState<number>((profile as any)?.agency_brand_font_size || 16);
+  const [brandBold, setBrandBold] = useState<boolean>((profile as any)?.agency_brand_bold || false);
+  const [brandItalic, setBrandItalic] = useState<boolean>((profile as any)?.agency_brand_italic || false);
+  const [brandUnderline, setBrandUnderline] = useState<boolean>((profile as any)?.agency_brand_underline || false);
   const [contactFirstName, setContactFirstName] = useState(profile?.agency_contact_first_name || '');
   const [contactLastName, setContactLastName] = useState(profile?.agency_contact_last_name || '');
   const [contactPhone, setContactPhone] = useState(profile?.agency_contact_phone || '');
