@@ -27,6 +27,8 @@ interface UserKpis {
   totalEvents: number;
   totalCorrectiveCodes: number;
   totalActionPlans: number;
+  totalBackendErrors: number;
+  totalFrontendErrors: number;
   planType: string;
 }
 
