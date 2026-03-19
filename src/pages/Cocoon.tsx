@@ -1000,6 +1000,18 @@ export default function Cocoon() {
                   language,
                   branding,
                 });
+                // Auto-save to saved_reports
+                await saveReport({
+                  reportType: 'cocoon' as any,
+                  title: `Rapport Cocoon — ${selectedSite.domain}`,
+                  url: `https://${selectedSite.domain}`,
+                  reportData: {
+                    domain: selectedSite.domain,
+                    siteName: selectedSite.site_name || selectedSite.domain,
+                    nodesCount: nodes.length,
+                    generatedAt: new Date().toISOString(),
+                  },
+                });
               }}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-violet-500/10 border-violet-500/20 text-violet-400 hover:bg-violet-500/20 backdrop-blur-md transition-all shrink-0"
             >
