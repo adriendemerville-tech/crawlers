@@ -105,3 +105,9 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.share-actions]
     verify_jwt = false
+  [functions.fetch-ga4-data]
+    verify_jwt = false
+  [functions.webhook-shopify-orders]
+    verify_jwt = false
+  [functions.webhook-woo-orders]
+    verify_jwt = false
