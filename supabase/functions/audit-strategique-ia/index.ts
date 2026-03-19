@@ -1260,8 +1260,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
     const sbUrl = Deno.env.get('SUPABASE_URL');
     const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (sbUrl && sbKey) {
-      const { createClient: cc } = await import('https://esm.sh/@supabase/supabase-js@2');
-      const sb = cc(sbUrl, sbKey);
+      const sb = createClient(sbUrl, sbKey);
       const { data: locations } = await sb
         .from('gmb_locations')
         .select('location_name, address, category, attributes')
