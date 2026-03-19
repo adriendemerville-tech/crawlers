@@ -97,6 +97,7 @@ export function SilentErrorsRegistry() {
   });
 
   return (
+    <>
     <div className="space-y-4">
       {/* Stats summary */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
