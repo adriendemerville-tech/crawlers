@@ -502,7 +502,7 @@ export default function MatricePrompt() {
                 </TableHeader>
                 <TableBody>
                   {rows.map(row => {
-                    const resultRow = results?.find(r => r.prompt === row.prompt);
+                    const resultRow = results?.find((r: any) => r.id === row.id || r.prompt === row.prompt);
                     return (
                       <TableRow key={row.id} className={!row.selected ? 'opacity-40' : ''}>
                         <TableCell>
