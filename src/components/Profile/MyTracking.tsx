@@ -1848,19 +1848,45 @@ export function MyTracking() {
 
       {/* Site Connection Modal (WordPress + GTM) */}
       <Dialog open={showWpModal} onOpenChange={setShowWpModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {(() => {
-            const wpSite = sites.find(s => s.id === wpConnectSiteId);
-            if (!wpSite) return null;
-            return (
-              <WordPressConfigCard
-                siteId={wpSite.id}
-                siteDomain={wpSite.domain}
-                siteApiKey={wpSite.api_key || ''}
-                hasConfig={!!(wpSite.current_config && Object.keys(wpSite.current_config).length > 0)}
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {(() => {
+              const wpSite = sites.find(s => s.id === wpConnectSiteId);
+              if (!wpSite) return null;
+              return (
+                <WordPressConfigCard
+                  siteId={wpSite.id}
+                  siteDomain={wpSite.domain}
+                  siteApiKey={wpSite.api_key || ''}
+                  hasConfig={!!(wpSite.current_config && Object.keys(wpSite.current_config).length > 0)}
+                />
+              );
+            })()}
+          </div>
+          {/* GA4 — fixed footer */}
+          <div className="shrink-0 pt-3 border-t border-border">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="ga4-wp-modal"
+                checked={ga4EnabledLocal}
+                disabled={ga4TogglingLocal}
+                onCheckedChange={(checked) => handleGa4ToggleLocal(!!checked)}
+                className="mt-0.5"
               />
-            );
-          })()}
+              <div className="space-y-1">
+                <label htmlFor="ga4-wp-modal" className="text-sm font-medium cursor-pointer leading-none">
+                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connecter Google Analytics'}
+                </label>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {language === 'en'
+                    ? 'Anonymized data. GA4 helps us make more precise recommendations and improve your ROI.'
+                    : language === 'es'
+                    ? 'Datos anonimizados. GA4 nos permite hacer recomendaciones más precisas y mejorar su ROI.'
+                    : 'Données anonymisées. GA4 nous permet de vous faire des recommandations plus précises et d\'améliorer votre ROI.'}
+                </p>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
