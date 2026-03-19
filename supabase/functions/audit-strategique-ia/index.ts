@@ -1263,7 +1263,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
       const sb = createClient(sbUrl, sbKey);
       const { data: locations } = await sb
         .from('gmb_locations')
-        .select('location_name, address, category, attributes')
+        .select('id, location_name, address, category, website')
         .or(`website.ilike.%${cleanDomain}%`)
         .limit(1);
 
