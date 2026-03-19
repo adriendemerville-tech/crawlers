@@ -233,18 +233,19 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const platform = cmsType === 'shopify' ? 'shopify' : cmsType;
+      const platform = cmsType;
+      const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix';
 
       const insertData: Record<string, any> = {
         user_id: user.id,
         tracked_site_id: selectedSiteId,
         platform,
         site_url: siteUrl,
-        auth_method: cmsType === 'shopify' ? 'api_key' : authMethod,
+        auth_method: isApiKeyAuth ? 'api_key' : authMethod,
         status: testResult === 'success' ? 'active' : 'pending',
       };
 
-      if (cmsType === 'shopify') {
+      if (isApiKeyAuth) {
         insertData.api_key = password;
       } else {
         insertData.basic_auth_user = authMethod === 'basic_auth' ? username : null;
