@@ -291,6 +291,8 @@ export async function ensureSiteContext(
     company_size: (enrichmentType === 'full' ? inferred.company_size : (currentContext.company_size || inferred.company_size)),
     site_name: inferred.site_name && (!siteName || siteName === domain) ? inferred.site_name : siteName,
     address: currentContext.address,
+    entity_type: inferred.entity_type || currentContext.entity_type || 'business',
+    media_specialties: inferred.media_specialties?.length ? inferred.media_specialties : (currentContext.media_specialties || []),
   }
 
   // Persist enriched data to tracked_sites
