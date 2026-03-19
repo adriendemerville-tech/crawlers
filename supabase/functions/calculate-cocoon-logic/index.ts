@@ -3,6 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
+import { checkFairUse } from "../_shared/fairUse.ts";
 
 /**
  * Edge Function: calculate-cocoon-logic
