@@ -1778,8 +1778,8 @@ export function MyTracking() {
             </div>
           </div>
 
-          {/* Google Analytics — anchored footer */}
-          <div className="mt-auto pt-4 border-t border-border">
+          {/* Google Analytics — sticky footer outside scrollable area */}
+          <div className="shrink-0 pt-4 border-t border-border">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium flex items-center gap-1.5">
