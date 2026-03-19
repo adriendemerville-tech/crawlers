@@ -20,6 +20,7 @@ import Papa from 'papaparse';
 
 interface MatrixRow {
   id: string;
+  dbId?: string; // prompt_matrix_items UUID
   prompt: string;
   poids: number;
   axe: string;
