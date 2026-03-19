@@ -776,8 +776,8 @@ function SceneContent({
       <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Background */}
-      <color attach="background" args={[bgColor]} />
-      <fog attach="fog" args={[bgColor, 150, 500]} />
+      <color attach="background" args={[sceneBgColor]} />
+      <fog attach="fog" args={[sceneBgColor, 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
