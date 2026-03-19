@@ -171,6 +171,7 @@ export function AnalyticsDashboard() {
         multiPageCrawls: 0,
         cocoonGenerated: 0,
         cocoonChatSessions: 0,
+        gmbConnected: 0,
       };
 
       // Count multi-page crawls from site_crawls table (30 days)
