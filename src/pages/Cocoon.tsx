@@ -398,6 +398,46 @@ export default function Cocoon() {
     const timer = setTimeout(() => handleCompute(), 500);
     return () => clearTimeout(timer);
   }, [isFullscreen, selectedSiteId, user, nodes.length]);
+
+  // Compute background CSS color from bgColor slider (-10=black, 0=night blue, 10=white)
+  const computedBgColor = useMemo(() => {
+    const nightBlue = { r: 15, g: 10, b: 30 }; // #0f0a1e
+    if (bgColor <= 0) {
+      // Interpolate from black (r=0,g=0,b=0) at -10 to nightBlue at 0
+      const t = (bgColor + 10) / 10;
+      return `rgb(${Math.round(nightBlue.r * t)},${Math.round(nightBlue.g * t)},${Math.round(nightBlue.b * t)})`;
+    } else {
+      // Interpolate from nightBlue at 0 to white (255,255,255) at 10
+      const t = bgColor / 10;
+      return `rgb(${Math.round(nightBlue.r + (255 - nightBlue.r) * t)},${Math.round(nightBlue.g + (255 - nightBlue.g) * t)},${Math.round(nightBlue.b + (255 - nightBlue.b) * t)})`;
+    }
+  }, [bgColor]);
+
+  // BroadcastChannel: send settings from main → fullscreen, receive in fullscreen
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('cocoon-settings');
+    if (isFullscreen) {
+      // Listen for updates
+      channel.onmessage = (e) => {
+        const s = e.data;
+        if (s.bgColor !== undefined) setBgColor(s.bgColor);
+        if (s.bgWarmth !== undefined) setBgWarmth(s.bgWarmth);
+        if (s.graphContrast !== undefined) setGraphContrast(s.graphContrast);
+        if (s.colorIntensity !== undefined) setColorIntensity(s.colorIntensity);
+        if (s.linkThickness !== undefined) setLinkThickness(s.linkThickness);
+      };
+    }
+    return () => channel.close();
+  }, [isFullscreen]);
+
+  // Broadcast settings changes (only from main window)
+  useEffect(() => {
+    if (isFullscreen || typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('cocoon-settings');
+    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness });
+    channel.close();
+  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
