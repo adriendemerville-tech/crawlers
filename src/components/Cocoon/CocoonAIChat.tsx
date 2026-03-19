@@ -464,26 +464,75 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
-        // Save recommendation to database (only if substantive + contains SEO terms)
         const lastMsg = prev[prev.length - 1];
-        if (lastMsg?.role === 'assistant' && lastMsg.content.length > 200 && trackedSiteId && domain && user) {
-          const seoKeywords = /maillage|h1|canonical|backlink|juice|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|lazy|seo|geo|eeat|citabilit|roi|trafic|traffic|linking|link|quick win|recommand|optimis|améliorer|improve/i;
-          if (seoKeywords.test(lastMsg.content)) {
-            // Smart summary: extract first bold heading or first meaningful sentence
-            const headingMatch = lastMsg.content.match(/\*\*(.{5,80})\*\*/);
-            const firstLine = lastMsg.content.replace(/[#*_`]/g, '').split('\n').find(l => l.trim().length > 10);
-            const summary = (headingMatch?.[1] || firstLine || lastMsg.content.slice(0, 100)).replace(/[#*_`]/g, '').trim().slice(0, 100);
-            
-            supabase.from('cocoon_recommendations').insert({
-              tracked_site_id: trackedSiteId,
-              user_id: user.id,
-              domain,
-              recommendation_text: lastMsg.content,
-              summary,
-              source_context: { language, nodes_count: nodes.length },
-            }).then(({ error }) => {
-              if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
-            });
+        if (lastMsg?.role === 'assistant' && trackedSiteId && domain && user) {
+          // Check for [COCOON_ERROR] prefix — log to cocoon_errors table
+          if (lastMsg.content.startsWith('[COCOON_ERROR]')) {
+            const firstLine = lastMsg.content.replace('[COCOON_ERROR]', '').split('\n')[0].trim();
+            const userQuestion = prev.length >= 2 ? prev[prev.length - 2]?.content?.slice(0, 500) : null;
+            // Strip prefix from displayed message
+            const cleanContent = lastMsg.content.replace(/^\[COCOON_ERROR\][^\n]*\n?/, '');
+            setMessages(msgs => msgs.map((m, i) => i === msgs.length - 1 ? { ...m, content: cleanContent } : m));
+
+            // Try to capture screenshot of canvas
+            const captureAndLog = async () => {
+              let screenshotUrl: string | null = null;
+              try {
+                const canvas = document.querySelector('canvas');
+                if (canvas) {
+                  const blob = await new Promise<Blob | null>(resolve => (canvas as HTMLCanvasElement).toBlob(resolve, 'image/png'));
+                  if (blob) {
+                    const filename = `cocoon-error-${Date.now()}.png`;
+                    const { data: uploadData } = await supabase.storage.from('user-reports').upload(`cocoon-errors/${user.id}/${filename}`, blob, { contentType: 'image/png' });
+                    if (uploadData?.path) {
+                      const { data: urlData } = supabase.storage.from('user-reports').getPublicUrl(uploadData.path);
+                      screenshotUrl = urlData?.publicUrl || null;
+                    }
+                  }
+                }
+              } catch (err) {
+                console.warn('[CocoonAIChat] Screenshot capture failed:', err);
+              }
+
+              await supabase.from('cocoon_errors').insert({
+                user_id: user.id,
+                domain,
+                tracked_site_id: trackedSiteId,
+                problem_description: firstLine || 'Erreur détectée par l\'assistant',
+                user_question: userQuestion,
+                ai_response: cleanContent.slice(0, 2000),
+                screenshot_url: screenshotUrl,
+                is_crawled: nodes.length > 0,
+              });
+            };
+            captureAndLog();
+          }
+          // Strip [DISPLAY_HINT] prefix from displayed message (just a display hint, no logging)
+          else if (lastMsg.content.startsWith('[DISPLAY_HINT]')) {
+            const cleanContent = lastMsg.content.replace(/^\[DISPLAY_HINT\]\s*/, '');
+            setMessages(msgs => msgs.map((m, i) => i === msgs.length - 1 ? { ...m, content: cleanContent } : m));
+          }
+
+          // Save recommendation to database (only if substantive + contains SEO terms)
+          const contentToCheck = lastMsg.content.replace(/^\[(COCOON_ERROR|DISPLAY_HINT)\][^\n]*\n?/, '');
+          if (contentToCheck.length > 200) {
+            const seoKeywords = /maillage|h1|canonical|backlink|juice|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|lazy|seo|geo|eeat|citabilit|roi|trafic|traffic|linking|link|quick win|recommand|optimis|améliorer|improve/i;
+            if (seoKeywords.test(contentToCheck)) {
+              const headingMatch = contentToCheck.match(/\*\*(.{5,80})\*\*/);
+              const firstLine = contentToCheck.replace(/[#*_`]/g, '').split('\n').find(l => l.trim().length > 10);
+              const summary = (headingMatch?.[1] || firstLine || contentToCheck.slice(0, 100)).replace(/[#*_`]/g, '').trim().slice(0, 100);
+              
+              supabase.from('cocoon_recommendations').insert({
+                tracked_site_id: trackedSiteId,
+                user_id: user.id,
+                domain,
+                recommendation_text: contentToCheck,
+                summary,
+                source_context: { language, nodes_count: nodes.length },
+              }).then(({ error }) => {
+                if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
+              });
+            }
           }
         }
         return prev;
