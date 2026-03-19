@@ -839,7 +839,7 @@ ROI = traffic × CPC × convRate × 12  // annualisé
 - **Mode X-Ray** : Toggle pour révéler les nœuds fantômes (faible trafic)
 - **Légende dynamique** : N'affiche que les types de pages réellement présents dans le cocon, avec animation fade-in retardée (1.2s)
 - **Gate d'accès** : Vérification \\\`agency_pro\\\` / \\\`agency_premium\\\` / admin — i18n FR/EN/ES
-- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini Flash avec sélection multi-nœuds (max 5), analyse comparative automatique, streaming SSE — i18n FR/EN/ES
+- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini 3 Flash avec accès complet aux données du domaine (crawl, audit, SERP, backlinks, GSC, GA4), sélection multi-nœuds (max 3), analyse comparative, streaming SSE, réponses limitées à 1000 caractères — i18n FR/EN/ES
 - **Bannière de troncature** : Affichée si le site dépasse 100 pages (dorée)
 - **Auto-refresh** : Détecte le retour de l'utilisateur après un audit/crawl dans un nouvel onglet et régénère automatiquement le cocon (via \\\`visibilitychange\\\` + vérification DB des nouveaux rapports)
 - **Navigation rapide** : Boutons vers Audit Expert, Crawl Multi-pages (nouveaux onglets) et Console (retour)
