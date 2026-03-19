@@ -458,7 +458,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       }
     } catch (e) {
       console.error('Cocoon chat error:', e);
-      upsertAssistant(t.error);
+      // Don't show error message to user — show a gentle retry suggestion instead
+      if (!assistantSoFar) {
+        const retryMsg = language === 'en' 
+          ? "I couldn't process your request. Please try again."
+          : language === 'es'
+            ? "No pude procesar tu solicitud. Inténtalo de nuevo."
+            : "Je n'ai pas pu traiter votre demande. Veuillez réessayer.";
+        upsertAssistant(retryMsg);
+      }
     } finally {
       setIsLoading(false);
       // Save after each exchange
