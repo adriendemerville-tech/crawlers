@@ -376,7 +376,7 @@ export default function MatricePrompt() {
 
   return (
     <>
-      <Helmet><title>Matrice de Prompts — Crawlers AI</title></Helmet>
+      <Helmet><title>Matrice CSV — Crawlers AI</title></Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
@@ -385,7 +385,7 @@ export default function MatricePrompt() {
             <Button variant="ghost" size="sm" onClick={() => navigate('/console')}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Console
             </Button>
-            <h1 className="text-xl font-bold">Matrice de Prompts</h1>
+            <h1 className="text-xl font-bold">Matrice CSV</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
             <div className="flex-1" />
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>

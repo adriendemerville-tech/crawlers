@@ -62,7 +62,7 @@ export function MatrixErrorsRegistry() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-lg font-semibold">Erreurs Matrice de Prompts</h2>
+        <h2 className="text-lg font-semibold">Erreurs Matrice CSV</h2>
         <Badge variant="outline">{errors.length} total</Badge>
         <div className="flex-1" />
         <div className="flex gap-1">

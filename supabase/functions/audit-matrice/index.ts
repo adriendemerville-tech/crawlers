@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 
 /* ================================================================== */
 /*  AUTO-DETECT item type from prompt text                             */
@@ -787,6 +788,12 @@ Score de 0 à 100 pour ce critère:`
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
+  const clientIp = getClientIp(req)
+  const ipCheck = checkIpRate(clientIp, 'audit-matrice', 20, 60_000)
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
+
+  if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
+
   try {
     const { url, items } = await req.json() as { url: string; items: ItemInput[] }
 
@@ -924,5 +931,7 @@ Deno.serve(async (req) => {
     }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+  } finally {
+    releaseConcurrency('audit-matrice')
   }
 })
