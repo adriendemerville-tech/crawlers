@@ -1,11 +1,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2 } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Header } from '@/components/Header';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -56,6 +57,14 @@ export default function MatricePrompt() {
   const [results, setResults] = useState<any[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Batch management
+  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; }
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [loadingBatches, setLoadingBatches] = useState(true);
+
+  const LAST_BATCH_KEY = 'matrice_last_batch_id';
+
   // Guard: admin only
   useEffect(() => {
     if (!adminLoading && !authLoading) {
@@ -64,10 +73,83 @@ export default function MatricePrompt() {
     }
   }, [isAdmin, adminLoading, authLoading, user, navigate]);
 
+  // Load available batches on mount
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('prompt_matrix_items')
+        .select('batch_id, batch_label, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data) { setLoadingBatches(false); return; }
+
+      // Group by batch_id
+      const map = new Map<string, Batch>();
+      data.forEach((row: any) => {
+        if (!map.has(row.batch_id)) {
+          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0 });
+        }
+        map.get(row.batch_id)!.count++;
+      });
+      const list = Array.from(map.values());
+      setBatches(list);
+
+      // Pre-select last used or most recent
+      const lastUsed = localStorage.getItem(LAST_BATCH_KEY);
+      const target = list.find(b => b.batch_id === lastUsed) || list[0];
+      if (target) {
+        setActiveBatchId(target.batch_id);
+        await loadBatch(target.batch_id);
+      }
+      setLoadingBatches(false);
+    })();
+  }, [user]);
+
+  // Load a specific batch's prompts
+  const loadBatch = async (batchId: string) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('prompt_matrix_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) return;
+
+    const parsed: MatrixRow[] = data.map((row: any, i: number) => ({
+      id: `row-${i}-${row.id}`,
+      dbId: row.id,
+      prompt: row.prompt,
+      poids: Number(row.poids),
+      axe: row.axe,
+      seuil_bon: Number(row.seuil_bon),
+      seuil_moyen: Number(row.seuil_moyen),
+      seuil_mauvais: Number(row.seuil_mauvais),
+      llm_name: row.llm_name,
+      selected: true,
+      isDefault: (row.is_default_flags as Record<string, boolean>) || {},
+    }));
+    setRows(parsed);
+    setResults(null);
+    localStorage.setItem(LAST_BATCH_KEY, batchId);
+  };
+
+  // Switch batch
+  const handleBatchChange = async (batchId: string) => {
+    setActiveBatchId(batchId);
+    await loadBatch(batchId);
+  };
+
   /* --- CSV Import + persist prompt items --- */
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    const fileName = file.name.replace(/\.csv$/i, '');
+    const newBatchId = crypto.randomUUID();
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -97,9 +179,11 @@ export default function MatricePrompt() {
           };
         });
 
-        // Persist prompt items to DB
+        // Persist with batch_id
         const dbRows = parsed.map(p => ({
           user_id: user.id,
+          batch_id: newBatchId,
+          batch_label: fileName,
           prompt: p.prompt,
           poids: p.poids,
           axe: p.axe,
@@ -119,9 +203,15 @@ export default function MatricePrompt() {
           parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
         }
 
+        // Update batches list
+        const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
+        setBatches(prev => [newBatch, ...prev]);
+        setActiveBatchId(newBatchId);
+        localStorage.setItem(LAST_BATCH_KEY, newBatchId);
+
         setRows(parsed);
         setResults(null);
-        toast.success(`${parsed.length} KPIs importés`);
+        toast.success(`${parsed.length} KPIs importés — "${fileName}"`);
       },
       error: () => toast.error('Erreur de parsing CSV'),
     });
@@ -264,14 +354,40 @@ export default function MatricePrompt() {
             )}
           </div>
 
-          {/* Import + URL */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileImport} />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
-              <Upload className="h-4 w-4" /> Importer .csv
-            </Button>
+          {/* CSV Selector + Import + URL */}
+          <div className="flex flex-col gap-3 mb-6">
+            {/* Row 1: CSV batch selector + import */}
+            <div className="flex items-center gap-3">
+              <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
+              {batches.length > 0 ? (
+                <Select value={activeBatchId || ''} onValueChange={handleBatchChange}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Sélectionner un CSV…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map(b => (
+                      <SelectItem key={b.batch_id} value={b.batch_id}>
+                        {b.batch_label} ({b.count} KPIs)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="text-sm text-muted-foreground">Aucun CSV importé</span>
+              )}
+              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileImport} />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
+                <Upload className="h-4 w-4" /> Importer .csv
+              </Button>
+              {rows.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
 
-            <div className="flex-1 flex gap-2">
+            {/* Row 2: URL + analyze */}
+            <div className="flex gap-2">
               <Input
                 placeholder="https://example.com"
                 value={url}
@@ -287,12 +403,6 @@ export default function MatricePrompt() {
                 Analyser
               </Button>
             </div>
-
-            {rows.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
           </div>
 
           {/* Matrix table */}

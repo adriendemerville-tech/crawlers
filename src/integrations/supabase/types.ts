@@ -3033,6 +3033,8 @@ export type Database = {
       prompt_matrix_items: {
         Row: {
           axe: string
+          batch_id: string
+          batch_label: string
           created_at: string
           id: string
           is_default_flags: Json | null
@@ -3048,6 +3050,8 @@ export type Database = {
         }
         Insert: {
           axe?: string
+          batch_id?: string
+          batch_label?: string
           created_at?: string
           id?: string
           is_default_flags?: Json | null
@@ -3063,6 +3067,8 @@ export type Database = {
         }
         Update: {
           axe?: string
+          batch_id?: string
+          batch_label?: string
           created_at?: string
           id?: string
           is_default_flags?: Json | null
