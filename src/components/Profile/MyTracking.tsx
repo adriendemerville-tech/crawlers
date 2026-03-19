@@ -957,6 +957,7 @@ export function MyTracking() {
         seo: entry.seo_score || 0,
         geo: entry.geo_score || 0,
         citation: entry.llm_citation_rate || 0,
+        semanticAuth: entry.semantic_authority || 0,
         performanceMobile: getPerformanceScore(entry) || 0,
         performanceDesktop: getPerformanceDesktop(entry) || 0,
       };
@@ -1310,6 +1311,7 @@ export function MyTracking() {
                               <Line type="monotone" dataKey="seo" name={t.seoScore} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="geo" name={t.geoScore} stroke="hsl(142, 76%, 36%)" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="citation" name={t.citationRate} stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="semanticAuth" name={t.semanticAuth} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
