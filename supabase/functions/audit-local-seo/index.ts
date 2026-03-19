@@ -561,7 +561,23 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ── IP rate limit ──
+  const ip = getClientIp(req);
+  const ipCheck = checkIpRate(ip, "audit-local-seo", 5, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
   try {
+    // ── Fair use check ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'local_seo_audit', userCtx.planType);
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Vérifier les credentials DataForSEO
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
       throw new Error('Les identifiants DataForSEO ne sont pas configurés');
