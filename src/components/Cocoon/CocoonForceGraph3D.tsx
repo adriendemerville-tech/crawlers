@@ -103,6 +103,7 @@ interface CocoonForceGraph3DProps {
   colorIntensity?: number;
   bgWarmth?: number;
   linkThickness?: number;
+  bgColorSlider?: number;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -721,6 +722,7 @@ function SceneContent({
   colorIntensity,
   bgWarmth = 0,
   linkThickness = 1,
+  bgColorSlider = 0,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -742,21 +744,28 @@ function SceneContent({
   colorIntensity: number;
   bgWarmth?: number;
   linkThickness?: number;
+  bgColorSlider?: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
   // Compute background color based on warmth (-10 to 10)
-  const bgColor = useMemo(() => {
+  const sceneBgColor = useMemo(() => {
     if (isDayMode) return "#f5f5f0";
-    // Base: #06060e (very dark blue-black)
-    // Warmth > 0 → shift toward warm (add red/reduce blue)
-    // Warmth < 0 → shift toward cool (add blue)
-    const base = { r: 6, g: 6, b: 14 };
+    const nightBlue = { r: 15, g: 10, b: 30 };
+    let base: { r: number; g: number; b: number };
+    if (bgColorSlider <= 0) {
+      const t = (bgColorSlider + 10) / 10;
+      base = { r: nightBlue.r * t, g: nightBlue.g * t, b: nightBlue.b * t };
+    } else {
+      const t = bgColorSlider / 10;
+      base = { r: nightBlue.r + (255 - nightBlue.r) * t, g: nightBlue.g + (255 - nightBlue.g) * t, b: nightBlue.b + (255 - nightBlue.b) * t };
+    }
+    // Apply warmth shift on top
     const r = Math.min(255, Math.max(0, base.r + bgWarmth * 3));
     const g = Math.min(255, Math.max(0, base.g + Math.abs(bgWarmth) * 0.5));
     const b = Math.min(255, Math.max(0, base.b - bgWarmth * 2));
     return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
-  }, [bgWarmth, isDayMode]);
+  }, [bgWarmth, bgColorSlider, isDayMode]);
 
    return (
     <>
@@ -767,8 +776,8 @@ function SceneContent({
       <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Background */}
-      <color attach="background" args={[bgColor]} />
-      <fog attach="fog" args={[bgColor, 150, 500]} />
+      <color attach="background" args={[sceneBgColor]} />
+      <fog attach="fog" args={[sceneBgColor, 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
@@ -851,6 +860,7 @@ export function CocoonForceGraph3D({
   colorIntensity = 5,
   bgWarmth = 0,
   linkThickness = 1,
+  bgColorSlider = 0,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
@@ -1051,12 +1061,21 @@ export function CocoonForceGraph3D({
           colorIntensity={colorIntensity}
           bgWarmth={bgWarmth}
           linkThickness={linkThickness}
+          bgColorSlider={bgColorSlider}
         />
       </Canvas>
 
       {/* Progressive vignette fade */}
       {!isDayMode && (() => {
-        const base = { r: 6, g: 6, b: 14 };
+        const nightBlue = { r: 15, g: 10, b: 30 };
+        let base: { r: number; g: number; b: number };
+        if (bgColorSlider <= 0) {
+          const t = (bgColorSlider + 10) / 10;
+          base = { r: nightBlue.r * t, g: nightBlue.g * t, b: nightBlue.b * t };
+        } else {
+          const t = bgColorSlider / 10;
+          base = { r: nightBlue.r + (255 - nightBlue.r) * t, g: nightBlue.g + (255 - nightBlue.g) * t, b: nightBlue.b + (255 - nightBlue.b) * t };
+        }
         const r = Math.min(255, Math.max(0, Math.round(base.r + bgWarmth * 3)));
         const g = Math.min(255, Math.max(0, Math.round(base.g + Math.abs(bgWarmth) * 0.5)));
         const b = Math.min(255, Math.max(0, Math.round(base.b - bgWarmth * 2)));

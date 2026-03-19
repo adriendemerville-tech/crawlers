@@ -193,6 +193,7 @@ export default function Cocoon() {
   const [colorIntensity, setColorIntensity] = useState(5);
   const [bgWarmth, setBgWarmth] = useState(0);
   const [linkThickness, setLinkThickness] = useState(1);
+  const [bgColor, setBgColor] = useState(0); // -10=black, 0=night blue, 10=white
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
@@ -298,6 +299,12 @@ export default function Cocoon() {
     if (params.get('fullscreen') === '1') {
       setIsFullscreen(true);
     }
+    // Restore settings from URL params (fullscreen sync)
+    if (params.get('bgColor')) setBgColor(Number(params.get('bgColor')));
+    if (params.get('bgWarmth')) setBgWarmth(Number(params.get('bgWarmth')));
+    if (params.get('contrast')) setGraphContrast(Number(params.get('contrast')));
+    if (params.get('halo')) setColorIntensity(Number(params.get('halo')));
+    if (params.get('thickness')) setLinkThickness(Number(params.get('thickness')));
     // daymode param removed
     const siteParam = params.get('site');
     if (siteParam) {
@@ -391,6 +398,46 @@ export default function Cocoon() {
     const timer = setTimeout(() => handleCompute(), 500);
     return () => clearTimeout(timer);
   }, [isFullscreen, selectedSiteId, user, nodes.length]);
+
+  // Compute background CSS color from bgColor slider (-10=black, 0=night blue, 10=white)
+  const computedBgColor = useMemo(() => {
+    const nightBlue = { r: 15, g: 10, b: 30 }; // #0f0a1e
+    if (bgColor <= 0) {
+      // Interpolate from black (r=0,g=0,b=0) at -10 to nightBlue at 0
+      const t = (bgColor + 10) / 10;
+      return `rgb(${Math.round(nightBlue.r * t)},${Math.round(nightBlue.g * t)},${Math.round(nightBlue.b * t)})`;
+    } else {
+      // Interpolate from nightBlue at 0 to white (255,255,255) at 10
+      const t = bgColor / 10;
+      return `rgb(${Math.round(nightBlue.r + (255 - nightBlue.r) * t)},${Math.round(nightBlue.g + (255 - nightBlue.g) * t)},${Math.round(nightBlue.b + (255 - nightBlue.b) * t)})`;
+    }
+  }, [bgColor]);
+
+  // BroadcastChannel: send settings from main → fullscreen, receive in fullscreen
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('cocoon-settings');
+    if (isFullscreen) {
+      // Listen for updates
+      channel.onmessage = (e) => {
+        const s = e.data;
+        if (s.bgColor !== undefined) setBgColor(s.bgColor);
+        if (s.bgWarmth !== undefined) setBgWarmth(s.bgWarmth);
+        if (s.graphContrast !== undefined) setGraphContrast(s.graphContrast);
+        if (s.colorIntensity !== undefined) setColorIntensity(s.colorIntensity);
+        if (s.linkThickness !== undefined) setLinkThickness(s.linkThickness);
+      };
+    }
+    return () => channel.close();
+  }, [isFullscreen]);
+
+  // Broadcast settings changes (only from main window)
+  useEffect(() => {
+    if (isFullscreen || typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('cocoon-settings');
+    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness });
+    channel.close();
+  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
@@ -548,7 +595,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e]`}>
+      <div className="h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden" style={{ backgroundColor: computedBgColor }}>
 
         {/* Top Bar */}
         {!isFullscreen && (
@@ -638,6 +685,19 @@ export default function Cocoon() {
                         </div>
                         <Slider min={0.5} max={8} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
+                      {/* Background color */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Background' : language === 'es' ? 'Fondo' : 'Fond'}</span>
+                          <span className="text-[9px] text-white/30 font-mono">{bgColor === 0 ? '●' : bgColor < 0 ? '◼' : '◻'}</span>
+                        </div>
+                        <Slider min={-10} max={10} step={1} value={[bgColor]} onValueChange={([v]) => setBgColor(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                        <div className="flex justify-between text-[8px] text-white/25">
+                          <span>{language === 'en' ? 'Black' : language === 'es' ? 'Negro' : 'Noir'}</span>
+                          <span>{language === 'en' ? 'Night blue' : language === 'es' ? 'Azul noche' : 'Bleu nuit'}</span>
+                          <span>{language === 'en' ? 'White' : language === 'es' ? 'Blanco' : 'Blanc'}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -682,6 +742,11 @@ export default function Cocoon() {
                   const params = new URLSearchParams();
                   if (selectedSiteId) params.set('site', selectedSiteId);
                   params.set('fullscreen', '1');
+                  params.set('bgColor', String(bgColor));
+                  params.set('bgWarmth', String(bgWarmth));
+                  params.set('contrast', String(graphContrast));
+                  params.set('halo', String(colorIntensity));
+                  params.set('thickness', String(linkThickness));
                   window.open(`/cocoon?${params.toString()}`, '_blank');
                 }}
                 className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
@@ -762,6 +827,7 @@ export default function Cocoon() {
                 colorIntensity={colorIntensity}
                 bgWarmth={bgWarmth}
                 linkThickness={linkThickness}
+                bgColorSlider={bgColor}
               />
             ) : (
               <CocoonForceGraph
