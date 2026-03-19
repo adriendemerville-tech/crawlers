@@ -1915,8 +1915,9 @@ export function MyTracking() {
 }
 
 
-function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
   const [refreshing, setRefreshing] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1930,6 +1931,24 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { labe
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <Icon className="h-3.5 w-3.5 shrink-0" />
         <span className="leading-tight">{label}</span>
+        {tooltip && (
+          <Popover open={showTooltip} onOpenChange={setShowTooltip}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
+                className="ml-auto shrink-0 p-0.5 rounded-full hover:bg-muted transition-colors"
+                aria-label="Info"
+              >
+                <Info className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-64 text-xs leading-relaxed p-3">
+              {tooltip.split('\n').map((line, i) => (
+                <p key={i} className={line.startsWith(' ') ? 'ml-2 text-muted-foreground' : 'font-medium'}>{line}</p>
+              ))}
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
       <p className={`text-base font-semibold mt-1 ${valueClassName || ''}`}>{value}</p>
       {onRefresh && (
