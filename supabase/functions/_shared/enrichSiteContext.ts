@@ -26,6 +26,8 @@ export interface SiteContext {
   company_size?: string
   site_name?: string
   address?: string
+  entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
+  media_specialties?: string[] // e.g. ['politique', 'économie', 'tech']
   identity_confidence?: number
   identity_source?: string
   identity_enriched_at?: string
