@@ -145,7 +145,6 @@ const App = () => (
                       <Suspense fallback={null}>
                         <SurveyModal />
                       </Suspense>
-                      </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
                 </CreditsProvider>
