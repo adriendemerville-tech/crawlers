@@ -388,7 +388,19 @@ function NodeSphere({
         />
       </mesh>
 
-      {/* Label — hover/select only (including home) */}
+      {/* Inner bright core (white highlight — matching 2D) */}
+      {!isGhost && (
+        <mesh>
+          <sphereGeometry args={[node.radius * (node.isHome ? 0.35 : 0.5), 16, 16]} />
+          <meshBasicMaterial
+            color="#ffffff"
+            transparent
+            opacity={node.isHome ? 0.6 : 0.4}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
       {(isSelected || isHovered) && (
         <Billboard position={[0, -node.radius - 1.5, 0]}>
           <Text
