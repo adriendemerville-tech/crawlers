@@ -1393,7 +1393,6 @@ export function ExpertAuditDashboard() {
       <PatienceCards isActive={isStrategicLoading} />
 
       {/* Results */}
-      {result && !isLoading && !isStrategicLoading && console.log('[AuditDashboard] Rendering results, mode:', auditMode, 'scores:', !!result?.scores) && false}
       {result && !isLoading && !isStrategicLoading && (
         <motion.div
           key={auditMode}
