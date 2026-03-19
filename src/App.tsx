@@ -36,6 +36,7 @@ const PolitiqueConfidentialite = lazy(() => import("./pages/PolitiqueConfidentia
 const ConditionsUtilisation = lazy(() => import("./pages/ConditionsUtilisation"));
 const RGPD = lazy(() => import("./pages/RGPD"));
 const Auth = lazy(() => import("./pages/Auth"));
+const SignupPage = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
