@@ -1886,8 +1886,9 @@ export function MyTracking() {
                 className="mt-0.5"
               />
               <div className="space-y-1">
-                <label htmlFor="ga4-wp-modal" className="text-sm font-medium cursor-pointer leading-none">
+                <label htmlFor="ga4-wp-modal" className="text-sm font-medium cursor-pointer leading-none flex items-center gap-2">
                   {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connecter Google Analytics'}
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 inline-block"><path fill="#F9AB00" d="M20.17 2.88a3.12 3.12 0 00-4.41 0l-2.62 2.62a3.12 3.12 0 000 4.41l.8.8a3.12 3.12 0 004.41 0l2.62-2.62a3.12 3.12 0 000-4.41l-.8-.8z"/><path fill="#E37400" d="M12.94 10.11l-.8-.8a3.12 3.12 0 00-4.41 0L5.11 11.93a3.12 3.12 0 000 4.41l.8.8a3.12 3.12 0 004.41 0l2.62-2.62a3.12 3.12 0 000-4.41z"/><circle fill="#E37400" cx="6.5" cy="19.5" r="2.5"/></svg>
                 </label>
                 <p className="text-[11px] text-muted-foreground leading-snug">
                   {language === 'en'
