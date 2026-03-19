@@ -32,7 +32,7 @@ interface Message {
   is_admin: boolean;
   sender_id: string;
   created_at: string;
-  device_info?: Record<string, string> | null;
+  device_info?: any;
 }
 
 export function SupportManagement() {
