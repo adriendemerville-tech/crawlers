@@ -4214,6 +4214,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_log: {
+        Row: {
+          created_at: string
+          id: string
+          last_gmb_action_at: string | null
+          last_gmb_location_name: string | null
+          last_llm_depth_test_at: string | null
+          last_llm_depth_test_url: string | null
+          last_multi_crawl_at: string | null
+          last_multi_crawl_url: string | null
+          last_strategic_audit_at: string | null
+          last_strategic_audit_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_gmb_action_at?: string | null
+          last_gmb_location_name?: string | null
+          last_llm_depth_test_at?: string | null
+          last_llm_depth_test_url?: string | null
+          last_multi_crawl_at?: string | null
+          last_multi_crawl_url?: string | null
+          last_strategic_audit_at?: string | null
+          last_strategic_audit_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_gmb_action_at?: string | null
+          last_gmb_location_name?: string | null
+          last_llm_depth_test_at?: string | null
+          last_llm_depth_test_url?: string | null
+          last_multi_crawl_at?: string | null
+          last_multi_crawl_url?: string | null
+          last_strategic_audit_at?: string | null
+          last_strategic_audit_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4389,6 +4434,15 @@ export type Database = {
       recalculate_reliability: { Args: never; Returns: undefined }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
+        Returns: undefined
+      }
+      upsert_user_activity: {
+        Args: {
+          p_field: string
+          p_label?: string
+          p_timestamp?: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       use_credit:
