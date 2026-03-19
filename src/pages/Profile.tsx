@@ -195,7 +195,6 @@ export default function Profile() {
                   <span className="hidden sm:inline">{t.actionPlans}</span>
                 </TabsTrigger>
                 <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
-                  <Code2 className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
                 <TabsTrigger
