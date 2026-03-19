@@ -1711,6 +1711,8 @@ export function MyTracking() {
                         address: currentSite.address || undefined,
                         commercial_area: currentSite.commercial_area || undefined,
                         company_size: currentSite.company_size || undefined,
+                        entity_type: currentSite.entity_type || undefined,
+                        media_specialties: currentSite.media_specialties || undefined,
                       }}
                     />
                    )}
