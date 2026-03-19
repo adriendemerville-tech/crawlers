@@ -723,7 +723,6 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                 </button>
               </div>
             )}
-            )}
             {messages.map((msg, i) => {
               const isUser = msg.role === 'user';
               const isAssistant = msg.role === 'assistant';
