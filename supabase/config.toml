@@ -117,3 +117,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.health-check]
     verify_jwt = false
+  [functions.iktracker-actions]
+    verify_jwt = false
