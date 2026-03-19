@@ -42,6 +42,8 @@ const translations = {
     wpHelp: 'Utilisez un "Application Password" WordPress (Utilisateurs → Profil → Mots de passe d\'application).',
     drupalHelp: 'Utilisez Basic Auth ou configurez le module Simple OAuth pour OAuth 2.0.',
     shopifyHelp: 'Entrez l\'URL de votre boutique Shopify et votre token d\'accès Admin API.',
+    webflowHelp: 'Entrez votre token API Webflow (Site Settings → Integrations → API Access).',
+    wixHelp: 'Entrez votre clé API Wix (Tableau de bord Wix → Dev Center → API Keys).',
     webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
     webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
     webhookManualTitle: 'Configuration manuelle du webhook',
@@ -49,6 +51,8 @@ const translations = {
     webhookManualShopify: 'Admin Shopify → Paramètres → Notifications → Webhooks → Ajouter "orders/create" avec cette URL :',
     copied: 'URL copiée !',
     shopifyToken: 'Token Admin API',
+    webflowToken: 'Token API Webflow',
+    wixToken: 'Clé API Wix',
   },
   en: {
     title: 'API Connection',
