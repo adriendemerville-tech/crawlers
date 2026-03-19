@@ -827,6 +827,7 @@ export default function Cocoon() {
                 colorIntensity={colorIntensity}
                 bgWarmth={bgWarmth}
                 linkThickness={linkThickness}
+                bgColorSlider={bgColor}
               />
             ) : (
               <CocoonForceGraph
