@@ -193,6 +193,12 @@ export function AnalyticsDashboard() {
         .gte('created_at', thirtyDaysAgo);
       newStats.cocoonChatSessions = chatCount || 0;
 
+      // Count GMB connected locations (total)
+      const { count: gmbCount } = await supabase
+        .from('gmb_locations')
+        .select('*', { count: 'exact', head: true });
+      newStats.gmbConnected = gmbCount || 0;
+
       setStats(newStats);
 
 
