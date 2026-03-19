@@ -3,8 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff, AlertTriangle, Link2, DollarSign, Search, Sparkles, Building2, Play, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AlgoConfig {
   id: string;
