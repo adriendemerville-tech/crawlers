@@ -842,6 +842,77 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_connections: {
+        Row: {
+          api_key: string | null
+          auth_method: string
+          basic_auth_pass: string | null
+          basic_auth_user: string | null
+          capabilities: Json | null
+          created_at: string
+          id: string
+          oauth_access_token: string | null
+          oauth_refresh_token: string | null
+          platform: Database["public"]["Enums"]["cms_platform"]
+          platform_site_id: string | null
+          scopes: string[] | null
+          site_url: string
+          status: string
+          token_expiry: string | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          auth_method?: string
+          basic_auth_pass?: string | null
+          basic_auth_user?: string | null
+          capabilities?: Json | null
+          created_at?: string
+          id?: string
+          oauth_access_token?: string | null
+          oauth_refresh_token?: string | null
+          platform: Database["public"]["Enums"]["cms_platform"]
+          platform_site_id?: string | null
+          scopes?: string[] | null
+          site_url: string
+          status?: string
+          token_expiry?: string | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          auth_method?: string
+          basic_auth_pass?: string | null
+          basic_auth_user?: string | null
+          capabilities?: Json | null
+          created_at?: string
+          id?: string
+          oauth_access_token?: string | null
+          oauth_refresh_token?: string | null
+          platform?: Database["public"]["Enums"]["cms_platform"]
+          platform_site_id?: string | null
+          scopes?: string[] | null
+          site_url?: string
+          status?: string
+          token_expiry?: string | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cms_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_chat_histories: {
         Row: {
           created_at: string
@@ -4740,6 +4811,7 @@ export type Database = {
         | "unpublished"
         | "archived"
         | "deleted"
+      cms_platform: "wordpress" | "shopify" | "webflow" | "wix" | "drupal"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -4890,6 +4962,7 @@ export const Constants = {
         "archived",
         "deleted",
       ],
+      cms_platform: ["wordpress", "shopify", "webflow", "wix", "drupal"],
       report_type: [
         "seo_technical",
         "seo_strategic",
