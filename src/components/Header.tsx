@@ -477,7 +477,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center gap-1.5">
-                <Link to="/auth?mode=signup">
+                <Link to="/signup">
                   <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
                     {t.signup}
                   </Button>
