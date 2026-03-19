@@ -354,14 +354,40 @@ export default function MatricePrompt() {
             )}
           </div>
 
-          {/* Import + URL */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileImport} />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
-              <Upload className="h-4 w-4" /> Importer .csv
-            </Button>
+          {/* CSV Selector + Import + URL */}
+          <div className="flex flex-col gap-3 mb-6">
+            {/* Row 1: CSV batch selector + import */}
+            <div className="flex items-center gap-3">
+              <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
+              {batches.length > 0 ? (
+                <Select value={activeBatchId || ''} onValueChange={handleBatchChange}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Sélectionner un CSV…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map(b => (
+                      <SelectItem key={b.batch_id} value={b.batch_id}>
+                        {b.batch_label} ({b.count} KPIs)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="text-sm text-muted-foreground">Aucun CSV importé</span>
+              )}
+              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileImport} />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
+                <Upload className="h-4 w-4" /> Importer .csv
+              </Button>
+              {rows.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
 
-            <div className="flex-1 flex gap-2">
+            {/* Row 2: URL + analyze */}
+            <div className="flex gap-2">
               <Input
                 placeholder="https://example.com"
                 value={url}
@@ -377,12 +403,6 @@ export default function MatricePrompt() {
                 Analyser
               </Button>
             </div>
-
-            {rows.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
           </div>
 
           {/* Matrix table */}
