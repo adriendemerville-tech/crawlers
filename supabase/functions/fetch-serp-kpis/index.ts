@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code } = await req.json()
+    const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code, site_context } = await req.json()
     const effectiveLocationCode = location_code || 2250
     const effectiveLanguageCode = language_code || 'fr'
 
