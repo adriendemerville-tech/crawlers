@@ -363,7 +363,7 @@ async function queryWithIterations(
       messages.push({ role: 'assistant', content })
 
       if (iteration <= 2) {
-        messages.push({ role: 'user', content: FOLLOW_UP_PROMPTS[iteration - 1] })
+        messages.push({ role: 'user', content: followUpPrompts[iteration - 1] })
       }
     } catch (err) {
       console.error(`[llm-vis] ${model} it${iteration} error:`, err)
