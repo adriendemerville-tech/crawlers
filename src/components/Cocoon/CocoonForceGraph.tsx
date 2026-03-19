@@ -548,7 +548,7 @@ export function CocoonForceGraph({
         const xrayHomeBlue: [number, number, number] = [18, 97, 212];
         const [cr, cg, cb] = node.isHome
           ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
-          : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
+          : resolveNodeColor(node.pageType);
         const baseAlpha = isGhost ? 0.15 : 1;
 
         // ─── Home Sun: rotating elliptical corona with tilt ───
