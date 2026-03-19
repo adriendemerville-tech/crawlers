@@ -1,6 +1,6 @@
 # CMS Adapter Architecture — Cocoon Auto-Implementation
 
-> **Statut** : Phase de design (Mars 2026)
+> **Statut** : Phase 1 active (Mars 2026)
 > **Objectif** : Permettre à Cocoon d'appliquer automatiquement ses recommandations SEO directement sur le CMS de l'utilisateur via les API REST natives.
 
 ## Vue d'ensemble
@@ -10,30 +10,35 @@ Cocoon Recommendation
         ↓
   Edge Function: cms-actions (routeur)
         ↓
-  ┌─────────────┐
-  │ CMS Adapter │ ← interface commune
-  └──┬──┬──┬──┬─┘
-     │  │  │  │
-    WP Shopify Webflow Wix
+  ┌──────────────────┐
+  │   CMS Adapter    │ ← interface commune
+  └──┬──┬──┬──┬──┬───┘
+     │  │  │  │  │
+    WP Shopify Webflow Wix Drupal
 ```
 
 ## Table `cms_connections`
 
-| Colonne              | Type                                              | Description                                    |
-|----------------------|---------------------------------------------------|------------------------------------------------|
-| `id`                 | uuid (PK)                                         | Identifiant unique                             |
-| `user_id`            | uuid (FK → auth.users)                            | Propriétaire                                   |
-| `tracked_site_id`    | uuid (FK → tracked_sites)                         | Site lié                                       |
-| `platform`           | enum (`wordpress`, `shopify`, `webflow`, `wix`)   | Type de CMS                                    |
-| `oauth_access_token` | text (chiffré via vault)                          | Token OAuth actif                              |
-| `oauth_refresh_token`| text                                              | Refresh token                                  |
-| `token_expiry`       | timestamptz                                       | Expiration du token                            |
-| `site_url`           | text                                              | URL racine du CMS                              |
-| `platform_site_id`   | text                                              | ID interne (Shopify store, Webflow site_id…)   |
-| `scopes`             | text[]                                            | Scopes OAuth accordés                          |
-| `status`             | text (`active`, `expired`, `revoked`)             | État de la connexion                           |
-| `created_at`         | timestamptz                                       |                                                |
-| `updated_at`         | timestamptz                                       |                                                |
+| Colonne              | Type                                                         | Description                                    |
+|----------------------|--------------------------------------------------------------|------------------------------------------------|
+| `id`                 | uuid (PK)                                                    | Identifiant unique                             |
+| `user_id`            | uuid (FK → auth.users)                                       | Propriétaire                                   |
+| `tracked_site_id`    | uuid (FK → tracked_sites)                                    | Site lié                                       |
+| `platform`           | enum (`wordpress`, `shopify`, `webflow`, `wix`, `drupal`)    | Type de CMS                                    |
+| `auth_method`        | text (`oauth2`, `basic`, `api_key`)                          | Mode d'authentification                        |
+| `oauth_access_token` | text (chiffré via vault)                                     | Token OAuth actif                              |
+| `oauth_refresh_token`| text                                                         | Refresh token                                  |
+| `token_expiry`       | timestamptz                                                  | Expiration du token                            |
+| `basic_auth_user`    | text                                                         | Utilisateur Basic Auth (Drupal)                |
+| `basic_auth_pass`    | text                                                         | Mot de passe Basic Auth (Drupal)               |
+| `api_key`            | text                                                         | Clé API directe                                |
+| `site_url`           | text                                                         | URL racine du CMS                              |
+| `platform_site_id`   | text                                                         | ID interne (Shopify store, Webflow site_id…)   |
+| `scopes`             | text[]                                                       | Scopes OAuth accordés                          |
+| `capabilities`       | jsonb                                                        | Capacités détectées (metatag, redirect…)        |
+| `status`             | text (`active`, `expired`, `revoked`, `pending`)             | État de la connexion                           |
+| `created_at`         | timestamptz                                                  |                                                |
+| `updated_at`         | timestamptz                                                  |                                                |
 
 ## Interface commune `CMSAdapter`
 
@@ -95,21 +100,43 @@ interface CMSAdapter {
 - **Secrets requis** : `WIX_CLIENT_ID`, `WIX_CLIENT_SECRET`
 - **Callback URL** : `https://{project_id}.supabase.co/functions/v1/cms-oauth-callback`
 
+### Drupal (NOUVEAU)
+- **API** : JSON:API (module core Drupal 8+/9+/10+/11+)
+- **Flow principal** : OAuth 2.0 via le module `simple_oauth`
+- **Flow alternatif** : Basic Auth (module `basic_auth` core) — idéal pour MVP/tests rapides
+- **Scopes OAuth** : Configurables via `simple_oauth` (ex: `administrator`, `content_editor`)
+- **Modules Drupal requis** :
+  - `jsonapi` (core, activé par défaut)
+  - `metatag` (contrib) — pour la gestion des meta title/description
+  - `redirect` (contrib) — pour les redirections 301/302
+  - `simple_oauth` (contrib, optionnel) — pour l'auth OAuth2
+  - `basic_auth` (core, optionnel) — pour l'auth Basic
+- **Secrets requis** : Aucun côté Crawlers (les credentials sont stockés par connexion dans `cms_connections`)
+- **Endpoints utilisés** :
+  - `GET /jsonapi` — Discovery des types de contenus
+  - `GET /jsonapi/node/{type}` — Lister les pages
+  - `PATCH /jsonapi/node/{type}/{uuid}` — Modifier title, meta, body
+  - `GET/POST/DELETE /jsonapi/redirect/redirect` — Gestion des redirections
+
 ## Actions supportées par CMS
 
-| Action                 | WordPress | Shopify | Webflow | Wix  |
-|------------------------|:---------:|:-------:|:-------:|:----:|
-| Modifier title/meta    | ✅        | ✅      | ✅      | ⚠️   |
-| Modifier canonical     | ✅        | ❌      | ✅      | ❌   |
-| Ajouter JSON-LD        | ✅        | ✅ (1)  | ⚠️ (2) | ❌   |
-| Maillage interne       | ✅        | ⚠️ (3) | ⚠️ (2) | ❌   |
-| Redirections 301/302   | ✅        | ✅      | ✅      | ✅   |
-| Lister les pages       | ✅        | ✅      | ✅      | ✅   |
+| Action                 | WordPress | Shopify | Webflow | Wix  | Drupal |
+|------------------------|:---------:|:-------:|:-------:|:----:|:------:|
+| Modifier title/meta    | ✅        | ✅      | ✅      | ⚠️   | ✅     |
+| Modifier canonical     | ✅        | ❌      | ✅      | ❌   | ✅ (1) |
+| Ajouter JSON-LD        | ✅        | ✅ (2)  | ⚠️ (3) | ❌   | ✅ (4) |
+| Maillage interne       | ✅        | ⚠️ (5) | ⚠️ (3) | ❌   | ✅     |
+| Redirections 301/302   | ✅        | ✅      | ✅      | ✅   | ✅ (6) |
+| Lister les pages       | ✅        | ✅      | ✅      | ✅   | ✅     |
+| Découvrir les types    | ❌        | ❌      | ❌      | ❌   | ✅     |
 
 Notes :
-1. Shopify : JSON-LD via modification du thème Liquid (plus complexe).
-2. Webflow : Pas de manipulation HTML fine via API — limité aux champs CMS.
-3. Shopify : Le contenu des pages est en Liquid, l'injection de liens nécessite du parsing HTML.
+1. Drupal canonical : Via le module `metatag` avec le champ `canonical_url`.
+2. Shopify : JSON-LD via modification du thème Liquid (plus complexe).
+3. Webflow : Pas de manipulation HTML fine via API — limité aux champs CMS.
+4. Drupal JSON-LD : Via le module `schema_metatag` ou injection dans le body.
+5. Shopify : Le contenu des pages est en Liquid, l'injection de liens nécessite du parsing HTML.
+6. Drupal redirections : Nécessite le module contrib `redirect`.
 
 ## Edge Functions
 
@@ -118,14 +145,31 @@ Notes :
 | `cms-oauth-callback`   | Réception du callback OAuth, stockage des tokens            |
 | `cms-actions`          | Routeur principal : `list-pages`, `update-meta`, `add-redirect`, `add-links` |
 | `cms-token-refresh`    | Cron job pour rafraîchir les tokens expirés                 |
+| `drupal-actions`       | **Routeur Drupal** : 10 actions (test, list-pages, get-page, update-meta, update-body, add-internal-links, list/create/delete-redirect, discover-node-types) |
+
+## Edge Function `drupal-actions` — Actions disponibles
+
+| Action               | Méthode | Description                                          |
+|----------------------|---------|------------------------------------------------------|
+| `test-connection`    | POST    | Teste la connexion Drupal (sans sauvegarder en DB)   |
+| `discover-node-types`| POST   | Liste les types de nœuds disponibles                 |
+| `list-pages`         | POST    | Liste les pages d'un type donné (pagination incluse) |
+| `get-page`           | POST    | Récupère le détail d'une page (body, meta, path)     |
+| `update-meta`        | POST    | Met à jour title et/ou metatags d'un nœud            |
+| `update-body`        | POST    | Remplace le body HTML d'un nœud                      |
+| `add-internal-links` | POST    | Injecte des liens internes dans le body existant      |
+| `list-redirects`     | POST    | Liste les redirections (module `redirect`)            |
+| `create-redirect`    | POST    | Crée une redirection 301/302                         |
+| `delete-redirect`    | POST    | Supprime une redirection                             |
 
 ## Roadmap
 
-1. **Phase 1** : Table `cms_connections` + WordPress Adapter (meta, redirections, maillage via plugin existant)
-2. **Phase 2** : Shopify Adapter (meta + redirections) + OAuth Shopify
-3. **Phase 3** : Webflow Adapter + Wix Adapter
-4. **Phase 4** : Bouton « Appliquer automatiquement » dans l'historique Cocoon
-5. **Phase 5** : Mode batch (appliquer N recommandations en 1 clic)
+1. **Phase 1** : Table `cms_connections` ✅ + WordPress Adapter (meta, redirections, maillage via plugin existant)
+2. **Phase 1bis** : **Drupal Adapter** ✅ (JSON:API, OAuth2 + Basic Auth, 10 actions)
+3. **Phase 2** : Shopify Adapter (meta + redirections) + OAuth Shopify
+4. **Phase 3** : Webflow Adapter + Wix Adapter
+5. **Phase 4** : Bouton « Appliquer automatiquement » dans l'historique Cocoon
+6. **Phase 5** : Mode batch (appliquer N recommandations en 1 clic)
 
 ## Sécurité
 
@@ -134,3 +178,4 @@ Notes :
 - Chaque action CMS est loguée dans `analytics_events` pour traçabilité.
 - Rate limiting via `check_fair_use_v2` sur les actions d'écriture.
 - Confirmation utilisateur requise avant toute modification destructive (redirections, suppression de contenu).
+- **Drupal** : Les credentials Basic Auth sont stockés en base (champ `basic_auth_pass`), idéalement à migrer vers Vault.
