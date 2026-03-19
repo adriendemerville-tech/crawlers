@@ -95,6 +95,7 @@ const translations = {
     myReports: 'Informes',
     actionPlans: 'Planes de Acción',
     correctiveCodes: '<Scripts>',
+    creator: 'Creador',
     wallet: 'Billetera',
     tracking: 'Mis sitios',
     firstName: 'Nombre',
