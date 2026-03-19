@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from '../_shared/cors.ts';
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 
 /**
  * Edge Function: gsc-auth
@@ -226,62 +227,30 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Get user tokens
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry, gsc_site_url')
-        .eq('user_id', user_id)
-        .single();
+      // Resolve the correct Google token for this domain (multi-account aware)
+      const requestedSite = site_url || '';
+      const bareDomain = requestedSite
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/+$/, '')
+        .toLowerCase();
 
-      if (!profile?.gsc_access_token) {
+      if (!bareDomain) {
+        return new Response(JSON.stringify({ error: 'No site URL configured' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const resolved = await resolveGoogleToken(supabase, user_id, bareDomain, clientId, clientSecret);
+
+      if (!resolved) {
         return new Response(JSON.stringify({ error: 'GSC not connected' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      let accessToken = profile.gsc_access_token;
-
-      // Refresh token if expired
-      if (profile.gsc_token_expiry && new Date(profile.gsc_token_expiry) < new Date()) {
-        if (!profile.gsc_refresh_token) {
-          return new Response(JSON.stringify({ error: 'GSC token expired, please reconnect' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        const refreshResp = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: clientId,
-            client_secret: clientSecret,
-            refresh_token: profile.gsc_refresh_token,
-            grant_type: 'refresh_token',
-          }),
-        });
-
-        if (!refreshResp.ok) {
-          return new Response(JSON.stringify({ error: 'Failed to refresh GSC token' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        const newTokens = await refreshResp.json();
-        accessToken = newTokens.access_token;
-
-        await supabase.from('profiles').update({
-          gsc_access_token: accessToken,
-          gsc_token_expiry: new Date(Date.now() + (newTokens.expires_in || 3600) * 1000).toISOString(),
-        }).eq('user_id', user_id);
-      }
-
-      // Fetch GSC data — resolve the correct site property first
-      const requestedSite = site_url || profile.gsc_site_url;
-      if (!requestedSite) {
-        return new Response(JSON.stringify({ error: 'No site URL configured' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      const accessToken = resolved.access_token;
+      console.log(`[gsc-auth] Token resolved via ${resolved.source} for "${bareDomain}" (connection: ${resolved.connection_id})`);
 
       // List all GSC properties to find the matching one
       const sitesResp = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
@@ -292,15 +261,7 @@ Deno.serve(async (req) => {
       if (sitesResp.ok) {
         const sitesData = await sitesResp.json();
         const allSites: { siteUrl: string; permissionLevel: string }[] = sitesData.siteEntry || [];
-        
-        // Extract bare domain from the requested URL for matching
-        const bareDomain = requestedSite
-          .replace(/^https?:\/\//, '')
-          .replace(/^www\./, '')
-          .replace(/\/+$/, '')
-          .toLowerCase();
 
-        // Try to find a matching property (sc-domain:, https://, https://www., http://)
         const match = allSites.find(s => {
           const su = s.siteUrl.toLowerCase();
           if (su === `sc-domain:${bareDomain}`) return true;
@@ -321,7 +282,7 @@ Deno.serve(async (req) => {
           });
         }
       } else {
-        await sitesResp.text(); // consume body
+        await sitesResp.text();
       }
 
       const endDate = end_date ? new Date(end_date) : new Date();
