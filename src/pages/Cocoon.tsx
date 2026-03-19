@@ -63,6 +63,7 @@ const i18n = {
     prereqAuditCta: 'Lancer un audit stratégique',
     prereqClose: 'Compris',
     refreshData: 'Actualiser data',
+    generateGraph: 'Générer le graph',
     analyzingData: 'Analyses data...',
     auditExpert: 'Audit Expert',
     crawlMulti: 'Crawl Multi-pages',
