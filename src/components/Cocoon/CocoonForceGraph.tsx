@@ -512,7 +512,7 @@ export function CocoonForceGraph({
           const py = source.y + (target.y - source.y) * p.progress;
           const fadeEdge = Math.sin(p.progress * Math.PI);
 
-          const [jr, jg, jb] = JUICE_COLORS[p.juiceType];
+          const [jr, jg, jb] = resolveJuiceColor(p.juiceType);
           const particleSize = p.size * nodeScale * (0.8 + link.juiceIntensity * 0.6);
           ctx.beginPath();
           ctx.arc(px, py, particleSize, 0, Math.PI * 2);
