@@ -750,39 +750,8 @@ export function MyTracking() {
 
     await Promise.allSettled(calls);
 
-    // === Semantic Authority: weighted avg of SERP rankings filtered by core-target relevance ===
-    const computedSemanticAuth = (() => {
-      const keywords: Array<{ keyword: string; position: number; search_volume: number }> = rawAccumulator.serpData?.sample_keywords || [];
-      if (keywords.length === 0) return null;
-
-      const identityTokens: string[] = [];
-      const addTokens = (val: string | null | undefined) => {
-        if (!val) return;
-        val.toLowerCase().split(/[\s,;|/]+/).filter(t => t.length > 2).forEach(t => identityTokens.push(t));
-      };
-      addTokens(site.products_services);
-      addTokens(site.market_sector);
-      addTokens(site.target_audience);
-      addTokens(site.commercial_area);
-
-      const scored = keywords
-        .filter(kw => kw.keyword && typeof kw.position === 'number' && kw.position > 0)
-        .map(kw => {
-          const kwLower = kw.keyword.toLowerCase();
-          const kwTokens = kwLower.split(/[\s,;|/]+/).filter(t => t.length > 2);
-          const isRelevant = identityTokens.length === 0 || identityTokens.some(t => kwLower.includes(t)) || kwTokens.some(kt => identityTokens.some(it => it.includes(kt) || kt.includes(it)));
-          if (!isRelevant) return null;
-          const posScore = Math.max(0, Math.round(100 * Math.exp(-0.05 * (kw.position - 1))));
-          const volume = kw.search_volume || 1;
-          return { posScore, volume };
-        })
-        .filter(Boolean) as Array<{ posScore: number; volume: number }>;
-
-      if (scored.length === 0) return null;
-      const totalWeight = scored.reduce((s, k) => s + k.volume, 0);
-      const weightedSum = scored.reduce((s, k) => s + k.posScore * k.volume, 0);
-      return Math.round(weightedSum / totalWeight);
-    })();
+    // Semantic Authority: computed server-side by LLM in fetch-serp-kpis
+    const computedSemanticAuth = rawAccumulator.serpData?.semantic_authority ?? null;
 
     // Insert ONE single snapshot with all collected data
     await supabase.from('user_stats_history').insert({
