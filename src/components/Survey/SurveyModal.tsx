@@ -266,7 +266,7 @@ export function SurveyModal() {
                     <Send className="h-4 w-4 mr-2" />
                     Partager via {block.share_channel === 'sms' ? 'SMS' : 'WhatsApp'}
                   </Button>
-                  {responses[block.id] && <p className="text-xs text-green-600">✓ Lien partagé</p>}
+                  {responses[block.id] && <p className="text-xs text-primary">✓ Lien partagé</p>}
                 </div>
               )}
             </div>
