@@ -133,7 +133,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {block.type === 'screenshot' && (
           <div>
-            <Label className="text-xs">Label du bouton</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Label du bouton</Label>
             <Input value={block.label || ''} onChange={e => onChange({ ...block, label: e.target.value })} placeholder="Envoyer une capture d'écran" />
           </div>
         )}
