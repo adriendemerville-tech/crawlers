@@ -288,6 +288,7 @@ export function MyWallet() {
               <div className="mb-2" />
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
+                  { value: 'reports', icon: FileText, label: language === 'fr' ? 'Rapports' : language === 'es' ? 'Informes' : 'Reports' },
                   { value: 'branding', icon: Palette, label: 'Branding' },
                   { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
