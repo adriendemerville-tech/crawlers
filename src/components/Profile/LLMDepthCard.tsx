@@ -677,6 +677,12 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
               </Badge>
             )}
           </div>
+          <div className="flex items-center justify-end gap-1 pt-1">
+            <span className="text-[9px] text-muted-foreground/60">
+              {language === 'es' ? 'Necesidad genérica → Caso de uso → Función' : language === 'en' ? 'Generic need → Use case → Feature' : 'Besoin générique → Cas d\'usage → Fonction'}
+            </span>
+            <RefreshCw className="h-2.5 w-2.5 text-muted-foreground/40" />
+          </div>
         </div>
 
         {/* Per-model results */}
