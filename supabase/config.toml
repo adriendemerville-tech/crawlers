@@ -115,3 +115,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.track-payment]
     verify_jwt = false
+  [functions.health-check]
+    verify_jwt = false

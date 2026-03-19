@@ -23,7 +23,10 @@ type ActionType =
   | 'llm_depth'
   | 'audit_compare'
   | 'hallucination_diagnosis'
-  | 'target_queries';
+  | 'target_queries'
+  | 'cocoon_chat'
+  | 'cocoon_logic'
+  | 'local_seo_audit';
 
 const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
   free: {
@@ -38,6 +41,9 @@ const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
     audit_compare:           { hourly: 3,  daily: 10 },
     hallucination_diagnosis: { hourly: 3,  daily: 10 },
     target_queries:          { hourly: 5,  daily: 15 },
+    cocoon_chat:             { hourly: 15, daily: 50 },
+    cocoon_logic:            { hourly: 3,  daily: 8 },
+    local_seo_audit:         { hourly: 3,  daily: 10 },
   },
   agency_pro: {
     expert_audit:            { hourly: 20, daily: 100 },
@@ -51,6 +57,9 @@ const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
     audit_compare:           { hourly: 10, daily: 50 },
     hallucination_diagnosis: { hourly: 10, daily: 50 },
     target_queries:          { hourly: 15, daily: 80 },
+    cocoon_chat:             { hourly: 40, daily: 200 },
+    cocoon_logic:            { hourly: 10, daily: 40 },
+    local_seo_audit:         { hourly: 10, daily: 50 },
   },
 };
 

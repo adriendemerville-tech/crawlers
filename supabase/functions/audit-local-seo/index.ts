@@ -2,6 +2,8 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 
 interface KeywordData {
   keyword: string;
@@ -559,7 +561,23 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ── IP rate limit ──
+  const ip = getClientIp(req);
+  const ipCheck = checkIpRate(ip, "audit-local-seo", 5, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
   try {
+    // ── Fair use check ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'local_seo_audit', userCtx.planType);
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Vérifier les credentials DataForSEO
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
       throw new Error('Les identifiants DataForSEO ne sont pas configurés');

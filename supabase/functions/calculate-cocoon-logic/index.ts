@@ -3,6 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
+import { checkFairUse } from "../_shared/fairUse.ts";
 
 /**
  * Edge Function: calculate-cocoon-logic
@@ -294,6 +295,15 @@ Deno.serve(async (req) => {
     if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
       return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Fair use check ──
+    const planType = ["agency_pro", "agency_premium"].includes(profile?.plan_type || "") ? 'agency_pro' : 'free';
+    const fairUse = await checkFairUse(userId, 'cocoon_logic', planType);
+    if (!fairUse.allowed) {
+      return new Response(JSON.stringify({ error: fairUse.reason }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

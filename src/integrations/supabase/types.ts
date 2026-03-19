@@ -4909,12 +4909,14 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_audit_cache_ttl: { Args: never; Returns: number }
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      downgrade_expired_subscriptions: { Args: never; Returns: number }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number

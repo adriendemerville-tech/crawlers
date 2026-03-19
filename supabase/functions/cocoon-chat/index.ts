@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -10,7 +12,23 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // ── IP rate limit ──
+  const ip = getClientIp(req);
+  const ipCheck = checkIpRate(ip, "cocoon-chat", 20, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
   try {
+    // ── Fair use check ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'cocoon_chat', userCtx.planType);
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const { messages, context, analysisMode, language, domain, trackedSiteId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
