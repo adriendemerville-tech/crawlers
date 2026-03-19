@@ -105,7 +105,7 @@ export function ExternalApisTab() {
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
-  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal'>('wordpress');
+  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify'>('wordpress');
 
   const analyticsServices = services.filter(s => s.category === 'analytics');
   const cmsServices = services.filter(s => s.category === 'cms');
