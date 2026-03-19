@@ -422,7 +422,7 @@ export function FunctionsManagement() {
             <div className="flex items-center gap-2">
               {showPromptMatrix ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
-              <span>Matrice de Prompts</span>
+              <span>Matrice CSV</span>
               <Badge variant="secondary" className="text-[9px] px-1.5 py-0">BETA</Badge>
             </div>
           </button>

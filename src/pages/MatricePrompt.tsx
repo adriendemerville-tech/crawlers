@@ -385,7 +385,7 @@ export default function MatricePrompt() {
             <Button variant="ghost" size="sm" onClick={() => navigate('/console')}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Console
             </Button>
-            <h1 className="text-xl font-bold">Matrice de Prompts</h1>
+            <h1 className="text-xl font-bold">Matrice CSV</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
             <div className="flex-1" />
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>

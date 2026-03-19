@@ -178,7 +178,7 @@ export default function Profile() {
             <div className="flex justify-end mb-1">
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={() => navigate('/matrice')}>
                 <Grid3X3 className="h-3.5 w-3.5" />
-                Matrice de Prompts
+                Matrice CSV
                 <Badge variant="secondary" className="text-[9px] px-1 py-0 text-muted-foreground">BETA</Badge>
               </Button>
             </div>
