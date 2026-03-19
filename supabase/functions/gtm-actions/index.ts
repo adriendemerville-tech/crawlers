@@ -189,14 +189,15 @@ async function handleDeployTag(
     throw new Error('container_path and site_id required');
   }
 
-  // Get site API key
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('api_key')
+  // Get SITE-specific API key (not profile key) — site key is required for widget.js
+  const { data: siteData } = await supabase
+    .from('tracked_sites')
+    .select('api_key, current_config')
+    .eq('id', siteId)
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (!profile?.api_key) throw new Error('No API key found for user');
+  if (!siteData?.api_key) throw new Error('No API key found for this site');
 
   // Check if tag already exists
   const existing = await findCrawlersTag(accessToken, containerPath);
@@ -239,7 +240,7 @@ async function handleDeployTag(
       {
         type: 'TEMPLATE',
         key: 'html',
-        value: `<script>\n  window.CRAWLERS_API_KEY = "${profile.api_key}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`,
+        value: `<script>\n  window.CRAWLERS_API_KEY = "${siteData.api_key}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`,
       },
       {
         type: 'BOOLEAN',
@@ -300,11 +301,13 @@ async function handleDeployTag(
     }
   }
 
-  // Update tracked_site with GTM info
+  // Merge GTM info into existing current_config (don't overwrite corrective_script etc.)
+  const existingConfig = (siteData.current_config as Record<string, unknown>) || {};
   await supabase
     .from('tracked_sites')
     .update({
       current_config: {
+        ...existingConfig,
         gtm_deployed: true,
         gtm_container_path: containerPath,
         gtm_tag_id: tag.tagId,
