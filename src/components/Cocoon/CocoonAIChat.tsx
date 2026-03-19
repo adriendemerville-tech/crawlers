@@ -670,7 +670,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
     sendMessage(prompts[language] || prompts.fr);
   }, [nodes, language, isLoading]);
 
-
+  const clearChat = () => {
     setMessages([]);
     chatHistoryId.current = null;
   };
