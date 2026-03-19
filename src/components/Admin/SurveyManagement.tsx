@@ -107,14 +107,14 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {(block.type === 'poll' || block.type === 'rating' || block.type === 'text_feedback') && (
           <div>
-            <Label className="text-xs">Question</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Question</Label>
             <Input value={block.question || ''} onChange={e => onChange({ ...block, question: e.target.value })} placeholder="Votre question..." />
           </div>
         )}
 
         {block.type === 'poll' && (
           <div className="space-y-1">
-            <Label className="text-xs">Options (une par ligne)</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Options (une par ligne)</Label>
             <Textarea
               value={(block.options || []).join('\n')}
               onChange={e => onChange({ ...block, options: e.target.value.split('\n').filter(Boolean) })}
@@ -133,7 +133,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {block.type === 'screenshot' && (
           <div>
-            <Label className="text-xs">Label du bouton</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Label du bouton</Label>
             <Input value={block.label || ''} onChange={e => onChange({ ...block, label: e.target.value })} placeholder="Envoyer une capture d'écran" />
           </div>
         )}
@@ -151,7 +151,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Message pré-rempli</Label>
+              <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Message pré-rempli</Label>
               <Textarea value={block.share_message || ''} onChange={e => onChange({ ...block, share_message: e.target.value })} placeholder="Découvrez ikTracker..." rows={2} />
             </div>
           </>
@@ -207,9 +207,28 @@ function BlocksEditor({ blocks, onChange }: { blocks: ContentBlock[]; onChange: 
 }
 
 function PersonaEditor({ persona, onChange }: { persona: Record<string, any>; onChange: (p: Record<string, any>) => void }) {
+  const allSelected = Object.keys(PERSONA_OPTIONS).every(key => {
+    const selected = (persona[key] || []) as string[];
+    return selected.length === 0 || selected.length === PERSONA_OPTIONS[key as keyof typeof PERSONA_OPTIONS].length;
+  }) && Object.keys(persona).filter(k => (persona[k] as string[])?.length > 0).length === 0;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Clear all filters = target everyone
+      onChange({});
+    }
+  };
+
   return (
     <div className="space-y-3">
       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ciblage persona</Label>
+      <label className="flex items-center gap-1.5 text-xs cursor-pointer font-medium">
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={handleSelectAll}
+        />
+        Toutes
+      </label>
       {Object.entries(PERSONA_OPTIONS).map(([key, values]) => (
         <div key={key}>
           <Label className="text-xs capitalize">{key === 'client_type' ? 'Type de client' : key === 'account_age' ? 'Ancienneté' : 'Langue'}</Label>
