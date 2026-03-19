@@ -864,70 +864,69 @@ export default function Cocoon() {
                 isWaitingAudit={waitingAuditUrl === selectedNode.url}
               />
             )}
-          </div>
 
-          {/* Legend — dynamic, based on actual node types */}
-          {nodes.length > 0 && (() => {
-            const typeColorMap: Record<string, { color: string; label: Record<string, string> }> = {
-              homepage: { color: '#fbbf24', label: { fr: 'Accueil', en: 'Home', es: 'Inicio' } },
-              blog: { color: '#a78bfa', label: { fr: 'Blog', en: 'Blog', es: 'Blog' } },
-              produit: { color: '#34d399', label: { fr: 'Produit', en: 'Product', es: 'Producto' } },
-              'catégorie': { color: '#60a5fa', label: { fr: 'Catégorie', en: 'Category', es: 'Categoría' } },
-              faq: { color: '#fb923c', label: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' } },
-              guide: { color: '#c084fc', label: { fr: 'Guide', en: 'Guide', es: 'Guía' } },
-              contact: { color: '#f472b6', label: { fr: 'Contact', en: 'Contact', es: 'Contacto' } },
-              tarifs: { color: '#facc15', label: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' } },
-              'légal': { color: '#94a3b8', label: { fr: 'Légal', en: 'Legal', es: 'Legal' } },
-              'à propos': { color: '#67e8f9', label: { fr: 'À propos', en: 'About', es: 'Acerca de' } },
-              page: { color: '#8b5cf6', label: { fr: 'Page', en: 'Page', es: 'Página' } },
-            };
-            const presentTypes = new Set(nodes.map((n: any) => n.page_type));
-            const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
+            {/* Legend — dynamic, inside graph container */}
+            {nodes.length > 0 && (() => {
+              const typeColorMap: Record<string, { color: string; label: Record<string, string> }> = {
+                homepage: { color: '#fbbf24', label: { fr: 'Accueil', en: 'Home', es: 'Inicio' } },
+                blog: { color: '#a78bfa', label: { fr: 'Blog', en: 'Blog', es: 'Blog' } },
+                produit: { color: '#34d399', label: { fr: 'Produit', en: 'Product', es: 'Producto' } },
+                'catégorie': { color: '#60a5fa', label: { fr: 'Catégorie', en: 'Category', es: 'Categoría' } },
+                faq: { color: '#fb923c', label: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' } },
+                guide: { color: '#c084fc', label: { fr: 'Guide', en: 'Guide', es: 'Guía' } },
+                contact: { color: '#f472b6', label: { fr: 'Contact', en: 'Contact', es: 'Contacto' } },
+                tarifs: { color: '#facc15', label: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' } },
+                'légal': { color: '#94a3b8', label: { fr: 'Légal', en: 'Legal', es: 'Legal' } },
+                'à propos': { color: '#67e8f9', label: { fr: 'À propos', en: 'About', es: 'Acerca de' } },
+                page: { color: '#8b5cf6', label: { fr: 'Page', en: 'Page', es: 'Página' } },
+              };
+              const presentTypes = new Set(nodes.map((n: any) => n.page_type));
+              const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
 
-            return (
+              return (
                 <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-black/40 backdrop-blur-sm opacity-0 animate-fade-in"
-                style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
-              >
-                {/* Pages legend */}
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
-                  {legendItems.map(([type, { color, label }]) => (
-                    <div key={type} className="flex items-center gap-1 sm:gap-1.5">
-                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                      <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Particles legend */}
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Particles:' : 'Particules :'}</span>
-                  {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
-                    <div key={key} className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
-                      <span className="text-[10px] sm:text-xs text-white/50 capitalize">{
-                        { authority: language === 'en' ? 'Authority' : language === 'es' ? 'Autoridad' : 'Autorité', semantic: language === 'en' ? 'Semantic' : language === 'es' ? 'Semántica' : 'Sémantique', traffic: language === 'en' ? 'Traffic' : language === 'es' ? 'Tráfico' : 'Trafic', hierarchy: language === 'en' ? 'Hierarchy' : language === 'es' ? 'Jerarquía' : 'Hiérarchie' }[key] || key
-                      }</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Links legend */}
-                <div className="hidden sm:flex items-center gap-2 sm:gap-3">
-                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                    <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
+                  style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
+                >
+                  {/* Pages legend */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
+                    {legendItems.map(([type, { color, label }]) => (
+                      <div key={type} className="flex items-center gap-1 sm:gap-1.5">
+                        <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
+                        <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                    <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+
+                  {/* Particles legend */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Particles:' : 'Particules :'}</span>
+                    {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
+                        <span className="text-[10px] sm:text-xs text-white/50 capitalize">{
+                          { authority: language === 'en' ? 'Authority' : language === 'es' ? 'Autoridad' : 'Autorité', semantic: language === 'en' ? 'Semantic' : language === 'es' ? 'Semántica' : 'Sémantique', traffic: language === 'en' ? 'Traffic' : language === 'es' ? 'Tráfico' : 'Trafic', hierarchy: language === 'en' ? 'Hierarchy' : language === 'es' ? 'Jerarquía' : 'Hiérarchie' }[key] || key
+                        }</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Links legend */}
+                  <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                      <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                      <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                    </div>
                   </div>
                 </div>
-                
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
