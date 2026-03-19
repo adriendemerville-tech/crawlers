@@ -316,6 +316,7 @@ async function queryWithIterations(
   prompt: string,
   patterns: BrandPatterns,
   domain: string,
+  followUpPrompts: string[] = ["Ok et t'aurais pas d'autres idées ?", "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?"],
 ): Promise<{ iteration_found: number; response_text: string }> {
   const messages: Array<{ role: string; content: string }> = [
     { role: 'user', content: prompt },
