@@ -729,11 +729,6 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                     → {result.mentioned_as}
                   </p>
                 )}
-                {result.angles_tested?.length > 0 && (
-                  <p className="text-[9px] text-muted-foreground/60 truncate" title={result.angles_tested.join(' → ')}>
-                    {result.angles_tested.join(' → ')}
-                  </p>
-                )}
 
                 {/* Conversation toggle arrow - paid users only */}
                 {hasConv && (
