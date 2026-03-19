@@ -256,7 +256,7 @@ export function SurveyModal() {
                     <Camera className="h-4 w-4 mr-2" />
                     {block.label || 'Envoyer une capture d\'écran'}
                   </Button>
-                  {responses[block.id] && <p className="text-xs text-green-600">✓ Capture enregistrée</p>}
+                  {responses[block.id] && <p className="text-xs text-primary">✓ Capture enregistrée</p>}
                 </div>
               )}
 

@@ -425,7 +425,7 @@ export function SurveyManagement() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const payload = {
+    const payload: Record<string, any> = {
       title: formData.title,
       status: formData.status,
       target_pages: formData.target_pages,
@@ -434,20 +434,20 @@ export function SurveyManagement() {
       duration_days: formData.duration_days,
       max_impressions_per_user: formData.max_impressions_per_user,
       delay_between_impressions_hours: formData.delay_between_impressions_hours,
-      content_blocks: formData.content_blocks,
+      content_blocks: formData.content_blocks as any,
       ab_enabled: formData.ab_enabled,
       ab_ratio: formData.ab_ratio,
-      variant_b_content_blocks: formData.variant_b_content_blocks,
+      variant_b_content_blocks: formData.variant_b_content_blocks as any,
       variant_b_target_persona: formData.variant_b_target_persona,
       variant_b_duration_days: formData.variant_b_duration_days,
       target_user_count: formData.target_user_count,
     };
 
     if (formData.id) {
-      const { error } = await supabase.from('surveys').update(payload).eq('id', formData.id);
+      const { error } = await supabase.from('surveys').update(payload as any).eq('id', formData.id);
       if (error) { toast.error('Erreur: ' + error.message); return; }
     } else {
-      const { error } = await supabase.from('surveys').insert({ ...payload, created_by: user.id });
+      const { error } = await supabase.from('surveys').insert({ ...payload, created_by: user.id } as any);
       if (error) { toast.error('Erreur: ' + error.message); return; }
     }
 
