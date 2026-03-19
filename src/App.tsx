@@ -64,6 +64,8 @@ const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementS
 const ArchitecteGeneratif = lazy(() => import("./pages/ArchitecteGeneratif"));
 const Cocoon = lazy(() => import("./pages/Cocoon"));
 const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
+const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
+const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
 
 // Loading fallback
 const PageLoader = () => (
