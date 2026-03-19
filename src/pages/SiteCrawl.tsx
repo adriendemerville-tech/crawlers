@@ -1391,6 +1391,39 @@ export default function SiteCrawl() {
                                 ))}
                               </div>
                             )}
+                            {/* Page type classification */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">
+                                {language === 'en' ? 'Page type' : language === 'es' ? 'Tipo de página' : 'Type de page'}
+                              </span>
+                              <Select
+                                value={(page as any).page_type_override || 'auto'}
+                                onValueChange={async (val) => {
+                                  const override = val === 'auto' ? null : val;
+                                  await supabase.from('crawl_pages' as any).update({ page_type_override: override } as any).eq('id', page.id);
+                                  setPages(prev => prev.map(p => p.id === page.id ? { ...p, page_type_override: override } as any : p));
+                                  toast.success(language === 'en' ? 'Classification updated' : language === 'es' ? 'Clasificación actualizada' : 'Classification mise à jour');
+                                }}
+                              >
+                                <SelectTrigger className="h-6 w-36 text-[10px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="auto" className="text-xs">🤖 Auto</SelectItem>
+                                  <SelectItem value="homepage" className="text-xs">🏠 {language === 'en' ? 'Home' : language === 'es' ? 'Inicio' : 'Accueil'}</SelectItem>
+                                  <SelectItem value="blog" className="text-xs">📝 Blog</SelectItem>
+                                  <SelectItem value="produit" className="text-xs">📦 {language === 'en' ? 'Product' : language === 'es' ? 'Producto' : 'Produit'}</SelectItem>
+                                  <SelectItem value="catégorie" className="text-xs">📂 {language === 'en' ? 'Category' : language === 'es' ? 'Categoría' : 'Catégorie'}</SelectItem>
+                                  <SelectItem value="faq" className="text-xs">❓ FAQ</SelectItem>
+                                  <SelectItem value="contact" className="text-xs">✉️ Contact</SelectItem>
+                                  <SelectItem value="tarifs" className="text-xs">💰 {language === 'en' ? 'Pricing' : language === 'es' ? 'Precios' : 'Tarifs'}</SelectItem>
+                                  <SelectItem value="guide" className="text-xs">📖 Guide</SelectItem>
+                                  <SelectItem value="légal" className="text-xs">⚖️ {language === 'en' ? 'Legal' : language === 'es' ? 'Legal' : 'Légal'}</SelectItem>
+                                  <SelectItem value="à propos" className="text-xs">ℹ️ {language === 'en' ? 'About' : language === 'es' ? 'Acerca de' : 'À propos'}</SelectItem>
+                                  <SelectItem value="page" className="text-xs">📄 Page</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                             {/* Custom extraction */}
                             {page.custom_extraction && Object.keys(page.custom_extraction).length > 0 && (
                               <div className="space-y-1">
