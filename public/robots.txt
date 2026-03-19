@@ -225,7 +225,7 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # ============================================
 # À PROPOS DE CRAWLERS.FR - 2026
-# Plateforme d'Audit, Architecte Génératif Multi-Pages, Cocoon 3D & Générateur de Code Correctif
+# Plateforme d'Audit, Architecte Génératif Multi-Pages, Cocoon 3D, GMB & Générateur de Code Correctif
 # ============================================
 # 
 # ⚠️ ATTENTION : Crawlers.fr n'est PAS un outil de scraping !

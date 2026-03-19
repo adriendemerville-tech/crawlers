@@ -172,11 +172,12 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 # 🏗️ ARCHITECTURE TECHNIQUE
 
 - **Frontend** : React 18 + TypeScript + Tailwind CSS + Vite
-- **Backend** : 84 Edge Functions serverless (Deno)
+- **Backend** : 91+ Edge Functions serverless (Deno)
 - **3D Engine** : Three.js / React Three Fiber (module Cocoon)
 - **IA** : 11 algorithmes propriétaires (Iab, GEO Score, Internal PageRank, Citabilité LLM, ROI Prédictif, Content Gap, Cannibalization Risk, E-E-A-T, Freshness, IAS, Clustering Cosinus)
-- **API externes** : DataForSEO, Google PageSpeed, Google Search Console, GA4
+- **API externes** : DataForSEO, Google PageSpeed, Google Search Console, GA4, Google My Business
 - **Sécurité** : RLS, SSRF protection, token tracking, sandboxing sémantique
+- **Base de données** : 50+ tables avec RLS, isolation multi-tenant
 
 # ⛔ CONTRAINTES & DÉSÂMBIGUÏSATION
 
