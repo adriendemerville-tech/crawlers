@@ -468,7 +468,7 @@ export default function MatricePrompt() {
               <Button
                 onClick={handleAnalyze}
                 disabled={analyzing || rows.length === 0}
-                className="gap-2"
+                className="gap-2 bg-purple-600 hover:bg-purple-700 text-white rounded-none"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 Analyser
