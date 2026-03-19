@@ -7,12 +7,14 @@ import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from '
 import { PersonaGate, type PersonaType } from '@/components/PersonaGate';
 import { AnimatePresence, motion } from 'framer-motion';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
