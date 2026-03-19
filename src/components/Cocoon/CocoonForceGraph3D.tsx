@@ -722,6 +722,7 @@ function SceneContent({
   colorIntensity,
   bgWarmth = 0,
   linkThickness = 1,
+  bgColorSlider = 0,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -743,6 +744,7 @@ function SceneContent({
   colorIntensity: number;
   bgWarmth?: number;
   linkThickness?: number;
+  bgColorSlider?: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
