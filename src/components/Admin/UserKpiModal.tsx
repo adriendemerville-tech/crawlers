@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search } from 'lucide-react';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug } from 'lucide-react';
 
 interface UserProfile {
   id: string;
