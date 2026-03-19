@@ -890,12 +890,16 @@ export default function Cocoon() {
                   {/* Pages legend */}
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
-                    {legendItems.map(([type, { color, label }]) => (
-                      <div key={type} className="flex items-center gap-1 sm:gap-1.5">
-                        <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                        <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
-                      </div>
-                    ))}
+                    {legendItems.map(([type, labels]) => {
+                      const color = cocoonTheme.nodeColors[type] || cocoonTheme.nodeColors.unknown || '#8c5cff';
+                      const label = labels[language] || labels.fr;
+                      return (
+                        <div key={type} className="flex items-center gap-1 sm:gap-1.5">
+                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}80` }} />
+                          <span className="text-[10px] sm:text-xs text-white/50">{label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Particles legend */}
