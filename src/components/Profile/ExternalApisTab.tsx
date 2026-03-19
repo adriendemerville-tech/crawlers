@@ -104,6 +104,8 @@ export function ExternalApisTab() {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
+  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal'>('wordpress');
 
   const analyticsServices = services.filter(s => s.category === 'analytics');
   const cmsServices = services.filter(s => s.category === 'cms');
@@ -111,15 +113,17 @@ export function ExternalApisTab() {
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
 
+    // Analytics: GSC/GA4 OAuth flow
     if (service.id === 'gsc' || service.id === 'ga4') {
       setConnectingId(service.id);
       try {
+        const { data: { user } } = await supabase.auth.getUser();
         const { data, error } = await supabase.functions.invoke('gsc-auth', {
-          body: { action: 'get_auth_url' },
+          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
         });
         if (error) throw error;
-        if (data?.url) {
-          window.location.href = data.url;
+        if (data?.auth_url) {
+          window.location.href = data.auth_url;
         } else {
           throw new Error('No auth URL returned');
         }
@@ -129,8 +133,14 @@ export function ExternalApisTab() {
       } finally {
         setConnectingId(null);
       }
+      return;
     }
-    // WordPress and other CMS: can be extended later
+
+    // CMS: WordPress / Drupal connection dialog
+    if (service.id === 'wordpress' || service.id === 'drupal') {
+      setCmsDialogType(service.id);
+      setCmsDialogOpen(true);
+    }
   };
 
   const renderServiceCard = (service: ServiceButton) => {
