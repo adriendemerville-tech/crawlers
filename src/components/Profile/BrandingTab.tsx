@@ -300,17 +300,19 @@ export function BrandingTab() {
   }, [logoUrl, primaryColor, brandName, brandFont, brandFontSize, brandBold, brandItalic, brandUnderline, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
 
-  // Load Google Font for preview
+  // Load Google Font for preview (report font + brand font)
   useEffect(() => {
-    if (!reportFont) return;
-    const id = `gfont-${reportFont.replace(/\s/g, '-')}`;
-    if (document.getElementById(id)) return;
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(reportFont)}:wght@400;700&display=swap`;
-    document.head.appendChild(link);
-  }, [reportFont]);
+    [reportFont, brandFont].forEach(font => {
+      if (!font) return;
+      const id = `gfont-${font.replace(/\s/g, '-')}`;
+      if (document.getElementById(id)) return;
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+      document.head.appendChild(link);
+    });
+  }, [reportFont, brandFont]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
