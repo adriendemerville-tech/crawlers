@@ -92,6 +92,104 @@ interface AuditContext {
   pagespeedSummary?: { performance?: number; lcp?: number; cls?: number };
 }
 
+// ══════════════════════════════════════════════════════════════
+// CMS SETTINGS — Prompting Dynamique selon connexion API
+// ══════════════════════════════════════════════════════════════
+
+interface SiteSettings {
+  hasApiConnection: boolean;
+  cmsType: 'wordpress' | 'shopify' | 'wix' | 'webflow' | 'drupal' | 'native' | null;
+}
+
+/**
+ * Récupère le type de CMS et l'état de connexion API du site cible.
+ * Fallback gracieux : retourne { hasApiConnection: false, cmsType: null } en cas d'erreur.
+ */
+async function fetchSiteSettings(siteUrl: string): Promise<SiteSettings> {
+  const DEFAULT_SETTINGS: SiteSettings = { hasApiConnection: false, cmsType: null };
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) return DEFAULT_SETTINGS;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Normaliser le domaine depuis l'URL
+    let domain: string;
+    try {
+      const urlObj = new URL(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`);
+      domain = urlObj.hostname.replace('www.', '');
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+
+    // 1. Trouver le tracked_site_id via le domaine
+    const { data: site } = await supabase
+      .from('tracked_sites')
+      .select('id')
+      .eq('domain', domain)
+      .maybeSingle();
+
+    if (!site) return DEFAULT_SETTINGS;
+
+    // 2. Chercher une connexion CMS active pour ce site
+    const { data: connection } = await supabase
+      .from('cms_connections')
+      .select('platform, status, auth_method, capabilities')
+      .eq('tracked_site_id', site.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!connection) return DEFAULT_SETTINGS;
+
+    // Vérifier si la connexion supporte l'écriture (pas read-only)
+    const capabilities = (connection.capabilities as Record<string, any>) || {};
+    const hasWriteAccess = capabilities.write_meta === true
+      || capabilities.write_content === true
+      || connection.auth_method === 'oauth2'
+      || connection.auth_method === 'api_key';
+
+    return {
+      hasApiConnection: hasWriteAccess,
+      cmsType: connection.platform as SiteSettings['cmsType'],
+    };
+  } catch (error) {
+    console.error('⚠️ Erreur lors de la récupération des paramètres CMS:', error);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+/**
+ * Assemble les consignes CMS spécifiques à injecter dans le prompt LLM.
+ * Si aucune API n'est connectée en écriture, retourne le prompt Vanilla JS par défaut.
+ */
+function buildCmsContextualPrompt(site: SiteSettings): string {
+  if (!site.hasApiConnection || !site.cmsType || site.cmsType === 'native') {
+    return `CONSIGNES : Ce site n'a pas de connexion CMS active par API ou est un site natif. Génère UNIQUEMENT un script JavaScript Vanilla personnalisé. Assure-toi que le code soit sécurisé contre les attaques XSS. Ne propose pas de code backend (pas de PHP, pas de Liquid, etc.).`;
+  }
+
+  switch (site.cmsType) {
+    case 'wordpress':
+      return `CONSIGNES CMS : L'API REST de ce site WordPress est connectée. Tu dois générer du code PHP. Utilise l'architecture des Hooks natifs (add_action, add_filter). Tu es libre de choisir le hook le plus pertinent (ex: wp_head, the_content) pour résoudre ce problème SEO/GEO de la manière la plus propre. Le code doit être prêt à être injecté dans un fichier functions.php ou un plugin.`;
+
+    case 'shopify':
+      return `CONSIGNES CMS : L'API Admin de ce site Shopify est connectée. Tu dois utiliser le langage Liquid ou générer les modifications JSON nécessaires pour l'API. Tu es libre de choisir l'architecture : tu peux créer un nouveau snippet Liquid, modifier un fichier theme.liquid, ou utiliser les Metafields si tu juges que c'est la meilleure approche SEO/GEO.`;
+
+    case 'wix':
+      return `CONSIGNES CMS : L'API de ce site Wix est connectée. Tu dois obligatoirement utiliser Velo (le framework JavaScript natif de Wix). N'utilise aucun code backend classique. Tu es libre d'explorer et d'utiliser les API natives de Wix (comme wix-seo ou wix-window) pour implémenter ta correction de la manière la plus performante.`;
+
+    case 'webflow':
+      return `CONSIGNES CMS : L'API de ce site Webflow est connectée. Tu dois générer du JavaScript Vanilla pur, du HTML ou du CSS. Ce code sera injecté via l'API Webflow dans la balise <head> ou avant la fin du <body>. Tu es libre de choisir comment cibler le DOM (querySelector, classes, IDs) de la manière la plus robuste pour ne pas casser le design existant.`;
+
+    case 'drupal':
+      return `CONSIGNES CMS : L'API de ce site Drupal est connectée. Tu dois générer du code PHP respectant l'architecture modulaire de Drupal. Utilise la Render API et les hooks spécifiques (ex: hook_page_attachments). Tu es libre de décider où greffer ton code dans le cycle de rendu pour optimiser le SEO/GEO au maximum.`;
+
+    default:
+      return `CONSIGNES : Ce site n'a pas de connexion CMS active par API ou est un site natif. Génère UNIQUEMENT un script JavaScript Vanilla personnalisé. Assure-toi que le code soit sécurisé contre les attaques XSS. Ne propose pas de code backend (pas de PHP, pas de Liquid, etc.).`;
+  }
+}
+
 interface SolutionMatch {
   id: string;
   error_type: string;
@@ -1671,7 +1769,8 @@ async function generateAllFixesWithAI(
   siteUrl: string,
   language: string,
   auditContext: AuditContext,
-  roadmapContext: string = ''
+  roadmapContext: string = '',
+  cmsSettings?: SiteSettings
 ): Promise<Map<string, { fn: string; call: string }> | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return null;
@@ -1755,8 +1854,14 @@ async function generateAllFixesWithAI(
     return null;
   }
 
-  const systemPrompt = `Tu es un architecte JavaScript expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
-Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.
+  // Construire le contexte CMS dynamique
+  const cmsPrompt = buildCmsContextualPrompt(cmsSettings || { hasApiConnection: false, cmsType: null });
+  const isCmsNative = !cmsSettings?.hasApiConnection || !cmsSettings?.cmsType || cmsSettings.cmsType === 'native';
+
+  const systemPrompt = `Tu es un architecte ${isCmsNative ? 'JavaScript' : 'web'} expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
+${isCmsNative ? `Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.` : `Tu génères du code adapté au CMS connecté (voir CONSIGNES CMS ci-dessous).`}
+
+${cmsPrompt}
 
 PROTOCOLE CLS-ZERO — RÈGLES ABSOLUES:
 
@@ -2778,10 +2883,16 @@ Deno.serve(async (req) => {
     // ÉTAPE 3: Génération IA personnalisée de TOUS les correctifs
     // ══════════════════════════════════════════════════════════════
     let aiGeneratedFixes: Map<string, { fn: string; call: string }> | null = null;
+    let cmsSettings: SiteSettings = { hasApiConnection: false, cmsType: null };
 
     if (useAI && auditContext) {
+      // Récupérer les paramètres CMS pour le prompting dynamique
+      cmsSettings = await fetchSiteSettings(siteUrl);
+      if (cmsSettings.hasApiConnection) {
+        console.log(`🔌 Connexion CMS détectée: ${cmsSettings.cmsType} (API lecture/écriture)`);
+      }
       console.log('🤖 Génération IA personnalisée de TOUS les correctifs...');
-      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext);
+      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings);
     }
 
     // Générer le script avec contexte et contenu IA
@@ -2879,6 +2990,7 @@ Deno.serve(async (req) => {
         registryRecommendationsCount: registryRecommendations.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
         // ═══ NOUVEAUTÉS v4.0 ═══
+        cmsDetected: cmsSettings.cmsType || null,
         syntaxValid: syntaxCheck.valid,
         syntaxError: syntaxCheck.error || null,
         sizeBytes: { original: originalSize, minified: minifiedSize, compressionRatio },
