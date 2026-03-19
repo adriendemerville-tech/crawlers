@@ -178,6 +178,7 @@ const labels = {
     pickFromGraph: 'Haz clic en un nodo del grafo…',
     analyze: 'Analizar',
     cancel: 'Cancelar',
+    optimize: 'Optimizar enlaces',
   },
 };
 
