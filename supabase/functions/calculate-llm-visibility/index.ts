@@ -277,8 +277,8 @@ function generatePrompts(site: any): string[] {
 // ═══════════════════════════════════════════════
 
 const FOLLOW_UP_PROMPTS = [
-  "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?",
-  "Et dans les solutions plus spécialisées ou de niche, tu connais d'autres acteurs ?",
+  "Ok et t'aurais pas d'autres idées ?",
+  "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
 ]
 
 async function queryWithIterations(

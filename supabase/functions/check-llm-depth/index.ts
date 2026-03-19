@@ -608,19 +608,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build service description from context — never mention the brand!
-    const svcDesc = service_description ||
-      (ctx.market_sector
-        ? (lang === 'fr'
-          ? `une solution dans le domaine "${ctx.market_sector}"`
-          : lang === 'es'
-          ? `una solución en el área de "${ctx.market_sector}"`
-          : `a solution in the "${ctx.market_sector}" space`)
-        : (lang === 'fr'
-          ? `un outil ou service professionnel en ligne`
-          : lang === 'es'
-          ? `una herramienta o servicio profesional en línea`
-          : `a professional online tool or service`))
+    // svcDesc is only used as fallback — prompts are now built naturally from ctx
+    const svcDesc = service_description || ctx.products_services || ctx.market_sector || ''
 
     // Build dynamic prompt sequence
     const prompts = buildPromptSequence(svcDesc, ctx, lang)
