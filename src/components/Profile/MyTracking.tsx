@@ -743,7 +743,7 @@ export function MyTracking() {
       }).catch(console.error),
 
       // 5. SERP KPIs
-      supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, tracked_site_id: site.id, user_id: user.id } }).then((res) => {
+      supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, tracked_site_id: site.id, user_id: user.id, site_context: { products_services: site.products_services, market_sector: site.market_sector, target_audience: site.target_audience, commercial_area: site.commercial_area } } }).then((res) => {
         rawAccumulator.serpData = res.data?.data || null;
       }).catch(console.error),
     ];
