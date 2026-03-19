@@ -22,6 +22,146 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
+// ─── Translations ──────────────────────────────────────────────
+
+const translations = {
+  fr: {
+    constructionTitle: '🚧 En construction — Données simulées',
+    constructionDesc: "Ce module sera connecté à l'API Google Business Profile une fois l'accès approuvé par Google.",
+    searches: 'Recherches',
+    mapsViews: 'Vues Maps',
+    siteClicks: 'Clics site',
+    directions: 'Itinéraires',
+    calls: 'Appels',
+    photoViews: 'Vues photos',
+    weeklyEvolution: 'Évolution hebdomadaire (12 semaines)',
+    userActions: 'Actions utilisateur',
+    reviews: 'avis',
+    reviewsTab: 'Avis',
+    reply: 'Répondre',
+    report: 'Signaler',
+    reported: 'Signalé',
+    yourReply: 'Votre réponse :',
+    replyPlaceholder: 'Votre réponse...',
+    cancel: 'Annuler',
+    send: 'Envoyer',
+    publications: 'publications',
+    newPublication: 'Nouvelle publication',
+    news: 'Actualité',
+    event: 'Événement',
+    offer: 'Offre',
+    published: 'Publié',
+    draft: 'Brouillon',
+    publishedOn: 'Publié le',
+    businessInfo: "Informations de l'établissement",
+    verified: 'Vérifié',
+    name: 'Nom',
+    category: 'Catégorie',
+    address: 'Adresse',
+    phone: 'Téléphone',
+    website: 'Site web',
+    photos: 'Photos',
+    photosPublished: 'photos publiées',
+    openingHours: "Horaires d'ouverture",
+    editHours: 'Modifier les horaires',
+    closed: 'Fermé',
+    addPhoto: 'Ajouter une photo',
+    add: 'Ajouter',
+    googleReviews: 'avis Google',
+    days: { Lundi: 'Lundi', Mardi: 'Mardi', Mercredi: 'Mercredi', Jeudi: 'Jeudi', Vendredi: 'Vendredi', Samedi: 'Samedi', Dimanche: 'Dimanche' },
+  },
+  en: {
+    constructionTitle: '🚧 Under construction — Simulated data',
+    constructionDesc: 'This module will be connected to the Google Business Profile API once approved by Google.',
+    searches: 'Searches',
+    mapsViews: 'Maps Views',
+    siteClicks: 'Site Clicks',
+    directions: 'Directions',
+    calls: 'Calls',
+    photoViews: 'Photo Views',
+    weeklyEvolution: 'Weekly evolution (12 weeks)',
+    userActions: 'User actions',
+    reviews: 'reviews',
+    reviewsTab: 'Reviews',
+    reply: 'Reply',
+    report: 'Report',
+    reported: 'Reported',
+    yourReply: 'Your reply:',
+    replyPlaceholder: 'Your reply...',
+    cancel: 'Cancel',
+    send: 'Send',
+    publications: 'publications',
+    newPublication: 'New publication',
+    news: 'News',
+    event: 'Event',
+    offer: 'Offer',
+    published: 'Published',
+    draft: 'Draft',
+    publishedOn: 'Published on',
+    businessInfo: 'Business information',
+    verified: 'Verified',
+    name: 'Name',
+    category: 'Category',
+    address: 'Address',
+    phone: 'Phone',
+    website: 'Website',
+    photos: 'Photos',
+    photosPublished: 'photos published',
+    openingHours: 'Opening hours',
+    editHours: 'Edit hours',
+    closed: 'Closed',
+    addPhoto: 'Add a photo',
+    add: 'Add',
+    googleReviews: 'Google reviews',
+    days: { Lundi: 'Monday', Mardi: 'Tuesday', Mercredi: 'Wednesday', Jeudi: 'Thursday', Vendredi: 'Friday', Samedi: 'Saturday', Dimanche: 'Sunday' },
+  },
+  es: {
+    constructionTitle: '🚧 En construcción — Datos simulados',
+    constructionDesc: 'Este módulo se conectará a la API de Google Business Profile una vez aprobado por Google.',
+    searches: 'Búsquedas',
+    mapsViews: 'Vistas Maps',
+    siteClicks: 'Clics sitio',
+    directions: 'Direcciones',
+    calls: 'Llamadas',
+    photoViews: 'Vistas fotos',
+    weeklyEvolution: 'Evolución semanal (12 semanas)',
+    userActions: 'Acciones del usuario',
+    reviews: 'reseñas',
+    reviewsTab: 'Reseñas',
+    reply: 'Responder',
+    report: 'Reportar',
+    reported: 'Reportado',
+    yourReply: 'Tu respuesta:',
+    replyPlaceholder: 'Tu respuesta...',
+    cancel: 'Cancelar',
+    send: 'Enviar',
+    publications: 'publicaciones',
+    newPublication: 'Nueva publicación',
+    news: 'Actualidad',
+    event: 'Evento',
+    offer: 'Oferta',
+    published: 'Publicado',
+    draft: 'Borrador',
+    publishedOn: 'Publicado el',
+    businessInfo: 'Información del establecimiento',
+    verified: 'Verificado',
+    name: 'Nombre',
+    category: 'Categoría',
+    address: 'Dirección',
+    phone: 'Teléfono',
+    website: 'Sitio web',
+    photos: 'Fotos',
+    photosPublished: 'fotos publicadas',
+    openingHours: 'Horario de apertura',
+    editHours: 'Modificar horario',
+    closed: 'Cerrado',
+    addPhoto: 'Añadir una foto',
+    add: 'Añadir',
+    googleReviews: 'reseñas Google',
+    days: { Lundi: 'Lunes', Mardi: 'Martes', Mercredi: 'Miércoles', Jeudi: 'Jueves', Vendredi: 'Viernes', Samedi: 'Sábado', Dimanche: 'Domingo' },
+  },
+};
+
 // ─── Simulated Data ────────────────────────────────────────────
 
 const SIMULATED_LOCATIONS = [
@@ -89,9 +229,9 @@ const SIMULATED_PERFORMANCE = (() => {
 
 const SIMULATED_REVIEWS = [
   { id: '1', reviewer_name: 'Marie Dupont', star_rating: 5, comment: 'Excellent service, très professionnel !', review_created_at: '2026-03-10T10:00:00Z', reply_comment: 'Merci beaucoup Marie ! Nous sommes ravis.', is_flagged: false, reviewer_photo: null },
-  { id: '2', reviewer_name: 'Jean Martin', star_rating: 4, comment: 'Très bien dans l\'ensemble, juste un petit temps d\'attente.', review_created_at: '2026-03-08T15:30:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
+  { id: '2', reviewer_name: 'Jean Martin', star_rating: 4, comment: "Très bien dans l'ensemble, juste un petit temps d'attente.", review_created_at: '2026-03-08T15:30:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
   { id: '3', reviewer_name: 'Sophie Bernard', star_rating: 5, comment: 'Je recommande vivement, équipe au top !', review_created_at: '2026-03-05T09:15:00Z', reply_comment: 'Merci Sophie, au plaisir de vous revoir !', is_flagged: false, reviewer_photo: null },
-  { id: '4', reviewer_name: 'Pierre Durand', star_rating: 2, comment: 'Accueil moyen, le produit n\'était pas en stock.', review_created_at: '2026-03-01T14:00:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
+  { id: '4', reviewer_name: 'Pierre Durand', star_rating: 2, comment: "Accueil moyen, le produit n'était pas en stock.", review_created_at: '2026-03-01T14:00:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
   { id: '5', reviewer_name: 'Utilisateur Google', star_rating: 1, comment: 'Avis douteux, concurrent probable...', review_created_at: '2026-02-28T11:00:00Z', reply_comment: null, is_flagged: true, reviewer_photo: null },
   { id: '6', reviewer_name: 'Claire Moreau', star_rating: 5, comment: 'Superbe expérience, je reviendrai !', review_created_at: '2026-02-25T16:45:00Z', reply_comment: 'Merci Claire !', is_flagged: false, reviewer_photo: null },
   { id: '7', reviewer_name: 'Luc Petit', star_rating: 4, comment: 'Bon rapport qualité-prix.', review_created_at: '2026-02-20T12:00:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
@@ -101,7 +241,7 @@ const SIMULATED_REVIEWS = [
 const SIMULATED_POSTS = [
   { id: '1', post_type: 'STANDARD', summary: '🎉 Nouvelle collection printemps disponible ! Venez découvrir nos nouveautés en magasin.', status: 'published', published_at: '2026-03-15T09:00:00Z' },
   { id: '2', post_type: 'EVENT', summary: '📅 Journée portes ouvertes le 22 mars. Réductions exclusives de -20% sur tout le magasin.', status: 'published', published_at: '2026-03-10T10:00:00Z' },
-  { id: '3', post_type: 'OFFER', summary: '🔥 Offre spéciale : -15% avec le code SPRING26 jusqu\'au 31 mars.', status: 'draft', published_at: null },
+  { id: '3', post_type: 'OFFER', summary: "🔥 Offre spéciale : -15% avec le code SPRING26 jusqu'au 31 mars.", status: 'draft', published_at: null },
 ];
 
 // ─── Subcomponents ─────────────────────────────────────────────
@@ -142,7 +282,7 @@ function KpiCard({ icon: Icon, label, value, trend, color = 'text-foreground' }:
 
 // ─── Stats Tab ─────────────────────────────────────────────────
 
-function StatsTab() {
+function StatsTab({ t }: { t: typeof translations.fr }) {
   const totals = useMemo(() => {
     const data = SIMULATED_PERFORMANCE;
     return {
@@ -158,19 +298,19 @@ function StatsTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        <KpiCard icon={Search} label="Recherches" value={totals.search_views} trend={12} color="text-primary" />
-        <KpiCard icon={Map} label="Vues Maps" value={totals.maps_views} trend={8} />
-        <KpiCard icon={MousePointerClick} label="Clics site" value={totals.website_clicks} trend={15} color="text-primary" />
-        <KpiCard icon={Navigation} label="Itinéraires" value={totals.direction_requests} trend={-3} />
-        <KpiCard icon={PhoneCall} label="Appels" value={totals.phone_calls} trend={5} />
-        <KpiCard icon={Image} label="Vues photos" value={totals.photo_views} trend={22} />
+        <KpiCard icon={Search} label={t.searches} value={totals.search_views} trend={12} color="text-primary" />
+        <KpiCard icon={Map} label={t.mapsViews} value={totals.maps_views} trend={8} />
+        <KpiCard icon={MousePointerClick} label={t.siteClicks} value={totals.website_clicks} trend={15} color="text-primary" />
+        <KpiCard icon={Navigation} label={t.directions} value={totals.direction_requests} trend={-3} />
+        <KpiCard icon={PhoneCall} label={t.calls} value={totals.phone_calls} trend={5} />
+        <KpiCard icon={Image} label={t.photoViews} value={totals.photo_views} trend={22} />
       </div>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Évolution hebdomadaire (12 semaines)
+            {t.weeklyEvolution}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -191,9 +331,9 @@ function StatsTab() {
                 <XAxis dataKey="week" tick={{ fontSize: 10 }} className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
                 <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
-                <Area type="monotone" dataKey="search_views" name="Recherches" stroke="hsl(var(--primary))" fill="url(#gmbSearchFill)" strokeWidth={2} />
+                <Area type="monotone" dataKey="search_views" name={t.searches} stroke="hsl(var(--primary))" fill="url(#gmbSearchFill)" strokeWidth={2} />
                 <Area type="monotone" dataKey="maps_views" name="Maps" stroke="hsl(var(--accent-foreground))" fill="url(#gmbMapsFill)" strokeWidth={2} />
-                <Area type="monotone" dataKey="website_clicks" name="Clics site" stroke="#10b981" fill="transparent" strokeWidth={1.5} strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="website_clicks" name={t.siteClicks} stroke="#10b981" fill="transparent" strokeWidth={1.5} strokeDasharray="4 4" />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -205,7 +345,7 @@ function StatsTab() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Actions utilisateur
+            {t.userActions}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -216,8 +356,8 @@ function StatsTab() {
                 <XAxis dataKey="week" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
-                <Bar dataKey="direction_requests" name="Itinéraires" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="phone_calls" name="Appels" fill="#f59e0b" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="direction_requests" name={t.directions} fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="phone_calls" name={t.calls} fill="#f59e0b" radius={[2, 2, 0, 0]} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </BarChart>
             </ResponsiveContainer>
@@ -230,7 +370,7 @@ function StatsTab() {
 
 // ─── Reviews Tab ───────────────────────────────────────────────
 
-function ReviewsTab() {
+function ReviewsTab({ t, language }: { t: typeof translations.fr; language: string }) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const avgRating = SIMULATED_REVIEWS.reduce((s, r) => s + r.star_rating, 0) / SIMULATED_REVIEWS.length;
@@ -239,6 +379,8 @@ function ReviewsTab() {
     count: SIMULATED_REVIEWS.filter(rv => rv.star_rating === r).length,
   }));
 
+  const locale = language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR';
+
   return (
     <div className="space-y-4">
       {/* Rating summary */}
@@ -246,7 +388,7 @@ function ReviewsTab() {
         <div className="text-center">
           <p className="text-4xl font-bold">{avgRating.toFixed(1)}</p>
           <StarRating rating={Math.round(avgRating)} />
-          <p className="text-xs text-muted-foreground mt-1">{SIMULATED_REVIEWS.length} avis</p>
+          <p className="text-xs text-muted-foreground mt-1">{SIMULATED_REVIEWS.length} {t.reviews}</p>
         </div>
         <div className="flex-1 space-y-1">
           {ratingDist.map(({ stars, count }) => (
@@ -278,7 +420,7 @@ function ReviewsTab() {
                   <div>
                     <p className="text-sm font-medium">{review.reviewer_name}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {new Date(review.review_created_at).toLocaleDateString('fr-FR')}
+                      {new Date(review.review_created_at).toLocaleDateString(locale)}
                     </p>
                   </div>
                 </div>
@@ -286,7 +428,7 @@ function ReviewsTab() {
                   <StarRating rating={review.star_rating} />
                   {review.is_flagged && (
                     <Badge variant="destructive" className="text-[10px]">
-                      <Flag className="h-2.5 w-2.5 mr-1" />Signalé
+                      <Flag className="h-2.5 w-2.5 mr-1" />{t.reported}
                     </Badge>
                   )}
                 </div>
@@ -297,7 +439,7 @@ function ReviewsTab() {
               {review.reply_comment && (
                 <div className="ml-6 pl-3 border-l-2 border-primary/20">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Votre réponse :</span> {review.reply_comment}
+                    <span className="font-medium text-foreground">{t.yourReply}</span> {review.reply_comment}
                   </p>
                 </div>
               )}
@@ -311,13 +453,13 @@ function ReviewsTab() {
                     onClick={() => { setReplyingTo(review.id); setReplyText(''); }}
                   >
                     <MessageSquare className="h-3 w-3" />
-                    Répondre
+                    {t.reply}
                   </Button>
                 )}
                 {!review.is_flagged && review.star_rating <= 2 && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive">
                     <Flag className="h-3 w-3" />
-                    Signaler
+                    {t.report}
                   </Button>
                 )}
               </div>
@@ -327,16 +469,16 @@ function ReviewsTab() {
                   <Textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Votre réponse..."
+                    placeholder={t.replyPlaceholder}
                     className="text-sm min-h-[60px]"
                   />
                   <div className="flex gap-2 justify-end">
                     <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>
-                      Annuler
+                      {t.cancel}
                     </Button>
                     <Button size="sm" className="gap-1">
                       <Send className="h-3 w-3" />
-                      Envoyer
+                      {t.send}
                     </Button>
                   </div>
                 </div>
@@ -351,20 +493,22 @@ function ReviewsTab() {
 
 // ─── Posts Tab ──────────────────────────────────────────────────
 
-function PostsTab() {
+function PostsTab({ t, language }: { t: typeof translations.fr; language: string }) {
   const postTypeLabels: Record<string, { label: string; icon: any; color: string }> = {
-    STANDARD: { label: 'Actualité', icon: Megaphone, color: 'bg-primary/10 text-primary' },
-    EVENT: { label: 'Événement', icon: Calendar, color: 'bg-blue-500/10 text-blue-600' },
-    OFFER: { label: 'Offre', icon: Star, color: 'bg-amber-500/10 text-amber-600' },
+    STANDARD: { label: t.news, icon: Megaphone, color: 'bg-primary/10 text-primary' },
+    EVENT: { label: t.event, icon: Calendar, color: 'bg-blue-500/10 text-blue-600' },
+    OFFER: { label: t.offer, icon: Star, color: 'bg-amber-500/10 text-amber-600' },
   };
+
+  const locale = language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR';
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{SIMULATED_POSTS.length} publications</p>
+        <p className="text-sm text-muted-foreground">{SIMULATED_POSTS.length} {t.publications}</p>
         <Button size="sm" className="gap-1">
           <Plus className="h-3.5 w-3.5" />
-          Nouvelle publication
+          {t.newPublication}
         </Button>
       </div>
 
@@ -383,13 +527,13 @@ function PostsTab() {
                         {typeInfo.label}
                       </Badge>
                       <Badge variant={post.status === 'published' ? 'default' : 'outline'} className="text-[10px]">
-                        {post.status === 'published' ? 'Publié' : 'Brouillon'}
+                        {post.status === 'published' ? t.published : t.draft}
                       </Badge>
                     </div>
                     <p className="text-sm">{post.summary}</p>
                     {post.published_at && (
                       <p className="text-[10px] text-muted-foreground">
-                        Publié le {new Date(post.published_at).toLocaleDateString('fr-FR')}
+                        {t.publishedOn} {new Date(post.published_at).toLocaleDateString(locale)}
                       </p>
                     )}
                   </div>
@@ -408,18 +552,18 @@ function PostsTab() {
 
 // ─── Info Tab ──────────────────────────────────────────────────
 
-function InfoTab({ location }: { location: typeof SIMULATED_LOCATIONS[0] }) {
+function InfoTab({ location, t }: { location: typeof SIMULATED_LOCATIONS[0]; t: typeof translations.fr }) {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Store className="h-4 w-4" />
-            Informations de l'établissement
+            {t.businessInfo}
             {location.verified && (
               <Badge variant="secondary" className="text-[10px] gap-1 bg-green-500/10 text-green-600">
                 <CheckCircle2 className="h-3 w-3" />
-                Vérifié
+                {t.verified}
               </Badge>
             )}
           </CardTitle>
@@ -427,28 +571,28 @@ function InfoTab({ location }: { location: typeof SIMULATED_LOCATIONS[0] }) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Nom</label>
+              <label className="text-xs text-muted-foreground">{t.name}</label>
               <Input value={location.name} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Catégorie</label>
+              <label className="text-xs text-muted-foreground">{t.category}</label>
               <Input value={location.category} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />Adresse</label>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{t.address}</label>
               <Input value={location.address} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />Téléphone</label>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{t.phone}</label>
               <Input value={location.phone} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" />Site web</label>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" />{t.website}</label>
               <Input value={location.website} readOnly className="text-sm" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><Image className="h-3 w-3" />Photos</label>
-              <Input value={`${location.photos_count} photos publiées`} readOnly className="text-sm" />
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Image className="h-3 w-3" />{t.photos}</label>
+              <Input value={`${location.photos_count} ${t.photosPublished}`} readOnly className="text-sm" />
             </div>
           </div>
         </CardContent>
@@ -458,24 +602,24 @@ function InfoTab({ location }: { location: typeof SIMULATED_LOCATIONS[0] }) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Horaires d'ouverture
+            {t.openingHours}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {Object.entries(location.hours).map(([day, hours]) => (
               <div key={day} className="flex items-center justify-between text-sm">
-                <span className="font-medium w-24">{day}</span>
+                <span className="font-medium w-24">{(t.days as Record<string, string>)[day] || day}</span>
                 {hours ? (
                   <span className="text-muted-foreground">{hours.open} — {hours.close}</span>
                 ) : (
-                  <span className="text-destructive text-xs">Fermé</span>
+                  <span className="text-destructive text-xs">{t.closed}</span>
                 )}
               </div>
             ))}
           </div>
           <Button variant="outline" size="sm" className="mt-4 w-full text-xs">
-            Modifier les horaires
+            {t.editHours}
           </Button>
         </CardContent>
       </Card>
@@ -485,16 +629,16 @@ function InfoTab({ location }: { location: typeof SIMULATED_LOCATIONS[0] }) {
 
 // ─── Photos Tab ────────────────────────────────────────────────
 
-function PhotosTab() {
+function PhotosTab({ t }: { t: typeof translations.fr }) {
   const placeholders = Array.from({ length: 8 }, (_, i) => i);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">24 photos publiées</p>
+        <p className="text-sm text-muted-foreground">24 {t.photosPublished}</p>
         <Button size="sm" className="gap-1">
           <Plus className="h-3.5 w-3.5" />
-          Ajouter une photo
+          {t.addPhoto}
         </Button>
       </div>
 
@@ -511,8 +655,6 @@ function PhotosTab() {
     </div>
   );
 }
-
-// ─── Main Component ────────────────────────────────────────────
 
 // ─── Sortable Location Item ────────────────────────────────────
 
@@ -551,6 +693,7 @@ function SortableLocationItem({ loc, isSelected, onSelect }: {
 
 export function GMBDashboard() {
   const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
   const [activeTab, setActiveTab] = useState('stats');
   const [orderedLocations, setOrderedLocations] = useState(SIMULATED_LOCATIONS);
   const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
@@ -581,10 +724,10 @@ export function GMBDashboard() {
         <Construction className="h-5 w-5 text-amber-500 shrink-0" />
         <div>
           <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-            🚧 En construction — Données simulées
+            {t.constructionTitle}
           </p>
           <p className="text-xs text-muted-foreground">
-            Ce module sera connecté à l'API Google Business Profile une fois l'accès approuvé par Google.
+            {t.constructionDesc}
           </p>
         </div>
       </div>
@@ -608,7 +751,7 @@ export function GMBDashboard() {
 
             <Button variant="ghost" size="sm" className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start">
               <Plus className="h-3.5 w-3.5" />
-              Ajouter
+              {t.add}
             </Button>
           </div>
         )}
@@ -635,7 +778,7 @@ export function GMBDashboard() {
                     <span className="text-2xl font-bold">{activeLocation.avg_rating}</span>
                     <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">{activeLocation.reviews_count} avis Google</p>
+                  <p className="text-[10px] text-muted-foreground">{activeLocation.reviews_count} {t.googleReviews}</p>
                 </div>
               </div>
             </CardContent>
@@ -649,7 +792,7 @@ export function GMBDashboard() {
               </TabsTrigger>
               <TabsTrigger value="reviews" className="text-xs gap-1">
                 <Star className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Avis</span>
+                <span className="hidden sm:inline">{t.reviewsTab}</span>
               </TabsTrigger>
               <TabsTrigger value="posts" className="text-xs gap-1">
                 <span className="hidden sm:inline">Posts</span>
@@ -658,15 +801,15 @@ export function GMBDashboard() {
                 <span className="hidden sm:inline">Infos</span>
               </TabsTrigger>
               <TabsTrigger value="photos" className="text-xs gap-1">
-                <span className="hidden sm:inline">Photos</span>
+                <span className="hidden sm:inline">{t.photos}</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="stats"><StatsTab /></TabsContent>
-            <TabsContent value="reviews"><ReviewsTab /></TabsContent>
-            <TabsContent value="posts"><PostsTab /></TabsContent>
-            <TabsContent value="info"><InfoTab location={activeLocation} /></TabsContent>
-            <TabsContent value="photos"><PhotosTab /></TabsContent>
+            <TabsContent value="stats"><StatsTab t={t} /></TabsContent>
+            <TabsContent value="reviews"><ReviewsTab t={t} language={language} /></TabsContent>
+            <TabsContent value="posts"><PostsTab t={t} language={language} /></TabsContent>
+            <TabsContent value="info"><InfoTab location={activeLocation} t={t} /></TabsContent>
+            <TabsContent value="photos"><PhotosTab t={t} /></TabsContent>
           </Tabs>
         </div>
       </div>
