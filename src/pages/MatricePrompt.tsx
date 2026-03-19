@@ -257,28 +257,48 @@ export default function MatricePrompt() {
     if (!user) return;
     setAnalyzing(true);
     try {
-      // Simulate analysis (stub — will be replaced by real edge function call)
-      await new Promise(r => setTimeout(r, 2000));
-      const mockResults = selectedRows.map(row => ({
+      // Build items payload for the edge function
+      const items = selectedRows.map(row => ({
+        id: row.id,
         prompt: row.prompt,
-        axe: row.axe,
+        llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
         poids: row.poids,
-        score: Math.round(Math.random() * 100),
-        crawlers_score: Math.round(Math.random() * 100),
+        axe: row.axe,
         seuil_bon: row.seuil_bon,
         seuil_moyen: row.seuil_moyen,
         seuil_mauvais: row.seuil_mauvais,
-        dbId: row.dbId,
       }));
 
-      // Calculate global scores
-      const tw = mockResults.reduce((s, r) => s + r.poids, 0);
-      const csvWeighted = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.score * r.poids, 0) / tw) : 0;
-      const crawlersGlobal = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
+      // Call real audit-matrice edge function
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('audit-matrice', {
+        body: { url: url.trim(), items },
+      });
+
+      if (fnError || !fnData?.success) {
+        throw new Error(fnData?.error || fnError?.message || 'Audit failed');
+      }
+
+      const auditResults = fnData.results.map((r: any) => ({
+        id: r.id,
+        prompt: r.prompt,
+        axe: r.axe,
+        poids: r.poids,
+        crawlers_score: r.crawlers_score,
+        detected_type: r.detected_type,
+        raw_data: r.raw_data,
+        seuil_bon: r.seuil_bon,
+        seuil_moyen: r.seuil_moyen,
+        seuil_mauvais: r.seuil_mauvais,
+        dbId: selectedRows.find(sr => sr.id === r.id)?.dbId,
+      }));
 
       // Extract domain
       let domain = '';
       try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { domain = url; }
+
+      // Calculate global scores
+      const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
+      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
 
       // Persist audit session
       const { data: session, error: sessErr } = await supabase
@@ -288,7 +308,7 @@ export default function MatricePrompt() {
           url: url.trim(),
           domain,
           crawlers_global_score: crawlersGlobal,
-          csv_weighted_score: csvWeighted,
+          csv_weighted_score: crawlersGlobal,
           total_prompts: rows.length,
           selected_prompts: selectedRows.length,
         })
@@ -299,8 +319,8 @@ export default function MatricePrompt() {
 
       // Persist per-KPI results
       if (session) {
-        const resultRows = mockResults.map(r => {
-          const verdict = r.score >= r.seuil_bon ? 'bon' : r.score >= r.seuil_moyen ? 'moyen' : 'mauvais';
+        const resultRows = auditResults.map((r: any) => {
+          const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
           return {
             session_id: session.id,
             prompt_item_id: r.dbId || null,
@@ -309,7 +329,7 @@ export default function MatricePrompt() {
             axe: r.axe,
             poids: r.poids,
             crawlers_score: r.crawlers_score,
-            csv_weighted_score: r.score,
+            csv_weighted_score: r.crawlers_score,
             seuil_bon: r.seuil_bon,
             seuil_moyen: r.seuil_moyen,
             seuil_mauvais: r.seuil_mauvais,
@@ -320,10 +340,10 @@ export default function MatricePrompt() {
         if (resErr) console.error('Results save error:', resErr);
       }
 
-      setResults(mockResults);
-      toast.success('Analyse terminée — résultats sauvegardés');
-    } catch {
-      toast.error('Erreur lors de l\'analyse');
+      setResults(auditResults);
+      toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'analyse');
     } finally {
       setAnalyzing(false);
     }
@@ -332,16 +352,13 @@ export default function MatricePrompt() {
   /* --- Report --- */
   const handleOpenReport = () => {
     if (!results || results.length === 0) { toast.error('Lancez une analyse d\'abord'); return; }
+    const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
     const reportData = {
       kind: 'matrice' as const,
       url,
       results,
-      totalWeight: results.reduce((s: number, r: any) => s + r.poids, 0),
-      weightedScore: (() => {
-        const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
-        if (tw === 0) return 0;
-        return Math.round(results.reduce((s: number, r: any) => s + r.score * r.poids, 0) / tw);
-      })(),
+      totalWeight: tw,
+      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/rapport/matrice', '_blank');
@@ -479,13 +496,13 @@ export default function MatricePrompt() {
                     <TableHead className="w-20">Moyen</TableHead>
                     <TableHead className="w-20">Mauvais</TableHead>
                     <TableHead className="w-36">Modèle</TableHead>
+                    {results && <TableHead className="w-20">Type</TableHead>}
                     {results && <TableHead className="w-24">Crawlers</TableHead>}
-                    {results && <TableHead className="w-24">CSV</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map(row => {
-                    const resultRow = results?.find(r => r.prompt === row.prompt);
+                    const resultRow = results?.find((r: any) => r.id === row.id || r.prompt === row.prompt);
                     return (
                       <TableRow key={row.id} className={!row.selected ? 'opacity-40' : ''}>
                         <TableCell>
@@ -520,13 +537,17 @@ export default function MatricePrompt() {
                           {row.isDefault.llm_name && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
+                          <TableCell>
+                            {resultRow ? (
+                              <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                                {resultRow.detected_type || '—'}
+                              </Badge>
+                            ) : '—'}
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.score}/100` : '—'}
+                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
                           </TableCell>
                         )}
                       </TableRow>
@@ -538,15 +559,13 @@ export default function MatricePrompt() {
               <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
                 <span>{selectedRows.length}/{rows.length} KPIs sélectionnés</span>
                 {results && (() => {
-                  const active = results.filter(r => selectedRows.some(s => s.prompt === r.prompt));
+                  const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
                   const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
                   if (tw === 0) return null;
-                  const csvScore = Math.round(active.reduce((s: number, r: any) => s + r.score * r.poids, 0) / tw);
                   const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
                   return (
-                    <span className="ml-auto font-medium text-foreground flex gap-4">
-                      <span>Crawlers : {crawlersScore}/100</span>
-                      <span>CSV pondéré : {csvScore}/100</span>
+                    <span className="ml-auto font-medium text-foreground">
+                      Score Crawlers pondéré : {crawlersScore}/100
                     </span>
                   );
                 })()}
