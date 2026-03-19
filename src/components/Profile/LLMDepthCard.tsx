@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, ChevronDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, HelpCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -242,9 +245,47 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
   const [streamProgress, setStreamProgress] = useState<Record<string, ModelProgress>>({});
   const [conversations, setConversations] = useState<Record<string, ConversationTurn[]>>({});
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [convOpen, setConvOpen] = useState(false);
+  const [convLoading, setConvLoading] = useState(false);
   const conversationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const convLlmNames = Object.keys(conversations);
+
+  const convTranslations = {
+    fr: { conversations: 'Conversations LLM', prompt: 'Question', response: 'Réponse', iteration: 'Itération', noConversations: 'Aucune conversation enregistrée.' },
+    en: { conversations: 'LLM Conversations', prompt: 'Prompt', response: 'Response', iteration: 'Iteration', noConversations: 'No conversations recorded.' },
+    es: { conversations: 'Conversaciones LLM', prompt: 'Pregunta', response: 'Respuesta', iteration: 'Iteración', noConversations: 'No hay conversaciones registradas.' },
+  };
+  const ct = convTranslations[language] || convTranslations.fr;
+
+  const handleOpenConversations = async () => {
+    setConvOpen(true);
+    if (Object.keys(conversations).length > 0) return;
+    if (!trackedSiteId || !userId) return;
+    setConvLoading(true);
+    try {
+      const { data: convData } = await supabase
+        .from('llm_depth_conversations')
+        .select('llm_name, iteration, prompt_text, response_summary')
+        .eq('tracked_site_id', trackedSiteId)
+        .eq('user_id', userId)
+        .order('iteration', { ascending: true });
+      if (convData?.length) {
+        const grouped: Record<string, ConversationTurn[]> = {};
+        for (const row of convData) {
+          if (!grouped[row.llm_name]) grouped[row.llm_name] = [];
+          grouped[row.llm_name].push(row as ConversationTurn);
+        }
+        setConversations(grouped);
+      }
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+    } finally {
+      setConvLoading(false);
+    }
+  };
 
   // Fetch stored conversations for paid users
   useEffect(() => {
@@ -630,37 +671,47 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
   }
 
   return (
+    <>
     <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Layers className="h-4 w-4" />
-          {t.title}
-          <Badge variant="secondary" className="text-[10px] font-normal">{t.subtitle}</Badge>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p className="text-xs">{t.tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          {data.measured_at && (
-            <span className="ml-auto text-[10px] text-muted-foreground font-normal mr-6">
-              {new Date(data.measured_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 absolute bottom-3 right-3"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <RefreshCw className="h-3 w-3" />
-          </Button>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Layers className="h-4 w-4" />
+            {t.title}
+            <Badge variant="secondary" className="text-[10px] font-normal">{t.subtitle}</Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">{t.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </CardTitle>
+          <div className="flex items-center gap-1">
+            {canViewConversations && (
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleOpenConversations}>
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        {data.measured_at && (
+          <span className="text-[10px] text-muted-foreground font-normal text-right">
+            {new Date(data.measured_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
+          </span>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Average depth score */}
@@ -690,26 +741,11 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
-            const hasConv = canViewConversations && conversations[result.llm]?.length > 0;
-            const isOpen = activeConversation === result.llm;
 
             return (
               <div
                 key={result.llm}
-                className="relative rounded-lg border bg-card p-2.5 space-y-1.5"
-                onMouseLeave={() => {
-                  if (isOpen) {
-                    conversationTimeoutRef.current = setTimeout(() => {
-                      setActiveConversation(null);
-                    }, 400);
-                  }
-                }}
-                onMouseEnter={() => {
-                  if (conversationTimeoutRef.current) {
-                    clearTimeout(conversationTimeoutRef.current);
-                    conversationTimeoutRef.current = null;
-                  }
-                }}
+                className="rounded-lg border bg-card p-2.5 space-y-1.5"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">{result.llm}</span>
@@ -735,69 +771,68 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                     → {result.mentioned_as}
                   </p>
                 )}
-
-                {/* Conversation toggle arrow - paid users only */}
-                {hasConv && (
-                  <button
-                    className="absolute bottom-1.5 right-1.5 p-0.5 rounded hover:bg-muted/50 transition-colors"
-                    onClick={() => setActiveConversation(isOpen ? null : result.llm)}
-                    aria-label="Voir la conversation"
-                  >
-                    <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                )}
-
-                {/* Conversation popover */}
-                <AnimatePresence>
-                  {isOpen && hasConv && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scaleY: 1 }}
-                      exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border bg-card shadow-lg max-h-64 overflow-y-auto p-2 space-y-2"
-                      style={{ minWidth: '280px' }}
-                      onMouseEnter={() => {
-                        if (conversationTimeoutRef.current) {
-                          clearTimeout(conversationTimeoutRef.current);
-                          conversationTimeoutRef.current = null;
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        conversationTimeoutRef.current = setTimeout(() => {
-                          setActiveConversation(null);
-                        }, 300);
-                      }}
-                    >
-                      {conversations[result.llm].map((turn) => (
-                        <div key={turn.iteration} className="space-y-1">
-                          {/* Prompt (Crawlers) in violet */}
-                          <div className="flex gap-1.5">
-                            <span className="text-[9px] font-bold text-violet-500 shrink-0 mt-0.5">Q{turn.iteration}</span>
-                            <p className="text-[10px] text-violet-600 dark:text-violet-400 leading-tight">
-                              {turn.prompt_text.length > 120 ? turn.prompt_text.slice(0, 120) + '…' : turn.prompt_text}
-                            </p>
-                          </div>
-                          {/* Response summary */}
-                          <div className="flex gap-1.5 ml-3">
-                            <span className="text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">R</span>
-                            <p className="text-[10px] text-foreground/80 leading-tight">
-                              {turn.response_summary}
-                            </p>
-                          </div>
-                          {turn.iteration < (conversations[result.llm]?.length ?? 0) && (
-                            <div className="border-b border-border/50" />
-                          )}
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             );
           })}
         </div>
       </CardContent>
     </Card>
+
+    {/* Conversations Modal */}
+    <Dialog open={convOpen} onOpenChange={setConvOpen}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            {ct.conversations}
+          </DialogTitle>
+        </DialogHeader>
+
+        {convLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : convLlmNames.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">{ct.noConversations}</p>
+        ) : (
+          <Tabs defaultValue={convLlmNames[0]} className="w-full">
+            <TabsList className="w-full justify-start gap-1 flex-wrap h-auto py-1">
+              {convLlmNames.map(llm => (
+                <TabsTrigger key={llm} value={llm} className="text-xs px-3 py-1.5">
+                  {llm}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {convLlmNames.map(llm => (
+              <TabsContent key={llm} value={llm}>
+                <ScrollArea className="h-[50vh] pr-4">
+                  <div className="space-y-4 py-2">
+                    {conversations[llm].map((turn) => (
+                      <div key={turn.iteration} className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Badge variant="outline" className="shrink-0 text-[10px] mt-0.5">
+                            {ct.iteration} {turn.iteration}
+                          </Badge>
+                        </div>
+                        <div className="ml-2 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                          <p className="text-[10px] font-medium text-violet-600 dark:text-violet-400 mb-1">{ct.prompt}</p>
+                          <p className="text-sm leading-relaxed">{turn.prompt_text}</p>
+                        </div>
+                        <div className="ml-2 p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-[10px] font-medium text-muted-foreground mb-1">{ct.response}</p>
+                          <p className="text-sm leading-relaxed text-foreground/80">{turn.response_summary}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
