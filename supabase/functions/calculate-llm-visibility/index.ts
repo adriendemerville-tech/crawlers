@@ -483,6 +483,7 @@ Deno.serve(async (req) => {
     const llmPromises = LLM_TARGETS.map(async (llm) => {
       const promptScores: PromptScore[] = []
 
+      const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
         const { iteration_found, response_text } = await queryWithIterations(
           openrouterKey,
@@ -490,6 +491,7 @@ Deno.serve(async (req) => {
           prompt,
           patterns,
           site.domain,
+          followUps,
         )
 
         trackPaidApiCall('calculate-llm-visibility', 'openrouter', llm.model, site.domain)
