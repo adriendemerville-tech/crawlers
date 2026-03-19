@@ -229,6 +229,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
     { icon: MousePointer, label: 'Événements totaux', value: kpis.totalEvents, color: 'text-rose-500' },
     { icon: TrendingUp, label: 'Codes correctifs', value: kpis.totalCorrectiveCodes, color: 'text-orange-500' },
     { icon: FileText, label: "Plans d'action", value: kpis.totalActionPlans, color: 'text-teal-500' },
+    { icon: AlertTriangle, label: 'Erreurs back-end', value: kpis.totalBackendErrors, color: 'text-red-500' },
+    { icon: Bug, label: 'Erreurs front-end', value: kpis.totalFrontendErrors, color: 'text-orange-600' },
     { icon: CreditCard, label: 'Plan', value: <Badge variant="outline">{kpis.planType}</Badge>, color: 'text-primary' },
   ] : [];
 
