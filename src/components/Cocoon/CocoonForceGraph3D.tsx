@@ -365,7 +365,7 @@ function NodeSphere({
         <meshBasicMaterial
           color={node.isHome ? color : "#d0d8e0"}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.65 : 0.55}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.7}
         />
       </mesh>
 
