@@ -113,6 +113,7 @@ export function AnalyticsDashboard() {
     multiPageCrawls: 0,
     cocoonGenerated: 0,
     cocoonChatSessions: 0,
+    gmbConnected: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
