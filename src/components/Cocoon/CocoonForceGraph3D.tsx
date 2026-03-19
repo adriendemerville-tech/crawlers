@@ -1067,7 +1067,15 @@ export function CocoonForceGraph3D({
 
       {/* Progressive vignette fade */}
       {!isDayMode && (() => {
-        const base = { r: 6, g: 6, b: 14 };
+        const nightBlue = { r: 15, g: 10, b: 30 };
+        let base: { r: number; g: number; b: number };
+        if (bgColorSlider <= 0) {
+          const t = (bgColorSlider + 10) / 10;
+          base = { r: nightBlue.r * t, g: nightBlue.g * t, b: nightBlue.b * t };
+        } else {
+          const t = bgColorSlider / 10;
+          base = { r: nightBlue.r + (255 - nightBlue.r) * t, g: nightBlue.g + (255 - nightBlue.g) * t, b: nightBlue.b + (255 - nightBlue.b) * t };
+        }
         const r = Math.min(255, Math.max(0, Math.round(base.r + bgWarmth * 3)));
         const g = Math.min(255, Math.max(0, Math.round(base.g + Math.abs(bgWarmth) * 0.5)));
         const b = Math.min(255, Math.max(0, Math.round(base.b - bgWarmth * 2)));
