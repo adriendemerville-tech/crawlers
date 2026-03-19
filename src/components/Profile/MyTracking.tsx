@@ -246,6 +246,46 @@ export function MyTracking() {
   const [gscLoading, setGscLoading] = useState(false);
   const gscConnected = !!profile?.gsc_access_token;
 
+  // GA4 toggle state (same logic as WordPressConfigCard)
+  const [ga4EnabledLocal, setGa4EnabledLocal] = useState(false);
+  const [ga4TogglingLocal, setGa4TogglingLocal] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'ga4_oauth_enabled')
+        .maybeSingle();
+      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+        setGa4EnabledLocal(true);
+      }
+    })();
+  }, []);
+
+  const handleGa4ToggleLocal = async (checked: boolean) => {
+    setGa4TogglingLocal(true);
+    try {
+      const { error } = await supabase
+        .from('system_config')
+        .upsert({
+          key: 'ga4_oauth_enabled',
+          value: { active: checked },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'key' });
+      if (error) throw error;
+      setGa4EnabledLocal(checked);
+      toast.success(checked
+        ? (language === 'en' ? 'Google Analytics enabled' : language === 'es' ? 'Google Analytics activado' : 'Google Analytics activé')
+        : (language === 'en' ? 'Google Analytics disabled' : language === 'es' ? 'Google Analytics desactivado' : 'Google Analytics désactivé')
+      );
+    } catch {
+      toast.error(language === 'en' ? 'Save error' : language === 'es' ? 'Error al guardar' : 'Erreur de sauvegarde');
+    } finally {
+      setGa4TogglingLocal(false);
+    }
+  };
+
   // GSC date range & granularity
   type GscDateMode = 'since' | 'range';
   type GscGranularity = 'daily' | 'weekly' | 'monthly';
