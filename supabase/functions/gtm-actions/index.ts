@@ -301,11 +301,13 @@ async function handleDeployTag(
     }
   }
 
-  // Update tracked_site with GTM info
+  // Merge GTM info into existing current_config (don't overwrite corrective_script etc.)
+  const existingConfig = (siteData.current_config as Record<string, unknown>) || {};
   await supabase
     .from('tracked_sites')
     .update({
       current_config: {
+        ...existingConfig,
         gtm_deployed: true,
         gtm_container_path: containerPath,
         gtm_tag_id: tag.tagId,
