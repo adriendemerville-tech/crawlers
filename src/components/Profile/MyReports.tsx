@@ -85,6 +85,7 @@ const translations = {
       geo: 'Analyse GEO',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Rapport Cocoon',
     },
   },
   en: {
