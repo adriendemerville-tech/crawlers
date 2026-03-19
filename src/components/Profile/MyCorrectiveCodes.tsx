@@ -321,6 +321,8 @@ export function MyCorrectiveCodes() {
     }
   };
 
+  const domainDndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
   if (loading) {
     return (
       <Card>
@@ -347,14 +349,11 @@ export function MyCorrectiveCodes() {
     }
   });
   const rawDomains = Array.from(domainMap.keys()).sort();
-  // Maintain order: use domainOrder if set, otherwise raw sorted
   const domains = domainOrder.length > 0
     ? [...domainOrder.filter(d => rawDomains.includes(d)), ...rawDomains.filter(d => !domainOrder.includes(d))]
     : rawDomains;
   const activeDomain = selectedDomain && domainMap.has(selectedDomain) ? selectedDomain : (domains[0] || null);
   const filteredCodes = activeDomain ? (domainMap.get(activeDomain) || []) : codes;
-
-  const domainDndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const handleDomainDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
