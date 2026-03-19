@@ -203,7 +203,7 @@ export function SurveyModal() {
                         className={cn(
                           "w-full text-left px-3 py-2 rounded-md border text-sm transition-colors",
                           responses[block.id] === opt
-                            ? "border-primary bg-primary/10 text-primary"
+                            ? "border-primary bg-primary/10 text-primary font-medium"
                             : "border-border hover:bg-muted/50"
                         )}
                       >
