@@ -442,13 +442,14 @@ export function CocoonForceGraph({
           ctx.lineWidth = lineW * 1.5;
           ctx.stroke();
         } else {
-          // Default: ultra-thin, ethereal
+          // Default: color by juice type
+          const [lr, lg, lb] = JUICE_COLORS[link.juiceType] || JUICE_COLORS.semantic;
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
           ctx.strokeStyle = isDayMode
             ? `rgba(0, 0, 0, ${Math.min(baseAlpha + 0.15, 0.35)})`
-            : `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
+            : `rgba(${lr}, ${lg}, ${lb}, ${Math.min(baseAlpha + 0.05, 0.25)})`;
           ctx.lineWidth = isDayMode ? lineW * 1.2 : lineW;
           ctx.stroke();
         }

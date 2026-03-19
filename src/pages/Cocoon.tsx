@@ -885,11 +885,23 @@ export default function Cocoon() {
             const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
 
             return (
-                <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
+                <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-black/40 backdrop-blur-sm opacity-0 animate-fade-in"
                 style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
               >
-                {/* Particle legend */}
-                <div className="flex items-center gap-3 mr-2 sm:mr-4 pr-2 sm:pr-4 border-r border-white/10">
+                {/* Pages legend */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
+                  {legendItems.map(([type, { color, label }]) => (
+                    <div key={type} className="flex items-center gap-1 sm:gap-1.5">
+                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
+                      <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Particles legend */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Particles:' : 'Particules :'}</span>
                   {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
                     <div key={key} className="flex items-center gap-1.5">
                       <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
@@ -899,20 +911,18 @@ export default function Cocoon() {
                     </div>
                   ))}
                 </div>
-                {legendItems.map(([type, { color, label }]) => (
-                  <div key={type} className="flex items-center gap-1 sm:gap-1.5">
-                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
+
+                {/* Links legend */}
+                <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                    <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                   </div>
-                ))}
-                <span className="mx-0.5 sm:mx-1 hidden sm:inline text-white/20">|</span>
-                <div className="hidden sm:flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                  <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
-                </div>
-                <div className="hidden sm:flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                  <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                    <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                  </div>
                 </div>
                 
               </div>
