@@ -247,6 +247,8 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
         { name: 'bounceRate' },
         { name: 'engagedSessions' },
         { name: 'engagementRate' },
+        { name: 'ecommercePurchases' },
+        { name: 'purchaseRevenue' },
       ],
     }),
   })
@@ -266,6 +268,8 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
         bounce_rate: parseFloat(vals[5]?.value || '0'),
         engaged_sessions: parseInt(vals[6]?.value || '0'),
         engagement_rate: parseFloat(vals[7]?.value || '0'),
+        ecommerce_purchases: parseInt(vals[8]?.value || '0'),
+        purchase_revenue: parseFloat(vals[9]?.value || '0'),
       }
     }
   } else {
@@ -287,6 +291,7 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
         { name: 'sessions' },
         { name: 'screenPageViews' },
         { name: 'totalUsers' },
+        { name: 'purchaseRevenue' },
       ],
       orderBys: [{ dimension: { dimensionName: 'date' } }],
       limit: 90,
@@ -301,6 +306,7 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
       sessions: parseInt(r.metricValues?.[0]?.value || '0'),
       pageviews: parseInt(r.metricValues?.[1]?.value || '0'),
       users: parseInt(r.metricValues?.[2]?.value || '0'),
+      revenue: parseFloat(r.metricValues?.[3]?.value || '0'),
     }))
   }
 
@@ -341,5 +347,36 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
     top_pages: topPages,
     period: { start_date: startDate, end_date: endDate },
     measured_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Persist GA4 revenue data into revenue_events table.
+ * Called after fetch_metrics when e-commerce data is available.
+ */
+async function persistGA4Revenue(
+  supabase: any,
+  userId: string,
+  trackedSiteId: string,
+  dailySeries: any[],
+) {
+  const revenueRows = dailySeries
+    .filter((d: any) => d.revenue > 0)
+    .map((d: any) => ({
+      tracked_site_id: trackedSiteId,
+      user_id: userId,
+      source: 'ga4',
+      amount: d.revenue,
+      currency: 'USD', // GA4 returns in property currency
+      transaction_date: `${d.date.slice(0, 4)}-${d.date.slice(4, 6)}-${d.date.slice(6, 8)}`,
+      order_external_id: `ga4-daily-${d.date}`,
+      raw_payload: { date: d.date, revenue: d.revenue },
+    }))
+
+  if (revenueRows.length > 0) {
+    const { error } = await supabase
+      .from('revenue_events')
+      .upsert(revenueRows, { onConflict: 'tracked_site_id,source,order_external_id' })
+    if (error) console.error('[GA4] Revenue persist error:', error.message)
   }
 }
