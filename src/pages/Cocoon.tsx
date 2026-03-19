@@ -498,6 +498,10 @@ export default function Cocoon() {
   useEffect(() => {
     if (!selectedSiteId) return;
 
+    // Clear previous graph state when switching sites
+    setNodes([]);
+    setSelectedNode(null);
+
     const loadNodes = async () => {
       setIsLoading(true);
       const { data, error } = await supabase
