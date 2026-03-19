@@ -1953,9 +1953,9 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   onRefresh?: Record<string, () => Promise<void>>;
 }) {
   return (
-    <Card className="border">
-      <CardContent className="p-4">
-        <div className={`grid grid-cols-3 md:grid-cols-5 gap-2 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+    <Card className="border-0 shadow-none bg-transparent">
+      <CardContent className="p-0">
+        <div className={`grid grid-cols-3 md:grid-cols-5 gap-2.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
