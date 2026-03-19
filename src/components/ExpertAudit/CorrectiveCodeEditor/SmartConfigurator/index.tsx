@@ -1544,7 +1544,7 @@ export function SmartConfigurator({
                 {/* Copy + Save buttons - visible after unlock */}
                 {generatedCode && viewMode === 'code' && hasPaid && (
                   <>
-                    {user && (
+                    {user && !isAgencyPro && !isAdmin && (
                       <Button
                         onClick={handleSaveToProfile}
                         variant="outline"
