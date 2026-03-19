@@ -730,7 +730,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           </div>
           <div className="flex items-center justify-end gap-1 pt-1">
             <span className="text-[9px] text-muted-foreground/60">
-              {language === 'es' ? 'Necesidad genérica → Caso de uso → Función' : language === 'en' ? 'Generic need → Use case → Feature' : 'Besoin générique → Cas d\'usage → Fonction'}
+              {language === 'es' ? 'Necesidad real → Seguimiento → Verificación' : language === 'en' ? 'Real need → Follow-up → Final check' : 'Besoin réel → Relance → Vérification'}
             </span>
             <RefreshCw className="h-2.5 w-2.5 text-muted-foreground/40" />
           </div>

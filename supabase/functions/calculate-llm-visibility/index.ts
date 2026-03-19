@@ -234,36 +234,38 @@ function generatePrompts(site: any): string[] {
   const products = (site.products_services || '').trim()
   const area = (site.commercial_area || '').trim()
 
+  // Build natural, conversational first prompts (1 sentence max each)
+  // These must stay aligned with check-llm-depth iterations 1-3
   const all: string[] = []
 
   if (products) {
     all.push(
       area
-        ? `Je cherche ${products} ${area}, qu'est-ce que tu me conseilles ?`
-        : `Je cherche ${products}, qu'est-ce que tu me conseilles ?`
+        ? `Je cherche ${products} ${area}, t'as des idées ?`
+        : `Je cherche ${products}, t'as des idées ?`
     )
-    all.push(`C'est quoi les meilleures options pour ${products} en ce moment ?`)
+    all.push(`C'est quoi le mieux pour ${products} en ce moment ?`)
   }
 
   if (sector) {
-    all.push(`Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`)
+    all.push(`J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`)
     all.push(
       target
-        ? `Je suis ${target} et je veux me lancer dans ${sector}, tu recommandes quoi ?`
-        : `Je veux me lancer dans ${sector}, par quoi je commence ?`
+        ? `Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`
+        : `J'ai besoin de ${sector}, par quoi je commence ?`
     )
   }
 
   if (target && products) {
-    all.push(`En tant que ${target}, j'hésite entre plusieurs solutions pour ${products}. Tu as des recommandations ?`)
+    all.push(`En tant que ${target}, j'hésite pour ${products}, tu me conseilles quoi ?`)
   }
 
   if (all.length === 0) {
-    const fb = sector || 'services en ligne'
+    const fb = sector || 'un service'
     return [
-      `Je cherche un bon prestataire pour ${fb}, tu connais ?`,
-      `C'est quoi les solutions les plus populaires dans le domaine ${fb} ?`,
-      `J'ai un projet dans ${fb}, tu me recommandes quoi comme outil ou service ?`,
+      `J'ai besoin d'aide pour ${fb}, tu connais ?`,
+      `C'est quoi le mieux pour ${fb} en ce moment ?`,
+      `Tu me recommandes quoi pour ${fb} ?`,
     ]
   }
 
@@ -275,8 +277,8 @@ function generatePrompts(site: any): string[] {
 // ═══════════════════════════════════════════════
 
 const FOLLOW_UP_PROMPTS = [
-  "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?",
-  "Et dans les solutions plus spécialisées ou de niche, tu connais d'autres acteurs ?",
+  "Ok et t'aurais pas d'autres idées ?",
+  "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
 ]
 
 async function queryWithIterations(

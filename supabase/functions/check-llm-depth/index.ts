@@ -4,21 +4,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 
 /**
- * check-llm-depth v2 — Expert-grade conversational discoverability analysis
+ * check-llm-depth v3 — Natural conversational discoverability analysis
  *
- * Simulates multi-turn conversations with multiple LLMs, using dynamic
- * prompt sequences adapted to each site's typology (sector, audience,
- * geography, products). Brand detection uses semantic extraction via
- * structured JSON output instead of naive substring matching.
+ * Simulates realistic multi-turn conversations with LLMs, using prompts
+ * that mimic how a real end-user would ask questions related to the entity's
+ * market. Each prompt is ONE sentence max, conversational and natural.
  *
- * Prompt funnel strategy (7 angles, increasingly specific):
- *  1. Generic need (category-level)
- *  2. Use case / profession
- *  3. Features & differentiators
- *  4. Budget & pricing
- *  5. Geographic proximity
- *  6. Niche & emerging players
- *  7. Exhaustive enumeration
+ * Prompt strategy (7 angles, natural conversation flow):
+ *  1. Genuine user need (as a real customer would ask)
+ *  2. Natural follow-up / precision
+ *  3. Comparison / "which one is best?"
+ *  4. Practical detail (price, availability, proximity)
+ *  5. Personal recommendation request
+ *  6. Edge case / specific scenario
+ *  7. Final check / "anything else?"
  */
 
 const MAX_ITERATIONS = 7
@@ -58,90 +57,111 @@ function buildPromptSequence(
   const isFr = lang === 'fr'
   const isEs = lang === 'es'
 
-  const products = ctx.products_services || serviceDesc
+  const products = ctx.products_services || ''
   const area = ctx.commercial_area || ''
   const sector = ctx.market_sector || ''
   const target = ctx.target_audience || ''
 
-  // ═══ Iterations 1-3: SAME as calculate-llm-visibility ═══
-  // These must produce identical prompts so scores are coherent
+  // ═══ Build natural, conversational prompts (1 sentence each) ═══
+  // These simulate a REAL end-user, not a market researcher.
+  // Must stay aligned with calculate-llm-visibility iterations 1-3.
 
-  // Iteration 1 — Initial prompt (same as visibility's first prompt)
-  const p1 = products
-    ? (area
-      ? (isFr ? `Je cherche ${products} ${area}, qu'est-ce que tu me conseilles ?`
-        : isEs ? `Busco ${products} ${area}, ¿qué me recomiendas?`
-        : `I'm looking for ${products} ${area}, what do you recommend?`)
-      : (isFr ? `Je cherche ${products}, qu'est-ce que tu me conseilles ?`
-        : isEs ? `Busco ${products}, ¿qué me recomiendas?`
-        : `I'm looking for ${products}, what do you recommend?`))
-    : sector
-    ? (isFr ? `Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`
-      : isEs ? `¿Cómo funciona ${sector}? ¿Qué herramientas o servicios existen?`
-      : `How does ${sector} work? What tools or services exist?`)
-    : (isFr ? `Je cherche un bon prestataire pour ${serviceDesc}, tu connais ?`
-      : isEs ? `Busco un buen proveedor para ${serviceDesc}, ¿conoces alguno?`
-      : `I'm looking for a good provider for ${serviceDesc}, do you know any?`)
+  // Iteration 1 — Genuine user need (as a real customer would ask)
+  const p1 = buildNaturalFirstPrompt(products, sector, area, target, isFr, isEs)
 
-  // Iteration 2 — Follow-up asking for alternatives (same as visibility)
+  // Iteration 2 — Natural follow-up, still conversational
   const p2 = isFr
-    ? "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?"
+    ? "Ok et t'aurais pas d'autres idées ?"
     : isEs
-    ? "Ok gracias, ¿pero no tienes otros nombres? ¿Alternativas menos conocidas quizás?"
-    : "Ok thanks, but don't you have other names? Maybe lesser-known alternatives?"
+    ? "Ok, ¿y no tienes otras ideas?"
+    : "Ok, any other ideas?"
 
-  // Iteration 3 — Follow-up asking for niche players (same as visibility)
+  // Iteration 3 — Comparison / which is best
   const p3 = isFr
-    ? "Et dans les solutions plus spécialisées ou de niche, tu connais d'autres acteurs ?"
+    ? "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?"
     : isEs
-    ? "¿Y en soluciones más especializadas o de nicho, conoces otros actores?"
-    : "And among more specialized or niche solutions, do you know other players?"
+    ? "¿Cuál me recomendarías de verdad si tuvieras que elegir uno solo?"
+    : "Which one would you really recommend if you had to pick just one?"
 
-  // ═══ Iterations 4-7: DEPTH-ONLY deeper probing ═══
+  // ═══ Iterations 4-7: DEPTH-ONLY deeper probing (still conversational) ═══
 
-  // Phase 4 — Budget & pricing (adapts to company_size)
-  const size = ctx.company_size
-  const p4 = size
-    ? (isFr
-      ? `Côté budget, pour une structure de type "${size}", quelles sont les solutions les plus rentables ? Cite les noms et fourchettes de prix.`
-      : isEs
-      ? `En cuanto al presupuesto, para una estructura tipo "${size}", ¿cuáles son las soluciones más rentables? Cita nombres y rangos de precios.`
-      : `Budget-wise, for a "${size}" organization, what are the most cost-effective solutions? Name them with price ranges.`)
-    : (isFr
-      ? `Quel est le rapport qualité-prix de chacune ? Y a-t-il des alternatives abordables moins connues ? Cite-les.`
-      : isEs
-      ? `¿Cuál es la relación calidad-precio de cada una? ¿Hay alternativas asequibles menos conocidas? Cítalas.`
-      : `What's the value for money of each? Are there lesser-known affordable alternatives? Name them.`)
+  // Phase 4 — Practical detail (price, proximity)
+  const p4 = area
+    ? (isFr ? `Et pas loin de ${area}, y'a quoi ?`
+      : isEs ? `¿Y cerca de ${area}, qué hay?`
+      : `And near ${area}, what's available?`)
+    : (isFr ? "C'est quoi le moins cher ?"
+      : isEs ? "¿Cuál es el más barato?"
+      : "Which one is the cheapest?")
 
-  // Phase 5 — Geographic (adapts to address/commercial_area)
-  const geo = ctx.address || ctx.commercial_area
-  const p5 = geo
-    ? (isFr
-      ? `Existe-t-il des acteurs locaux ou spécialisés dans la zone "${geo}" ? Des prestataires régionaux que tu recommanderais ?`
-      : isEs
-      ? `¿Existen actores locales o especializados en la zona "${geo}"? ¿Proveedores regionales que recomendarías?`
-      : `Are there local players or specialists in the "${geo}" area? Regional providers you'd recommend?`)
-    : (isFr
-      ? `Y a-t-il des différences régionales ? Des acteurs forts dans certaines villes ou pays spécifiques ? Cite-les.`
-      : isEs
-      ? `¿Hay diferencias regionales? ¿Actores fuertes en ciudades o países específicos? Cítalos.`
-      : `Are there regional differences? Strong players in specific cities or countries? Name them.`)
+  // Phase 5 — Personal recommendation
+  const p5 = target
+    ? (isFr ? `Pour quelqu'un comme moi qui suis ${target}, tu conseillerais quoi ?`
+      : isEs ? `Para alguien como yo que soy ${target}, ¿qué aconsejarías?`
+      : `For someone like me who is ${target}, what would you recommend?`)
+    : (isFr ? "Franchement, toi tu utiliserais lequel ?"
+      : isEs ? "Sinceramente, ¿tú cuál usarías?"
+      : "Honestly, which one would you use?")
 
-  // Phase 6 — Niche & emerging
+  // Phase 6 — Edge case / specific scenario
   const p6 = isFr
-    ? `Maintenant, creuse vraiment. Quels sont les acteurs de niche, les startups émergentes, les outsiders que même les experts ne connaissent pas forcément ? Liste tous les noms.`
+    ? "Et si je veux un truc vraiment différent, un outsider que personne connaît ?"
     : isEs
-    ? `Ahora, profundiza de verdad. ¿Cuáles son los actores de nicho, startups emergentes, outsiders que ni los expertos conocen? Lista todos los nombres.`
-    : `Now dig really deep. What are the niche players, emerging startups, outsiders that even experts might not know? List every name.`
+    ? "¿Y si quiero algo realmente diferente, un outsider que nadie conoce?"
+    : "What if I want something really different, an outsider nobody knows?"
 
-  // Phase 7 — Exhaustive enumeration
+  // Phase 7 — Final check
   const p7 = isFr
-    ? `Dernière question : fais-moi la liste la plus exhaustive possible de TOUTES les marques, outils et entreprises que tu connais dans ce secteur. Même les plus confidentiels, même ceux qui ne sont plus actifs. Je veux absolument tout.`
+    ? "T'as rien oublié ? Vraiment aucun autre nom ?"
     : isEs
-    ? `Última pregunta: hazme la lista más exhaustiva posible de TODAS las marcas, herramientas y empresas que conoces en este sector. Incluso las más confidenciales. Quiero absolutamente todo.`
-    : `Last question: give me the most exhaustive list possible of ALL brands, tools and companies you know in this sector. Even the most obscure ones. I want absolutely everything.`
+    ? "¿No te olvidaste de nada? ¿Ningún otro nombre?"
+    : "Did you forget anything? No other names at all?"
 
   return [p1, p2, p3, p4, p5, p6, p7]
+}
+
+/**
+ * Builds a natural first prompt that mimics how a REAL user would ask.
+ * - E-commerce selling boots → "Je cherche des bottes de pluie pour ma fille, t'as des idées ?"
+ * - Plumber → "J'ai une fuite d'eau, tu connais un plombier pas loin ?"
+ * - Media/news → "C'est quoi l'actu politique du moment ?"
+ * - Generic → Uses products_services as a natural query
+ */
+function buildNaturalFirstPrompt(
+  products: string,
+  sector: string,
+  area: string,
+  target: string,
+  isFr: boolean,
+  isEs: boolean,
+): string {
+  // If we have specific products/services, build a natural customer question
+  if (products) {
+    const geoSuffix = area
+      ? (isFr ? ` ${area}` : isEs ? ` ${area}` : ` in ${area}`)
+      : ''
+    return isFr
+      ? `Je cherche ${products}${geoSuffix}, t'as des idées ?`
+      : isEs
+      ? `Busco ${products}${geoSuffix}, ¿tienes ideas?`
+      : `I'm looking for ${products}${geoSuffix}, any ideas?`
+  }
+
+  // If we only have sector, ask a natural question about it
+  if (sector) {
+    return isFr
+      ? `J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`
+      : isEs
+      ? `Necesito ayuda con ${sector}, ¿conoces buenos?`
+      : `I need help with ${sector}, do you know any good ones?`
+  }
+
+  // Fallback: very generic
+  return isFr
+    ? "J'ai besoin d'aide, tu peux me recommander quelque chose ?"
+    : isEs
+    ? "Necesito ayuda, ¿puedes recomendarme algo?"
+    : "I need help, can you recommend something?"
 }
 
 // ─── Dual-gateway fetch helper ───────────────────────────────────────────────
@@ -383,20 +403,20 @@ async function runDepthConversation(
   const isEs = lang === 'es'
 
   const systemPrompt = isFr
-    ? `Tu es un consultant indépendant qui aide les entreprises à trouver les meilleurs outils et prestataires. Tu donnes des recommandations honnêtes et exhaustives en citant des noms précis de marques et d'entreprises. Tu ne connais pas à l'avance ce que cherche l'utilisateur.`
+    ? `Tu es un assistant utile et honnête. Tu réponds de façon naturelle et conversationnelle. Quand on te demande des recommandations, cite des noms précis.`
     : isEs
-    ? `Eres un consultor independiente que ayuda a las empresas a encontrar las mejores herramientas y proveedores. Das recomendaciones honestas y exhaustivas citando nombres precisos de marcas y empresas. No sabes de antemano lo que busca el usuario.`
-    : `You are an independent consultant helping businesses find the best tools and providers. You give honest and exhaustive recommendations citing precise brand and company names. You don't know in advance what the user is looking for.`
+    ? `Eres un asistente útil y honesto. Respondes de forma natural y conversacional. Cuando te piden recomendaciones, cita nombres precisos.`
+    : `You are a helpful and honest assistant. You answer naturally and conversationally. When asked for recommendations, cite precise names.`
 
   const messages: { role: string; content: string }[] = [
     { role: 'system', content: systemPrompt },
   ]
 
   const anglesLabels = isFr
-    ? ['Besoin générique', 'Alternatives', 'Niche / spécialisé', 'Budget', 'Géographie', 'Niche profond', 'Exhaustif']
+    ? ['Besoin réel', 'Relance', 'Comparaison', 'Détail pratique', 'Reco perso', 'Outsider', 'Vérification']
     : isEs
-    ? ['Necesidad genérica', 'Alternativas', 'Nicho / especializado', 'Presupuesto', 'Geografía', 'Nicho profundo', 'Exhaustivo']
-    : ['Generic need', 'Alternatives', 'Niche / specialized', 'Budget', 'Geography', 'Deep niche', 'Exhaustive']
+    ? ['Necesidad real', 'Seguimiento', 'Comparación', 'Detalle práctico', 'Reco personal', 'Outsider', 'Verificación']
+    : ['Real need', 'Follow-up', 'Comparison', 'Practical detail', 'Personal reco', 'Outsider', 'Final check']
 
   const anglesTested: string[] = []
   let lastAssistantContent = ''
@@ -588,19 +608,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build service description from context — never mention the brand!
-    const svcDesc = service_description ||
-      (ctx.market_sector
-        ? (lang === 'fr'
-          ? `une solution dans le domaine "${ctx.market_sector}"`
-          : lang === 'es'
-          ? `una solución en el área de "${ctx.market_sector}"`
-          : `a solution in the "${ctx.market_sector}" space`)
-        : (lang === 'fr'
-          ? `un outil ou service professionnel en ligne`
-          : lang === 'es'
-          ? `una herramienta o servicio profesional en línea`
-          : `a professional online tool or service`))
+    // svcDesc is only used as fallback — prompts are now built naturally from ctx
+    const svcDesc = service_description || ctx.products_services || ctx.market_sector || ''
 
     // Build dynamic prompt sequence
     const prompts = buildPromptSequence(svcDesc, ctx, lang)
