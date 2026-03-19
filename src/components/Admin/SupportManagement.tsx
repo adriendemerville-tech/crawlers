@@ -32,6 +32,7 @@ interface Message {
   is_admin: boolean;
   sender_id: string;
   created_at: string;
+  device_info?: any;
 }
 
 export function SupportManagement() {
@@ -375,6 +376,8 @@ export function SupportManagement() {
                       isAdmin={msg.is_admin}
                       isOwn={msg.is_admin}
                       createdAt={msg.created_at}
+                      deviceInfo={msg.device_info as any}
+                      isAdminView={true}
                     />
                   ))}
                 </div>

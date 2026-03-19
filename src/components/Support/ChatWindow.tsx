@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatMessage } from './ChatMessage';
 import { useToast } from '@/hooks/use-toast';
+import { getDeviceInfo } from '@/utils/deviceInfo';
 
 interface Message {
   id: string;
@@ -137,7 +138,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         setConversationId(currentConversationId);
       }
 
-      // Send message
+      // Send message with device info
+      const deviceInfo = getDeviceInfo();
       const { error: msgError } = await supabase
         .from('support_messages')
         .insert({
@@ -145,6 +147,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           sender_id: user.id,
           content: messageContent,
           is_admin: false,
+          device_info: deviceInfo as any,
         });
 
       if (msgError) throw msgError;
