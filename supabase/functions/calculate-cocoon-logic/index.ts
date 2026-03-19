@@ -298,6 +298,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Fair use check ──
+    const planType = ["agency_pro", "agency_premium"].includes(profile?.plan_type || "") ? 'agency_pro' : 'free';
+    const fairUse = await checkFairUse(userId, 'cocoon_logic', planType);
+    if (!fairUse.allowed) {
+      return new Response(JSON.stringify({ error: fairUse.reason }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ─── Verify site ownership ───
     const { data: site } = await supabase
       .from("tracked_sites").select("id, domain, user_id")
