@@ -406,7 +406,7 @@ export default function MatricePrompt() {
                 Envoyer
               </Button>
             </div>
-          )
+          )}
 
           {/* CSV Selector + Import + URL */}
           <div className="flex flex-col gap-3 mb-6">
