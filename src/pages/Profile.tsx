@@ -64,6 +64,7 @@ const translations = {
     myReports: 'Reports',
     actionPlans: 'Action Plans',
     correctiveCodes: '<Scripts>',
+    creator: 'Creator',
     wallet: 'Wallet',
     tracking: 'My Sites',
     firstName: 'First Name',
