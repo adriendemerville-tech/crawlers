@@ -164,6 +164,7 @@ const labels = {
     pickFromGraph: 'Click a node on the graph…',
     analyze: 'Analyze',
     cancel: 'Cancel',
+    optimize: 'Optimize linking',
   },
   es: {
     title: 'Asistente Cocoon',
