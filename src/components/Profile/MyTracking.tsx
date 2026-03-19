@@ -1986,6 +1986,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
                 icon={def.icon}
                 valueClassName={def.valueClassName}
                 onRefresh={onRefresh?.[id]}
+                tooltip={def.tooltip}
               />
             );
           })}
