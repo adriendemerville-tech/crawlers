@@ -514,14 +514,65 @@ function PhotosTab() {
 
 // ─── Main Component ────────────────────────────────────────────
 
+// ─── Sortable Location Item ────────────────────────────────────
+
+function SortableLocationItem({ loc, isSelected, onSelect }: {
+  loc: typeof SIMULATED_LOCATIONS[0];
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: loc.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onSelect}
+      className={`flex items-center gap-0.5 px-3 py-2 rounded-lg text-left transition-colors cursor-grab active:cursor-grabbing ${
+        isSelected
+          ? 'bg-primary/10 text-primary border border-primary/20'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+      }`}
+    >
+      <span className="text-xs font-medium truncate">{loc.name.split('—').pop()?.trim() || loc.name}</span>
+    </button>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────
+
 export function GMBDashboard() {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState('stats');
+  const [orderedLocations, setOrderedLocations] = useState(SIMULATED_LOCATIONS);
   const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
 
-  const locations = SIMULATED_LOCATIONS;
-  const activeLocation = locations.find(l => l.id === selectedLocationId) || locations[0];
-  const showSidebar = locations.length > 1;
+  const activeLocation = orderedLocations.find(l => l.id === selectedLocationId) || orderedLocations[0];
+  const showSidebar = orderedLocations.length > 1;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setOrderedLocations(prev => {
+        const oldIndex = prev.findIndex(l => l.id === active.id);
+        const newIndex = prev.findIndex(l => l.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -542,23 +593,23 @@ export function GMBDashboard() {
         {/* Location sidebar — only shown when 2+ locations */}
         {showSidebar && (
           <div className="flex flex-col gap-1 shrink-0 w-40">
-            {locations.map(loc => (
-              <button
-                key={loc.id}
-                onClick={() => setSelectedLocationId(loc.id)}
-                className={`flex flex-col gap-0.5 px-3 py-2 rounded-lg text-left transition-colors ${
-                  selectedLocationId === loc.id
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-                }`}
-              >
-                <span className="text-xs font-medium truncate">{loc.name.split('—').pop()?.trim() || loc.name}</span>
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Star className="h-2.5 w-2.5 text-yellow-500 fill-yellow-500" />
-                  {loc.avg_rating} · {loc.reviews_count} avis
-                </span>
-              </button>
-            ))}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={orderedLocations.map(l => l.id)} strategy={verticalListSortingStrategy}>
+                {orderedLocations.map(loc => (
+                  <SortableLocationItem
+                    key={loc.id}
+                    loc={loc}
+                    isSelected={selectedLocationId === loc.id}
+                    onSelect={() => setSelectedLocationId(loc.id)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+
+            <Button variant="ghost" size="sm" className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start">
+              <Plus className="h-3.5 w-3.5" />
+              Ajouter
+            </Button>
           </div>
         )}
 
@@ -568,9 +619,6 @@ export function GMBDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Store className="h-6 w-6 text-primary" />
-                </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{activeLocation.name}</h3>
@@ -578,8 +626,8 @@ export function GMBDashboard() {
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />{activeLocation.address}
+                  <p className="text-xs text-muted-foreground">
+                    {activeLocation.address}
                   </p>
                 </div>
                 <div className="text-right">
@@ -597,23 +645,19 @@ export function GMBDashboard() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full grid grid-cols-5 h-9">
               <TabsTrigger value="stats" className="text-xs gap-1">
-                <BarChart3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Stats</span>
               </TabsTrigger>
               <TabsTrigger value="reviews" className="text-xs gap-1">
-                <MessageSquare className="h-3.5 w-3.5" />
+                <Star className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Avis</span>
               </TabsTrigger>
               <TabsTrigger value="posts" className="text-xs gap-1">
-                <Megaphone className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Posts</span>
               </TabsTrigger>
               <TabsTrigger value="info" className="text-xs gap-1">
-                <Store className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Infos</span>
               </TabsTrigger>
               <TabsTrigger value="photos" className="text-xs gap-1">
-                <Image className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Photos</span>
               </TabsTrigger>
             </TabsList>
