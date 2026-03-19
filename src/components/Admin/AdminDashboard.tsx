@@ -132,6 +132,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
+  const { notifications } = useAdminNotifications();
 
   useEffect(() => {
     const loadDocVisibility = async () => {
