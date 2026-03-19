@@ -532,45 +532,8 @@ export function MyTracking() {
       const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
       const performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
 
-      // === Semantic Authority: weighted avg of SERP rankings filtered by core-target relevance ===
-      const semanticAuthority = (() => {
-        const keywords: Array<{ keyword: string; position: number; search_volume: number }> = serpData?.sample_keywords || [];
-        if (keywords.length === 0) return null;
-
-        // Build relevance tokens from site identity card
-        const identityTokens: string[] = [];
-        const addTokens = (val: string | null | undefined) => {
-          if (!val) return;
-          val.toLowerCase().split(/[\s,;|/]+/).filter(t => t.length > 2).forEach(t => identityTokens.push(t));
-        };
-        addTokens(site.products_services);
-        addTokens(site.market_sector);
-        addTokens(site.target_audience);
-        addTokens(site.commercial_area);
-
-        // Score each keyword for relevance (0 or 1) via token overlap
-        const scored = keywords
-          .filter(kw => kw.keyword && typeof kw.position === 'number' && kw.position > 0)
-          .map(kw => {
-            const kwLower = kw.keyword.toLowerCase();
-            const kwTokens = kwLower.split(/[\s,;|/]+/).filter(t => t.length > 2);
-            // Relevant if any identity token appears in keyword or vice versa
-            const isRelevant = identityTokens.length === 0 || identityTokens.some(t => kwLower.includes(t)) || kwTokens.some(kt => identityTokens.some(it => it.includes(kt) || kt.includes(it)));
-            if (!isRelevant) return null;
-
-            // Position → score: pos 1 = 100, pos 3 = 90, pos 10 = 50, pos 20 = 25, pos 50 = 5
-            const posScore = Math.max(0, Math.round(100 * Math.exp(-0.05 * (kw.position - 1))));
-            const volume = kw.search_volume || 1;
-            return { posScore, volume };
-          })
-          .filter(Boolean) as Array<{ posScore: number; volume: number }>;
-
-        if (scored.length === 0) return null;
-
-        const totalWeight = scored.reduce((s, k) => s + k.volume, 0);
-        const weightedSum = scored.reduce((s, k) => s + k.posScore * k.volume, 0);
-        return Math.round(weightedSum / totalWeight);
-      })();
+      // Semantic Authority: computed server-side by LLM in fetch-serp-kpis
+      const semanticAuthority = serpData?.semantic_authority ?? null;
 
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
