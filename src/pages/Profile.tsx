@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -173,6 +173,16 @@ export default function Profile() {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-2 max-w-5xl">
+          {/* Admin-only shortcut */}
+          {isAdmin && (
+            <div className="flex justify-end mb-1">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={() => navigate('/matrice')}>
+                <Grid3X3 className="h-3.5 w-3.5" />
+                Matrice de Prompts
+                <Badge variant="secondary" className="text-[9px] px-1 py-0 text-muted-foreground">BETA</Badge>
+              </Button>
+            </div>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
