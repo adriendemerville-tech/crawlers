@@ -719,7 +719,9 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
               // Hide full prompt, show short label instead
               const displayContent = isUser && isAnalysisPrompt(msg.content)
                 ? getAnalysisLabel(msg.content, language)
-                : msg.content;
+                : isUser && isOptimizePrompt(msg.content)
+                  ? getOptimizeLabel(language)
+                  : msg.content;
 
               return (
               <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
