@@ -668,7 +668,7 @@ export function MyCorrectiveCodes() {
                 <WordPressConfigCard
                   siteId={site.id}
                   siteDomain={site.domain}
-                  siteApiKey={profile?.api_key || site.api_key || ''}
+                  siteApiKey={site.api_key || ''}
                   hasConfig={!!(site.current_config && typeof site.current_config === 'object' && Object.keys(site.current_config).length > 0)}
                   onConnectionSuccess={() => setPlugConnected(true)}
                 />
