@@ -285,13 +285,7 @@ export function MyWallet() {
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="overflow-hidden shrink-0"
             >
-              <div className="mb-2 flex justify-end">
-                <Badge className="bg-violet-600 text-white text-xs">
-                  {subscriptionStatus === 'canceling'
-                    ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
-                    : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
-                </Badge>
-              </div>
+              <div className="mb-2" />
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
                   { value: 'branding', icon: Palette, label: 'Branding' },

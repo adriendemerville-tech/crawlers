@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const translations = {
   fr: {
@@ -12,6 +15,7 @@ const translations = {
     comingSoon: 'Bientôt',
     connected: 'Connecté',
     configure: 'Configurer',
+    connecting: 'Connexion…',
   },
   en: {
     title: 'External APIs',
@@ -21,6 +25,7 @@ const translations = {
     comingSoon: 'Coming soon',
     connected: 'Connected',
     configure: 'Configure',
+    connecting: 'Connecting…',
   },
   es: {
     title: 'APIs Externas',
@@ -30,6 +35,7 @@ const translations = {
     comingSoon: 'Próximamente',
     connected: 'Conectado',
     configure: 'Configurar',
+    connecting: 'Conectando…',
   },
 };
 
@@ -89,45 +95,84 @@ const services: ServiceButton[] = [
 export function ExternalApisTab() {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const [connectingId, setConnectingId] = useState<string | null>(null);
 
   const analyticsServices = services.filter(s => s.category === 'analytics');
   const cmsServices = services.filter(s => s.category === 'cms');
 
-  const renderServiceCard = (service: ServiceButton) => (
-    <button
-      key={service.id}
-      disabled={!service.available}
-      className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
-        service.available
-          ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
-          : 'border-border/50 opacity-50 cursor-not-allowed'
-      }`}
-    >
-      <div
-        className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
-        dangerouslySetInnerHTML={{ __html: service.logoSvg }}
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">{service.name}</span>
-          {!service.available && (
-            <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-muted-foreground/30">
-              {t.comingSoon}
-            </Badge>
+  const handleServiceClick = async (service: ServiceButton) => {
+    if (!service.available || connectingId) return;
+
+    if (service.id === 'gsc' || service.id === 'ga4') {
+      setConnectingId(service.id);
+      try {
+        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'get_auth_url' },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No auth URL returned');
+        }
+      } catch (err) {
+        console.error(`[ExternalApis] ${service.id} auth error:`, err);
+        toast.error(language === 'fr' ? 'Erreur de connexion' : language === 'es' ? 'Error de conexión' : 'Connection error');
+      } finally {
+        setConnectingId(null);
+      }
+    }
+    // WordPress and other CMS: can be extended later
+  };
+
+  const renderServiceCard = (service: ServiceButton) => {
+    const isConnecting = connectingId === service.id;
+    return (
+      <button
+        key={service.id}
+        disabled={!service.available || isConnecting}
+        onClick={() => handleServiceClick(service)}
+        className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+          service.available
+            ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
+            : 'border-border/50 opacity-50 cursor-not-allowed'
+        }`}
+      >
+        <div
+          className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+          dangerouslySetInnerHTML={{ __html: service.logoSvg }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm">{service.name}</span>
+            {!service.available && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-muted-foreground/30">
+                {t.comingSoon}
+              </Badge>
+            )}
+          </div>
+          {service.available && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              {isConnecting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {t.connecting}
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="w-3 h-3" />
+                  {t.configure}
+                </>
+              )}
+            </span>
           )}
         </div>
-        {service.available && (
-          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <ExternalLink className="w-3 h-3" />
-            {t.configure}
-          </span>
-        )}
-      </div>
-    </button>
-  );
+      </button>
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4">
       <div>
         <h3 className="text-lg font-semibold">{t.title}</h3>
         <p className="text-sm text-muted-foreground">{t.description}</p>
