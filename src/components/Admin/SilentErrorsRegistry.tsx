@@ -220,5 +220,11 @@ export function SilentErrorsRegistry() {
         </CardContent>
       </Card>
     </div>
+
+    {/* Cocoon Errors Registry */}
+    <div className="mt-6">
+      <CocoonErrorsRegistry />
+    </div>
+    </>
   );
 }
