@@ -860,6 +860,7 @@ export function CocoonForceGraph3D({
   colorIntensity = 5,
   bgWarmth = 0,
   linkThickness = 1,
+  bgColorSlider = 0,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
