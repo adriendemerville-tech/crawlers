@@ -197,6 +197,11 @@ export function BrandingTab() {
   const isIdentityDirty = logoUrl !== (profile?.agency_logo_url || '')
     || primaryColor !== (profile?.agency_primary_color || '#7c3aed')
     || brandName !== (profile?.agency_brand_name || '')
+    || brandFont !== ((profile as any)?.agency_brand_font || '')
+    || brandFontSize !== ((profile as any)?.agency_brand_font_size || 16)
+    || brandBold !== ((profile as any)?.agency_brand_bold || false)
+    || brandItalic !== ((profile as any)?.agency_brand_italic || false)
+    || brandUnderline !== ((profile as any)?.agency_brand_underline || false)
     || reportFont !== ((profile as any)?.agency_report_font || '');
 
   const isContactDirty = contactFirstName !== (profile?.agency_contact_first_name || '')
