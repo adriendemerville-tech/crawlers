@@ -228,7 +228,7 @@ export function SurveyModal() {
                           className={cn(
                             "h-6 w-6",
                             (responses[block.id] || 0) > j
-                              ? "fill-yellow-400 text-yellow-400"
+                              ? "fill-amber-400 text-amber-400"
                               : "text-muted-foreground/30"
                           )}
                         />
