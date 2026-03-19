@@ -8,26 +8,28 @@ export interface CocoonTheme {
   haloColors: string[];
 }
 
+// Page node colors — vivid, electric, high saturation
 const DEFAULT_NODE_COLORS: Record<string, string> = {
-  homepage: "#ffc83c",
-  blog: "#8c78ff",
-  produit: "#3cdca0",
-  "catégorie": "#50aaff",
-  faq: "#ff9650",
-  contact: "#f078b4",
-  tarifs: "#ffc83c",
-  guide: "#b48cff",
+  homepage: "#ffcc00",
+  blog: "#9b5fff",
+  produit: "#00f0a0",
+  "catégorie": "#3db8ff",
+  faq: "#ff8030",
+  contact: "#ff5caa",
+  tarifs: "#ffcc00",
+  guide: "#c07aff",
   "légal": "#a0aab4",
-  "à propos": "#50dce6",
-  page: "#8c64fa",
-  unknown: "#8c64fa",
+  "à propos": "#00e5f0",
+  page: "#8c5cff",
+  unknown: "#8c5cff",
 };
 
+// Particle colors — matte, soft, pastel-like
 const DEFAULT_PARTICLE_COLORS: Record<string, string> = {
-  authority: "#ffc83c",
-  semantic: "#508cff",
-  traffic: "#3cdc8c",
-  hierarchy: "#b464ff",
+  authority: "#c8a86e",
+  semantic: "#7a9ec4",
+  traffic: "#6eb89a",
+  hierarchy: "#a382b8",
 };
 
 const DEFAULT_HALO_COLORS: string[] = [
