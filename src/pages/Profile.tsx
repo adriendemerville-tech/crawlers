@@ -33,6 +33,7 @@ const translations = {
     myReports: 'Rapports',
     actionPlans: 'Plans d\'Action',
     correctiveCodes: '<Scripts>',
+    creator: 'Créateur',
     wallet: 'Portefeuille',
     tracking: 'Mes sites',
     firstName: 'Prénom',
@@ -63,6 +64,7 @@ const translations = {
     myReports: 'Reports',
     actionPlans: 'Action Plans',
     correctiveCodes: '<Scripts>',
+    creator: 'Creator',
     wallet: 'Wallet',
     tracking: 'My Sites',
     firstName: 'First Name',
@@ -93,6 +95,7 @@ const translations = {
     myReports: 'Informes',
     actionPlans: 'Planes de Acción',
     correctiveCodes: '<Scripts>',
+    creator: 'Creador',
     wallet: 'Billetera',
     tracking: 'Mis sitios',
     firstName: 'Nombre',
@@ -234,7 +237,7 @@ export default function Profile() {
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
-                    <span className="hidden sm:inline">Créateur</span>
+                    <span className="hidden sm:inline">{t.creator}</span>
                   </TabsTrigger>
                 )}
               </TabsList>
