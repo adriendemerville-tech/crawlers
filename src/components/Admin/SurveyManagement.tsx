@@ -77,6 +77,7 @@ const PERSONA_OPTIONS = {
 
 const defaultSurvey: Omit<Survey, 'id' | 'created_at' | 'created_by'> = {
   title: '',
+  description: null,
   status: 'draft',
   target_pages: ['/console'],
   target_persona: {},
