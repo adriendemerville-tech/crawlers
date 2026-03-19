@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -21,6 +21,7 @@ import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
+import { SurveyManagement } from './SurveyManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ const adminTranslations = {
     documentation: 'Documentation',
     docs: 'Docs',
     functions: 'Functions',
+    surveys: 'Surveys',
     hideDocsForViewers: 'Masquer docs aux viewers',
     showDocsForViewers: 'Docs visibles aux viewers',
   },
@@ -75,6 +77,7 @@ const adminTranslations = {
     documentation: 'Documentation',
     docs: 'Docs',
     functions: 'Functions',
+    surveys: 'Surveys',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
@@ -99,6 +102,7 @@ const adminTranslations = {
     documentation: 'Documentación',
     docs: 'Docs',
     functions: 'Functions',
+    surveys: 'Surveys',
     hideDocsForViewers: 'Ocultar docs de viewers',
     showDocsForViewers: 'Docs visibles para viewers',
   },
@@ -185,6 +189,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
+        { id: 'surveys', label: t.surveys, icon: ClipboardList, group: 'content' },
       ],
     },
     {
@@ -226,6 +231,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'algos': return showAlgos ? wrap(<AlgoTrainingDashboard />) : null;
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
+      case 'surveys': return <SurveyManagement />;
       default: return <AnalyticsDashboard />;
     }
   };

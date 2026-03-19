@@ -3863,6 +3863,110 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          response_data: Json | null
+          survey_id: string
+          user_id: string
+          variant: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          response_data?: Json | null
+          survey_id: string
+          user_id: string
+          variant?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          response_data?: Json | null
+          survey_id?: string
+          user_id?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_events_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          ab_enabled: boolean | null
+          ab_ratio: number | null
+          content_blocks: Json | null
+          created_at: string | null
+          created_by: string
+          delay_between_impressions_hours: number | null
+          duration_days: number | null
+          id: string
+          max_impressions_per_user: number | null
+          schedule_at: string | null
+          status: string
+          target_pages: Json | null
+          target_persona: Json | null
+          target_user_count: number | null
+          title: string
+          updated_at: string | null
+          variant_b_content_blocks: Json | null
+          variant_b_duration_days: number | null
+          variant_b_target_persona: Json | null
+        }
+        Insert: {
+          ab_enabled?: boolean | null
+          ab_ratio?: number | null
+          content_blocks?: Json | null
+          created_at?: string | null
+          created_by: string
+          delay_between_impressions_hours?: number | null
+          duration_days?: number | null
+          id?: string
+          max_impressions_per_user?: number | null
+          schedule_at?: string | null
+          status?: string
+          target_pages?: Json | null
+          target_persona?: Json | null
+          target_user_count?: number | null
+          title: string
+          updated_at?: string | null
+          variant_b_content_blocks?: Json | null
+          variant_b_duration_days?: number | null
+          variant_b_target_persona?: Json | null
+        }
+        Update: {
+          ab_enabled?: boolean | null
+          ab_ratio?: number | null
+          content_blocks?: Json | null
+          created_at?: string | null
+          created_by?: string
+          delay_between_impressions_hours?: number | null
+          duration_days?: number | null
+          id?: string
+          max_impressions_per_user?: number | null
+          schedule_at?: string | null
+          status?: string
+          target_pages?: Json | null
+          target_persona?: Json | null
+          target_user_count?: number | null
+          title?: string
+          updated_at?: string | null
+          variant_b_content_blocks?: Json | null
+          variant_b_duration_days?: number | null
+          variant_b_target_persona?: Json | null
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           key: string
