@@ -1308,6 +1308,7 @@ export type Database = {
           is_indexable: boolean | null
           issues: Json | null
           meta_description: string | null
+          page_type_override: string | null
           path: string
           redirect_url: string | null
           response_time_ms: number | null
@@ -1348,6 +1349,7 @@ export type Database = {
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_type_override?: string | null
           path?: string
           redirect_url?: string | null
           response_time_ms?: number | null
@@ -1388,6 +1390,7 @@ export type Database = {
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_type_override?: string | null
           path?: string
           redirect_url?: string | null
           response_time_ms?: number | null

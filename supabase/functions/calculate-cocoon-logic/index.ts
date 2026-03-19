@@ -151,20 +151,54 @@ function classifyIntent(title: string, h1: string, keywords: string[]): string {
 }
 
 // ─── Page Type Classification ───
-function classifyPageType(url: string, title: string, h1: string): string {
+function classifyPageType(url: string, title: string, h1: string, override?: string | null): string {
+  // Manual override takes precedence
+  if (override) return override;
+
   const path = url.toLowerCase();
   const text = `${title} ${h1}`.toLowerCase();
 
+  // Homepage
   if (path === "/" || path.endsWith(".com") || path.endsWith(".fr") || path.match(/^https?:\/\/[^/]+\/?$/)) return "homepage";
-  if (path.match(/\/blog|\/article|\/actualit|\/news|\/post/)) return "blog";
-  if (path.match(/\/produit|\/product|\/shop|\/boutique|\/item/)) return "produit";
-  if (path.match(/\/categor|\/collection|\/rayon/)) return "catégorie";
-  if (path.match(/\/faq|\/aide|\/help|\/support/)) return "faq";
-  if (path.match(/\/contact|\/nous-contacter/)) return "contact";
-  if (path.match(/\/tarif|\/pricing|\/prix|\/plan/)) return "tarifs";
-  if (path.match(/\/mention|\/legal|\/cgu|\/cgv|\/politique|\/privacy/)) return "légal";
-  if (path.match(/\/a-propos|\/about|\/qui-sommes/)) return "à propos";
-  if (text.match(/guide|tutoriel|tutorial|comment|how to/)) return "guide";
+  
+  // Blog / editorial
+  if (path.match(/\/blog|\/article|\/actualit|\/news|\/post|\/journal|\/magazine/)) return "blog";
+  
+  // Product / service
+  if (path.match(/\/produit|\/product|\/shop|\/boutique|\/item|\/service|\/solution|\/offre|\/offer|\/outil|\/tool|\/feature|\/fonctionnalit/)) return "produit";
+  
+  // Category / collection
+  if (path.match(/\/categor|\/collection|\/rayon|\/rubrique|\/section|\/tag|\/thematique/)) return "catégorie";
+  
+  // FAQ / support
+  if (path.match(/\/faq|\/aide|\/help|\/support|\/assistance|\/centre-aide|\/knowledge/)) return "faq";
+  
+  // Contact
+  if (path.match(/\/contact|\/nous-contacter|\/get-in-touch|\/contacto/)) return "contact";
+  
+  // Pricing
+  if (path.match(/\/tarif|\/pricing|\/prix|\/plan|\/abonnement|\/subscription|\/forfait/)) return "tarifs";
+  
+  // Legal
+  if (path.match(/\/mention|\/legal|\/cgu|\/cgv|\/politique|\/privacy|\/terms|\/conditions|\/confidentialit|\/cookie|\/rgpd|\/gdpr/)) return "légal";
+  
+  // About
+  if (path.match(/\/a-propos|\/about|\/qui-sommes|\/equipe|\/team|\/notre-histoire|\/mission|\/valeurs/)) return "à propos";
+  
+  // Guide / tutorial (path-based)
+  if (path.match(/\/guide|\/tutoriel|\/tutorial|\/how-to|\/comment|\/ressource|\/resource|\/documentation|\/docs|\/wiki|\/learn/)) return "guide";
+  
+  // Text-based fallback for guide
+  if (text.match(/guide|tutoriel|tutorial|comment|how to|paso a paso/)) return "guide";
+  
+  // SaaS-specific patterns (text-based)
+  if (text.match(/dashboard|tableau de bord|console|panel|admin/)) return "produit";
+  if (text.match(/intégration|integration|api|webhook|plugin|extension|connector/)) return "produit";
+  if (text.match(/cas d'usage|use case|caso de uso|témoignage|testimonial|case stud/)) return "blog";
+  if (text.match(/changelog|release|mise à jour|roadmap|version/)) return "blog";
+  if (text.match(/partenaire|partner|affiliate|affilié/)) return "à propos";
+  if (text.match(/carrière|career|recrutement|hiring|job|emploi/)) return "à propos";
+  if (text.match(/démo|demo|essai|trial|gratuit|free/)) return "tarifs";
 
   return "page";
 }
@@ -299,7 +333,7 @@ Deno.serve(async (req) => {
 
     const { data: crawlPages } = await supabase
       .from("crawl_pages")
-      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status, anchor_texts")
+      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status, anchor_texts, page_type_override")
       .eq("crawl_id", latestCrawlId)
       .order("crawl_depth", { ascending: true })
       .limit(MAX_COCOON_PAGES);
@@ -341,7 +375,7 @@ Deno.serve(async (req) => {
     for (const page of validPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
-      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
+      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "", page.page_type_override);
       
       // Enrich tokenization: title + h1 + meta + keywords + URL path segments + anchor texts
       const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");

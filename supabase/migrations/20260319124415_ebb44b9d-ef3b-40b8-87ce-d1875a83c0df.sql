@@ -1,0 +1,1 @@
+ALTER TABLE public.crawl_pages ADD COLUMN IF NOT EXISTS page_type_override TEXT DEFAULT NULL;

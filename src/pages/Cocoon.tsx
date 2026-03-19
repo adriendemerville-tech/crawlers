@@ -889,8 +889,9 @@ export default function Cocoon() {
                 'légal': { fr: 'Légal', en: 'Legal', es: 'Legal' },
                 'à propos': { fr: 'À propos', en: 'About', es: 'Acerca de' },
                 page: { fr: 'Page', en: 'Page', es: 'Página' },
+                unknown: { fr: 'Autre', en: 'Other', es: 'Otro' },
               };
-              const presentTypes = new Set(nodes.map((n: any) => n.page_type));
+              const presentTypes = new Set(nodes.map((n: any) => n.page_type || 'unknown'));
               const legendItems = Object.entries(pageLabels).filter(([type]) => presentTypes.has(type));
 
               return (
