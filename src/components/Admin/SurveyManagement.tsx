@@ -116,7 +116,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {block.type === 'poll' && (
           <div className="space-y-1">
-            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Options (une par ligne)</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Options (une par ligne)</Label>
             <Textarea
               value={(block.options || []).join('\n')}
               onChange={e => onChange({ ...block, options: e.target.value.split('\n').filter(Boolean) })}
