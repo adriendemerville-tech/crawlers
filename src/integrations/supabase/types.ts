@@ -2417,6 +2417,125 @@ export type Database = {
         }
         Relationships: []
       }
+      matrix_audit_results: {
+        Row: {
+          axe: string
+          crawlers_score: number | null
+          created_at: string
+          csv_weighted_score: number | null
+          id: string
+          llm_name: string | null
+          poids: number
+          prompt: string
+          prompt_item_id: string | null
+          raw_data: Json | null
+          session_id: string
+          seuil_bon: number
+          seuil_mauvais: number
+          seuil_moyen: number
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          axe: string
+          crawlers_score?: number | null
+          created_at?: string
+          csv_weighted_score?: number | null
+          id?: string
+          llm_name?: string | null
+          poids: number
+          prompt: string
+          prompt_item_id?: string | null
+          raw_data?: Json | null
+          session_id: string
+          seuil_bon?: number
+          seuil_mauvais?: number
+          seuil_moyen?: number
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          axe?: string
+          crawlers_score?: number | null
+          created_at?: string
+          csv_weighted_score?: number | null
+          id?: string
+          llm_name?: string | null
+          poids?: number
+          prompt?: string
+          prompt_item_id?: string | null
+          raw_data?: Json | null
+          session_id?: string
+          seuil_bon?: number
+          seuil_mauvais?: number
+          seuil_moyen?: number
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matrix_audit_results_prompt_item_id_fkey"
+            columns: ["prompt_item_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_matrix_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matrix_audit_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "matrix_audit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matrix_audit_sessions: {
+        Row: {
+          crawlers_global_score: number | null
+          created_at: string
+          csv_weighted_score: number | null
+          domain: string
+          id: string
+          selected_prompts: number
+          total_prompts: number
+          tracked_site_id: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          crawlers_global_score?: number | null
+          created_at?: string
+          csv_weighted_score?: number | null
+          domain: string
+          id?: string
+          selected_prompts?: number
+          total_prompts?: number
+          tracked_site_id?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          crawlers_global_score?: number | null
+          created_at?: string
+          csv_weighted_score?: number | null
+          domain?: string
+          id?: string
+          selected_prompts?: number
+          total_prompts?: number
+          tracked_site_id?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matrix_audit_sessions_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       observatory_sectors: {
         Row: {
           avg_brand_authority: number | null
@@ -2904,6 +3023,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "prompt_matrix_imports_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_matrix_items: {
+        Row: {
+          axe: string
+          created_at: string
+          id: string
+          is_default_flags: Json | null
+          llm_name: string
+          poids: number
+          prompt: string
+          seuil_bon: number
+          seuil_mauvais: number
+          seuil_moyen: number
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          axe?: string
+          created_at?: string
+          id?: string
+          is_default_flags?: Json | null
+          llm_name?: string
+          poids?: number
+          prompt: string
+          seuil_bon?: number
+          seuil_mauvais?: number
+          seuil_moyen?: number
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          axe?: string
+          created_at?: string
+          id?: string
+          is_default_flags?: Json | null
+          llm_name?: string
+          poids?: number
+          prompt?: string
+          seuil_bon?: number
+          seuil_mauvais?: number
+          seuil_moyen?: number
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_matrix_items_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
