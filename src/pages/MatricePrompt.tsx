@@ -537,13 +537,17 @@ export default function MatricePrompt() {
                           {row.isDefault.llm_name && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
+                          <TableCell>
+                            {resultRow ? (
+                              <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                                {resultRow.detected_type || '—'}
+                              </Badge>
+                            ) : '—'}
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.score}/100` : '—'}
+                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
                           </TableCell>
                         )}
                       </TableRow>
