@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Copy, Webhook } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,7 +17,7 @@ interface TrackedSite {
 interface CmsConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cmsType: 'wordpress' | 'drupal';
+  cmsType: 'wordpress' | 'drupal' | 'shopify';
 }
 
 const translations = {
@@ -41,6 +41,14 @@ const translations = {
     saved: 'Connexion enregistrée !',
     wpHelp: 'Utilisez un "Application Password" WordPress (Utilisateurs → Profil → Mots de passe d\'application).',
     drupalHelp: 'Utilisez Basic Auth ou configurez le module Simple OAuth pour OAuth 2.0.',
+    shopifyHelp: 'Entrez l\'URL de votre boutique Shopify et votre token d\'accès Admin API.',
+    webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
+    webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
+    webhookManualTitle: 'Configuration manuelle du webhook',
+    webhookManualWoo: 'WP Admin → WooCommerce → Réglages → Avancé → Webhooks → Ajouter "order.created" avec cette URL :',
+    webhookManualShopify: 'Admin Shopify → Paramètres → Notifications → Webhooks → Ajouter "orders/create" avec cette URL :',
+    copied: 'URL copiée !',
+    shopifyToken: 'Token Admin API',
   },
   en: {
     title: 'API Connection',
@@ -62,6 +70,14 @@ const translations = {
     saved: 'Connection saved!',
     wpHelp: 'Use a WordPress "Application Password" (Users → Profile → Application Passwords).',
     drupalHelp: 'Use Basic Auth or configure the Simple OAuth module for OAuth 2.0.',
+    shopifyHelp: 'Enter your Shopify store URL and Admin API access token.',
+    webhookAutoSuccess: 'Order tracking webhook registered automatically ✓',
+    webhookAutoFailed: 'Automatic webhook registration failed. See manual instructions below.',
+    webhookManualTitle: 'Manual webhook setup',
+    webhookManualWoo: 'WP Admin → WooCommerce → Settings → Advanced → Webhooks → Add "order.created" with this URL:',
+    webhookManualShopify: 'Shopify Admin → Settings → Notifications → Webhooks → Add "orders/create" with this URL:',
+    copied: 'URL copied!',
+    shopifyToken: 'Admin API Token',
   },
   es: {
     title: 'Conexión API',
@@ -83,6 +99,14 @@ const translations = {
     saved: '¡Conexión guardada!',
     wpHelp: 'Use un "Application Password" de WordPress (Usuarios → Perfil → Contraseñas de aplicación).',
     drupalHelp: 'Use Basic Auth o configure el módulo Simple OAuth para OAuth 2.0.',
+    shopifyHelp: 'Ingrese la URL de su tienda Shopify y el token de acceso Admin API.',
+    webhookAutoSuccess: 'Webhook de seguimiento de pedidos registrado automáticamente ✓',
+    webhookAutoFailed: 'Registro automático del webhook fallido. Vea las instrucciones manuales.',
+    webhookManualTitle: 'Configuración manual del webhook',
+    webhookManualWoo: 'WP Admin → WooCommerce → Ajustes → Avanzado → Webhooks → Añadir "order.created" con esta URL:',
+    webhookManualShopify: 'Admin Shopify → Configuración → Notificaciones → Webhooks → Añadir "orders/create" con esta URL:',
+    copied: '¡URL copiada!',
+    shopifyToken: 'Token Admin API',
   },
 };
 
@@ -100,8 +124,16 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
   const [saving, setSaving] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'failed' | null>(null);
 
+  // Webhook registration state
+  const [webhookStatus, setWebhookStatus] = useState<'idle' | 'registering' | 'success' | 'failed'>('idle');
+  const [fallbackWebhookUrl, setFallbackWebhookUrl] = useState('');
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setWebhookStatus('idle');
+      setFallbackWebhookUrl('');
+      return;
+    }
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -118,16 +150,33 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     if (selectedSiteId) {
       const site = sites.find(s => s.id === selectedSiteId);
       if (site) {
-        setSiteUrl(`https://${site.domain}`);
+        setSiteUrl(cmsType === 'shopify' ? `https://${site.domain}` : `https://${site.domain}`);
       }
     }
     setTestResult(null);
-  }, [selectedSiteId, sites]);
+    setWebhookStatus('idle');
+  }, [selectedSiteId, sites, cmsType]);
 
   const handleTest = async () => {
     setTesting(true);
     setTestResult(null);
     try {
+      if (cmsType === 'shopify') {
+        // Test Shopify Admin API access
+        const shopDomain = siteUrl.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+        const resp = await fetch(`https://${shopDomain}/admin/api/2024-01/shop.json`, {
+          headers: { 'X-Shopify-Access-Token': password },
+        });
+        if (resp.ok) {
+          setTestResult('success');
+          toast.success(t.testSuccess);
+        } else {
+          setTestResult('failed');
+          toast.error(t.testFailed);
+        }
+        return;
+      }
+
       const fnName = cmsType === 'wordpress' ? 'wpsync' : 'drupal-actions';
       const body: Record<string, string> = { action: 'test-connection', site_url: siteUrl };
 
@@ -138,7 +187,6 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           body.basic_pass = password;
         }
       } else {
-        // WordPress: test via REST API
         body.auth_method = 'basic_auth';
         body.basic_user = username;
         body.basic_pass = password;
@@ -167,20 +215,37 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('cms_connections').upsert({
+      const platform = cmsType === 'shopify' ? 'shopify' : cmsType;
+
+      const insertData: Record<string, any> = {
         user_id: user.id,
         tracked_site_id: selectedSiteId,
-        platform: cmsType,
+        platform,
         site_url: siteUrl,
-        auth_method: authMethod,
-        basic_auth_user: authMethod === 'basic_auth' ? username : null,
-        basic_auth_pass: authMethod === 'basic_auth' ? password : null,
+        auth_method: cmsType === 'shopify' ? 'api_key' : authMethod,
         status: testResult === 'success' ? 'active' : 'pending',
-      }, { onConflict: 'tracked_site_id,platform' });
+      };
+
+      if (cmsType === 'shopify') {
+        insertData.api_key = password;
+      } else {
+        insertData.basic_auth_user = authMethod === 'basic_auth' ? username : null;
+        insertData.basic_auth_pass = authMethod === 'basic_auth' ? password : null;
+      }
+
+      const { data: saved, error } = await supabase
+        .from('cms_connections')
+        .upsert(insertData, { onConflict: 'tracked_site_id,platform' })
+        .select('id')
+        .single();
 
       if (error) throw error;
       toast.success(t.saved);
-      onOpenChange(false);
+
+      // Auto-register webhook for e-commerce CMS
+      if (saved?.id && (cmsType === 'wordpress' || cmsType === 'shopify')) {
+        await tryRegisterWebhook(saved.id, user.id);
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -188,16 +253,51 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     }
   };
 
-  const canTest = siteUrl && username && password;
-  const canSave = selectedSiteId && siteUrl && username && password;
+  const tryRegisterWebhook = async (connectionId: string, userId: string) => {
+    setWebhookStatus('registering');
+    try {
+      const action = cmsType === 'shopify' ? 'register_shopify' : 'register_woo';
+      const { data, error } = await supabase.functions.invoke('register-cms-webhook', {
+        body: { action, connection_id: connectionId, user_id: userId },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setWebhookStatus('success');
+        toast.success(t.webhookAutoSuccess);
+      } else {
+        setWebhookStatus('failed');
+        setFallbackWebhookUrl(data?.fallback_url || '');
+        toast.warning(t.webhookAutoFailed);
+      }
+    } catch {
+      setWebhookStatus('failed');
+      // Build fallback URL from env
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const fn = cmsType === 'shopify' ? 'webhook-shopify-orders' : 'webhook-woo-orders';
+      setFallbackWebhookUrl(`https://${projectId}.supabase.co/functions/v1/${fn}`);
+      toast.warning(t.webhookAutoFailed);
+    }
+  };
+
+  const copyWebhookUrl = () => {
+    navigator.clipboard.writeText(fallbackWebhookUrl);
+    toast.success(t.copied);
+  };
+
+  const canTest = siteUrl && (cmsType === 'shopify' ? password : username && password);
+  const canSave = selectedSiteId && siteUrl && (cmsType === 'shopify' ? password : username && password);
+
+  const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t.title} — {cmsType === 'wordpress' ? 'WordPress' : 'Drupal'}</DialogTitle>
+          <DialogTitle>{t.title} — {cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : 'Drupal'}</DialogTitle>
           <DialogDescription className="text-xs">
-            {cmsType === 'wordpress' ? t.wpHelp : t.drupalHelp}
+            {cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : t.drupalHelp}
           </DialogDescription>
         </DialogHeader>
 
@@ -225,7 +325,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
             <Input value={siteUrl} onChange={e => setSiteUrl(e.target.value)} placeholder="https://example.com" />
           </div>
 
-          {/* Auth method (Drupal only shows both options) */}
+          {/* Auth method (Drupal only) */}
           {cmsType === 'drupal' && (
             <div className="space-y-1.5">
               <Label className="text-xs">{t.authMethod}</Label>
@@ -240,12 +340,16 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           )}
 
           {/* Credentials */}
+          {cmsType !== 'shopify' && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t.username}</Label>
+              <Input value={username} onChange={e => setUsername(e.target.value)} />
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label className="text-xs">{t.username}</Label>
-            <Input value={username} onChange={e => setUsername(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">{cmsType === 'wordpress' ? t.apiKey : t.password}</Label>
+            <Label className="text-xs">
+              {cmsType === 'shopify' ? t.shopifyToken : cmsType === 'wordpress' ? t.apiKey : t.password}
+            </Label>
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
@@ -254,6 +358,40 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
             <div className={`flex items-center gap-2 text-xs ${testResult === 'success' ? 'text-green-500' : 'text-destructive'}`}>
               {testResult === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
               {testResult === 'success' ? t.testSuccess : t.testFailed}
+            </div>
+          )}
+
+          {/* Webhook status */}
+          {webhookStatus === 'registering' && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Webhook className="w-3.5 h-3.5" />
+              Enregistrement du webhook…
+            </div>
+          )}
+          {webhookStatus === 'success' && (
+            <div className="flex items-center gap-2 text-xs text-green-500">
+              <CheckCircle2 className="w-4 h-4" />
+              {t.webhookAutoSuccess}
+            </div>
+          )}
+          {webhookStatus === 'failed' && fallbackWebhookUrl && (
+            <div className="space-y-2 rounded-md border border-border bg-muted/50 p-3">
+              <p className="text-xs font-medium flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                {t.webhookManualTitle}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {cmsType === 'shopify' ? t.webhookManualShopify : t.webhookManualWoo}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <code className="flex-1 text-[10px] bg-background rounded px-2 py-1.5 break-all border border-border">
+                  {fallbackWebhookUrl}
+                </code>
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={copyWebhookUrl}>
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
