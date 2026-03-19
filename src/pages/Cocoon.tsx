@@ -18,7 +18,6 @@ import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -209,9 +208,11 @@ export default function Cocoon() {
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
   const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
   const waitingAuditNodeUrl = useRef<string | null>(null);
+  const settingsPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Sync selectedNode with latest nodes data after recompute
   useEffect(() => {
@@ -303,6 +304,33 @@ export default function Cocoon() {
       setSelectedSiteId(siteParam);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (settingsPanelRef.current && target && !settingsPanelRef.current.contains(target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSettingsOpen]);
 
   // Load tracked sites
   const autoReadyTriggered = useRef(false);
@@ -524,7 +552,7 @@ export default function Cocoon() {
 
         {/* Top Bar */}
         {!isFullscreen && (
-        <header className="shrink-0 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 bg-[#0f0a1e]/80 relative z-30">
+        <header className="shrink-0 overflow-visible backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 bg-[#0f0a1e]/80 relative z-30">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
             {/* Title */}
             <div className="flex items-center gap-2 shrink-0">
@@ -554,58 +582,65 @@ export default function Cocoon() {
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {/* Settings popover */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-40">
+              {/* Settings panel */}
               {nodes.length > 0 && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
-                    >
-                      <Settings2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="end"
-                    className="w-72 bg-[#0f0a1e]/95 backdrop-blur-xl border-white/10 p-4 space-y-4"
+                <div ref={settingsPanelRef} className="relative z-50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-haspopup="dialog"
+                    aria-expanded={isSettingsOpen}
+                    onClick={() => setIsSettingsOpen((open) => !open)}
+                    className={`h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] px-2 sm:px-3 ${
+                      isSettingsOpen ? 'bg-white/10 text-white' : 'bg-transparent text-white/60 hover:text-white'
+                    }`}
                   >
-                    {/* Contrast */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-white/50 font-medium">{language === 'es' ? 'Contraste' : language === 'en' ? 'Contrast' : 'Contraste'}</span>
-                        <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+                    <Settings2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                  </Button>
+
+                  {isSettingsOpen && (
+                    <div
+                      role="dialog"
+                      aria-label={language === 'es' ? 'Ajustes del gráfico' : language === 'en' ? 'Graph settings' : 'Réglages du graphe'}
+                      className="absolute right-0 top-full mt-2 w-72 rounded-md border border-white/10 bg-[#0f0a1e]/95 p-4 shadow-md backdrop-blur-xl z-[60] space-y-4"
+                    >
+                      {/* Contrast */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">{language === 'es' ? 'Contraste' : language === 'en' ? 'Contrast' : 'Contraste'}</span>
+                          <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+                        </div>
+                        <Slider min={50} max={200} step={5} value={[graphContrast]} onValueChange={([v]) => setGraphContrast(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
-                      <Slider min={50} max={200} step={5} value={[graphContrast]} onValueChange={([v]) => setGraphContrast(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
-                    </div>
-                    {/* Halo (color intensity) */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-white/50 font-medium">Halo</span>
-                        <span className="text-[9px] text-white/30 font-mono">{colorIntensity}</span>
+                      {/* Halo (color intensity) */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">Halo</span>
+                          <span className="text-[9px] text-white/30 font-mono">{colorIntensity}</span>
+                        </div>
+                        <Slider min={0} max={10} step={1} value={[colorIntensity]} onValueChange={([v]) => setColorIntensity(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
-                      <Slider min={0} max={10} step={1} value={[colorIntensity]} onValueChange={([v]) => setColorIntensity(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
-                    </div>
-                    {/* Background warmth */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Warmth' : language === 'es' ? 'Calidez' : 'Chaleur'}</span>
-                        <span className="text-[9px] text-white/30 font-mono">{bgWarmth}</span>
+                      {/* Background warmth */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Warmth' : language === 'es' ? 'Calidez' : 'Chaleur'}</span>
+                          <span className="text-[9px] text-white/30 font-mono">{bgWarmth}</span>
+                        </div>
+                        <Slider min={-10} max={10} step={1} value={[bgWarmth]} onValueChange={([v]) => setBgWarmth(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
-                      <Slider min={-10} max={10} step={1} value={[bgWarmth]} onValueChange={([v]) => setBgWarmth(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
-                    </div>
-                    {/* Link & particle thickness */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Thickness' : language === 'es' ? 'Grosor' : 'Épaisseur'}</span>
-                        <span className="text-[9px] text-white/30 font-mono">{linkThickness.toFixed(1)}×</span>
+                      {/* Link & particle thickness */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Thickness' : language === 'es' ? 'Grosor' : 'Épaisseur'}</span>
+                          <span className="text-[9px] text-white/30 font-mono">{linkThickness.toFixed(1)}×</span>
+                        </div>
+                        <Slider min={0.5} max={4} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
-                      <Slider min={0.5} max={4} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  )}
+                </div>
               )}
               {new Set(nodes.map((n: any) => n.page_type || 'unknown')).size > 1 && (
                 <CocoonFilterSelector
