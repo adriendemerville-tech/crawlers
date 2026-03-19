@@ -4,21 +4,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 
 /**
- * check-llm-depth v2 — Expert-grade conversational discoverability analysis
+ * check-llm-depth v3 — Natural conversational discoverability analysis
  *
- * Simulates multi-turn conversations with multiple LLMs, using dynamic
- * prompt sequences adapted to each site's typology (sector, audience,
- * geography, products). Brand detection uses semantic extraction via
- * structured JSON output instead of naive substring matching.
+ * Simulates realistic multi-turn conversations with LLMs, using prompts
+ * that mimic how a real end-user would ask questions related to the entity's
+ * market. Each prompt is ONE sentence max, conversational and natural.
  *
- * Prompt funnel strategy (7 angles, increasingly specific):
- *  1. Generic need (category-level)
- *  2. Use case / profession
- *  3. Features & differentiators
- *  4. Budget & pricing
- *  5. Geographic proximity
- *  6. Niche & emerging players
- *  7. Exhaustive enumeration
+ * Prompt strategy (7 angles, natural conversation flow):
+ *  1. Genuine user need (as a real customer would ask)
+ *  2. Natural follow-up / precision
+ *  3. Comparison / "which one is best?"
+ *  4. Practical detail (price, availability, proximity)
+ *  5. Personal recommendation request
+ *  6. Edge case / specific scenario
+ *  7. Final check / "anything else?"
  */
 
 const MAX_ITERATIONS = 7
