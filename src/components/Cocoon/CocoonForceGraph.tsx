@@ -474,7 +474,7 @@ export function CocoonForceGraph({
           ctx.stroke();
         } else {
           // Default: color by juice type
-          const [lr, lg, lb] = JUICE_COLORS[link.juiceType] || JUICE_COLORS.semantic;
+          const [lr, lg, lb] = resolveJuiceColor(link.juiceType);
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
