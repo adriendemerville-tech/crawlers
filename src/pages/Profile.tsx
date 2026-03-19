@@ -173,16 +173,6 @@ export default function Profile() {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-2 max-w-5xl">
-          {/* Admin-only shortcut */}
-          {isAdmin && (
-            <div className="flex justify-end mb-1">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={() => navigate('/matrice')}>
-                <Grid3X3 className="h-3.5 w-3.5" />
-                Matrice CSV
-                <Badge variant="secondary" className="text-[9px] px-1 py-0 text-muted-foreground">BETA</Badge>
-              </Button>
-            </div>
-          )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -228,10 +218,12 @@ export default function Profile() {
                     <span className="hidden sm:inline">GMB</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="reports" className="flex-1 gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.myReports}</span>
-                </TabsTrigger>
+                {!isProUser && (
+                  <TabsTrigger value="reports" className="flex-1 gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.myReports}</span>
+                  </TabsTrigger>
+                )}
                 {!isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Wallet className="h-4 w-4" />

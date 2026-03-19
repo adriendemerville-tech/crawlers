@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
+const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 
 const translations = {
   fr: {
@@ -288,6 +289,7 @@ export function MyWallet() {
               <div className="mb-2" />
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
+                  { value: 'reports', icon: FileText, label: language === 'fr' ? 'Rapports' : language === 'es' ? 'Informes' : 'Reports' },
                   { value: 'branding', icon: Palette, label: 'Branding' },
                   { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
@@ -313,6 +315,13 @@ export function MyWallet() {
             </motion.div>
 
             <div className="flex-1 min-w-0 space-y-4">
+              {/* Reports Tab */}
+              <TabsContent value="reports" className="mt-0">
+                <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                  <MyReports />
+                </Suspense>
+              </TabsContent>
+
               {/* Branding Tab */}
               <TabsContent value="branding" className="mt-0">
                 <BrandingTab />

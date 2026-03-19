@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3 } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -304,13 +304,24 @@ export function Header() {
             </Link>
           )}
           {isProfilePage && (
-            <Link to="/cocoon">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-                <span className="text-sm font-semibold">Cocoon</span>
-              </Button>
-            </Link>
+            <>
+              <Link to="/cocoon">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                  
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                  <span className="text-sm font-semibold">Cocoon</span>
+                </Button>
+              </Link>
+              {isAdmin && (
+                <Link to="/matrice">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                    <Grid3X3 className="h-3.5 w-3.5" />
+                    Matrice
+                    <Badge variant="secondary" className="text-[9px] px-1 py-0 text-muted-foreground">BETA</Badge>
+                  </Button>
+                </Link>
+              )}
+            </>
           )}
           {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
             isAuditExpertPage ? (
