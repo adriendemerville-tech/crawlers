@@ -139,7 +139,7 @@ type TestResult = {
   stale: boolean;
 };
 
-export function MyInjectedScripts() {
+export function MyInjectedScripts({ filterDomain }: { filterDomain?: string | null }) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
