@@ -1942,9 +1942,9 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
                 <Info className="h-3 w-3 text-muted-foreground" />
               </button>
             </PopoverTrigger>
-            <PopoverContent side="top" className="w-64 text-xs leading-relaxed p-3">
+            <PopoverContent side="top" className="w-52 p-2.5">
               {tooltip.split('\n').map((line, i) => (
-                <p key={i} className={line.startsWith(' ') ? 'ml-2 text-muted-foreground' : 'font-medium'}>{line}</p>
+                <p key={i} className={i === 0 ? 'text-[11px] font-semibold text-foreground' : 'text-[11px] text-muted-foreground mt-1 leading-snug'}>{line}</p>
               ))}
             </PopoverContent>
           </Popover>
