@@ -305,10 +305,17 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     toast.success(t.copied);
   };
 
-  const canTest = siteUrl && (cmsType === 'shopify' ? password : username && password);
-  const canSave = selectedSiteId && siteUrl && (cmsType === 'shopify' ? password : username && password);
+  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix';
+  const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
+  const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
+
+  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : 'Drupal';
+
+  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : t.drupalHelp;
+
+  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'wordpress' ? t.apiKey : t.password;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
