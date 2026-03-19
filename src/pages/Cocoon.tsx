@@ -63,6 +63,7 @@ const i18n = {
     prereqAuditCta: 'Lancer un audit stratégique',
     prereqClose: 'Compris',
     refreshData: 'Actualiser data',
+    generateGraph: 'Générer le graph',
     analyzingData: 'Analyses data...',
     auditExpert: 'Audit Expert',
     crawlMulti: 'Crawl Multi-pages',
@@ -103,6 +104,7 @@ const i18n = {
     prereqAuditCta: 'Start a strategic audit',
     prereqClose: 'Got it',
     refreshData: 'Refresh data',
+    generateGraph: 'Generate graph',
     analyzingData: 'Analyzing data...',
     auditExpert: 'Expert Audit',
     crawlMulti: 'Multi-page Crawl',
@@ -143,6 +145,7 @@ const i18n = {
     prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
     refreshData: 'Actualizar datos',
+    generateGraph: 'Generar el gráfico',
     analyzingData: 'Analizando datos...',
     auditExpert: 'Auditoría Experta',
     crawlMulti: 'Crawl Multi-página',
@@ -495,6 +498,10 @@ export default function Cocoon() {
   useEffect(() => {
     if (!selectedSiteId) return;
 
+    // Clear previous graph state when switching sites
+    setNodes([]);
+    setSelectedNode(null);
+
     const loadNodes = async () => {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -722,7 +729,7 @@ export default function Cocoon() {
                 className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1 sm:gap-1.5 px-2 sm:px-3"
               >
                 {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 animate-spin" /> : <RefreshCw className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
-                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}</span>
+                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : (nodes.length === 0 ? t.generateGraph : t.refreshData)}</span>
               </Button>
               <Button
                 variant="outline"
