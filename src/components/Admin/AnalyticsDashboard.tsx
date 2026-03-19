@@ -511,6 +511,12 @@ export function AnalyticsDashboard() {
           icon={Brain}
           description="Conversations IA Cocoon"
         />
+        <StatCard 
+          title="Fiches GMB" 
+          value={stats.gmbConnected} 
+          icon={Globe}
+          description="Fiches Google connectées"
+        />
       </div>
 
 
