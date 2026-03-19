@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 
 /* ================================================================== */
 /*  AUTO-DETECT item type from prompt text                             */
