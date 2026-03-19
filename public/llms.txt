@@ -161,10 +161,12 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Cocoon — Organisme Vivant 3D** : https://crawlers.fr/cocoon (Architecture sémantique Three.js avec Anti-Wiki, ROI prédictif, Citabilité LLM et Assistant IA)
 - **Landing Cocoon** : https://crawlers.fr/features/cocoon (Présentation du module Cocoon)
 - **Intégration GTM** : https://crawlers.fr/integration-gtm (Guide de déploiement automatique des correctifs via Google Tag Manager)
+- **Inscription** : https://crawlers.fr/signup (Créer un compte gratuit)
 - **Blog** : https://crawlers.fr/blog (Actualités SEO, GEO & IA)
 - **Comprendre le GEO** : https://crawlers.fr/lexique (Définitions officielles)
 - **Tarifs** : https://crawlers.fr/tarifs (Packs de crédits et abonnement Pro Agency)
 - **Documentation Technique** : https://crawlers.fr/llms.txt
+- **Sitemap XML** : https://crawlers.fr/sitemap.xml
 - **Sitemap XML** : https://crawlers.fr/sitemap.xml
 
 # 🏗️ ARCHITECTURE TECHNIQUE
