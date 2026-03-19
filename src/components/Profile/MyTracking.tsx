@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw } from 'lucide-react';
@@ -244,6 +245,46 @@ export function MyTracking() {
   const [gscData, setGscData] = useState<GscData | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
   const gscConnected = !!profile?.gsc_access_token;
+
+  // GA4 toggle state (same logic as WordPressConfigCard)
+  const [ga4EnabledLocal, setGa4EnabledLocal] = useState(false);
+  const [ga4TogglingLocal, setGa4TogglingLocal] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'ga4_oauth_enabled')
+        .maybeSingle();
+      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+        setGa4EnabledLocal(true);
+      }
+    })();
+  }, []);
+
+  const handleGa4ToggleLocal = async (checked: boolean) => {
+    setGa4TogglingLocal(true);
+    try {
+      const { error } = await supabase
+        .from('system_config')
+        .upsert({
+          key: 'ga4_oauth_enabled',
+          value: { active: checked },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'key' });
+      if (error) throw error;
+      setGa4EnabledLocal(checked);
+      toast.success(checked
+        ? (language === 'en' ? 'Google Analytics enabled' : language === 'es' ? 'Google Analytics activado' : 'Google Analytics activé')
+        : (language === 'en' ? 'Google Analytics disabled' : language === 'es' ? 'Google Analytics desactivado' : 'Google Analytics désactivé')
+      );
+    } catch {
+      toast.error(language === 'en' ? 'Save error' : language === 'es' ? 'Error al guardar' : 'Erreur de sauvegarde');
+    } finally {
+      setGa4TogglingLocal(false);
+    }
+  };
 
   // GSC date range & granularity
   type GscDateMode = 'since' | 'range';
@@ -1778,14 +1819,20 @@ export function MyTracking() {
             </div>
           </div>
 
-          {/* Google Analytics — sticky footer outside scrollable area */}
-          <div className="shrink-0 pt-4 border-t border-border">
-            <div className="flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connectez Google Analytics'}
-                </p>
+          {/* Google Analytics — fixed footer outside scrollable area */}
+          <div className="shrink-0 pt-3 border-t border-border">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="ga4-add-modal"
+                checked={ga4EnabledLocal}
+                disabled={ga4TogglingLocal}
+                onCheckedChange={(checked) => handleGa4ToggleLocal(!!checked)}
+                className="mt-0.5"
+              />
+              <div className="space-y-1">
+                <label htmlFor="ga4-add-modal" className="text-sm font-medium cursor-pointer leading-none">
+                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connecter Google Analytics'}
+                </label>
                 <p className="text-[11px] text-muted-foreground leading-snug">
                   {language === 'en'
                     ? 'Anonymized data. GA4 helps us make more precise recommendations and improve your ROI.'
@@ -1794,16 +1841,6 @@ export function MyTracking() {
                     : 'Données anonymisées. GA4 nous permet de vous faire des recommandations plus précises et d\'améliorer votre ROI.'}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5 text-xs"
-                onClick={handleConnectGsc}
-                disabled={gscConnecting}
-              >
-                {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
-                {language === 'en' ? 'Connect' : language === 'es' ? 'Conectar' : 'Connecter'}
-              </Button>
             </div>
           </div>
         </DialogContent>
@@ -1811,19 +1848,45 @@ export function MyTracking() {
 
       {/* Site Connection Modal (WordPress + GTM) */}
       <Dialog open={showWpModal} onOpenChange={setShowWpModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {(() => {
-            const wpSite = sites.find(s => s.id === wpConnectSiteId);
-            if (!wpSite) return null;
-            return (
-              <WordPressConfigCard
-                siteId={wpSite.id}
-                siteDomain={wpSite.domain}
-                siteApiKey={wpSite.api_key || ''}
-                hasConfig={!!(wpSite.current_config && Object.keys(wpSite.current_config).length > 0)}
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {(() => {
+              const wpSite = sites.find(s => s.id === wpConnectSiteId);
+              if (!wpSite) return null;
+              return (
+                <WordPressConfigCard
+                  siteId={wpSite.id}
+                  siteDomain={wpSite.domain}
+                  siteApiKey={wpSite.api_key || ''}
+                  hasConfig={!!(wpSite.current_config && Object.keys(wpSite.current_config).length > 0)}
+                />
+              );
+            })()}
+          </div>
+          {/* GA4 — fixed footer */}
+          <div className="shrink-0 pt-3 border-t border-border">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="ga4-wp-modal"
+                checked={ga4EnabledLocal}
+                disabled={ga4TogglingLocal}
+                onCheckedChange={(checked) => handleGa4ToggleLocal(!!checked)}
+                className="mt-0.5"
               />
-            );
-          })()}
+              <div className="space-y-1">
+                <label htmlFor="ga4-wp-modal" className="text-sm font-medium cursor-pointer leading-none">
+                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connecter Google Analytics'}
+                </label>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {language === 'en'
+                    ? 'Anonymized data. GA4 helps us make more precise recommendations and improve your ROI.'
+                    : language === 'es'
+                    ? 'Datos anonimizados. GA4 nos permite hacer recomendaciones más precisas y mejorar su ROI.'
+                    : 'Données anonymisées. GA4 nous permet de vous faire des recommandations plus précises et d\'améliorer votre ROI.'}
+                </p>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

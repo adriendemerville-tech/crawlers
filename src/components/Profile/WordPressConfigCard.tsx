@@ -10,10 +10,8 @@ import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/di
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import { t3 } from '@/utils/i18n';
-import { Checkbox } from '@/components/ui/checkbox';
 
 // ── Plugin PHP generator (unchanged) ──
 function generatePluginPhp(apiKey: string, domain: string): string {
@@ -119,7 +117,7 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const { isAdmin } = useAdmin();
+  
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -137,48 +135,6 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   const [gtmLoadingContainers, setGtmLoadingContainers] = useState(false);
   const [gtmDeployed, setGtmDeployed] = useState(false);
 
-  // GA4 admin-only state
-  const [ga4Enabled, setGa4Enabled] = useState(false);
-  const [ga4Loading, setGa4Loading] = useState(false);
-
-  // Load GA4 config on mount (admin only)
-  useEffect(() => {
-    if (!isAdmin) return;
-    (async () => {
-      const { data } = await supabase
-        .from('system_config')
-        .select('value')
-        .eq('key', 'ga4_oauth_enabled')
-        .maybeSingle();
-      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
-        setGa4Enabled(true);
-      }
-    })();
-  }, [isAdmin]);
-
-  const handleGa4Toggle = async (checked: boolean) => {
-    setGa4Loading(true);
-    try {
-      const { error } = await supabase
-        .from('system_config')
-        .upsert({
-          key: 'ga4_oauth_enabled',
-          value: { active: checked },
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'key' });
-
-      if (error) throw error;
-      setGa4Enabled(checked);
-      toast.success(checked
-        ? t3(language, 'Google Analytics activé — reconnectez Google pour appliquer le scope GA4.', 'Google Analytics enabled — reconnect Google to apply the GA4 scope.', 'Google Analytics activado — reconecte Google para aplicar el alcance GA4.')
-        : t3(language, 'Google Analytics désactivé.', 'Google Analytics disabled.', 'Google Analytics desactivado.')
-      );
-    } catch {
-      toast.error(t3(language, 'Erreur de sauvegarde', 'Save error', 'Error al guardar'));
-    } finally {
-      setGa4Loading(false);
-    }
-  };
 
   const isValidWpUrl = (() => {
     try {
@@ -681,32 +637,6 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </p>
       </div>
 
-      {/* GA4 OAuth — Admin only */}
-      {isAdmin && (
-        <>
-          <Separator className="mt-2" />
-          <div className="flex items-start gap-3 pt-3 pb-1">
-            <Checkbox
-              id="ga4-oauth"
-              checked={ga4Enabled}
-              disabled={ga4Loading}
-              onCheckedChange={(checked) => handleGa4Toggle(!!checked)}
-            />
-            <div className="space-y-1">
-              <label htmlFor="ga4-oauth" className="text-sm font-medium cursor-pointer leading-none">
-                {t3(language, 'Connecter Google Analytics', 'Connect Google Analytics', 'Conectar Google Analytics')}
-              </label>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                {t3(language,
-                  'Active le scope OAuth GA4 (analytics.readonly). Au prochain branchement Google, les données Analytics seront collectées automatiquement.',
-                  'Enables the GA4 OAuth scope (analytics.readonly). On next Google connection, Analytics data will be collected automatically.',
-                  'Activa el alcance OAuth GA4 (analytics.readonly). En la próxima conexión de Google, los datos de Analytics se recopilarán automáticamente.'
-                )}
-              </p>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }
