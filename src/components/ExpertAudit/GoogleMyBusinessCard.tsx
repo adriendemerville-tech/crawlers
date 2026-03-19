@@ -2,6 +2,40 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Star, Clock, MessageSquare, Lightbulb } from 'lucide-react';
 import { GoogleMyBusinessData } from '@/types/expertAudit';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const translations = {
+  fr: {
+    avgRating: 'Note moyenne',
+    googleReviews: 'Avis Google',
+    category: 'Catégorie',
+    claimed: 'Fiche revendiquée',
+    yes: 'Oui',
+    no: 'Non',
+    detected: 'Fiche détectée',
+    quickWins: 'Quick Wins',
+  },
+  en: {
+    avgRating: 'Average rating',
+    googleReviews: 'Google Reviews',
+    category: 'Category',
+    claimed: 'Claimed listing',
+    yes: 'Yes',
+    no: 'No',
+    detected: 'Listing detected',
+    quickWins: 'Quick Wins',
+  },
+  es: {
+    avgRating: 'Calificación media',
+    googleReviews: 'Reseñas Google',
+    category: 'Categoría',
+    claimed: 'Ficha reclamada',
+    yes: 'Sí',
+    no: 'No',
+    detected: 'Ficha detectada',
+    quickWins: 'Quick Wins',
+  },
+};
 
 interface Props {
   data: GoogleMyBusinessData;
@@ -15,12 +49,15 @@ function ratingColor(rating: number): string {
 }
 
 export function GoogleMyBusinessCard({ data }: Props) {
+  const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
+
   const kpis: { icon: React.ReactNode; label: string; value: string | number; sub?: string }[] = [];
 
   if (data.rating != null) {
     kpis.push({
       icon: <Star className="h-4 w-4" />,
-      label: 'Note moyenne',
+      label: t.avgRating,
       value: data.rating.toFixed(1),
       sub: '/ 5',
     });
@@ -28,26 +65,25 @@ export function GoogleMyBusinessCard({ data }: Props) {
   if (data.reviews_count != null) {
     kpis.push({
       icon: <MessageSquare className="h-4 w-4" />,
-      label: 'Avis Google',
+      label: t.googleReviews,
       value: data.reviews_count.toLocaleString(),
     });
   }
   if (data.category) {
     kpis.push({
       icon: <MapPin className="h-4 w-4" />,
-      label: 'Catégorie',
+      label: t.category,
       value: data.category,
     });
   }
   if (data.is_claimed != null) {
     kpis.push({
       icon: <Clock className="h-4 w-4" />,
-      label: 'Fiche revendiquée',
-      value: data.is_claimed ? 'Oui' : 'Non',
+      label: t.claimed,
+      value: data.is_claimed ? t.yes : t.no,
     });
   }
 
-  // Limit to 4 KPIs max
   const displayKpis = kpis.slice(0, 4);
 
   return (
@@ -59,17 +95,15 @@ export function GoogleMyBusinessCard({ data }: Props) {
           </div>
           Google My Business
           <Badge variant="outline" className="ml-auto text-xs font-normal">
-            Fiche détectée
+            {t.detected}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Business name */}
         {data.title && (
           <p className="text-sm font-medium text-foreground">{data.title}</p>
         )}
 
-        {/* KPI grid */}
         <div className={`grid gap-3 ${displayKpis.length > 2 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
           {displayKpis.map((kpi, i) => (
             <div key={i} className="rounded-lg bg-muted/50 p-3 space-y-1">
@@ -77,7 +111,7 @@ export function GoogleMyBusinessCard({ data }: Props) {
                 {kpi.icon}
                 <span className="text-[11px] uppercase tracking-wider">{kpi.label}</span>
               </div>
-              <p className={`text-xl font-bold ${kpi.label === 'Note moyenne' && data.rating ? ratingColor(data.rating) : 'text-foreground'}`}>
+              <p className={`text-xl font-bold ${kpi.label === t.avgRating && data.rating ? ratingColor(data.rating) : 'text-foreground'}`}>
                 {kpi.value}
                 {kpi.sub && <span className="text-sm font-normal text-muted-foreground ml-0.5">{kpi.sub}</span>}
               </p>
@@ -85,19 +119,17 @@ export function GoogleMyBusinessCard({ data }: Props) {
           ))}
         </div>
 
-        {/* Address */}
         {data.address && (
           <p className="text-xs text-muted-foreground border-l-2 border-primary/30 pl-3">
             {data.address}
           </p>
         )}
 
-        {/* Quick wins */}
         {data.quick_wins && data.quick_wins.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
               <Lightbulb className="h-3.5 w-3.5 text-primary" />
-              Quick Wins
+              {t.quickWins}
             </p>
             <ul className="space-y-1.5">
               {data.quick_wins.slice(0, 2).map((win, i) => (
