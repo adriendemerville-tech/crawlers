@@ -118,8 +118,8 @@ function getPluginPHP(): string {
 /**
  * Plugin Name: Crawlers GEO
  * Plugin URI:  https://crawlers.fr/modifier-code-wordpress
- * Description: Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr — meta tags, JSON-LD, scripts correctifs.
- * Version:     1.3.0
+ * Description: Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr — meta tags, JSON-LD, scripts correctifs + suivi des paiements WooCommerce.
+ * Version:     2.0.0
  * Author:      Crawlers.fr
  * Author URI:  https://crawlers.fr
  * License:     GPLv2 or later
@@ -131,9 +131,10 @@ function getPluginPHP(): string {
 if (!defined('ABSPATH')) exit;
 
 // --- Constants ---
-define('CRAWLERS_GEO_VERSION', '1.3.0');
+define('CRAWLERS_GEO_VERSION', '2.0.0');
 define('CRAWLERS_GEO_SYNC_URL', 'https://${projectId}.supabase.co/functions/v1/wpsync');
 define('CRAWLERS_GEO_SDK_URL', 'https://${projectId}.supabase.co/functions/v1/serve-client-script');
+define('CRAWLERS_GEO_TRACK_URL', 'https://${projectId}.supabase.co/functions/v1/track-payment');
 
 // --- Activation ---
 register_activation_hook(__FILE__, function () {
@@ -415,6 +416,81 @@ add_action('wp_footer', function () {
     echo "<!-- /Crawlers GEO Corrective Script -->\\n";
 }, 99);
 
+// --- WooCommerce Payment Tracking ---
+// Hook into WooCommerce order completion to send revenue data server-side
+add_action('woocommerce_thankyou', function (\$order_id) {
+    \$api_key = get_option('crawlers_geo_api_key', '');
+    if (empty(\$api_key) || empty(\$order_id)) return;
+
+    \$order = wc_get_order(\$order_id);
+    if (!\$order) return;
+
+    // Avoid duplicate sends
+    if (\$order->get_meta('_crawlers_tracked')) return;
+
+    \$payload = [
+        'api_key'  => \$api_key,
+        'order_id' => 'woo_' . \$order_id,
+        'amount'   => (float) \$order->get_total(),
+        'currency' => \$order->get_currency(),
+        'source'   => 'wordpress_woocommerce',
+        'page_url' => \$order->get_checkout_order_received_url(),
+        'metadata' => [
+            'items_count'    => \$order->get_item_count(),
+            'payment_method' => \$order->get_payment_method(),
+            'billing_email'  => hash('sha256', \$order->get_billing_email()),
+            'status'         => \$order->get_status(),
+        ],
+    ];
+
+    \$response = wp_remote_post(CRAWLERS_GEO_TRACK_URL, [
+        'timeout' => 10,
+        'headers' => ['Content-Type' => 'application/json'],
+        'body'    => wp_json_encode(\$payload),
+    ]);
+
+    if (!is_wp_error(\$response) && wp_remote_retrieve_response_code(\$response) === 200) {
+        \$order->update_meta_data('_crawlers_tracked', '1');
+        \$order->save();
+    }
+}, 10, 1);
+
+// Also track WooCommerce status changes to 'completed' or 'processing'
+add_action('woocommerce_order_status_completed', 'crawlers_geo_track_order_status');
+add_action('woocommerce_order_status_processing', 'crawlers_geo_track_order_status');
+function crawlers_geo_track_order_status(\$order_id) {
+    \$api_key = get_option('crawlers_geo_api_key', '');
+    if (empty(\$api_key)) return;
+
+    \$order = wc_get_order(\$order_id);
+    if (!\$order) return;
+    if (\$order->get_meta('_crawlers_tracked')) return;
+
+    \$payload = [
+        'api_key'  => \$api_key,
+        'order_id' => 'woo_' . \$order_id,
+        'amount'   => (float) \$order->get_total(),
+        'currency' => \$order->get_currency(),
+        'source'   => 'wordpress_woocommerce',
+        'page_url' => home_url('/'),
+        'metadata' => [
+            'items_count'    => \$order->get_item_count(),
+            'payment_method' => \$order->get_payment_method(),
+            'status'         => \$order->get_status(),
+            'trigger'        => 'status_change',
+        ],
+    ];
+
+    wp_remote_post(CRAWLERS_GEO_TRACK_URL, [
+        'timeout' => 10,
+        'headers' => ['Content-Type' => 'application/json'],
+        'body'    => wp_json_encode(\$payload),
+    ]);
+
+    \$order->update_meta_data('_crawlers_tracked', '1');
+    \$order->save();
+}
+
 // --- Daily auto-sync via WP Cron ---
 add_action('init', function () {
     if (!wp_next_scheduled('crawlers_geo_daily_sync') && get_option('crawlers_geo_api_key', '')) {
@@ -430,14 +506,14 @@ add_action('crawlers_geo_daily_sync', 'crawlers_geo_fetch_config');
 function getReadmeTxt(): string {
   return `=== Crawlers GEO ===
 Contributors: crawlersfr
-Tags: seo, geo, schema, json-ld, optimization
+Tags: seo, geo, schema, json-ld, optimization, woocommerce, payment-tracking, revenue
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 
-Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr.
+Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr et traque les paiements WooCommerce.
 
 == Description ==
 
@@ -446,10 +522,15 @@ Crawlers GEO connecte votre site WordPress a la plateforme Crawlers.fr pour inje
 * Les balises meta optimisees
 * Les schemas JSON-LD (Organization, FAQ, LocalBusiness, etc.)
 * Les scripts correctifs SEO
+* Le suivi automatique des paiements WooCommerce (revenus)
 
 Deux modes disponibles :
-* **SDK dynamique** : charge le script en temps reel (toujours a jour)
+* **SDK dynamique** : charge le script en temps reel (toujours a jour, inclut le suivi de paiements cote client)
 * **Synchronisation serveur** : stocke la config localement
+
+Tracking des paiements :
+* WooCommerce : suivi automatique cote serveur via hooks (woocommerce_thankyou, order status)
+* Stripe / PayPal / Generique : suivi cote client via le widget.js v3
 
 == Installation ==
 
@@ -461,6 +542,11 @@ Deux modes disponibles :
 6. Collez votre cle API ou utilisez le Lien Magique
 
 == Changelog ==
+
+= 2.0.0 =
+* Suivi automatique des paiements WooCommerce (server-side)
+* Widget.js v3 avec detection Stripe, PayPal, Shopify, DataLayer
+* API publique window.CrawlersTrackPayment() pour integrations custom
 
 = 1.3.0 =
 * Mode SDK dynamique (charge serve-client-script en temps reel)

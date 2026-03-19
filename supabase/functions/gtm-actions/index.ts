@@ -232,7 +232,7 @@ async function handleDeployTag(
 
   const workspace = await wsResp.json();
 
-  // Create the tag
+  // Create the tag — widget.js v3 includes automatic payment tracking
   const tagBody = {
     name: TAG_NAME,
     type: 'html',

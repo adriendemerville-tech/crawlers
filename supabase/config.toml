@@ -113,3 +113,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.register-cms-webhook]
     verify_jwt = false
+  [functions.track-payment]
+    verify_jwt = false
