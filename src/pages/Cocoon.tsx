@@ -16,7 +16,8 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart } from "lucide-react";
+import { generateCocoonReport } from "@/components/Cocoon/CocoonReportGenerator";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -966,6 +967,43 @@ export default function Cocoon() {
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          {/* Report button — bottom right */}
+          {hasAccess && nodes.length > 0 && selectedSiteId && (
+            <button
+              onClick={async () => {
+                const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                if (!selectedSite || !user) return;
+                // Fetch branding
+                const { data: prof } = await supabase.from('profiles').select('agency_logo_url, agency_primary_color, agency_brand_name, agency_contact_first_name, agency_contact_last_name, agency_contact_email, agency_contact_phone, agency_report_header_text, agency_report_footer_text, agency_report_font').eq('user_id', user.id).maybeSingle();
+                const branding = prof ? {
+                  logoUrl: prof.agency_logo_url,
+                  primaryColor: prof.agency_primary_color,
+                  brandName: prof.agency_brand_name,
+                  contactFirstName: prof.agency_contact_first_name,
+                  contactLastName: prof.agency_contact_last_name,
+                  contactEmail: prof.agency_contact_email,
+                  contactPhone: prof.agency_contact_phone,
+                  reportHeaderText: prof.agency_report_header_text,
+                  reportFooterText: prof.agency_report_footer_text,
+                  reportFont: prof.agency_report_font,
+                } : undefined;
+                await generateCocoonReport({
+                  nodes,
+                  domain: selectedSite.domain,
+                  siteName: selectedSite.site_name || selectedSite.domain,
+                  trackedSiteId: selectedSiteId,
+                  userId: user.id,
+                  language,
+                  branding,
+                });
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-violet-500/10 border-violet-500/20 text-violet-400 hover:bg-violet-500/20 backdrop-blur-md transition-all shrink-0"
+            >
+              <FileBarChart className="w-4 h-4" />
+              <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Report' : language === 'es' ? 'Informe' : 'Rapport'}</span>
+            </button>
+          )}
 
           {/* Task Plan button — bottom right */}
           {hasAccess && selectedSiteId && (

@@ -15,10 +15,11 @@ import { useQuery } from '@tanstack/react-query';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Palette, Network } from 'lucide-react';
+import { Palette, Network, Plug } from 'lucide-react';
 import { BrandingTab } from '@/components/Profile/BrandingTab';
 import { CocoonTab } from '@/components/Profile/CocoonTab';
 import { ClientsTab } from '@/components/Profile/ClientsTab';
+import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
@@ -300,6 +301,7 @@ export function MyWallet() {
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
                   { value: 'credits', icon: Bot, label: language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits', color: 'text-amber-500' },
+                  { value: 'apis', icon: Plug, label: language === 'fr' ? 'API externe' : language === 'es' ? 'API externa' : 'External API', color: 'text-blue-500' },
                 ].map((item, i) => (
                   <motion.div
                     key={item.value}
@@ -484,6 +486,11 @@ export function MyWallet() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* External APIs Tab */}
+              <TabsContent value="apis" className="mt-0">
+                <ExternalApisTab />
               </TabsContent>
             </div>
           </div>
