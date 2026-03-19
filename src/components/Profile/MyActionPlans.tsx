@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
+import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,7 @@ interface ActionPlan {
   tasks: ActionPlanTask[];
   created_at: string;
   updated_at: string;
+  is_archived: boolean;
 }
 
 const translations = {
@@ -50,6 +52,13 @@ const translations = {
     saved: 'Progression sauvegardée',
     deleted: 'Plan d\'action supprimé',
     architect: 'Architecte',
+    archive: 'Archiver',
+    unarchive: 'Restaurer',
+    archived: 'Plan archivé',
+    unarchived: 'Plan restauré',
+    archives: 'Archives',
+    archivesCount: 'plan(s) archivé(s)',
+    noArchives: 'Aucun plan archivé',
   },
   en: {
     title: 'Action Plans',
@@ -70,6 +79,13 @@ const translations = {
     saved: 'Progress saved',
     deleted: 'Action plan deleted',
     architect: 'Architect',
+    archive: 'Archive',
+    unarchive: 'Restore',
+    archived: 'Plan archived',
+    unarchived: 'Plan restored',
+    archives: 'Archives',
+    archivesCount: 'archived plan(s)',
+    noArchives: 'No archived plans',
   },
   es: {
     title: 'Planes de Acción',
@@ -90,6 +106,13 @@ const translations = {
     saved: 'Progreso guardado',
     deleted: 'Plan de acción eliminado',
     architect: 'Arquitecto',
+    archive: 'Archivar',
+    unarchive: 'Restaurar',
+    archived: 'Plan archivado',
+    unarchived: 'Plan restaurado',
+    archives: 'Archivos',
+    archivesCount: 'plan(es) archivado(s)',
+    noArchives: 'Sin planes archivados',
   },
 };
 
@@ -101,6 +124,7 @@ export function MyActionPlans() {
   const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [archivesOpen, setArchivesOpen] = useState(false);
   
   // Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
@@ -130,11 +154,15 @@ export function MyActionPlans() {
         ...plan,
         audit_type: plan.audit_type as 'technical' | 'strategic',
         tasks: (plan.tasks as unknown as ActionPlanTask[]) || [],
+        is_archived: (plan as any).is_archived ?? false,
       }));
       setActionPlans(parsedPlans);
     }
     setLoading(false);
   };
+
+  const activePlans = useMemo(() => actionPlans.filter(p => !p.is_archived), [actionPlans]);
+  const archivedPlans = useMemo(() => actionPlans.filter(p => p.is_archived), [actionPlans]);
 
   const toggleTask = async (planId: string, taskId: string) => {
     const plan = actionPlans.find(p => p.id === planId);
@@ -144,18 +172,48 @@ export function MyActionPlans() {
       task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
     );
 
+    const allCompleted = updatedTasks.every(t => t.isCompleted);
+
     setActionPlans(prev =>
-      prev.map(p => (p.id === planId ? { ...p, tasks: updatedTasks } : p))
+      prev.map(p => (p.id === planId ? { ...p, tasks: updatedTasks, is_archived: allCompleted ? true : p.is_archived } : p))
     );
+
+    // Update tasks + auto-archive if 100%
+    const updatePayload: Record<string, unknown> = {
+      tasks: JSON.parse(JSON.stringify(updatedTasks)),
+    };
+    if (allCompleted) {
+      updatePayload.is_archived = true;
+    }
 
     const { error } = await supabase
       .from('action_plans')
-      .update({ tasks: JSON.parse(JSON.stringify(updatedTasks)) })
+      .update(updatePayload)
       .eq('id', planId);
 
     if (error) {
       console.error('Error updating task:', error);
       fetchActionPlans();
+    } else if (allCompleted) {
+      toast.success(t.archived);
+    }
+  };
+
+  const toggleArchive = async (planId: string, archive: boolean) => {
+    setActionPlans(prev =>
+      prev.map(p => (p.id === planId ? { ...p, is_archived: archive } : p))
+    );
+
+    const { error } = await supabase
+      .from('action_plans')
+      .update({ is_archived: archive } as any)
+      .eq('id', planId);
+
+    if (error) {
+      console.error('Error archiving plan:', error);
+      fetchActionPlans();
+    } else {
+      toast.success(archive ? t.archived : t.unarchived);
     }
   };
 
@@ -228,7 +286,6 @@ export function MyActionPlans() {
     }
   };
 
-  // Sort tasks: incomplete first, then by priority
   const getSortedTasks = (tasks: ActionPlanTask[]) => {
     const priorityOrder = { critical: 0, important: 1, optional: 2 };
     return [...tasks].sort((a, b) => {
@@ -240,7 +297,6 @@ export function MyActionPlans() {
   const handleOpenArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
     setArchitectPlan(plan);
     
-    // Try to fetch cached audit data for this URL
     const domain = (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })();
     
     const { data: auditData } = await supabase
@@ -259,6 +315,185 @@ export function MyActionPlans() {
     setIsArchitectOpen(true);
   };
 
+  const renderPlanCard = (plan: ActionPlan, isArchived = false) => {
+    const progress = getProgress(plan.tasks);
+    const remaining = getRemainingCount(plan.tasks);
+    const isExpanded = expandedPlans.has(plan.id);
+    const isComplete = remaining === 0;
+    const sortedTasks = getSortedTasks(plan.tasks);
+
+    return (
+      <motion.div
+        key={plan.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className={cn("border rounded-lg overflow-hidden", isArchived && "opacity-70")}
+      >
+        {/* Header */}
+        <div className="p-4 bg-card">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={cn(
+                  "text-xs font-medium px-2 py-0.5 rounded",
+                  plan.audit_type === 'technical' 
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-muted text-muted-foreground"
+                )}>
+                  {plan.audit_type === 'technical' ? t.technical : t.strategic}
+                </span>
+              </div>
+              <h3 className="font-semibold truncate">{plan.title}</h3>
+              <a 
+                href={plan.url.startsWith('http') ? plan.url : `https://${plan.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mt-1"
+              >
+                {plan.url}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <div className="flex items-center gap-1">
+              {/* Archive / Unarchive button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleArchive(plan.id, !isArchived)}
+                className="text-muted-foreground hover:text-foreground"
+                title={isArchived ? t.unarchive : t.archive}
+              >
+                {isArchived ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => deletePlan(plan.id)}
+                className="text-muted-foreground hover:text-destructive"
+                aria-label="Supprimer le plan d'action"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className={cn(
+                "font-medium",
+                isComplete ? "text-success" : "text-muted-foreground"
+              )}>
+                {isComplete ? (
+                  <span className="flex items-center gap-1">
+                    <Check className="h-4 w-4" />
+                    {t.completed}
+                  </span>
+                ) : (
+                  `${remaining} ${t.tasksRemaining}`
+                )}
+              </span>
+              <span className="text-muted-foreground">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
+          {/* Expand/Collapse */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => toggleExpanded(plan.id)}
+            className="w-full mt-3 text-muted-foreground"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-2" />
+                {t.collapse}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-2" />
+                {t.expand}
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Tasks List */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="border-t"
+            >
+              <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
+                {sortedTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={cn(
+                      "flex items-start gap-3 p-3 rounded-lg border-l-4 transition-all",
+                      getPriorityColor(task.priority),
+                      task.isCompleted && "opacity-50"
+                    )}
+                  >
+                    <Checkbox
+                      id={`${plan.id}-${task.id}`}
+                      checked={task.isCompleted}
+                      onCheckedChange={() => toggleTask(plan.id, task.id)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <label
+                        htmlFor={`${plan.id}-${task.id}`}
+                        className={cn(
+                          "text-sm font-medium cursor-pointer",
+                          task.isCompleted && "line-through text-muted-foreground"
+                        )}
+                      >
+                        {task.title}
+                      </label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={cn(
+                          "text-xs px-1.5 py-0.5 rounded",
+                          task.priority === 'critical' && "bg-destructive/10 text-destructive",
+                          task.priority === 'important' && "bg-warning/10 text-warning-foreground",
+                          task.priority === 'optional' && "bg-muted text-muted-foreground"
+                        )}>
+                          {getPriorityLabel(task.priority)}
+                        </span>
+                        {task.category && (
+                          <span className="text-xs text-muted-foreground">
+                            {task.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Architect button for incomplete tasks */}
+                    {!task.isCompleted && !isArchived && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenArchitect(plan, task)}
+                        className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+                      >
+                        <Wand2 className="h-3 w-3" />
+                        {t.architect}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  };
+
   return (
     <>
       <Card>
@@ -267,7 +502,7 @@ export function MyActionPlans() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : actionPlans.length === 0 ? (
+          ) : activePlans.length === 0 && archivedPlans.length === 0 ? (
             <div className="text-center py-12">
               <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="font-medium">{t.noPlans}</p>
@@ -275,171 +510,45 @@ export function MyActionPlans() {
             </div>
           ) : (
             <div className="space-y-4">
-              {actionPlans.map((plan) => {
-                const progress = getProgress(plan.tasks);
-                const remaining = getRemainingCount(plan.tasks);
-                const isExpanded = expandedPlans.has(plan.id);
-                const isComplete = remaining === 0;
-                const sortedTasks = getSortedTasks(plan.tasks);
+              {/* Active plans */}
+              {activePlans.length === 0 && archivedPlans.length > 0 && (
+                <div className="text-center py-8">
+                  <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+                </div>
+              )}
+              <AnimatePresence>
+                {activePlans.map((plan) => renderPlanCard(plan, false))}
+              </AnimatePresence>
 
-                return (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="border rounded-lg overflow-hidden"
-                  >
-                    {/* Header */}
-                    <div className="p-4 bg-card">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={cn(
-                              "text-xs font-medium px-2 py-0.5 rounded",
-                              plan.audit_type === 'technical' 
-                                ? "bg-primary/10 text-primary" 
-                                : "bg-[#4b5563]/20 text-[#6b7280] dark:text-[#9ca3af]"
-                            )}>
-                              {plan.audit_type === 'technical' ? t.technical : t.strategic}
-                            </span>
-                          </div>
-                          <h3 className="font-semibold truncate">{plan.title}</h3>
-                          <a 
-                            href={plan.url.startsWith('http') ? plan.url : `https://${plan.url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mt-1"
-                          >
-                            {plan.url}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deletePlan(plan.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                          aria-label="Supprimer le plan d'action"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      </div>
-
-                      {/* Progress */}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className={cn(
-                            "font-medium",
-                            isComplete ? "text-success" : "text-muted-foreground"
-                          )}>
-                            {isComplete ? (
-                              <span className="flex items-center gap-1">
-                                <Check className="h-4 w-4" />
-                                {t.completed}
-                              </span>
-                            ) : (
-                              `${remaining} ${t.tasksRemaining}`
-                            )}
-                          </span>
-                          <span className="text-muted-foreground">{progress}%</span>
-                        </div>
-                        <Progress value={progress} className="h-2" />
-                      </div>
-
-                      {/* Expand/Collapse */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleExpanded(plan.id)}
-                        className="w-full mt-3 text-muted-foreground"
-                      >
-                        {isExpanded ? (
-                          <>
-                            <ChevronUp className="h-4 w-4 mr-2" />
-                            {t.collapse}
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="h-4 w-4 mr-2" />
-                            {t.expand}
-                          </>
-                        )}
-                      </Button>
+              {/* Archived plans collapsible */}
+              {archivedPlans.length > 0 && (
+                <Collapsible open={archivesOpen} onOpenChange={setArchivesOpen} className="mt-6">
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between text-muted-foreground hover:text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Archive className="h-4 w-4" />
+                        {t.archives}
+                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                          {archivedPlans.length} {t.archivesCount}
+                        </span>
+                      </span>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform",
+                        archivesOpen && "rotate-180"
+                      )} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-4 mt-3">
+                      {archivedPlans.map((plan) => renderPlanCard(plan, true))}
                     </div>
-
-                    {/* Tasks List */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="border-t"
-                        >
-                          <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
-                            {sortedTasks.map((task) => (
-                              <div
-                                key={task.id}
-                                className={cn(
-                                  "flex items-start gap-3 p-3 rounded-lg border-l-4 transition-all",
-                                  getPriorityColor(task.priority),
-                                  task.isCompleted && "opacity-50"
-                                )}
-                              >
-                                <Checkbox
-                                  id={`${plan.id}-${task.id}`}
-                                  checked={task.isCompleted}
-                                  onCheckedChange={() => toggleTask(plan.id, task.id)}
-                                  className="mt-0.5"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <label
-                                    htmlFor={`${plan.id}-${task.id}`}
-                                    className={cn(
-                                      "text-sm font-medium cursor-pointer",
-                                      task.isCompleted && "line-through text-muted-foreground"
-                                    )}
-                                  >
-                                    {task.title}
-                                  </label>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className={cn(
-                                      "text-xs px-1.5 py-0.5 rounded",
-                                      task.priority === 'critical' && "bg-destructive/10 text-destructive",
-                                      task.priority === 'important' && "bg-warning/10 text-warning-foreground",
-                                      task.priority === 'optional' && "bg-muted text-muted-foreground"
-                                    )}>
-                                      {getPriorityLabel(task.priority)}
-                                    </span>
-                                    {task.category && (
-                                      <span className="text-xs text-muted-foreground">
-                                        {task.category}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {/* Architect button for incomplete tasks */}
-                                {!task.isCompleted && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleOpenArchitect(plan, task)}
-                                    className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
-                                  >
-                                    <Wand2 className="h-3 w-3" />
-                                    {t.architect}
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </div>
           )}
         </CardContent>

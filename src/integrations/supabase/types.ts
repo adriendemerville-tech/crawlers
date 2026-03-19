@@ -19,6 +19,7 @@ export type Database = {
           audit_type: string
           created_at: string
           id: string
+          is_archived: boolean | null
           tasks: Json
           title: string
           updated_at: string
@@ -29,6 +30,7 @@ export type Database = {
           audit_type: string
           created_at?: string
           id?: string
+          is_archived?: boolean | null
           tasks?: Json
           title: string
           updated_at?: string
@@ -39,6 +41,7 @@ export type Database = {
           audit_type?: string
           created_at?: string
           id?: string
+          is_archived?: boolean | null
           tasks?: Json
           title?: string
           updated_at?: string
