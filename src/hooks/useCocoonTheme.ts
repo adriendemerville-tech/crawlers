@@ -16,7 +16,7 @@ const DEFAULT_NODE_COLORS: Record<string, string> = {
   "catégorie": "#3db8ff",
   faq: "#ff8030",
   contact: "#ff5caa",
-  tarifs: "#ffcc00",
+  tarifs: "#f59e0b",
   guide: "#c07aff",
   "légal": "#a0aab4",
   "à propos": "#00e5f0",

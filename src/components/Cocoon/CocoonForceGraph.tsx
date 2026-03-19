@@ -80,7 +80,7 @@ const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
   "catégorie": [61, 184, 255],   // #3db8ff
   faq:         [255, 128, 48],   // #ff8030
   contact:     [255, 92, 170],   // #ff5caa
-  tarifs:      [255, 204, 0],    // #ffcc00
+  tarifs:      [245, 158, 11],   // #f59e0b
   guide:       [192, 122, 255],  // #c07aff
   "légal":     [160, 170, 180],  // #a0aab4
   "à propos":  [0, 229, 240],    // #00e5f0
