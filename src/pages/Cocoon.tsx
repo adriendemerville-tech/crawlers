@@ -299,6 +299,12 @@ export default function Cocoon() {
     if (params.get('fullscreen') === '1') {
       setIsFullscreen(true);
     }
+    // Restore settings from URL params (fullscreen sync)
+    if (params.get('bgColor')) setBgColor(Number(params.get('bgColor')));
+    if (params.get('bgWarmth')) setBgWarmth(Number(params.get('bgWarmth')));
+    if (params.get('contrast')) setGraphContrast(Number(params.get('contrast')));
+    if (params.get('halo')) setColorIntensity(Number(params.get('halo')));
+    if (params.get('thickness')) setLinkThickness(Number(params.get('thickness')));
     // daymode param removed
     const siteParam = params.get('site');
     if (siteParam) {
