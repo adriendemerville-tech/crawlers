@@ -209,15 +209,15 @@ export default function Profile() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                <TabsTrigger
-                  value="gmb"
-                  className="flex-1 gap-2"
-                  disabled={!isProUser}
-                >
-                  <Store className="h-4 w-4 text-emerald-500" />
-                  <span className="hidden sm:inline">GMB</span>
-                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </TabsTrigger>
+                {isProUser && (
+                  <TabsTrigger
+                    value="gmb"
+                    className="flex-1 gap-2"
+                  >
+                    <Store className="h-4 w-4 text-emerald-500" />
+                    <span className="hidden sm:inline">GMB</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="reports" className="flex-1 gap-2">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
