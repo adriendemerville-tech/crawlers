@@ -77,6 +77,7 @@ const adminTranslations = {
     documentation: 'Documentation',
     docs: 'Docs',
     functions: 'Functions',
+    surveys: 'Surveys',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
