@@ -82,8 +82,8 @@ const PAGE_TYPE_COLORS: Record<string, string> = {
   guide: "#b48cff",
   "légal": "#a0aab4",
   "à propos": "#50dce6",
-  page: "#8c64fa",
-  unknown: "#8c64fa",
+  page: "#7a7a9e",
+  unknown: "#7a7a9e",
 };
 
 // ─── Props ───

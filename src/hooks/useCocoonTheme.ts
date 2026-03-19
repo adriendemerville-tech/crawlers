@@ -11,7 +11,7 @@ export interface CocoonTheme {
 // Page node colors — vivid, electric, high saturation
 const DEFAULT_NODE_COLORS: Record<string, string> = {
   homepage: "#ffcc00",
-  blog: "#9b5fff",
+  blog: "#8c78ff",
   produit: "#00f0a0",
   "catégorie": "#3db8ff",
   faq: "#ff8030",
@@ -20,8 +20,8 @@ const DEFAULT_NODE_COLORS: Record<string, string> = {
   guide: "#c07aff",
   "légal": "#a0aab4",
   "à propos": "#00e5f0",
-  page: "#8c5cff",
-  unknown: "#8c5cff",
+  page: "#7a7a9e",
+  unknown: "#7a7a9e",
 };
 
 // Particle colors — matte, soft, pastel-like

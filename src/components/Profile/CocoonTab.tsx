@@ -191,7 +191,7 @@ export function CocoonTab() {
               <ColorInput
                 key={key}
                 label={labels[language] || labels.fr}
-                value={nodeColors[key] || "#8c64fa"}
+                value={nodeColors[key] || "#7a7a9e"}
                 onChange={(v) => setNodeColors((prev) => ({ ...prev, [key]: v }))}
               />
             ))}

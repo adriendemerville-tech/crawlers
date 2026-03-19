@@ -155,7 +155,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             {presentPageTypes.map(type => {
               const labels = PAGE_TYPE_LABELS[type] || PAGE_TYPE_LABELS.unknown;
               const label = labels[language] || labels.fr;
-              const color = nodeColors[type] || nodeColors.unknown || '#8c64fa';
+              const color = nodeColors[type] || nodeColors.unknown || '#7a7a9e';
               const checked = filters.visiblePageTypes.has(type);
               const count = nodes.filter((n: any) => (n.page_type || 'unknown') === type).length;
               return (
