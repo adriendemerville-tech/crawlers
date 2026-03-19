@@ -108,6 +108,7 @@ const App = () => (
                           <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
                           <Route path="/rgpd" element={<RGPD />} />
                           <Route path="/auth" element={<Auth />} />
+                          <Route path="/signup" element={<SignupPage />} />
                           <Route path="/console" element={<Profile />} />
                           <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
                           <Route path="/rapport/:reportId" element={<ReportViewer />} />

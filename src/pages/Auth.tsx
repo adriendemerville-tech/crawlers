@@ -508,19 +508,15 @@ export default function Auth() {
               <span className="text-muted-foreground">
                 {isLogin ? t.noAccount : t.hasAccount}{' '}
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isLogin) {
-                    // Track signup click when switching to signup form
-                    trackAnalyticsEvent('signup_click');
-                  }
-                  setIsLogin(!isLogin);
-                }}
-                className="text-primary hover:underline font-medium"
-              >
-                {isLogin ? t.signup : t.login}
-              </button>
+              {isLogin ? (
+                <Link to="/signup" className="text-primary hover:underline font-medium" onClick={() => trackAnalyticsEvent('signup_click')}>
+                  {t.signup}
+                </Link>
+              ) : (
+                <button type="button" onClick={() => setIsLogin(true)} className="text-primary hover:underline font-medium">
+                  {t.login}
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
