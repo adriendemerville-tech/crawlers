@@ -136,9 +136,9 @@ export function ExternalApisTab() {
       return;
     }
 
-    // CMS: WordPress / Drupal connection dialog
-    if (service.id === 'wordpress' || service.id === 'drupal') {
-      setCmsDialogType(service.id);
+    // CMS: WordPress / Drupal / Shopify connection dialog
+    if (service.id === 'wordpress' || service.id === 'drupal' || service.id === 'shopify') {
+      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify');
       setCmsDialogOpen(true);
     }
   };
