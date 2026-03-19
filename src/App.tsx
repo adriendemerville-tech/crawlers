@@ -142,6 +142,8 @@ const App = () => (
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
                           <Route path="/cocoon" element={<Cocoon />} />
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
+                          <Route path="/matrice" element={<MatricePrompt />} />
+                          <Route path="/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
