@@ -307,9 +307,9 @@ export function MyInjectedScripts({ filterDomain }: { filterDomain?: string | nu
     <>
       <div className="space-y-2">
         {/* Validated corrective codes */}
-        {validatedCodes.length > 0 && (
+        {filteredValidatedCodes.length > 0 && (
           <div className="space-y-2">
-            {validatedCodes.map(vc => (
+            {filteredValidatedCodes.map(vc => (
               <div
                 key={vc.id}
                 className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
