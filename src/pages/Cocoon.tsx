@@ -180,6 +180,7 @@ export default function Cocoon() {
   useCanonicalHreflang('/cocoon');
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
+  const { saveReport } = useSaveReport();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
