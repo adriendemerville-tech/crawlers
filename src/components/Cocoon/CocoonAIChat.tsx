@@ -150,6 +150,7 @@ const labels = {
     pickFromGraph: 'Cliquez sur un nœud dans le graphe…',
     analyze: 'Analyser',
     cancel: 'Annuler',
+    optimize: 'Optimiser le maillage',
   },
   en: {
     title: 'Cocoon Assistant',
