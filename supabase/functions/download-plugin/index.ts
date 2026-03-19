@@ -118,8 +118,8 @@ function getPluginPHP(): string {
 /**
  * Plugin Name: Crawlers GEO
  * Plugin URI:  https://crawlers.fr/modifier-code-wordpress
- * Description: Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr — meta tags, JSON-LD, scripts correctifs.
- * Version:     1.3.0
+ * Description: Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr — meta tags, JSON-LD, scripts correctifs + suivi des paiements WooCommerce.
+ * Version:     2.0.0
  * Author:      Crawlers.fr
  * Author URI:  https://crawlers.fr
  * License:     GPLv2 or later
@@ -131,9 +131,10 @@ function getPluginPHP(): string {
 if (!defined('ABSPATH')) exit;
 
 // --- Constants ---
-define('CRAWLERS_GEO_VERSION', '1.3.0');
+define('CRAWLERS_GEO_VERSION', '2.0.0');
 define('CRAWLERS_GEO_SYNC_URL', 'https://${projectId}.supabase.co/functions/v1/wpsync');
 define('CRAWLERS_GEO_SDK_URL', 'https://${projectId}.supabase.co/functions/v1/serve-client-script');
+define('CRAWLERS_GEO_TRACK_URL', 'https://${projectId}.supabase.co/functions/v1/track-payment');
 
 // --- Activation ---
 register_activation_hook(__FILE__, function () {
