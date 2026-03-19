@@ -365,11 +365,11 @@ function NodeSphere({
         <meshBasicMaterial
           color={node.isHome ? color : "#d0d8e0"}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.65 : 0.55}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.7}
         />
       </mesh>
 
-      {/* Core sphere — Home: 12% opacity, others: gradient-like with top-lit coloring */}
+      {/* Core sphere — matched to 2D: solid opaque fill with emissive glow */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -382,13 +382,25 @@ function NodeSphere({
           emissive={color}
           emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.7}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.12 : 0.35}
-          roughness={node.isHome ? 0.3 : 0.45}
-          metalness={node.isHome ? 0.6 : 0.75}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.85 : 0.8}
+          roughness={node.isHome ? 0.2 : 0.35}
+          metalness={node.isHome ? 0.7 : 0.6}
         />
       </mesh>
 
-      {/* Label — hover/select only (including home) */}
+      {/* Inner bright core (white highlight — matching 2D) */}
+      {!isGhost && (
+        <mesh>
+          <sphereGeometry args={[node.radius * (node.isHome ? 0.35 : 0.5), 16, 16]} />
+          <meshBasicMaterial
+            color="#ffffff"
+            transparent
+            opacity={node.isHome ? 0.6 : 0.4}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
       {(isSelected || isHovered) && (
         <Billboard position={[0, -node.radius - 1.5, 0]}>
           <Text
