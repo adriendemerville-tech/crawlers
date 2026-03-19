@@ -4573,6 +4573,13 @@ export type Database = {
             referencedRelation: "google_connections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tracked_sites_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_connections_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       url_correction_decisions: {
@@ -4759,6 +4766,104 @@ export type Database = {
       }
     }
     Views: {
+      cms_connections_safe: {
+        Row: {
+          auth_method: string | null
+          capabilities: Json | null
+          created_at: string | null
+          has_api_key: boolean | null
+          has_oauth_token: boolean | null
+          id: string | null
+          platform: Database["public"]["Enums"]["cms_platform"] | null
+          platform_site_id: string | null
+          scopes: string[] | null
+          site_url: string | null
+          status: string | null
+          tracked_site_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth_method?: string | null
+          capabilities?: Json | null
+          created_at?: string | null
+          has_api_key?: never
+          has_oauth_token?: never
+          id?: string | null
+          platform?: Database["public"]["Enums"]["cms_platform"] | null
+          platform_site_id?: string | null
+          scopes?: string[] | null
+          site_url?: string | null
+          status?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_method?: string | null
+          capabilities?: Json | null
+          created_at?: string | null
+          has_api_key?: never
+          has_oauth_token?: never
+          id?: string | null
+          platform?: Database["public"]["Enums"]["cms_platform"] | null
+          platform_site_id?: string | null
+          scopes?: string[] | null
+          site_url?: string | null
+          status?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cms_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_connections_safe: {
+        Row: {
+          created_at: string | null
+          ga4_property_id: string | null
+          google_email: string | null
+          gsc_site_urls: Json | null
+          has_refresh_token: boolean | null
+          has_token: boolean | null
+          id: string | null
+          token_expiry: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ga4_property_id?: string | null
+          google_email?: string | null
+          gsc_site_urls?: Json | null
+          has_refresh_token?: never
+          has_token?: never
+          id?: string | null
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ga4_property_id?: string | null
+          google_email?: string | null
+          gsc_site_urls?: Json | null
+          has_refresh_token?: never
+          has_token?: never
+          id?: string | null
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       revenue_weekly_summary: {
         Row: {
           avg_order_value: number | null
