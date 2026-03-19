@@ -840,14 +840,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
               );
             })}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
-                  <Loader2 className="w-3 h-3 animate-spin text-[#fbbf24]" />
-                  <span className="text-[10px] text-white/40">
-                    {language === 'en' ? 'Analyzing…' : language === 'es' ? 'Analizando…' : 'Analyse…'}
-                  </span>
-                </div>
-              </div>
+              <ThinkingIndicator language={language} />
             )}
           </div>
 
