@@ -80,7 +80,7 @@ const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
   "catégorie": [61, 184, 255],   // #3db8ff
   faq:         [255, 128, 48],   // #ff8030
   contact:     [255, 92, 170],   // #ff5caa
-  tarifs:      [255, 204, 0],    // #ffcc00
+  tarifs:      [245, 158, 11],   // #f59e0b
   guide:       [192, 122, 255],  // #c07aff
   "légal":     [160, 170, 180],  // #a0aab4
   "à propos":  [0, 229, 240],    // #00e5f0
@@ -106,6 +106,11 @@ interface CocoonForceGraphProps {
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
   isDayMode?: boolean;
+  nodeColors?: Record<string, string>;
+  particleColors?: Record<string, string>;
+  visibleJuiceTypes?: Set<string>;
+  showClusters?: boolean;
+  colorIntensity?: number;
 }
 
 export function CocoonForceGraph({
@@ -116,6 +121,11 @@ export function CocoonForceGraph({
   isPickingMode = false,
   particlesEnabled = true,
   isDayMode = false,
+  nodeColors: nodeColorsProp,
+  particleColors: particleColorsProp,
+  visibleJuiceTypes,
+  showClusters,
+  colorIntensity = 100,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,6 +139,26 @@ export function CocoonForceGraph({
   const graphLinksRef = useRef<GraphLink[]>([]);
   const particlesRef = useRef<Particle[]>([]);
   const lastClickPos = useRef<{ x: number; y: number } | null>(null);
+
+  // Convert hex to RGB tuple, with fallback to hardcoded map
+  const hexToRgb = useCallback((hex: string): [number, number, number] => {
+    const m = hex.replace('#', '').match(/.{2}/g);
+    if (!m) return [140, 92, 255];
+    return [parseInt(m[0], 16), parseInt(m[1], 16), parseInt(m[2], 16)];
+  }, []);
+
+  // Resolve node color: theme prop > hardcoded
+  const resolveNodeColor = useCallback((pageType: string): [number, number, number] => {
+    if (nodeColorsProp?.[pageType]) return hexToRgb(nodeColorsProp[pageType]);
+    if (nodeColorsProp?.unknown) return hexToRgb(nodeColorsProp.unknown);
+    return PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
+  }, [nodeColorsProp, hexToRgb]);
+
+  // Resolve particle/juice color: theme prop > hardcoded
+  const resolveJuiceColor = useCallback((juiceType: JuiceType): [number, number, number] => {
+    if (particleColorsProp?.[juiceType]) return hexToRgb(particleColorsProp[juiceType]);
+    return JUICE_COLORS[juiceType] || JUICE_COLORS.semantic;
+  }, [particleColorsProp, hexToRgb]);
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
@@ -422,6 +452,8 @@ export function CocoonForceGraph({
         const source = link.source as GraphNode;
         const target = link.target as GraphNode;
         if (!source.x || !source.y || !target.x || !target.y) continue;
+        // Filter by visible juice types
+        if (visibleJuiceTypes && !visibleJuiceTypes.has(link.juiceType)) continue;
 
         const isSelectedLink = selectedNodeId && (source.id === selectedNodeId || target.id === selectedNodeId);
         const baseAlpha = link.strength * 0.4;
@@ -444,7 +476,7 @@ export function CocoonForceGraph({
           ctx.stroke();
         } else {
           // Default: color by juice type
-          const [lr, lg, lb] = JUICE_COLORS[link.juiceType] || JUICE_COLORS.semantic;
+          const [lr, lg, lb] = resolveJuiceColor(link.juiceType);
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
@@ -474,6 +506,7 @@ export function CocoonForceGraph({
           }
           const link = gLinks[p.linkIdx];
           if (!link) continue;
+          if (visibleJuiceTypes && !visibleJuiceTypes.has(p.juiceType)) continue;
           const source = link.source as GraphNode;
           const target = link.target as GraphNode;
           if (!source.x || !source.y || !target.x || !target.y) continue;
@@ -482,7 +515,7 @@ export function CocoonForceGraph({
           const py = source.y + (target.y - source.y) * p.progress;
           const fadeEdge = Math.sin(p.progress * Math.PI);
 
-          const [jr, jg, jb] = JUICE_COLORS[p.juiceType];
+          const [jr, jg, jb] = resolveJuiceColor(p.juiceType);
           const particleSize = p.size * nodeScale * (0.8 + link.juiceIntensity * 0.6);
           ctx.beginPath();
           ctx.arc(px, py, particleSize, 0, Math.PI * 2);
@@ -518,7 +551,7 @@ export function CocoonForceGraph({
         const xrayHomeBlue: [number, number, number] = [18, 97, 212];
         const [cr, cg, cb] = node.isHome
           ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
-          : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
+          : resolveNodeColor(node.pageType);
         const baseAlpha = isGhost ? 0.15 : 1;
 
         // ─── Home Sun: rotating elliptical corona with tilt ───
