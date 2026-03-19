@@ -297,7 +297,7 @@ export function BrandingTab() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [logoUrl, primaryColor, brandName, brandFont, brandFontSize, brandBold, brandItalic, brandUnderline, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
 
   // Load Google Font for preview
