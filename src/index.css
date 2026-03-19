@@ -142,10 +142,11 @@
     contain: layout style;
   }
 
-  /* Strict containment for modals/dialogs */
+  /* Strict containment only for true modal dialogs.
+     Do not target generic [role="dialog"] because Radix popovers also use it,
+     which collapses their auto-sized content. */
   [data-radix-dialog-content],
-  [data-radix-alert-dialog-content],
-  [role="dialog"] {
+  [data-radix-alert-dialog-content] {
     contain: strict;
   }
 
