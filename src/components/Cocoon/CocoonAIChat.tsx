@@ -542,7 +542,135 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
     setSelectedSlots([]);
   };
 
-  const clearChat = () => {
+  const handleOptimizeLinking = useCallback(() => {
+    if (!nodes.length || isLoading) return;
+
+    // Build full graph topology for AI analysis
+    const allNodes = nodes.map((n: any) => ({
+      url: getSlug(n.url),
+      title: n.title || '',
+      depth: n.crawl_depth ?? n.depth ?? '?',
+      type: n.page_type || 'page',
+      intent: n.intent || '?',
+      cluster: n.cluster_id || 'unclustered',
+      pageRank: n.page_authority?.toFixed(2) || '?',
+      linksIn: n.internal_links_in ?? 0,
+      linksOut: n.internal_links_out ?? 0,
+      roi: n.roi_predictive?.toFixed(0) || '?',
+      geo: n.geo_score ?? '?',
+      gap: n.content_gap_score ?? '?',
+      cannibal: n.cannibalization_risk ?? '?',
+    }));
+
+    // Edges
+    const edges = nodes.flatMap((n: any) =>
+      (n.similarity_edges || []).map((e: any) => `${getSlug(n.url)} → ${getSlug(e.target_url)} (${e.type}, score: ${e.score?.toFixed(2)})`)
+    );
+
+    // Orphans (0 incoming links)
+    const orphans = allNodes.filter(n => n.linksIn === 0).map(n => n.url);
+    // Deep pages
+    const deep = allNodes.filter(n => typeof n.depth === 'number' && n.depth >= 4).map(n => `${n.url} (depth: ${n.depth})`);
+
+    const topologyBlock = `TOPOLOGIE DU GRAPHE (${allNodes.length} pages):
+${allNodes.map(n => `- ${n.url} | type:${n.type} | intent:${n.intent} | cluster:${n.cluster} | depth:${n.depth} | PR:${n.pageRank} | in:${n.linksIn} | out:${n.linksOut} | ROI:${n.roi}€ | GEO:${n.geo} | gap:${n.gap} | cannibal:${n.cannibal}`).join('\n')}
+
+LIENS EXISTANTS (${edges.length}):
+${edges.slice(0, 100).join('\n')}${edges.length > 100 ? `\n... et ${edges.length - 100} autres` : ''}
+
+PAGES ORPHELINES (0 lien entrant): ${orphans.length ? orphans.join(', ') : 'Aucune'}
+PAGES PROFONDES (≥4 clics): ${deep.length ? deep.join(', ') : 'Aucune'}`;
+
+    const prompts: Record<string, string> = {
+      fr: `OPTIMISATION DU MAILLAGE INTERNE
+
+${topologyBlock}
+
+En te basant sur cette topologie complète du graphe, propose un PLAN D'ACTION COMPLET pour optimiser le maillage interne. Réponds avec ce format :
+
+**🔴 Pages orphelines & profondeur**
+- Liste chaque page orpheline ou trop profonde (≥4 clics)
+- Pour chacune, propose une page source concrète depuis laquelle créer un lien, avec une ancre suggérée
+
+**📊 Distribution du PageRank**
+- Identifie les pages à fort PageRank qui ne redistribuent pas assez (peu de liens sortants)
+- Identifie les pages stratégiques (fort ROI/GEO) qui manquent d'autorité
+- Propose des liens précis pour rééquilibrer
+
+**🏗️ Cohérence des silos**
+- Analyse la cohérence de chaque cluster : les pages du même silo se lient-elles bien entre elles ?
+- Identifie les fuites inter-silos (liens entre clusters non pertinents)
+- Propose des corrections
+
+**✨ Pages à créer / fusionner / supprimer**
+- Pages manquantes dans le cocon (gaps sémantiques à combler)
+- Pages à risque de cannibalisation à fusionner
+- Pages à faible valeur à désindexer ou supprimer
+
+**📋 Résumé exécutif**
+- Top 5 actions prioritaires classées par impact estimé`,
+
+      en: `INTERNAL LINKING OPTIMIZATION
+
+${topologyBlock}
+
+Based on this complete graph topology, propose a FULL ACTION PLAN to optimize internal linking. Use this format:
+
+**🔴 Orphan pages & depth**
+- List each orphan or too-deep page (≥4 clicks)
+- For each, suggest a concrete source page to link from, with suggested anchor text
+
+**📊 PageRank distribution**
+- Identify high-PR pages that don't redistribute enough (few outgoing links)
+- Identify strategic pages (high ROI/GEO) lacking authority
+- Suggest specific links to rebalance
+
+**🏗️ Silo coherence**
+- Analyze each cluster's coherence: do pages in the same silo link well to each other?
+- Identify inter-silo leaks (irrelevant cross-cluster links)
+- Suggest corrections
+
+**✨ Pages to create / merge / remove**
+- Missing pages in the cocoon (semantic gaps to fill)
+- Cannibalization-risk pages to merge
+- Low-value pages to deindex or remove
+
+**📋 Executive summary**
+- Top 5 priority actions ranked by estimated impact`,
+
+      es: `OPTIMIZACIÓN DEL ENLAZADO INTERNO
+
+${topologyBlock}
+
+Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COMPLETO para optimizar el enlazado interno. Usa este formato:
+
+**🔴 Páginas huérfanas y profundidad**
+- Lista cada página huérfana o demasiado profunda (≥4 clics)
+- Para cada una, sugiere una página fuente concreta desde la cual crear un enlace, con texto ancla sugerido
+
+**📊 Distribución del PageRank**
+- Identifica páginas con alto PR que no redistribuyen suficiente (pocos enlaces salientes)
+- Identifica páginas estratégicas (alto ROI/GEO) que carecen de autoridad
+- Sugiere enlaces específicos para reequilibrar
+
+**🏗️ Coherencia de silos**
+- Analiza la coherencia de cada cluster: ¿las páginas del mismo silo se enlazan bien entre sí?
+- Identifica fugas inter-silo (enlaces entre clusters no pertinentes)
+- Sugiere correcciones
+
+**✨ Páginas a crear / fusionar / eliminar**
+- Páginas faltantes en el cocoon (gaps semánticos a llenar)
+- Páginas con riesgo de canibalización a fusionar
+- Páginas de bajo valor a desindexar o eliminar
+
+**📋 Resumen ejecutivo**
+- Top 5 acciones prioritarias clasificadas por impacto estimado`,
+    };
+
+    sendMessage(prompts[language] || prompts.fr);
+  }, [nodes, language, isLoading]);
+
+
     setMessages([]);
     chatHistoryId.current = null;
   };
