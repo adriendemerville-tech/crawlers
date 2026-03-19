@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatMessage } from './ChatMessage';
 import { useToast } from '@/hooks/use-toast';
+import { getDeviceInfo } from '@/utils/deviceInfo';
 
 interface Message {
   id: string;
