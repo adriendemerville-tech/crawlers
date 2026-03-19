@@ -416,6 +416,81 @@ add_action('wp_footer', function () {
     echo "<!-- /Crawlers GEO Corrective Script -->\\n";
 }, 99);
 
+// --- WooCommerce Payment Tracking ---
+// Hook into WooCommerce order completion to send revenue data server-side
+add_action('woocommerce_thankyou', function (\$order_id) {
+    \$api_key = get_option('crawlers_geo_api_key', '');
+    if (empty(\$api_key) || empty(\$order_id)) return;
+
+    \$order = wc_get_order(\$order_id);
+    if (!\$order) return;
+
+    // Avoid duplicate sends
+    if (\$order->get_meta('_crawlers_tracked')) return;
+
+    \$payload = [
+        'api_key'  => \$api_key,
+        'order_id' => 'woo_' . \$order_id,
+        'amount'   => (float) \$order->get_total(),
+        'currency' => \$order->get_currency(),
+        'source'   => 'wordpress_woocommerce',
+        'page_url' => \$order->get_checkout_order_received_url(),
+        'metadata' => [
+            'items_count'    => \$order->get_item_count(),
+            'payment_method' => \$order->get_payment_method(),
+            'billing_email'  => hash('sha256', \$order->get_billing_email()),
+            'status'         => \$order->get_status(),
+        ],
+    ];
+
+    \$response = wp_remote_post(CRAWLERS_GEO_TRACK_URL, [
+        'timeout' => 10,
+        'headers' => ['Content-Type' => 'application/json'],
+        'body'    => wp_json_encode(\$payload),
+    ]);
+
+    if (!is_wp_error(\$response) && wp_remote_retrieve_response_code(\$response) === 200) {
+        \$order->update_meta_data('_crawlers_tracked', '1');
+        \$order->save();
+    }
+}, 10, 1);
+
+// Also track WooCommerce status changes to 'completed' or 'processing'
+add_action('woocommerce_order_status_completed', 'crawlers_geo_track_order_status');
+add_action('woocommerce_order_status_processing', 'crawlers_geo_track_order_status');
+function crawlers_geo_track_order_status(\$order_id) {
+    \$api_key = get_option('crawlers_geo_api_key', '');
+    if (empty(\$api_key)) return;
+
+    \$order = wc_get_order(\$order_id);
+    if (!\$order) return;
+    if (\$order->get_meta('_crawlers_tracked')) return;
+
+    \$payload = [
+        'api_key'  => \$api_key,
+        'order_id' => 'woo_' . \$order_id,
+        'amount'   => (float) \$order->get_total(),
+        'currency' => \$order->get_currency(),
+        'source'   => 'wordpress_woocommerce',
+        'page_url' => home_url('/'),
+        'metadata' => [
+            'items_count'    => \$order->get_item_count(),
+            'payment_method' => \$order->get_payment_method(),
+            'status'         => \$order->get_status(),
+            'trigger'        => 'status_change',
+        ],
+    ];
+
+    wp_remote_post(CRAWLERS_GEO_TRACK_URL, [
+        'timeout' => 10,
+        'headers' => ['Content-Type' => 'application/json'],
+        'body'    => wp_json_encode(\$payload),
+    ]);
+
+    \$order->update_meta_data('_crawlers_tracked', '1');
+    \$order->save();
+}
+
 // --- Daily auto-sync via WP Cron ---
 add_action('init', function () {
     if (!wp_next_scheduled('crawlers_geo_daily_sync') && get_option('crawlers_geo_api_key', '')) {
