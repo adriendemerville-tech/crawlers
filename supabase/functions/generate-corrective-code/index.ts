@@ -1854,8 +1854,14 @@ async function generateAllFixesWithAI(
     return null;
   }
 
-  const systemPrompt = `Tu es un architecte JavaScript expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
-Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.
+  // Construire le contexte CMS dynamique
+  const cmsPrompt = buildCmsContextualPrompt(cmsSettings || { hasApiConnection: false, cmsType: null });
+  const isCmsNative = !cmsSettings?.hasApiConnection || !cmsSettings?.cmsType || cmsSettings.cmsType === 'native';
+
+  const systemPrompt = `Tu es un architecte ${isCmsNative ? 'JavaScript' : 'web'} expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
+${isCmsNative ? `Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.` : `Tu génères du code adapté au CMS connecté (voir CONSIGNES CMS ci-dessous).`}
+
+${cmsPrompt}
 
 PROTOCOLE CLS-ZERO — RÈGLES ABSOLUES:
 
