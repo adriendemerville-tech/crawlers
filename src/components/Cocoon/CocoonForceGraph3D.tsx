@@ -1061,6 +1061,7 @@ export function CocoonForceGraph3D({
           colorIntensity={colorIntensity}
           bgWarmth={bgWarmth}
           linkThickness={linkThickness}
+          bgColorSlider={bgColorSlider}
         />
       </Canvas>
 
