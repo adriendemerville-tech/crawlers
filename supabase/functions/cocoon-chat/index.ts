@@ -15,11 +15,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const supabase = getServiceClient();
+
     // ── Fetch site identity card ──
     let siteIdentityBlock = '';
     try {
       if (domain || trackedSiteId) {
-        const supabase = getServiceClient();
         const ctx = await getSiteContext(supabase, trackedSiteId ? { trackedSiteId } : { domain });
         if (ctx) {
           const parts: string[] = [];
@@ -35,6 +36,173 @@ serve(async (req) => {
       console.warn('[cocoon-chat] Could not fetch site context:', e);
     }
 
+    // ── Fetch all domain-related data ──
+    let domainDataBlock = '';
+    try {
+      const normalizedDomain = (domain || '')
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/.*$/, '')
+        .toLowerCase();
+
+      if (normalizedDomain && trackedSiteId) {
+        // Parallel fetch all relevant data
+        const [
+          crawlRes,
+          crawlPagesRes,
+          auditRes,
+          serpRes,
+          backlinkRes,
+          gscRes,
+          ga4Res,
+          indexHistoryRes,
+        ] = await Promise.all([
+          // Latest crawl
+          supabase
+            .from('site_crawls')
+            .select('id, domain, status, total_pages, crawled_pages, avg_score, ai_summary, created_at, completed_at')
+            .eq('domain', normalizedDomain)
+            .order('created_at', { ascending: false })
+            .limit(3),
+          // Crawl pages from latest crawl (summary only)
+          supabase
+            .from('site_crawls')
+            .select('id')
+            .eq('domain', normalizedDomain)
+            .eq('status', 'completed')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .then(async ({ data }) => {
+              if (!data?.[0]?.id) return { data: null };
+              const { data: pages } = await supabase
+                .from('crawl_pages')
+                .select('url, title, seo_score, word_count, internal_links, external_links, h1, has_noindex, is_indexable, crawl_depth, page_type_override, issues')
+                .eq('crawl_id', data[0].id)
+                .order('seo_score', { ascending: true })
+                .limit(50);
+              return { data: pages };
+            }),
+          // Audit raw data (latest)
+          supabase
+            .from('audit_raw_data')
+            .select('audit_type, created_at')
+            .eq('domain', normalizedDomain)
+            .order('created_at', { ascending: false })
+            .limit(5),
+          // SERP KPIs (latest snapshot)
+          supabase
+            .from('domain_data_cache')
+            .select('data_type, result_data, created_at')
+            .eq('domain', normalizedDomain)
+            .in('data_type', ['serp_kpis', 'keyword_rankings'])
+            .order('created_at', { ascending: false })
+            .limit(2),
+          // Backlink snapshot (latest)
+          supabase
+            .from('backlink_snapshots')
+            .select('referring_domains, backlinks_total, domain_rank, referring_domains_new, referring_domains_lost, measured_at')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('measured_at', { ascending: false })
+            .limit(1),
+          // GSC history (latest)
+          supabase
+            .from('gsc_history_log')
+            .select('clicks, impressions, ctr, avg_position, top_queries, week_start_date')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('week_start_date', { ascending: false })
+            .limit(4),
+          // GA4 history (latest)
+          supabase
+            .from('ga4_history_log')
+            .select('total_users, sessions, pageviews, bounce_rate, engagement_rate, week_start_date')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('week_start_date', { ascending: false })
+            .limit(4),
+          // Crawl index history
+          supabase
+            .from('crawl_index_history')
+            .select('total_pages, indexed_count, noindex_count, gsc_indexed_count, week_start_date')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('week_start_date', { ascending: false })
+            .limit(4),
+        ]);
+
+        const blocks: string[] = [];
+
+        // Crawl summary
+        if (crawlRes.data?.length) {
+          const latest = crawlRes.data[0];
+          blocks.push(`CRAWL MULTI-PAGES (dernier: ${latest.created_at?.slice(0, 10)}):
+- Statut: ${latest.status}, Pages: ${latest.crawled_pages}/${latest.total_pages}, Score moyen: ${latest.avg_score || '—'}/200
+- Résumé IA: ${latest.ai_summary?.slice(0, 500) || 'Non disponible'}`);
+        }
+
+        // Crawl pages (worst pages)
+        if (crawlPagesRes.data?.length) {
+          const worstPages = crawlPagesRes.data.slice(0, 15).map((p: any) =>
+            `  - ${p.url} | Score: ${p.seo_score}/200 | Mots: ${p.word_count || '?'} | Liens int: ${p.internal_links || 0} | Profondeur: ${p.crawl_depth || '?'} | Noindex: ${p.has_noindex ? 'oui' : 'non'} | Issues: ${(p.issues || []).join(', ') || 'aucune'}`
+          ).join('\n');
+          blocks.push(`PAGES LES PLUS FAIBLES (top 15 par score):\n${worstPages}`);
+        }
+
+        // Audit history
+        if (auditRes.data?.length) {
+          blocks.push(`AUDITS RÉALISÉS:\n${auditRes.data.map((a: any) => `  - ${a.audit_type} le ${a.created_at?.slice(0, 10)}`).join('\n')}`);
+        }
+
+        // SERP KPIs
+        if (serpRes.data?.length) {
+          for (const entry of serpRes.data) {
+            if (entry.data_type === 'serp_kpis' && entry.result_data) {
+              const d = entry.result_data as any;
+              blocks.push(`SERP KPIs (${entry.created_at?.slice(0, 10)}):
+- Mots-clés organiques: ${d.organic_keywords || '?'}, Trafic estimé: ${d.organic_traffic || '?'}
+- Domaine rank: ${d.domain_rank || '?'}, Autorité sémantique: ${d.semantic_authority || '?'}`);
+            }
+          }
+        }
+
+        // Backlinks
+        if (backlinkRes.data?.length) {
+          const bl = backlinkRes.data[0];
+          blocks.push(`BACKLINKS (${bl.measured_at?.slice(0, 10)}):
+- Domaines référents: ${bl.referring_domains || '?'}, Total backlinks: ${bl.backlinks_total || '?'}
+- Rang domaine: ${bl.domain_rank || '?'}, Nouveaux: +${bl.referring_domains_new || 0}, Perdus: -${bl.referring_domains_lost || 0}`);
+        }
+
+        // GSC
+        if (gscRes.data?.length) {
+          const latest = gscRes.data[0];
+          blocks.push(`GOOGLE SEARCH CONSOLE (semaine ${latest.week_start_date}):
+- Clics: ${latest.clicks}, Impressions: ${latest.impressions}, CTR: ${(latest.ctr * 100).toFixed(1)}%, Position moy: ${latest.avg_position?.toFixed(1) || '?'}
+- Top requêtes: ${JSON.stringify(latest.top_queries)?.slice(0, 300) || 'N/A'}`);
+        }
+
+        // GA4
+        if (ga4Res.data?.length) {
+          const latest = ga4Res.data[0];
+          blocks.push(`GOOGLE ANALYTICS (semaine ${latest.week_start_date}):
+- Utilisateurs: ${latest.total_users}, Sessions: ${latest.sessions}, Pages vues: ${latest.pageviews}
+- Taux rebond: ${(latest.bounce_rate * 100).toFixed(1)}%, Engagement: ${(latest.engagement_rate * 100).toFixed(1)}%`);
+        }
+
+        // Index history
+        if (indexHistoryRes.data?.length) {
+          const latest = indexHistoryRes.data[0];
+          blocks.push(`INDEXATION (semaine ${latest.week_start_date}):
+- Total pages: ${latest.total_pages}, Indexées: ${latest.indexed_count}, Noindex: ${latest.noindex_count}
+- GSC indexées: ${latest.gsc_indexed_count || 'N/A'}`);
+        }
+
+        if (blocks.length > 0) {
+          domainDataBlock = `\n\nDONNÉES COMPLÈTES DU DOMAINE "${normalizedDomain}" :\n${blocks.join('\n\n')}`;
+          console.log(`[cocoon-chat] Domain data loaded: ${blocks.length} data blocks`);
+        }
+      }
+    } catch (e) {
+      console.warn('[cocoon-chat] Could not fetch domain data:', e);
+    }
+
     const langInstruction = language === 'en'
       ? 'You MUST reply entirely in English.'
       : language === 'es'
@@ -45,9 +213,14 @@ serve(async (req) => {
 
 ${langInstruction}
 ${siteIdentityBlock}
+${domainDataBlock}
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
+
+RESTRICTION DE DOMAINE :
+Tu ne dois répondre QU'AUX questions concernant le domaine "${domain || 'affiché dans le graphe'}". 
+Si l'utilisateur pose une question sur un autre domaine, réponds poliment que tu ne peux analyser que le domaine actuellement affiché dans la preview du cocon sémantique.
 
 IMPORTANT — VÉRIFICATION DE COHÉRENCE :
 Avant de répondre à chaque question, analyse si la question de l'utilisateur est cohérente avec les données du graphe que tu as reçues. 
@@ -63,6 +236,12 @@ Si la question est cohérente avec les données mais révèle un vrai problème 
 
 Si la question est une question normale (analyse, conseil, optimisation), réponds normalement sans préfixe.
 
+STYLE DE RÉPONSE :
+- Prends le temps de bien analyser les données avant de répondre
+- Ne montre jamais de message d'erreur technique ou de processus de réflexion interne
+- Réponds toujours de manière structurée et professionnelle, même si les données sont incomplètes
+- Si tu ne disposes pas de certaines données, dis simplement que cette information n'est pas encore disponible pour ce domaine
+
 Ton rôle :
 - Interpréter les métriques du cocon (ROI prédictif, GEO score, citabilité LLM, E-E-A-T, content gap, cannibalisation)
 - Identifier les clusters faibles et proposer des optimisations concrètes
@@ -70,6 +249,7 @@ Ton rôle :
 - Recommander des pages à créer, fusionner ou supprimer
 - Expliquer les relations sémantiques entre les nœuds
 - Donner des conseils pour améliorer la visibilité LLM (GEO)
+- Utiliser les données de crawl, audit, SERP, backlinks, GSC et GA4 quand elles sont disponibles pour enrichir tes analyses
 
 Réponds de façon concise, structurée et actionnable. Utilise des bullets points et du markdown.`;
 

@@ -133,6 +133,38 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+// ─── Thinking indicator with cycling messages ───
+function ThinkingIndicator({ language }: { language: string }) {
+  const [step, setStep] = useState(0);
+  const steps = language === 'en'
+    ? ['Analyzing graph data…', 'Cross-referencing metrics…', 'Building recommendations…']
+    : language === 'es'
+      ? ['Analizando datos del grafo…', 'Cruzando métricas…', 'Construyendo recomendaciones…']
+      : ['Analyse des données du graphe…', 'Croisement des métriques…', 'Construction des recommandations…'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep(s => (s + 1) % steps.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [steps.length]);
+
+  return (
+    <div className="flex justify-start">
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
+        <div className="flex gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#fbbf24] animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#fbbf24] animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#fbbf24] animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+        <span className="text-[10px] text-white/40 transition-opacity duration-500">
+          {steps[step]}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cocoon-chat`;
@@ -458,7 +490,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       }
     } catch (e) {
       console.error('Cocoon chat error:', e);
-      upsertAssistant(t.error);
+      // Don't show error message to user — show a gentle retry suggestion instead
+      if (!assistantSoFar) {
+        const retryMsg = language === 'en' 
+          ? "I couldn't process your request. Please try again."
+          : language === 'es'
+            ? "No pude procesar tu solicitud. Inténtalo de nuevo."
+            : "Je n'ai pas pu traiter votre demande. Veuillez réessayer.";
+        upsertAssistant(retryMsg);
+      }
     } finally {
       setIsLoading(false);
       // Save after each exchange
@@ -832,14 +872,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
               );
             })}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
-                  <Loader2 className="w-3 h-3 animate-spin text-[#fbbf24]" />
-                  <span className="text-[10px] text-white/40">
-                    {language === 'en' ? 'Analyzing…' : language === 'es' ? 'Analizando…' : 'Analyse…'}
-                  </span>
-                </div>
-              </div>
+              <ThinkingIndicator language={language} />
             )}
           </div>
 
