@@ -161,6 +161,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
         totalEvents: eventsRes.count || 0,
         totalCorrectiveCodes: codesRes.count || 0,
         totalActionPlans: plansRes.count || 0,
+        totalBackendErrors: backendErrorsRes.count || 0,
+        totalFrontendErrors: frontendErrorsRes.count || 0,
         planType: (user as any).plan_type || 'free',
       });
     } catch (err) {
