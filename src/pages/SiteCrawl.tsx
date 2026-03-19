@@ -495,6 +495,7 @@ export default function SiteCrawl() {
     supabase
       .from('site_crawls')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20)
       .then(({ data }) => {
