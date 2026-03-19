@@ -257,28 +257,48 @@ export default function MatricePrompt() {
     if (!user) return;
     setAnalyzing(true);
     try {
-      // Simulate analysis (stub — will be replaced by real edge function call)
-      await new Promise(r => setTimeout(r, 2000));
-      const mockResults = selectedRows.map(row => ({
+      // Build items payload for the edge function
+      const items = selectedRows.map(row => ({
+        id: row.id,
         prompt: row.prompt,
-        axe: row.axe,
+        llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
         poids: row.poids,
-        score: Math.round(Math.random() * 100),
-        crawlers_score: Math.round(Math.random() * 100),
+        axe: row.axe,
         seuil_bon: row.seuil_bon,
         seuil_moyen: row.seuil_moyen,
         seuil_mauvais: row.seuil_mauvais,
-        dbId: row.dbId,
       }));
 
-      // Calculate global scores
-      const tw = mockResults.reduce((s, r) => s + r.poids, 0);
-      const csvWeighted = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.score * r.poids, 0) / tw) : 0;
-      const crawlersGlobal = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
+      // Call real audit-matrice edge function
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('audit-matrice', {
+        body: { url: url.trim(), items },
+      });
+
+      if (fnError || !fnData?.success) {
+        throw new Error(fnData?.error || fnError?.message || 'Audit failed');
+      }
+
+      const auditResults = fnData.results.map((r: any) => ({
+        id: r.id,
+        prompt: r.prompt,
+        axe: r.axe,
+        poids: r.poids,
+        crawlers_score: r.crawlers_score,
+        detected_type: r.detected_type,
+        raw_data: r.raw_data,
+        seuil_bon: r.seuil_bon,
+        seuil_moyen: r.seuil_moyen,
+        seuil_mauvais: r.seuil_mauvais,
+        dbId: selectedRows.find(sr => sr.id === r.id)?.dbId,
+      }));
 
       // Extract domain
       let domain = '';
       try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { domain = url; }
+
+      // Calculate global scores
+      const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
+      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
 
       // Persist audit session
       const { data: session, error: sessErr } = await supabase
@@ -288,7 +308,7 @@ export default function MatricePrompt() {
           url: url.trim(),
           domain,
           crawlers_global_score: crawlersGlobal,
-          csv_weighted_score: csvWeighted,
+          csv_weighted_score: crawlersGlobal,
           total_prompts: rows.length,
           selected_prompts: selectedRows.length,
         })
@@ -299,8 +319,8 @@ export default function MatricePrompt() {
 
       // Persist per-KPI results
       if (session) {
-        const resultRows = mockResults.map(r => {
-          const verdict = r.score >= r.seuil_bon ? 'bon' : r.score >= r.seuil_moyen ? 'moyen' : 'mauvais';
+        const resultRows = auditResults.map((r: any) => {
+          const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
           return {
             session_id: session.id,
             prompt_item_id: r.dbId || null,
@@ -309,7 +329,7 @@ export default function MatricePrompt() {
             axe: r.axe,
             poids: r.poids,
             crawlers_score: r.crawlers_score,
-            csv_weighted_score: r.score,
+            csv_weighted_score: r.crawlers_score,
             seuil_bon: r.seuil_bon,
             seuil_moyen: r.seuil_moyen,
             seuil_mauvais: r.seuil_mauvais,
@@ -320,10 +340,10 @@ export default function MatricePrompt() {
         if (resErr) console.error('Results save error:', resErr);
       }
 
-      setResults(mockResults);
-      toast.success('Analyse terminée — résultats sauvegardés');
-    } catch {
-      toast.error('Erreur lors de l\'analyse');
+      setResults(auditResults);
+      toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'analyse');
     } finally {
       setAnalyzing(false);
     }
