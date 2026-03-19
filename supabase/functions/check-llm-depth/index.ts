@@ -403,20 +403,20 @@ async function runDepthConversation(
   const isEs = lang === 'es'
 
   const systemPrompt = isFr
-    ? `Tu es un consultant indépendant qui aide les entreprises à trouver les meilleurs outils et prestataires. Tu donnes des recommandations honnêtes et exhaustives en citant des noms précis de marques et d'entreprises. Tu ne connais pas à l'avance ce que cherche l'utilisateur.`
+    ? `Tu es un assistant utile et honnête. Tu réponds de façon naturelle et conversationnelle. Quand on te demande des recommandations, cite des noms précis.`
     : isEs
-    ? `Eres un consultor independiente que ayuda a las empresas a encontrar las mejores herramientas y proveedores. Das recomendaciones honestas y exhaustivas citando nombres precisos de marcas y empresas. No sabes de antemano lo que busca el usuario.`
-    : `You are an independent consultant helping businesses find the best tools and providers. You give honest and exhaustive recommendations citing precise brand and company names. You don't know in advance what the user is looking for.`
+    ? `Eres un asistente útil y honesto. Respondes de forma natural y conversacional. Cuando te piden recomendaciones, cita nombres precisos.`
+    : `You are a helpful and honest assistant. You answer naturally and conversationally. When asked for recommendations, cite precise names.`
 
   const messages: { role: string; content: string }[] = [
     { role: 'system', content: systemPrompt },
   ]
 
   const anglesLabels = isFr
-    ? ['Besoin générique', 'Alternatives', 'Niche / spécialisé', 'Budget', 'Géographie', 'Niche profond', 'Exhaustif']
+    ? ['Besoin réel', 'Relance', 'Comparaison', 'Détail pratique', 'Reco perso', 'Outsider', 'Vérification']
     : isEs
-    ? ['Necesidad genérica', 'Alternativas', 'Nicho / especializado', 'Presupuesto', 'Geografía', 'Nicho profundo', 'Exhaustivo']
-    : ['Generic need', 'Alternatives', 'Niche / specialized', 'Budget', 'Geography', 'Deep niche', 'Exhaustive']
+    ? ['Necesidad real', 'Seguimiento', 'Comparación', 'Detalle práctico', 'Reco personal', 'Outsider', 'Verificación']
+    : ['Real need', 'Follow-up', 'Comparison', 'Practical detail', 'Personal reco', 'Outsider', 'Final check']
 
   const anglesTested: string[] = []
   let lastAssistantContent = ''
