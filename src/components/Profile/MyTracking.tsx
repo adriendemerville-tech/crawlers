@@ -532,6 +532,46 @@ export function MyTracking() {
       const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
       const performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
 
+      // === Semantic Authority: weighted avg of SERP rankings filtered by core-target relevance ===
+      const semanticAuthority = (() => {
+        const keywords: Array<{ keyword: string; position: number; search_volume: number }> = serpData?.sample_keywords || [];
+        if (keywords.length === 0) return null;
+
+        // Build relevance tokens from site identity card
+        const identityTokens: string[] = [];
+        const addTokens = (val: string | null | undefined) => {
+          if (!val) return;
+          val.toLowerCase().split(/[\s,;|/]+/).filter(t => t.length > 2).forEach(t => identityTokens.push(t));
+        };
+        addTokens(site.products_services);
+        addTokens(site.market_sector);
+        addTokens(site.target_audience);
+        addTokens(site.commercial_area);
+
+        // Score each keyword for relevance (0 or 1) via token overlap
+        const scored = keywords
+          .filter(kw => kw.keyword && typeof kw.position === 'number' && kw.position > 0)
+          .map(kw => {
+            const kwLower = kw.keyword.toLowerCase();
+            const kwTokens = kwLower.split(/[\s,;|/]+/).filter(t => t.length > 2);
+            // Relevant if any identity token appears in keyword or vice versa
+            const isRelevant = identityTokens.length === 0 || identityTokens.some(t => kwLower.includes(t)) || kwTokens.some(kt => identityTokens.some(it => it.includes(kt) || kt.includes(it)));
+            if (!isRelevant) return null;
+
+            // Position → score: pos 1 = 100, pos 3 = 90, pos 10 = 50, pos 20 = 25, pos 50 = 5
+            const posScore = Math.max(0, Math.round(100 * Math.exp(-0.05 * (kw.position - 1))));
+            const volume = kw.search_volume || 1;
+            return { posScore, volume };
+          })
+          .filter(Boolean) as Array<{ posScore: number; volume: number }>;
+
+        if (scored.length === 0) return null;
+
+        const totalWeight = scored.reduce((s, k) => s + k.volume, 0);
+        const weightedSum = scored.reduce((s, k) => s + k.posScore * k.volume, 0);
+        return Math.round(weightedSum / totalWeight);
+      })();
+
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
         user_id: user.id,
@@ -541,6 +581,7 @@ export function MyTracking() {
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
+        semantic_authority: semanticAuthority,
         voice_share: citationRate || null,
         raw_data: { 
           geoData: geoData?.data, 
@@ -746,6 +787,40 @@ export function MyTracking() {
 
     await Promise.allSettled(calls);
 
+    // === Semantic Authority: weighted avg of SERP rankings filtered by core-target relevance ===
+    const computedSemanticAuth = (() => {
+      const keywords: Array<{ keyword: string; position: number; search_volume: number }> = rawAccumulator.serpData?.sample_keywords || [];
+      if (keywords.length === 0) return null;
+
+      const identityTokens: string[] = [];
+      const addTokens = (val: string | null | undefined) => {
+        if (!val) return;
+        val.toLowerCase().split(/[\s,;|/]+/).filter(t => t.length > 2).forEach(t => identityTokens.push(t));
+      };
+      addTokens(site.products_services);
+      addTokens(site.market_sector);
+      addTokens(site.target_audience);
+      addTokens(site.commercial_area);
+
+      const scored = keywords
+        .filter(kw => kw.keyword && typeof kw.position === 'number' && kw.position > 0)
+        .map(kw => {
+          const kwLower = kw.keyword.toLowerCase();
+          const kwTokens = kwLower.split(/[\s,;|/]+/).filter(t => t.length > 2);
+          const isRelevant = identityTokens.length === 0 || identityTokens.some(t => kwLower.includes(t)) || kwTokens.some(kt => identityTokens.some(it => it.includes(kt) || kt.includes(it)));
+          if (!isRelevant) return null;
+          const posScore = Math.max(0, Math.round(100 * Math.exp(-0.05 * (kw.position - 1))));
+          const volume = kw.search_volume || 1;
+          return { posScore, volume };
+        })
+        .filter(Boolean) as Array<{ posScore: number; volume: number }>;
+
+      if (scored.length === 0) return null;
+      const totalWeight = scored.reduce((s, k) => s + k.volume, 0);
+      const weightedSum = scored.reduce((s, k) => s + k.posScore * k.volume, 0);
+      return Math.round(weightedSum / totalWeight);
+    })();
+
     // Insert ONE single snapshot with all collected data
     await supabase.from('user_stats_history').insert({
       user_id: user.id,
@@ -755,6 +830,7 @@ export function MyTracking() {
       geo_score: Math.round(currentGeoScore),
       llm_citation_rate: currentCitationRate,
       ai_sentiment: currentSentiment,
+      semantic_authority: computedSemanticAuth,
       voice_share: currentCitationRate || null,
       raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
     });
@@ -1217,7 +1293,7 @@ export function MyTracking() {
                       aiVisibility: { label: t.aiVisibility, value: latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—', icon: Eye, tooltip: 'Méthodologie :\nScore combiné et pondéré de votre visibilité globale sur les moteurs IA.' },
                       citationRate: { label: t.citationRate, value: latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—', icon: Brain, tooltip: 'Méthodologie :\nPourcentage brut et factuel — sur X prompts testés, combien de fois votre domaine a été explicitement cité dans la réponse du LLM.' },
                       sentiment: { label: t.sentiment, value: latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—', icon: BarChart3, valueClassName: latestStats ? sentimentColor(latestStats.ai_sentiment) : '' },
-                      semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—', icon: TrendingUp },
+                      semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}/100` : '—', icon: TrendingUp, tooltip: 'Méthodologie :\nMoyenne pondérée par volume de recherche des positions SERP (DataForSEO) filtrées par pertinence avec la carte d\'identité du site (produits/services, secteur, audience cible).' },
                       voiceShare: { label: `${t.voiceShare} (estimation)`, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3, tooltip: 'Méthodologie :\nScore pondéré incluant visibilité LLM (moyenne des citations), performance SERP (mots-clés Top 10) et volume de recherche (ETV normalisé).' },
                     };
 
