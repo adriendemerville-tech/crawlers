@@ -3,8 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff, AlertTriangle, Link2, DollarSign, Search, Sparkles, Building2, Play, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AlgoConfig {
   id: string;
@@ -149,6 +152,114 @@ const ALGOS: AlgoConfig[] = [
     ],
   },
   {
+    id: 'anomaly-detection',
+    name: 'Anomaly Detection (Traffic/Rankings)',
+    description: 'Détection automatique de chutes anormales de trafic, positions ou indexation via Z-score et Isolation Forest sur les séries temporelles GSC/GA4.',
+    tier: 1,
+    tierLabel: 'Déterministe',
+    icon: AlertTriangle,
+    trainingScore: 85,
+    dataRequirement: 'gsc_history_log + ga4_history_log (8+ semaines)',
+    status: 'ready',
+    enabled: false,
+    edgeFunction: 'detect-anomalies',
+    metrics: [
+      { label: 'Type', value: 'Z-score / IQR' },
+      { label: 'Source', value: 'GSC + GA4' },
+      { label: 'Alerting', value: 'Temps réel' },
+    ],
+  },
+  {
+    id: 'internal-link-optimizer',
+    name: 'Internal Link Optimizer',
+    description: 'Simulation de flux PageRank : prédit le gain d\'autorité de chaque lien interne ajouté. Recommande les liens à plus fort impact.',
+    tier: 1,
+    tierLabel: 'Déterministe',
+    icon: Link2,
+    trainingScore: 90,
+    dataRequirement: 'semantic_nodes + crawl_pages.anchor_texts',
+    status: 'ready',
+    enabled: false,
+    edgeFunction: 'optimize-internal-links',
+    metrics: [
+      { label: 'Type', value: 'Simulation PR' },
+      { label: 'Algo', value: 'Delta PageRank' },
+      { label: 'Output', value: 'Top 20 liens' },
+    ],
+  },
+  {
+    id: 'roi-predictor',
+    name: 'ROI Predictor par Recommandation',
+    description: 'Corrèle les recommandations appliquées avec le delta trafic/revenu réel à T+90. Prédit le ROI avant application.',
+    tier: 2,
+    tierLabel: 'Données 3-6 mois',
+    icon: DollarSign,
+    trainingScore: 10,
+    dataRequirement: 'audit_impact_snapshots + cocoon_recommendations (20+ applied)',
+    status: 'collecting',
+    enabled: false,
+    edgeFunction: null,
+    metrics: [
+      { label: 'Type', value: 'Corrélation' },
+      { label: 'Min. data', value: '20 recos appliquées' },
+      { label: 'Source', value: 'impact_snapshots' },
+    ],
+  },
+  {
+    id: 'keyword-opportunity',
+    name: 'Keyword Opportunity Scoring',
+    description: 'Score multi-facteurs : écart entre position SERP et autorité du domaine. Identifie les mots-clés sous-exploités à fort potentiel.',
+    tier: 2,
+    tierLabel: 'Données 3-6 mois',
+    icon: Search,
+    trainingScore: 25,
+    dataRequirement: 'serp_snapshots + backlink_snapshots + volumes LLM',
+    status: 'collecting',
+    enabled: false,
+    edgeFunction: null,
+    metrics: [
+      { label: 'Type', value: 'Scoring composite' },
+      { label: 'Facteurs', value: 'Position × Autorité × Volume' },
+      { label: 'Output', value: 'Top opportunités' },
+    ],
+  },
+  {
+    id: 'geo-citation-predictor',
+    name: 'GEO Citation Predictor',
+    description: 'Prédit quels attributs de contenu (longueur, schema.org, EEAT, structure) corrèlent avec un meilleur taux de citation LLM.',
+    tier: 2,
+    tierLabel: 'Données 3-6 mois',
+    icon: Sparkles,
+    trainingScore: 8,
+    dataRequirement: 'llm_depth_conversations + crawl_pages (100+ pages testées)',
+    status: 'collecting',
+    enabled: false,
+    edgeFunction: null,
+    metrics: [
+      { label: 'Type', value: 'Feature importance' },
+      { label: 'Min. data', value: '100 pages' },
+      { label: 'Moat', value: 'First-mover GEO' },
+    ],
+  },
+  {
+    id: 'sector-benchmark',
+    name: 'Benchmark Sectoriel',
+    description: 'Percentile ranking par secteur d\'activité : compare les scores SEO, citation LLM et santé technique aux moyennes du secteur.',
+    tier: 2,
+    tierLabel: 'Données 3-6 mois',
+    icon: Building2,
+    trainingScore: 18,
+    dataRequirement: 'analyzed_urls + audits (100+ domaines par secteur)',
+    status: 'collecting',
+    enabled: false,
+    edgeFunction: null,
+    metrics: [
+      { label: 'Type', value: 'Statistique' },
+      { label: 'Min. data', value: '100 domaines/secteur' },
+      { label: 'Output', value: 'Percentile rank' },
+    ],
+  },
+  {
     id: 'intent-shift',
     name: 'Intent Shift Detector',
     description: 'Tracking longitudinal du type d\'intent sur les mêmes queries. Risque élevé de bruit dû à la volatilité SERP.',
@@ -223,11 +334,17 @@ export function AlgoTrainingDashboard() {
   return (
     <div className="space-y-6">
       {/* Header stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-border/50">
           <CardContent className="pt-4 pb-3">
-            <div className="text-sm text-muted-foreground">Algos actifs</div>
-            <div className="text-2xl font-bold mt-1">{algos.filter((a) => a.enabled).length} / {algos.length}</div>
+            <div className="text-sm text-muted-foreground">Algos total</div>
+            <div className="text-2xl font-bold mt-1">{algos.length}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="pt-4 pb-3">
+            <div className="text-sm text-muted-foreground">Actifs</div>
+            <div className="text-2xl font-bold mt-1">{algos.filter((a) => a.enabled).length}</div>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -245,7 +362,7 @@ export function AlgoTrainingDashboard() {
         <Card className="border-border/50">
           <CardContent className="pt-4 pb-3">
             <div className="text-sm text-muted-foreground">En collecte</div>
-            <div className="text-2xl font-bold text-amber-400 mt-1">{tier2.filter((a) => a.status === 'collecting').length + tier3.filter((a) => a.status === 'collecting').length}</div>
+            <div className="text-2xl font-bold text-amber-400 mt-1">{algos.filter((a) => a.status === 'collecting').length}</div>
           </CardContent>
         </Card>
       </div>
