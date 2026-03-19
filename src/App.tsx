@@ -142,6 +142,10 @@ const App = () => (
                       <Suspense fallback={null}>
                         <FloatingChatBubble />
                       </Suspense>
+                      <Suspense fallback={null}>
+                        <SurveyModal />
+                      </Suspense>
+                      </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
                 </CreditsProvider>
