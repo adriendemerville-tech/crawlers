@@ -66,6 +66,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
         codesRes,
         plansRes,
         eventsRes,
+        backendErrorsRes,
+        frontendErrorsRes,
       ] = await Promise.all([
         // Sessions & activity from analytics_events
         supabase
@@ -98,6 +100,18 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
           .from('analytics_events')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),
+        // Backend errors (silent_error, edge_function_error, browserless_error, scan_error, scan_error_final)
+        supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .in('event_type', ['silent_error', 'edge_function_error', 'browserless_error', 'scan_error', 'scan_error_final']),
+        // Frontend errors
+        supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('event_type', 'error'),
       ]);
 
       // Calculate sessions
