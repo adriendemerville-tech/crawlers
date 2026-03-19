@@ -296,8 +296,38 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.title} — {cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : 'Drupal'}</DialogTitle>
-          <DialogDescription className="text-xs">
-            {cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : t.drupalHelp}
+          <DialogDescription className="text-xs space-y-1">
+            <span>{cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : t.drupalHelp}</span>
+            {cmsType === 'wordpress' && siteUrl && (
+              <a
+                href={`${siteUrl.replace(/\/$/, '')}/wp-admin/users.php?page=application-passwords`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages API WordPress' : language === 'es' ? 'Abrir configuración API WordPress' : 'Open WordPress API settings'}
+              </a>
+            )}
+            {cmsType === 'drupal' && siteUrl && (
+              <a
+                href={`${siteUrl.replace(/\/$/, '')}/admin/config/services`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages API Drupal' : language === 'es' ? 'Abrir configuración API Drupal' : 'Open Drupal API settings'}
+              </a>
+            )}
+            {cmsType === 'shopify' && siteUrl && (
+              <a
+                href={`https://${siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}/admin/settings/notifications`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages API Shopify' : language === 'es' ? 'Abrir configuración API Shopify' : 'Open Shopify API settings'}
+              </a>
+            )}
           </DialogDescription>
         </DialogHeader>
 
