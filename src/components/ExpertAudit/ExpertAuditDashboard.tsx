@@ -1234,6 +1234,7 @@ export function ExpertAuditDashboard() {
   }, [handleStrategicAudit, toast]);
 
   return (
+    <StrategicErrorBoundary onReset={handleNewAudit}>
     <div className="container mx-auto px-4 py-10 max-w-5xl">
       {/* Fatal error banner — after 4 consecutive failures */}
       {fatalAuditError && (
