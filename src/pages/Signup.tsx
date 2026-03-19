@@ -183,10 +183,36 @@ export default function Signup() {
     }
   };
 
+  const signupJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers',
+    "description": language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers.' : 'Créez votre compte Crawlers gratuitement. Accédez aux audits SEO, GEO et IA.',
+    "url": "https://crawlers.fr/signup",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Crawlers",
+      "url": "https://crawlers.fr"
+    },
+    "potentialAction": {
+      "@type": "RegisterAction",
+      "target": "https://crawlers.fr/signup",
+      "name": language === 'en' ? 'Create account' : language === 'es' ? 'Crear cuenta' : 'Créer un compte'
+    }
+  };
+
+  useCanonicalHreflang('/signup');
+
   // Step 1: PersonaGate
   if (!personaSelected) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+        <Helmet>
+          <title>{language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers'}</title>
+          <meta name="description" content={language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI visibility audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers. Auditorías SEO, GEO e IA.' : 'Créez votre compte Crawlers gratuit. Accédez aux audits SEO, GEO et de visibilité IA.'} />
+          <meta name="robots" content="index, follow" />
+          <script type="application/ld+json">{JSON.stringify(signupJsonLd)}</script>
+        </Helmet>
         <AnimatePresence>
           <PersonaGate onSelect={handlePersonaSelect} />
         </AnimatePresence>
