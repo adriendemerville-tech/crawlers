@@ -39,6 +39,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const SignupPage = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
+const RapportViewer = lazy(() => import("./pages/RapportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
