@@ -122,7 +122,6 @@ export default function Auth() {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
