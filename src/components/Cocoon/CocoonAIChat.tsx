@@ -696,6 +696,9 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
               <button onClick={() => setFontSize(s => Math.min(FONT_MAX, s + 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Agrandir le texte">
                 <ZoomIn className="w-3 h-3 text-white/30 hover:text-white/60" />
               </button>
+              <button onClick={handleOptimizeLinking} disabled={isLoading || nodes.length < 3} className="p-1 rounded-lg hover:bg-emerald-500/20 transition-colors disabled:opacity-30" title={t.optimize}>
+                <Network className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
+              </button>
               <div className="w-px h-3 bg-white/10 mx-0.5" />
               {messages.length > 0 && (
                 <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
