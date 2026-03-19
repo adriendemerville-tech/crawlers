@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type ReportType = 'seo_technical' | 'seo_strategic' | 'llm' | 'geo' | 'pagespeed' | 'crawlers';
+type ReportType = 'seo_technical' | 'seo_strategic' | 'llm' | 'geo' | 'pagespeed' | 'crawlers' | 'cocoon';
 
 interface SaveReportParams {
   reportType: ReportType;
