@@ -389,8 +389,8 @@ export function SurveyManagement() {
         ...d,
         target_pages: (d.target_pages || []) as string[],
         target_persona: (d.target_persona || {}) as Record<string, any>,
-        content_blocks: (d.content_blocks || []) as ContentBlock[],
-        variant_b_content_blocks: d.variant_b_content_blocks as ContentBlock[] | null,
+        content_blocks: (d.content_blocks || []) as unknown as ContentBlock[],
+        variant_b_content_blocks: d.variant_b_content_blocks as unknown as ContentBlock[] | null,
         variant_b_target_persona: d.variant_b_target_persona as Record<string, any> | null,
       })));
 
