@@ -193,6 +193,7 @@ export default function Cocoon() {
   const [colorIntensity, setColorIntensity] = useState(5);
   const [bgWarmth, setBgWarmth] = useState(0);
   const [linkThickness, setLinkThickness] = useState(1);
+  const [bgColor, setBgColor] = useState(0); // -10=black, 0=night blue, 10=white
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
