@@ -334,11 +334,17 @@ export function AlgoTrainingDashboard() {
   return (
     <div className="space-y-6">
       {/* Header stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-border/50">
           <CardContent className="pt-4 pb-3">
-            <div className="text-sm text-muted-foreground">Algos actifs</div>
-            <div className="text-2xl font-bold mt-1">{algos.filter((a) => a.enabled).length} / {algos.length}</div>
+            <div className="text-sm text-muted-foreground">Algos total</div>
+            <div className="text-2xl font-bold mt-1">{algos.length}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="pt-4 pb-3">
+            <div className="text-sm text-muted-foreground">Actifs</div>
+            <div className="text-2xl font-bold mt-1">{algos.filter((a) => a.enabled).length}</div>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -356,7 +362,7 @@ export function AlgoTrainingDashboard() {
         <Card className="border-border/50">
           <CardContent className="pt-4 pb-3">
             <div className="text-sm text-muted-foreground">En collecte</div>
-            <div className="text-2xl font-bold text-amber-400 mt-1">{tier2.filter((a) => a.status === 'collecting').length + tier3.filter((a) => a.status === 'collecting').length}</div>
+            <div className="text-2xl font-bold text-amber-400 mt-1">{algos.filter((a) => a.status === 'collecting').length}</div>
           </CardContent>
         </Card>
       </div>
