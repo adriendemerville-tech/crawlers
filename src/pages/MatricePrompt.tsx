@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, CheckSquare } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Header } from '@/components/Header';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
@@ -19,6 +20,7 @@ import Papa from 'papaparse';
 
 interface MatrixRow {
   id: string;
+  dbId?: string; // prompt_matrix_items UUID
   prompt: string;
   poids: number;
   axe: string;
@@ -62,14 +64,14 @@ export default function MatricePrompt() {
     }
   }, [isAdmin, adminLoading, authLoading, user, navigate]);
 
-  /* --- CSV Import --- */
+  /* --- CSV Import + persist prompt items --- */
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (result) => {
+      complete: async (result) => {
         const parsed: MatrixRow[] = result.data.map((raw: any, i: number) => {
           const isDefault: Record<string, boolean> = {};
           const val = (key: string, def: any) => {
@@ -94,6 +96,29 @@ export default function MatricePrompt() {
             isDefault,
           };
         });
+
+        // Persist prompt items to DB
+        const dbRows = parsed.map(p => ({
+          user_id: user.id,
+          prompt: p.prompt,
+          poids: p.poids,
+          axe: p.axe,
+          seuil_bon: p.seuil_bon,
+          seuil_moyen: p.seuil_moyen,
+          seuil_mauvais: p.seuil_mauvais,
+          llm_name: p.llm_name,
+          is_default_flags: p.isDefault,
+        }));
+
+        const { data: inserted, error } = await supabase
+          .from('prompt_matrix_items')
+          .insert(dbRows)
+          .select('id');
+
+        if (!error && inserted) {
+          parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+        }
+
         setRows(parsed);
         setResults(null);
         toast.success(`${parsed.length} KPIs importés`);
@@ -101,7 +126,7 @@ export default function MatricePrompt() {
       error: () => toast.error('Erreur de parsing CSV'),
     });
     e.target.value = '';
-  }, []);
+  }, [user]);
 
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
@@ -111,25 +136,78 @@ export default function MatricePrompt() {
 
   const selectedRows = useMemo(() => rows.filter(r => r.selected), [rows]);
 
-  /* --- Analyze stub --- */
+  /* --- Analyze + persist session & results --- */
   const handleAnalyze = async () => {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
+    if (!user) return;
     setAnalyzing(true);
     try {
-      // Simulate analysis with selected KPIs
+      // Simulate analysis (stub — will be replaced by real edge function call)
       await new Promise(r => setTimeout(r, 2000));
       const mockResults = selectedRows.map(row => ({
         prompt: row.prompt,
         axe: row.axe,
         poids: row.poids,
         score: Math.round(Math.random() * 100),
+        crawlers_score: Math.round(Math.random() * 100),
         seuil_bon: row.seuil_bon,
         seuil_moyen: row.seuil_moyen,
         seuil_mauvais: row.seuil_mauvais,
+        dbId: row.dbId,
       }));
+
+      // Calculate global scores
+      const tw = mockResults.reduce((s, r) => s + r.poids, 0);
+      const csvWeighted = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.score * r.poids, 0) / tw) : 0;
+      const crawlersGlobal = tw > 0 ? Math.round(mockResults.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
+
+      // Extract domain
+      let domain = '';
+      try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { domain = url; }
+
+      // Persist audit session
+      const { data: session, error: sessErr } = await supabase
+        .from('matrix_audit_sessions')
+        .insert({
+          user_id: user.id,
+          url: url.trim(),
+          domain,
+          crawlers_global_score: crawlersGlobal,
+          csv_weighted_score: csvWeighted,
+          total_prompts: rows.length,
+          selected_prompts: selectedRows.length,
+        })
+        .select('id')
+        .single();
+
+      if (sessErr) console.error('Session save error:', sessErr);
+
+      // Persist per-KPI results
+      if (session) {
+        const resultRows = mockResults.map(r => {
+          const verdict = r.score >= r.seuil_bon ? 'bon' : r.score >= r.seuil_moyen ? 'moyen' : 'mauvais';
+          return {
+            session_id: session.id,
+            prompt_item_id: r.dbId || null,
+            user_id: user.id,
+            prompt: r.prompt,
+            axe: r.axe,
+            poids: r.poids,
+            crawlers_score: r.crawlers_score,
+            csv_weighted_score: r.score,
+            seuil_bon: r.seuil_bon,
+            seuil_moyen: r.seuil_moyen,
+            seuil_mauvais: r.seuil_mauvais,
+            verdict,
+          };
+        });
+        const { error: resErr } = await supabase.from('matrix_audit_results').insert(resultRows);
+        if (resErr) console.error('Results save error:', resErr);
+      }
+
       setResults(mockResults);
-      toast.success('Analyse terminée');
+      toast.success('Analyse terminée — résultats sauvegardés');
     } catch {
       toast.error('Erreur lors de l\'analyse');
     } finally {
@@ -237,7 +315,8 @@ export default function MatricePrompt() {
                     <TableHead className="w-20">Moyen</TableHead>
                     <TableHead className="w-20">Mauvais</TableHead>
                     <TableHead className="w-36">Modèle</TableHead>
-                    {results && <TableHead className="w-20">Score</TableHead>}
+                    {results && <TableHead className="w-24">Crawlers</TableHead>}
+                    {results && <TableHead className="w-24">CSV</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -277,6 +356,11 @@ export default function MatricePrompt() {
                           {row.isDefault.llm_name && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
                         {results && (
+                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
+                          </TableCell>
+                        )}
+                        {results && (
                           <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? `${resultRow.score}/100` : '—'}
                           </TableCell>
@@ -289,16 +373,19 @@ export default function MatricePrompt() {
 
               <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
                 <span>{selectedRows.length}/{rows.length} KPIs sélectionnés</span>
-                {results && (
-                  <span className="ml-auto font-medium text-foreground">
-                    Score pondéré : {(() => {
-                      const active = results.filter(r => selectedRows.some(s => s.prompt === r.prompt));
-                      const tw = active.reduce((s, r) => s + r.poids, 0);
-                      if (tw === 0) return '—';
-                      return Math.round(active.reduce((s, r) => s + r.score * r.poids, 0) / tw) + '/100';
-                    })()}
-                  </span>
-                )}
+                {results && (() => {
+                  const active = results.filter(r => selectedRows.some(s => s.prompt === r.prompt));
+                  const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
+                  if (tw === 0) return null;
+                  const csvScore = Math.round(active.reduce((s: number, r: any) => s + r.score * r.poids, 0) / tw);
+                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
+                  return (
+                    <span className="ml-auto font-medium text-foreground flex gap-4">
+                      <span>Crawlers : {crawlersScore}/100</span>
+                      <span>CSV pondéré : {csvScore}/100</span>
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           )}
