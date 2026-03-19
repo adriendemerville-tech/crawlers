@@ -271,7 +271,7 @@ export function BrandingTab() {
       }, 2000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [user, logoUrl, primaryColor, brandName, brandFont, brandFontSize, brandBold, brandItalic, brandUnderline, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
   // Debounced auto-save: triggers 1.5s after last change
   useEffect(() => {
