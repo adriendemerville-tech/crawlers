@@ -36,6 +36,7 @@ const PolitiqueConfidentialite = lazy(() => import("./pages/PolitiqueConfidentia
 const ConditionsUtilisation = lazy(() => import("./pages/ConditionsUtilisation"));
 const RGPD = lazy(() => import("./pages/RGPD"));
 const Auth = lazy(() => import("./pages/Auth"));
+const SignupPage = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
@@ -108,6 +109,7 @@ const App = () => (
                           <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
                           <Route path="/rgpd" element={<RGPD />} />
                           <Route path="/auth" element={<Auth />} />
+                          <Route path="/signup" element={<SignupPage />} />
                           <Route path="/console" element={<Profile />} />
                           <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
                           <Route path="/rapport/:reportId" element={<ReportViewer />} />
