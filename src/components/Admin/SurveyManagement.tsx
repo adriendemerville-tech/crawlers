@@ -293,8 +293,18 @@ function SurveyEditor({ survey, onSave, onCancel }: { survey: Partial<Survey>; o
             <CardHeader className="pb-3"><CardTitle className="text-sm">Paramètres</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label className="text-xs">Titre</Label>
+                <Label className="text-xs flex items-center gap-1">
+                  <Eye className="h-3 w-3 text-emerald-500" />
+                  Titre
+                </Label>
                 <Input value={form.title || ''} onChange={e => updateField('title', e.target.value)} placeholder="Titre de la survey" />
+              </div>
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <Eye className="h-3 w-3 text-destructive" />
+                  Description
+                </Label>
+                <Textarea value={form.description || ''} onChange={e => updateField('description', e.target.value)} placeholder="Description interne (admin only)" rows={2} />
               </div>
               <div>
                 <Label className="text-xs">Date d'envoi</Label>
