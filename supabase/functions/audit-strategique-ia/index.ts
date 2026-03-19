@@ -1252,10 +1252,64 @@ interface GMBData {
 }
 
 async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
-
   const cleanDomain = domain.replace(/^www\./, '');
   console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
+
+  // ── Step 1: Check backend gmb_locations table first ──
+  try {
+    const sbUrl = Deno.env.get('SUPABASE_URL');
+    const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (sbUrl && sbKey) {
+      const { createClient: cc } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const sb = cc(sbUrl, sbKey);
+      const { data: locations } = await sb
+        .from('gmb_locations')
+        .select('location_name, address, category, attributes')
+        .or(`website.ilike.%${cleanDomain}%`)
+        .limit(1);
+
+      if (locations && locations.length > 0) {
+        const loc = locations[0];
+        // Also fetch latest performance data
+        const { data: perf } = await sb
+          .from('gmb_performance')
+          .select('avg_rating, total_reviews')
+          .eq('gmb_location_id', loc.id || '')
+          .order('measured_at', { ascending: false })
+          .limit(1);
+
+        const rating = perf?.[0]?.avg_rating ?? undefined;
+        const reviewsCount = perf?.[0]?.total_reviews ?? undefined;
+
+        const quickWins: string[] = [];
+        if (rating != null && rating < 4.5 && reviewsCount != null) {
+          quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+.`);
+        }
+        if (reviewsCount != null && reviewsCount < 50) {
+          quickWins.push(`Avec ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis pour renforcer votre visibilité Maps.`);
+        }
+        if (quickWins.length < 2) {
+          quickWins.push(`Publiez des Google Posts hebdomadaires pour maintenir votre fiche active.`);
+        }
+
+        console.log(`📍 ✅ GMB found in backend: "${loc.location_name}" (skipping DataForSEO)`);
+        return {
+          title: loc.location_name || brandName,
+          rating,
+          reviews_count: reviewsCount,
+          category: loc.category || undefined,
+          address: loc.address || undefined,
+          quick_wins: quickWins.slice(0, 2),
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('📍 Backend GMB lookup failed, falling back to DataForSEO:', e);
+  }
+
+  // ── Step 2: Fallback to DataForSEO Google Maps API ──
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+
 
   try {
     // Search Google Maps for the brand/domain
