@@ -140,6 +140,26 @@ export function CocoonForceGraph({
   const particlesRef = useRef<Particle[]>([]);
   const lastClickPos = useRef<{ x: number; y: number } | null>(null);
 
+  // Convert hex to RGB tuple, with fallback to hardcoded map
+  const hexToRgb = useCallback((hex: string): [number, number, number] => {
+    const m = hex.replace('#', '').match(/.{2}/g);
+    if (!m) return [140, 92, 255];
+    return [parseInt(m[0], 16), parseInt(m[1], 16), parseInt(m[2], 16)];
+  }, []);
+
+  // Resolve node color: theme prop > hardcoded
+  const resolveNodeColor = useCallback((pageType: string): [number, number, number] => {
+    if (nodeColorsProp?.[pageType]) return hexToRgb(nodeColorsProp[pageType]);
+    if (nodeColorsProp?.unknown) return hexToRgb(nodeColorsProp.unknown);
+    return PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
+  }, [nodeColorsProp, hexToRgb]);
+
+  // Resolve particle/juice color: theme prop > hardcoded
+  const resolveJuiceColor = useCallback((juiceType: JuiceType): [number, number, number] => {
+    if (particleColorsProp?.[juiceType]) return hexToRgb(particleColorsProp[juiceType]);
+    return JUICE_COLORS[juiceType] || JUICE_COLORS.semantic;
+  }, [particleColorsProp, hexToRgb]);
+
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
     if (depth === 0) return 11; // home base radius (bigger sun)
