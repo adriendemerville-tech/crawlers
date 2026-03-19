@@ -685,6 +685,19 @@ export default function Cocoon() {
                         </div>
                         <Slider min={0.5} max={8} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
+                      {/* Background color */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Background' : language === 'es' ? 'Fondo' : 'Fond'}</span>
+                          <span className="text-[9px] text-white/30 font-mono">{bgColor === 0 ? '●' : bgColor < 0 ? '◼' : '◻'}</span>
+                        </div>
+                        <Slider min={-10} max={10} step={1} value={[bgColor]} onValueChange={([v]) => setBgColor(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                        <div className="flex justify-between text-[8px] text-white/25">
+                          <span>{language === 'en' ? 'Black' : language === 'es' ? 'Negro' : 'Noir'}</span>
+                          <span>{language === 'en' ? 'Night blue' : language === 'es' ? 'Azul noche' : 'Bleu nuit'}</span>
+                          <span>{language === 'en' ? 'White' : language === 'es' ? 'Blanco' : 'Blanc'}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
