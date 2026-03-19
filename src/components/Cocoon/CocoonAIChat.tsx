@@ -711,7 +711,18 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
             {messages.length === 0 && (
-              <p className="text-xs text-white/30 text-center py-8">{t.empty}</p>
+              <div className="text-center py-6 space-y-4">
+                <p className="text-xs text-white/30">{t.empty}</p>
+                <button
+                  onClick={handleOptimizeLinking}
+                  disabled={isLoading || nodes.length < 3}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Network className="w-3.5 h-3.5" />
+                  {t.optimize}
+                </button>
+              </div>
+            )}
             )}
             {messages.map((msg, i) => {
               const isUser = msg.role === 'user';
