@@ -258,6 +258,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
                     return (
                       <button
                         key={item.id}
@@ -270,7 +271,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                         )}
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{item.label}</span>
+                        <span className="truncate flex-1">{item.label}</span>
+                        {notifCount > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                            {notifCount > 99 ? '99+' : notifCount}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
