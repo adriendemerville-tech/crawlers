@@ -26,6 +26,8 @@ export interface SiteContext {
   company_size?: string
   site_name?: string
   address?: string
+  entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
+  media_specialties?: string[] // e.g. ['politique', 'économie', 'tech']
   identity_confidence?: number
   identity_source?: string
   identity_enriched_at?: string
@@ -131,15 +133,17 @@ Déduis les informations suivantes sur cette entreprise/ce site web. Sois préci
 
 Réponds UNIQUEMENT en JSON valide avec ces champs :
 {
-  "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel et électronique', 'SaaS marketing', 'Restauration rapide')",
-  "products_services": "Les principaux produits ou services vendus (ex: 'Livres, musique, électronique, jeux vidéo, billetterie spectacles', 'Logiciel d'emailing et CRM')",
-  "target_audience": "La cible principale (ex: 'Grand public, consommateurs français', 'PME et startups B2B', 'Professionnels de santé')",
-  "commercial_area": "La zone commerciale (ex: 'France métropolitaine et DOM-TOM', 'Europe francophone', 'International')",
-  "company_size": "Estimation de la taille (ex: 'Grande entreprise', 'PME', 'Startup', 'ETI')",
-  "site_name": "Le vrai nom de la marque/entreprise (ex: 'Fnac', 'Decathlon', 'Semrush')"
+  "entity_type": "Le type d'entité : 'business' (entreprise qui vend produits/services), 'media' (site d'information, journal, magazine), 'blog' (blog personnel ou thématique), 'institutional' (administration, gouvernement, association). IMPORTANT: un média/blog ne vend PAS de produits/services, il produit du contenu.",
+  "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech', 'sport']. Pour 'business', mettre []"],
+  "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
+  "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres')",
+  "target_audience": "La cible principale (ex: 'Grand public', 'Citoyens français intéressés par la politique')",
+  "commercial_area": "La zone géographique couverte",
+  "company_size": "Estimation de la taille",
+  "site_name": "Le vrai nom de la marque/entreprise/média"
 }
 
-Si tu ne connais pas un champ, mets une valeur générique raisonnable basée sur le TLD et le nom de domaine. Ne laisse aucun champ vide.`
+Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laisse aucun champ vide.`
 
   const messages = [
     { role: 'system', content: 'Tu es un analyste de marché expert. Tu connais très bien les entreprises et marques du web. Réponds uniquement en JSON valide.' },
@@ -241,6 +245,8 @@ export async function ensureSiteContext(
     company_size: site.company_size as string | undefined,
     site_name: site.site_name as string | undefined,
     address: site.address as string | undefined,
+    entity_type: (site.entity_type as string) || 'business',
+    media_specialties: (site.media_specialties as string[]) || [],
     identity_confidence: site.identity_confidence as number | undefined,
     identity_source: site.identity_source as string | undefined,
     identity_enriched_at: site.identity_enriched_at as string | undefined,
@@ -285,6 +291,8 @@ export async function ensureSiteContext(
     company_size: (enrichmentType === 'full' ? inferred.company_size : (currentContext.company_size || inferred.company_size)),
     site_name: inferred.site_name && (!siteName || siteName === domain) ? inferred.site_name : siteName,
     address: currentContext.address,
+    entity_type: inferred.entity_type || currentContext.entity_type || 'business',
+    media_specialties: inferred.media_specialties?.length ? inferred.media_specialties : (currentContext.media_specialties || []),
   }
 
   // Persist enriched data to tracked_sites
@@ -303,6 +311,8 @@ export async function ensureSiteContext(
       if (merged.target_audience) updatePayload.target_audience = merged.target_audience
       if (merged.commercial_area) updatePayload.commercial_area = merged.commercial_area
       if (merged.company_size) updatePayload.company_size = merged.company_size
+      if (merged.entity_type) updatePayload.entity_type = merged.entity_type
+      if (merged.media_specialties?.length) updatePayload.media_specialties = merged.media_specialties
       if (merged.site_name && merged.site_name !== domain) {
         updatePayload.site_name = merged.site_name
       }

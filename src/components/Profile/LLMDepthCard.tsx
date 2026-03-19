@@ -46,6 +46,8 @@ interface SiteContext {
   address?: string;
   commercial_area?: string;
   company_size?: string;
+  entity_type?: string;
+  media_specialties?: string[];
 }
 
 interface LLMDepthCardProps {

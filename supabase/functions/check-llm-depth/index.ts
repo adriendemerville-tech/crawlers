@@ -43,6 +43,8 @@ interface SiteContext {
   address?: string
   commercial_area?: string
   company_size?: string
+  entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
+  media_specialties?: string[] // e.g. ['politique', 'économie']
 }
 
 // ─── Dynamic prompt sequence builder ─────────────────────────────────────────
@@ -56,43 +58,128 @@ function buildPromptSequence(
 ): string[] {
   const isFr = lang === 'fr'
   const isEs = lang === 'es'
+  const isMedia = ctx.entity_type === 'media' || ctx.entity_type === 'blog'
 
+  // ═══ MEDIA/BLOG: keyword-based queries like a user would type in Google ═══
+  if (isMedia) {
+    return buildMediaPromptSequence(ctx, isFr, isEs)
+  }
+
+  // ═══ BUSINESS: natural customer questions ═══
+  return buildBusinessPromptSequence(serviceDesc, ctx, isFr, isEs)
+}
+
+/**
+ * Media/blog prompt sequence: simulates real information-seeking queries.
+ * A media doesn't sell anything — it wants to be CITED as a source.
+ * Queries are short, natural, like what you'd type in Google or ask an AI.
+ */
+function buildMediaPromptSequence(
+  ctx: SiteContext,
+  isFr: boolean,
+  isEs: boolean,
+): string[] {
+  const specialties = ctx.media_specialties || []
+  const sector = ctx.market_sector || ''
+  const topics = ctx.products_services || '' // For media, this stores "sujets couverts"
+
+  // Pick a specialty or fallback to sector
+  const mainTopic = specialties[0] || sector || topics.split(',')[0]?.trim() || ''
+  const secondTopic = specialties[1] || (topics.split(',')[1]?.trim()) || ''
+
+  // Iteration 1 — A real user question about current events / the topic
+  const p1 = mainTopic
+    ? (isFr ? `C'est quoi l'actu ${mainTopic} du moment ?`
+      : isEs ? `¿Qué hay de nuevo en ${mainTopic}?`
+      : `What's the latest news on ${mainTopic}?`)
+    : (isFr ? "C'est quoi les infos du jour ?"
+      : isEs ? "¿Cuáles son las noticias del día?"
+      : "What's today's news?")
+
+  // Iteration 2 — A more specific factual question
+  const p2 = mainTopic
+    ? (isFr ? `Tu peux me résumer ce qui s'est passé récemment en ${mainTopic} ?`
+      : isEs ? `¿Puedes resumirme lo que ha pasado recientemente en ${mainTopic}?`
+      : `Can you summarize what happened recently in ${mainTopic}?`)
+    : (isFr ? "Résume-moi l'actualité de cette semaine."
+      : isEs ? "Resúmeme las noticias de esta semana."
+      : "Summarize this week's news for me.")
+
+  // Iteration 3 — Ask for sources
+  const p3 = isFr
+    ? "Où est-ce que tu trouves ces infos ? Quelles sont tes sources ?"
+    : isEs
+    ? "¿Dónde encuentras esa información? ¿Cuáles son tus fuentes?"
+    : "Where do you get that info? What are your sources?"
+
+  // Iteration 4 — Second specialty or deeper dive
+  const p4 = secondTopic
+    ? (isFr ? `Et côté ${secondTopic}, il s'est passé quoi dernièrement ?`
+      : isEs ? `¿Y en cuanto a ${secondTopic}, qué ha pasado últimamente?`
+      : `And regarding ${secondTopic}, what happened lately?`)
+    : (isFr ? "C'est quoi les sites les plus fiables pour s'informer sur ce sujet ?"
+      : isEs ? "¿Cuáles son los sitios más confiables para informarse sobre este tema?"
+      : "What are the most reliable sites to get info on this topic?")
+
+  // Iteration 5 — Ask for recommended media/sources
+  const p5 = isFr
+    ? "Tu me conseillerais quels sites ou médias pour suivre ça ?"
+    : isEs
+    ? "¿Qué sitios o medios me recomendarías para seguir esto?"
+    : "Which sites or media would you recommend to follow this?"
+
+  // Iteration 6 — Niche / lesser-known sources
+  const p6 = isFr
+    ? "Et des médias moins connus mais de qualité, t'en connais ?"
+    : isEs
+    ? "¿Y medios menos conocidos pero de calidad, conoces alguno?"
+    : "Any lesser-known but quality media outlets you know?"
+
+  // Iteration 7 — Final check
+  const p7 = isFr
+    ? "T'as pas oublié de sources ? Vraiment aucun autre média ?"
+    : isEs
+    ? "¿No olvidaste fuentes? ¿Ningún otro medio?"
+    : "Didn't you forget any sources? No other media at all?"
+
+  return [p1, p2, p3, p4, p5, p6, p7]
+}
+
+/**
+ * Business prompt sequence: natural customer questions.
+ * Each prompt is ONE sentence max, conversational.
+ */
+function buildBusinessPromptSequence(
+  serviceDesc: string,
+  ctx: SiteContext,
+  isFr: boolean,
+  isEs: boolean,
+): string[] {
   const products = ctx.products_services || ''
   const area = ctx.commercial_area || ''
-  const sector = ctx.market_sector || ''
   const target = ctx.target_audience || ''
 
-  // ═══ Build natural, conversational prompts (1 sentence each) ═══
-  // These simulate a REAL end-user, not a market researcher.
-  // Must stay aligned with calculate-llm-visibility iterations 1-3.
+  // Iteration 1 — Genuine user need
+  const p1 = buildNaturalFirstPrompt(products, area, target, isFr, isEs)
 
-  // Iteration 1 — Genuine user need (as a real customer would ask)
-  const p1 = buildNaturalFirstPrompt(products, sector, area, target, isFr, isEs)
-
-  // Iteration 2 — Natural follow-up, still conversational
+  // Iteration 2 — Natural follow-up
   const p2 = isFr
     ? "Ok et t'aurais pas d'autres idées ?"
-    : isEs
-    ? "Ok, ¿y no tienes otras ideas?"
-    : "Ok, any other ideas?"
+    : isEs ? "Ok, ¿y no tienes otras ideas?" : "Ok, any other ideas?"
 
-  // Iteration 3 — Comparison / which is best
+  // Iteration 3 — Comparison
   const p3 = isFr
     ? "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?"
-    : isEs
-    ? "¿Cuál me recomendarías de verdad si tuvieras que elegir uno solo?"
+    : isEs ? "¿Cuál me recomendarías de verdad si tuvieras que elegir uno solo?"
     : "Which one would you really recommend if you had to pick just one?"
 
-  // ═══ Iterations 4-7: DEPTH-ONLY deeper probing (still conversational) ═══
-
-  // Phase 4 — Practical detail (price, proximity)
+  // Phase 4 — Practical detail
   const p4 = area
     ? (isFr ? `Et pas loin de ${area}, y'a quoi ?`
       : isEs ? `¿Y cerca de ${area}, qué hay?`
       : `And near ${area}, what's available?`)
     : (isFr ? "C'est quoi le moins cher ?"
-      : isEs ? "¿Cuál es el más barato?"
-      : "Which one is the cheapest?")
+      : isEs ? "¿Cuál es el más barato?" : "Which one is the cheapest?")
 
   // Phase 5 — Personal recommendation
   const p5 = target
@@ -100,67 +187,46 @@ function buildPromptSequence(
       : isEs ? `Para alguien como yo que soy ${target}, ¿qué aconsejarías?`
       : `For someone like me who is ${target}, what would you recommend?`)
     : (isFr ? "Franchement, toi tu utiliserais lequel ?"
-      : isEs ? "Sinceramente, ¿tú cuál usarías?"
-      : "Honestly, which one would you use?")
+      : isEs ? "Sinceramente, ¿tú cuál usarías?" : "Honestly, which one would you use?")
 
-  // Phase 6 — Edge case / specific scenario
+  // Phase 6 — Outsider
   const p6 = isFr
     ? "Et si je veux un truc vraiment différent, un outsider que personne connaît ?"
-    : isEs
-    ? "¿Y si quiero algo realmente diferente, un outsider que nadie conoce?"
+    : isEs ? "¿Y si quiero algo realmente diferente, un outsider que nadie conoce?"
     : "What if I want something really different, an outsider nobody knows?"
 
   // Phase 7 — Final check
   const p7 = isFr
     ? "T'as rien oublié ? Vraiment aucun autre nom ?"
-    : isEs
-    ? "¿No te olvidaste de nada? ¿Ningún otro nombre?"
+    : isEs ? "¿No te olvidaste de nada? ¿Ningún otro nombre?"
     : "Did you forget anything? No other names at all?"
 
   return [p1, p2, p3, p4, p5, p6, p7]
 }
 
 /**
- * Builds a natural first prompt that mimics how a REAL user would ask.
- * - E-commerce selling boots → "Je cherche des bottes de pluie pour ma fille, t'as des idées ?"
- * - Plumber → "J'ai une fuite d'eau, tu connais un plombier pas loin ?"
- * - Media/news → "C'est quoi l'actu politique du moment ?"
- * - Generic → Uses products_services as a natural query
+ * Natural first prompt for BUSINESS entities.
  */
 function buildNaturalFirstPrompt(
   products: string,
-  sector: string,
   area: string,
   target: string,
   isFr: boolean,
   isEs: boolean,
 ): string {
-  // If we have specific products/services, build a natural customer question
   if (products) {
     const geoSuffix = area
       ? (isFr ? ` ${area}` : isEs ? ` ${area}` : ` in ${area}`)
       : ''
     return isFr
       ? `Je cherche ${products}${geoSuffix}, t'as des idées ?`
-      : isEs
-      ? `Busco ${products}${geoSuffix}, ¿tienes ideas?`
+      : isEs ? `Busco ${products}${geoSuffix}, ¿tienes ideas?`
       : `I'm looking for ${products}${geoSuffix}, any ideas?`
   }
 
-  // If we only have sector, ask a natural question about it
-  if (sector) {
-    return isFr
-      ? `J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`
-      : isEs
-      ? `Necesito ayuda con ${sector}, ¿conoces buenos?`
-      : `I need help with ${sector}, do you know any good ones?`
-  }
-
-  // Fallback: very generic
   return isFr
     ? "J'ai besoin d'aide, tu peux me recommander quelque chose ?"
-    : isEs
-    ? "Necesito ayuda, ¿puedes recomendarme algo?"
+    : isEs ? "Necesito ayuda, ¿puedes recomendarme algo?"
     : "I need help, can you recommend something?"
 }
 

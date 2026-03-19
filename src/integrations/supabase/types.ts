@@ -4348,6 +4348,7 @@ export type Database = {
           created_at: string
           current_config: Json
           domain: string
+          entity_type: string | null
           founding_year: number | null
           gmb_city: string | null
           gmb_presence: boolean | null
@@ -4361,6 +4362,7 @@ export type Database = {
           last_widget_ping: string | null
           legal_structure: string | null
           market_sector: string | null
+          media_specialties: string[] | null
           previous_config: Json
           primary_language: string | null
           products_services: string | null
@@ -4382,6 +4384,7 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain: string
+          entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null
           gmb_presence?: boolean | null
@@ -4395,6 +4398,7 @@ export type Database = {
           last_widget_ping?: string | null
           legal_structure?: string | null
           market_sector?: string | null
+          media_specialties?: string[] | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
@@ -4416,6 +4420,7 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain?: string
+          entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null
           gmb_presence?: boolean | null
@@ -4429,6 +4434,7 @@ export type Database = {
           last_widget_ping?: string | null
           legal_structure?: string | null
           market_sector?: string | null
+          media_specialties?: string[] | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
