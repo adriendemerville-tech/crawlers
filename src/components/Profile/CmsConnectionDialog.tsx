@@ -416,16 +416,14 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           )}
 
           {/* Credentials */}
-          {cmsType !== 'shopify' && (
+          {!isApiKeyAuth && (
             <div className="space-y-1.5">
               <Label className="text-xs">{t.username}</Label>
               <Input value={username} onChange={e => setUsername(e.target.value)} />
             </div>
           )}
           <div className="space-y-1.5">
-            <Label className="text-xs">
-              {cmsType === 'shopify' ? t.shopifyToken : cmsType === 'wordpress' ? t.apiKey : t.password}
-            </Label>
+            <Label className="text-xs">{tokenLabel}</Label>
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
