@@ -1966,7 +1966,7 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
 }
 
 function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: {
-  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }>;
+  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }>;
   defaultOrder: string[];
   disabled: boolean;
   onRefresh?: Record<string, () => Promise<void>>;
