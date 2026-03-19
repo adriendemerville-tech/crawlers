@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,32 @@ export default function MatricePrompt() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [loadingBatches, setLoadingBatches] = useState(true);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorTitle, setErrorTitle] = useState('');
+  const [errorDesc, setErrorDesc] = useState('');
+  const [submittingError, setSubmittingError] = useState(false);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
+
+  const handleReportError = async () => {
+    if (!errorTitle.trim() || !user) return;
+    setSubmittingError(true);
+    const { error } = await supabase.from('matrix_errors').insert({
+      user_id: user.id,
+      user_email: user.email || null,
+      error_type: 'user_report',
+      title: errorTitle.trim(),
+      description: errorDesc.trim() || null,
+      batch_id: activeBatchId || null,
+      context_data: { url, kpi_count: rows.length, selected_count: rows.filter(r => r.selected).length, has_results: !!results },
+    });
+    setSubmittingError(false);
+    if (error) { toast.error('Erreur lors du signalement'); return; }
+    toast.success('Erreur signalée — merci !');
+    setShowErrorDialog(false);
+    setErrorTitle('');
+    setErrorDesc('');
+  };
 
   // Guard: admin only
   useEffect(() => {
@@ -347,12 +371,42 @@ export default function MatricePrompt() {
             <h1 className="text-xl font-bold">Matrice de Prompts</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
             <div className="flex-1" />
+            <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>
+              <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
+            </Button>
             {results && results.length > 0 && (
               <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenReport}>
                 <FileText className="h-4 w-4" /> Rapport
               </Button>
             )}
           </div>
+
+          {/* Error report dialog */}
+          {showErrorDialog && (
+            <div className="mb-6 border rounded-lg p-4 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <h3 className="text-sm font-semibold">Signaler une erreur</h3>
+                <div className="flex-1" />
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowErrorDialog(false)}>Annuler</Button>
+              </div>
+              <Input
+                placeholder="Titre du problème"
+                value={errorTitle}
+                onChange={e => setErrorTitle(e.target.value)}
+              />
+              <textarea
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]"
+                placeholder="Description détaillée (optionnel)"
+                value={errorDesc}
+                onChange={e => setErrorDesc(e.target.value)}
+              />
+              <Button size="sm" onClick={handleReportError} disabled={!errorTitle.trim() || submittingError} className="gap-1.5">
+                {submittingError ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                Envoyer
+              </Button>
+            </div>
+          )}
 
           {/* CSV Selector + Import + URL */}
           <div className="flex flex-col gap-3 mb-6">

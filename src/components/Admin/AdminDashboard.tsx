@@ -22,6 +22,7 @@ import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
+import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { SurveyManagement } from './SurveyManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
@@ -182,6 +183,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
         { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
+        { id: 'matrix-errors', label: 'Matrice', icon: ClipboardList, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
       ],
     },
@@ -225,6 +227,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'injection-errors': return <InjectionErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
       case 'scanned-urls': return <ScannedUrlsRegistry />;
+      case 'matrix-errors': return <MatrixErrorsRegistry />;
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
