@@ -487,6 +487,11 @@ export function MyWallet() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {/* External APIs Tab */}
+              <TabsContent value="apis" className="mt-0">
+                <ExternalApisTab />
+              </TabsContent>
             </div>
           </div>
         </Tabs>
