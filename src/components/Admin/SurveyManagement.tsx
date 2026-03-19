@@ -31,6 +31,7 @@ interface ContentBlock {
 interface Survey {
   id: string;
   title: string;
+  description: string | null;
   status: string;
   target_pages: string[];
   target_persona: Record<string, any>;
