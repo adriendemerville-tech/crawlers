@@ -233,31 +233,49 @@ function generatePrompts(site: any): string[] {
   const target = (site.target_audience || '').trim()
   const products = (site.products_services || '').trim()
   const area = (site.commercial_area || '').trim()
+  const entityType = (site.entity_type || 'business').trim()
+  const specialties = (site.media_specialties || []) as string[]
+  const isMedia = entityType === 'media' || entityType === 'blog'
 
-  // Build natural, conversational first prompts (1 sentence max each)
-  // These must stay aligned with check-llm-depth iterations 1-3
   const all: string[] = []
 
-  if (products) {
-    all.push(
-      area
-        ? `Je cherche ${products} ${area}, t'as des idées ?`
-        : `Je cherche ${products}, t'as des idées ?`
-    )
-    all.push(`C'est quoi le mieux pour ${products} en ce moment ?`)
-  }
+  if (isMedia) {
+    // Media/blog: keyword-based queries like a user would type in Google
+    const mainTopic = specialties[0] || sector || products.split(',')[0]?.trim() || ''
+    if (mainTopic) {
+      all.push(`C'est quoi l'actu ${mainTopic} du moment ?`)
+      all.push(`Résume-moi ce qui s'est passé récemment en ${mainTopic}.`)
+    }
+    if (specialties[1]) {
+      all.push(`Et côté ${specialties[1]}, il s'est passé quoi dernièrement ?`)
+    }
+    if (all.length === 0) {
+      all.push("C'est quoi les infos du jour ?")
+      all.push("Résume-moi l'actualité de cette semaine.")
+    }
+  } else {
+    // Business: natural customer questions
+    if (products) {
+      all.push(
+        area
+          ? `Je cherche ${products} ${area}, t'as des idées ?`
+          : `Je cherche ${products}, t'as des idées ?`
+      )
+      all.push(`C'est quoi le mieux pour ${products} en ce moment ?`)
+    }
 
-  if (sector) {
-    all.push(`J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`)
-    all.push(
-      target
-        ? `Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`
-        : `J'ai besoin de ${sector}, par quoi je commence ?`
-    )
-  }
+    if (sector) {
+      all.push(`J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`)
+      all.push(
+        target
+          ? `Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`
+          : `J'ai besoin de ${sector}, par quoi je commence ?`
+      )
+    }
 
-  if (target && products) {
-    all.push(`En tant que ${target}, j'hésite pour ${products}, tu me conseilles quoi ?`)
+    if (target && products) {
+      all.push(`En tant que ${target}, j'hésite pour ${products}, tu me conseilles quoi ?`)
+    }
   }
 
   if (all.length === 0) {
@@ -276,10 +294,21 @@ function generatePrompts(site: any): string[] {
 // LLM QUERY ENGINE — 3-iteration discovery
 // ═══════════════════════════════════════════════
 
-const FOLLOW_UP_PROMPTS = [
-  "Ok et t'aurais pas d'autres idées ?",
-  "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
-]
+function getFollowUpPrompts(site: any): string[] {
+  const entityType = (site.entity_type || 'business').trim()
+  const isMedia = entityType === 'media' || entityType === 'blog'
+  
+  if (isMedia) {
+    return [
+      "Où est-ce que tu trouves ces infos ? Quelles sont tes sources ?",
+      "Tu me conseillerais quels sites ou médias pour suivre ça ?",
+    ]
+  }
+  return [
+    "Ok et t'aurais pas d'autres idées ?",
+    "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
+  ]
+}
 
 async function queryWithIterations(
   apiKey: string,
