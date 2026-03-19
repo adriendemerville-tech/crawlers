@@ -403,6 +403,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
           analysisMode: !!overrideContext,
           language,
+          domain,
+          trackedSiteId,
         }),
       });
 
