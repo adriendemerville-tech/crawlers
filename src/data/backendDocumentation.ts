@@ -265,7 +265,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`cocoon-chat\` | ✅ | 0 | Assistant IA conversationnel Cocoon (Gemini, streaming SSE) |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) — accès aux données crawl, audit, SERP, backlinks, GSC, GA4 du domaine. Réponses limitées à 1000 caractères. Restreint au domaine affiché. |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 
 ## Utilisateur & Billing
