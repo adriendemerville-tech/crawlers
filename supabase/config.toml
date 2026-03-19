@@ -111,3 +111,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.webhook-woo-orders]
     verify_jwt = false
+  [functions.register-cms-webhook]
+    verify_jwt = false
