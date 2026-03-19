@@ -22,6 +22,7 @@ import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
+import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { SurveyManagement } from './SurveyManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
