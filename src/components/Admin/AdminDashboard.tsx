@@ -114,6 +114,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   group: string;
+  notifKey?: keyof ReturnType<typeof useAdminNotifications>['notifications'];
 }
 
 interface AdminDashboardProps {
