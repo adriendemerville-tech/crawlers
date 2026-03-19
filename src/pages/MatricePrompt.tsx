@@ -62,8 +62,32 @@ export default function MatricePrompt() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [loadingBatches, setLoadingBatches] = useState(true);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorTitle, setErrorTitle] = useState('');
+  const [errorDesc, setErrorDesc] = useState('');
+  const [submittingError, setSubmittingError] = useState(false);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
+
+  const handleReportError = async () => {
+    if (!errorTitle.trim() || !user) return;
+    setSubmittingError(true);
+    const { error } = await supabase.from('matrix_errors').insert({
+      user_id: user.id,
+      user_email: user.email || null,
+      error_type: 'user_report',
+      title: errorTitle.trim(),
+      description: errorDesc.trim() || null,
+      batch_id: activeBatchId || null,
+      context_data: { url, kpi_count: rows.length, selected_count: rows.filter(r => r.selected).length, has_results: !!results },
+    });
+    setSubmittingError(false);
+    if (error) { toast.error('Erreur lors du signalement'); return; }
+    toast.success('Erreur signalée — merci !');
+    setShowErrorDialog(false);
+    setErrorTitle('');
+    setErrorDesc('');
+  };
 
   // Guard: admin only
   useEffect(() => {
