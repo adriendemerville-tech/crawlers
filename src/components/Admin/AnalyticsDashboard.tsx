@@ -55,6 +55,7 @@ interface AnalyticsStats {
   multiPageCrawls: number;
   cocoonGenerated: number;
   cocoonChatSessions: number;
+  gmbConnected: number;
 }
 
 
