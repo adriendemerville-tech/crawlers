@@ -5,8 +5,8 @@
   <!-- 
     Crawlers.fr - Sitemap XML Optimisé SEO & GEO
     Plateforme d'Audit Technique, Stratégique & Marketing
-    Générateur de Code Correctif | IAS | 2026
-    Dernière mise à jour : 2026-03-13
+    Générateur de Code Correctif | IAS | Cocoon 3D | GMB | Surveys | 2026
+    Dernière mise à jour : 2026-03-19
     
     ⚠️ CLARIFICATION : Crawlers.fr est une PLATEFORME D'AUDIT pour webmasters,
     PAS un scraper ni un outil d'extraction de données.
@@ -564,5 +564,69 @@
     <lastmod>2025-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+
+  <!-- ==================== AUTHENTIFICATION ==================== -->
+
+  <!-- Inscription / Signup -->
+  <url>
+    <loc>https://crawlers.fr/signup</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/signup"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/signup?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/signup?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/signup"/>
+  </url>
+
+  <!-- Connexion / Auth -->
+  <url>
+    <loc>https://crawlers.fr/auth</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/auth"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/auth?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/auth?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/auth"/>
+  </url>
+
+  <!-- ==================== FONCTIONNALITÉS PRO ==================== -->
+
+  <!-- Cocoon - Architecture Sémantique 3D -->
+  <url>
+    <loc>https://crawlers.fr/cocoon</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/cocoon"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/cocoon?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/cocoon?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/cocoon"/>
+  </url>
+
+  <!-- Features Cocoon - Landing Page -->
+  <url>
+    <loc>https://crawlers.fr/features/cocoon</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/features/cocoon"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/features/cocoon?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/features/cocoon?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/features/cocoon"/>
+  </url>
+
+  <!-- Architecte Génératif - Correctif Multi-Pages -->
+  <url>
+    <loc>https://crawlers.fr/architecte-generatif</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/architecte-generatif"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/architecte-generatif?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/architecte-generatif?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/architecte-generatif"/>
   </url>
 </urlset>

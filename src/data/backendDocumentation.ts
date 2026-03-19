@@ -976,6 +976,18 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Avg Rating** | Note moyenne des avis Google (1-5 étoiles). |
 | **Review Volume** | Nombre total d'avis et tendance (nouveaux avis / semaine). |
 | **Photo Views** | Nombre de vues des photos publiées sur la fiche. |
+
+---
+
+## Indicateurs Surveys (Enquêtes Utilisateurs)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Impressions** | Nombre total d'affichages de la survey aux utilisateurs ciblés (table survey_events, event_type='impression'). |
+| **Taux de réponse** | Ratio réponses / impressions. |
+| **Taux de fermeture** | Ratio fermetures (dismiss) / impressions. |
+| **Réponses A/B** | Ventilation des réponses par variante (A ou B) pour les surveys avec A/B testing activé. |
+| **Ciblage persona** | Filtrage par langue, type de client (entrepreneur, agence, freelance, boutique), et ancienneté du compte. |
 `,
   },
 ];
@@ -985,10 +997,10 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.8.0',
-  lastUpdated: '2026-03-18',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB',
+  version: '1.9.0',
+  lastUpdated: '2026-03-19',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Surveys',
   totalEdgeFunctions: 91,
-  totalTables: '45+',
-  totalLinesOfCode: '145 000+',
+  totalTables: '50+',
+  totalLinesOfCode: '150 000+',
 };

@@ -55,6 +55,7 @@ interface AnalyticsStats {
   multiPageCrawls: number;
   cocoonGenerated: number;
   cocoonChatSessions: number;
+  gmbConnected: number;
 }
 
 
@@ -112,6 +113,7 @@ export function AnalyticsDashboard() {
     multiPageCrawls: 0,
     cocoonGenerated: 0,
     cocoonChatSessions: 0,
+    gmbConnected: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
@@ -169,6 +171,7 @@ export function AnalyticsDashboard() {
         multiPageCrawls: 0,
         cocoonGenerated: 0,
         cocoonChatSessions: 0,
+        gmbConnected: 0,
       };
 
       // Count multi-page crawls from site_crawls table (30 days)
@@ -189,6 +192,12 @@ export function AnalyticsDashboard() {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', thirtyDaysAgo);
       newStats.cocoonChatSessions = chatCount || 0;
+
+      // Count GMB connected locations (total)
+      const { count: gmbCount } = await supabase
+        .from('gmb_locations')
+        .select('*', { count: 'exact', head: true });
+      newStats.gmbConnected = gmbCount || 0;
 
       setStats(newStats);
 
@@ -501,6 +510,12 @@ export function AnalyticsDashboard() {
           value={stats.cocoonChatSessions} 
           icon={Brain}
           description="Conversations IA Cocoon"
+        />
+        <StatCard 
+          title="Fiches GMB" 
+          value={stats.gmbConnected} 
+          icon={Globe}
+          description="Fiches Google connectées"
         />
       </div>
 

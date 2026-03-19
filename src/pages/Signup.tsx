@@ -7,12 +7,14 @@ import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from '
 import { PersonaGate, type PersonaType } from '@/components/PersonaGate';
 import { AnimatePresence, motion } from 'framer-motion';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -181,10 +183,36 @@ export default function Signup() {
     }
   };
 
+  const signupJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers',
+    "description": language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers.' : 'Créez votre compte Crawlers gratuitement. Accédez aux audits SEO, GEO et IA.',
+    "url": "https://crawlers.fr/signup",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Crawlers",
+      "url": "https://crawlers.fr"
+    },
+    "potentialAction": {
+      "@type": "RegisterAction",
+      "target": "https://crawlers.fr/signup",
+      "name": language === 'en' ? 'Create account' : language === 'es' ? 'Crear cuenta' : 'Créer un compte'
+    }
+  };
+
+  useCanonicalHreflang('/signup');
+
   // Step 1: PersonaGate
   if (!personaSelected) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+        <Helmet>
+          <title>{language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers'}</title>
+          <meta name="description" content={language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI visibility audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers. Auditorías SEO, GEO e IA.' : 'Créez votre compte Crawlers gratuit. Accédez aux audits SEO, GEO et de visibilité IA.'} />
+          <meta name="robots" content="index, follow" />
+          <script type="application/ld+json">{JSON.stringify(signupJsonLd)}</script>
+        </Helmet>
         <AnimatePresence>
           <PersonaGate onSelect={handlePersonaSelect} />
         </AnimatePresence>
@@ -195,6 +223,12 @@ export default function Signup() {
   // Step 2: Signup form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+      <Helmet>
+        <title>{language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers'}</title>
+        <meta name="description" content={language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI visibility audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers. Auditorías SEO, GEO e IA.' : 'Créez votre compte Crawlers gratuit. Accédez aux audits SEO, GEO et de visibilité IA.'} />
+        <meta name="robots" content="index, follow" />
+        <script type="application/ld+json">{JSON.stringify(signupJsonLd)}</script>
+      </Helmet>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
