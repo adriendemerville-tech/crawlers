@@ -43,6 +43,8 @@ interface SiteContext {
   address?: string
   commercial_area?: string
   company_size?: string
+  entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
+  media_specialties?: string[] // e.g. ['politique', 'économie']
 }
 
 // ─── Dynamic prompt sequence builder ─────────────────────────────────────────
