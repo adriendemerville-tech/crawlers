@@ -352,16 +352,13 @@ export default function MatricePrompt() {
   /* --- Report --- */
   const handleOpenReport = () => {
     if (!results || results.length === 0) { toast.error('Lancez une analyse d\'abord'); return; }
+    const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
     const reportData = {
       kind: 'matrice' as const,
       url,
       results,
-      totalWeight: results.reduce((s: number, r: any) => s + r.poids, 0),
-      weightedScore: (() => {
-        const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
-        if (tw === 0) return 0;
-        return Math.round(results.reduce((s: number, r: any) => s + r.score * r.poids, 0) / tw);
-      })(),
+      totalWeight: tw,
+      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/rapport/matrice', '_blank');
