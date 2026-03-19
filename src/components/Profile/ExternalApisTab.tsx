@@ -81,7 +81,7 @@ const services: ServiceButton[] = [
     id: 'webflow',
     name: 'Webflow',
     category: 'cms',
-    available: false,
+    available: true,
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4353FF" d="M17.802 8.712s-2.596 7.956-2.746 8.436c-.02-.518-.982-8.436-.982-8.436A4.672 4.672 0 009.7 5.148s2.796 8.756 2.972 9.324c.202.652.354 1.384.354 1.892 0 .276-.024.508-.068.692A4.65 4.65 0 008.5 20.86l4.416-13.824a4.584 4.584 0 014.492-3.524c.08 0 .158.004.236.008l-4.498 14.072s.976-.028 1.458-.028a4.558 4.558 0 004.058-2.468l3.338-10.16c-.266-.034-.54-.052-.818-.052a4.58 4.58 0 00-3.38 1.828z"/></svg>`,
   },
   {
@@ -95,7 +95,7 @@ const services: ServiceButton[] = [
     id: 'wix',
     name: 'Wix',
     category: 'cms',
-    available: false,
+    available: true,
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#0C6EFC" d="M4.206 7.092c-.488.36-.702 1.146-.702 1.146L1.5 16.908l-.996-4.836s-.186-1.05-.666-1.524c-.378-.372-.762-.504-.762-.504s.312-.246.81-.246c.498 0 .852.258 1.134.684.216.33.414.888.414.888l1.176 5.388 2.1-6.87s.282-.786.762-1.11c.366-.246.738-.282.738-.282s-.072.126-.072.408c0 .282.186.834.186.834l1.596 5.004L9.894 8.28s.204-.762.69-1.11c.372-.264.756-.294.756-.294s-.084.15-.084.444c0 .282.216.9.216.9l2.316 8.688 2.004-6.666s.18-.684.618-1.032c.438-.348.864-.414.864-.414s-.204.204-.204.546c0 .258.12.642.12.642L18.51 16.9l1.818-5.76s.258-.93.756-1.314c.498-.384 1.068-.444 1.068-.444s-.264.246-.264.636c0 .39.138.786.138.786l1.974 6.102-1.98-2.424-.912 2.424-1.776-5.958-1.962 6.54-2.61-9.018-1.914 6.372-2.64-8.73z"/></svg>`,
   },
 ];
@@ -105,7 +105,7 @@ export function ExternalApisTab() {
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
-  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify'>('wordpress');
+  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix'>('wordpress');
 
   const analyticsServices = services.filter(s => s.category === 'analytics');
   const cmsServices = services.filter(s => s.category === 'cms');
@@ -136,9 +136,9 @@ export function ExternalApisTab() {
       return;
     }
 
-    // CMS: WordPress / Drupal / Shopify connection dialog
-    if (service.id === 'wordpress' || service.id === 'drupal' || service.id === 'shopify') {
-      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify');
+    // CMS: WordPress / Drupal / Shopify / Webflow / Wix connection dialog
+    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix'].includes(service.id)) {
+      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix');
       setCmsDialogOpen(true);
     }
   };
