@@ -31,6 +31,7 @@ interface ContentBlock {
 interface Survey {
   id: string;
   title: string;
+  description: string | null;
   status: string;
   target_pages: string[];
   target_persona: Record<string, any>;
@@ -76,6 +77,7 @@ const PERSONA_OPTIONS = {
 
 const defaultSurvey: Omit<Survey, 'id' | 'created_at' | 'created_by'> = {
   title: '',
+  description: null,
   status: 'draft',
   target_pages: ['/console'],
   target_persona: {},
@@ -107,14 +109,14 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {(block.type === 'poll' || block.type === 'rating' || block.type === 'text_feedback') && (
           <div>
-            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Question</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Question</Label>
             <Input value={block.question || ''} onChange={e => onChange({ ...block, question: e.target.value })} placeholder="Votre question..." />
           </div>
         )}
 
         {block.type === 'poll' && (
           <div className="space-y-1">
-            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Options (une par ligne)</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Options (une par ligne)</Label>
             <Textarea
               value={(block.options || []).join('\n')}
               onChange={e => onChange({ ...block, options: e.target.value.split('\n').filter(Boolean) })}
@@ -133,7 +135,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {block.type === 'screenshot' && (
           <div>
-            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Label du bouton</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Label du bouton</Label>
             <Input value={block.label || ''} onChange={e => onChange({ ...block, label: e.target.value })} placeholder="Envoyer une capture d'écran" />
           </div>
         )}
@@ -151,7 +153,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
               </Select>
             </div>
             <div>
-              <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Message pré-rempli</Label>
+              <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Message pré-rempli</Label>
               <Textarea value={block.share_message || ''} onChange={e => onChange({ ...block, share_message: e.target.value })} placeholder="Découvrez ikTracker..." rows={2} />
             </div>
           </>
@@ -291,8 +293,18 @@ function SurveyEditor({ survey, onSave, onCancel }: { survey: Partial<Survey>; o
             <CardHeader className="pb-3"><CardTitle className="text-sm">Paramètres</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label className="text-xs">Titre</Label>
+                <Label className="text-xs flex items-center gap-1">
+                  <Eye className="h-3 w-3 text-emerald-500" />
+                  Titre
+                </Label>
                 <Input value={form.title || ''} onChange={e => updateField('title', e.target.value)} placeholder="Titre de la survey" />
+              </div>
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <Eye className="h-3 w-3 text-destructive" />
+                  Description
+                </Label>
+                <Textarea value={form.description || ''} onChange={e => updateField('description', e.target.value)} placeholder="Description interne (admin only)" rows={2} />
               </div>
               <div>
                 <Label className="text-xs">Date d'envoi</Label>
@@ -446,6 +458,7 @@ export function SurveyManagement() {
 
     const payload: Record<string, any> = {
       title: formData.title,
+      description: formData.description,
       status: formData.status,
       target_pages: formData.target_pages,
       target_persona: formData.target_persona,

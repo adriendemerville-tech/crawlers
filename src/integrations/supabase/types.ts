@@ -3912,6 +3912,7 @@ export type Database = {
           created_at: string | null
           created_by: string
           delay_between_impressions_hours: number | null
+          description: string | null
           duration_days: number | null
           id: string
           max_impressions_per_user: number | null
@@ -3933,6 +3934,7 @@ export type Database = {
           created_at?: string | null
           created_by: string
           delay_between_impressions_hours?: number | null
+          description?: string | null
           duration_days?: number | null
           id?: string
           max_impressions_per_user?: number | null
@@ -3954,6 +3956,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           delay_between_impressions_hours?: number | null
+          description?: string | null
           duration_days?: number | null
           id?: string
           max_impressions_per_user?: number | null
