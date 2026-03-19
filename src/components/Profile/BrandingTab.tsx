@@ -427,7 +427,7 @@ export function BrandingTab() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Brand Name */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>{t.brandNameLabel}</Label>
             <p className="text-xs text-muted-foreground">{t.brandNameHint}</p>
             <Input
@@ -436,7 +436,81 @@ export function BrandingTab() {
               placeholder={t.brandNamePlaceholder}
               maxLength={100}
               className="max-w-md"
+              style={{
+                fontFamily: brandFont ? `${brandFont}, sans-serif` : undefined,
+                fontSize: `${brandFontSize}px`,
+                fontWeight: brandBold ? 700 : 400,
+                fontStyle: brandItalic ? 'italic' : 'normal',
+                textDecoration: brandUnderline ? 'underline' : 'none',
+              }}
             />
+
+            {/* Typography controls */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Font selector */}
+              <Select value={brandFont || '__default__'} onValueChange={(v) => setBrandFont(v === '__default__' ? '' : v)}>
+                <SelectTrigger className="w-44 h-8 text-xs" style={{ fontFamily: brandFont || undefined }}>
+                  <SelectValue placeholder="Police par défaut" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_OPTIONS.map((font) => (
+                    <SelectItem
+                      key={font.value}
+                      value={font.value || '__default__'}
+                      style={{ fontFamily: font.value || undefined }}
+                      className="text-xs"
+                    >
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Font size */}
+              <Select value={String(brandFontSize)} onValueChange={(v) => setBrandFontSize(Number(v))}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[12, 14, 16, 18, 20, 24, 28, 32, 36].map((s) => (
+                    <SelectItem key={s} value={String(s)} className="text-xs">
+                      {s}px
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Bold / Italic / Underline toggles */}
+              <div className="flex items-center border border-border rounded-md">
+                <Toggle
+                  size="sm"
+                  pressed={brandBold}
+                  onPressedChange={setBrandBold}
+                  className="h-8 w-8 p-0 rounded-none rounded-l-md data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Bold"
+                >
+                  <Bold className="h-3.5 w-3.5" />
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  pressed={brandItalic}
+                  onPressedChange={setBrandItalic}
+                  className="h-8 w-8 p-0 rounded-none border-x border-border data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Italic"
+                >
+                  <Italic className="h-3.5 w-3.5" />
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  pressed={brandUnderline}
+                  onPressedChange={setBrandUnderline}
+                  className="h-8 w-8 p-0 rounded-none rounded-r-md data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Underline"
+                >
+                  <Underline className="h-3.5 w-3.5" />
+                </Toggle>
+              </div>
+            </div>
           </div>
 
           {/* Logo Upload */}
