@@ -871,8 +871,10 @@ export default function Cocoon() {
               />
             )}
 
-            {/* Legend — dynamic, inside graph container */}
-            {nodes.length > 0 && (() => {
+          </div>
+
+          {/* Legend — dynamic, below preview */}
+          {nodes.length > 0 && (() => {
               const pageLabels: Record<string, Record<string, string>> = {
                 homepage: { fr: 'Accueil', en: 'Home', es: 'Inicio' },
                 blog: { fr: 'Blog', en: 'Blog', es: 'Blog' },
@@ -890,7 +892,7 @@ export default function Cocoon() {
               const legendItems = Object.entries(pageLabels).filter(([type]) => presentTypes.has(type));
 
               return (
-                <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-black/40 backdrop-blur-sm opacity-0 animate-fade-in"
+                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in"
                   style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
                 >
                   {/* Pages legend */}
@@ -936,7 +938,6 @@ export default function Cocoon() {
                 </div>
               );
             })()}
-          </div>
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
