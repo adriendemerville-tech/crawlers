@@ -636,7 +636,7 @@ export default function Cocoon() {
                           <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Thickness' : language === 'es' ? 'Grosor' : 'Épaisseur'}</span>
                           <span className="text-[9px] text-white/30 font-mono">{linkThickness.toFixed(1)}×</span>
                         </div>
-                        <Slider min={0.5} max={4} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                        <Slider min={0.5} max={8} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
                       </div>
                     </div>
                   )}
