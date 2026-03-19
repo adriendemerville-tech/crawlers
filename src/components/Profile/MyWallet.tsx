@@ -314,6 +314,13 @@ export function MyWallet() {
             </motion.div>
 
             <div className="flex-1 min-w-0 space-y-4">
+              {/* Reports Tab */}
+              <TabsContent value="reports" className="mt-0">
+                <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+                  <MyReports />
+                </Suspense>
+              </TabsContent>
+
               {/* Branding Tab */}
               <TabsContent value="branding" className="mt-0">
                 <BrandingTab />
