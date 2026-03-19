@@ -782,17 +782,15 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
     <Dialog open={convOpen} onOpenChange={setConvOpen}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              {ct.conversations}
-            </DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            {ct.conversations}
             {data?.measured_at && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[11px] font-normal text-muted-foreground ml-1">
                 {new Date(data.measured_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
             )}
-          </div>
+          </DialogTitle>
         </DialogHeader>
 
         {convLoading ? (
