@@ -133,15 +133,17 @@ Déduis les informations suivantes sur cette entreprise/ce site web. Sois préci
 
 Réponds UNIQUEMENT en JSON valide avec ces champs :
 {
-  "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel et électronique', 'SaaS marketing', 'Restauration rapide')",
-  "products_services": "Les principaux produits ou services vendus (ex: 'Livres, musique, électronique, jeux vidéo, billetterie spectacles', 'Logiciel d'emailing et CRM')",
-  "target_audience": "La cible principale (ex: 'Grand public, consommateurs français', 'PME et startups B2B', 'Professionnels de santé')",
-  "commercial_area": "La zone commerciale (ex: 'France métropolitaine et DOM-TOM', 'Europe francophone', 'International')",
-  "company_size": "Estimation de la taille (ex: 'Grande entreprise', 'PME', 'Startup', 'ETI')",
-  "site_name": "Le vrai nom de la marque/entreprise (ex: 'Fnac', 'Decathlon', 'Semrush')"
+  "entity_type": "Le type d'entité : 'business' (entreprise qui vend produits/services), 'media' (site d'information, journal, magazine), 'blog' (blog personnel ou thématique), 'institutional' (administration, gouvernement, association). IMPORTANT: un média/blog ne vend PAS de produits/services, il produit du contenu.",
+  "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech', 'sport']. Pour 'business', mettre []"],
+  "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
+  "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres')",
+  "target_audience": "La cible principale (ex: 'Grand public', 'Citoyens français intéressés par la politique')",
+  "commercial_area": "La zone géographique couverte",
+  "company_size": "Estimation de la taille",
+  "site_name": "Le vrai nom de la marque/entreprise/média"
 }
 
-Si tu ne connais pas un champ, mets une valeur générique raisonnable basée sur le TLD et le nom de domaine. Ne laisse aucun champ vide.`
+Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laisse aucun champ vide.`
 
   const messages = [
     { role: 'system', content: 'Tu es un analyste de marché expert. Tu connais très bien les entreprises et marques du web. Réponds uniquement en JSON valide.' },
