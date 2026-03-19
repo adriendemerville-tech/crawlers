@@ -599,9 +599,17 @@ export function ExpertAuditDashboard() {
   };
 
   const openReportAndSave = async () => {
-    setIsReportModalOpen(true);
-    // Save the report to profile
+    // Open report in new tab via /rapport/audit
     if (result && auditMode) {
+      const payload = JSON.stringify({
+        kind: 'audit',
+        result,
+        auditMode,
+        preSummarizedResult: auditMode === 'strategic' ? preSummarizedResult : null,
+      });
+      sessionStorage.setItem('rapport_audit_data', payload);
+      window.open('/rapport/audit', '_blank');
+      // Also save to profile
       await handleSaveReportToProfile(result, auditMode);
     }
   };
