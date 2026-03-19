@@ -369,7 +369,7 @@ function NodeSphere({
         />
       </mesh>
 
-      {/* Core sphere — Home: 12% opacity, others: gradient-like with top-lit coloring */}
+      {/* Core sphere — matched to 2D: solid opaque fill with emissive glow */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -382,9 +382,9 @@ function NodeSphere({
           emissive={color}
           emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.7}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.12 : 0.35}
-          roughness={node.isHome ? 0.3 : 0.45}
-          metalness={node.isHome ? 0.6 : 0.75}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.85 : 0.8}
+          roughness={node.isHome ? 0.2 : 0.35}
+          metalness={node.isHome ? 0.7 : 0.6}
         />
       </mesh>
 
