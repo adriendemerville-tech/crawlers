@@ -452,6 +452,8 @@ export function CocoonForceGraph({
         const source = link.source as GraphNode;
         const target = link.target as GraphNode;
         if (!source.x || !source.y || !target.x || !target.y) continue;
+        // Filter by visible juice types
+        if (visibleJuiceTypes && !visibleJuiceTypes.has(link.juiceType)) continue;
 
         const isSelectedLink = selectedNodeId && (source.id === selectedNodeId || target.id === selectedNodeId);
         const baseAlpha = link.strength * 0.4;
