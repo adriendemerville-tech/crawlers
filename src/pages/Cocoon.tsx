@@ -867,21 +867,21 @@ export default function Cocoon() {
 
             {/* Legend — dynamic, inside graph container */}
             {nodes.length > 0 && (() => {
-              const typeColorMap: Record<string, { color: string; label: Record<string, string> }> = {
-                homepage: { color: '#fbbf24', label: { fr: 'Accueil', en: 'Home', es: 'Inicio' } },
-                blog: { color: '#a78bfa', label: { fr: 'Blog', en: 'Blog', es: 'Blog' } },
-                produit: { color: '#34d399', label: { fr: 'Produit', en: 'Product', es: 'Producto' } },
-                'catégorie': { color: '#60a5fa', label: { fr: 'Catégorie', en: 'Category', es: 'Categoría' } },
-                faq: { color: '#fb923c', label: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' } },
-                guide: { color: '#c084fc', label: { fr: 'Guide', en: 'Guide', es: 'Guía' } },
-                contact: { color: '#f472b6', label: { fr: 'Contact', en: 'Contact', es: 'Contacto' } },
-                tarifs: { color: '#facc15', label: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' } },
-                'légal': { color: '#94a3b8', label: { fr: 'Légal', en: 'Legal', es: 'Legal' } },
-                'à propos': { color: '#67e8f9', label: { fr: 'À propos', en: 'About', es: 'Acerca de' } },
-                page: { color: '#8b5cf6', label: { fr: 'Page', en: 'Page', es: 'Página' } },
+              const pageLabels: Record<string, Record<string, string>> = {
+                homepage: { fr: 'Accueil', en: 'Home', es: 'Inicio' },
+                blog: { fr: 'Blog', en: 'Blog', es: 'Blog' },
+                produit: { fr: 'Produit', en: 'Product', es: 'Producto' },
+                'catégorie': { fr: 'Catégorie', en: 'Category', es: 'Categoría' },
+                faq: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' },
+                guide: { fr: 'Guide', en: 'Guide', es: 'Guía' },
+                contact: { fr: 'Contact', en: 'Contact', es: 'Contacto' },
+                tarifs: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' },
+                'légal': { fr: 'Légal', en: 'Legal', es: 'Legal' },
+                'à propos': { fr: 'À propos', en: 'About', es: 'Acerca de' },
+                page: { fr: 'Page', en: 'Page', es: 'Página' },
               };
               const presentTypes = new Set(nodes.map((n: any) => n.page_type));
-              const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
+              const legendItems = Object.entries(pageLabels).filter(([type]) => presentTypes.has(type));
 
               return (
                 <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-black/40 backdrop-blur-sm opacity-0 animate-fade-in"
