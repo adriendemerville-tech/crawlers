@@ -2,6 +2,8 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 
 interface KeywordData {
   keyword: string;
