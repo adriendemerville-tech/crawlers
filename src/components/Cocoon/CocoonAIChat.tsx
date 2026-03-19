@@ -90,9 +90,14 @@ function injectLexiconLinks(text: string): React.ReactNode[] {
 
 // ─── Analysis prompt helpers ───
 const ANALYSIS_PREFIXES = ['Analyse les pages suivantes:', 'Analyze the following pages:', 'Analiza las siguientes páginas:'];
+const OPTIMIZE_PREFIXES = ['OPTIMISATION DU MAILLAGE INTERNE', 'INTERNAL LINKING OPTIMIZATION', 'OPTIMIZACIÓN DEL ENLAZADO INTERNO'];
 
 function isAnalysisPrompt(content: string): boolean {
   return ANALYSIS_PREFIXES.some(p => content.startsWith(p));
+}
+
+function isOptimizePrompt(content: string): boolean {
+  return OPTIMIZE_PREFIXES.some(p => content.startsWith(p));
 }
 
 function getAnalysisLabel(content: string, lang: string): string {
@@ -101,6 +106,12 @@ function getAnalysisLabel(content: string, lang: string): string {
   if (lang === 'en') return `📊 Multi-page analysis: ${pages}`;
   if (lang === 'es') return `📊 Análisis multi-página: ${pages}`;
   return `📊 Analyse multi-pages : ${pages}`;
+}
+
+function getOptimizeLabel(lang: string): string {
+  if (lang === 'en') return '🔗 Internal linking optimization';
+  if (lang === 'es') return '🔗 Optimización del enlazado interno';
+  return '🔗 Optimisation du maillage interne';
 }
 
 // ─── Copy button ───
