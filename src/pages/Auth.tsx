@@ -121,8 +121,7 @@ export default function Auth() {
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
-  const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
-  const [showPersonaGate, setShowPersonaGate] = useState(initialMode === 'signup');
+  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
