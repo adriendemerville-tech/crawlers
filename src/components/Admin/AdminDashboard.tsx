@@ -227,6 +227,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'injection-errors': return <InjectionErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
       case 'scanned-urls': return <ScannedUrlsRegistry />;
+      case 'matrix-errors': return <MatrixErrorsRegistry />;
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
