@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw, Loader2, Brain, Info } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { RefreshCw, Loader2, Brain, Info, HelpCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -14,6 +17,13 @@ interface VisibilityScore {
   llm_name: string;
   score_percentage: number;
   week_start_date: string;
+}
+
+interface ConversationTurn {
+  iteration: number;
+  prompt_text: string;
+  response_summary: string;
+  llm_name: string;
 }
 
 interface LLMVisibilityDashboardProps {
@@ -31,6 +41,11 @@ const translations = {
     refreshing: 'Analyse en cours...',
     legend: '0% → 100%',
     week: 'Sem.',
+    conversations: 'Conversations LLM',
+    noConversations: 'Aucune conversation enregistrée pour ce modèle.',
+    prompt: 'Question',
+    response: 'Réponse',
+    iteration: 'Itération',
   },
   en: {
     title: 'LLM Benchmark',
@@ -39,6 +54,11 @@ const translations = {
     refreshing: 'Analyzing...',
     legend: '0% → 100%',
     week: 'Wk.',
+    conversations: 'LLM Conversations',
+    noConversations: 'No conversations recorded for this model.',
+    prompt: 'Question',
+    response: 'Response',
+    iteration: 'Iteration',
   },
   es: {
     title: 'Benchmark LLM',
@@ -47,6 +67,11 @@ const translations = {
     refreshing: 'Analizando...',
     legend: '0% → 100%',
     week: 'Sem.',
+    conversations: 'Conversaciones LLM',
+    noConversations: 'No hay conversaciones registradas para este modelo.',
+    prompt: 'Pregunta',
+    response: 'Respuesta',
+    iteration: 'Iteración',
   },
 };
 
@@ -76,6 +101,9 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
   const [scores, setScores] = useState<VisibilityScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [convOpen, setConvOpen] = useState(false);
+  const [conversations, setConversations] = useState<Record<string, ConversationTurn[]>>({});
+  const [convLoading, setConvLoading] = useState(false);
 
   const fetchScores = useCallback(async () => {
     setLoading(true);
@@ -116,12 +144,38 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
     }
   };
 
+  const handleOpenConversations = async () => {
+    setConvOpen(true);
+    if (Object.keys(conversations).length > 0) return; // already loaded
+    setConvLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('llm_depth_conversations')
+        .select('llm_name, iteration, prompt_text, response_summary')
+        .eq('tracked_site_id', trackedSiteId)
+        .eq('user_id', userId)
+        .order('iteration', { ascending: true });
+
+      if (!error && data?.length) {
+        const grouped: Record<string, ConversationTurn[]> = {};
+        for (const row of data) {
+          if (!grouped[row.llm_name]) grouped[row.llm_name] = [];
+          grouped[row.llm_name].push(row as ConversationTurn);
+        }
+        setConversations(grouped);
+      }
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+    } finally {
+      setConvLoading(false);
+    }
+  };
+
   // Build heatmap data: weeks as columns, LLMs as rows
   const weeks = [...new Set(scores.map(s => s.week_start_date))].sort().slice(-12);
   const llmNames = LLM_ORDER.filter(name =>
     scores.some(s => s.llm_name === name)
   );
-  // If there are LLMs not in our predefined order, add them at the end
   const extraLlms = [...new Set(scores.map(s => s.llm_name))].filter(n => !LLM_ORDER.includes(n as any));
   const allLlms = [...llmNames, ...extraLlms];
 
@@ -132,12 +186,9 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
     rawScoreMap.get(s.llm_name)!.set(s.week_start_date, s.score_percentage);
   }
 
-  // Temporal normalization: weight each week's score by its 4-week trend
-  // Formula: adjusted = raw * (1 + α * trend), α = 0.3
-  // trend = (current - mean_of_prev_3) / 100, clamped to [-0.5, 0.5]
   const TREND_ALPHA = 0.3;
   const scoreMap = new Map<string, Map<string, number>>();
-  const trendMap = new Map<string, Map<string, number>>(); // llm -> week -> trend direction
+  const trendMap = new Map<string, Map<string, number>>();
 
   for (const llm of allLlms) {
     const llmRaw = rawScoreMap.get(llm);
@@ -150,7 +201,6 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
       const raw = llmRaw.get(week);
       if (raw == null) continue;
 
-      // Collect up to 3 previous weeks' scores
       const prevScores: number[] = [];
       for (let j = Math.max(0, i - 3); j < i; j++) {
         const prev = llmRaw.get(weeks[j]);
@@ -158,7 +208,6 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
       }
 
       if (prevScores.length === 0) {
-        // No history: use raw score
         normalizedWeekMap.set(week, raw);
         trendWeekMap.set(week, 0);
       } else {
@@ -172,6 +221,8 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
     scoreMap.set(llm, normalizedWeekMap);
     trendMap.set(llm, trendWeekMap);
   }
+
+  const convLlmNames = Object.keys(conversations);
 
   if (loading) {
     return (
@@ -200,96 +251,164 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
   }
 
   return (
-    <Card className="relative">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Brain className="h-4 w-4" />
-          {t.title}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p className="text-xs">
-                  {language === 'fr'
-                    ? 'Score basé sur la profondeur de découverte : 1ère mention = 100%, 2ème = 50%, 3ème = 25%, absent = 0%.'
-                    : 'Score based on discovery depth: 1st mention = 100%, 2nd = 50%, 3rd = 25%, absent = 0%.'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="ml-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              {refreshing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            </Button>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto -mx-2">
-          <table className="text-sm border-separate" style={{ borderSpacing: '3px' }}>
-            <thead>
-              <tr>
-                <th className="text-left py-2 pr-3 text-[10px] uppercase text-muted-foreground font-medium tracking-wider min-w-[100px]">
-                  {language === 'fr' ? 'MODÈLE' : language === 'es' ? 'MODELO' : 'MODEL'}
-                </th>
-                {weeks.map(week => (
-                  <th key={week} className="text-center py-2 px-1 text-[10px] text-muted-foreground font-normal whitespace-nowrap">
-                    {formatWeekLabel(week, language)}
+    <>
+      <Card className="relative">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            {t.title}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">
+                    {language === 'fr'
+                      ? 'Score basé sur la profondeur de découverte : 1ère mention = 100%, 2ème = 50%, 3ème = 25%, absent = 0%.'
+                      : 'Score based on discovery depth: 1st mention = 100%, 2nd = 50%, 3rd = 25%, absent = 0%.'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleOpenConversations}
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                {refreshing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto -mx-2">
+            <table className="text-sm border-separate" style={{ borderSpacing: '3px' }}>
+              <thead>
+                <tr>
+                  <th className="text-left py-2 pr-3 text-[10px] uppercase text-muted-foreground font-medium tracking-wider min-w-[100px]">
+                    {language === 'fr' ? 'MODÈLE' : language === 'es' ? 'MODELO' : 'MODEL'}
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {allLlms.map(llmName => (
-                <tr key={llmName}>
-                  <td className="py-1.5 pr-3 font-medium text-sm whitespace-nowrap">
-                    {llmName}
-                  </td>
-                  {weeks.map(week => {
-                    const score = scoreMap.get(llmName)?.get(week);
-                    const trend = trendMap.get(llmName)?.get(week) ?? 0;
-                    const hasScore = score != null;
-                    const trendIcon = trend > 0.05 ? '↑' : trend < -0.05 ? '↓' : '';
-                    return (
-                      <td key={week} className="text-center pb-1.5 pl-1.5 pr-0 pt-0">
-                        <div
-                          className={`inline-flex items-center justify-center min-w-[48px] rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
-                            hasScore ? cellBg(score) : 'bg-muted/30 text-muted-foreground/50'
-                          }`}
-                        >
-                          {hasScore ? `${Math.round(score)}%` : '—'}
-                          {trendIcon && <span className="ml-0.5 text-[9px] opacity-80">{trendIcon}</span>}
-                        </div>
-                      </td>
-                    );
-                  })}
+                  {weeks.map(week => (
+                    <th key={week} className="text-center py-2 px-1 text-[10px] text-muted-foreground font-normal whitespace-nowrap">
+                      {formatWeekLabel(week, language)}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {allLlms.map(llmName => (
+                  <tr key={llmName}>
+                    <td className="py-1.5 pr-3 font-medium text-sm whitespace-nowrap">
+                      {llmName}
+                    </td>
+                    {weeks.map(week => {
+                      const score = scoreMap.get(llmName)?.get(week);
+                      const trend = trendMap.get(llmName)?.get(week) ?? 0;
+                      const hasScore = score != null;
+                      const trendIcon = trend > 0.05 ? '↑' : trend < -0.05 ? '↓' : '';
+                      return (
+                        <td key={week} className="text-center pb-1.5 pl-1.5 pr-0 pt-0">
+                          <div
+                            className={`inline-flex items-center justify-center min-w-[48px] rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                              hasScore ? cellBg(score) : 'bg-muted/30 text-muted-foreground/50'
+                            }`}
+                          >
+                            {hasScore ? `${Math.round(score)}%` : '—'}
+                            {trendIcon && <span className="ml-0.5 text-[9px] opacity-80">{trendIcon}</span>}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Legend bar */}
-        <div className="flex items-center gap-2 mt-4 text-[10px] text-muted-foreground">
-          <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-blue-100 via-blue-300 to-blue-600" />
-          <span>{t.legend}</span>
-        </div>
-        <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
-          {language === 'fr'
-            ? 'Score normalisé par la tendance sur 4 semaines (↑ progression, ↓ régression). Base : 3 itérations × modèle.'
-            : language === 'es'
-              ? 'Puntuación normalizada por tendencia de 4 semanas (↑ progresión, ↓ regresión). Base: 3 iteraciones × modelo.'
-              : 'Score normalized by 4-week trend (↑ improving, ↓ declining). Base: 3 iterations × model.'}
-        </p>
-      </CardContent>
-    </Card>
+          {/* Legend bar */}
+          <div className="flex items-center gap-2 mt-4 text-[10px] text-muted-foreground">
+            <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-blue-100 via-blue-300 to-blue-600" />
+            <span>{t.legend}</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
+            {language === 'fr'
+              ? 'Score normalisé par la tendance sur 4 semaines (↑ progression, ↓ régression). Base : 3 itérations × modèle.'
+              : language === 'es'
+                ? 'Puntuación normalizada por tendencia de 4 semanas (↑ progresión, ↓ regresión). Base: 3 iteraciones × modelo.'
+                : 'Score normalized by 4-week trend (↑ improving, ↓ declining). Base: 3 iterations × model.'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Conversations Modal */}
+      <Dialog open={convOpen} onOpenChange={setConvOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              {t.conversations}
+            </DialogTitle>
+          </DialogHeader>
+
+          {convLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : convLlmNames.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">{t.noConversations}</p>
+          ) : (
+            <Tabs defaultValue={convLlmNames[0]} className="w-full">
+              <TabsList className="w-full justify-start gap-1 flex-wrap h-auto py-1">
+                {convLlmNames.map(llm => (
+                  <TabsTrigger key={llm} value={llm} className="text-xs px-3 py-1.5">
+                    {llm}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {convLlmNames.map(llm => (
+                <TabsContent key={llm} value={llm}>
+                  <ScrollArea className="h-[50vh] pr-4">
+                    <div className="space-y-4 py-2">
+                      {conversations[llm].map((turn) => (
+                        <div key={turn.iteration} className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <Badge variant="outline" className="shrink-0 text-[10px] mt-0.5">
+                              {t.iteration} {turn.iteration}
+                            </Badge>
+                          </div>
+                          {/* Prompt */}
+                          <div className="ml-2 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                            <p className="text-[10px] font-medium text-violet-600 dark:text-violet-400 mb-1">{t.prompt}</p>
+                            <p className="text-sm leading-relaxed">{turn.prompt_text}</p>
+                          </div>
+                          {/* Response */}
+                          <div className="ml-2 p-3 rounded-lg bg-muted/50 border">
+                            <p className="text-[10px] font-medium text-muted-foreground mb-1">{t.response}</p>
+                            <p className="text-sm leading-relaxed text-foreground/80">{turn.response_summary}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
