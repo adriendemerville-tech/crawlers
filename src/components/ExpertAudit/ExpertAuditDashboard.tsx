@@ -1403,7 +1403,9 @@ export function ExpertAuditDashboard() {
         >
           {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
-            <TechnicalResultsSection result={result} t={t} onReportClick={handleReportButtonClick} />
+            <StrategicErrorBoundary onReset={handleNewAudit}>
+              <TechnicalResultsSection result={result} t={t} onReportClick={handleReportButtonClick} />
+            </StrategicErrorBoundary>
           )}
 
           {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
