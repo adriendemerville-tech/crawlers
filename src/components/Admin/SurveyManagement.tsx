@@ -207,9 +207,28 @@ function BlocksEditor({ blocks, onChange }: { blocks: ContentBlock[]; onChange: 
 }
 
 function PersonaEditor({ persona, onChange }: { persona: Record<string, any>; onChange: (p: Record<string, any>) => void }) {
+  const allSelected = Object.keys(PERSONA_OPTIONS).every(key => {
+    const selected = (persona[key] || []) as string[];
+    return selected.length === 0 || selected.length === PERSONA_OPTIONS[key as keyof typeof PERSONA_OPTIONS].length;
+  }) && Object.keys(persona).filter(k => (persona[k] as string[])?.length > 0).length === 0;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Clear all filters = target everyone
+      onChange({});
+    }
+  };
+
   return (
     <div className="space-y-3">
       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ciblage persona</Label>
+      <label className="flex items-center gap-1.5 text-xs cursor-pointer font-medium">
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={handleSelectAll}
+        />
+        Toutes
+      </label>
       {Object.entries(PERSONA_OPTIONS).map(([key, values]) => (
         <div key={key}>
           <Label className="text-xs capitalize">{key === 'client_type' ? 'Type de client' : key === 'account_age' ? 'Ancienneté' : 'Langue'}</Label>
