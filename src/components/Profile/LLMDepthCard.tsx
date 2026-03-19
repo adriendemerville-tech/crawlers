@@ -245,9 +245,47 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
   const [streamProgress, setStreamProgress] = useState<Record<string, ModelProgress>>({});
   const [conversations, setConversations] = useState<Record<string, ConversationTurn[]>>({});
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [convOpen, setConvOpen] = useState(false);
+  const [convLoading, setConvLoading] = useState(false);
   const conversationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const convLlmNames = Object.keys(conversations);
+
+  const convTranslations = {
+    fr: { conversations: 'Conversations LLM', prompt: 'Question', response: 'Réponse', iteration: 'Itération', noConversations: 'Aucune conversation enregistrée.' },
+    en: { conversations: 'LLM Conversations', prompt: 'Prompt', response: 'Response', iteration: 'Iteration', noConversations: 'No conversations recorded.' },
+    es: { conversations: 'Conversaciones LLM', prompt: 'Pregunta', response: 'Respuesta', iteration: 'Iteración', noConversations: 'No hay conversaciones registradas.' },
+  };
+  const ct = convTranslations[language] || convTranslations.fr;
+
+  const handleOpenConversations = async () => {
+    setConvOpen(true);
+    if (Object.keys(conversations).length > 0) return;
+    if (!trackedSiteId || !userId) return;
+    setConvLoading(true);
+    try {
+      const { data: convData } = await supabase
+        .from('llm_depth_conversations')
+        .select('llm_name, iteration, prompt_text, response_summary')
+        .eq('tracked_site_id', trackedSiteId)
+        .eq('user_id', userId)
+        .order('iteration', { ascending: true });
+      if (convData?.length) {
+        const grouped: Record<string, ConversationTurn[]> = {};
+        for (const row of convData) {
+          if (!grouped[row.llm_name]) grouped[row.llm_name] = [];
+          grouped[row.llm_name].push(row as ConversationTurn);
+        }
+        setConversations(grouped);
+      }
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+    } finally {
+      setConvLoading(false);
+    }
+  };
 
   // Fetch stored conversations for paid users
   useEffect(() => {
