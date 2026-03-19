@@ -3329,6 +3329,53 @@ export type Database = {
           },
         ]
       }
+      revenue_events: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_external_id: string | null
+          raw_payload: Json | null
+          source: Database["public"]["Enums"]["revenue_source"]
+          tracked_site_id: string
+          transaction_date: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_external_id?: string | null
+          raw_payload?: Json | null
+          source: Database["public"]["Enums"]["revenue_source"]
+          tracked_site_id: string
+          transaction_date: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_external_id?: string | null
+          raw_payload?: Json | null
+          source?: Database["public"]["Enums"]["revenue_source"]
+          tracked_site_id?: string
+          transaction_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_events_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_corrective_codes: {
         Row: {
           code: string
@@ -4712,7 +4759,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      revenue_weekly_summary: {
+        Row: {
+          avg_order_value: number | null
+          currency: string | null
+          source: Database["public"]["Enums"]["revenue_source"] | null
+          total_revenue: number | null
+          tracked_site_id: string | null
+          transaction_count: number | null
+          user_id: string | null
+          week_start_date: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_events_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       atomic_credit_update: {
@@ -4748,6 +4815,19 @@ export type Database = {
         Returns: number
       }
       get_database_size: { Args: never; Returns: Json }
+      get_site_revenue: {
+        Args: {
+          p_end_date: string
+          p_start_date: string
+          p_tracked_site_id: string
+        }
+        Returns: {
+          avg_order_value: number
+          currency: string
+          total_revenue: number
+          transaction_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4820,6 +4900,13 @@ export type Database = {
         | "pagespeed"
         | "crawlers"
         | "cocoon"
+      revenue_source:
+        | "ga4"
+        | "shopify"
+        | "woocommerce"
+        | "webflow"
+        | "wix"
+        | "drupal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4971,6 +5058,14 @@ export const Constants = {
         "pagespeed",
         "crawlers",
         "cocoon",
+      ],
+      revenue_source: [
+        "ga4",
+        "shopify",
+        "woocommerce",
+        "webflow",
+        "wix",
+        "drupal",
       ],
     },
   },
