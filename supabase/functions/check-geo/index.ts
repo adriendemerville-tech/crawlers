@@ -661,7 +661,17 @@ Deno.serve(async (req) => {
         });
       }
     }
-    const { url, lang: requestLang } = await req.json();
+    let reqBody: any;
+    try {
+      reqBody = await req.json();
+    } catch {
+      releaseConcurrency('check-geo');
+      return new Response(
+        JSON.stringify({ success: false, reliabilityScore: 0, blockingError: 'Invalid JSON body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const { url, lang: requestLang } = reqBody || {};
     const lang = parseLanguage(requestLang);
     const t = getGeoTranslations(lang);
 
