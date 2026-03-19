@@ -145,6 +145,7 @@ const i18n = {
     prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
     refreshData: 'Actualizar datos',
+    generateGraph: 'Generar el gráfico',
     analyzingData: 'Analizando datos...',
     auditExpert: 'Auditoría Experta',
     crawlMulti: 'Crawl Multi-página',
