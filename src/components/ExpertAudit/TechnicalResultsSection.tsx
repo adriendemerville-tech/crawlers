@@ -35,7 +35,16 @@ interface Props {
 }
 
 export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
-  const computedTotal = result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score;
+  // Defensive: guard against missing scores sub-objects
+  const scores = result?.scores;
+  if (!scores?.performance || !scores?.technical || !scores?.semantic || !scores?.aiReady || !scores?.security) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        <p className="text-sm">Les résultats de l'audit sont incomplets. Veuillez relancer l'analyse.</p>
+      </div>
+    );
+  }
+  const computedTotal = (scores.performance.score ?? 0) + (scores.technical.score ?? 0) + (scores.semantic.score ?? 0) + (scores.aiReady.score ?? 0) + (scores.security.score ?? 0);
 
   return (
     <>
