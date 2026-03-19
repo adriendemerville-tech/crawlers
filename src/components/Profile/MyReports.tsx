@@ -85,6 +85,7 @@ const translations = {
       geo: 'Analyse GEO',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Rapport Cocoon',
     },
   },
   en: {
@@ -110,6 +111,7 @@ const translations = {
       geo: 'GEO Analysis',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Cocoon Report',
     },
   },
   es: {
@@ -135,6 +137,7 @@ const translations = {
       geo: 'Análisis GEO',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Informe Cocoon',
     },
   },
 };

@@ -18,6 +18,7 @@ import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart } from "lucide-react";
 import { generateCocoonReport } from "@/components/Cocoon/CocoonReportGenerator";
+import { useSaveReport } from "@/hooks/useSaveReport";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -179,6 +180,7 @@ export default function Cocoon() {
   useCanonicalHreflang('/cocoon');
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
+  const { saveReport } = useSaveReport();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -997,6 +999,18 @@ export default function Cocoon() {
                   userId: user.id,
                   language,
                   branding,
+                });
+                // Auto-save to saved_reports
+                await saveReport({
+                  reportType: 'cocoon' as any,
+                  title: `Rapport Cocoon — ${selectedSite.domain}`,
+                  url: `https://${selectedSite.domain}`,
+                  reportData: {
+                    domain: selectedSite.domain,
+                    siteName: selectedSite.site_name || selectedSite.domain,
+                    nodesCount: nodes.length,
+                    generatedAt: new Date().toISOString(),
+                  },
                 });
               }}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-violet-500/10 border-violet-500/20 text-violet-400 hover:bg-violet-500/20 backdrop-blur-md transition-all shrink-0"
