@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -1207,7 +1207,7 @@ export function MyTracking() {
                   {(() => {
                     const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
-                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
+                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }> = {
                       performanceMobile: { label: t.performanceMobile, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
                       performanceDesktop: { label: t.performanceDesktop, value: latestPerformanceDesktop !== null ? `${Math.round(latestPerformanceDesktop)}/100` : '—', icon: Gauge },
                       seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
@@ -1216,7 +1216,7 @@ export function MyTracking() {
                       citationRate: { label: t.citationRate, value: latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—', icon: Brain },
                       sentiment: { label: t.sentiment, value: latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—', icon: BarChart3, valueClassName: latestStats ? sentimentColor(latestStats.ai_sentiment) : '' },
                       semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—', icon: TrendingUp },
-                      voiceShare: { label: `${t.voiceShare} (estimation)`, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
+                      voiceShare: { label: `${t.voiceShare} (estimation)`, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3, tooltip: 'Méthodologie pondérée incluant :\n Visibilité LLM (moyenne des citations)\n Performance SERP (mots-clés Top 10)\n Volume de recherche (ETV normalisé)' },
                     };
 
                     // Per-KPI refresh handler map — shared for both mobile/desktop
@@ -1915,8 +1915,9 @@ export function MyTracking() {
 }
 
 
-function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
   const [refreshing, setRefreshing] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1930,6 +1931,24 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { labe
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <Icon className="h-3.5 w-3.5 shrink-0" />
         <span className="leading-tight">{label}</span>
+        {tooltip && (
+          <Popover open={showTooltip} onOpenChange={setShowTooltip}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
+                className="ml-auto shrink-0 p-0.5 rounded-full hover:bg-muted transition-colors"
+                aria-label="Info"
+              >
+                <Info className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-64 text-xs leading-relaxed p-3">
+              {tooltip.split('\n').map((line, i) => (
+                <p key={i} className={line.startsWith(' ') ? 'ml-2 text-muted-foreground' : 'font-medium'}>{line}</p>
+              ))}
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
       <p className={`text-base font-semibold mt-1 ${valueClassName || ''}`}>{value}</p>
       {onRefresh && (
@@ -1947,7 +1966,7 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { labe
 }
 
 function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: {
-  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }>;
+  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }>;
   defaultOrder: string[];
   disabled: boolean;
   onRefresh?: Record<string, () => Promise<void>>;
@@ -1967,6 +1986,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
                 icon={def.icon}
                 valueClassName={def.valueClassName}
                 onRefresh={onRefresh?.[id]}
+                tooltip={def.tooltip}
               />
             );
           })}
