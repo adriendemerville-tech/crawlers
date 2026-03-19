@@ -114,6 +114,8 @@ const App = () => (
                           <Route path="/console" element={<Profile />} />
                           <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
                           <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                          <Route path="/rapport/audit" element={<RapportViewer />} />
+                          <Route path="/rapport/cocoon" element={<RapportViewer />} />
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
