@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
+import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 
 /**
  * fetch-serp-kpis
@@ -16,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code } = await req.json()
+    const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code, site_context } = await req.json()
     const effectiveLocationCode = location_code || 2250
     const effectiveLanguageCode = language_code || 'fr'
 
@@ -146,8 +147,8 @@ Deno.serve(async (req) => {
     // Extract ETV from metrics if available
     const etv = result.metrics?.organic?.etv ?? 0
 
-    // Sample top keywords (first 20)
-    const sampleKeywords = items.slice(0, 20).map((item: any) => ({
+    // Sample top keywords (first 50 for semantic authority)
+    const sampleKeywords = items.slice(0, 50).map((item: any) => ({
       keyword: item.keyword_data?.keyword,
       position: item.ranked_serp_element?.serp_item?.rank_absolute,
       search_volume: item.keyword_data?.keyword_info?.search_volume,
@@ -185,6 +186,117 @@ Deno.serve(async (req) => {
       console.error('[fetch-serp-kpis] Indexed pages fetch error:', err)
     }
 
+    // === Semantic Authority: LLM-scored keyword relevance × position × volume ===
+    let semantic_authority: number | null = null
+    if (site_context && sampleKeywords.length > 0) {
+      try {
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+        if (LOVABLE_API_KEY) {
+          const identityDesc = [
+            site_context.products_services && `Produits/Services: ${site_context.products_services}`,
+            site_context.market_sector && `Secteur: ${site_context.market_sector}`,
+            site_context.target_audience && `Audience cible: ${site_context.target_audience}`,
+            site_context.commercial_area && `Zone: ${site_context.commercial_area}`,
+          ].filter(Boolean).join('. ')
+
+          if (identityDesc) {
+            const kwList = sampleKeywords
+              .filter((kw: any) => kw.keyword && kw.position > 0)
+              .map((kw: any, i: number) => `${i + 1}. "${kw.keyword}"`)
+              .join('\n')
+
+            const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash-lite',
+                messages: [
+                  {
+                    role: 'system',
+                    content: `Tu es un expert SEO. On te donne la carte d'identité d'un site et une liste de mots-clés sur lesquels il se positionne. Pour chaque mot-clé, donne un score de pertinence de 0 à 100 par rapport au cœur de cible du site. 100 = parfaitement aligné avec l'activité principale. 0 = aucun rapport.`
+                  },
+                  {
+                    role: 'user',
+                    content: `CARTE D'IDENTITÉ DU SITE:\n${identityDesc}\n\nMOTS-CLÉS:\n${kwList}`
+                  }
+                ],
+                tools: [{
+                  type: 'function',
+                  function: {
+                    name: 'score_keywords',
+                    description: 'Score de pertinence pour chaque mot-clé',
+                    parameters: {
+                      type: 'object',
+                      properties: {
+                        scores: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              index: { type: 'number', description: 'Numéro du mot-clé (1-based)' },
+                              relevance: { type: 'number', description: 'Score 0-100' }
+                            },
+                            required: ['index', 'relevance'],
+                            additionalProperties: false
+                          }
+                        }
+                      },
+                      required: ['scores'],
+                      additionalProperties: false
+                    }
+                  }
+                }],
+                tool_choice: { type: 'function', function: { name: 'score_keywords' } },
+                temperature: 0.1,
+              }),
+              signal: AbortSignal.timeout(15000),
+            })
+
+            if (resp.ok) {
+              const data = await resp.json()
+              trackTokenUsage('fetch-serp-kpis', 'google/gemini-2.5-flash-lite', data.usage, domain)
+              
+              const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
+              if (toolCall?.function?.arguments) {
+                const parsed = JSON.parse(toolCall.function.arguments)
+                const relevanceMap = new Map<number, number>()
+                for (const s of (parsed.scores || [])) {
+                  relevanceMap.set(s.index, Math.min(100, Math.max(0, s.relevance)))
+                }
+
+                // Compute weighted authority score
+                let weightedSum = 0
+                let totalWeight = 0
+                const validKws = sampleKeywords.filter((kw: any) => kw.keyword && kw.position > 0)
+                
+                validKws.forEach((kw: any, i: number) => {
+                  const relevance = relevanceMap.get(i + 1) ?? 0
+                  if (relevance < 20) return // Skip irrelevant keywords
+                  
+                  const posScore = Math.max(0, Math.round(100 * Math.exp(-0.05 * (kw.position - 1))))
+                  const volume = kw.search_volume || 1
+                  const weight = volume * (relevance / 100)
+                  
+                  weightedSum += posScore * weight
+                  totalWeight += weight
+                })
+
+                semantic_authority = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null
+                console.log(`[fetch-serp-kpis] Semantic authority for ${domain}: ${semantic_authority}/100 (${validKws.length} kws scored)`)
+              }
+            } else {
+              console.error(`[fetch-serp-kpis] LLM relevance scoring failed: ${resp.status}`)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[fetch-serp-kpis] Semantic authority LLM error:', err)
+      }
+    }
+
     const serpData = {
       total_keywords: totalKeywords,
       avg_position: avgPosition,
@@ -194,6 +306,7 @@ Deno.serve(async (req) => {
       top_50: top50,
       etv: Math.round(etv),
       indexed_pages,
+      semantic_authority,
       sample_keywords: sampleKeywords,
       measured_at: new Date().toISOString(),
     }
