@@ -34,7 +34,7 @@
 # Langues supportées : Français (FR), English (EN), Español (ES)
 # Zones cibles : Europe, Amérique du Nord, Amérique du Sud
 #
-# Architecture : 84 Edge Functions, 11 algorithmes propriétaires, Three.js 3D engine
+# Architecture : 91+ Edge Functions, 11 algorithmes propriétaires, Three.js 3D engine, GMB integration
 # 
 # ============================================
 
