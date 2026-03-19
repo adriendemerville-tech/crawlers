@@ -1207,7 +1207,7 @@ export function MyTracking() {
                   {(() => {
                     const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
-                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
+                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }> = {
                       performanceMobile: { label: t.performanceMobile, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
                       performanceDesktop: { label: t.performanceDesktop, value: latestPerformanceDesktop !== null ? `${Math.round(latestPerformanceDesktop)}/100` : '—', icon: Gauge },
                       seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
