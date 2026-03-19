@@ -2536,6 +2536,68 @@ export type Database = {
           },
         ]
       }
+      matrix_errors: {
+        Row: {
+          admin_notes: string | null
+          batch_id: string | null
+          context_data: Json | null
+          created_at: string
+          description: string | null
+          error_type: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          session_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          batch_id?: string | null
+          context_data?: Json | null
+          created_at?: string
+          description?: string | null
+          error_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          batch_id?: string | null
+          context_data?: Json | null
+          created_at?: string
+          description?: string | null
+          error_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matrix_errors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "matrix_audit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       observatory_sectors: {
         Row: {
           avg_brand_authority: number | null
