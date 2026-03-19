@@ -2885,8 +2885,13 @@ Deno.serve(async (req) => {
     let aiGeneratedFixes: Map<string, { fn: string; call: string }> | null = null;
 
     if (useAI && auditContext) {
+      // Récupérer les paramètres CMS pour le prompting dynamique
+      const cmsSettings = await fetchSiteSettings(siteUrl);
+      if (cmsSettings.hasApiConnection) {
+        console.log(`🔌 Connexion CMS détectée: ${cmsSettings.cmsType} (API lecture/écriture)`);
+      }
       console.log('🤖 Génération IA personnalisée de TOUS les correctifs...');
-      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext);
+      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings);
     }
 
     // Générer le script avec contexte et contenu IA
