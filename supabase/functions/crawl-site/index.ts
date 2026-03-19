@@ -52,8 +52,9 @@ Deno.serve(async (req) => {
     const domain = new URL(normalizedUrl).hostname;
     let pageLimit = Math.min(maxPages, 20);
 
-    // ── Step 1: Count pages from sitemap ──
+    // ── Step 1: Get pages from sitemap (used as primary URL source) ──
     let sitemapPageCount: number | null = null;
+    let sitemapUrls: string[] = [];
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const controller1 = new AbortController();
@@ -73,6 +74,19 @@ Deno.serve(async (req) => {
         if (sitemapData.totalUrls > 0) {
           sitemapPageCount = sitemapData.totalUrls;
           console.log(`[${domain}] Sitemap: ${sitemapPageCount} pages found`);
+          // Extract flat URL list from tree
+          const extractUrls = (nodes: any[]): string[] => {
+            const result: string[] = [];
+            for (const node of nodes) {
+              if (node.urls) result.push(...node.urls);
+              if (node.children) result.push(...extractUrls(node.children));
+            }
+            return result;
+          };
+          if (sitemapData.tree) {
+            sitemapUrls = extractUrls(sitemapData.tree);
+            console.log(`[${domain}] Extracted ${sitemapUrls.length} URLs from sitemap tree`);
+          }
         }
       }
     } catch (e) {
