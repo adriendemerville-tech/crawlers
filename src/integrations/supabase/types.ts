@@ -872,6 +872,62 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_errors: {
+        Row: {
+          ai_response: string | null
+          created_at: string
+          domain: string
+          id: string
+          is_crawled: boolean | null
+          problem_description: string
+          resolved_at: string | null
+          screenshot_url: string | null
+          status: string
+          tracked_site_id: string | null
+          url_crawled: string | null
+          user_id: string
+          user_question: string | null
+        }
+        Insert: {
+          ai_response?: string | null
+          created_at?: string
+          domain: string
+          id?: string
+          is_crawled?: boolean | null
+          problem_description: string
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          tracked_site_id?: string | null
+          url_crawled?: string | null
+          user_id: string
+          user_question?: string | null
+        }
+        Update: {
+          ai_response?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          is_crawled?: boolean | null
+          problem_description?: string
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          tracked_site_id?: string | null
+          url_crawled?: string | null
+          user_id?: string
+          user_question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_errors_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_recommendations: {
         Row: {
           created_at: string
