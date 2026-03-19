@@ -97,12 +97,12 @@ export function SurveyModal() {
 
       // Determine variant
       let variant: 'A' | 'B' = 'A';
-      let blocks = (s.content_blocks || []) as ContentBlock[];
+      let blocks = (s.content_blocks || []) as unknown as ContentBlock[];
       if (s.ab_enabled) {
         const rand = Math.random() * 100;
         if (rand >= (s.ab_ratio || 50)) {
           variant = 'B';
-          blocks = (s.variant_b_content_blocks || s.content_blocks || []) as ContentBlock[];
+          blocks = (s.variant_b_content_blocks || s.content_blocks || []) as unknown as ContentBlock[];
         }
       }
 
