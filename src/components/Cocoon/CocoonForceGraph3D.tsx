@@ -103,6 +103,7 @@ interface CocoonForceGraph3DProps {
   colorIntensity?: number;
   bgWarmth?: number;
   linkThickness?: number;
+  bgColorSlider?: number;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
