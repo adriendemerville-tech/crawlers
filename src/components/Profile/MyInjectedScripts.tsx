@@ -139,7 +139,7 @@ type TestResult = {
   stale: boolean;
 };
 
-export function MyInjectedScripts() {
+export function MyInjectedScripts({ filterDomain }: { filterDomain?: string | null }) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -270,8 +270,21 @@ export function MyInjectedScripts() {
     }
   };
 
-  const hasAnyRules = Object.values(rulesBySite).some(r => r.length > 0);
-  const hasContent = hasAnyRules || validatedCodes.length > 0;
+  // Filter by domain if provided
+  const filteredSites = filterDomain
+    ? sites.filter(s => s.domain.replace(/^www\./, '') === filterDomain.replace(/^www\./, ''))
+    : sites;
+  const filteredValidatedCodes = filterDomain
+    ? validatedCodes.filter(vc => {
+        try {
+          const d = new URL(vc.url.startsWith('http') ? vc.url : `https://${vc.url}`).hostname.replace(/^www\./, '');
+          return d === filterDomain.replace(/^www\./, '');
+        } catch { return false; }
+      })
+    : validatedCodes;
+
+  const hasAnyRules = filteredSites.some(s => (rulesBySite[s.id] || []).length > 0);
+  const hasContent = hasAnyRules || filteredValidatedCodes.length > 0;
 
   if (loading) {
     return (
@@ -285,8 +298,7 @@ export function MyInjectedScripts() {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p className="font-medium">{t.empty}</p>
-        <p className="text-sm mt-1">{t.emptyDesc}</p>
+        <p className="text-sm">{language === 'fr' ? 'Pas encore de <script>' : language === 'es' ? 'Aún no hay <script>' : 'No <script> yet'}</p>
       </div>
     );
   }
@@ -295,9 +307,9 @@ export function MyInjectedScripts() {
     <>
       <div className="space-y-2">
         {/* Validated corrective codes */}
-        {validatedCodes.length > 0 && (
+        {filteredValidatedCodes.length > 0 && (
           <div className="space-y-2">
-            {validatedCodes.map(vc => (
+            {filteredValidatedCodes.map(vc => (
               <div
                 key={vc.id}
                 className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
@@ -328,7 +340,7 @@ export function MyInjectedScripts() {
         )}
 
         {/* Site script rules */}
-        {sites.map(site => {
+        {filteredSites.map(site => {
           const rules = rulesBySite[site.id] || [];
           if (rules.length === 0) return null;
           const isExpanded = expandedSites.has(site.id);

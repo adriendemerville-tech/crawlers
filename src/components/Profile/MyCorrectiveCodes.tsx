@@ -40,10 +40,10 @@ function SortableDomainButton({ id, label, isActive, onClick }: {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`text-left text-xs px-3 py-2 rounded-md truncate transition-colors ${
+      className={`text-left text-xs px-3 py-2 rounded-lg truncate transition-colors border ${
         isActive
-          ? 'bg-primary text-primary-foreground font-medium'
-          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+          ? 'bg-primary/10 text-primary border-primary/20 font-medium'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent'
       }`}
     >
       {label}
@@ -552,7 +552,7 @@ export function MyCorrectiveCodes() {
             </TabsContent>
 
             <TabsContent value="injection">
-              <MyInjectedScripts />
+              <MyInjectedScripts filterDomain={activeDomain} />
             </TabsContent>
 
             <TabsContent value="debug">
