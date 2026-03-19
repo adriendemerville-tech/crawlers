@@ -228,20 +228,22 @@ Deno.serve(async (req) => {
 
     // Cache results
     const expiresAt = new Date(Date.now() + CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString();
-    await supabase.from('domain_data_cache').upsert({
+    const { error: upsertError } = await supabase.from('domain_data_cache').upsert({
       domain: cleanDomain,
       data_type: 'sitemap_tree',
       result_data: result,
       expires_at: expiresAt,
-    }, { onConflict: 'domain,data_type' }).catch(() => {
-      // If upsert fails (no unique constraint), try insert
-      supabase.from('domain_data_cache').insert({
+    }, { onConflict: 'domain,data_type' });
+
+    if (upsertError) {
+      console.warn('[fetch-sitemap-tree] Upsert failed, trying insert:', upsertError.message);
+      await supabase.from('domain_data_cache').insert({
         domain: cleanDomain,
         data_type: 'sitemap_tree',
         result_data: result,
         expires_at: expiresAt,
       });
-    });
+    }
 
     return new Response(JSON.stringify({ ...result, cached: false }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
