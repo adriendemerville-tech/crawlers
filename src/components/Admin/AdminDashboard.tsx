@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
 import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList } from 'lucide-react';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -113,6 +114,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   group: string;
+  notifKey?: keyof ReturnType<typeof useAdminNotifications>['notifications'];
 }
 
 interface AdminDashboardProps {
@@ -130,6 +132,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
+  const { notifications } = useAdminNotifications();
 
   useEffect(() => {
     const loadDocVisibility = async () => {
@@ -175,9 +178,9 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
-        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' }] : []),
-        { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
-        { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring' },
+        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
+        { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
+        { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
       ],
@@ -187,7 +190,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       items: [
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
-        { id: 'support', label: t.support, icon: MessageCircle, group: 'content' },
+        { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
         { id: 'surveys', label: t.surveys, icon: ClipboardList, group: 'content' },
       ],
@@ -255,6 +258,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
                     return (
                       <button
                         key={item.id}
@@ -267,7 +271,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                         )}
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{item.label}</span>
+                        <span className="truncate flex-1">{item.label}</span>
+                        {notifCount > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                            {notifCount > 99 ? '99+' : notifCount}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
