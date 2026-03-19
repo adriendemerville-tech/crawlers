@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from '../_shared/cors.ts';
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 
 /**
  * Edge Function: gsc-auth
