@@ -245,6 +245,8 @@ export async function ensureSiteContext(
     company_size: site.company_size as string | undefined,
     site_name: site.site_name as string | undefined,
     address: site.address as string | undefined,
+    entity_type: (site.entity_type as string) || 'business',
+    media_specialties: (site.media_specialties as string[]) || [],
     identity_confidence: site.identity_confidence as number | undefined,
     identity_source: site.identity_source as string | undefined,
     identity_enriched_at: site.identity_enriched_at as string | undefined,
