@@ -176,7 +176,7 @@ export default function Auth() {
         if (auditUrl) {
           navigate('/audit-expert');
         } else {
-          navigate('/');
+          navigate('/console');
         }
       }
     }
