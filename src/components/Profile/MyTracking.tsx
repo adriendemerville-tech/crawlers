@@ -1682,7 +1682,7 @@ export function MyTracking() {
 
       {/* Add Site Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent>
+        <DialogContent className="flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Radar className="h-5 w-5" />
@@ -1690,7 +1690,7 @@ export function MyTracking() {
             </DialogTitle>
             <DialogDescription>{t.addSiteDesc}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1">
             <div className="flex gap-2">
               <Input
                 placeholder={t.urlPlaceholder}
@@ -1774,6 +1774,35 @@ export function MyTracking() {
               >
                 {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {adding ? t.adding : t.add}
+              </Button>
+            </div>
+          </div>
+
+          {/* Google Analytics — anchored footer */}
+          <div className="mt-auto pt-4 border-t border-border">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connectez Google Analytics'}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {language === 'en'
+                    ? 'Anonymized data. GA4 helps us make more precise recommendations and improve your ROI.'
+                    : language === 'es'
+                    ? 'Datos anonimizados. GA4 nos permite hacer recomendaciones más precisas y mejorar su ROI.'
+                    : 'Données anonymisées. GA4 nous permet de vous faire des recommandations plus précises et d\'améliorer votre ROI.'}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5 text-xs"
+                onClick={handleConnectGsc}
+                disabled={gscConnecting}
+              >
+                {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                {language === 'en' ? 'Connect' : language === 'es' ? 'Conectar' : 'Connecter'}
               </Button>
             </div>
           </div>
