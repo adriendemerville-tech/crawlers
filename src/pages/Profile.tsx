@@ -33,6 +33,7 @@ const translations = {
     myReports: 'Rapports',
     actionPlans: 'Plans d\'Action',
     correctiveCodes: '<Scripts>',
+    creator: 'Créateur',
     wallet: 'Portefeuille',
     tracking: 'Mes sites',
     firstName: 'Prénom',
