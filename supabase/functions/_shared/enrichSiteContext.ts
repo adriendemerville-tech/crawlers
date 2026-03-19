@@ -311,6 +311,8 @@ export async function ensureSiteContext(
       if (merged.target_audience) updatePayload.target_audience = merged.target_audience
       if (merged.commercial_area) updatePayload.commercial_area = merged.commercial_area
       if (merged.company_size) updatePayload.company_size = merged.company_size
+      if (merged.entity_type) updatePayload.entity_type = merged.entity_type
+      if (merged.media_specialties?.length) updatePayload.media_specialties = merged.media_specialties
       if (merged.site_name && merged.site_name !== domain) {
         updatePayload.site_name = merged.site_name
       }
