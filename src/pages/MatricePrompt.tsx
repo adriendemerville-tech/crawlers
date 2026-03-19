@@ -315,7 +315,8 @@ export default function MatricePrompt() {
                     <TableHead className="w-20">Moyen</TableHead>
                     <TableHead className="w-20">Mauvais</TableHead>
                     <TableHead className="w-36">Modèle</TableHead>
-                    {results && <TableHead className="w-20">Score</TableHead>}
+                    {results && <TableHead className="w-24">Crawlers</TableHead>}
+                    {results && <TableHead className="w-24">CSV</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
