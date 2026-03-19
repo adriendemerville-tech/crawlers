@@ -552,7 +552,7 @@ export function MyCorrectiveCodes() {
             </TabsContent>
 
             <TabsContent value="injection">
-              <MyInjectedScripts />
+              <MyInjectedScripts filterDomain={activeDomain} />
             </TabsContent>
 
             <TabsContent value="debug">
