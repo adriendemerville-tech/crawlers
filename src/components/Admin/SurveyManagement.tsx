@@ -458,6 +458,7 @@ export function SurveyManagement() {
 
     const payload: Record<string, any> = {
       title: formData.title,
+      description: formData.description,
       status: formData.status,
       target_pages: formData.target_pages,
       target_persona: formData.target_persona,
