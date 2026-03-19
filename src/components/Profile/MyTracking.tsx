@@ -508,7 +508,7 @@ export function MyTracking() {
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
         supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }),
         supabase.functions.invoke('check-crawlers', { body: { url } }),
-        supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url } }),
+        supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, site_context: { products_services: site.products_services, market_sector: site.market_sector, target_audience: site.target_audience, commercial_area: site.commercial_area } } }),
       ]);
 
       const geoData = geoRes.status === 'fulfilled' ? geoRes.value.data : null;
