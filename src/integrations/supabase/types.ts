@@ -2645,7 +2645,12 @@ export type Database = {
       profiles: {
         Row: {
           affiliate_code_used: string | null
+          agency_brand_bold: boolean | null
+          agency_brand_font: string | null
+          agency_brand_font_size: number | null
+          agency_brand_italic: boolean | null
           agency_brand_name: string | null
+          agency_brand_underline: boolean | null
           agency_contact_email: string | null
           agency_contact_first_name: string | null
           agency_contact_last_name: string | null
@@ -2682,7 +2687,12 @@ export type Database = {
         }
         Insert: {
           affiliate_code_used?: string | null
+          agency_brand_bold?: boolean | null
+          agency_brand_font?: string | null
+          agency_brand_font_size?: number | null
+          agency_brand_italic?: boolean | null
           agency_brand_name?: string | null
+          agency_brand_underline?: boolean | null
           agency_contact_email?: string | null
           agency_contact_first_name?: string | null
           agency_contact_last_name?: string | null
@@ -2719,7 +2729,12 @@ export type Database = {
         }
         Update: {
           affiliate_code_used?: string | null
+          agency_brand_bold?: boolean | null
+          agency_brand_font?: string | null
+          agency_brand_font_size?: number | null
+          agency_brand_italic?: boolean | null
           agency_brand_name?: string | null
+          agency_brand_underline?: boolean | null
           agency_contact_email?: string | null
           agency_contact_first_name?: string | null
           agency_contact_last_name?: string | null

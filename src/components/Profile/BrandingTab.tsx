@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type } from 'lucide-react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type, Bold, Italic, Underline } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Toggle } from '@/components/ui/toggle';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -169,6 +170,11 @@ export function BrandingTab() {
   const [logoUrl, setLogoUrl] = useState(profile?.agency_logo_url || '');
   const [primaryColor, setPrimaryColor] = useState(profile?.agency_primary_color || '#7c3aed');
   const [brandName, setBrandName] = useState(profile?.agency_brand_name || '');
+  const [brandFont, setBrandFont] = useState((profile as any)?.agency_brand_font || '');
+  const [brandFontSize, setBrandFontSize] = useState<number>((profile as any)?.agency_brand_font_size || 16);
+  const [brandBold, setBrandBold] = useState<boolean>((profile as any)?.agency_brand_bold || false);
+  const [brandItalic, setBrandItalic] = useState<boolean>((profile as any)?.agency_brand_italic || false);
+  const [brandUnderline, setBrandUnderline] = useState<boolean>((profile as any)?.agency_brand_underline || false);
   const [contactFirstName, setContactFirstName] = useState(profile?.agency_contact_first_name || '');
   const [contactLastName, setContactLastName] = useState(profile?.agency_contact_last_name || '');
   const [contactPhone, setContactPhone] = useState(profile?.agency_contact_phone || '');
@@ -191,6 +197,11 @@ export function BrandingTab() {
   const isIdentityDirty = logoUrl !== (profile?.agency_logo_url || '')
     || primaryColor !== (profile?.agency_primary_color || '#7c3aed')
     || brandName !== (profile?.agency_brand_name || '')
+    || brandFont !== ((profile as any)?.agency_brand_font || '')
+    || brandFontSize !== ((profile as any)?.agency_brand_font_size || 16)
+    || brandBold !== ((profile as any)?.agency_brand_bold || false)
+    || brandItalic !== ((profile as any)?.agency_brand_italic || false)
+    || brandUnderline !== ((profile as any)?.agency_brand_underline || false)
     || reportFont !== ((profile as any)?.agency_report_font || '');
 
   const isContactDirty = contactFirstName !== (profile?.agency_contact_first_name || '')
@@ -221,6 +232,11 @@ export function BrandingTab() {
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
         agency_brand_name: brandName.trim() || null,
+        agency_brand_font: brandFont || null,
+        agency_brand_font_size: brandFontSize,
+        agency_brand_bold: brandBold,
+        agency_brand_italic: brandItalic,
+        agency_brand_underline: brandUnderline,
         agency_report_font: reportFont || null,
         agency_contact_first_name: contactFirstName.trim() || null,
         agency_contact_last_name: contactLastName.trim() || null,
@@ -255,7 +271,7 @@ export function BrandingTab() {
       }, 2000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [user, logoUrl, primaryColor, brandName, brandFont, brandFontSize, brandBold, brandItalic, brandUnderline, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
   // Debounced auto-save: triggers 1.5s after last change
   useEffect(() => {
@@ -281,20 +297,22 @@ export function BrandingTab() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [logoUrl, primaryColor, brandName, brandFont, brandFontSize, brandBold, brandItalic, brandUnderline, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
 
-  // Load Google Font for preview
+  // Load Google Font for preview (report font + brand font)
   useEffect(() => {
-    if (!reportFont) return;
-    const id = `gfont-${reportFont.replace(/\s/g, '-')}`;
-    if (document.getElementById(id)) return;
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(reportFont)}:wght@400;700&display=swap`;
-    document.head.appendChild(link);
-  }, [reportFont]);
+    [reportFont, brandFont].forEach(font => {
+      if (!font) return;
+      const id = `gfont-${font.replace(/\s/g, '-')}`;
+      if (document.getElementById(id)) return;
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+      document.head.appendChild(link);
+    });
+  }, [reportFont, brandFont]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -347,6 +365,11 @@ export function BrandingTab() {
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
         agency_brand_name: brandName.trim() || null,
+        agency_brand_font: brandFont || null,
+        agency_brand_font_size: brandFontSize,
+        agency_brand_bold: brandBold,
+        agency_brand_italic: brandItalic,
+        agency_brand_underline: brandUnderline,
         agency_report_font: reportFont || null,
         agency_contact_first_name: contactFirstName.trim() || null,
         agency_contact_last_name: contactLastName.trim() || null,
@@ -404,7 +427,7 @@ export function BrandingTab() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Brand Name */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>{t.brandNameLabel}</Label>
             <p className="text-xs text-muted-foreground">{t.brandNameHint}</p>
             <Input
@@ -413,7 +436,81 @@ export function BrandingTab() {
               placeholder={t.brandNamePlaceholder}
               maxLength={100}
               className="max-w-md"
+              style={{
+                fontFamily: brandFont ? `${brandFont}, sans-serif` : undefined,
+                fontSize: `${brandFontSize}px`,
+                fontWeight: brandBold ? 700 : 400,
+                fontStyle: brandItalic ? 'italic' : 'normal',
+                textDecoration: brandUnderline ? 'underline' : 'none',
+              }}
             />
+
+            {/* Typography controls */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Font selector */}
+              <Select value={brandFont || '__default__'} onValueChange={(v) => setBrandFont(v === '__default__' ? '' : v)}>
+                <SelectTrigger className="w-44 h-8 text-xs" style={{ fontFamily: brandFont || undefined }}>
+                  <SelectValue placeholder="Police par défaut" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_OPTIONS.map((font) => (
+                    <SelectItem
+                      key={font.value}
+                      value={font.value || '__default__'}
+                      style={{ fontFamily: font.value || undefined }}
+                      className="text-xs"
+                    >
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Font size */}
+              <Select value={String(brandFontSize)} onValueChange={(v) => setBrandFontSize(Number(v))}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[12, 14, 16, 18, 20, 24, 28, 32, 36].map((s) => (
+                    <SelectItem key={s} value={String(s)} className="text-xs">
+                      {s}px
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Bold / Italic / Underline toggles */}
+              <div className="flex items-center border border-border rounded-md">
+                <Toggle
+                  size="sm"
+                  pressed={brandBold}
+                  onPressedChange={setBrandBold}
+                  className="h-8 w-8 p-0 rounded-none rounded-l-md data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Bold"
+                >
+                  <Bold className="h-3.5 w-3.5" />
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  pressed={brandItalic}
+                  onPressedChange={setBrandItalic}
+                  className="h-8 w-8 p-0 rounded-none border-x border-border data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Italic"
+                >
+                  <Italic className="h-3.5 w-3.5" />
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  pressed={brandUnderline}
+                  onPressedChange={setBrandUnderline}
+                  className="h-8 w-8 p-0 rounded-none rounded-r-md data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                  aria-label="Underline"
+                >
+                  <Underline className="h-3.5 w-3.5" />
+                </Toggle>
+              </div>
+            </div>
           </div>
 
           {/* Logo Upload */}
