@@ -340,7 +340,7 @@ export function MyInjectedScripts({ filterDomain }: { filterDomain?: string | nu
         )}
 
         {/* Site script rules */}
-        {sites.map(site => {
+        {filteredSites.map(site => {
           const rules = rulesBySite[site.id] || [];
           if (rules.length === 0) return null;
           const isExpanded = expandedSites.has(site.id);
