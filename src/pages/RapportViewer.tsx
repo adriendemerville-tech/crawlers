@@ -354,7 +354,7 @@ export default function RapportViewer() {
                 {isSharing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : copied ? (
-                  <Check className="h-4 w-4 text-emerald-500" />
+                  <Check className="h-4 w-4 text-success" />
                 ) : (
                   <Link2 className="h-4 w-4" />
                 )}
