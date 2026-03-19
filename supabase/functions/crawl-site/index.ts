@@ -318,23 +318,32 @@ Deno.serve(async (req) => {
     const crawlId = crawl.id;
     console.log(`[${crawlId}] Mapping démarré: ${domain} (max ${pageLimit} pages, depth: ${maxDepth || '∞'}, filter: ${urlFilter || 'none'})`);
 
-    // Map URLs via Firecrawl
-    const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: normalizedUrl, limit: pageLimit, includeSubdomains: false }),
-    });
+    // ── Use sitemap URLs as primary source, Firecrawl map as fallback ──
+    let urls: string[] = [];
 
-    const mapData = await mapResponse.json();
-    await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
-    if (!mapResponse.ok || !mapData.links?.length) {
-      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
-      return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
-        status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (sitemapUrls.length > 0) {
+      // Use sitemap URLs (already validated by fetch-sitemap-tree)
+      urls = sitemapUrls.slice(0, pageLimit);
+      console.log(`[${crawlId}] Using ${urls.length} URLs from sitemap (primary source)`);
+    } else {
+      // Fallback to Firecrawl map
+      console.log(`[${crawlId}] No sitemap URLs, falling back to Firecrawl map`);
+      const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: normalizedUrl, limit: pageLimit, includeSubdomains: false }),
       });
-    }
 
-    let urls: string[] = mapData.links.slice(0, pageLimit);
+      const mapData = await mapResponse.json();
+      await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+      if (!mapResponse.ok || !mapData.links?.length) {
+        await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
+        return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
+          status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      urls = mapData.links.slice(0, pageLimit);
+    }
 
     // Pre-filter URLs by regex if provided
     if (urlFilter) {
