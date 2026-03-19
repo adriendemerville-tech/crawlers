@@ -845,6 +845,11 @@ export default function Cocoon() {
                 isPickingMode={!!nodePickerCallback}
                 particlesEnabled={particlesEnabled}
                 isDayMode={false}
+                nodeColors={cocoonTheme.nodeColors}
+                particleColors={cocoonTheme.particleColors}
+                visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                showClusters={cocoonFilters.showAllClusters}
+                colorIntensity={colorIntensity}
               />
             )}
 
