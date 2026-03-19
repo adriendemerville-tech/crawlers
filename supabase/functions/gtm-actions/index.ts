@@ -240,7 +240,7 @@ async function handleDeployTag(
       {
         type: 'TEMPLATE',
         key: 'html',
-        value: `<script>\n  window.CRAWLERS_API_KEY = "${profile.api_key}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`,
+        value: `<script>\n  window.CRAWLERS_API_KEY = "${siteData.api_key}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`,
       },
       {
         type: 'BOOLEAN',
