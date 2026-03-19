@@ -189,6 +189,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
+        { id: 'surveys', label: t.surveys, icon: ClipboardList, group: 'content' },
       ],
     },
     {
