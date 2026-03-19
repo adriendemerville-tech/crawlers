@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  85+ fonctions serverless déployées sur ~30 PoPs          │
+│  94 fonctions serverless + 21 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -60,7 +60,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  40+ tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  50+ tables avec RLS, fonctions PL/pgSQL, triggers    │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -72,7 +72,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 85 fonctions serverless |
+| Backend | Supabase Edge Functions (Deno) | 94 fonctions serverless + 21 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs |
@@ -265,7 +265,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`cocoon-chat\` | ✅ | 0 | Assistant IA conversationnel Cocoon (Gemini, streaming SSE) |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) — accès aux données crawl, audit, SERP, backlinks, GSC, GA4 du domaine. Réponses limitées à 1000 caractères. Restreint au domaine affiché. |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 
 ## Utilisateur & Billing
@@ -839,7 +839,7 @@ ROI = traffic × CPC × convRate × 12  // annualisé
 - **Mode X-Ray** : Toggle pour révéler les nœuds fantômes (faible trafic)
 - **Légende dynamique** : N'affiche que les types de pages réellement présents dans le cocon, avec animation fade-in retardée (1.2s)
 - **Gate d'accès** : Vérification \\\`agency_pro\\\` / \\\`agency_premium\\\` / admin — i18n FR/EN/ES
-- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini Flash avec sélection multi-nœuds (max 5), analyse comparative automatique, streaming SSE — i18n FR/EN/ES
+- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini 3 Flash avec accès complet aux données du domaine (crawl, audit, SERP, backlinks, GSC, GA4), sélection multi-nœuds (max 3), analyse comparative, streaming SSE, réponses limitées à 1000 caractères — i18n FR/EN/ES
 - **Bannière de troncature** : Affichée si le site dépasse 100 pages (dorée)
 - **Auto-refresh** : Détecte le retour de l'utilisateur après un audit/crawl dans un nouvel onglet et régénère automatiquement le cocon (via \\\`visibilitychange\\\` + vérification DB des nouveaux rapports)
 - **Navigation rapide** : Boutons vers Audit Expert, Crawl Multi-pages (nouveaux onglets) et Console (retour)
@@ -997,10 +997,14 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.9.0',
+  version: '2.8.0',
   lastUpdated: '2026-03-19',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Surveys',
-  totalEdgeFunctions: 91,
+  totalEdgeFunctions: 94,
+  totalSharedModules: 21,
   totalTables: '50+',
-  totalLinesOfCode: '150 000+',
+  totalLinesOfCode: '147 600+',
+  totalMigrations: 160,
+  totalPages: 36,
+  totalComponents: 261,
 };
