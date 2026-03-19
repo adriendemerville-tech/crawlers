@@ -3806,6 +3806,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          device_info: Json | null
           id: string
           is_admin: boolean
           read_at: string | null
@@ -3815,6 +3816,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          device_info?: Json | null
           id?: string
           is_admin?: boolean
           read_at?: string | null
@@ -3824,6 +3826,7 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          device_info?: Json | null
           id?: string
           is_admin?: boolean
           read_at?: string | null
