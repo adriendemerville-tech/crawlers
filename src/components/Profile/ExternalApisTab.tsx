@@ -226,6 +226,12 @@ export function ExternalApisTab() {
           </div>
         </CardContent>
       </Card>
+      {/* CMS Connection Dialog */}
+      <CmsConnectionDialog
+        open={cmsDialogOpen}
+        onOpenChange={setCmsDialogOpen}
+        cmsType={cmsDialogType}
+      />
     </div>
   );
 }
