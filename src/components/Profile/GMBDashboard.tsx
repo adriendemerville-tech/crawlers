@@ -9,9 +9,17 @@ import { Input } from '@/components/ui/input';
 import {
   Construction, Star, MapPin, Phone, Globe, Clock, Search, Map, MousePointerClick,
   Navigation, PhoneCall, Image, MessageSquare, Send, Flag, TrendingUp, Eye,
-  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle
+  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
 // ─── Simulated Data ────────────────────────────────────────────
