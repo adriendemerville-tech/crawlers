@@ -1,73 +1,180 @@
-# Welcome to your Lovable project
+# Crawlers.fr — Documentation Technique
 
-## Project info
+> **Dernière mise à jour** : 19 mars 2026  
+> **Version** : 2.8.0  
+> **Lignes de code** : ~147 600 (Backend: 41 060 · Frontend: 106 600)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+## 1. Vue d'ensemble
 
-There are several ways of editing your application.
+**Crawlers.fr** est une plateforme SaaS d'audit SEO, GEO (Generative Engine Optimization) et de visualisation sémantique. Elle permet aux agences et consultants SEO d'analyser, optimiser et monitorer la visibilité de sites web dans les moteurs de recherche traditionnels et les moteurs de réponse IA (ChatGPT, Perplexity, Gemini, etc.).
 
-**Use Lovable**
+### Stack technique
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+| Couche | Technologies |
+|--------|-------------|
+| **Frontend** | React 18 · TypeScript · Vite · Tailwind CSS · shadcn/ui · Framer Motion · Three.js (Cocoon 3D) · Recharts |
+| **Backend** | Supabase Edge Functions (Deno) · PostgreSQL · Lovable Cloud |
+| **IA** | Lovable AI Gateway (Gemini, GPT-5) · OpenRouter (fallback) |
+| **APIs externes** | DataForSEO · Google PageSpeed · Google Search Console · Google Analytics 4 · Firecrawl · Stripe |
+| **Déploiement** | Lovable Cloud (auto-deploy) · Custom domain: crawlers.lovable.app |
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 2. Architecture Backend
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 2.1 Edge Functions (94 fonctions + 21 modules partagés)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Organisées en **13 domaines fonctionnels** :
 
-Follow these steps:
+| Domaine | Fonctions | Description |
+|---------|-----------|-------------|
+| **Audit SEO/GEO** | `check-pagespeed`, `check-crawlers`, `check-geo`, `check-llm`, `check-llm-depth`, `diagnose-hallucination`, `calculate-ias`, `calculate-sov` | Audits techniques, visibilité LLM, détection d'hallucinations |
+| **Audit Expert** | `expert-audit`, `audit-expert-seo`, `audit-local-seo`, `audit-strategique-ia`, `audit-compare`, `audit-matrice` | Audits stratégiques multi-dimensions |
+| **Cocoon & Maillage** | `calculate-cocoon-logic`, `cocoon-chat`, `calculate-internal-pagerank`, `persist-cocoon-session` | Graphe sémantique, assistant IA, PageRank interne |
+| **Crawl & Analyse** | `crawl-site`, `process-crawl-queue`, `fetch-sitemap-tree`, `validate-url` | Crawl multi-pages (max 500), file d'attente |
+| **Tracking & SERP** | `fetch-serp-kpis`, `refresh-serp-all`, `refresh-llm-visibility-all`, `calculate-llm-volumes`, `snapshot-audit-impact`, `measure-audit-impact` | Suivi hebdomadaire SEO/GEO, autorité sémantique |
+| **Paiement** | `create-checkout`, `create-subscription-session`, `create-credit-checkout`, `create-customer-portal`, `stripe-webhook`, `stripe-actions`, `apply-affiliate`, `apply-referral`, `apply-retention-offer` | Stripe, crédits, affiliation, rétention |
+| **Auth & Email** | `auth-actions`, `auth-email-hook`, `send-password-reset`, `send-verification-code`, `verify-email-code`, `check-email-exists`, `process-email-queue`, `ensure-profile` | Authentification, emails transactionnels (PGMQ) |
+| **Injection & SDK** | `serve-client-script`, `process-script-queue`, `generate-corrective-code`, `dry-run-script`, `get-final-script`, `verify-injection`, `widget-connect`, `check-widget-health`, `sdk-status`, `watchdog-scripts` | Scripts correctifs, widget JS, monitoring |
+| **Content & Blog** | `generate-blog-from-news`, `fetch-news`, `generate-infotainment`, `rss-feed`, `sitemap` | Génération de contenu, flux RSS |
+| **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO) |
+| **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
+| **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress |
+| **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2.2 Modules partagés (`_shared/`)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+21 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, etc.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2.3 Base de données
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+- **~50 tables** PostgreSQL avec RLS
+- **160 migrations** versionnées
+- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`
+- Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
+- File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 3. Architecture Frontend
 
-**Use GitHub Codespaces**
+### 3.1 Pages (36 pages)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Catégorie | Pages |
+|-----------|-------|
+| **Landing & Marketing** | `Index`, `ProAgency`, `Tarifs`, `Faq`, `Methodologie`, `Observatoire` |
+| **Audit & Analyse** | `ExpertAudit`, `SiteCrawl`, `AuditCompare`, `AuditSeoGratuit`, `AnalyseSiteWebGratuit`, `MatricePrompt`, `RapportMatrice` |
+| **Cocoon** | `Cocoon`, `FeaturesCocoon` |
+| **Outils** | `ArchitecteGeneratif`, `GenerativeEngineOptimization`, `IndiceAlignementStrategique`, `IntegrationGTM`, `ModifierCodeWordPress` |
+| **Profil & Compte** | `Profile`, `Auth`, `Signup`, `ResetPassword` |
+| **Contenu** | `Lexique`, `GuideAuditSeo`, `ComparatifCrawlersSemrush` |
+| **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
+| **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-## What technologies are used for this project?
+### 3.2 Composants (261 fichiers, 12 modules)
 
-This project is built with:
+| Module | Rôle |
+|--------|------|
+| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions |
+| **Cocoon/** | Graphe 3D (Three.js), assistant IA, rapport, recommandations, tâches |
+| **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif |
+| **Profile/** | Mes sites, crawls, rapports, wallet, scripts, intégrations, GMB |
+| **Blog/** | Articles, carrousel actualités |
+| **Lexique/** | Glossaire SEO interactif |
+| **Analytics/** | Tracking événements |
+| **Support/** | FAQ, chat support |
+| **ui/** | Composants shadcn/ui personnalisés |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3.3 Contextes React
 
-## How can I deploy this project?
+- `AuthContext` — Authentification utilisateur
+- `LanguageContext` — i18n (FR, EN, ES)
+- `CreditsContext` — Solde crédits temps réel
+- `ThemeProvider` — Dark/Light mode
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 4. Fonctionnalités clés
 
-Yes, you can!
+### 4.1 Cocoon Sémantique
+- Visualisation 3D/2D du graphe de maillage interne
+- Calcul TF-IDF enrichi par segments URL et ancres
+- Assistant IA (Gemini 3 Flash) avec accès aux données complètes du domaine (crawl, audit, SERP, backlinks, GSC, GA4)
+- Historique des recommandations + plan de tâches
+- Rapport exportable (PDF/CSV) avec white-labeling
+- Limite : 100 pages max pour le graphe, 500 pour le crawl
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### 4.2 Audit Expert
+- Audit technique (PageSpeed, crawlers IA, sécurité, structure)
+- Audit stratégique (E-E-A-T, positionnement, autorité de marque, feuille de route IA)
+- Audit local SEO (GMB, NAP, avis)
+- Code correctif généré par IA (JSON-LD, meta, robots.txt)
+- Architecte Génératif : injection de scripts via widget JS
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### 4.3 Suivi & Monitoring
+- Tracking hebdomadaire automatique (SEO score, GEO score, visibilité LLM, autorité sémantique)
+- Intégrations : Google Search Console, Google Analytics 4, Google My Business
+- Historique backlinks (DataForSEO)
+- Graphiques d'évolution multi-métriques
+
+### 4.4 Système de crédits
+- Crédits welcome (25 pour les 1000 premiers inscrits)
+- Pro Agency gratuit 6 mois pour les 100 premiers
+- Système d'affiliation et parrainage
+- Paiement Stripe (abonnements + crédits à la carte)
+
+---
+
+## 5. Sécurité
+
+- **RLS** sur toutes les tables sensibles
+- **Rôles** : table `user_roles` avec enum (`admin`, `moderator`, `user`)
+- **Fair-use** : `check_fair_use_v2` (limites horaires + journalières)
+- **Rate limiting** : `check_rate_limit` par action
+- **Protection profils** : triggers `protect_profile_fields` et `protect_billing_fields`
+- **Tokens OAuth** : stockage chiffré (Google, CMS)
+- **Turnstile** : vérification CAPTCHA Cloudflare sur les formulaires publics
+
+---
+
+## 6. Internationalisation
+
+- 3 langues : Français (défaut), Anglais, Espagnol
+- Traductions inline dans chaque composant via objets `translations`
+- L'assistant IA adapte sa langue automatiquement
+
+---
+
+## 7. Intégrations externes
+
+| Service | Usage | Secret(s) |
+|---------|-------|-----------|
+| DataForSEO | SERP, backlinks, keywords | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` |
+| Google PageSpeed | Core Web Vitals | `GOOGLE_PAGESPEED_API_KEY` |
+| Google OAuth (GSC/GA4) | Search Console, Analytics | `GOOGLE_GSC_CLIENT_ID`, `GOOGLE_GSC_CLIENT_SECRET` |
+| Stripe | Paiements | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| Firecrawl | Crawl de pages web | `FIRECRAWL_API_KEY` |
+| OpenRouter | LLM fallback | `OPENROUTER_API_KEY` |
+| Cloudflare Turnstile | CAPTCHA | `TURNSTILE_SECRET_KEY` |
+| Fly.io Renderer | Rendu PDF/screenshots | `FLY_RENDERER_URL`, `FLY_RENDERER_SECRET` |
+
+---
+
+## 8. Roadmap (Phase de design)
+
+- **CMS Adapters** : Application automatique des recommandations Cocoon via API WordPress, Shopify, Webflow, Wix (voir `docs/cms-adapter-architecture.md`)
+- **URL Registry** : Référentiel centralisé `url_registry` pour la déduplication et le cache inter-modules
+- **Agents autonomes** : Expansion des agents CTO et SEO pour l'auto-optimisation continue
+
+---
+
+## 9. Conventions de développement
+
+- **Backend** : Routeurs consolidés (ex: `stripe-actions`, `auth-actions`) pour minimiser les cold starts
+- **Extraction** : Autorisée uniquement si une fonction dépasse 500 lignes ou est partagée par ≥3 services
+- **Frontend** : Composants < 300 lignes, refactoring au-delà
+- **Secrets** : Jamais dans le code, toujours via Supabase secrets
+- **Types** : `src/integrations/supabase/types.ts` auto-généré, ne pas modifier
+- **Fichiers protégés** : `config.toml`, `client.ts`, `types.ts`, `.env` — auto-gérés
