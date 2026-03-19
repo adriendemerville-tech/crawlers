@@ -4492,6 +4492,7 @@ export type Database = {
         | "geo"
         | "pagespeed"
         | "crawlers"
+        | "cocoon"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4641,6 +4642,7 @@ export const Constants = {
         "geo",
         "pagespeed",
         "crawlers",
+        "cocoon",
       ],
     },
   },
