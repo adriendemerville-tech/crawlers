@@ -957,6 +957,7 @@ export function MyTracking() {
         seo: entry.seo_score || 0,
         geo: entry.geo_score || 0,
         citation: entry.llm_citation_rate || 0,
+        semanticAuth: entry.semantic_authority || 0,
         performanceMobile: getPerformanceScore(entry) || 0,
         performanceDesktop: getPerformanceDesktop(entry) || 0,
       };
