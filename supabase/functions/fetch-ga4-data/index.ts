@@ -107,6 +107,24 @@ Deno.serve(async (req) => {
       const metrics = await fetchGA4Metrics(accessToken, resolvedPropertyId, startD, endD)
       trackPaidApiCall('fetch-ga4-data', 'google-ga4', 'runReport')
 
+      // Persist revenue data if a tracked_site is linked
+      if (metrics.daily_series?.length > 0) {
+        // Find tracked_site_id for this user + domain
+        const domainForLookup = domain || ''
+        if (domainForLookup) {
+          const { data: site } = await supabase
+            .from('tracked_sites')
+            .select('id')
+            .eq('user_id', user_id)
+            .ilike('domain', `%${domainForLookup.replace(/^www\./, '')}%`)
+            .limit(1)
+            .single()
+          if (site) {
+            await persistGA4Revenue(supabase, user_id, site.id, metrics.daily_series)
+          }
+        }
+      }
+
       return new Response(JSON.stringify({ success: true, property_id: resolvedPropertyId, ...metrics }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
