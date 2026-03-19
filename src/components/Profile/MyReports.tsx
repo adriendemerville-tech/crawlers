@@ -137,6 +137,7 @@ const translations = {
       geo: 'Análisis GEO',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Informe Cocoon',
     },
   },
 };
