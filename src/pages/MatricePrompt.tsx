@@ -57,6 +57,14 @@ export default function MatricePrompt() {
   const [results, setResults] = useState<any[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Batch management
+  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; }
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [loadingBatches, setLoadingBatches] = useState(true);
+
+  const LAST_BATCH_KEY = 'matrice_last_batch_id';
+
   // Guard: admin only
   useEffect(() => {
     if (!adminLoading && !authLoading) {
@@ -65,10 +73,83 @@ export default function MatricePrompt() {
     }
   }, [isAdmin, adminLoading, authLoading, user, navigate]);
 
+  // Load available batches on mount
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('prompt_matrix_items')
+        .select('batch_id, batch_label, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data) { setLoadingBatches(false); return; }
+
+      // Group by batch_id
+      const map = new Map<string, Batch>();
+      data.forEach((row: any) => {
+        if (!map.has(row.batch_id)) {
+          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0 });
+        }
+        map.get(row.batch_id)!.count++;
+      });
+      const list = Array.from(map.values());
+      setBatches(list);
+
+      // Pre-select last used or most recent
+      const lastUsed = localStorage.getItem(LAST_BATCH_KEY);
+      const target = list.find(b => b.batch_id === lastUsed) || list[0];
+      if (target) {
+        setActiveBatchId(target.batch_id);
+        await loadBatch(target.batch_id);
+      }
+      setLoadingBatches(false);
+    })();
+  }, [user]);
+
+  // Load a specific batch's prompts
+  const loadBatch = async (batchId: string) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('prompt_matrix_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) return;
+
+    const parsed: MatrixRow[] = data.map((row: any, i: number) => ({
+      id: `row-${i}-${row.id}`,
+      dbId: row.id,
+      prompt: row.prompt,
+      poids: Number(row.poids),
+      axe: row.axe,
+      seuil_bon: Number(row.seuil_bon),
+      seuil_moyen: Number(row.seuil_moyen),
+      seuil_mauvais: Number(row.seuil_mauvais),
+      llm_name: row.llm_name,
+      selected: true,
+      isDefault: (row.is_default_flags as Record<string, boolean>) || {},
+    }));
+    setRows(parsed);
+    setResults(null);
+    localStorage.setItem(LAST_BATCH_KEY, batchId);
+  };
+
+  // Switch batch
+  const handleBatchChange = async (batchId: string) => {
+    setActiveBatchId(batchId);
+    await loadBatch(batchId);
+  };
+
   /* --- CSV Import + persist prompt items --- */
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    const fileName = file.name.replace(/\.csv$/i, '');
+    const newBatchId = crypto.randomUUID();
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -98,9 +179,11 @@ export default function MatricePrompt() {
           };
         });
 
-        // Persist prompt items to DB
+        // Persist with batch_id
         const dbRows = parsed.map(p => ({
           user_id: user.id,
+          batch_id: newBatchId,
+          batch_label: fileName,
           prompt: p.prompt,
           poids: p.poids,
           axe: p.axe,
@@ -120,9 +203,15 @@ export default function MatricePrompt() {
           parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
         }
 
+        // Update batches list
+        const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
+        setBatches(prev => [newBatch, ...prev]);
+        setActiveBatchId(newBatchId);
+        localStorage.setItem(LAST_BATCH_KEY, newBatchId);
+
         setRows(parsed);
         setResults(null);
-        toast.success(`${parsed.length} KPIs importés`);
+        toast.success(`${parsed.length} KPIs importés — "${fileName}"`);
       },
       error: () => toast.error('Erreur de parsing CSV'),
     });
