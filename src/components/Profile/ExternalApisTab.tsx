@@ -136,9 +136,9 @@ export function ExternalApisTab() {
       return;
     }
 
-    // CMS: WordPress / Drupal / Shopify connection dialog
-    if (service.id === 'wordpress' || service.id === 'drupal' || service.id === 'shopify') {
-      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify');
+    // CMS: WordPress / Drupal / Shopify / Webflow / Wix connection dialog
+    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix'].includes(service.id)) {
+      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix');
       setCmsDialogOpen(true);
     }
   };
