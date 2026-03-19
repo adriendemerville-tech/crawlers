@@ -1511,5 +1511,6 @@ export function ExpertAuditDashboard() {
         }}
       />
     </div>
+    </StrategicErrorBoundary>
   );
 }
