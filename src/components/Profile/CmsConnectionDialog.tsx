@@ -321,9 +321,9 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t.title} — {cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : 'Drupal'}</DialogTitle>
+          <DialogTitle>{t.title} — {cmsLabel}</DialogTitle>
           <DialogDescription className="text-xs space-y-1">
-            <span>{cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : t.drupalHelp}</span>
+            <span>{helpText}</span>
             {cmsType === 'wordpress' && siteUrl && (
               <a
                 href={`${siteUrl.replace(/\/$/, '')}/wp-admin/users.php?page=application-passwords`}
@@ -352,6 +352,26 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
                 className="flex items-center gap-1 text-primary hover:underline"
               >
                 ↗ {language === 'fr' ? 'Ouvrir les réglages API Shopify' : language === 'es' ? 'Abrir configuración API Shopify' : 'Open Shopify API settings'}
+              </a>
+            )}
+            {cmsType === 'webflow' && (
+              <a
+                href="https://webflow.com/dashboard/account/integrations"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages API Webflow' : language === 'es' ? 'Abrir configuración API Webflow' : 'Open Webflow API settings'}
+              </a>
+            )}
+            {cmsType === 'wix' && (
+              <a
+                href="https://manage.wix.com/account/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages API Wix' : language === 'es' ? 'Abrir configuración API Wix' : 'Open Wix API settings'}
               </a>
             )}
           </DialogDescription>
