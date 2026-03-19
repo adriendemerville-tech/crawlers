@@ -75,7 +75,7 @@ const JUICE_COLORS: Record<JuiceType, [number, number, number]> = {
 // Page node colors — vivid, electric (matching useCocoonTheme)
 const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
   homepage:    [255, 204, 0],    // #ffcc00
-  blog:        [155, 95, 255],   // #9b5fff
+  blog:        [140, 120, 255],  // #8c78ff
   produit:     [0, 240, 160],    // #00f0a0
   "catégorie": [61, 184, 255],   // #3db8ff
   faq:         [255, 128, 48],   // #ff8030
@@ -84,8 +84,8 @@ const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
   guide:       [192, 122, 255],  // #c07aff
   "légal":     [160, 170, 180],  // #a0aab4
   "à propos":  [0, 229, 240],    // #00e5f0
-  page:        [140, 92, 255],   // #8c5cff
-  unknown:     [140, 92, 255],   // #8c5cff
+  page:        [122, 122, 158],  // #7a7a9e
+  unknown:     [122, 122, 158],  // #7a7a9e
 };
 
 // ─── Particle system for links ───

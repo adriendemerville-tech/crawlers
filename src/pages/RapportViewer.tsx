@@ -302,11 +302,18 @@ export default function RapportViewer() {
 
   const handlePrint = () => {
     if (!htmlContent) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.onload = () => printWindow.print();
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+    document.body.appendChild(iframe);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc || !iframe.contentWindow) return;
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
   };
 
   /* --- Render --- */
@@ -387,9 +394,28 @@ export default function RapportViewer() {
           <iframe
             title="Report"
             srcDoc={htmlContent}
-            className="w-full h-[calc(100vh-57px)] bg-white"
+            className="w-full h-[calc(100vh-57px-40px)] bg-white"
           />
         </main>
+
+        {/* Branded footer */}
+        <footer className="sticky bottom-0 z-50 border-t border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="mx-auto max-w-6xl px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {branding?.logoUrl ? (
+                <img src={branding.logoUrl} alt="Logo" className="h-5 max-w-[120px] object-contain" />
+              ) : (
+                <span className="text-xs font-semibold text-foreground">Crawlers</span>
+              )}
+              {branding?.primaryColor ? null : (
+                <span className="text-[10px] text-muted-foreground">crawlers.fr</span>
+              )}
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              © {new Date().getFullYear()} {branding?.logoUrl ? '' : 'Crawlers'}
+            </span>
+          </div>
+        </footer>
       </div>
     </>
   );

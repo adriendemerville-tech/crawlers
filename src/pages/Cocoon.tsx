@@ -899,7 +899,7 @@ export default function Cocoon() {
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
                     {legendItems.map(([type, labels]) => {
-                      const color = cocoonTheme.nodeColors[type] || cocoonTheme.nodeColors.unknown || '#8c5cff';
+                      const color = cocoonTheme.nodeColors[type] || cocoonTheme.nodeColors.unknown || '#7a7a9e';
                       const label = labels[language] || labels.fr;
                       return (
                         <div key={type} className="flex items-center gap-1 sm:gap-1.5">
