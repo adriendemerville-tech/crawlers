@@ -907,7 +907,7 @@ export default function Cocoon() {
                     <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Particles:' : 'Particules :'}</span>
                     {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
                       <div key={key} className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
+                        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full opacity-70" style={{ backgroundColor: color }} />
                         <span className="text-[10px] sm:text-xs text-white/50 capitalize">{
                           { authority: language === 'en' ? 'Authority' : language === 'es' ? 'Autoridad' : 'Autorité', semantic: language === 'en' ? 'Semantic' : language === 'es' ? 'Semántica' : 'Sémantique', traffic: language === 'en' ? 'Traffic' : language === 'es' ? 'Tráfico' : 'Trafic', hierarchy: language === 'en' ? 'Hierarchy' : language === 'es' ? 'Jerarquía' : 'Hiérarchie' }[key] || key
                         }</span>
