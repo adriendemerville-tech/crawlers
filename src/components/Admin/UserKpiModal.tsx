@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search } from 'lucide-react';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -27,6 +27,8 @@ interface UserKpis {
   totalEvents: number;
   totalCorrectiveCodes: number;
   totalActionPlans: number;
+  totalBackendErrors: number;
+  totalFrontendErrors: number;
   planType: string;
 }
 
@@ -64,6 +66,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
         codesRes,
         plansRes,
         eventsRes,
+        backendErrorsRes,
+        frontendErrorsRes,
       ] = await Promise.all([
         // Sessions & activity from analytics_events
         supabase
@@ -96,6 +100,18 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
           .from('analytics_events')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),
+        // Backend errors (silent_error, edge_function_error, browserless_error, scan_error, scan_error_final)
+        supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .in('event_type', ['silent_error', 'edge_function_error', 'browserless_error', 'scan_error', 'scan_error_final']),
+        // Frontend errors
+        supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('event_type', 'error'),
       ]);
 
       // Calculate sessions
@@ -145,6 +161,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
         totalEvents: eventsRes.count || 0,
         totalCorrectiveCodes: codesRes.count || 0,
         totalActionPlans: plansRes.count || 0,
+        totalBackendErrors: backendErrorsRes.count || 0,
+        totalFrontendErrors: frontendErrorsRes.count || 0,
         planType: (user as any).plan_type || 'free',
       });
     } catch (err) {
@@ -211,6 +229,8 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
     { icon: MousePointer, label: 'Événements totaux', value: kpis.totalEvents, color: 'text-rose-500' },
     { icon: TrendingUp, label: 'Codes correctifs', value: kpis.totalCorrectiveCodes, color: 'text-orange-500' },
     { icon: FileText, label: "Plans d'action", value: kpis.totalActionPlans, color: 'text-teal-500' },
+    { icon: AlertTriangle, label: 'Erreurs back-end', value: kpis.totalBackendErrors, color: 'text-red-500' },
+    { icon: Bug, label: 'Erreurs front-end', value: kpis.totalFrontendErrors, color: 'text-orange-600' },
     { icon: CreditCard, label: 'Plan', value: <Badge variant="outline">{kpis.planType}</Badge>, color: 'text-primary' },
   ] : [];
 
