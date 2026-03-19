@@ -39,6 +39,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const SignupPage = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
+const RapportViewer = lazy(() => import("./pages/RapportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
@@ -112,6 +113,8 @@ const App = () => (
                           <Route path="/signup" element={<SignupPage />} />
                           <Route path="/console" element={<Profile />} />
                           <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
+                          <Route path="/rapport/audit" element={<RapportViewer />} />
+                          <Route path="/rapport/cocoon" element={<RapportViewer />} />
                           <Route path="/rapport/:reportId" element={<ReportViewer />} />
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}

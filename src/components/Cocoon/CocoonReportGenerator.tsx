@@ -557,10 +557,17 @@ export async function generateCocoonReport(data: CocoonReportData): Promise<void
 </body>
 </html>`;
 
-  // Open in new tab
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  // Clean up after a delay
-  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  // Store in sessionStorage and open /rapport/cocoon
+  const payload = JSON.stringify({
+    kind: 'cocoon',
+    html,
+    domain,
+    siteName: siteName || domain,
+    nodes: nodes.slice(0, 200), // limit size for sessionStorage
+  });
+  sessionStorage.setItem('rapport_cocoon_data', payload);
+  window.open('/rapport/cocoon', '_blank');
 }
+
+/** Export the HTML builder for reuse (e.g. by RapportViewer) */
+export { getTranslations as getCocoonTranslations, analyzeNodes, fetchCrawlStats, getPriorityColor, getHealthColor, escapeHtml };
