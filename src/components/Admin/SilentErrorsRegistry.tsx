@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { CocoonErrorsRegistry } from './CocoonErrorsRegistry';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +97,7 @@ export function SilentErrorsRegistry() {
   });
 
   return (
+    <>
     <div className="space-y-4">
       {/* Stats summary */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -219,5 +221,11 @@ export function SilentErrorsRegistry() {
         </CardContent>
       </Card>
     </div>
+
+    {/* Cocoon Errors Registry */}
+    <div className="mt-6">
+      <CocoonErrorsRegistry />
+    </div>
+    </>
   );
 }
