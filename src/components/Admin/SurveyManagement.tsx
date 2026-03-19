@@ -109,7 +109,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
 
         {(block.type === 'poll' || block.type === 'rating' || block.type === 'text_feedback') && (
           <div>
-            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Question</Label>
+            <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-emerald-500" /> Question</Label>
             <Input value={block.question || ''} onChange={e => onChange({ ...block, question: e.target.value })} placeholder="Votre question..." />
           </div>
         )}
