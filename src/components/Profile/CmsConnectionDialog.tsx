@@ -235,7 +235,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
 
       const { data: saved, error } = await supabase
         .from('cms_connections')
-        .upsert(insertData, { onConflict: 'tracked_site_id,platform' })
+        .upsert(insertData as any, { onConflict: 'tracked_site_id,platform' })
         .select('id')
         .single();
 
