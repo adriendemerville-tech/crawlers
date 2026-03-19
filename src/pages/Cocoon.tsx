@@ -725,7 +725,7 @@ export default function Cocoon() {
                 className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1 sm:gap-1.5 px-2 sm:px-3"
               >
                 {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 animate-spin" /> : <RefreshCw className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
-                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}</span>
+                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : (nodes.length === 0 ? t.generateGraph : t.refreshData)}</span>
               </Button>
               <Button
                 variant="outline"
