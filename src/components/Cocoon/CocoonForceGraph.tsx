@@ -64,27 +64,28 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
 
 type JuiceType = 'authority' | 'semantic' | 'traffic' | 'hierarchy';
 
+// Particle colors — matte, soft (matching useCocoonTheme)
 const JUICE_COLORS: Record<JuiceType, [number, number, number]> = {
-  authority:  [255, 200, 60],
-  semantic:   [80, 140, 255],
-  traffic:    [60, 220, 140],
-  hierarchy:  [180, 100, 255],
+  authority:  [200, 168, 110],  // #c8a86e
+  semantic:   [122, 158, 196],  // #7a9ec4
+  traffic:    [110, 184, 154],  // #6eb89a
+  hierarchy:  [163, 130, 184],  // #a382b8
 };
 
-// ─── Jarvis-style Color Palette ───
+// Page node colors — vivid, electric (matching useCocoonTheme)
 const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
-  homepage:    [255, 200, 60],
-  blog:        [140, 120, 255],
-  produit:     [60, 220, 160],
-  "catégorie": [80, 170, 255],
-  faq:         [255, 150, 80],
-  contact:     [240, 120, 180],
-  tarifs:      [255, 200, 60],
-  guide:       [180, 140, 255],
-  "légal":     [160, 170, 180],
-  "à propos":  [80, 220, 230],
-  page:        [140, 100, 250],
-  unknown:     [140, 100, 250],
+  homepage:    [255, 204, 0],    // #ffcc00
+  blog:        [155, 95, 255],   // #9b5fff
+  produit:     [0, 240, 160],    // #00f0a0
+  "catégorie": [61, 184, 255],   // #3db8ff
+  faq:         [255, 128, 48],   // #ff8030
+  contact:     [255, 92, 170],   // #ff5caa
+  tarifs:      [255, 204, 0],    // #ffcc00
+  guide:       [192, 122, 255],  // #c07aff
+  "légal":     [160, 170, 180],  // #a0aab4
+  "à propos":  [0, 229, 240],    // #00e5f0
+  page:        [140, 92, 255],   // #8c5cff
+  unknown:     [140, 92, 255],   // #8c5cff
 };
 
 // ─── Particle system for links ───
