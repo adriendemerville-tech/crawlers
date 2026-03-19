@@ -1779,14 +1779,20 @@ export function MyTracking() {
             </div>
           </div>
 
-          {/* Google Analytics — sticky footer outside scrollable area */}
-          <div className="shrink-0 pt-4 border-t border-border">
-            <div className="flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connectez Google Analytics'}
-                </p>
+          {/* Google Analytics — fixed footer outside scrollable area */}
+          <div className="shrink-0 pt-3 border-t border-border">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="ga4-add-modal"
+                checked={ga4EnabledLocal}
+                disabled={ga4TogglingLocal}
+                onCheckedChange={(checked) => handleGa4ToggleLocal(!!checked)}
+                className="mt-0.5"
+              />
+              <div className="space-y-1">
+                <label htmlFor="ga4-add-modal" className="text-sm font-medium cursor-pointer leading-none">
+                  {language === 'en' ? 'Connect Google Analytics' : language === 'es' ? 'Conectar Google Analytics' : 'Connecter Google Analytics'}
+                </label>
                 <p className="text-[11px] text-muted-foreground leading-snug">
                   {language === 'en'
                     ? 'Anonymized data. GA4 helps us make more precise recommendations and improve your ROI.'
@@ -1795,16 +1801,6 @@ export function MyTracking() {
                     : 'Données anonymisées. GA4 nous permet de vous faire des recommandations plus précises et d\'améliorer votre ROI.'}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5 text-xs"
-                onClick={handleConnectGsc}
-                disabled={gscConnecting}
-              >
-                {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
-                {language === 'en' ? 'Connect' : language === 'es' ? 'Conectar' : 'Connecter'}
-              </Button>
             </div>
           </div>
         </DialogContent>
