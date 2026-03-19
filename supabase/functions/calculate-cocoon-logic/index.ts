@@ -375,7 +375,7 @@ Deno.serve(async (req) => {
     for (const page of validPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
-      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
+      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "", page.page_type_override);
       
       // Enrich tokenization: title + h1 + meta + keywords + URL path segments + anchor texts
       const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");
