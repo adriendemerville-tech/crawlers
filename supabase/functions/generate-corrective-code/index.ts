@@ -2990,7 +2990,7 @@ Deno.serve(async (req) => {
         registryRecommendationsCount: registryRecommendations.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
         // ═══ NOUVEAUTÉS v4.0 ═══
-        cmsDetected: (useAI && auditContext) ? (await fetchSiteSettings(siteUrl)).cmsType : null,
+        cmsDetected: cmsSettings.cmsType || null,
         syntaxValid: syntaxCheck.valid,
         syntaxError: syntaxCheck.error || null,
         sizeBytes: { original: originalSize, minified: minifiedSize, compressionRatio },
