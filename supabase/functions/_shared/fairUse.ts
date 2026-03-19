@@ -23,7 +23,10 @@ type ActionType =
   | 'llm_depth'
   | 'audit_compare'
   | 'hallucination_diagnosis'
-  | 'target_queries';
+  | 'target_queries'
+  | 'cocoon_chat'
+  | 'cocoon_logic'
+  | 'local_seo_audit';
 
 const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
   free: {
