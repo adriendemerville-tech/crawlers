@@ -373,16 +373,19 @@ export default function MatricePrompt() {
 
               <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
                 <span>{selectedRows.length}/{rows.length} KPIs sélectionnés</span>
-                {results && (
-                  <span className="ml-auto font-medium text-foreground">
-                    Score pondéré : {(() => {
-                      const active = results.filter(r => selectedRows.some(s => s.prompt === r.prompt));
-                      const tw = active.reduce((s, r) => s + r.poids, 0);
-                      if (tw === 0) return '—';
-                      return Math.round(active.reduce((s, r) => s + r.score * r.poids, 0) / tw) + '/100';
-                    })()}
-                  </span>
-                )}
+                {results && (() => {
+                  const active = results.filter(r => selectedRows.some(s => s.prompt === r.prompt));
+                  const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
+                  if (tw === 0) return null;
+                  const csvScore = Math.round(active.reduce((s: number, r: any) => s + r.score * r.poids, 0) / tw);
+                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
+                  return (
+                    <span className="ml-auto font-medium text-foreground flex gap-4">
+                      <span>Crawlers : {crawlersScore}/100</span>
+                      <span>CSV pondéré : {csvScore}/100</span>
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           )}
