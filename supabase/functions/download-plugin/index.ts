@@ -506,14 +506,14 @@ add_action('crawlers_geo_daily_sync', 'crawlers_geo_fetch_config');
 function getReadmeTxt(): string {
   return `=== Crawlers GEO ===
 Contributors: crawlersfr
-Tags: seo, geo, schema, json-ld, optimization
+Tags: seo, geo, schema, json-ld, optimization, woocommerce, payment-tracking, revenue
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 
-Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr.
+Synchronise automatiquement les optimisations SEO/GEO depuis Crawlers.fr et traque les paiements WooCommerce.
 
 == Description ==
 
@@ -522,10 +522,15 @@ Crawlers GEO connecte votre site WordPress a la plateforme Crawlers.fr pour inje
 * Les balises meta optimisees
 * Les schemas JSON-LD (Organization, FAQ, LocalBusiness, etc.)
 * Les scripts correctifs SEO
+* Le suivi automatique des paiements WooCommerce (revenus)
 
 Deux modes disponibles :
-* **SDK dynamique** : charge le script en temps reel (toujours a jour)
+* **SDK dynamique** : charge le script en temps reel (toujours a jour, inclut le suivi de paiements cote client)
 * **Synchronisation serveur** : stocke la config localement
+
+Tracking des paiements :
+* WooCommerce : suivi automatique cote serveur via hooks (woocommerce_thankyou, order status)
+* Stripe / PayPal / Generique : suivi cote client via le widget.js v3
 
 == Installation ==
 
@@ -537,6 +542,11 @@ Deux modes disponibles :
 6. Collez votre cle API ou utilisez le Lien Magique
 
 == Changelog ==
+
+= 2.0.0 =
+* Suivi automatique des paiements WooCommerce (server-side)
+* Widget.js v3 avec detection Stripe, PayPal, Shopify, DataLayer
+* API publique window.CrawlersTrackPayment() pour integrations custom
 
 = 1.3.0 =
 * Mode SDK dynamique (charge serve-client-script en temps reel)
