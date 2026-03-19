@@ -172,6 +172,8 @@ interface TrackedSite {
   address?: string | null;
   commercial_area?: string | null;
   company_size?: string | null;
+  entity_type?: string | null;
+  media_specialties?: string[] | null;
 }
 
 interface StatsEntry {
