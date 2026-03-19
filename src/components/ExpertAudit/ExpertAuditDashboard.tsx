@@ -1234,6 +1234,7 @@ export function ExpertAuditDashboard() {
   }, [handleStrategicAudit, toast]);
 
   return (
+    <StrategicErrorBoundary onReset={handleNewAudit}>
     <div className="container mx-auto px-4 py-10 max-w-5xl">
       {/* Fatal error banner — after 4 consecutive failures */}
       {fatalAuditError && (
@@ -1393,7 +1394,16 @@ export function ExpertAuditDashboard() {
       <PatienceCards isActive={isStrategicLoading} />
 
       {/* Results */}
-      {result && !isLoading && !isStrategicLoading && (
+      {result && !isLoading && !isStrategicLoading && (() => {
+        // Diagnostic: log result structure to catch crashes
+        console.log('[AuditDashboard] Rendering results:', {
+          auditMode,
+          hasScores: !!result?.scores,
+          hasStrategicAnalysis: !!result?.strategicAnalysis,
+          scannedAt: result?.scannedAt,
+          domain: result?.domain,
+        });
+        return (
         <motion.div
           key={auditMode}
           initial={{ opacity: 0 }}
@@ -1443,9 +1453,11 @@ export function ExpertAuditDashboard() {
             transition={{ delay: 0.5 }}
             className="flex flex-col items-center gap-6 pt-8"
           >
-            <p className="text-xs text-muted-foreground">
-              {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
-            </p>
+            {result.scannedAt && (
+              <p className="text-xs text-muted-foreground">
+                {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
+              </p>
+            )}
             <Button
               onClick={handleReportButtonClick}
               size="lg"
@@ -1456,7 +1468,8 @@ export function ExpertAuditDashboard() {
             </Button>
           </motion.div>
         </motion.div>
-      )}
+        );
+      })()}
 
       {/* Report Preview Modal */}
       {result && auditMode && (
@@ -1510,5 +1523,6 @@ export function ExpertAuditDashboard() {
         }}
       />
     </div>
+    </StrategicErrorBoundary>
   );
 }
