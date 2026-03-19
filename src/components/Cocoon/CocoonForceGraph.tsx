@@ -106,6 +106,11 @@ interface CocoonForceGraphProps {
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
   isDayMode?: boolean;
+  nodeColors?: Record<string, string>;
+  particleColors?: Record<string, string>;
+  visibleJuiceTypes?: Set<string>;
+  showClusters?: boolean;
+  colorIntensity?: number;
 }
 
 export function CocoonForceGraph({
@@ -116,6 +121,11 @@ export function CocoonForceGraph({
   isPickingMode = false,
   particlesEnabled = true,
   isDayMode = false,
+  nodeColors: nodeColorsProp,
+  particleColors: particleColorsProp,
+  visibleJuiceTypes,
+  showClusters,
+  colorIntensity = 100,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
