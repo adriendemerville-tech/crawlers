@@ -147,8 +147,8 @@ Deno.serve(async (req) => {
     // Extract ETV from metrics if available
     const etv = result.metrics?.organic?.etv ?? 0
 
-    // Sample top keywords (first 20)
-    const sampleKeywords = items.slice(0, 20).map((item: any) => ({
+    // Sample top keywords (first 50 for semantic authority)
+    const sampleKeywords = items.slice(0, 50).map((item: any) => ({
       keyword: item.keyword_data?.keyword,
       position: item.ranked_serp_element?.serp_item?.rank_absolute,
       search_volume: item.keyword_data?.keyword_info?.search_volume,
