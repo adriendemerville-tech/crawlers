@@ -111,6 +111,7 @@ const translations = {
       geo: 'GEO Analysis',
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
+      cocoon: 'Cocoon Report',
     },
   },
   es: {
