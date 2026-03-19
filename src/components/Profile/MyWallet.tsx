@@ -301,6 +301,7 @@ export function MyWallet() {
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
                   { value: 'credits', icon: Bot, label: language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits', color: 'text-amber-500' },
+                  { value: 'apis', icon: Plug, label: language === 'fr' ? 'API externe' : language === 'es' ? 'API externa' : 'External API', color: 'text-blue-500' },
                 ].map((item, i) => (
                   <motion.div
                     key={item.value}
