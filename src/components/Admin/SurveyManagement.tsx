@@ -151,7 +151,7 @@ function ContentBlockEditor({ block, onChange, onRemove }: { block: ContentBlock
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Message pré-rempli</Label>
+              <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3 text-muted-foreground" /> Message pré-rempli</Label>
               <Textarea value={block.share_message || ''} onChange={e => onChange({ ...block, share_message: e.target.value })} placeholder="Découvrez ikTracker..." rows={2} />
             </div>
           </>
