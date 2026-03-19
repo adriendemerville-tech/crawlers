@@ -2429,7 +2429,7 @@ Deno.serve(async (req) => {
       let siteIdentityCtx: Record<string, unknown> | null = null;
       try {
         const sbService = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-        siteIdentityCtx = await getSiteContext(sbService, { domain: domainWithoutWww, userId });
+        siteIdentityCtx = await getSiteContext(sbService, { domain: domainWithoutWww });
         if (siteIdentityCtx) console.log(`📇 Carte d'identité chargée (confiance: ${siteIdentityCtx.identity_confidence || 0})`);
       } catch (e) {
         console.warn(`⚠️ Carte d'identité non disponible:`, e);
