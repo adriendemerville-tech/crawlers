@@ -925,10 +925,7 @@ export function ExpertAuditDashboard() {
         setPreSummarizedResult(null);
         summarizeStrategicResult(cached.data, language).then(s => setPreSummarizedResult(s)).catch(() => {});
         
-        toast({
-          title: t.strategicComplete,
-          description: 'Données stratégiques en cache (module stable).',
-        });
+        // Toast removed — results appear directly in the UI
         setIsStrategicLoading(false);
         // Reset force refresh flag
         setForceStrategicRefresh(false);
