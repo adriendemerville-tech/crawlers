@@ -12,6 +12,159 @@ function json(body: unknown, status = 200) {
   });
 }
 
+async function ensureArchivedUserRecord(supabase: any, userId: string, archiveReason = 'admin_delete') {
+  const { data: existingArchive, error: existingArchiveError } = await supabase
+    .from('archived_users')
+    .select('id')
+    .eq('original_user_id', userId)
+    .order('archived_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingArchiveError) {
+    console.error('ensureArchivedUserRecord lookup error:', existingArchiveError);
+  }
+
+  if (existingArchive?.id) return;
+
+  const [profileResult, authUserResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase.auth.admin.getUserById(userId),
+  ]);
+
+  if (profileResult.error) {
+    console.error('ensureArchivedUserRecord profile lookup error:', profileResult.error);
+  }
+
+  if (authUserResult.error) {
+    console.error('ensureArchivedUserRecord auth lookup error:', authUserResult.error);
+  }
+
+  const profile = profileResult.data;
+  const authUser = authUserResult.data?.user;
+  const archivedEmail = normalizeEmail(profile?.email ?? authUser?.email ?? '');
+
+  if (!archivedEmail) return;
+
+  const snapshot = profile ?? {
+    user_id: authUser?.id,
+    email: authUser?.email ?? null,
+    user_metadata: authUser?.user_metadata ?? null,
+    app_metadata: authUser?.app_metadata ?? null,
+    created_at: authUser?.created_at ?? null,
+  };
+
+  const { error: insertError } = await supabase
+    .from('archived_users')
+    .insert({
+      original_user_id: userId,
+      email: archivedEmail,
+      first_name: profile?.first_name ?? authUser?.user_metadata?.first_name ?? null,
+      last_name: profile?.last_name ?? authUser?.user_metadata?.last_name ?? null,
+      credits_balance: profile?.credits_balance ?? null,
+      plan_type: profile?.plan_type ?? null,
+      persona_type: profile?.persona_type ?? null,
+      affiliate_code_used: profile?.affiliate_code_used ?? null,
+      original_created_at: profile?.created_at ?? authUser?.created_at ?? null,
+      archived_at: new Date().toISOString(),
+      archive_reason: archiveReason,
+      profile_snapshot: snapshot,
+    } as any);
+
+  if (insertError) {
+    console.error('ensureArchivedUserRecord insert error:', insertError);
+    throw new Error('Failed to archive user before deletion');
+  }
+}
+
+async function cleanupUserRelations(supabase: any, userId: string) {
+  const deleteOperations: Array<{ table: string; column: string }> = [
+    { table: 'saved_reports', column: 'user_id' },
+    { table: 'support_messages', column: 'sender_id' },
+    { table: 'support_conversations', column: 'user_id' },
+    { table: 'gmb_performance', column: 'user_id' },
+    { table: 'gmb_posts', column: 'user_id' },
+    { table: 'gmb_reviews', column: 'user_id' },
+    { table: 'gmb_locations', column: 'user_id' },
+    { table: 'predictions', column: 'client_id' },
+    { table: 'pdf_audits', column: 'client_id' },
+    { table: 'cms_connections', column: 'user_id' },
+    { table: 'admin_dashboard_config', column: 'user_id' },
+    { table: 'billing_info', column: 'user_id' },
+    { table: 'cocoon_sessions', column: 'user_id' },
+    { table: 'prompt_deployments', column: 'user_id' },
+    { table: 'report_folders', column: 'user_id' },
+    { table: 'revenue_events', column: 'user_id' },
+    { table: 'url_correction_decisions', column: 'user_id' },
+    { table: 'user_roles', column: 'user_id' },
+  ];
+
+  for (const operation of deleteOperations) {
+    const { error } = await supabase
+      .from(operation.table)
+      .delete()
+      .eq(operation.column, userId);
+
+    if (error) {
+      console.error(`cleanup delete error on ${operation.table}.${operation.column}:`, error);
+      throw new Error(`Failed to cleanup ${operation.table}`);
+    }
+  }
+
+  const { error: nullAuditsError } = await supabase
+    .from('audits')
+    .update({ user_id: null } as any)
+    .eq('user_id', userId);
+
+  if (nullAuditsError) {
+    console.error('cleanup audits nullification error:', nullAuditsError);
+    throw new Error('Failed to detach audits from deleted user');
+  }
+
+  const { error: nullBlogArticlesError } = await supabase
+    .from('blog_articles')
+    .update({ author_id: null } as any)
+    .eq('author_id', userId);
+
+  if (nullBlogArticlesError) {
+    console.error('cleanup blog articles nullification error:', nullBlogArticlesError);
+    throw new Error('Failed to detach blog articles from deleted user');
+  }
+
+  const { error: profileDeleteError } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('user_id', userId);
+
+  if (profileDeleteError) {
+    console.error('cleanup profile delete error:', profileDeleteError);
+    throw new Error('Failed to cleanup profile before auth deletion');
+  }
+}
+
+async function cleanupAndDeleteAuthUser(
+  supabase: any,
+  userId: string,
+  options: { ensureArchive?: boolean; archiveReason?: string } = {},
+) {
+  if (options.ensureArchive) {
+    await ensureArchivedUserRecord(supabase, userId, options.archiveReason);
+  }
+
+  await cleanupUserRelations(supabase, userId);
+
+  const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+
+  if (deleteError && !deleteError.message?.toLowerCase().includes('user not found')) {
+    console.error('cleanupAndDeleteAuthUser auth delete error:', deleteError);
+    throw new Error(deleteError.message);
+  }
+}
+
 // ─── check-email ───
 
 async function handleCheckEmail(body: any) {
@@ -67,9 +220,10 @@ async function handleCheckEmail(body: any) {
       }
 
       if ((linkedProfileCount ?? 0) === 0) {
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(archivedUser.original_user_id);
-        if (deleteError) {
-          console.error('Failed to cleanup archived auth user during check-email:', deleteError);
+        try {
+          await cleanupAndDeleteAuthUser(supabase, archivedUser.original_user_id);
+        } catch (cleanupError) {
+          console.error('Failed to cleanup archived auth user during check-email:', cleanupError);
           return json({ exists: true, source: 'stale_auth_cleanup_failed' });
         }
       } else {
@@ -79,10 +233,7 @@ async function handleCheckEmail(body: any) {
   }
 
   // Final check: look for orphan auth user (exists in auth.users but no profile, no archive)
-  const { data: listResult, error: listError } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1,
-  });
+  const { error: listError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
 
   if (!listError) {
     // Use a direct approach: try to find user by email via admin API
@@ -92,10 +243,10 @@ async function handleCheckEmail(body: any) {
     );
 
     if (orphanUser) {
-      // Auth user exists but no profile and no archived record → orphan, clean it up
-      const { error: deleteOrphanError } = await supabase.auth.admin.deleteUser(orphanUser.id);
-      if (deleteOrphanError) {
-        console.error('Failed to cleanup orphan auth user:', deleteOrphanError);
+      try {
+        await cleanupAndDeleteAuthUser(supabase, orphanUser.id);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup orphan auth user:', cleanupError);
         return json({ exists: true, source: 'orphan_cleanup_failed' });
       }
       console.log(`Cleaned up orphan auth user ${orphanUser.id} for email ${normalizedEmail}`);
@@ -233,11 +384,14 @@ async function handleDeleteUser(body: any, req: Request) {
   const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
   if (!isAdmin) return json({ error: 'Admin access required' }, 403);
 
-  // Delete from auth.users (cascades to profiles via FK)
-  const { error } = await supabase.auth.admin.deleteUser(user_id);
-  if (error) {
+  try {
+    await cleanupAndDeleteAuthUser(supabase, user_id, {
+      ensureArchive: true,
+      archiveReason: 'admin_delete',
+    });
+  } catch (error: any) {
     console.error('Delete auth user error:', error);
-    return json({ error: error.message }, 500);
+    return json({ error: error.message || 'Delete failed' }, 500);
   }
 
   return json({ success: true });
