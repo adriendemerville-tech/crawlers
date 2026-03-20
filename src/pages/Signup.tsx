@@ -264,6 +264,7 @@ export default function Signup() {
     }
 
     setIsLoading(false);
+    await signupForm.trigger(['password', 'confirmPassword']);
     signupForm.handleSubmit(handleSignup)();
   };
 
@@ -272,24 +273,25 @@ export default function Signup() {
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
+
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
 
     if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
       try {
-        const { data: emailCheck } = await supabase.functions.invoke('auth-actions', {
+        const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
           body: { action: 'check-email', email: data.email },
         });
 
-        if (emailCheck?.exists === true) {
+        if (!emailCheckError && emailCheck?.exists === false) {
+          const retry = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+          error = retry.error;
+        } else if (!emailCheckError && emailCheck?.exists === true) {
           setShowExistsBanner(true);
           setIsLoading(false);
           return;
         }
-
-        const retry = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
-        error = retry.error;
       } catch {
-        // fallback to existing error handling below
+        // keep original signup error below
       }
     }
 
@@ -297,7 +299,19 @@ export default function Signup() {
 
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        setShowExistsBanner(true);
+        try {
+          const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
+            body: { action: 'check-email', email: data.email },
+          });
+
+          if (!emailCheckError && emailCheck?.exists === true) {
+            setShowExistsBanner(true);
+          } else {
+            toast.error(t.signupError);
+          }
+        } catch {
+          toast.error(t.signupError);
+        }
       } else {
         toast.error(t.signupError);
       }

@@ -20,49 +20,65 @@ async function handleCheckEmail(body: any) {
 
   const normalizedEmail = normalizeEmail(email);
   const supabase = getServiceClient();
-  const { count } = await supabase
+
+  const { count: activeProfileCount, error: profileError } = await supabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
     .eq('email', normalizedEmail);
 
-  if ((count ?? 0) > 0) {
-    return json({ exists: true });
+  if (profileError) {
+    console.error('check-email profile lookup error:', profileError);
   }
 
-  const { data: archivedUser } = await supabase
+  if ((activeProfileCount ?? 0) > 0) {
+    return json({ exists: true, source: 'profiles' });
+  }
+
+  const { data: archivedUser, error: archivedError } = await supabase
     .from('archived_users')
-    .select('id, original_user_id')
+    .select('id, original_user_id, email')
     .eq('email', normalizedEmail)
     .order('archived_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (archivedUser) {
-    const { data: authList, error: authListError } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
+  if (archivedError) {
+    console.error('check-email archived lookup error:', archivedError);
+  }
 
-    if (!authListError) {
-      const staleUser = authList.users.find((user) => normalizeEmail(user.email ?? '') === normalizedEmail);
+  if (archivedUser?.original_user_id) {
+    const { data: authUserResult, error: authUserError } = await supabase.auth.admin.getUserById(archivedUser.original_user_id);
 
-      if (staleUser) {
-        const { count: linkedProfileCount } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', staleUser.id);
+    if (authUserError) {
+      console.error('check-email getUserById error:', authUserError);
+    }
 
-        if ((linkedProfileCount ?? 0) === 0) {
-          const { error: deleteError } = await supabase.auth.admin.deleteUser(staleUser.id);
-          if (deleteError) {
-            console.error('Failed to cleanup stale auth user during check-email:', deleteError);
-          }
+    const authUser = authUserResult?.user;
+    const authUserEmail = normalizeEmail(authUser?.email ?? '');
+
+    if (authUser && authUserEmail === normalizedEmail) {
+      const { count: linkedProfileCount, error: linkedProfileError } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', archivedUser.original_user_id);
+
+      if (linkedProfileError) {
+        console.error('check-email linked profile lookup error:', linkedProfileError);
+      }
+
+      if ((linkedProfileCount ?? 0) === 0) {
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(archivedUser.original_user_id);
+        if (deleteError) {
+          console.error('Failed to cleanup archived auth user during check-email:', deleteError);
+          return json({ exists: true, source: 'stale_auth_cleanup_failed' });
         }
+      } else {
+        return json({ exists: true, source: 'profiles-linked' });
       }
     }
   }
 
-  return json({ exists: false });
+  return json({ exists: false, source: archivedUser ? 'archived' : 'none' });
 }
 
 // ─── send-code ───
