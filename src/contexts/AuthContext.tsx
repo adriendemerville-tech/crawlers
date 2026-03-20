@@ -105,6 +105,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             ensureProfile(session.user.id).then(setProfile);
           }, 0);
+
+          // Auto-trigger Google OAuth (GSC+GA4+GMB+GTM) on first signup
+          if (event === 'SIGNED_IN') {
+            const googleOauthKey = `google_oauth_prompted_${session.user.id}`;
+            if (!localStorage.getItem(googleOauthKey)) {
+              localStorage.setItem(googleOauthKey, 'true');
+              // Delay slightly to let the app settle after auth
+              setTimeout(async () => {
+                try {
+                  const { data, error } = await supabase.functions.invoke('gsc-auth', {
+                    body: { action: 'login', user_id: session.user.id, frontend_origin: window.location.origin },
+                  });
+                  if (!error && data?.auth_url) {
+                    window.location.href = data.auth_url;
+                  }
+                } catch (err) {
+                  console.error('[AuthContext] Auto Google OAuth failed:', err);
+                }
+              }, 2000);
+            }
+          }
         } else {
           setProfile(null);
         }
