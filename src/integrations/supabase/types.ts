@@ -4272,6 +4272,57 @@ export type Database = {
         }
         Relationships: []
       }
+      supervisor_logs: {
+        Row: {
+          analysis_summary: string
+          audit_id: string | null
+          confidence_score: number | null
+          correction_count: number | null
+          created_at: string
+          cto_score: number | null
+          decision: string | null
+          functions_audited: string[] | null
+          id: string
+          metadata: Json | null
+          post_deploy_errors: number | null
+          resolved_at: string | null
+          self_critique: string
+          status: string | null
+        }
+        Insert: {
+          analysis_summary?: string
+          audit_id?: string | null
+          confidence_score?: number | null
+          correction_count?: number | null
+          created_at?: string
+          cto_score?: number | null
+          decision?: string | null
+          functions_audited?: string[] | null
+          id?: string
+          metadata?: Json | null
+          post_deploy_errors?: number | null
+          resolved_at?: string | null
+          self_critique?: string
+          status?: string | null
+        }
+        Update: {
+          analysis_summary?: string
+          audit_id?: string | null
+          confidence_score?: number | null
+          correction_count?: number | null
+          created_at?: string
+          cto_score?: number | null
+          decision?: string | null
+          functions_audited?: string[] | null
+          id?: string
+          metadata?: Json | null
+          post_deploy_errors?: number | null
+          resolved_at?: string | null
+          self_critique?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string

@@ -363,7 +363,7 @@ function CorrelationMonitor() {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       
       const [ctoRes, errorsRes, silentRes, injectionRes] = await Promise.all([
-        supabase.from('cto_agent_logs').select('*').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }).limit(50),
+        supabase.from('cto_agent_logs').select('*').gte('created_at', thirtyDaysAgo).neq('function_analyzed', 'supervisor-audit').order('created_at', { ascending: false }).limit(50),
         supabase.from('analytics_events').select('*').in('event_type', ['error', 'edge_function_error', 'browserless_error', 'scan_error']).gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }).limit(200),
         supabase.from('analytics_events').select('*').eq('event_type', 'silent_error').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }).limit(100),
         supabase.from('analytics_events').select('*').eq('event_type', 'injection_error').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }).limit(50),
@@ -693,7 +693,7 @@ export async function fetchSupervisorAlertCount(): Promise<number> {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     
     const [ctoRes, errorsRes] = await Promise.all([
-      supabase.from('cto_agent_logs').select('id, function_analyzed, decision, created_at').neq('decision', 'no_change').gte('created_at', thirtyDaysAgo).limit(50),
+      supabase.from('cto_agent_logs').select('id, function_analyzed, decision, created_at').neq('decision', 'no_change').neq('function_analyzed', 'supervisor-audit').gte('created_at', thirtyDaysAgo).limit(50),
       supabase.from('analytics_events').select('id, event_type, event_data, created_at').in('event_type', ['edge_function_error', 'silent_error', 'injection_error']).gte('created_at', thirtyDaysAgo).limit(200),
     ]);
 

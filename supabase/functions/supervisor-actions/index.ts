@@ -300,20 +300,19 @@ Deno.serve(async (req) => {
 
       const analysis = await auditCorrections(corrections, functionSources, postErrors)
 
-      // Log the audit
-      await supabase.from('cto_agent_logs').insert({
+      // Log into supervisor_logs (NOT cto_agent_logs)
+      await supabase.from('supervisor_logs').insert({
         audit_id: `supervisor_audit_${Date.now()}`,
-        function_analyzed: 'supervisor-audit',
         analysis_summary: analysis.summary || '',
         self_critique: `Score CTO: ${analysis.overall_cto_score || 'N/A'}/100`,
         confidence_score: 0,
         decision: 'needs_review',
+        cto_score: analysis.overall_cto_score || 0,
+        correction_count: corrections.length,
+        functions_audited: functionNames,
+        post_deploy_errors: postErrors.length,
         metadata: {
-          source: 'supervisor',
           type: 'correction_audit',
-          correction_count: corrections.length,
-          functions_audited: functionNames,
-          post_deploy_errors: postErrors.length,
           cto_score: analysis.overall_cto_score,
         },
       })
