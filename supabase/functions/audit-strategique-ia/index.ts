@@ -2139,6 +2139,40 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
     
+    // ═══ CTA & SEO PATTERN EXTRACTION (before HTML strip) ═══
+    const ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    {
+      // CTA detection
+      const ctaPatterns: Array<{ re: RegExp; type: string }> = [
+        { re: /(?:demander?\s+(?:un\s+)?devis|request\s+(?:a\s+)?quote|obtenir\s+un\s+devis)/gi, type: 'devis' },
+        { re: /(?:réserver?\s+(?:une?\s+)?(?:démo|demo)|book\s+(?:a\s+)?demo|essai\s+gratuit|free\s+trial|tester?\s+gratuitement)/gi, type: 'demo' },
+        { re: /(?:acheter|achetez|commander|ajouter\s+au\s+panier|buy\s+now|add\s+to\s+cart|order\s+now)/gi, type: 'achat' },
+        { re: /(?:télécharger|download|obtenir\s+le\s+guide)/gi, type: 'telecharger' },
+        { re: /(?:nous\s+contacter|contactez|contact\s+us|prendre\s+rendez-vous|appeler)/gi, type: 'contact' },
+        { re: /(?:s[''](?:inscrire|abonner)|sign\s+up|subscribe|créer\s+(?:un\s+)?compte|get\s+started|commencer)/gi, type: 'inscription' },
+      ];
+      const detectedTypes = new Set<string>();
+      for (const { re, type } of ctaPatterns) {
+        const matches = html.match(re) || [];
+        if (matches.length > 0) {
+          ctaSeoSignals.ctaCount += matches.length;
+          detectedTypes.add(type);
+        }
+      }
+      // Generic CTA buttons/links
+      const btnMatches = html.match(/<(?:a|button)[^>]*class="[^"]*(?:btn|cta|button)[^"]*"[^>]*>/gi) || [];
+      ctaSeoSignals.ctaCount += btnMatches.length;
+      if (btnMatches.length > 0 && detectedTypes.size === 0) detectedTypes.add('generic');
+      ctaSeoSignals.ctaTypes = [...detectedTypes];
+      ctaSeoSignals.ctaAggressive = detectedTypes.has('achat') || detectedTypes.has('devis') || (ctaSeoSignals.ctaCount >= 3 && detectedTypes.size >= 2);
+
+      // Explanatory tone detection
+      const explPatterns = /(?:c['']est[- ]à[- ]dire|autrement\s+dit|en\s+d['']autres\s+termes|i\.e\.|e\.g\.|that\s+is\s+to\s+say|\(.*?(?:signifie|désigne|définition).*?\))/gi;
+      ctaSeoSignals.toneExplanatory = explPatterns.test(html);
+
+      console.log(`🎯 CTA signals: count=${ctaSeoSignals.ctaCount}, types=[${ctaSeoSignals.ctaTypes}], aggressive=${ctaSeoSignals.ctaAggressive}, explanatory=${ctaSeoSignals.toneExplanatory}`);
+    }
+
     // ═══ NOW strip HTML to metadata only ═══
     const headMatch2 = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
     const h1Match2 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
