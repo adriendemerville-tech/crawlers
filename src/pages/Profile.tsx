@@ -218,7 +218,7 @@ export default function Profile() {
                     value="gmb"
                     className="flex-1 gap-2"
                   >
-                    <Store className="h-4 w-4 text-emerald-500" />
+                    <Store className="h-4 w-4 text-muted-foreground" />
                     <span className="hidden sm:inline">GMB</span>
                   </TabsTrigger>
                 )}
