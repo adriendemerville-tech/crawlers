@@ -502,7 +502,17 @@ function CorrelationMonitor() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Badge variant="outline" className="text-xs">30 jours — Corrélations CTO ↔ Erreurs</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">30 jours — Corrélations CTO ↔ Erreurs</Badge>
+          <Badge className={cn(
+            "text-xs font-semibold",
+            stats.successRate >= 70
+              ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+              : "bg-destructive/15 text-destructive border-destructive/30"
+          )}>
+            {stats.successRate}% succès ({stats.successCount}/{stats.activeChanges})
+          </Badge>
+        </div>
         <Button variant="ghost" size="sm" onClick={fetchData} disabled={refreshing}>
           <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
           Actualiser
