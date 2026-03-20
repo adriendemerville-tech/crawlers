@@ -159,19 +159,31 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         }
       }
 
-      // URLs tested — count from analytics events with target_url
-      const { count: urlCount } = await supabase
-        .from('analytics_events')
-        .select('target_url', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .not('target_url', 'is', null);
+      // URLs tested + bundle data
+      const [urlCountRes, bundleRes] = await Promise.all([
+        supabase
+          .from('analytics_events')
+          .select('target_url', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .not('target_url', 'is', null),
+        supabase
+          .from('bundle_subscriptions' as any)
+          .select('selected_apis, monthly_price_cents')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .maybeSingle() as any,
+      ]);
+
+      const bundleData = bundleRes.data;
+      const bundleApiCount = bundleData?.selected_apis?.length || 0;
+      const bundleMonthlyEur = (bundleData?.monthly_price_cents || 0) / 100;
 
       setKpis({
         totalSessions,
         lastSessionAt,
         avgSessionDurationMin,
         totalAudits: auditsRes.count || 0,
-        totalUrlsTested: urlCount || 0,
+        totalUrlsTested: urlCountRes.count || 0,
         totalReportsSaved: reportsRes.count || 0,
         totalEvents: eventsRes.count || 0,
         totalCorrectiveCodes: codesRes.count || 0,
@@ -179,6 +191,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         totalBackendErrors: backendErrorsRes.count || 0,
         totalFrontendErrors: frontendErrorsRes.count || 0,
         planType: (user as any).plan_type || 'free',
+        bundleApiCount,
+        bundleMonthlyEur,
       });
     } catch (err) {
       console.error('Error fetching KPIs:', err);
