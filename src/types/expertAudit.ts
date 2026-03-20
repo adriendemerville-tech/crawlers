@@ -561,6 +561,9 @@ export interface StrategicAnalysis {
 
   // Google My Business
   google_my_business?: GoogleMyBusinessData | null;
+
+  // Client Targets Analysis
+  client_targets?: ClientTargetsAnalysis | null;
 }
 
  // Raw LLM visibility data from check-llm edge function
