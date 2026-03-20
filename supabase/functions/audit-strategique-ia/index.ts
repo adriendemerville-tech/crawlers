@@ -3143,19 +3143,22 @@ Réponds en JSON STRICT:
       } catch {}
     }
 
-    // ═══ PERSIST CLIENT TARGETS TO IDENTITY CARD ═══
-    if (parsedAnalysis?.client_targets && domain) {
+    // ═══ PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
+    if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
         const svcUrl = Deno.env.get('SUPABASE_URL')!;
         const svcKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const svcSb = createClient(svcUrl, svcKey);
+        const updatePayload: Record<string, any> = {};
+        if (parsedAnalysis?.client_targets) updatePayload.client_targets = parsedAnalysis.client_targets;
+        if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
         await svcSb
           .from('tracked_sites')
-          .update({ client_targets: parsedAnalysis.client_targets })
+          .update(updatePayload)
           .ilike('domain', `%${domain}%`);
-        console.log(`[audit-strategique-ia] client_targets persisted for ${domain}`);
+        console.log(`[audit-strategique-ia] client_targets + jargon_distance persisted for ${domain}`);
       } catch (e) {
-        console.warn('[audit-strategique-ia] Failed to persist client_targets:', e);
+        console.warn('[audit-strategique-ia] Failed to persist identity data:', e);
       }
     }
 

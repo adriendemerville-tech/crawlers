@@ -40,10 +40,36 @@ export interface SummaryResilience {
   llmSummary: string;
 }
 
+export interface JargonTargetScore {
+  distance: number; // 0-100
+  qualifier: string; // Adapté | Accessible | Spécialisé | Très distant | Opaque
+  terms_causing_distance: string[];
+  confidence: number; // 0-1
+}
+
+export interface JargonIntentionality {
+  score: number; // 0-1
+  label: string; // Spécialisation assumée | Positionnement ambigu | Distance non maîtrisée
+  components: {
+    cta_aggressiveness: number;
+    seo_pattern_alignment: number;
+    tone_assertiveness: number;
+    structural_consistency: number;
+  };
+}
+
+export interface JargonDistance {
+  primary: JargonTargetScore;
+  secondary: JargonTargetScore;
+  untapped: JargonTargetScore;
+  intentionality: JargonIntentionality;
+}
+
 export interface LexicalFootprint {
-  score: number; // 0-100 (100 = highly specific/actionable)
+  score?: number;
   jargonRatio: number;
   concreteRatio: number;
+  jargon_distance?: JargonDistance;
 }
 
 export interface ExpertiseSentiment {
