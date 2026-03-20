@@ -2274,6 +2274,7 @@ function buildFallbackResult(url: string, domain: string, marketData: MarketData
       competitive_landscape: { leader: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, direct_competitor: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, challenger: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, inspiration_source: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' } },
       geo_readiness: { citability_score: 0, readiness_level: 'basic', analysis: 'Non disponible', strengths: [], weaknesses: [], recommendations: [] },
       executive_roadmap: [],
+      client_targets: { primary: [], secondary: [], untapped: [] },
       keyword_positioning: marketData ? {
         main_keywords: marketData.top_keywords.slice(0, 5).map(kw => ({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, current_rank: kw.current_rank })),
         quick_wins: [], content_gaps: [], opportunities: [], competitive_gaps: [], recommendations: [],
