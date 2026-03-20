@@ -307,6 +307,26 @@ export function UserManagement() {
     }
   };
 
+  // Signup funnel counters
+  const [funnelCounts, setFunnelCounts] = useState({ promptShown: 0, promptClosed: 0, signupAbandoned: 0, verificationSent: 0 });
+  useEffect(() => {
+    const loadFunnel = async () => {
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('event_type')
+        .in('event_type', ['signup_prompt_shown', 'signup_prompt_closed', 'signup_abandoned', 'verification_email_sent']);
+      if (data) {
+        setFunnelCounts({
+          promptShown: data.filter(e => e.event_type === 'signup_prompt_shown').length,
+          promptClosed: data.filter(e => e.event_type === 'signup_prompt_closed').length,
+          signupAbandoned: data.filter(e => e.event_type === 'signup_abandoned').length,
+          verificationSent: data.filter(e => e.event_type === 'verification_email_sent').length,
+        });
+      }
+    };
+    loadFunnel();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -324,6 +344,20 @@ export function UserManagement() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
+        </div>
+        {/* Signup funnel counters */}
+        <div className="flex gap-3 mt-3 flex-wrap">
+          {[
+            { label: 'Modal affichée', value: funnelCounts.promptShown, color: 'text-blue-500' },
+            { label: 'Modal fermée', value: funnelCounts.promptClosed, color: 'text-amber-500' },
+            { label: 'Signup abandonnés', value: funnelCounts.signupAbandoned, color: 'text-red-500' },
+            { label: 'Emails vérif. envoyés', value: funnelCounts.verificationSent, color: 'text-emerald-500' },
+          ].map(c => (
+            <div key={c.label} className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-md">
+              <span className={`font-bold text-sm ${c.color}`}>{c.value}</span>
+              {c.label}
+            </div>
+          ))}
         </div>
       </CardHeader>
       <CardContent>
