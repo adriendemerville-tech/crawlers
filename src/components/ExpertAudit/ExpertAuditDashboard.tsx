@@ -990,12 +990,7 @@ export function ExpertAuditDashboard() {
       const auditDomain = new URL(normalizedUrl).hostname;
       fetchStoredCorrections(auditDomain);
 
-      toast({
-        title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
-        description: hallucinationCorrections 
-          ? 'Le rapport a été régénéré avec vos corrections.' 
-          : t.strategicDesc2,
-      });
+      // Toast removed — results appear directly in the UI
     } catch (error) {
       console.error('Strategic audit error:', error);
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
