@@ -474,9 +474,9 @@ export default function MatricePrompt() {
               ) : (
                 <span className="text-sm text-muted-foreground">Aucun CSV importé</span>
               )}
-              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileImport} />
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
-                <Upload className="h-4 w-4" /> Importer .csv
+              <input ref={fileInputRef} type="file" accept=".csv,.doc,.docx" className="hidden" onChange={handleFileImport} />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2">
+                {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
               </Button>
               {rows.length > 0 && (
                 <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
