@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -41,14 +41,12 @@ const translations = {
     passwordMin: 'Minimum 6 caractères',
     passwordWeak: 'Mot de passe trop faible',
     passwordMismatch: 'Les mots de passe ne correspondent pas',
-    firstNameRequired: 'Prénom requis',
-    lastNameRequired: 'Nom requis',
     signupSuccess: 'Inscription réussie !',
     signupError: 'Erreur lors de l\'inscription',
     or: 'ou',
     verifyTitle: 'Vérifiez votre email',
-    verifyDesc: 'Un code à 6 chiffres a été envoyé à',
-    verifyConfirm: 'Confirmer',
+    verifyDesc: 'Nous vous avons envoyé un mail de confirmation avec un code de vérification à',
+    verifyConfirm: 'Vérifier',
     verifying: 'Vérification...',
     invalidCode: 'Code invalide ou expiré',
     resend: 'Renvoyer le code',
@@ -74,14 +72,12 @@ const translations = {
     passwordMin: 'Minimum 6 characters',
     passwordWeak: 'Password too weak',
     passwordMismatch: 'Passwords do not match',
-    firstNameRequired: 'First name required',
-    lastNameRequired: 'Last name required',
     signupSuccess: 'Registration successful!',
     signupError: 'Error during signup',
     or: 'or',
     verifyTitle: 'Verify your email',
-    verifyDesc: 'A 6-digit code was sent to',
-    verifyConfirm: 'Confirm',
+    verifyDesc: 'We sent you a confirmation email with a verification code to',
+    verifyConfirm: 'Verify',
     verifying: 'Verifying...',
     invalidCode: 'Invalid or expired code',
     resend: 'Resend code',
@@ -107,14 +103,12 @@ const translations = {
     passwordMin: 'Mínimo 6 caracteres',
     passwordWeak: 'Contraseña demasiado débil',
     passwordMismatch: 'Las contraseñas no coinciden',
-    firstNameRequired: 'Nombre requerido',
-    lastNameRequired: 'Apellido requerido',
     signupSuccess: '¡Registro exitoso!',
     signupError: 'Error durante el registro',
     or: 'o',
     verifyTitle: 'Verifica tu email',
-    verifyDesc: 'Se envió un código de 6 dígitos a',
-    verifyConfirm: 'Confirmar',
+    verifyDesc: 'Le hemos enviado un correo de confirmación con un código de verificación a',
+    verifyConfirm: 'Verificar',
     verifying: 'Verificando...',
     invalidCode: 'Código inválido o expirado',
     resend: 'Reenviar código',
@@ -136,14 +130,37 @@ export default function Signup() {
   const [verificationEmail, setVerificationEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState(false);
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [otpShake, setOtpShake] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
   const { user, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = translations[language] || translations.fr;
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+
+  // Handle email link verification (user clicked link in email)
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      setStep('success');
+      const doRedirect = () => setTimeout(() => navigate('/console'), 1500);
+      if (!document.hidden) {
+        doRedirect();
+      } else {
+        const handler = () => {
+          if (!document.hidden) {
+            document.removeEventListener('visibilitychange', handler);
+            doRedirect();
+          }
+        };
+        document.addEventListener('visibilitychange', handler);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user && step === 'form') {
@@ -183,8 +200,8 @@ export default function Signup() {
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
     password: z.string().min(6, t.passwordMin).refine(isPasswordAcceptable, { message: t.passwordWeak }),
     confirmPassword: z.string().min(1, t.passwordMin),
-    firstName: z.string().min(1, t.firstNameRequired),
-    lastName: z.string().min(1, t.lastNameRequired),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
   }).refine((data) => data.password === data.confirmPassword, {
     message: t.passwordMismatch,
     path: ['confirmPassword'],
@@ -202,12 +219,12 @@ export default function Signup() {
     setPersonaSelected(true);
   };
 
-  const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName: string; lastName: string }) => {
+  const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
-    const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
+    const { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
     setIsLoading(false);
 
     if (error) {
@@ -225,26 +242,35 @@ export default function Signup() {
     }
   };
 
-  const handleVerifyCode = async () => {
-    if (otpCode.length !== 6) return;
+  const handleVerifyCode = async (codeToVerify?: string) => {
+    const code = codeToVerify || otpCode;
+    if (code.length !== 6 || isVerifying) return;
     setIsVerifying(true);
     setOtpError(false);
+    setOtpShake(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('auth-actions', {
-        body: { action: 'verify-code', email: verificationEmail, code: otpCode },
+        body: { action: 'verify-code', email: verificationEmail, code },
       });
       if (error || !data?.success) {
         setOtpError(true);
+        setOtpShake(true);
+        setTimeout(() => setOtpShake(false), 600);
+        setTimeout(() => { setOtpError(false); setOtpCode(''); }, 3000);
         setIsVerifying(false);
         return;
       }
-      setStep('success');
+      setOtpSuccess(true);
       setTimeout(() => {
-        navigate('/console');
-      }, 1500);
+        setStep('success');
+        setTimeout(() => navigate('/console'), 1500);
+      }, 800);
     } catch {
       setOtpError(true);
+      setOtpShake(true);
+      setTimeout(() => setOtpShake(false), 600);
+      setTimeout(() => { setOtpError(false); setOtpCode(''); }, 3000);
     } finally {
       setIsVerifying(false);
     }
@@ -266,10 +292,10 @@ export default function Signup() {
     }
   };
 
-  // Auto-submit when 6 digits entered
+  // Auto-verify when 6 digits entered
   useEffect(() => {
-    if (otpCode.length === 6 && step === 'verify') {
-      handleVerifyCode();
+    if (otpCode.length === 6 && step === 'verify' && !isVerifying) {
+      handleVerifyCode(otpCode);
     }
   }, [otpCode]);
 
@@ -329,7 +355,7 @@ export default function Signup() {
           >
             <CheckCircle2 className="w-8 h-8 text-green-600" />
           </motion.div>
-          <h2 className="text-xl font-bold text-foreground">{t.signupSuccess}</h2>
+          <h2 className="text-xl font-bold text-green-500">{t.signupSuccess}</h2>
         </motion.div>
       </div>
     );
@@ -366,25 +392,30 @@ export default function Signup() {
                 <p className="text-xs text-muted-foreground">{t.checkSpam}</p>
               </div>
 
-              <div className="flex justify-center">
+              <motion.div
+                className="flex justify-center"
+                animate={otpShake ? { x: [0, -8, 8, -8, 8, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
                 <InputOTP
                   maxLength={6}
                   value={otpCode}
                   onChange={(value) => {
                     setOtpCode(value);
-                    setOtpError(false);
+                    if (otpError) setOtpError(false);
                   }}
                 >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
+                    {[0, 1, 2, 3, 4, 5].map(i => (
+                      <InputOTPSlot
+                        key={i}
+                        index={i}
+                        className={otpError ? 'border-destructive' : otpSuccess ? 'border-green-500 text-green-500' : ''}
+                      />
+                    ))}
                   </InputOTPGroup>
                 </InputOTP>
-              </div>
+              </motion.div>
 
               <AnimatePresence>
                 {otpError && (
@@ -398,12 +429,23 @@ export default function Signup() {
                     {t.invalidCode}
                   </motion.div>
                 )}
+                {otpSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-center gap-2 text-sm text-green-500"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    {t.signupSuccess}
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               <Button
-                onClick={handleVerifyCode}
+                variant="outline"
+                onClick={() => handleVerifyCode()}
                 disabled={otpCode.length !== 6 || isVerifying}
-                className="w-full"
+                className="w-full border-primary text-primary hover:bg-primary/5 hover:text-primary"
               >
                 {isVerifying ? (
                   <><Loader2 className="w-4 h-4 animate-spin mr-2" />{t.verifying}</>
@@ -471,7 +513,7 @@ export default function Signup() {
             </div>
 
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-3">
+              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-2.5">
                 {showExistsBanner && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
                     <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
@@ -537,7 +579,7 @@ export default function Signup() {
                 )} />
 
                 <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="-mt-0.5">
                     <FormLabel className="text-xs">{t.confirmPassword}</FormLabel>
                     <FormControl>
                       <div className="relative">
