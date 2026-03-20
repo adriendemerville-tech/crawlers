@@ -355,7 +355,6 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
           <DialogTitle className="flex items-center gap-2 text-base">
             Carte d'identité
             <Badge variant="outline" className="text-[10px]">{site.domain}</Badge>
-            <span className="text-xs text-muted-foreground ml-auto tabular-nums">{filledCount}/{TAXONOMY_FIELDS.length}</span>
           </DialogTitle>
         </DialogHeader>
 
