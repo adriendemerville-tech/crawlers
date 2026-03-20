@@ -1935,10 +1935,11 @@ Deno.serve(async (req) => {
       reliabilityScore: smartFetchResult.selfAudit.reliabilityScore,
     };
     
-    // Add broken links to insights
+    // Add broken links + sitemap coherence to insights
     const enrichedInsights = {
       ...htmlAnalysis.insights,
-      brokenLinks: brokenLinksAnalysis
+      brokenLinks: brokenLinksAnalysis,
+      sitemapRobotsCoherence
     };
     
     const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, enrichedInsights);
