@@ -1043,6 +1043,21 @@ export function MyTracking() {
                       <Plus className="h-3.5 w-3.5" />
                       <span>{t.addSite}</span>
                     </button>
+                    {/* API button — detached */}
+                    <div className="mt-4 pt-3 border-t border-border/40">
+                      <button
+                        onClick={() => { setShowApiPanel(true); setSelectedSite(null); }}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full transition-colors",
+                          showApiPanel
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <Cable className="h-3.5 w-3.5" />
+                        <span>API</span>
+                      </button>
+                    </div>
                   </div>
                 </SortableContext>
               </DndContext>
