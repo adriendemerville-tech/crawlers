@@ -70,7 +70,7 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
         // Keep original if parsing fails
       }
 
-      const title = `${auditType === 'technical' ? 'Audit Technique' : 'Audit Stratégique'} - ${domain}`;
+      const title = `${auditType === 'technical' ? 'Audit Technique SEO' : 'Audit Stratégique GEO'} - ${domain}`;
 
       const { error } = await supabase.from('action_plans').insert({
         user_id: user.id,

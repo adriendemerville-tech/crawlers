@@ -4,18 +4,18 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const translations = {
   fr: {
-    step1: 'Audit Technique',
-    step2: 'Audit IA',
+    step1: 'Audit Technique SEO',
+    step2: 'Audit Stratégique GEO',
     step3: 'Architecte Génératif',
   },
   en: {
-    step1: 'Technical Audit',
-    step2: 'AI Audit',
+    step1: 'Technical SEO Audit',
+    step2: 'Strategic GEO Audit',
     step3: 'Generative Architect',
   },
   es: {
-    step1: 'Auditoría Técnica',
-    step2: 'Auditoría IA',
+    step1: 'Auditoría Técnica SEO',
+    step2: 'Auditoría Estratégica GEO',
     step3: 'Arquitecto Generativo',
   },
 };

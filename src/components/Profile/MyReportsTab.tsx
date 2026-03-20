@@ -60,8 +60,8 @@ const t = {
     deleteConfirmReport: 'Archiver ce rapport ?',
     save: 'Enregistrer',
     reportTypes: {
-      seo_technical: 'Audit SEO Technique',
-      seo_strategic: 'Audit Stratégique IA',
+      seo_technical: 'Audit Technique SEO',
+      seo_strategic: 'Audit Stratégique GEO',
       llm: 'Analyse LLM',
       geo: 'Analyse GEO',
       pagespeed: 'PageSpeed',
@@ -87,7 +87,7 @@ const t = {
     save: 'Save',
     reportTypes: {
       seo_technical: 'Technical SEO Audit',
-      seo_strategic: 'Strategic AI Audit',
+      seo_strategic: 'Strategic GEO Audit',
       llm: 'LLM Analysis',
       geo: 'GEO Analysis',
       pagespeed: 'PageSpeed',
@@ -112,8 +112,8 @@ const t = {
     deleteConfirmReport: '¿Archivar este informe?',
     save: 'Guardar',
     reportTypes: {
-      seo_technical: 'Auditoría SEO Técnica',
-      seo_strategic: 'Auditoría Estratégica IA',
+      seo_technical: 'Auditoría Técnica SEO',
+      seo_strategic: 'Auditoría Estratégica GEO',
       llm: 'Análisis LLM',
       geo: 'Análisis GEO',
       pagespeed: 'PageSpeed',

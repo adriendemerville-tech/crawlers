@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Plus, GripVertical } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -13,6 +14,13 @@ interface ApiItem {
   api_url: string;
   seo_segment: string;
   crawlers_feature: string;
+}
+
+interface BundleSubscription {
+  id: string;
+  selected_apis: string[];
+  status: string;
+  display_order?: string[];
 }
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -67,26 +75,11 @@ function getFeatureColor(feature: string): string {
   return FEATURE_COLORS[key] || 'bg-muted text-muted-foreground border-border/30';
 }
 
-export function BundleOptionTab() {
-  const { user } = useAuth();
-  const [apis, setApis] = useState<ApiItem[]>([]);
+// ── Catalog view (marketplace) ──────────────────────────────────
+function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
   const [featureFilter, setFeatureFilter] = useState<string | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from('bundle_api_catalog' as any)
-        .select('id, api_name, api_url, seo_segment, crawlers_feature')
-        .eq('is_active', true)
-        .order('display_order') as any;
-      if (data) setApis(data as ApiItem[]);
-      setLoading(false);
-    };
-    load();
-  }, []);
 
   const segments = useMemo(() => [...new Set(apis.map(a => getSegmentKey(a.seo_segment)))], [apis]);
   const features = useMemo(() => [...new Set(apis.map(a => getFeatureKey(a.crawlers_feature)))], [apis]);
@@ -110,15 +103,6 @@ export function BundleOptionTab() {
 
   const price = selected.size;
 
-  const handleSubscribe = async () => {
-    if (!user || selected.size === 0) return;
-    toast.info(`Bundle ${selected.size} API${selected.size > 1 ? 's' : ''} — ${price}€/mois — bientôt disponible`);
-  };
-
-  if (loading) {
-    return <div className="flex justify-center py-12 text-muted-foreground text-sm">Chargement…</div>;
-  }
-
   return (
     <div className="space-y-5">
       <div>
@@ -126,7 +110,7 @@ export function BundleOptionTab() {
         <p className="text-sm text-muted-foreground">Sélectionnez les API tierces à intégrer à votre stack Crawlers.</p>
       </div>
 
-      {/* Detached header bar */}
+      {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-muted/40 border border-border/30">
         <span className="text-xs font-medium text-muted-foreground mr-1 shrink-0">Segment SEO</span>
         {segments.map(seg => (
@@ -170,7 +154,7 @@ export function BundleOptionTab() {
         )}
       </div>
 
-      {/* Table body */}
+      {/* Table */}
       <div className="border border-border/30 rounded-lg overflow-hidden">
         <table className="w-full">
           <thead>
@@ -183,7 +167,7 @@ export function BundleOptionTab() {
             </tr>
           </thead>
           <tbody>
-            {filteredApis.map((api, i) => (
+            {filteredApis.map(api => (
               <tr
                 key={api.id}
                 className={`border-b border-border/10 transition-colors hover:bg-muted/20 ${
@@ -192,12 +176,7 @@ export function BundleOptionTab() {
               >
                 <td className="px-4 py-3 text-sm font-medium">{api.api_name}</td>
                 <td className="px-1 py-3">
-                  <a
-                    href={api.api_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
+                  <a href={api.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </td>
@@ -212,10 +191,7 @@ export function BundleOptionTab() {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <Checkbox
-                    checked={selected.has(api.id)}
-                    onCheckedChange={() => toggle(api.id)}
-                  />
+                  <Checkbox checked={selected.has(api.id)} onCheckedChange={() => toggle(api.id)} />
                 </td>
               </tr>
             ))}
@@ -243,12 +219,178 @@ export function BundleOptionTab() {
           )}
         </span>
         <Button
-          onClick={handleSubscribe}
+          onClick={() => onSubscribe(Array.from(selected))}
           disabled={selected.size === 0}
           size="sm"
         >
           S'abonner
         </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main BundleOptionTab ────────────────────────────────────────
+export function BundleOptionTab() {
+  const { user } = useAuth();
+  const [apis, setApis] = useState<ApiItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<BundleSubscription | null>(null);
+  const [view, setView] = useState<'catalog' | string>('catalog'); // 'catalog' or api id
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [orderedActiveApis, setOrderedActiveApis] = useState<ApiItem[]>([]);
+
+  // Load catalog + subscription
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const [catalogRes, subRes] = await Promise.all([
+        supabase
+          .from('bundle_api_catalog' as any)
+          .select('id, api_name, api_url, seo_segment, crawlers_feature')
+          .eq('is_active', true)
+          .order('display_order') as any,
+        supabase
+          .from('bundle_subscriptions' as any)
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle() as any,
+      ]);
+      if (catalogRes.data) setApis(catalogRes.data as ApiItem[]);
+      if (subRes.data) setSubscription(subRes.data as BundleSubscription);
+      setLoading(false);
+    };
+    load();
+  }, [user]);
+
+  // Build ordered active APIs list
+  useEffect(() => {
+    if (!subscription || apis.length === 0) {
+      setOrderedActiveApis([]);
+      return;
+    }
+    const activeIds = subscription.selected_apis || [];
+    const displayOrder = subscription.display_order || activeIds;
+    const activeApis = displayOrder
+      .filter((id: string) => activeIds.includes(id))
+      .map((id: string) => apis.find(a => a.id === id))
+      .filter(Boolean) as ApiItem[];
+    // Add any in selected_apis but not in display_order
+    activeIds.forEach((id: string) => {
+      if (!activeApis.find(a => a.id === id)) {
+        const api = apis.find(a => a.id === id);
+        if (api) activeApis.push(api);
+      }
+    });
+    setOrderedActiveApis(activeApis);
+    // Default view to first active API
+    if (activeApis.length > 0 && view === 'catalog') {
+      setView(activeApis[0].id);
+    }
+  }, [subscription, apis]);
+
+  const hasActiveApis = orderedActiveApis.length > 0;
+
+  // Drag handlers for reordering
+  const handleDragStart = (idx: number) => setDraggedIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+    const newOrder = [...orderedActiveApis];
+    const [dragged] = newOrder.splice(draggedIdx, 1);
+    newOrder.splice(idx, 0, dragged);
+    setOrderedActiveApis(newOrder);
+    setDraggedIdx(idx);
+  };
+  const handleDragEnd = async () => {
+    setDraggedIdx(null);
+    if (!subscription) return;
+    const newDisplayOrder = orderedActiveApis.map(a => a.id);
+    await supabase
+      .from('bundle_subscriptions' as any)
+      .update({ display_order: newDisplayOrder } as any)
+      .eq('id', subscription.id);
+  };
+
+  const handleSubscribe = async (selectedIds: string[]) => {
+    if (!user || selectedIds.length === 0) return;
+    toast.info(`Bundle ${selectedIds.length} API${selectedIds.length > 1 ? 's' : ''} — ${selectedIds.length}€/mois — bientôt disponible`);
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-12 text-muted-foreground text-sm">Chargement…</div>;
+  }
+
+  return (
+    <div className="flex gap-4">
+      {/* Left sidebar — only if active APIs */}
+      {hasActiveApis && (
+        <div className="flex flex-col gap-1 shrink-0 w-40">
+          {orderedActiveApis.map((api, idx) => (
+            <button
+              key={api.id}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              onClick={() => setView(api.id)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-all duration-200 group ${
+                view === api.id
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+              }`}
+            >
+              <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity shrink-0 cursor-grab" />
+              <span className="truncate">{api.api_name}</span>
+            </button>
+          ))}
+
+          <Separator className="my-2" />
+
+          <button
+            onClick={() => setView('catalog')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Ajouter</span>
+          </button>
+        </div>
+      )}
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {view === 'catalog' || !hasActiveApis ? (
+          <BundleCatalog apis={apis} onSubscribe={handleSubscribe} />
+        ) : (
+          <div className="space-y-4">
+            {(() => {
+              const activeApi = orderedActiveApis.find(a => a.id === view);
+              if (!activeApi) return null;
+              return (
+                <>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold">{activeApi.api_name}</h2>
+                    <a href={activeApi.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className={`text-[10px] font-medium ${getSegmentColor(activeApi.seo_segment)}`}>
+                      {activeApi.seo_segment}
+                    </Badge>
+                    <Badge variant="outline" className={`text-[10px] font-medium ${getFeatureColor(activeApi.crawlers_feature)}`}>
+                      {activeApi.crawlers_feature}
+                    </Badge>
+                  </div>
+                  <div className="border border-border/30 rounded-lg p-6 text-sm text-muted-foreground">
+                    Configuration et données de l'API à venir.
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
     </div>
   );
