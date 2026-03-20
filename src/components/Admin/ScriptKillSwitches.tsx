@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DemoModeToggle } from './DemoModeToggle';
 import { GA4OAuthToggle } from './GA4OAuthToggle';
+import { useAdminContext } from '@/contexts/AdminContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 const translations = {
   fr: {
@@ -104,6 +106,9 @@ export function ScriptKillSwitches() {
   const t = translations[language] || translations.fr;
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { readOnly } = useAdminContext();
+  const { isDemoMode } = useDemoMode();
+  const showSdkGlobal = !readOnly && !isDemoMode;
 
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
@@ -310,23 +315,27 @@ export function ScriptKillSwitches() {
           </div>
         </div>
 
-        <Separator />
+        {showSdkGlobal && (
+          <>
+            <Separator />
 
-        {/* Level 2: Global SDK — with double confirmation */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <Label className="text-sm font-medium">{t.level2}</Label>
-            <p className="text-xs text-muted-foreground">{t.level2Desc}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={sdkEnabled ? 'default' : 'destructive'} className="text-[10px]">
-              {sdkEnabled ? t.active : t.disabled}
-            </Badge>
-            <Switch checked={sdkEnabled} onCheckedChange={handleToggleSdk} disabled={saving} />
-          </div>
-        </div>
+            {/* Level 2: Global SDK — with double confirmation */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <Label className="text-sm font-medium">{t.level2}</Label>
+                <p className="text-xs text-muted-foreground">{t.level2Desc}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={sdkEnabled ? 'default' : 'destructive'} className="text-[10px]">
+                  {sdkEnabled ? t.active : t.disabled}
+                </Badge>
+                <Switch checked={sdkEnabled} onCheckedChange={handleToggleSdk} disabled={saving} />
+              </div>
+            </div>
 
-        <Separator />
+            <Separator />
+          </>
+        )}
 
         {/* Freemium Open Mode */}
         <div className="flex items-center justify-between gap-4">
