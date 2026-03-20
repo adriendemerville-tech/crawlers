@@ -212,6 +212,45 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
           </div>
         )}
 
+        {/* Client Targets (from strategic audit) */}
+        {site.client_targets && (site.client_targets.primary?.length > 0 || site.client_targets.secondary?.length > 0 || site.client_targets.untapped?.length > 0) && (
+          <div className="mt-4 pt-3 border-t border-border/30 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Cibles Clients
+            </p>
+            {site.client_targets.primary?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-emerald-500 font-medium">Principales</p>
+                {site.client_targets.primary.map((t: any, i: number) => (
+                  <p key={`p-${i}`} className="text-sm text-foreground pl-2 border-l-2 border-emerald-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
+            )}
+            {site.client_targets.secondary?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-500 font-medium">Secondaires</p>
+                {site.client_targets.secondary.map((t: any, i: number) => (
+                  <p key={`s-${i}`} className="text-sm text-foreground pl-2 border-l-2 border-amber-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
+            )}
+            {site.client_targets.untapped?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-violet-500 font-medium">Potentielles non adressées</p>
+                {site.client_targets.untapped.map((t: any, i: number) => (
+                  <p key={`u-${i}`} className="text-sm text-foreground/70 italic pl-2 border-l-2 border-violet-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Microphone button */}
         <div className="flex flex-col items-center gap-3 mt-4">
           <Button
