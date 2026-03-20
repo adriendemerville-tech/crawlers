@@ -30,6 +30,7 @@ const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({
 // Lazy load below-the-fold components with higher priority grouping
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
 
 // Lazy load Footer - not needed for initial render
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -697,6 +698,9 @@ const Index = () => {
           </div>
         </section>
 
+        <Suspense fallback={<SectionSkeleton />}>
+          <TestimonialsCarousel />
+        </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <FAQSection />
         </Suspense>
