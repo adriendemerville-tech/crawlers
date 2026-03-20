@@ -899,6 +899,75 @@ export type Database = {
         }
         Relationships: []
       }
+      bundle_api_catalog: {
+        Row: {
+          api_name: string
+          api_url: string
+          crawlers_feature: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          seo_segment: string
+        }
+        Insert: {
+          api_name: string
+          api_url: string
+          crawlers_feature: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          seo_segment: string
+        }
+        Update: {
+          api_name?: string
+          api_url?: string
+          crawlers_feature?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          seo_segment?: string
+        }
+        Relationships: []
+      }
+      bundle_subscriptions: {
+        Row: {
+          api_count: number
+          created_at: string | null
+          id: string
+          monthly_price_cents: number
+          selected_apis: string[]
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_count?: number
+          created_at?: string | null
+          id?: string
+          monthly_price_cents?: number
+          selected_apis?: string[]
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_count?: number
+          created_at?: string | null
+          id?: string
+          monthly_price_cents?: number
+          selected_apis?: string[]
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cms_connections: {
         Row: {
           api_key: string | null
