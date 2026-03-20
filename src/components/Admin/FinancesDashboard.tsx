@@ -324,7 +324,9 @@ export function FinancesDashboard() {
           </CardHeader>
           <CardContent className="p-3 pt-0">
             <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{businessMetrics.payingSubscribers} × 59 €/mois</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {businessMetrics.payingSubscribers} × 59€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
+            </p>
           </CardContent>
         </Card>
         {dbSize && (

@@ -35,6 +35,8 @@ interface UserKpis {
   totalBackendErrors: number;
   totalFrontendErrors: number;
   planType: string;
+  bundleApiCount: number;
+  bundleMonthlyEur: number;
 }
 
 interface ScannedUrl {
