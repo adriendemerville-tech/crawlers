@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (94 fonctions + 21 modules partagés)
+### 2.1 Edge Functions (95 fonctions + 21 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
