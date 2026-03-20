@@ -243,6 +243,7 @@ export function MyTracking() {
   const [wpApiKeyCopied, setWpApiKeyCopied] = useState(false);
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
+  const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
@@ -1720,6 +1721,7 @@ export function MyTracking() {
                    {/* LLM Visibility Dashboard */}
                    {currentSite && user && (
                     <LLMVisibilityDashboard
+                      key={`llm-vis-${currentSite.id}-${llmBenchmarkRefreshKey}`}
                       trackedSiteId={currentSite.id}
                       userId={user.id}
                       domain={currentSite.domain}
@@ -1743,6 +1745,7 @@ export function MyTracking() {
                         entity_type: currentSite.entity_type || undefined,
                         media_specialties: currentSite.media_specialties || undefined,
                       }}
+                      onDepthComplete={() => setLlmBenchmarkRefreshKey(k => k + 1)}
                     />
                    )}
 

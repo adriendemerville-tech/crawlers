@@ -56,6 +56,7 @@ interface LLMDepthCardProps {
   userId?: string;
   siteContext?: SiteContext;
   initialData?: LLMDepthData | null;
+  onDepthComplete?: () => void;
 }
 
 // Streaming progress state per model
@@ -234,7 +235,7 @@ function MiniProgressRing({ iteration, found }: { iteration: number; found: bool
   );
 }
 
-export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
+export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData, onDepthComplete }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
@@ -483,6 +484,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
               } else if (responseData?.results?.length > 0) {
                 setData(responseData);
                 setHasPreviousData(true);
+                onDepthComplete?.();
               }
             }
           } catch {

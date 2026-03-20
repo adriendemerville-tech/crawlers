@@ -4014,6 +4014,7 @@ export type Database = {
           payload_type: string
           previous_payload_data: Json | null
           queued_at: string | null
+          script_source: string
           status: string
           telemetry_last_ping: string | null
           updated_at: string
@@ -4033,6 +4034,7 @@ export type Database = {
           payload_type?: string
           previous_payload_data?: Json | null
           queued_at?: string | null
+          script_source?: string
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
@@ -4052,6 +4054,7 @@ export type Database = {
           payload_type?: string
           previous_payload_data?: Json | null
           queued_at?: string | null
+          script_source?: string
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
