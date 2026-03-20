@@ -2499,6 +2499,7 @@ Deno.serve(async (req) => {
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
     let gmbData: GMBData | null = null;
     let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
+    let ctaSeoSignalsForJargon: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
