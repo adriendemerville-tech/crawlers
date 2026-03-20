@@ -20,6 +20,8 @@
 
     --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
+    --brand-violet: 262 83% 58%;
+    --brand-violet-muted: 262 72% 96%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -69,6 +71,8 @@
 
     --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
+    --brand-violet: 262 90% 72%;
+    --brand-violet-muted: 262 42% 18%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
