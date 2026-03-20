@@ -1065,7 +1065,7 @@ export function MyTracking() {
               {/* Main content */}
               <div className="flex-1 min-w-0">
 
-              {showApiPanel && !currentSite && (
+              {showApiPanel && (
                 <ExternalApisTab />
               )}
 
