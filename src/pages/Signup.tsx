@@ -162,6 +162,15 @@ export default function Signup() {
     }
   }, [searchParams]);
 
+  // Track abandoned signups: user reached verify step but navigated away
+  useEffect(() => {
+    return () => {
+      if (step === 'verify') {
+        trackAnalyticsEvent('signup_abandoned' as any);
+      }
+    };
+  }, [step]);
+
   useEffect(() => {
     if (user && step === 'form') {
       const returnPath = sessionStorage.getItem('audit_return_path');
