@@ -106,6 +106,9 @@ export function ScriptKillSwitches() {
   const t = translations[language] || translations.fr;
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { readOnly } = useAdminContext();
+  const { isDemoMode } = useDemoMode();
+  const showSdkGlobal = !readOnly && !isDemoMode;
 
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
