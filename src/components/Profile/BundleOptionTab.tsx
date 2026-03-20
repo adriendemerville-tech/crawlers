@@ -16,6 +16,23 @@ interface ApiItem {
   crawlers_feature: string;
 }
 
+function ApiFavicon({ url, className = '' }: { url: string; className?: string }) {
+  try {
+    const host = new URL(url).hostname;
+    return (
+      <img
+        src={`https://www.google.com/s2/favicons?domain=${host}&sz=32`}
+        alt=""
+        className={`inline-block h-4 w-4 rounded-sm shrink-0 ${className}`}
+        loading="lazy"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+      />
+    );
+  } catch {
+    return null;
+  }
+}
+
 interface BundleSubscription {
   id: string;
   selected_apis: string[];
@@ -183,7 +200,12 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
                   selected.has(api.id) ? 'bg-primary/[0.03]' : ''
                 }`}
               >
-                <td className="px-4 py-3 text-sm font-medium">{api.api_name}</td>
+                <td className="px-4 py-3 text-sm font-medium">
+                  <span className="flex items-center gap-2">
+                    <ApiFavicon url={api.api_url} />
+                    {api.api_name}
+                  </span>
+                </td>
                 <td className="px-1 py-3">
                   <a href={api.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -351,6 +373,7 @@ export function BundleOptionTab() {
               }`}
             >
               <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity shrink-0 cursor-grab" />
+              <ApiFavicon url={api.api_url} className="h-3.5 w-3.5" />
               <span className="truncate">{api.api_name}</span>
             </button>
           ))}
@@ -379,6 +402,7 @@ export function BundleOptionTab() {
               return (
                 <>
                   <div className="flex items-center gap-3">
+                    <ApiFavicon url={activeApi.api_url} className="h-5 w-5" />
                     <h2 className="text-lg font-semibold">{activeApi.api_name}</h2>
                     <a href={activeApi.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                       <ExternalLink className="h-4 w-4" />
