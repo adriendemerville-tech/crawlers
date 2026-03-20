@@ -361,15 +361,15 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                 <p className="text-xs font-semibold text-foreground">Répondez à ces 3 questions :</p>
                 <div className="space-y-2.5">
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-border/20">
-                    <span className="text-base font-bold text-[hsl(var(--brand-violet))]">❶</span>
+                    <span className="text-base font-bold bg-gradient-to-r from-yellow-400 to-green-500 bg-clip-text text-transparent">❶</span>
                     <p className="text-sm text-foreground">Quel est votre objectif business à <strong>court terme</strong> ? À <strong>moyen terme</strong> ?</p>
                   </div>
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-border/20">
-                    <span className="text-base font-bold text-[hsl(var(--brand-violet))]">❷</span>
+                    <span className="text-base font-bold bg-gradient-to-r from-yellow-400 to-green-500 bg-clip-text text-transparent">❷</span>
                     <p className="text-sm text-foreground">Qui est votre <strong>principal concurrent</strong> dans la SERP ? Et de manière générale ?</p>
                   </div>
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-border/20">
-                    <span className="text-base font-bold text-destructive">❸</span>
+                    <span className="text-base font-bold bg-gradient-to-r from-yellow-400 to-green-500 bg-clip-text text-transparent">❸</span>
                     <p className="text-sm text-foreground">Avec quelle entreprise Crawlers ne doit <strong>pas vous confondre</strong> ?</p>
                   </div>
                 </div>
