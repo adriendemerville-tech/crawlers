@@ -156,14 +156,26 @@ export function MyReportsTab() {
   }, [user]);
 
   // Get domain for selected site
-  const selectedDomain = sites.find(s => s.id === selectedSite)?.domain || '';
+  const selectedDomain = selectedSite === '__all__' || selectedSite === '__other__'
+    ? null
+    : sites.find(s => s.id === selectedSite)?.domain || '';
+
+  // Helper: extract domain from URL
+  const getDomain = (url: string) => {
+    try {
+      const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+      return u.hostname.replace('www.', '');
+    } catch { return ''; }
+  };
 
   // Fetch folders & reports for selected site + current folder
   const fetchData = useCallback(async () => {
-    if (!user || !selectedDomain) return;
+    if (!user) return;
+    // Need at least a selection
+    if (!selectedSite) return;
     setLoading(true);
 
-    // Get all reports matching domain
+    // Folders query
     let foldersQ = supabase
       .from('report_folders')
       .select('*')
@@ -175,7 +187,7 @@ export function MyReportsTab() {
       foldersQ = foldersQ.eq('parent_id', currentFolderId);
     }
 
-    // Reports matching domain
+    // Reports query — fetch ALL for this user, filter client-side
     let reportsQ = supabase
       .from('saved_reports')
       .select('*')
@@ -193,19 +205,31 @@ export function MyReportsTab() {
     ]);
 
     const allFolders = (fRes.data || []) as ReportFolder[];
-    const allReports = (rRes.data || []).filter((r: any) => {
-      try {
-        const u = new URL(r.url.startsWith('http') ? r.url : `https://${r.url}`);
-        return u.hostname.replace('www.', '') === selectedDomain.replace('www.', '');
-      } catch { return false; }
-    }) as SavedReport[];
+    let allReports = (rRes.data || []) as SavedReport[];
+
+    // Filter by site selection
+    if (selectedSite === '__all__') {
+      // Show all reports — no domain filter
+    } else if (selectedSite === '__other__') {
+      // Show reports not matching any tracked site domain
+      const trackedDomains = sites.map(s => s.domain.replace('www.', ''));
+      allReports = allReports.filter(r => {
+        const rd = getDomain(r.url);
+        return !trackedDomains.some(td => rd === td.replace('www.', ''));
+      });
+    } else if (selectedDomain) {
+      allReports = allReports.filter(r => {
+        const rd = getDomain(r.url);
+        return rd === selectedDomain.replace('www.', '');
+      });
+    }
 
     setFolders(allFolders.filter(f => !f.is_archived));
     setReports(allReports.filter(r => !r.is_archived));
     setArchivedFolders(allFolders.filter(f => f.is_archived));
     setArchivedReports(allReports.filter(r => r.is_archived));
     setLoading(false);
-  }, [user, selectedDomain, currentFolderId]);
+  }, [user, selectedSite, selectedDomain, currentFolderId, sites]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
