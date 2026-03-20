@@ -124,6 +124,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(!!sessionStorage.getItem('pending_persona_type'));
+  const [isSigningUp, setIsSigningUp] = useState(false); // blocks auto-redirect during signup flow
 
   // Verification state
   const [step, setStep] = useState<'form' | 'verify' | 'success'>('form');
@@ -172,7 +173,7 @@ export default function Signup() {
   }, [step]);
 
   useEffect(() => {
-    if (user && step === 'form') {
+    if (user && step === 'form' && !isSigningUp) {
       const returnPath = sessionStorage.getItem('audit_return_path');
       const downloadReturnPath = sessionStorage.getItem('download_return_path');
       if (returnPath) {
@@ -184,7 +185,7 @@ export default function Signup() {
         navigate('/');
       }
     }
-  }, [user, navigate, step]);
+  }, [user, navigate, step, isSigningUp]);
 
   const verifyTurnstile = async (): Promise<boolean> => {
     // Non-blocking: if token isn't ready yet, skip silently
@@ -269,10 +270,11 @@ export default function Signup() {
   };
 
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
+    setIsSigningUp(true);
     setIsLoading(true);
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); return; }
+    if (!verified) { setIsLoading(false); setIsSigningUp(false); return; }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
 
@@ -288,6 +290,7 @@ export default function Signup() {
         } else if (!emailCheckError && emailCheck?.exists === true) {
           setShowExistsBanner(true);
           setIsLoading(false);
+          setIsSigningUp(false);
           return;
         }
       } catch {
@@ -298,6 +301,7 @@ export default function Signup() {
     setIsLoading(false);
 
     if (error) {
+      setIsSigningUp(false);
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -322,6 +326,7 @@ export default function Signup() {
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
+      // isSigningUp stays true — user is now in verify step, no redirect needed
     }
   };
 
