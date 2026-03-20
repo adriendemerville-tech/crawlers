@@ -252,6 +252,11 @@ export function StrategicInsights({
             />
           )}
 
+          {/* 3b. Cibles Clients */}
+          {analysis.client_targets && (
+            <ClientTargetsCard data={analysis.client_targets} />
+          )}
+
           {/* 4. Sentiment d'Expertise (E-E-A-T Tone) & Red Team */}
           {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
           {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
