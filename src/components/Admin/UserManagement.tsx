@@ -288,7 +288,28 @@ export function UserManagement() {
     
     setActionLoading(true);
     try {
-      // Delete user profile (cascade will handle related data)
+      // 1. Archive the user first
+      const { error: archiveError } = await supabase
+        .from('archived_users')
+        .insert({
+          original_user_id: selectedUser.user_id,
+          email: selectedUser.email,
+          first_name: selectedUser.first_name,
+          last_name: selectedUser.last_name,
+          credits_balance: selectedUser.credits_balance,
+          plan_type: selectedUser.plan_type,
+          persona_type: selectedUser.persona_type,
+          affiliate_code_used: selectedUser.affiliate_code_used || null,
+          original_created_at: selectedUser.created_at,
+          profile_snapshot: selectedUser,
+        } as any);
+
+      if (archiveError) {
+        console.error('Archive error:', archiveError);
+        // Continue with deletion even if archiving fails
+      }
+
+      // 2. Delete user profile (cascade will handle related data)
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -296,7 +317,7 @@ export function UserManagement() {
 
       if (error) throw error;
 
-      toast.success('Utilisateur supprimé avec succès');
+      toast.success('Utilisateur archivé et supprimé');
       setDeleteDialogOpen(false);
       fetchUsers();
     } catch (error) {
@@ -446,73 +467,61 @@ export function UserManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Persona</TableHead>
-                  <TableHead className="text-center">Crédits</TableHead>
-                  <TableHead>Inscrit le</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-xs py-1.5">Utilisateur</TableHead>
+                  <TableHead className="text-xs py-1.5">Crédits</TableHead>
+                  <TableHead className="text-xs py-1.5">Plan</TableHead>
+                  <TableHead className="text-xs py-1.5">Inscrit</TableHead>
+                  <TableHead className="text-xs py-1.5 text-right w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id} className="group cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {user.first_name} {user.last_name}
+                      <TableCell className="py-1.5 max-w-[280px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-xs font-medium truncate">
+                            {user.first_name} {user.last_name}
+                          </span>
                           {adminUserIds.has(user.user_id) && (
-                            <Badge variant="outline" className="text-xs border-primary text-primary">Créateur</Badge>
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary text-primary shrink-0">C</Badge>
                           )}
                           {!adminUserIds.has(user.user_id) && viewerUserIds.has(user.user_id) && (
-                            <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-600 dark:text-emerald-400">Viewer</Badge>
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 border-emerald-500 text-emerald-600 dark:text-emerald-400 shrink-0">V</Badge>
                           )}
                           {!adminUserIds.has(user.user_id) && !viewerUserIds.has(user.user_id) && viewer2UserIds.has(user.user_id) && (
-                            <Badge variant="outline" className="text-xs border-sky-500 text-sky-600 dark:text-sky-400">Viewer L2</Badge>
-                          )}
-                          {user.affiliate_code_used && (
-                            <Badge variant="outline" className="text-xs border-violet-500 text-violet-600 dark:text-violet-400 gap-1">
-                              <Link2 className="h-2.5 w-2.5" />
-                              {user.affiliate_code_used}
-                            </Badge>
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 border-sky-500 text-sky-600 dark:text-sky-400 shrink-0">L2</Badge>
                           )}
                         </div>
+                        <p className="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">{user.email}</p>
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.persona_type ? (
-                          <Badge variant="outline" className="text-xs">
-                            {user.persona_type === 'entrepreneur' ? 'Entrepreneur' : user.persona_type === 'seo_pro' ? 'SEO/SIO' : user.persona_type === 'marketing' ? 'Marketing' : user.persona_type === 'ecommerce' ? 'Ecommerce' : user.persona_type}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={user.credits_balance > 0 ? 'default' : 'secondary'}>
+                      <TableCell className="py-1.5">
+                        <Badge variant={user.credits_balance > 0 ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
                           {user.credits_balance}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                      <TableCell className="py-1.5">
+                        <span className="text-[10px] text-muted-foreground">{user.plan_type === 'agency_pro' ? 'Pro' : 'Free'}</span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="py-1.5">
+                        <span className="text-[10px] text-muted-foreground">{new Date(user.created_at).toLocaleDateString('fr-FR')}</span>
+                      </TableCell>
+                      <TableCell className="py-1.5 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant={(adminUserIds.has(user.user_id) || viewerUserIds.has(user.user_id) || viewer2UserIds.has(user.user_id)) ? 'default' : 'outline'}
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
+                                size="icon"
+                                className="h-6 w-6"
                               >
-                                <ShieldCheck className="h-4 w-4" />
-                                <ChevronDown className="h-3 w-3" />
+                                <ShieldCheck className="h-3 w-3" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -539,143 +548,23 @@ export function UserManagement() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          {user.plan_type === 'agency_pro' && (
-                            <Dialog open={stripDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
-                              setStripDialogOpen(open);
-                              if (open) setSelectedUser(user);
-                            }}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950"
-                                  title="Retirer Pro Agency"
-                                >
-                                  <Crown className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle className="flex items-center gap-2 text-amber-600">
-                                    <Crown className="h-5 w-5" />
-                                    Retirer l'abonnement Pro Agency
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    Voulez-vous retirer l'abonnement Pro Agency de {user.first_name} {user.last_name} ({user.email}) ?
-                                    Son plan passera en « free ».
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                  <Button variant="outline" onClick={() => setStripDialogOpen(false)}>
-                                    Annuler
-                                  </Button>
-                                  <Button
-                                    variant="default"
-                                    className="bg-amber-600 hover:bg-amber-700"
-                                    onClick={handleStripProAgency}
-                                    disabled={actionLoading}
-                                  >
-                                    {actionLoading ? (
-                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    ) : (
-                                      <Crown className="h-4 w-4 mr-2" />
-                                    )}
-                                    Retirer Pro Agency
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                          <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setCreditDialogOpen(open);
-                            if (open) setSelectedUser(user);
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <CreditCard className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Gérer les crédits</DialogTitle>
-                                <DialogDescription>
-                                  {user.first_name} {user.last_name} - Solde actuel: {user.credits_balance} crédits
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                  <Label>Montant de crédits</Label>
-                                  <Input
-                                    type="number"
-                                    value={creditAmount}
-                                    onChange={(e) => setCreditAmount(e.target.value)}
-                                    placeholder="Ex: 10"
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    onClick={() => handleAddCredits(parseInt(creditAmount) || 0)}
-                                    disabled={!creditAmount || actionLoading}
-                                    className="flex-1"
-                                  >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Ajouter
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => handleAddCredits(-(parseInt(creditAmount) || 0))}
-                                    disabled={!creditAmount || actionLoading}
-                                    className="flex-1"
-                                  >
-                                    <Minus className="h-4 w-4 mr-2" />
-                                    Retirer
-                                  </Button>
-                                </div>
-                                <div className="border-t pt-4 space-y-2">
-                                  <Button
-                                    variant="secondary"
-                                    onClick={handleRefund}
-                                    disabled={actionLoading}
-                                    className="w-full"
-                                  >
-                                    <RefreshCw className="h-4 w-4 mr-2" />
-                                    Marquer dernier paiement comme remboursé
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setAffiliateUser(user);
-                                      setAffiliateModalOpen(true);
-                                      setCreditDialogOpen(false);
-                                    }}
-                                    className="w-full border-violet-500/40 text-violet-600 dark:text-violet-400 hover:bg-violet-500/5"
-                                  >
-                                    <Link2 className="h-4 w-4 mr-2" />
-                                    Créer un code d'affiliation
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-
                           <Dialog open={deleteDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setDeleteDialogOpen(open);
                             if (open) setSelectedUser(user);
                           }}>
                             <DialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2 text-destructive">
                                   <AlertTriangle className="h-5 w-5" />
-                                  Supprimer l'utilisateur
+                                  Archiver et supprimer
                                 </DialogTitle>
                                 <DialogDescription>
-                                  Êtes-vous sûr de vouloir supprimer {user.first_name} {user.last_name} ({user.email}) ?
-                                  Cette action est irréversible.
+                                  L'utilisateur {user.first_name} {user.last_name} ({user.email}) sera archivé puis supprimé de la base active. Ses données seront conservées dans les archives.
                                 </DialogDescription>
                               </DialogHeader>
                               <DialogFooter>
@@ -692,7 +581,7 @@ export function UserManagement() {
                                   ) : (
                                     <Trash2 className="h-4 w-4 mr-2" />
                                   )}
-                                  Supprimer
+                                  Archiver & Supprimer
                                 </Button>
                               </DialogFooter>
                             </DialogContent>
@@ -708,7 +597,120 @@ export function UserManagement() {
         )}
       </CardContent>
 
-      <UserKpiModal user={kpiUser} open={kpiModalOpen} onOpenChange={setKpiModalOpen} />
+      <UserKpiModal
+        user={kpiUser}
+        open={kpiModalOpen}
+        onOpenChange={setKpiModalOpen}
+        onDeleteUser={(u) => { setSelectedUser(u); setDeleteDialogOpen(true); setKpiModalOpen(false); }}
+        onToggleRole={(userId, role) => toggleRole(userId, role)}
+        onManageCredits={(u) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
+        onStripPro={(u) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
+        adminUserIds={adminUserIds}
+        viewerUserIds={viewerUserIds}
+        viewer2UserIds={viewer2UserIds}
+        auditorUserIds={auditorUserIds}
+      />
+
+      {/* Credit Dialog (moved outside table rows) */}
+      <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gérer les crédits</DialogTitle>
+            <DialogDescription>
+              {selectedUser?.first_name} {selectedUser?.last_name} - Solde actuel: {selectedUser?.credits_balance} crédits
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Montant de crédits</Label>
+              <Input
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                placeholder="Ex: 10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleAddCredits(parseInt(creditAmount) || 0)}
+                disabled={!creditAmount || actionLoading}
+                className="flex-1"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleAddCredits(-(parseInt(creditAmount) || 0))}
+                disabled={!creditAmount || actionLoading}
+                className="flex-1"
+              >
+                <Minus className="h-4 w-4 mr-2" />
+                Retirer
+              </Button>
+            </div>
+            <div className="border-t pt-4 space-y-2">
+              <Button
+                variant="secondary"
+                onClick={handleRefund}
+                disabled={actionLoading}
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Marquer dernier paiement comme remboursé
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (selectedUser) {
+                    setAffiliateUser(selectedUser);
+                    setAffiliateModalOpen(true);
+                    setCreditDialogOpen(false);
+                  }
+                }}
+                className="w-full border-violet-500/40 text-violet-600 dark:text-violet-400 hover:bg-violet-500/5"
+              >
+                <Link2 className="h-4 w-4 mr-2" />
+                Créer un code d'affiliation
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Strip Pro Agency Dialog */}
+      <Dialog open={stripDialogOpen} onOpenChange={setStripDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <Crown className="h-5 w-5" />
+              Retirer l'abonnement Pro Agency
+            </DialogTitle>
+            <DialogDescription>
+              Voulez-vous retirer l'abonnement Pro Agency de {selectedUser?.first_name} {selectedUser?.last_name} ({selectedUser?.email}) ?
+              Son plan passera en « free ».
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStripDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              variant="default"
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={handleStripProAgency}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Crown className="h-4 w-4 mr-2" />
+              )}
+              Retirer Pro Agency
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {affiliateUser && (
         <CreateAffiliateModal
