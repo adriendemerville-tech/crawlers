@@ -235,6 +235,21 @@ export function CtoAgentDashboard() {
         </CardHeader>
       </Card>
 
+      {/* Priority Alert */}
+      {priorityAlert && (
+        <Alert variant={priorityAlert.severity === 'critical' ? 'destructive' : 'default'} className={priorityAlert.severity === 'critical' ? '' : 'border-orange-500/40 bg-orange-500/5'}>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="text-sm">
+            {priorityAlert.severity === 'critical' ? '🔴' : '🟠'} {priorityAlert.count} problème(s) récurrent(s) détecté(s)
+          </AlertTitle>
+          <AlertDescription className="mt-1 space-y-0.5">
+            {priorityAlert.problems.map((line, i) => (
+              <p key={i} className="text-xs text-muted-foreground">{line}</p>
+            ))}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>

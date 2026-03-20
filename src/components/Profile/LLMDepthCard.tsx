@@ -56,6 +56,7 @@ interface LLMDepthCardProps {
   userId?: string;
   siteContext?: SiteContext;
   initialData?: LLMDepthData | null;
+  onDepthComplete?: () => void;
 }
 
 // Streaming progress state per model
