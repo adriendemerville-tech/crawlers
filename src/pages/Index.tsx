@@ -580,6 +580,10 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <title>Crawlers.fr — Audit SEO & GEO, Visibilité IA pour PME</title>
+        <meta name="description" content="Crawlers.fr audite votre site sur 200 points SEO et GEO. Mesurez votre visibilité sur ChatGPT, Claude, Perplexity. Code correctif inclus." />
+      </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Contenu principal">
         <HeroSection 

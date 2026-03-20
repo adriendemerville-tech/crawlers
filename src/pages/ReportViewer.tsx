@@ -235,6 +235,8 @@ export default function ReportViewer() {
     <>
       <Helmet>
         <title>{pageTitle}</title>
+        <meta name="description" content="Visualisez votre rapport d'audit SEO complet : scores, recommandations et plan d'action correctif." />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

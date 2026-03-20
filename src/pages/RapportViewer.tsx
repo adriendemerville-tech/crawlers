@@ -330,6 +330,8 @@ export default function RapportViewer() {
     <>
       <Helmet>
         <title>{pageTitle}</title>
+        <meta name="description" content="Rapport d'audit SEO & GEO détaillé généré par Crawlers.fr. Performance, technique, sémantique et visibilité IA." />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">

@@ -178,6 +178,10 @@ const ExpertAudit = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <title>Audit Expert SEO & IA — Score 200 points | Crawlers.fr</title>
+        <meta name="description" content="Audit SEO expert sur 200 points : performance, technique, sémantique, préparation IA et GEO. Analysez et corrigez votre site en 2 minutes." />
+      </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
         <ExpertAuditDashboard />

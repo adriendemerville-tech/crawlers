@@ -100,7 +100,11 @@ export default function RapportMatrice() {
 
   return (
     <>
-      <Helmet><title>Rapport Matrice — Crawlers AI</title></Helmet>
+      <Helmet>
+        <title>Rapport Matrice — Crawlers.fr</title>
+        <meta name="description" content="Résultats détaillés de votre matrice de prompts : visibilité IA, taux de citation LLM et recommandations d'optimisation GEO." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="min-h-screen bg-background flex flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">

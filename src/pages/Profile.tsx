@@ -173,6 +173,8 @@ export default function Profile() {
       <WelcomeBackModal />
       <Helmet>
         <title>{t.pageTitle}</title>
+        <meta name="description" content="Gérez votre profil Crawlers.fr : crédits, abonnement, clé API et paramètres de compte." />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

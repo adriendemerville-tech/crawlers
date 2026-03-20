@@ -404,7 +404,10 @@ export default function MatricePrompt() {
 
   return (
     <>
-      <Helmet><title>Matrice — Crawlers AI</title></Helmet>
+      <Helmet>
+        <title>Matrice de Prompts SEO & GEO | Crawlers.fr</title>
+        <meta name="description" content="Analysez votre positionnement sur les moteurs IA avec la matrice de prompts Crawlers. Testez votre citabilité LLM en quelques clics." />
+      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
