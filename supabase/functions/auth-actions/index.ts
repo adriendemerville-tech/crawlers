@@ -219,6 +219,130 @@ async function handleDeleteUser(body: any, req: Request) {
   return json({ success: true });
 }
 
+// ─── request-sdk-toggle (admin only — sends confirmation email) ───
+
+async function handleRequestSdkToggle(body: any, req: Request) {
+  const { requested_value } = body;
+  if (typeof requested_value !== 'boolean') return json({ error: 'requested_value required' }, 400);
+
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  // Generate a unique token
+  const token = crypto.randomUUID();
+
+  // Store pending confirmation
+  const { error: insertError } = await supabase
+    .from('sdk_toggle_confirmations')
+    .insert({
+      token,
+      requested_by: caller.id,
+      requested_value,
+    });
+
+  if (insertError) {
+    console.error('SDK toggle insert error:', insertError);
+    return json({ error: 'Failed to create confirmation' }, 500);
+  }
+
+  // Get admin email
+  const adminEmail = caller.email;
+  const action = requested_value ? 'ACTIVER' : 'DÉSACTIVER';
+  const confirmUrl = `https://crawlers.fr/console?confirm_sdk=${token}`;
+
+  // Send confirmation email
+  const emailPayload = {
+    run_id: crypto.randomUUID(),
+    message_id: crypto.randomUUID(),
+    to: adminEmail,
+    subject: `Confirmation requise — ${action} le SDK Global`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
+        <h1 style="color: #111; font-size: 20px; margin-bottom: 12px;">Confirmation SDK Global</h1>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">
+          Vous avez demandé à <strong>${action}</strong> le SDK Global sur l'ensemble du parc client Crawlers.
+        </p>
+        <p style="color: #555; font-size: 14px; margin-bottom: 24px;">
+          Cette action impacte tous les scripts injectés sur tous les sites connectés. Pour confirmer, cliquez sur le bouton ci-dessous.
+        </p>
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="${confirmUrl}" style="display: inline-block; padding: 12px 32px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+            Confirmer la modification
+          </a>
+        </div>
+        <p style="color: #999; font-size: 12px;">
+          Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+        </p>
+      </div>
+    `,
+    from: 'noreply@notify.crawlers.fr',
+    sender_domain: 'notify.crawlers.fr',
+    purpose: 'transactional',
+    label: 'sdk-toggle-confirmation',
+    text: `Confirmation requise : ${action} le SDK Global. Lien : ${confirmUrl}`,
+    queued_at: new Date().toISOString(),
+  };
+
+  await supabase.rpc('enqueue_email', {
+    queue_name: 'transactional_emails',
+    payload: emailPayload,
+  });
+
+  return json({ success: true, pending: true });
+}
+
+// ─── confirm-sdk-toggle (validates token and applies change) ───
+
+async function handleConfirmSdkToggle(body: any, req: Request) {
+  const { token } = body;
+  if (!token) return json({ error: 'Token required' }, 400);
+
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  // Fetch the pending confirmation
+  const { data: confirmation, error: fetchError } = await supabase
+    .from('sdk_toggle_confirmations')
+    .select('*')
+    .eq('token', token)
+    .eq('confirmed', false)
+    .gte('expires_at', new Date().toISOString())
+    .maybeSingle();
+
+  if (fetchError || !confirmation) {
+    return json({ error: 'Token invalide ou expiré' }, 400);
+  }
+
+  // Apply the SDK change
+  await supabase
+    .from('system_config')
+    .upsert({ key: 'sdk_enabled', value: confirmation.requested_value, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
+
+  // Mark as confirmed
+  await supabase
+    .from('sdk_toggle_confirmations')
+    .update({ confirmed: true, confirmed_at: new Date().toISOString() } as any)
+    .eq('id', confirmation.id);
+
+  return json({ success: true, sdk_enabled: confirmation.requested_value });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
@@ -229,11 +353,13 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     switch (action) {
-      case 'check-email':     return await handleCheckEmail(body);
-      case 'send-code':       return await handleSendCode(body);
-      case 'verify-code':     return await handleVerifyCode(body);
-      case 'reset-password':  return await handleResetPassword(body);
-      case 'delete-user':     return await handleDeleteUser(body, req);
+      case 'check-email':           return await handleCheckEmail(body);
+      case 'send-code':             return await handleSendCode(body);
+      case 'verify-code':           return await handleVerifyCode(body);
+      case 'reset-password':        return await handleResetPassword(body);
+      case 'delete-user':           return await handleDeleteUser(body, req);
+      case 'request-sdk-toggle':    return await handleRequestSdkToggle(body, req);
+      case 'confirm-sdk-toggle':    return await handleConfirmSdkToggle(body, req);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
