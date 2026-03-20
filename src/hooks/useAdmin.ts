@@ -5,7 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const AUDITOR_DEADLINE_KEY = 'auditor_session_deadline';
+const ADMIN_SESSION_KEY = 'admin_session_start';
 const AUDITOR_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const ADMIN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 export function useAdmin() {
   const { user } = useAuth();
@@ -74,7 +76,19 @@ export function useAdmin() {
             .filter((r: any) => !r.expires_at || new Date(r.expires_at) > now)
             .map((r: any) => r.role);
 
-          setIsAdmin(activeRoles.includes('admin'));
+          const adminActive = activeRoles.includes('admin');
+          setIsAdmin(adminActive);
+
+          // Admin 12h session tracking
+          if (adminActive) {
+            const sessionStart = localStorage.getItem(ADMIN_SESSION_KEY);
+            if (!sessionStart) {
+              localStorage.setItem(ADMIN_SESSION_KEY, Date.now().toString());
+            }
+          } else {
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+          }
+
           setIsViewer(activeRoles.includes('viewer'));
           setIsViewerLevel2(activeRoles.includes('viewer_level2'));
 
@@ -131,7 +145,24 @@ export function useAdmin() {
     };
   }, [isAuditor, auditorExpired, checkAuditorDeadline]);
 
-  // Hierarchy: admin (créateur) > viewer > auditor > viewer_level2
+  // Admin auto-logout after 12h
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const checkAdminSession = () => {
+      const start = localStorage.getItem(ADMIN_SESSION_KEY);
+      if (start && Date.now() - parseInt(start, 10) >= ADMIN_TTL_MS) {
+        localStorage.removeItem(ADMIN_SESSION_KEY);
+        toast.error('Session admin expirée (12h). Déconnexion automatique.', { duration: 8000 });
+        supabase.auth.signOut();
+      }
+    };
+
+    checkAdminSession();
+    const interval = setInterval(checkAdminSession, 30_000); // check every 30s
+    return () => clearInterval(interval);
+  }, [isAdmin]);
+
   const hasAdminAccess = isAdmin || isViewer || isViewerLevel2 || isAuditor;
   const isReadOnly = (isViewer || isViewerLevel2 || isAuditor) && !isAdmin;
   // viewer_level2 & auditor can't see docs; auditor can't see intelligence, finances, users
