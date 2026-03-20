@@ -173,6 +173,29 @@ export function ExternalApisTab() {
       return;
     }
 
+    // Google My Business — uses same GSC OAuth (which includes business.manage scope)
+    if (service.id === 'gmb') {
+      setConnectingId(service.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
+        });
+        if (error) throw error;
+        if (data?.auth_url) {
+          window.location.href = data.auth_url;
+        } else {
+          throw new Error('No auth URL returned');
+        }
+      } catch (err) {
+        console.error('[ExternalApis] GMB auth error:', err);
+        toast.error(language === 'fr' ? 'Erreur de connexion GMB' : language === 'es' ? 'Error de conexión GMB' : 'GMB connection error');
+      } finally {
+        setConnectingId(null);
+      }
+      return;
+    }
+
     // CMS: WordPress / Drupal / Shopify / Webflow / Wix connection dialog
     if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix'].includes(service.id)) {
       setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix');

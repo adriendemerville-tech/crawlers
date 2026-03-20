@@ -201,6 +201,9 @@ Deno.serve(async (req) => {
       // Always include GTM scope for 1-click tag deployment
       scopes.push('https://www.googleapis.com/auth/tagmanager.edit.containers');
       scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
+      // GMB & Indexing scopes
+      scopes.push('https://www.googleapis.com/auth/business.manage');
+      scopes.push('https://www.googleapis.com/auth/indexing');
 
       const params = new URLSearchParams({
         client_id: clientId,
