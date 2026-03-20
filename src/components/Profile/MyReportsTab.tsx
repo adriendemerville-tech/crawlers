@@ -129,6 +129,8 @@ export function MyReportsTab() {
   const tr = t[language];
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
+  const [orderedSites, setOrderedSites] = useState<TrackedSite[]>([]);
+  const [draggedSiteIdx, setDraggedSiteIdx] = useState<number | null>(null);
   const [selectedSite, setSelectedSite] = useState<string>('__all__');
   const [folders, setFolders] = useState<ReportFolder[]>([]);
   const [reports, setReports] = useState<SavedReport[]>([]);
