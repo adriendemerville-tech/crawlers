@@ -60,8 +60,8 @@ const t = {
     deleteConfirmReport: 'Archiver ce rapport ?',
     save: 'Enregistrer',
     reportTypes: {
-      seo_technical: 'Audit SEO Technique',
-      seo_strategic: 'Audit Stratégique IA',
+      seo_technical: 'Audit Technique SEO',
+      seo_strategic: 'Audit Stratégique GEO',
       llm: 'Analyse LLM',
       geo: 'Analyse GEO',
       pagespeed: 'PageSpeed',
