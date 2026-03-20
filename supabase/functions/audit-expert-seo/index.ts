@@ -1604,6 +1604,69 @@ function generateRecommendations(
     });
   }
   
+  // === HEADING HIERARCHY RECOMMENDATIONS ===
+  if (insights.headingHierarchy) {
+    const hh = insights.headingHierarchy;
+    if (hh.gaps.length > 0) {
+      recommendations.push({
+        id: 'heading-hierarchy-gaps',
+        priority: hh.gaps.length > 2 ? 'critical' : 'important',
+        category: 'contenu',
+        icon: hh.gaps.length > 2 ? '🔴' : '🟠',
+        title: 'Structure Hn cassée : sauts de niveaux détectés',
+        description: `La hiérarchie des titres comporte ${hh.gaps.length} saut(s) de niveau. Une page sans hiérarchie Hn claire est une page que Google comprend moins bien que ses concurrents.`,
+        weaknesses: [
+          ...hh.gaps.slice(0, 4),
+          hh.hasMultipleH1 ? `${htmlAnalysis.h1Count} balises H1 détectées (une seule recommandée)` : ''
+        ].filter(Boolean),
+        fixes: [
+          "Utiliser une hiérarchie stricte : H1 → H2 → H3 (sans sauter de niveau)",
+          "Ne pas utiliser les balises Hn pour le style visuel — utiliser CSS à la place",
+          "Vérifier que le H1 est unique et que chaque section a son propre H2"
+        ]
+      });
+    }
+  }
+  
+  // === SITEMAP / ROBOTS.TXT COHERENCE RECOMMENDATIONS ===
+  if (insights.sitemapRobotsCoherence) {
+    const src = insights.sitemapRobotsCoherence;
+    for (const issue of src.issues) {
+      const idMap: Record<string, string> = {
+        'noindex_in_sitemap': 'sitemap-noindex-conflict',
+        'http_urls_in_sitemap': 'sitemap-http-urls',
+        'http_sitemap_on_https': 'sitemap-http-declaration',
+        'blocks_rendering_resources': 'robots-blocks-resources',
+        'sitemap_not_in_robots': 'sitemap-undeclared',
+      };
+      recommendations.push({
+        id: idMap[issue.type] || `sitemap-${issue.type}`,
+        priority: issue.severity,
+        category: 'technique',
+        icon: issue.severity === 'critical' ? '🔴' : '🟠',
+        title: issue.type === 'noindex_in_sitemap' 
+          ? 'Sitemap et robots se contredisent'
+          : issue.type === 'blocks_rendering_resources'
+          ? 'Robots.txt bloque des ressources de rendu'
+          : issue.type === 'http_urls_in_sitemap'
+          ? 'URLs HTTP dans le sitemap d\'un site HTTPS'
+          : issue.type === 'sitemap_not_in_robots'
+          ? 'Sitemap non déclaré dans robots.txt'
+          : 'Incohérence sitemap/robots.txt',
+        description: issue.description,
+        fixes: issue.type === 'noindex_in_sitemap' 
+          ? ["Retirer les pages noindex du sitemap.xml", "Ou supprimer la directive noindex si ces pages doivent être indexées"]
+          : issue.type === 'blocks_rendering_resources'
+          ? ["Retirer les règles Disallow ciblant les fichiers CSS et JS", "Google a besoin de ces ressources pour rendre et comprendre les pages"]
+          : issue.type === 'http_urls_in_sitemap'
+          ? ["Mettre à jour toutes les URLs du sitemap en HTTPS", "Vérifier que les redirections 301 HTTP→HTTPS sont en place"]
+          : issue.type === 'sitemap_not_in_robots'
+          ? ["Ajouter 'Sitemap: https://votre-site.com/sitemap.xml' dans robots.txt", "Soumettre le sitemap dans Google Search Console"]
+          : ["Corriger l'incohérence entre le sitemap et le robots.txt"]
+      });
+    }
+  }
+  
   // Sort by priority
   const priorityOrder = { critical: 0, important: 1, optional: 2 };
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
