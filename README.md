@@ -147,8 +147,12 @@ Organisées en **13 domaines fonctionnels** :
 - Modal d'inscription contextuelle en mode ouvert (après 60s sur une feature) avec tracking admin (affichages, fermetures, signups abandonnés, emails envoyés)
 
 ### 4.6 Gestion utilisateurs (Admin)
-- Suppression = archivage complet dans `archived_users` (profil, crédits, plan, branding)
-- Suppression effective du compte auth (Supabase Admin API) pour libérer l'email
+- **Suppression dédiée** : Edge Function `delete-account` en 4 étapes :
+  1. Archivage complet dans `archived_users` (profil, crédits, plan, branding, snapshot)
+  2. Nettoyage exhaustif de **60+ tables** dans l'ordre des dépendances FK (leaves → parents)
+  3. Suppression du compte `auth.users` pour libérer définitivement l'email
+  4. Vérification post-suppression (profile, auth, tracked_sites) avec rapport d'anomalies
+- Aucun faux positif : un email archivé ne remonte plus comme « déjà inscrit »
 - Réinscription possible : modal "Welcome Back" proposant la restauration des données
 - Interface utilisateurs condensée (sans scroll horizontal), actions au survol
 - Session admin auto-expirée après 12h
