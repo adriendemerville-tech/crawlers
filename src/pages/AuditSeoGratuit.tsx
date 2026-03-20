@@ -127,7 +127,7 @@ const AuditSeoGratuit = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <title>Audit SEO en Ligne 2026 — Score 200 Points, Visibilité IA | Crawlers.fr</title>
-        <meta name="description" content="Audit SEO instantané : analysez votre site sur 200 points (Core Web Vitals, JSON-LD, robots.txt, visibilité LLM). Résultats en 2 minutes, code correctif inclus." />
+        <meta name="description" content="Audit SEO gratuit sur 200 points : Core Web Vitals, JSON-LD, robots.txt, visibilité LLM. Résultats en 2 min, code correctif inclus." />
         <link rel="canonical" href="https://crawlers.fr/audit-seo-gratuit" />
         <meta property="og:title" content="Audit SEO 2026 — Score 200 Points | Crawlers.fr" />
         <meta property="og:description" content="Analysez votre site sur 200 points : performance, technique, sémantique, IA/GEO et sécurité. Code correctif personnalisé inclus." />

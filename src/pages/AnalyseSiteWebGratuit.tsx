@@ -61,7 +61,7 @@ const AnalyseSiteWebGratuit = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <title>Analyse de Site Web 2026 — Guide Complet SEO & Visibilité IA | Crawlers.fr</title>
-        <meta name="description" content="Comment analyser votre site web en 2026 : SEO technique, Core Web Vitals, visibilité LLM (ChatGPT, Claude), données structurées JSON-LD. Guide complet avec outil d'audit." />
+        <meta name="description" content="Analysez votre site web gratuitement : SEO technique, Core Web Vitals, visibilité LLM et JSON-LD. Guide complet 2026." />
         <link rel="canonical" href="https://crawlers.fr/analyse-site-web-gratuit" />
         <meta property="og:title" content="Analyse de Site Web — Guide Complet 2026" />
         <meta property="og:description" content="Le guide complet pour analyser votre site web : SEO technique, Core Web Vitals, visibilité IA et code correctif." />
