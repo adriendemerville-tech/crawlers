@@ -126,6 +126,7 @@ const translations = {
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(!!sessionStorage.getItem('pending_persona_type'));
