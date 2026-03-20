@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, TrendingUp, AlertTriangle, RefreshCw, Users, Coins, ExternalLink } from 'lucide-react';
+import { Package, TrendingUp, AlertTriangle, RefreshCw, Users, Coins, ExternalLink, Cpu } from 'lucide-react';
 
 interface BundleSub {
   id: string;
@@ -31,17 +31,24 @@ interface BundleError {
   created_at: string;
 }
 
+interface ApiCostEntry {
+  function_name: string;
+  total_tokens: number;
+  call_count: number;
+}
+
 export function BundleManagement() {
   const [subs, setSubs] = useState<BundleSub[]>([]);
   const [catalog, setCatalog] = useState<CatalogApi[]>([]);
   const [errors, setErrors] = useState<BundleError[]>([]);
+  const [apiCosts, setApiCosts] = useState<ApiCostEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchAll = async () => {
     setRefreshing(true);
     try {
-      const [subsRes, catalogRes, errorsRes] = await Promise.all([
+      const [subsRes, catalogRes, errorsRes, tokenRes, paidRes] = await Promise.all([
         supabase
           .from('bundle_subscriptions')
           .select('id, user_id, selected_apis, api_count, monthly_price_cents, status, created_at, stripe_subscription_id')
@@ -56,10 +63,43 @@ export function BundleManagement() {
           .like('event_type', '%bundle%error%')
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'ai_token_usage')
+          .order('created_at', { ascending: false })
+          .limit(1000),
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'paid_api_call')
+          .order('created_at', { ascending: false })
+          .limit(1000),
       ]);
       if (subsRes.data) setSubs(subsRes.data as unknown as BundleSub[]);
       if (catalogRes.data) setCatalog(catalogRes.data as unknown as CatalogApi[]);
       if (errorsRes.data) setErrors(errorsRes.data as unknown as BundleError[]);
+
+      // Aggregate costs per function
+      const costMap: Record<string, { total_tokens: number; call_count: number }> = {};
+      (tokenRes.data || []).forEach((row: any) => {
+        const fn = row.event_data?.function_name;
+        if (!fn) return;
+        if (!costMap[fn]) costMap[fn] = { total_tokens: 0, call_count: 0 };
+        costMap[fn].total_tokens += (row.event_data?.total_tokens || 0);
+        costMap[fn].call_count += 1;
+      });
+      (paidRes.data || []).forEach((row: any) => {
+        const fn = row.event_data?.function_name;
+        if (!fn) return;
+        if (!costMap[fn]) costMap[fn] = { total_tokens: 0, call_count: 0 };
+        costMap[fn].call_count += 1;
+      });
+      const costEntries = Object.entries(costMap)
+        .filter(([, v]) => v.total_tokens > 0 || v.call_count > 0)
+        .sort(([, a], [, b]) => b.total_tokens - a.total_tokens)
+        .map(([fn, v]) => ({ function_name: fn, ...v }));
+      setApiCosts(costEntries);
     } catch (err) {
       console.error('BundleManagement fetch error:', err);
     } finally {
@@ -189,7 +229,56 @@ export function BundleManagement() {
         </Card>
       )}
 
-      {/* Active Subscriptions */}
+      {/* Cost per API (only APIs with token usage) */}
+      {apiCosts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-muted-foreground" />
+              Coût par API (tokens consommés)
+            </CardTitle>
+            <CardDescription>Uniquement les APIs ayant consommé des tokens</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Fonction</TableHead>
+                  <TableHead className="text-xs text-right">Appels</TableHead>
+                  <TableHead className="text-xs text-right">Tokens</TableHead>
+                  <TableHead className="text-xs text-right">Coût estimé</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {apiCosts.map(entry => {
+                  // Rough cost estimate: ~$0.50 per 1M tokens (blended average)
+                  const estimatedCost = (entry.total_tokens / 1_000_000) * 0.50;
+                  return (
+                    <TableRow key={entry.function_name}>
+                      <TableCell className="text-xs font-mono">{entry.function_name}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums">{entry.call_count.toLocaleString('fr-FR')}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums">{entry.total_tokens.toLocaleString('fr-FR')}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums font-semibold">
+                        {estimatedCost < 0.01 ? '< 0,01 €' : `${estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="border-t-2">
+                  <TableCell className="text-xs font-semibold">Total</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">{apiCosts.reduce((s, e) => s + e.call_count, 0).toLocaleString('fr-FR')}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">{apiCosts.reduce((s, e) => s + e.total_tokens, 0).toLocaleString('fr-FR')}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">
+                    {((apiCosts.reduce((s, e) => s + e.total_tokens, 0) / 1_000_000) * 0.50).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
