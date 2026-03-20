@@ -264,6 +264,7 @@ export default function Signup() {
     }
 
     setIsLoading(false);
+    await signupForm.trigger(['password', 'confirmPassword']);
     signupForm.handleSubmit(handleSignup)();
   };
 
