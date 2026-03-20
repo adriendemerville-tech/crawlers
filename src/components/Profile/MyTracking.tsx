@@ -1065,7 +1065,11 @@ export function MyTracking() {
               {/* Main content */}
               <div className="flex-1 min-w-0">
 
-              {currentSite && (
+              {showApiPanel && !currentSite && (
+                <ExternalApisTab />
+              )}
+
+              {currentSite && !showApiPanel && (
                 <div className="space-y-6">
                   {/* Site header */}
                   <div className="flex items-center justify-between">
