@@ -1731,7 +1731,7 @@ export function MyTracking() {
                   {/* Keywords, Quick Wins — real or simulated (admin only) */}
                   {(() => {
                     const realKw = latestSerpData?.sample_keywords?.length > 0 ? latestSerpData.sample_keywords : null;
-                    const shouldSimulate = !realKw;
+                    const shouldSimulate = !realKw && simulatedDataEnabled;
                     const simKw = shouldSimulate ? [
                       { keyword: 'agence seo paris', position: 3, search_volume: 2400, url: `https://${currentSite?.domain}/` },
                       { keyword: 'audit seo gratuit', position: 7, search_volume: 1900, url: `https://${currentSite?.domain}/audit` },
