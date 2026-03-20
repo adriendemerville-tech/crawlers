@@ -22,6 +22,7 @@ import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 import { LLMVisibilityCard } from './LLMVisibilityCard';
+import { ClientTargetsCard } from './ClientTargetsCard';
 import { LLMTargetQueriesCard } from '@/components/LLMTargetQueriesCard';
 import { PriorityContentCard } from './PriorityContentCard';
 import { PainScoreCard } from './PainScoreCard';
