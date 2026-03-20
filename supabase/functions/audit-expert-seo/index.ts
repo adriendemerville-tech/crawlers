@@ -1822,6 +1822,9 @@ Deno.serve(async (req) => {
       doc ? checkBrokenLinks(doc, normalizedUrl) : Promise.resolve({ total: 0, broken: [], checked: 0, corsBlocked: 0, verdict: 'optimal' as const })
     ]);
     
+    // Step 2b: Check sitemap/robots.txt coherence (depends on robotsAnalysis)
+    const sitemapRobotsCoherence = await checkSitemapRobotsCoherence(normalizedUrl, robotsAnalysis.content, robotsAnalysis.exists);
+    
     // Step 3: DOM-based HTML analysis
     const htmlAnalysis = analyzeHtmlWithDOM(smartFetchResult.html, normalizedUrl);
     
