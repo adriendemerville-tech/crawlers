@@ -1,0 +1,1 @@
+ALTER TABLE public.site_script_rules ADD COLUMN IF NOT EXISTS script_source text NOT NULL DEFAULT 'native' CHECK (script_source IN ('native', 'wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'custom'));
