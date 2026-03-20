@@ -1958,6 +1958,16 @@ export function MyTracking() {
           />
         );
       })()}
+
+      {/* Site Identity Modal */}
+      {currentSite && (
+        <SiteIdentityModal
+          open={showIdentityModal}
+          onOpenChange={setShowIdentityModal}
+          site={currentSite}
+          onUpdate={() => fetchSites()}
+        />
+      )}
     </div>
   );
 }
