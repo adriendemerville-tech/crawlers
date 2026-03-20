@@ -22,6 +22,7 @@ import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 import { LLMVisibilityCard } from './LLMVisibilityCard';
+import { ClientTargetsCard } from './ClientTargetsCard';
 import { LLMTargetQueriesCard } from '@/components/LLMTargetQueriesCard';
 import { PriorityContentCard } from './PriorityContentCard';
 import { PainScoreCard } from './PainScoreCard';
@@ -249,6 +250,11 @@ export function StrategicInsights({
               onCorrectionSubmit={onCompetitorCorrection}
               isReanalyzing={isReanalyzing}
             />
+          )}
+
+          {/* 3b. Cibles Clients */}
+          {analysis.client_targets && (
+            <ClientTargetsCard data={analysis.client_targets} />
           )}
 
           {/* 4. Sentiment d'Expertise (E-E-A-T Tone) & Red Team */}

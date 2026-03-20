@@ -231,6 +231,15 @@ export default function Profile() {
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
+                {isAdmin && (
+                  <TabsTrigger
+                    value="bundle"
+                    className="flex-1 gap-2"
+                  >
+                    <Blocks className="h-4 w-4 text-orange-500" />
+                    <span className="hidden sm:inline">Bundle</span>
+                  </TabsTrigger>
+                )}
                 {!isProUser && (
                   <TabsTrigger value="reports" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />
@@ -270,15 +279,6 @@ export default function Profile() {
                   <TabsContent value="settings">
                     <ProfileSettings />
                   </TabsContent>
-                )}
-                {isAdmin && (
-                  <TabsTrigger
-                    value="bundle"
-                    className="flex-1 gap-2"
-                  >
-                    <Blocks className="h-4 w-4 text-orange-500" />
-                    <span className="hidden sm:inline">Bundle</span>
-                  </TabsTrigger>
                 )}
 
                 <TabsContent value="reports">

@@ -77,6 +77,7 @@ export function mapStrategicData(
       expertise_sentiment: data.expertise_sentiment || null,
       red_team: data.red_team || null,
       google_my_business: data.google_my_business || null,
+      client_targets: data.client_targets || null,
     },
   };
 }

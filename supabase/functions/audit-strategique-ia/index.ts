@@ -1619,7 +1619,16 @@ D. MOTS CLÉS: 11.5 Principaux avec volumes réels 12.Opportunités 13.Gaps Conc
 E. TECHNIQUE: 14.Accessibilité Bots IA 15.Performance 16.Cohérence Sémantique
 F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats IA-Ready 20.First-Party Data 21.Changelog Marque
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
-H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
+H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt
+I. CIBLES CLIENTS: 28.Cibles principales (B2B/B2C, segment, CSP, pouvoir d'achat, fréquence d'achat, mode paiement) 29.Cibles secondaires 30.Cibles potentielles non adressées
+
+RÈGLE CIBLES CLIENTS:
+- Analyser le contenu, le pricing, le ton, les CTA et les produits/services pour déduire les cibles.
+- Pour B2B: qualifier taille, secteur d'activité, segment métier (marketing, SEO, IT, etc.), rôle décisionnel, fréquence d'achat et mode de paiement.
+- Pour B2C: qualifier genre, tranche d'âge, CSP, pouvoir d'achat, fréquence d'achat et mode de paiement.
+- PRIMARY: 1-2 cibles les plus évidentes (confidence > 0.7). SECONDARY: 1-2 cibles secondaires (confidence 0.4-0.7). UNTAPPED: exactement 2 cibles potentielles non adressées avec rationale.
+- Remplir UNIQUEMENT b2b OU b2c selon le market, jamais les deux pour la même cible.
+- La zone géographique (geo_scope) et le pays sont transversaux B2B/B2C.`;
 
 const EDITORIAL_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
 
@@ -1869,6 +1878,7 @@ GÉNÈRE un JSON:
 "keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par 3/4 concurrents en H2 et corps de texte","suggested_placement":"Intégrer dans le H2 et le premier paragraphe"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"...","vs_competitors":"Comparaison densité sémantique vs top 3 SERP","top_missing_clusters":["cluster thématique manquant 1","2"]},"serp_recommendations":[{"action":"Action concrète pour remonter","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"2-4 semaines"}],"alternative_strategy":null},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Contenu|Autorité|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"client_targets":{"primary":[{"market":"B2B|B2C","b2b":{"segment":"...","sector":"...","job_segment":"...","role":"...","buying_frequency":"...","payment_mode":"..."},"b2c":{"gender":"...","age_range":"...","csp":"...","purchasing_power":"...","buying_frequency":"...","payment_mode":"..."},"geo_scope":"...","intent":"...","maturity":"...","confidence":0.0-1.0,"evidence":"..."}],"secondary":[...],"untapped":[{"market":"...","rationale":"...","confidence":0.3-0.6,...}]},
 "executive_summary":"2-3ph résumé du potentiel de cette page","overallScore":0-100,
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
@@ -1909,6 +1919,7 @@ GÉNÈRE un JSON:
 "keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[{"keyword":"...","volume":0,"current_rank":15,"action":"..."}],"content_gaps":[{"keyword":"mot-clé pertinent non classé","volume":100,"priority":"high|medium|low","action":"Créer une page dédiée..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par X concurrents","suggested_placement":"Où et comment l'intégrer"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"Analyse densité sémantique","vs_competitors":"Comparaison vs top SERP","top_missing_clusters":["cluster 1","cluster 2"]},"serp_recommendations":[{"action":"Action concrète","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"délai estimé"}],"alternative_strategy":null},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"client_targets":{"primary":[{"market":"B2B|B2C|B2B2C","b2b":{"segment":"TPE/Indépendants|PME|ETI/Grands comptes|Startups|Secteur public|Agences/Revendeurs","sector":"Tech/SaaS|E-commerce|Industrie|Santé|Finance|Immobilier|Éducation|Média|Juridique|Tourisme|Agriculture|Énergie|Autre","job_segment":"Marketing/Communication|SEO/SEA|Dev/IT|RH|Commercial|Direction générale|Achat|Logistique|R&D|Autre","role":"Dirigeant/CEO|CMO|CTO|Acheteur|Opérationnel","buying_frequency":"Ponctuel|Régulier|Récurrent|Saisonnier|Abonnement|Appel d'offres","payment_mode":"Abonnement mensuel|Abonnement annuel|Licence unique|Facturation projet|Crédit/Usage|Freemium→Payant"},"b2c":{"gender":"Homme|Femme|Enfant/Ado|Tous","age_range":"<18|18-25|26-35|36-50|51-65|65+","csp":"Étudiant|Employé|Cadre|Cadre supérieur|Profession libérale|Artisan/Commerçant|Fonctionnaire|Retraité|Sans emploi","purchasing_power":"Contraint|Classe moy. inf.|Classe moyenne|Classe moy. sup.|Aisé|Premium/Luxe|Ultra-premium","buying_frequency":"Ponctuel|Régulier|Récurrent|Saisonnier|Abonnement|Impulsif","payment_mode":"Abonnement mensuel|Abonnement annuel|Achat unique|Paiement fractionné|Crédit/Usage|Freemium→Payant"},"geo_scope":"Local|Régional|National|International","geo_country":"pays si détectable","intent":"Acheteur direct|Prescripteur|Utilisateur final|Chercheur d'info","maturity":"Awareness|Consideration|Decision|Loyalty","confidence":0.0-1.0,"evidence":"preuve issue du contenu crawlé"}],"secondary":[...],"untapped":[{"market":"...","rationale":"explication du potentiel non adressé","confidence":0.3-0.6,...}]},
 "executive_summary":"3-4ph CEO/CMO","overallScore":0-100,
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
@@ -1934,6 +1945,7 @@ RÈGLES:
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.
 - serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
 - alternative_strategy: UNIQUEMENT si position très défavorable (>50, faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking d'une URL. Types possibles: RP presse, partenariat (nommer l'entreprise idéale), stratégie vidéo réseaux sociaux, événement.
+- client_targets: OBLIGATOIRE. Analyse le contenu, le pricing, le positionnement pour déduire les cibles. primary: 1-2 cibles (confidence>0.7). secondary: 1-2 cibles (confidence 0.4-0.7). untapped: exactement 2 cibles non adressées avec rationale. Pour chaque cible, remplir SOIT b2b SOIT b2c selon le market.
 - JSON pur, sans virgules traînantes`;
 }
 
@@ -2262,6 +2274,7 @@ function buildFallbackResult(url: string, domain: string, marketData: MarketData
       competitive_landscape: { leader: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, direct_competitor: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, challenger: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, inspiration_source: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' } },
       geo_readiness: { citability_score: 0, readiness_level: 'basic', analysis: 'Non disponible', strengths: [], weaknesses: [], recommendations: [] },
       executive_roadmap: [],
+      client_targets: { primary: [], secondary: [], untapped: [] },
       keyword_positioning: marketData ? {
         main_keywords: marketData.top_keywords.slice(0, 5).map(kw => ({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, current_rank: kw.current_rank })),
         quick_wins: [], content_gaps: [], opportunities: [], competitive_gaps: [], recommendations: [],
