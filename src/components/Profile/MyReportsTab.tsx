@@ -154,6 +154,7 @@ export function MyReportsTab() {
       .order('position')
       .then(({ data }) => {
         setSites(data || []);
+        setOrderedSites(data || []);
       });
   }, [user]);
 
