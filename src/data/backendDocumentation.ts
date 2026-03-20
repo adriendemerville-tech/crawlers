@@ -51,16 +51,18 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  94 fonctions serverless + 21 modules partagés        │
+│  109 fonctions serverless + 21 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
+│  - CMS bridges (WordPress, Drupal, Shopify, Wix)         │
+│  - Google integrations (Ads, GSC, GA4, GTM)              │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  50+ tables avec RLS, fonctions PL/pgSQL, triggers    │
+│  55+ tables avec RLS, fonctions PL/pgSQL, triggers    │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -72,14 +74,16 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 94 fonctions serverless + 21 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 109 fonctions serverless + 21 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
-| Storage | Supabase Storage | Logos agence, PDFs |
+| Storage | Supabase Storage | Logos agence, PDFs, plugins |
 | Payments | Stripe | Abonnements, crédits, webhooks |
 | AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu |
 | Crawling | Firecrawl API | Map + scrape multi-pages |
 | Anti-détection | StealthFetch (custom) | User-Agent rotation, headers, retries |
+| SEO Data | DataForSEO API | SERP rankings, backlinks, indexed pages |
+| Analytics | Google Analytics 4 + GSC | Trafic, Search Console |
 
 ## Flux de données principal
 
@@ -95,6 +99,9 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 - **Fire-and-forget workers** : Le crawl multi-pages lance un job puis déclenche le worker de manière asynchrone
 - **Token tracking** : Chaque appel API externe est tracké dans \`api_call_logs\` (via \`_shared/tokenTracker.ts\`)
 - **SSRF protection** : Toutes les URLs utilisateur sont validées contre les IPs privées (via \`_shared/ssrf.ts\`)
+- **Circuit breaker** : Protection contre les cascades de pannes API (via \`_shared/circuitBreaker.ts\`)
+- **Fair use** : Rate limiting par utilisateur (via \`_shared/fairUse.ts\` + \`check_fair_use_v2\` RPC)
+- **IP rate limiting** : Protection des endpoints publics (via \`_shared/ipRateLimiter.ts\`)
 `,
   },
 
@@ -114,10 +121,12 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
-| \`profiles\` | Profil utilisateur étendu | \`user_id\`, \`email\`, \`plan_type\`, \`credits_balance\`, \`subscription_status\`, champs marque blanche (agency_*) |
-| \`user_roles\` | Rôles applicatifs (RBAC) | \`user_id\`, \`role\` (enum: admin/créateur, viewer, viewer_level2, moderator, user) |
+| \`profiles\` | Profil utilisateur étendu | \`user_id\`, \`email\`, \`plan_type\`, \`credits_balance\`, \`subscription_status\`, champs marque blanche (agency_*), \`api_key\` |
+| \`user_roles\` | Rôles applicatifs (RBAC) | \`user_id\`, \`role\` (enum: admin, moderator, user), \`expires_at\` |
 | \`billing_info\` | Informations de facturation | \`user_id\`, \`stripe_customer_id\`, \`vat_number\`, adresse |
 | \`credit_transactions\` | Historique des transactions | \`user_id\`, \`amount\`, \`transaction_type\`, \`stripe_session_id\` |
+| \`user_activity_log\` | Journal d'activité utilisateur | \`user_id\`, \`last_gmb_action_at\`, \`last_strategic_audit_at\`, \`last_llm_depth_test_at\` |
+| \`archived_users\` | Utilisateurs supprimés (archivage) | \`original_user_id\`, \`email\`, \`profile_snapshot\`, \`archive_reason\` |
 
 ### Audits & Rapports
 
@@ -127,7 +136,10 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`saved_reports\` | Rapports sauvegardés | \`user_id\`, \`url\`, \`report_type\` (enum), \`report_data\` (JSON), \`folder_id\` |
 | \`report_folders\` | Organisation en dossiers | \`user_id\`, \`name\`, \`parent_id\`, \`position\` |
 | \`audit_cache\` | Cache des résultats d'audit | \`cache_key\`, \`function_name\`, \`result_data\`, \`expires_at\` |
-| \`action_plans\` | Plans d'action générés | \`user_id\`, \`url\`, \`audit_type\`, \`tasks\` (JSON) |
+| \`audit_raw_data\` | Données brutes d'audit (pour Architecte) | \`user_id\`, \`url\`, \`domain\`, \`audit_type\`, \`raw_payload\`, \`source_functions\` |
+| \`audit_recommendations_registry\` | Registre des recommandations | \`recommendation_id\`, \`title\`, \`priority\`, \`category\`, \`fix_type\`, \`is_resolved\` |
+| \`action_plans\` | Plans d'action générés | \`user_id\`, \`url\`, \`audit_type\`, \`tasks\` (JSON), \`is_archived\` |
+| \`audit_impact_snapshots\` | Snapshots d'impact T+30/60/90 | \`url\`, \`domain\`, \`audit_scores\`, \`gsc_baseline\`, \`gsc_t30\`...\`gsc_t90\` |
 
 ### Crawl Engine
 
@@ -136,12 +148,17 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`site_crawls\` | Sessions de crawl | \`user_id\`, \`domain\`, \`status\`, \`total_pages\`, \`credits_used\` |
 | \`crawl_jobs\` | Jobs de processing | \`crawl_id\`, \`urls_to_process\` (JSON), \`status\`, \`max_depth\`, \`url_filter\` |
 | \`crawl_pages\` | Pages analysées | \`crawl_id\`, \`url\`, \`seo_score\`, \`http_status\`, \`title\`, \`meta_description\`, maillage, images, schema.org |
+| \`crawl_index_history\` | Historique d'indexation hebdo | \`domain\`, \`indexed_count\`, \`noindex_count\`, \`sitemap_count\`, \`week_start_date\` |
 
 ### Tracking & Analytics
 
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
-| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\` |
+| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\`, \`market_sector\`, \`client_targets\`, \`jargon_distance\`, \`api_key\` |
+| \`user_stats_history\` | Historique KPIs hebdomadaire | \`tracked_site_id\`, \`seo_score\`, \`geo_score\`, \`llm_citation_rate\`, \`raw_data\` (SERP, perf, LLM) |
+| \`serp_snapshots\` | Snapshots SERP DataForSEO | \`tracked_site_id\`, \`total_keywords\`, \`avg_position\`, \`top_3/10/50\`, \`sample_keywords\` |
+| \`backlink_snapshots\` | Snapshots backlinks hebdo | \`tracked_site_id\`, \`referring_domains\`, \`backlinks_total\`, \`domain_rank\` |
+| \`ga4_history_log\` | Historique GA4 hebdomadaire | \`tracked_site_id\`, \`pageviews\`, \`sessions\`, \`bounce_rate\`, \`engagement_rate\` |
 | \`analytics_events\` | Événements utilisateur | \`event_type\`, \`url\`, \`session_id\`, \`event_data\` (JSON) |
 | \`analyzed_urls\` | Index des URLs analysées | \`url\`, \`domain\`, \`analysis_count\` |
 
@@ -154,6 +171,18 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`cto_agent_logs\` | Logs de l'Agent CTO | \`function_analyzed\`, \`decision\`, \`confidence_score\`, \`proposed_change\` |
 | \`prompt_registry\` | Registre des prompts versionnés | \`function_name\`, \`prompt_text\`, \`version\`, \`is_champion\` |
 | \`hallucination_corrections\` | Corrections d'hallucinations | \`url\`, \`original_values\`, \`corrected_values\`, \`discrepancies\` |
+| \`llm_depth_conversations\` | Conversations LLM Depth | \`domain\`, \`model\`, \`messages\`, \`expires_at\` |
+
+### Cocoon (Architecture Sémantique)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`semantic_nodes\` | Nœuds du graphe sémantique | \`tracked_site_id\`, \`url\`, \`keywords\`, \`cluster_id\`, \`page_type\`, \`intent\`, \`roi_predictive\` |
+| \`cocoon_sessions\` | Sessions de cocon sauvegardées | \`tracked_site_id\`, \`nodes_snapshot\`, \`edges_snapshot\`, \`cluster_summary\` |
+| \`cocoon_recommendations\` | Recommandations IA Cocoon | \`tracked_site_id\`, \`recommendation_text\`, \`summary\`, \`is_applied\` |
+| \`cocoon_tasks\` | Tâches liées au cocon | \`tracked_site_id\`, \`title\`, \`priority\`, \`status\` |
+| \`cocoon_chat_histories\` | Historique chat IA Cocoon | \`tracked_site_id\`, \`messages\`, \`session_hash\` |
+| \`cocoon_errors\` | Erreurs détectées par Cocoon | \`domain\`, \`problem_description\`, \`ai_response\`, \`status\` |
 
 ### Google My Business (GMB)
 
@@ -164,25 +193,46 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`gmb_posts\` | Publications GMB | \`gmb_location_id\`, \`post_type\` (STANDARD/EVENT/OFFER), \`summary\`, \`status\`, \`published_at\` |
 | \`gmb_performance\` | Stats hebdomadaires | \`gmb_location_id\`, \`week_start_date\`, \`search_views\`, \`maps_views\`, \`website_clicks\`, \`phone_calls\`, \`avg_rating\` |
 
+### CMS & Intégrations
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`cms_connections\` | Connexions CMS (WP, Drupal, Shopify, Webflow, Wix) | \`tracked_site_id\`, \`platform\`, \`auth_method\`, \`status\`, \`capabilities\` |
+| \`google_ads_connections\` | Connexions Google Ads OAuth | \`user_id\`, \`tracked_site_id\`, \`customer_id\`, \`access_token\`, \`refresh_token\` |
+| \`tool_api_keys\` | Clés API outils tiers (GTmetrix, Rank Math, Link Whisper) | \`user_id\`, \`tool_name\`, \`api_key\`, \`tracked_site_id\` |
+| \`site_script_rules\` | Règles d'injection de scripts | \`domain_id\`, \`url_pattern\`, \`payload_type\`, \`payload_data\`, \`version\` |
+| \`site_script_rules_history\` | Historique de versionnement | \`rule_id\`, \`version\`, \`payload_data\` |
+
+### Bundle (Marketplace APIs)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`bundle_api_catalog\` | Catalogue des APIs disponibles | \`api_name\`, \`api_url\`, \`seo_segment\`, \`crawlers_feature\`, \`is_active\`, \`display_order\` |
+| \`bundle_subscriptions\` | Abonnements utilisateurs | \`user_id\`, \`selected_apis\`, \`api_count\`, \`monthly_price_cents\`, \`status\`, \`display_order\` |
+
 ### Agence (Marque Blanche)
 
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
 | \`agency_clients\` | Clients de l'agence | \`owner_user_id\`, \`first_name\`, \`last_name\`, \`company\` |
+| \`agency_client_sites\` | Association client ↔ site | \`client_id\`, \`tracked_site_id\` |
 | \`agency_team_members\` | Membres de l'équipe | \`owner_user_id\`, \`member_user_id\`, \`role\` |
 | \`agency_invitations\` | Invitations d'équipe | \`token\`, \`email\`, \`role\`, \`status\`, \`expires_at\` |
 
-## Relations clés
+### E-commerce & Revenus
 
-\`\`\`
-profiles.user_id ──────→ auth.users.id (1:1)
-user_roles.user_id ────→ auth.users.id (N:1)
-saved_reports.folder_id → report_folders.id (N:1)
-crawl_jobs.crawl_id ───→ site_crawls.id (N:1)
-crawl_pages.crawl_id ──→ site_crawls.id (N:1)
-predictions.audit_id ──→ pdf_audits.id (N:1)
-actual_results.prediction_id → predictions.id (N:1)
-\`\`\`
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`revenue_events\` | Événements de revenus e-commerce | \`tracked_site_id\`, \`amount\`, \`currency\`, \`transaction_date\`, \`source\` |
+| \`affiliate_codes\` | Codes affiliés | \`code\`, \`discount_percent\`, \`max_activations\`, \`current_activations\` |
+
+### Emails & Notifications
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`email_send_log\` | Journal d'envoi d'emails | \`recipient_email\`, \`template_name\`, \`status\`, \`message_id\` |
+| \`email_send_state\` | Configuration de la file d'attente | \`batch_size\`, \`send_delay_ms\`, \`retry_after_until\` |
+| \`email_unsubscribe_tokens\` | Tokens de désinscription | \`email\`, \`token\`, \`used_at\` |
 
 ## Fonctions SQL importantes
 
@@ -190,7 +240,15 @@ actual_results.prediction_id → predictions.id (N:1)
 |----------|------|-------------|
 | \`use_credit(p_user_id, p_amount, p_description)\` | RPC | Débite les crédits de manière atomique |
 | \`has_role(_user_id, _role)\` | SECURITY DEFINER | Vérifie un rôle sans récursion RLS |
-| \`handle_new_user()\` | Trigger | Crée un profil automatiquement à l'inscription |
+| \`check_fair_use_v2(p_user_id, p_action, p_hourly, p_daily)\` | RPC | Rate limiting par action |
+| \`check_rate_limit(p_user_id, p_action, p_max, p_window)\` | RPC | Rate limiting générique |
+| \`atomic_credit_update(p_user_id, p_amount)\` | RPC | Mise à jour atomique des crédits |
+| \`get_site_revenue(p_site_id, p_start, p_end)\` | RPC | Calcul du CA e-commerce |
+| \`get_database_size()\` | RPC | Taille de la base de données |
+| \`upsert_user_activity(p_user_id, p_field, p_timestamp)\` | RPC | MAJ journal d'activité |
+| \`grant_welcome_credits()\` | Trigger | 25 crédits offerts aux 1000 premiers inscrits |
+| \`protect_profile_fields()\` | Trigger | Empêche la modification client de \`credits_balance\`, \`plan_type\`, etc. |
+| \`generate_referral_code()\` | Trigger | Génère un code de parrainage unique |
 
 ## Row-Level Security (RLS)
 
@@ -211,6 +269,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
 
 - Rôles stockés dans \\\`user_roles\\\` (table séparée, jamais sur \\\`profiles\\\`)
 - Fonction \\\`has_role()\\\` (SECURITY DEFINER) empêche la récursion RLS
+- Support d'expiration des rôles via \\\`expires_at\\\` + \\\`cleanup_expired_roles()\\\`
 - Les edge functions vérifient \\\`has_role(uid, 'admin')\\\` côté serveur
 - Le Créateur peut masquer la documentation pour tous les viewers via toggle
 `,
@@ -224,7 +283,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions
+# API — Edge Functions (109 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -242,6 +301,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA (Gemini) |
 | \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
+| \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
 | \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
@@ -257,7 +317,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 
 | Endpoint | Auth | Crédits | Description |
 |----------|------|---------|-------------|
-| \`generate-corrective-code\` | ✅ | 2 | Génère le code correctif JS |
+| \`generate-corrective-code\` | ✅ | 2 | Génère le code correctif JS/PHP/Liquid |
 | \`get-final-script\` | ✅ | 0 | Récupère le script final validé |
 | \`generate-target-queries\` | ✅ | 1 | Génère des requêtes cibles LLM |
 | \`generate-more-keywords\` | ✅ | 1 | Extension de mots-clés |
@@ -265,19 +325,41 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) — accès aux données crawl, audit, SERP, backlinks, GSC, GA4 du domaine. Réponses limitées à 1000 caractères. Restreint au domaine affiché. |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
+| \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
+| \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
+
+## Calculs & Métriques
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`calculate-cocoon-logic\` | ✅ | Calcul du graphe sémantique Cocoon |
+| \`calculate-ias\` | ✅ | Indice d'Alignement Stratégique |
+| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
+| \`calculate-llm-visibility\` | ✅ | Score de visibilité LLM |
+| \`calculate-llm-volumes\` | ✅ | Volumes LLM estimés |
+| \`calculate-sov\` | ✅ | Part de voix (Share of Voice) |
+| \`measure-audit-impact\` | ✅ | Mesure d'impact post-audit |
+| \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
+| \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
+| \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
 
 ## Utilisateur & Billing
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`ensure-profile\` | ✅ | Crée le profil si inexistant |
+| \`auth-actions\` | ✅ | Actions d'authentification groupées |
+| \`delete-account\` | ✅ | Suppression de compte (archivage) |
+| \`restore-archived-user\` | ✅ | Restauration d'un compte archivé |
 | \`create-checkout\` | ✅ | Session Stripe pour achat audit |
 | \`create-credit-checkout\` | ✅ | Session Stripe pour achat crédits |
 | \`create-subscription-session\` | ✅ | Session Stripe pour abonnement |
 | \`create-customer-portal\` | ✅ | Portail client Stripe |
-| \`stripe-webhook\` | ❌ | Webhook Stripe (signature vérifié) |
+| \`stripe-webhook\` | ❌ | Webhook Stripe (signature vérifiée) |
+| \`stripe-actions\` | ✅ | Actions Stripe groupées |
+| \`track-payment\` | ✅ | Tracking paiements |
 | \`apply-referral\` | ✅ | Applique un code de parrainage |
 | \`apply-affiliate\` | ✅ | Applique un code affilié |
 | \`apply-retention-offer\` | ✅ | Applique une offre de rétention |
@@ -287,16 +369,66 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`send-verification-code\` | ✅ | Envoie un code de vérification email |
 | \`verify-email-code\` | ✅ | Vérifie un code email |
 | \`admin-update-plan\` | ✅ | MAJ plan utilisateur (admin) |
+| \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
+
+## Intégrations Google
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`gsc-auth\` | ✅ | OAuth Google Search Console |
+| \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
+| \`google-ads-connector\` | ✅ | OAuth2 Google Ads + récupération données campagnes |
+| \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
+| \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
+| \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP de tous les sites |
+| \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+
+## CMS & Bridges externes
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`wpsync\` | ✅ | Synchronisation WordPress |
+| \`drupal-actions\` | ✅ | Bridge CMS Drupal |
+| \`iktracker-actions\` | ✅ | Bridge IKtracker (CRUD pages/articles) |
+| \`register-cms-webhook\` | ✅ | Enregistrement webhooks CMS |
+| \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
+| \`webhook-woo-orders\` | ❌ | Webhook WooCommerce (commandes) |
+
+## Outils tiers (Bundle APIs)
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`gtmetrix-actions\` | ✅ | Audits de performance GTmetrix |
+| \`rankmath-actions\` | ✅ | Gestion métadonnées SEO Rank Math (WordPress) |
+| \`linkwhisper-actions\` | ✅ | Maillage interne Link Whisper (WordPress) |
 
 ## Partage & Export
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`share-report\` | ✅ | Crée un lien de partage temporaire |
+| \`share-actions\` | ✅ | Actions de partage groupées |
 | \`resolve-share\` | ❌ | Résout un lien de partage |
 | \`track-share-click\` | ❌ | Compteur de clics partage |
 | \`save-audit\` | ✅ | Sauvegarde un audit |
 | \`download-plugin\` | ✅ | Télécharge le plugin WordPress |
+
+## Scripts & Déploiement
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`serve-client-script\` | ❌ | Sert le script client (widget.js) |
+| \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
+| \`archive-solution\` | ✅ | Archive une solution/correctif |
+| \`verify-injection\` | ✅ | Vérifie l'injection d'un script |
+| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
+| \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
+
+## GMB (Google My Business)
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`gmb-actions\` | ✅ | CRUD fiches GMB, avis, posts, stats |
 
 ## Divers
 
@@ -305,70 +437,24 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`track-analytics\` | ❌ | Tracking événements analytics |
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
+| \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
 | \`agent-seo\` | ✅ | Agent SEO autonome |
-| \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
-| \`calculate-llm-volumes\` | ✅ | Calcul volumes LLM |
-| \`calculate-llm-visibility\` | ✅ | Calcul score visibilité LLM |
-| \`calculate-ias\` | ✅ | Calcul Indice d'Alignement Stratégique |
-| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
-| \`measure-audit-impact\` | ✅ | Mesure d'impact post-audit |
-| \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
-| \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
-| \`update-market-trends\` | ✅ | MAJ tendances marché |
-| \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
-| \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
-| \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
+| \`update-market-trends\` | ✅ | MAJ tendances marché |
+| \`update-config\` | ✅ | MAJ configuration système |
+| \`view-function-source\` | ✅ | Consultation source d'une edge function |
+| \`run-backend-tests\` | ✅ | Exécute les tests backend |
+| \`health-check\` | ❌ | Vérification santé du système |
+| \`check-widget-health\` | ❌ | Vérification santé du widget |
 | \`sdk-status\` | ❌ | Statut du SDK widget |
+| \`widget-connect\` | ❌ | Connexion du widget externe |
 | \`sitemap\` | ❌ | Génération sitemap XML |
 | \`rss-feed\` | ❌ | Flux RSS du blog |
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
-| \`widget-connect\` | ❌ | Connexion du widget externe |
-| \`serve-client-script\` | ❌ | Sert le script client GTM |
-| \`wpsync\` | ✅ | Synchronisation WordPress |
 | \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
 | \`process-email-queue\` | ✅ | Worker file d'attente emails |
-| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
-| \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
-| \`archive-solution\` | ✅ | Archive une solution/correctif |
-| \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
-| \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
-| \`view-function-source\` | ✅ | Consultation source d'une edge function |
-| \`run-backend-tests\` | ✅ | Exécute les tests backend |
-| \`update-config\` | ✅ | MAJ configuration système |
-
-## Exemple de requête
-
-\`\`\`bash
-curl -X POST \\
-  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/check-geo \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <anon_key>" \\
-  -d '{"url": "https://example.com"}'
-\`\`\`
-
-## Exemple de réponse (check-geo)
-
-\`\`\`json
-{
-  "success": true,
-  "scores": {
-    "global": 72,
-    "technical": 85,
-    "content": 68,
-    "authority": 63
-  },
-  "recommendations": [
-    {
-      "category": "technical",
-      "priority": "high",
-      "title": "Ajouter des données structurées FAQ",
-      "description": "..."
-    }
-  ]
-}
-\`\`\`
 `,
   },
 
@@ -446,18 +532,23 @@ Phase 1: MAPPING         Phase 2: QUEUING          Phase 3: PROCESSING
 | \`title\` | string | Balise \`<title>\` |
 | \`meta_description\` | string | Meta description |
 | \`h1\` | string | Premier H1 |
-| \`h2_count\`, \`h3_count\` | number | Compteurs de headings |
+| \`h2_count\`, \`h3_count\`, \`h4_h6_count\` | number | Compteurs de headings |
 | \`word_count\` | number | Nombre de mots |
 | \`http_status\` | number | Code HTTP |
 | \`internal_links\` | number | Liens internes |
 | \`external_links\` | number | Liens externes |
 | \`images_total\` | number | Total images |
 | \`images_without_alt\` | number | Images sans alt |
-| \`has_canonical\`, \`has_schema_org\`, \`has_og\` | boolean | Présence de balises |
+| \`has_canonical\`, \`has_schema_org\`, \`has_og\`, \`has_hreflang\`, \`has_noindex\`, \`has_nofollow\` | boolean | Présence de balises |
 | \`broken_links\` | JSON | Liste des liens cassés |
 | \`seo_score\` | number | Score SEO calculé |
 | \`response_time_ms\` | number | Temps de réponse |
 | \`schema_org_types\` | JSON | Types schema.org détectés |
+| \`schema_org_errors\` | JSON | Erreurs dans les schémas |
+| \`anchor_texts\` | JSON | Textes d'ancrage |
+| \`crawl_depth\` | number | Profondeur de crawl |
+| \`html_size_bytes\` | number | Taille HTML |
+| \`content_hash\` | string | Hash du contenu (détection duplicata) |
 
 ## Anti-détection (\`stealthFetch\`)
 
@@ -512,28 +603,25 @@ Ces variables sont injectées automatiquement dans chaque Edge Function :
 
 ## Secrets Backend (Edge Functions)
 
-Ces secrets doivent être configurés dans la console Lovable Cloud :
+Ces secrets sont configurés dans Lovable Cloud :
 
 | Secret | Utilisé par | Description |
 |--------|-------------|-------------|
-| \`STRIPE_SECRET_KEY\` | \`create-checkout\`, \`stripe-webhook\`, billing | Clé secrète Stripe |
+| \`STRIPE_SECRET_KEY\` | billing, webhooks | Clé secrète Stripe |
 | \`STRIPE_WEBHOOK_SECRET\` | \`stripe-webhook\` | Secret de signature webhook |
-| \`FIRECRAWL_API_KEY\` | \`crawl-site\`, \`process-crawl-queue\` | Clé API Firecrawl (scraping) |
+| \`FIRECRAWL_API_KEY\` | crawl engine | Clé API Firecrawl (scraping) |
 | \`GOOGLE_PAGESPEED_API_KEY\` | \`check-pagespeed\` | Clé API Google PageSpeed Insights |
-| \`GOOGLE_CSE_API_KEY\` | \`check-llm\` | Clé API Google Custom Search |
-| \`GOOGLE_CSE_ID\` | \`check-llm\` | ID du moteur de recherche personnalisé |
-| \`GOOGLE_CLIENT_ID\` | \`gsc-auth\` | OAuth Google Search Console |
-| \`GOOGLE_CLIENT_SECRET\` | \`gsc-auth\` | OAuth Google Search Console |
+| \`GOOGLE_GSC_CLIENT_ID\` | \`gsc-auth\` | OAuth Google Search Console |
+| \`GOOGLE_GSC_CLIENT_SECRET\` | \`gsc-auth\` | OAuth Google Search Console |
 | \`TURNSTILE_SECRET_KEY\` | \`verify-turnstile\` | Secret Cloudflare Turnstile |
-| \`NEWS_API_KEY\` | \`fetch-news\` | Clé API pour actualités |
-
-## Variables optionnelles
-
-| Secret | Utilisé par | Description |
-|--------|-------------|-------------|
-| \`BROWSERLESS_API_KEY\` | Rendering SPA | Clé Browserless (rendu JS headless) |
-| \`DATAFORSEO_LOGIN\` | \`measure-audit-impact\` | Login DataForSEO |
-| \`DATAFORSEO_PASSWORD\` | \`measure-audit-impact\` | Password DataForSEO |
+| \`DATAFORSEO_LOGIN\` | SERP, backlinks | Login DataForSEO |
+| \`DATAFORSEO_PASSWORD\` | SERP, backlinks | Password DataForSEO |
+| \`OPENROUTER_API_KEY\` | fallback IA | Clé OpenRouter (backup) |
+| \`LOVABLE_API_KEY\` | Lovable AI | Accès aux modèles Gemini/GPT |
+| \`IKTRACKER_API_KEY\` | \`iktracker-actions\` | Clé bridge IKtracker |
+| \`FLY_RENDERER_URL\` | rendering SPA | URL du renderer Fly.io |
+| \`FLY_RENDERER_SECRET\` | rendering SPA | Secret Fly.io |
+| \`RENDERING_API_KEY\` | rendu headless | Clé API rendering |
 
 ## Sécurité
 
@@ -552,7 +640,7 @@ Ces secrets doivent être configurés dans la console Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/)
+# Modules Partagés (_shared/) — 21 modules
 
 Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions.
 
@@ -561,57 +649,65 @@ Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés
 ### \`cors.ts\`
 Headers CORS standard pour les réponses Edge Functions.
 
-\`\`\`typescript
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-\`\`\`
+### \`supabaseClient.ts\`
+Factory pour créer le client Supabase côté serveur (service role).
+
+### \`auth.ts\`
+Utilitaires d'authentification : extraction JWT, vérification utilisateur.
 
 ### \`stealthFetch.ts\`
-Wrapper anti-détection pour les requêtes HTTP sortantes.
-
-- Rotation de User-Agent (17+ agents)
-- Headers réalistes (Sec-CH-UA, Accept-Language, Referer)
-- Retries exponentiels avec jitter
-- Respect des en-têtes Retry-After
+Wrapper anti-détection pour les requêtes HTTP sortantes (17+ User-Agents, headers réalistes, retries).
 
 ### \`renderPage.ts\`
-Moteur de rendu pour les pages SPA/JavaScript.
-
-- Utilise Browserless (si disponible) pour le rendu headless
-- Fallback sur fetch direct avec StealthFetch
-- Extraction du HTML final après exécution JS
+Moteur de rendu SPA : Fly.io → Browserless → fetch direct (cascade de fallbacks).
 
 ### \`auditCache.ts\`
-Système de cache pour les résultats d'audit.
-
-- Clé de cache basée sur : URL + fonction + paramètres
-- TTL configurable par fonction
-- Invalidation automatique à l'expiration
+Cache des résultats d'audit (TTL configurable, invalidation automatique).
 
 ### \`tokenTracker.ts\`
-Tracking des appels API externes payants.
-
-- Log chaque appel dans \`api_call_logs\`
-- Utilisé pour le monitoring des coûts
-- Supporte : Firecrawl, Google PSI, DataForSEO, etc.
+Tracking des appels API externes payants dans \`api_call_logs\`.
 
 ### \`ssrf.ts\`
-Protection contre les attaques SSRF (Server-Side Request Forgery).
+Protection SSRF : bloque IPs privées, localhost, protocoles non-HTTP.
 
-- Bloque les IPs privées (10.x, 172.16-31.x, 192.168.x, 127.x)
-- Bloque les URLs \`localhost\`, \`0.0.0.0\`
-- Valide le protocole (HTTP/HTTPS uniquement)
+### \`circuitBreaker.ts\`
+Circuit breaker pour les API tierces : protège contre les cascades de pannes.
+
+### \`fairUse.ts\`
+Rate limiting par utilisateur et par action (via \`check_fair_use_v2\` RPC).
+
+### \`ipRateLimiter.ts\`
+Rate limiting par IP pour les endpoints publics.
+
+### \`safeBodyParser.ts\`
+Parsing sécurisé du body JSON avec validation et limites de taille.
+
+### \`enrichSiteContext.ts\`
+Enrichissement du contexte d'un site (secteur, cibles, mots-clés) pour les prompts IA.
+
+### \`getSiteContext.ts\`
+Récupération du contexte d'un site tracké depuis la base de données.
+
+### \`fetchGA4.ts\`
+Utilitaire de récupération des données Google Analytics 4.
+
+### \`resolveGoogleToken.ts\`
+Résolution et rafraîchissement des tokens OAuth Google (GSC, GA4, Ads).
+
+### \`saveRawAuditData.ts\`
+Persistance des données brutes d'audit dans \`audit_raw_data\`.
+
+### \`silentErrorLogger.ts\`
+Logger d'erreurs silencieux (insertion dans \`analytics_events\` sans bloquer le flux).
 
 ### \`trackUrl.ts\`
-Utilitaire d'enregistrement des URLs analysées.
-
-- Upsert dans \`analyzed_urls\`
-- Incrémente le compteur d'analyses
+Upsert dans \`analyzed_urls\` (compteur d'analyses).
 
 ### \`translations.ts\`
 Traductions pour le contenu généré côté serveur (emails, rapports).
+
+### \`email-templates/\`
+Templates HTML d'emails transactionnels (bienvenue, vérification, rapports).
 `,
   },
 
@@ -639,81 +735,34 @@ Les données SERP permettent de mesurer le positionnement Google d'un domaine : 
 | **Limite** | 1 000 mots-clés (triés par rang ascendant) |
 | **Secrets** | \`DATAFORSEO_LOGIN\`, \`DATAFORSEO_PASSWORD\` |
 
-## Edge Functions
+## Affichage côté client (3 composants)
 
-### \`fetch-serp-kpis\`
-Fonction unitaire : prend un \`domain\` et retourne les KPIs SERP calculés.
+### 1. \`SerpKpiBanner\` — Bandeau KPIs
+Affiche les métriques principales : position homepage, total mots-clés, ETV, pages indexées, avec barre de distribution Top 3/10/50.
 
-**Payload d'entrée :**
-\`\`\`json
-{ "domain": "example.com", "url": "https://example.com" }
-\`\`\`
+### 2. \`KeywordCloud\` — Nuage de mots-clés
+Badges interactifs en nuage. **Taille** proportionnelle à l'importance stratégique (volume × position). **Couleur** proportionnelle au ranking (vert = top 3, rouge = 50+). Tooltip avec position, volume et URL.
 
-**Payload de sortie :**
-\`\`\`json
-{
-  "data": {
-    "total_keywords": 142,
-    "avg_position": 28.3,
-    "homepage_position": 5,
-    "top_3": 3,
-    "top_10": 12,
-    "top_50": 67,
-    "etv": 1250,
-    "sample_keywords": [
-      { "keyword": "audit seo", "position": 3, "search_volume": 2400, "url": "..." }
-    ],
-    "measured_at": "2026-03-13T09:00:00Z"
-  }
-}
-\`\`\`
+### 3. \`TopKeywordsList\` — Top 20 positionnés
+Liste déroulante des 20 mots-clés sur lesquels l'URL rank le mieux. Affiche les 5 premiers avec bouton "voir les suivants". Badge couleur par position.
 
-### \`refresh-serp-all\`
-CRON hebdomadaire (lundi 05:00 Paris) : itère sur tous les \`tracked_sites\` et appelle \`fetch-serp-kpis\` pour chacun, puis met à jour l'entrée la plus récente de \`user_stats_history\`.
+### 4. \`QuickWinsCard\` — Recommandations Quick Wins
+Génère des recommandations automatiques basées sur les mots-clés proches de la page 1 (positions 8-25). Types : optimisation title, meta description, contenu, liens internes, structure Hn. Chaque recommendation peut être ajoutée au plan d'action (\`action_plans\`) en un clic, avec animation de paillettes.
 
 ## Stockage des données
 
-Les données SERP **ne sont pas dans une table dédiée**. Elles sont stockées dans la colonne \`raw_data\` (JSONB) de la table **\`user_stats_history\`**, sous la clé \`serpData\` :
-
-\`\`\`
-user_stats_history
-├── id (uuid)
-├── user_id (uuid)
-├── tracked_site_id (uuid)
-├── domain (text)
-├── raw_data (jsonb)
-│   ├── serpData ← 🎯 données SERP DataForSEO
-│   │   ├── total_keywords
-│   │   ├── avg_position
-│   │   ├── homepage_position
-│   │   ├── top_3 / top_10 / top_50
-│   │   ├── etv
-│   │   ├── sample_keywords[]
-│   │   └── measured_at
-│   ├── performanceScore
-│   ├── llmOverallScore
-│   └── ...autres KPIs
-└── recorded_at (timestamptz)
-\`\`\`
+Les données SERP sont stockées dans :
+1. **\`user_stats_history.raw_data.serpData\`** — JSONB dans la colonne raw_data
+2. **\`serp_snapshots\`** — Table dédiée pour l'historique et les fallbacks
 
 ## Déclencheurs de synchronisation
 
 | Déclencheur | Mécanisme |
 |-------------|-----------|
-| **Après audit technique** | Fire-and-forget via \`syncSerpToTrackedSite()\` dans \`ExpertAuditDashboard\` |
-| **Après audit stratégique** | Idem — même fonction appelée à la fin du flux stratégique |
-| **Rafraîchissement manuel** | Bouton 🔄 dans le bandeau SERP de 'Mes sites' (\`SerpKpiBanner\`) |
+| **Après audit technique** | Fire-and-forget via \`syncSerpToTrackedSite()\` |
+| **Après audit stratégique** | Idem |
+| **Rafraîchissement manuel** | Bouton 🔄 dans le bandeau SERP |
 | **CRON hebdomadaire** | \`refresh-serp-all\` tous les lundis à 05:00 (UTC+1) |
-
-## Affichage côté client
-
-Le composant \`SerpKpiBanner\` (dans \`src/components/Profile/SerpKpiBanner.tsx\`) affiche :
-- Position moyenne
-- Rang homepage
-- Total mots-clés (Top 100)
-- ETV (trafic mensuel estimé)
-
-Les données sont lues depuis la dernière entrée \`user_stats_history\` du site sélectionné.
 `,
   },
 
@@ -739,121 +788,112 @@ Le module Cocoon transforme les données de crawl d'un site en une **visualisati
 |---------|------|-------------|
 | \\\`id\\\` | uuid | Identifiant unique du nœud |
 | \\\`tracked_site_id\\\` | uuid (FK) | Référence vers \\\`tracked_sites\\\` |
-| \\\`user_id\\\` | uuid | Propriétaire du nœud |
 | \\\`url\\\` | text | URL de la page |
-| \\\`title\\\` | text | Titre SEO de la page |
-| \\\`h1\\\` | text | Contenu du H1 |
+| \\\`title\\\` | text | Titre SEO |
 | \\\`keywords\\\` | jsonb | Mots-clés extraits (top 10 TF) |
-| \\\`cluster_id\\\` | text | Identifiant du cluster (composantes connexes) |
-| \\\`depth\\\` | int | Profondeur : 0 = seed cluster, 1 = membre |
-| \\\`page_type\\\` | text | Type détecté : homepage, blog, produit, catégorie, faq, guide, contact, tarifs, légal, à propos, page |
-| \\\`intent\\\` | text | Intent classifié : transactional, commercial, informational, navigational |
-| \\\`internal_links_in\\\` | int | Nombre de liens entrants internes |
-| \\\`internal_links_out\\\` | int | Nombre de liens sortants internes |
-| \\\`word_count\\\` | int | Nombre de mots de la page |
-| \\\`crawl_depth\\\` | int | Profondeur de crawl (0 = homepage) |
-| \\\`traffic_estimate\\\` | float | Estimation du trafic mensuel |
-| \\\`cpc_value\\\` | float | CPC moyen (enrichi depuis audit) |
-| \\\`search_volume\\\` | int | Volume de recherche (enrichi depuis audit) |
-| \\\`keyword_difficulty\\\` | float | Difficulté du mot-clé (enrichi depuis audit) |
-| \\\`iab_score\\\` | float | Score Anti-Wiki (0-100) — difficulté SERP |
-| \\\`eeat_score\\\` | float | Score E-E-A-T (repris du seo_score crawl) |
+| \\\`cluster_id\\\` | text | Identifiant du cluster |
+| \\\`page_type\\\` | text | Type : homepage, blog, produit, catégorie, faq, guide, etc. |
+| \\\`intent\\\` | text | Intent : transactional, commercial, informational, navigational |
+| \\\`iab_score\\\` | float | Score Anti-Wiki (0-100) |
+| \\\`eeat_score\\\` | float | Score E-E-A-T |
 | \\\`roi_predictive\\\` | float | ROI annualisé prédictif (€) |
-| \\\`similarity_edges\\\` | jsonb | Top 10 nœuds les plus proches (cosinus TF-IDF) |
-| \\\`status\\\` | text | \\\`pending\\\` → \\\`computed\\\` |
+| \\\`similarity_edges\\\` | jsonb | Top 10 nœuds les plus proches |
 
 ## Edge Function : \\\`calculate-cocoon-logic\\\`
 
 ### Algorithme (100% déterministe, aucun LLM)
 
-1. **Authentification** : Vérifie JWT + plan agency_pro/agency_premium ou admin
-2. **Vérification propriété** : Le site tracké doit appartenir à l'utilisateur
-3. **Récupération des données** : Charge les pages du dernier crawl (\\\`crawl_pages\\\`), limité à **100 pages max** triées par profondeur
-4. **Filtrage** : Exclut les pages HTTP ≥ 400 (403, 500, etc.)
-5. **Enrichissement** : Croise avec les données d'audit existantes (\\\`audits\\\`) pour CPC, volume, KD, compétiteurs SERP
-6. **Extraction de mots-clés** : TF-based (top 10 termes par fréquence, hors stopwords FR/EN)
-7. **Classification intent** : Basée sur des listes de mots-clés transactionnels, navigationnels, commerciaux
-8. **Classification type de page** : Basée sur le path URL + titre/H1
-
-### Vectorisation TF-IDF
-
-\\\`\\\`\\\`
-Pour chaque page :
-  texte = titre + h1 + meta_description + keywords
-  tokens = tokenize(texte)  // ≥3 chars, sans stopwords FR/EN
-  TF = log(1 + count)
-  IDF = log(N / df)
-  vecteur = TF × IDF (sparse map)
-\\\`\\\`\\\`
-
-### Similarité cosinus (sparse)
-
-Calcul O(n²) entre toutes les paires de vecteurs TF-IDF :
-
-| Seuil | Type | Usage |
-|-------|------|-------|
-| ≥ 0.4 | **strong** | Lien sémantique fort |
-| ≥ 0.2 | **medium** | Lien modéré — utilisé pour le clustering |
-| ≥ 0.1 | **weak** | Lien faible — affiché mais pas dans les clusters |
-
-Chaque nœud conserve ses **10 meilleurs edges** triés par score.
-
-### Clustering (Composantes connexes)
-
-Les nœuds sont groupés via BFS sur les edges **medium+** (≥ 0.2). Chaque composante connexe = un cluster (\\\`cluster_0\\\`, \\\`cluster_1\\\`, etc.). Les nœuds isolés reçoivent un \\\`cluster_singleton_N\\\`.
-
-### Score Anti-Wiki (Iab)
-
-Le score Iab (0-100) mesure la difficulté de ranking face aux sites d'autorité :
-- **Wiki / Encyclopédies** (wikipedia, larousse, britannica…) : augmente la difficulté
-- **Gouvernement / .edu** (.gouv.fr, .gov, .edu) : augmente la difficulté
-- **Réseaux sociaux** (youtube, reddit, quora, linkedin…) : difficulté modérée
-- Formule : \\\`baseScore = (1 - authorityRatio) × 70 + (1 - socialRatio) × 30\\\`
-
-### ROI Prédictif
-
-\\\`\\\`\\\`
-estimatedCTR = max(0.01, (100 - KD) / 100 × 0.15)
-traffic = volume × CTR
-convRate = convPotential / 100 × 0.03
-ROI = traffic × CPC × convRate × 12  // annualisé
-\\\`\\\`\\\`
-
-### Estimation trafic
-
-- Si position SERP connue (1-10) : lookup table CTR (pos 1 = 28%, pos 10 = 2%)
-- Sinon : \\\`volume × max(0.01, (100 - KD) / 100 × 0.10)\\\`
-
-### Rate limiting & sécurité
-
-- IP rate limit : 5 appels / 60s
-- Erreurs loguées via \\\`silentErrorLogger\\\` + \\\`tokenTracker\\\`
-- Insert par batch de 50 nœuds
+1. Charge les pages du dernier crawl (limité à 100 pages)
+2. Filtrage : exclut HTTP ≥ 400
+3. Enrichissement depuis les données d'audit existantes
+4. Extraction de mots-clés TF-based
+5. Classification intent + type de page
+6. Vectorisation TF-IDF + similarité cosinus
+7. Clustering par composantes connexes (BFS sur edges ≥ 0.2)
 
 ## Frontend
 
-### Route : \\\`/cocoon\\\`
-
-- **Rendu Canvas D3.js** via \\\`CocoonForceGraph.tsx\\\` — supporte 500+ nœuds interactifs
-- **CocoonNodePanel.tsx** : Panneau latéral détaillé avec métriques Iab, GEO, ROI, maillage, mots-clés et liens de proximité sémantique — **entièrement i18n FR/EN/ES**
-- **Mode X-Ray** : Toggle pour révéler les nœuds fantômes (faible trafic)
-- **Légende dynamique** : N'affiche que les types de pages réellement présents dans le cocon, avec animation fade-in retardée (1.2s)
-- **Gate d'accès** : Vérification \\\`agency_pro\\\` / \\\`agency_premium\\\` / admin — i18n FR/EN/ES
-- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini 3 Flash avec accès complet aux données du domaine (crawl, audit, SERP, backlinks, GSC, GA4), sélection multi-nœuds (max 3), analyse comparative, streaming SSE, réponses limitées à 1000 caractères — i18n FR/EN/ES
-- **Bannière de troncature** : Affichée si le site dépasse 100 pages (dorée)
-- **Auto-refresh** : Détecte le retour de l'utilisateur après un audit/crawl dans un nouvel onglet et régénère automatiquement le cocon (via \\\`visibilitychange\\\` + vérification DB des nouveaux rapports)
-- **Navigation rapide** : Boutons vers Audit Expert, Crawl Multi-pages (nouveaux onglets) et Console (retour)
-
-### Route : \\\`/features/cocoon\\\`
-
-Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités.
-
-## RLS Policies
-
-- \\\`SELECT\\\` : \\\`user_id = auth.uid() OR has_role(auth.uid(), 'admin')\\\`
-- \\\`INSERT / UPDATE / DELETE\\\` : \\\`user_id = auth.uid()\\\`
+- **Rendu Canvas D3.js** via \`CocoonForceGraph.tsx\`
+- **CocoonNodePanel.tsx** : Panneau latéral détaillé — i18n FR/EN/ES
+- **CocoonAIChat** : Chat Gemini 3 Flash avec streaming SSE
+- **Mode X-Ray** : Toggle nœuds fantômes
+- **Légende dynamique** : N'affiche que les types présents
+- **Auto-refresh** : Détecte retour utilisateur après audit/crawl
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : INTÉGRATIONS TIERCES
+  // ───────────────────────────────────────────────
+  {
+    id: 'integrations',
+    title: 'Intégrations Tierces',
+    icon: 'Cable',
+    content: `
+# Intégrations Tierces
+
+## Google Ads
+
+| Élément | Détail |
+|---------|--------|
+| **Edge function** | \`google-ads-connector\` |
+| **Table** | \`google_ads_connections\` (\`customer_id\`, \`access_token\`, \`refresh_token\`, \`tracked_site_id\`) |
+| **OAuth2** | Scopes : \`https://www.googleapis.com/auth/adwords.readonly\` |
+| **Données** | Campagnes, dépenses, impressions, clics, conversions |
+| **Activation** | Carte dédiée dans Console → onglets API |
+
+## Google Tag Manager (GTM)
+
+| Élément | Détail |
+|---------|--------|
+| **Edge function** | \`gtm-actions\` |
+| **Scopes** | \`tagmanager.edit.containers\`, \`tagmanager.publish\` |
+| **Workflow** | Installation en 1-clic du widget.js via API GTM |
+| **Sécurité** | Utilise la clé API spécifique au site (\`tracked_sites.api_key\`) |
+
+## GTmetrix
+
+| Élément | Détail |
+|---------|--------|
+| **Edge function** | \`gtmetrix-actions\` |
+| **API** | REST v2.0 : \`https://gtmetrix.com/api/2.0/tests\` |
+| **Auth** | API Key (Basic Auth) stockée dans \`tool_api_keys\` |
+| **Données** | Lighthouse scores, Web Vitals (LCP, TBT, CLS), waterfall |
+
+## Rank Math SEO (WordPress)
+
+| Élément | Détail |
+|---------|--------|
+| **Edge function** | \`rankmath-actions\` |
+| **Endpoints** | \`/rankmath/v1/getHead\`, \`/rankmath/v1/getKeywords\` |
+| **Auth** | Application Password WordPress via \`tool_api_keys\` |
+| **Données** | SEO score, focus keywords, rich snippets config |
+
+## Link Whisper (WordPress)
+
+| Élément | Détail |
+|---------|--------|
+| **Edge function** | \`linkwhisper-actions\` |
+| **Endpoints** | \`/linkwhisper/v1/links\`, \`/linkwhisper/v1/suggestions\` |
+| **Auth** | Application Password WordPress via \`tool_api_keys\` |
+| **Données** | Internal links, suggestions auto-link, orphan pages |
+
+## Bundle Option (Marketplace)
+
+Le marketplace 'Bundle Option' dans la Console permet de s'abonner à des APIs tierces. Interface avec tri par Segment SEO, Fonction Crawlers et nom d'API. Tarification : 1€ × nombre d'APIs sélectionnées.
+
+## CMS supportés
+
+| CMS | Bridge | Fonctionnalités |
+|-----|--------|-----------------|
+| WordPress | \`wpsync\` + plugins | Sync bidirectionnelle, Rank Math, Link Whisper |
+| Drupal | \`drupal-actions\` | CRUD contenu via JSON:API |
+| Shopify | \`webhook-shopify-orders\` | Webhooks commandes, revenus |
+| WooCommerce | \`webhook-woo-orders\` | Webhooks commandes, revenus |
+| IKtracker | \`iktracker-actions\` | CRUD pages/articles via bridge dédié |
+`,
+  },
+
   // ───────────────────────────────────────────────
   // SECTION : INDICATEURS SEO / GEO / SERP / EEAT
   // ───────────────────────────────────────────────
@@ -873,18 +913,12 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | Indicateur | Construction |
 |------------|-------------|
 | **Score SEO** | Moyenne pondérée de 6 sous-scores : performance mobile, structure HTML (Hn, meta), sécurité (HTTPS, Safe Browsing), accessibilité bots, densité contenu et maillage. |
-| **Perf. Mobile** | Score PageSpeed Insights (API Google) mesurant LCP, FCP, CLS, TTFB et TBT sur émulation mobile Moto G Power. |
-| **Perf. Desktop** | Même calcul que Perf. Mobile mais sur émulation desktop via l'API PageSpeed Insights. |
-| **LCP (Largest Contentful Paint)** | Temps de rendu du plus grand élément visible (image ou bloc texte), mesuré en millisecondes par PageSpeed Insights. |
-| **FCP (First Contentful Paint)** | Temps avant l'affichage du premier texte ou image, mesuré en millisecondes par PageSpeed Insights. |
-| **CLS (Cumulative Layout Shift)** | Somme des décalages visuels inattendus pendant le chargement, score sans unité (0 = stable). |
-| **TTFB (Time To First Byte)** | Temps de réponse du serveur au premier octet, mesuré en millisecondes par PageSpeed Insights. |
-| **Ratio texte/HTML** | Pourcentage de contenu textuel visible par rapport au code HTML total, calculé après suppression des balises script/style/template. Exclu du score si la page est une homepage. |
-| **Volume de contenu** | Nombre de mots de texte visible extraits du DOM après nettoyage (seuil : 500 mots minimum). |
-| **Profil de liens** | Comptage des liens internes et externes détectés dans le DOM de la page analysée. |
-| **Images sans alt** | Nombre d'images dont l'attribut 'alt' est absent ou vide, détecté par parsing HTML avec regex multi-format. |
-| **Poids de page** | Taille totale des ressources chargées (HTML + CSS + JS + images), récupérée via PageSpeed Insights. |
-| **Détection SPA** | Compare le volume de texte entre le HTML brut et le rendu Browserless pour identifier les Single Page Applications. |
+| **Perf. Mobile / Desktop** | Score PageSpeed Insights mesurant LCP, FCP, CLS, TTFB et TBT. |
+| **Ratio texte/HTML** | Pourcentage de contenu textuel vs code HTML total. |
+| **Volume de contenu** | Nombre de mots de texte visible (seuil : 500 mots minimum). |
+| **Profil de liens** | Comptage des liens internes et externes. |
+| **Images sans alt** | Nombre d'images dont l'attribut 'alt' est absent ou vide. |
+| **Détection SPA** | Compare le volume de texte entre HTML brut et rendu Browserless. |
 
 ---
 
@@ -892,15 +926,13 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Score GEO** | Score composite (0-100%) évaluant la compatibilité du site avec les moteurs de recherche génératifs (SGE, ChatGPT, Perplexity). |
-| **Robots.txt** | Vérifie l'existence et le contenu du fichier robots.txt : permissivité générale et autorisation spécifique des bots IA (GPTBot, Google-Extended, ClaudeBot, etc.). |
-| **Bots IA autorisés** | Nombre de crawlers IA explicitement autorisés dans le robots.txt, sur un total de 6 bots principaux vérifiés. |
-| **JSON-LD** | Détection et validation syntaxique des blocs JSON-LD dans le code source statique de la page (les JSON-LD injectés par JavaScript sont pénalisés de -3 pts). |
-| **Schema.org** | Présence de données structurées Schema.org (JSON-LD, Microdata ou RDFa) dans le HTML de la page. |
-| **Cohérence Title/H1** | Similarité textuelle entre la balise Title et le H1 principal, calculée par comparaison de tokens (seuil : 30% minimum). |
-| **llms.txt** | Détection de la présence d'un fichier 'llms.txt' à la racine du domaine, standard émergent pour guider les LLM. |
-| **Citabilité LLM** | Score estimant la probabilité qu'un LLM cite cette page dans ses réponses, basé sur la structure du contenu (listes, FAQ, tableaux), la densité informationnelle et la présence de données structurées. |
-| **Content Gap** | Écart entre le contenu existant et le contenu attendu par les LLM sur le sujet, évalué par analyse comparative SERP + IA. |
+| **Score GEO** | Score composite (0-100%) évaluant la compatibilité avec les moteurs génératifs. |
+| **Bots IA autorisés** | Nombre de crawlers IA autorisés dans robots.txt (sur 6 vérifiés). |
+| **JSON-LD / Schema.org** | Détection et validation des données structurées. |
+| **Cohérence Title/H1** | Similarité textuelle (seuil : 30% minimum). |
+| **llms.txt** | Présence du fichier standard pour guider les LLM. |
+| **Citabilité LLM** | Probabilité de citation par un LLM. |
+| **Content Gap** | Écart contenu existant vs attendu par les LLM. |
 
 ---
 
@@ -908,25 +940,23 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Position SERP** | Position organique du domaine sur le mot-clé cible, récupérée via l'API DataForSEO (Google FR). |
-| **Volume de recherche** | Volume mensuel moyen de recherches pour le mot-clé, fourni par DataForSEO (données Google Keyword Planner). |
-| **Keyword Difficulty (KD)** | Indice de difficulté (0-100) pour se positionner sur le mot-clé, calculé par DataForSEO à partir de l'autorité des pages en top 10. |
-| **CPC** | Coût par clic moyen en EUR du mot-clé dans Google Ads, fourni par DataForSEO. |
-| **Part de voix (SOV)** | Pourcentage de visibilité SERP du domaine sur l'ensemble des requêtes cibles suivies, calculé par 'calculate-sov'. |
-| **Competitors SERP** | Liste des 10 premiers domaines positionnés sur le mot-clé cible avec leur autorité respective, via DataForSEO. |
-| **ROI Prédictif** | Estimation annualisée du revenu potentiel : trafic_estimé × CPC × taux_conversion × 12. |
-| **Estimation trafic** | Si position connue : lookup table CTR (pos 1 = 28%…pos 10 = 2%). Sinon : volume × CTR_estimé. |
+| **Position SERP** | Position organique via DataForSEO (Google FR). |
+| **Volume de recherche** | Volume mensuel via DataForSEO. |
+| **Keyword Difficulty (KD)** | Indice de difficulté (0-100). |
+| **CPC** | Coût par clic moyen en EUR. |
+| **Part de voix (SOV)** | Visibilité SERP calculée par \`calculate-sov\`. |
+| **ROI Prédictif** | trafic_estimé × CPC × taux_conversion × 12. |
 
 ---
 
-## Indicateurs E-E-A-T (Thought Leadership)
+## Indicateurs E-E-A-T
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Score E-E-A-T** | Score global (0-10) évaluant l'Expérience, l'Expertise, l'Autorité et la Fiabilité du site, calculé par analyse IA des signaux SERP en temps réel. |
-| **Signaux sociaux** | Détection de la présence officielle de la marque sur les réseaux sociaux (Facebook, LinkedIn, Twitter/X) via recherche SERP croisée marque + secteur. |
-| **Autorité sémantique** | Mesure de la force du domaine comme source de référence sur son sujet, basée sur le ratio de domaines gouvernementaux, éducatifs et médias dans les résultats SERP concurrents. |
-| **Sentiment IA** | Perception de la marque par les LLM (très positif / positif / neutre / négatif), évaluée en interrogeant directement les modèles IA sur la réputation du domaine. |
+| **Score E-E-A-T** | Score global (0-10) évaluant Expérience, Expertise, Autorité, Fiabilité. |
+| **Signaux sociaux** | Détection présence sur Facebook, LinkedIn, Twitter/X. |
+| **Autorité sémantique** | Pertinence thématique des 50 meilleurs mots-clés via Gemini Flash Lite. |
+| **Sentiment IA** | Perception de la marque par les LLM. |
 
 ---
 
@@ -934,11 +964,10 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Visibilité IA** | Score (0-100) mesurant si le domaine est mentionné par les LLM en réponse à des requêtes sectorielles, testé sur ChatGPT, Gemini et Perplexity. |
-| **Benchmark LLM** | Scores de visibilité par modèle IA (ChatGPT, Gemini, Perplexity), mesurés via 3 itérations conversationnelles pondérées (100/50/25 pts). |
-| **Taux de citation LLM** | Pourcentage de requêtes pour lesquelles le domaine est explicitement cité dans la réponse du LLM. |
-| **Volumes LLM estimés** | Estimation du trafic potentiel provenant de chaque LLM, calculée via la table 'market_trends' (parts de marché FR) × taux de pénétration par type d'intention (informationnelle, commerciale, locale). |
-| **LLM Depth** | Test approfondi en 3 itérations conversationnelles avec relances (alternatives, niches), vérifiant si la marque apparaît naturellement dans les réponses des LLM gratuits. |
+| **Visibilité IA** | Score (0-100) sur ChatGPT, Gemini et Perplexity. |
+| **Taux de citation LLM** | Pourcentage de requêtes avec citation explicite. |
+| **Volumes LLM estimés** | Trafic potentiel par LLM via \`market_trends\`. |
+| **LLM Depth** | Test approfondi en 3 itérations conversationnelles. |
 
 ---
 
@@ -946,48 +975,41 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Score IAS** | Ratio entre le trafic organique générique et le trafic total (brand + générique), comparé au ratio cible du secteur d'activité. |
-| **Risk Score** | Écart entre le ratio réel et le ratio cible : un score élevé signale une sur-dépendance au trafic de marque. |
-| **Brand Penetration Rate** | Part du trafic de marque dans le trafic organique total, calculée via les données GSC (clicks brand vs generic). |
+| **Score IAS** | Ratio trafic organique générique / total vs ratio cible du secteur. |
+| **Risk Score** | Écart entre ratio réel et ratio cible. |
+| **Brand Penetration Rate** | Part du trafic de marque dans le trafic organique (via GSC). |
 
 ---
 
-## Indicateurs Cocoon (Architecture Sémantique)
+## Indicateurs Cocoon
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Cannibalization Risk** | Probabilité que deux pages du même site se disputent le même mot-clé, détectée par similarité TF-IDF entre les nœuds du graphe. |
-| **GEO Score (nœud)** | Score GEO individuel par page, hérité de l'audit expert ou estimé par le moteur Cocoon. |
-| **Internal Links In/Out** | Nombre de liens internes entrants et sortants par page, extraits du crawl multi-pages. |
-| **Cluster ID** | Regroupement thématique automatique des pages par similarité sémantique (TF-IDF + analyse IA). |
-| **Page Authority** | Score d'autorité interne calculé par l'algorithme PageRank adapté au maillage interne du site. |
+| **Cannibalization Risk** | Détection par similarité TF-IDF entre nœuds. |
+| **Internal Links In/Out** | Liens internes entrants/sortants par page. |
+| **Page Authority** | PageRank interne via \`calculate-internal-pagerank\`. |
 
 ---
 
-## Indicateurs GMB (Google My Business)
+## Indicateurs GMB
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Search Views** | Nombre de fois où la fiche apparaît dans les résultats de recherche Google (Business Profile Performance API). |
-| **Maps Views** | Nombre de fois où la fiche apparaît dans Google Maps. |
-| **Website Clicks** | Nombre de clics vers le site web depuis la fiche GMB. |
-| **Direction Requests** | Nombre de demandes d'itinéraire vers l'établissement. |
-| **Phone Calls** | Nombre d'appels téléphoniques initiés depuis la fiche. |
-| **Avg Rating** | Note moyenne des avis Google (1-5 étoiles). |
-| **Review Volume** | Nombre total d'avis et tendance (nouveaux avis / semaine). |
-| **Photo Views** | Nombre de vues des photos publiées sur la fiche. |
+| **Search/Maps Views** | Vues dans les résultats Google et Maps. |
+| **Website Clicks** | Clics vers le site depuis la fiche GMB. |
+| **Direction Requests** | Demandes d'itinéraire. |
+| **Phone Calls** | Appels téléphoniques. |
+| **Avg Rating** | Note moyenne des avis (1-5). |
 
 ---
 
-## Indicateurs Surveys (Enquêtes Utilisateurs)
+## Empreinte Lexicale (Lexical Footprint)
 
 | Indicateur | Construction |
 |------------|-------------|
-| **Impressions** | Nombre total d'affichages de la survey aux utilisateurs ciblés (table survey_events, event_type='impression'). |
-| **Taux de réponse** | Ratio réponses / impressions. |
-| **Taux de fermeture** | Ratio fermetures (dismiss) / impressions. |
-| **Réponses A/B** | Ventilation des réponses par variante (A ou B) pour les surveys avec A/B testing activé. |
-| **Ciblage persona** | Filtrage par langue, type de client (entrepreneur, agence, freelance, boutique), et ancienneté du compte. |
+| **Jargon Distance** | Distance sémantique relative entre contenu et 3 cibles (Primaire, Secondaire, Inexploitée). |
+| **Score d'intentionnalité** | Hybride : 30% CTA + 30% SEO + 20% Ton + 20% Structure. |
+| **Classification** | Spécialisation assumée (> 0.65), Positionnement ambigu (0.35-0.65), Distance non maîtrisée (< 0.35). |
 `,
   },
 ];
@@ -997,14 +1019,14 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '2.8.0',
-  lastUpdated: '2026-03-19',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Surveys',
-  totalEdgeFunctions: 94,
+  version: '3.0.0',
+  lastUpdated: '2026-03-20',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Intégrations',
+  totalEdgeFunctions: 109,
   totalSharedModules: 21,
-  totalTables: '50+',
-  totalLinesOfCode: '147 600+',
-  totalMigrations: 160,
-  totalPages: 36,
-  totalComponents: 261,
+  totalTables: '55+',
+  totalLinesOfCode: '157 000+',
+  totalMigrations: 186,
+  totalPages: 39,
+  totalComponents: 275,
 };
