@@ -28,7 +28,7 @@ const translations = {
     signupDesc: 'Rejoignez Crawlers AI pour sauvegarder vos analyses',
     email: 'Email',
     password: 'Mot de passe',
-    confirmPassword: 'Confirmer le mot de passe',
+    confirmPassword: 'Confirmation',
     firstName: 'Prénom',
     lastName: 'Nom',
     signupButton: "S'inscrire",
@@ -59,7 +59,7 @@ const translations = {
     signupDesc: 'Join Crawlers AI to save your analyses',
     email: 'Email',
     password: 'Password',
-    confirmPassword: 'Confirm password',
+    confirmPassword: 'Confirmation',
     firstName: 'First Name',
     lastName: 'Last Name',
     signupButton: 'Sign Up',
@@ -90,7 +90,7 @@ const translations = {
     signupDesc: 'Únete a Crawlers AI para guardar tus análisis',
     email: 'Correo electrónico',
     password: 'Contraseña',
-    confirmPassword: 'Confirmar contraseña',
+    confirmPassword: 'Confirmación',
     firstName: 'Nombre',
     lastName: 'Apellido',
     signupButton: 'Registrarse',
@@ -203,13 +203,27 @@ export default function Signup() {
 
   const signupSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
-    password: z.string().min(6, t.passwordMin).refine(isPasswordAcceptable, { message: t.passwordWeak }),
+    password: z.string(),
     confirmPassword: z.string(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: t.passwordMismatch,
-    path: ['confirmPassword'],
+  }).superRefine((data, ctx) => {
+    if (!isPasswordAcceptable(data.password)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['password'],
+        message: t.passwordWeak,
+      });
+      return;
+    }
+
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmPassword'],
+        message: t.passwordMismatch,
+      });
+    }
   });
 
   const signupForm = useForm({
@@ -228,8 +242,7 @@ export default function Signup() {
   const checkUserExistsFirst = async () => {
     const email = signupForm.getValues('email');
     if (!email || !z.string().email().safeParse(email).success) {
-      // Let normal form validation handle it
-      signupForm.handleSubmit(handleSignup)();
+      await signupForm.trigger('email');
       return;
     }
 
@@ -237,40 +250,21 @@ export default function Signup() {
     setShowExistsBanner(false);
 
     try {
-      // Attempt signup with the provided password to check existence
-      const password = signupForm.getValues('password');
-      const { error } = await signUpWithEmail(
-        email,
-        password || 'temp_check_123456',
-        signupForm.getValues('firstName') || '',
-        signupForm.getValues('lastName') || ''
-      );
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'check-email', email },
+      });
 
-      if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
-        // User exists - show banner directly, skip password validation
+      if (!error && data?.exists === true) {
         setShowExistsBanner(true);
         setIsLoading(false);
         return;
       }
-
-      if (!error) {
-        // Signup succeeded - proceed to verification
-        trackAnalyticsEvent('signup_complete');
-        trackAnalyticsEvent('verification_email_sent' as any);
-        setVerificationEmail(email);
-        supabase.functions.invoke('send-verification-code', { body: { email } });
-        setIsLoading(false);
-        setStep('verify');
-        return;
-      }
-
-      // Other error - fall through to normal form validation
-      setIsLoading(false);
-      signupForm.handleSubmit(handleSignup)();
     } catch {
-      setIsLoading(false);
-      signupForm.handleSubmit(handleSignup)();
+      // continue with normal validation flow if pre-check fails
     }
+
+    setIsLoading(false);
+    signupForm.handleSubmit(handleSignup)();
   };
 
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
@@ -278,7 +272,27 @@ export default function Signup() {
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
-    const { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+    let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+
+    if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
+      try {
+        const { data: emailCheck } = await supabase.functions.invoke('auth-actions', {
+          body: { action: 'check-email', email: data.email },
+        });
+
+        if (emailCheck?.exists === true) {
+          setShowExistsBanner(true);
+          setIsLoading(false);
+          return;
+        }
+
+        const retry = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+        error = retry.error;
+      } catch {
+        // fallback to existing error handling below
+      }
+    }
+
     setIsLoading(false);
 
     if (error) {
