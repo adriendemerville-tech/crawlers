@@ -656,10 +656,10 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   <Button size="sm" className="gap-1.5" asChild>
                     <span>
                       <Upload className="h-3.5 w-3.5" />
-                      Choisir un fichier CSV
+                      Choisir un fichier
                     </span>
                   </Button>
-                  <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
+                  <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
                 </label>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
                   <FlaskConical className="h-3.5 w-3.5" />
