@@ -144,7 +144,15 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
         <table className="w-full">
           <thead>
             <tr className="border-b border-border/20">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5 w-[180px]">API</th>
+              <th className="text-left text-xs font-medium px-4 py-2.5 w-[180px]">
+                <button
+                  onClick={toggleNameSort}
+                  className={`inline-flex items-center gap-1.5 transition-colors ${nameSort ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  API
+                  <SortIcon state={nameSort} />
+                </button>
+              </th>
               <th className="w-[36px]" />
               <th className="text-left text-xs font-medium px-4 py-2.5">
                 <button
