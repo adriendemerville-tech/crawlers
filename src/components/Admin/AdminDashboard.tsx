@@ -156,9 +156,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     loadDocVisibility();
   }, []);
 
-  const toggleDocsVisibility = async () => {
-    const newValue = !docsHiddenForViewers;
-    setDocsHiddenForViewers(newValue);
+  const updateAdminConfig = async (patch: Record<string, unknown>) => {
     const { data: existing } = await supabase
       .from('admin_dashboard_config')
       .select('id, card_order')
@@ -170,9 +168,21 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         : {};
       await supabase
         .from('admin_dashboard_config')
-        .update({ card_order: { ...currentConfig, docs_hidden_for_viewers: newValue } })
+        .update({ card_order: { ...currentConfig, ...patch } })
         .eq('id', existing.id);
     }
+  };
+
+  const toggleDocsVisibility = async () => {
+    const newValue = !docsHiddenForViewers;
+    setDocsHiddenForViewers(newValue);
+    await updateAdminConfig({ docs_hidden_for_viewers: newValue });
+  };
+
+  const toggleSimulatedData = async () => {
+    const newValue = !simulatedDataEnabled;
+    setSimulatedDataEnabled(newValue);
+    await updateAdminConfig({ simulated_data_enabled: newValue });
   };
 
   const showDocs = canSeeDocs && !(readOnly && docsHiddenForViewers);
