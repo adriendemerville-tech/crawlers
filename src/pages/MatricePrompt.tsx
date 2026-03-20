@@ -404,7 +404,7 @@ export default function MatricePrompt() {
 
   return (
     <>
-      <Helmet><title>Matrice CSV — Crawlers AI</title></Helmet>
+      <Helmet><title>Matrice — Crawlers AI</title></Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
