@@ -24,11 +24,11 @@ export function BundleOptionTab() {
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
-        .from('bundle_api_catalog')
+        .from('bundle_api_catalog' as any)
         .select('id, api_name, api_url, seo_segment, crawlers_feature')
         .eq('is_active', true)
-        .order('display_order');
-      if (data) setApis(data);
+        .order('display_order') as any;
+      if (data) setApis(data as ApiItem[]);
       setLoading(false);
     };
     load();
