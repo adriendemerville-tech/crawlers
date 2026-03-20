@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, Loader2, Download, ArrowLeft, Pencil, Archive, ChevronDown, Undo2, Folder, AlertTriangle } from 'lucide-react';
+import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, Loader2, Download, ArrowLeft, Pencil, Archive, ChevronDown, Undo2, Folder, AlertTriangle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
