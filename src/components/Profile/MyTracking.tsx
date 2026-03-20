@@ -77,7 +77,7 @@ const translations = {
     adding: 'Ajout...',
     remove: 'Retirer',
     removeConfirm: 'Site retiré du suivi',
-    lastAudit: 'Dernier audit',
+    lastAudit: 'Dernier audit complet',
     never: 'Jamais',
     aiVisibility: 'Visibilité IA',
     seoScore: 'Score SEO',
@@ -107,7 +107,7 @@ const translations = {
     adding: 'Adding...',
     remove: 'Remove',
     removeConfirm: 'Site removed from tracking',
-    lastAudit: 'Last audit',
+    lastAudit: 'Last full audit',
     never: 'Never',
     aiVisibility: 'AI Visibility',
     seoScore: 'SEO Score',
@@ -137,7 +137,7 @@ const translations = {
     adding: 'Agregando...',
     remove: 'Eliminar',
     removeConfirm: 'Sitio eliminado del seguimiento',
-    lastAudit: 'Última auditoría',
+    lastAudit: 'Última auditoría completa',
     never: 'Nunca',
     aiVisibility: 'Visibilidad IA',
     seoScore: 'Score SEO',
@@ -1094,8 +1094,8 @@ export function MyTracking() {
                         <ExternalLink className="h-3.5 w-3.5" />
                         <span>{language === 'fr' ? 'Visiter le site' : language === 'es' ? 'Visitar sitio' : 'Visit site'}</span>
                       </a>
-                      <p className="text-xs text-muted-foreground">
-                        {t.lastAudit}: {currentSite.last_audit_at 
+                      <p className="text-sm text-muted-foreground">
+                        {t.lastAudit} : {currentSite.last_audit_at 
                           ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
                           : t.never}
                         {refreshingSites.has(currentSite.id) && (
