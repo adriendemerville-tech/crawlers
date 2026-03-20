@@ -229,7 +229,56 @@ export function BundleManagement() {
         </Card>
       )}
 
-      {/* Active Subscriptions */}
+      {/* Cost per API (only APIs with token usage) */}
+      {apiCosts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-muted-foreground" />
+              Coût par API (tokens consommés)
+            </CardTitle>
+            <CardDescription>Uniquement les APIs ayant consommé des tokens</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Fonction</TableHead>
+                  <TableHead className="text-xs text-right">Appels</TableHead>
+                  <TableHead className="text-xs text-right">Tokens</TableHead>
+                  <TableHead className="text-xs text-right">Coût estimé</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {apiCosts.map(entry => {
+                  // Rough cost estimate: ~$0.50 per 1M tokens (blended average)
+                  const estimatedCost = (entry.total_tokens / 1_000_000) * 0.50;
+                  return (
+                    <TableRow key={entry.function_name}>
+                      <TableCell className="text-xs font-mono">{entry.function_name}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums">{entry.call_count.toLocaleString('fr-FR')}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums">{entry.total_tokens.toLocaleString('fr-FR')}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums font-semibold">
+                        {estimatedCost < 0.01 ? '< 0,01 €' : `${estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="border-t-2">
+                  <TableCell className="text-xs font-semibold">Total</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">{apiCosts.reduce((s, e) => s + e.call_count, 0).toLocaleString('fr-FR')}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">{apiCosts.reduce((s, e) => s + e.total_tokens, 0).toLocaleString('fr-FR')}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums font-semibold">
+                    {((apiCosts.reduce((s, e) => s + e.total_tokens, 0) / 1_000_000) * 0.50).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
