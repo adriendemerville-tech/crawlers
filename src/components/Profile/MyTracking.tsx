@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,7 @@ import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
+import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -244,6 +245,7 @@ export function MyTracking() {
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
@@ -1236,6 +1238,15 @@ export function MyTracking() {
                     </div>
                   </div>
 
+                  {/* Identity Card button */}
+                  <button
+                    onClick={() => setShowIdentityModal(true)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors text-xs font-medium bg-transparent mb-4"
+                  >
+                    <IdCard className="h-4 w-4" />
+                    Carte d'identité
+                  </button>
+
                   {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
                     const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
@@ -1947,6 +1958,16 @@ export function MyTracking() {
           />
         );
       })()}
+
+      {/* Site Identity Modal */}
+      {currentSite && (
+        <SiteIdentityModal
+          open={showIdentityModal}
+          onOpenChange={setShowIdentityModal}
+          site={currentSite}
+          onUpdate={() => fetchSites()}
+        />
+      )}
     </div>
   );
 }
