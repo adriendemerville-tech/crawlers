@@ -129,7 +129,7 @@ export function MyReportsTab() {
   const tr = t[language];
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
-  const [selectedSite, setSelectedSite] = useState<string | null>(null);
+  const [selectedSite, setSelectedSite] = useState<string>('__all__');
   const [folders, setFolders] = useState<ReportFolder[]>([]);
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [archivedFolders, setArchivedFolders] = useState<ReportFolder[]>([]);
