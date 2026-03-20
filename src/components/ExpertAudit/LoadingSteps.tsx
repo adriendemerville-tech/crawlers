@@ -79,7 +79,7 @@ interface LoadingStepsProps {
 export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
-  const { embedContainerRef, stopPlayback, isCustomPlaylist } = useSpotifyTrackRotation();
+  const { embedContainerRef, stopPlayback, isCustomPlaylist, goNext, goPrev } = useSpotifyTrackRotation();
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [showPlaylistInput, setShowPlaylistInput] = useState(false);
   const [playlistInputValue, setPlaylistInputValue] = useState('');

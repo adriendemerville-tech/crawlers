@@ -262,9 +262,21 @@ export function useSpotifyTrackRotation(active = true) {
     }
   };
 
+  const goNext = () => {
+    manualSkipRef.current = true;
+    setCurrentTrackIndex((prev) => (prev + 1) % trackQueue.length);
+  };
+
+  const goPrev = () => {
+    manualSkipRef.current = true;
+    setCurrentTrackIndex((prev) => (prev - 1 + trackQueue.length) % trackQueue.length);
+  };
+
   return {
     embedContainerRef,
     stopPlayback,
     isCustomPlaylist: !!customPlaylistUri,
+    goNext,
+    goPrev,
   };
 }
