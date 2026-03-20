@@ -1731,7 +1731,7 @@ export function MyTracking() {
                   {/* Keywords, Quick Wins — real or simulated (admin only) */}
                   {(() => {
                     const realKw = latestSerpData?.sample_keywords?.length > 0 ? latestSerpData.sample_keywords : null;
-                    const shouldSimulate = !realKw && isAdmin;
+                    const shouldSimulate = !realKw;
                     const simKw = shouldSimulate ? [
                       { keyword: 'agence seo paris', position: 3, search_volume: 2400, url: `https://${currentSite?.domain}/` },
                       { keyword: 'audit seo gratuit', position: 7, search_volume: 1900, url: `https://${currentSite?.domain}/audit` },
@@ -1753,12 +1753,6 @@ export function MyTracking() {
                     if (!kw) return null;
                     return (
                       <>
-                        {shouldSimulate && (
-                          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-xs font-medium">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                            Données simulées — aucune donnée SERP réelle disponible pour ce site
-                          </div>
-                        )}
                         <KeywordCloud keywords={kw} />
                         <TopKeywordsList keywords={kw} />
                         {currentSite && user && (
