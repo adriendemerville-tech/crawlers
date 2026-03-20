@@ -769,6 +769,85 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
     chatHistoryId.current = null;
   };
 
+  // Parse AI optimization response into deployable link recommendations
+  const parseRecommendations = useCallback((content: string) => {
+    const recs: Array<{ source_url: string; target_url: string; anchor_text: string; action: 'add_link' | 'update_anchor' }> = [];
+    // Match patterns like: "page-source → page-cible (ancre: texte)" or URLs with arrows
+    const linkRegex = /(?:depuis|from|crear.*desde)\s+["`]?([^\s"`→]+)["`]?\s*→\s*["`]?([^\s"`(]+)["`]?\s*\(?(?:ancre|anchor|texto)[:\s]*["`]?([^"`)\n]+)/gi;
+    let match;
+    while ((match = linkRegex.exec(content)) !== null) {
+      recs.push({
+        source_url: match[1],
+        target_url: match[2],
+        anchor_text: match[3].trim(),
+        action: 'add_link',
+      });
+    }
+    // Also try to find URL pairs in bullet points
+    const urlPairRegex = /(?:https?:\/\/[^\s)]+)\s*(?:→|->|vers|to)\s*(https?:\/\/[^\s)]+)/gi;
+    while ((match = urlPairRegex.exec(content)) !== null) {
+      if (!recs.some(r => r.target_url === match![1])) {
+        recs.push({
+          source_url: match[0].split(/→|->|vers|to/)[0].trim(),
+          target_url: match[1],
+          anchor_text: 'lien interne',
+          action: 'add_link',
+        });
+      }
+    }
+    return recs;
+  }, []);
+
+  // Check if an assistant message is an optimization response (follows an optimize prompt)
+  const isOptimizationResponse = useCallback((msgIndex: number) => {
+    if (msgIndex === 0) return false;
+    const prevMsg = messages[msgIndex - 1];
+    return prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content);
+  }, [messages]);
+
+  // Deploy recommendations to the site
+  const handleDeployLinks = useCallback(async (content: string) => {
+    if (!trackedSiteId || !user || isDeploying) return;
+    setIsDeploying(true);
+    setDeploySuccess(false);
+
+    try {
+      const recs = parseRecommendations(content);
+      if (recs.length === 0) {
+        // Fallback: send the raw content for manual processing
+        const { data, error } = await supabase.functions.invoke('cocoon-deploy-links', {
+          body: {
+            tracked_site_id: trackedSiteId,
+            recommendations: nodes.slice(0, 10).flatMap((n: any) =>
+              (n.similarity_edges || [])
+                .filter((e: any) => e.type === 'suggested' || e.score > 0.6)
+                .slice(0, 2)
+                .map((e: any) => ({
+                  source_url: n.url,
+                  target_url: e.target_url,
+                  anchor_text: e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien',
+                  action: 'add_link',
+                }))
+            ),
+          },
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke('cocoon-deploy-links', {
+          body: { tracked_site_id: trackedSiteId, recommendations: recs },
+        });
+        if (error) throw error;
+      }
+
+      setDeploySuccess(true);
+      setTimeout(() => setDeploySuccess(false), 5000);
+    } catch (e) {
+      console.error('[Cocoon] Deploy failed:', e);
+    } finally {
+      setIsDeploying(false);
+    }
+  }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes]);
+
   return (
     <div className="relative">
       {/* Floating chat window — opens upward */}
