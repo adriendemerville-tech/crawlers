@@ -71,7 +71,7 @@ export function FinancesDashboard() {
   const { allEvents: sharedAllEvents, filteredEvents: sharedFilteredEvents, adminUserIds: sharedAdminUserIds, isLoading: sharedLoading, fetchEvents } = useAdminAnalytics();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
+  const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0, bundleMrr: 0 });
   const [totalPlatformCost, setTotalPlatformCost] = useState(0);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
@@ -196,16 +196,24 @@ export function FinancesDashboard() {
       setActiveUsersCount(activeUserIds.size);
 
       // Business metrics
-      const { data: payingProfiles } = await supabase
-        .from('profiles').select('user_id')
-        .eq('plan_type', 'agency_pro').eq('subscription_status', 'active')
-        .not('stripe_subscription_id', 'is', null);
+      const [payingRes, purchaseRes, bundleRes] = await Promise.all([
+        supabase
+          .from('profiles').select('user_id')
+          .eq('plan_type', 'agency_pro').eq('subscription_status', 'active')
+          .not('stripe_subscription_id', 'is', null),
+        supabase
+          .from('credit_transactions').select('amount').eq('transaction_type', 'purchase'),
+        supabase
+          .from('bundle_subscriptions')
+          .select('monthly_price_cents')
+          .eq('status', 'active'),
+      ]);
+      const payingProfiles = payingRes.data;
       const payingCount = payingProfiles?.length || 0;
-      const { data: purchaseTx } = await supabase
-        .from('credit_transactions').select('amount').eq('transaction_type', 'purchase');
-      const creditsPurchased = (purchaseTx || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-      const mrr = payingCount * 59;
-      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr });
+      const creditsPurchased = (purchaseRes.data || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+      const bundleMrr = (bundleRes.data || []).reduce((sum: number, s: any) => sum + ((s.monthly_price_cents || 0) / 100), 0);
+      const mrr = payingCount * 59 + bundleMrr;
+      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr, bundleMrr });
 
       // ACPU per subscriber
       if (payingProfiles && payingProfiles.length > 0) {
@@ -316,7 +324,9 @@ export function FinancesDashboard() {
           </CardHeader>
           <CardContent className="p-3 pt-0">
             <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{businessMetrics.payingSubscribers} × 59 €/mois</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {businessMetrics.payingSubscribers} × 59€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
+            </p>
           </CardContent>
         </Card>
         {dbSize && (

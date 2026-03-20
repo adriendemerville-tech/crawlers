@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -23,6 +23,7 @@ import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
+import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
@@ -55,6 +56,7 @@ const adminTranslations = {
     docs: 'Docs',
     functions: 'Functions',
     surveys: 'Surveys',
+    bundle: 'Bundle',
     hideDocsForViewers: 'Masquer docs aux viewers',
     showDocsForViewers: 'Docs visibles aux viewers',
   },
@@ -80,6 +82,7 @@ const adminTranslations = {
     docs: 'Docs',
     functions: 'Functions',
     surveys: 'Surveys',
+    bundle: 'Bundle',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
@@ -105,6 +108,7 @@ const adminTranslations = {
     docs: 'Docs',
     functions: 'Functions',
     surveys: 'Surveys',
+    bundle: 'Bundle',
     hideDocsForViewers: 'Ocultar docs de viewers',
     showDocsForViewers: 'Docs visibles para viewers',
   },
@@ -179,6 +183,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
+        ...(canSeeFinances ? [{ id: 'bundle', label: t.bundle, icon: Package, group: 'monitoring' }] : []),
         ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
         { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
@@ -238,6 +243,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
       case 'surveys': return <SurveyManagement />;
+      case 'bundle': return <BundleManagement />;
       default: return <AnalyticsDashboard />;
     }
   };
