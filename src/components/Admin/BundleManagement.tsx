@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, TrendingUp, AlertTriangle, RefreshCw, Users, Coins, ExternalLink } from 'lucide-react';
+import { Package, TrendingUp, AlertTriangle, RefreshCw, Users, Coins, ExternalLink, Cpu } from 'lucide-react';
 
 interface BundleSub {
   id: string;
