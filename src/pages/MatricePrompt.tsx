@@ -89,13 +89,12 @@ export default function MatricePrompt() {
     setErrorDesc('');
   };
 
-  // Guard: admin only
+  // Guard: authenticated users only
   useEffect(() => {
-    if (!adminLoading && !authLoading) {
-      if (!user) navigate('/auth');
-      else if (!isAdmin) navigate('/console');
+    if (!authLoading && !user) {
+      navigate('/auth');
     }
-  }, [isAdmin, adminLoading, authLoading, user, navigate]);
+  }, [authLoading, user, navigate]);
 
   // Load available batches on mount
   useEffect(() => {

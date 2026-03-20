@@ -312,7 +312,7 @@ export function Header() {
                   <span className="text-sm font-semibold">Cocoon</span>
                 </Button>
               </Link>
-              {isAdmin && (
+              {user && (
                 <Link to="/matrice">
                   <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
                     <Grid3X3 className="h-3.5 w-3.5" />
