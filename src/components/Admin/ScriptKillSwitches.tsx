@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DemoModeToggle } from './DemoModeToggle';
 import { GA4OAuthToggle } from './GA4OAuthToggle';
+import { useAdminContext } from '@/contexts/AdminContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 const translations = {
   fr: {
