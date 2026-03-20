@@ -112,8 +112,8 @@ const t = {
     deleteConfirmReport: '¿Archivar este informe?',
     save: 'Guardar',
     reportTypes: {
-      seo_technical: 'Auditoría SEO Técnica',
-      seo_strategic: 'Auditoría Estratégica IA',
+      seo_technical: 'Auditoría Técnica SEO',
+      seo_strategic: 'Auditoría Estratégica GEO',
       llm: 'Análisis LLM',
       geo: 'Análisis GEO',
       pagespeed: 'PageSpeed',
