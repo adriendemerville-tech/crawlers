@@ -270,10 +270,11 @@ export default function Signup() {
   };
 
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
+    setIsSigningUp(true);
     setIsLoading(true);
     setShowExistsBanner(false);
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); return; }
+    if (!verified) { setIsLoading(false); setIsSigningUp(false); return; }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
 
@@ -289,6 +290,7 @@ export default function Signup() {
         } else if (!emailCheckError && emailCheck?.exists === true) {
           setShowExistsBanner(true);
           setIsLoading(false);
+          setIsSigningUp(false);
           return;
         }
       } catch {
@@ -299,6 +301,7 @@ export default function Signup() {
     setIsLoading(false);
 
     if (error) {
+      setIsSigningUp(false);
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -323,6 +326,7 @@ export default function Signup() {
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
+      // isSigningUp stays true — user is now in verify step, no redirect needed
     }
   };
 
