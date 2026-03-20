@@ -243,6 +243,7 @@ export function MyTracking() {
   const [wpApiKeyCopied, setWpApiKeyCopied] = useState(false);
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
+  const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
