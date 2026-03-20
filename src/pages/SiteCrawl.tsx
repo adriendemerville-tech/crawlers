@@ -976,7 +976,7 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                       className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-orange-400 [&_[role=slider]]:to-violet-500 [&_[role=slider]]:border-violet-500/50 [&_.relative>div]:bg-gradient-to-r [&_.relative>div]:from-orange-400 [&_.relative>div]:to-violet-500"
                     />
-                    {indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
+                    {!isAdmin && indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
                       <p className="text-[10px] text-muted-foreground">
                         {language === 'fr' 
                           ? `Maximum limité à ${Math.min(20, indexedPagesCount)} pages (pages indexées détectées par Google)` 
