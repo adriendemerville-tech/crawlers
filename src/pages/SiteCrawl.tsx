@@ -1089,7 +1089,7 @@ export default function SiteCrawl() {
                     <span className="text-muted-foreground">{phase}</span>
                     <span className="font-mono text-foreground">{progress}%</span>
                   </div>
-                  <Progress value={progress} className="h-2 [&>div]:bg-violet-500" />
+                  <Progress value={progress} className="h-2 [&>*]:bg-violet-500" />
                 </div>
               )}
             </CardContent>
