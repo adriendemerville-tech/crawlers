@@ -188,6 +188,7 @@ function EditableKeyword({ value, onChange }: { value: string; onChange: (v: str
 }
 
 
+type ModalView = 'attributes' | 'instructions';
 type VoiceStep = 'idle' | 'recording' | 'processing' | 'summary' | 'confirming' | 'done';
 
 export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteIdentityModalProps) {
