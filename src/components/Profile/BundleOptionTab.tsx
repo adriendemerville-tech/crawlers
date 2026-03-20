@@ -402,6 +402,7 @@ export function BundleOptionTab() {
               return (
                 <>
                   <div className="flex items-center gap-3">
+                    <ApiFavicon url={activeApi.api_url} className="h-5 w-5" />
                     <h2 className="text-lg font-semibold">{activeApi.api_name}</h2>
                     <a href={activeApi.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                       <ExternalLink className="h-4 w-4" />
