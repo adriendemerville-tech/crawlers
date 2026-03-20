@@ -78,6 +78,30 @@ async function handleCheckEmail(body: any) {
     }
   }
 
+  // Final check: look for orphan auth user (exists in auth.users but no profile, no archive)
+  const { data: listResult, error: listError } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1,
+  });
+
+  if (!listError) {
+    // Use a direct approach: try to find user by email via admin API
+    const { data: allUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    const orphanUser = allUsers?.users?.find(
+      (u: any) => (u.email || '').toLowerCase() === normalizedEmail
+    );
+
+    if (orphanUser) {
+      // Auth user exists but no profile and no archived record → orphan, clean it up
+      const { error: deleteOrphanError } = await supabase.auth.admin.deleteUser(orphanUser.id);
+      if (deleteOrphanError) {
+        console.error('Failed to cleanup orphan auth user:', deleteOrphanError);
+        return json({ exists: true, source: 'orphan_cleanup_failed' });
+      }
+      console.log(`Cleaned up orphan auth user ${orphanUser.id} for email ${normalizedEmail}`);
+    }
+  }
+
   return json({ exists: false, source: archivedUser ? 'archived' : 'none' });
 }
 
