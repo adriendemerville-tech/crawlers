@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
@@ -39,6 +39,7 @@ export function CtoAgentDashboard() {
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [alertDismissed, setAlertDismissed] = useState(false);
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [cacheHealth, setCacheHealth] = useState<CacheHealthReport | null>(null);
   const [checkingCache, setCheckingCache] = useState(false);
@@ -64,6 +65,7 @@ export function CtoAgentDashboard() {
       }
       if (logsRes.data) {
         setLogs((logsRes.data as unknown as AgentLog[]) || []);
+        setAlertDismissed(false);
       }
     } catch (e) {
       console.error('Error fetching CTO agent data:', e);
@@ -236,10 +238,10 @@ export function CtoAgentDashboard() {
       </Card>
 
       {/* Priority Alert */}
-      {priorityAlert && (
-        <Alert variant={priorityAlert.severity === 'critical' ? 'destructive' : 'default'} className={priorityAlert.severity === 'critical' ? '' : 'border-orange-500/40 bg-orange-500/5'}>
+      {priorityAlert && !alertDismissed && (
+        <Alert variant={priorityAlert.severity === 'critical' ? 'destructive' : 'default'} className={`relative ${priorityAlert.severity === 'critical' ? '' : 'border-orange-500/40 bg-orange-500/5'}`}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-sm">
+          <AlertTitle className="text-sm pr-6">
             {priorityAlert.severity === 'critical' ? '🔴' : '🟠'} {priorityAlert.count} problème(s) récurrent(s) détecté(s)
           </AlertTitle>
           <AlertDescription className="mt-1 space-y-0.5">
@@ -247,6 +249,12 @@ export function CtoAgentDashboard() {
               <p key={i} className="text-xs text-muted-foreground">{line}</p>
             ))}
           </AlertDescription>
+          <button
+            onClick={() => setAlertDismissed(true)}
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </Alert>
       )}
 
