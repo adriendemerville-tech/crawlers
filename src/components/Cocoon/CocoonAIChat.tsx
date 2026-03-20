@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Rocket } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -268,6 +269,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
   const [fontSize, setFontSize] = useState(12); // px base for messages
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploySuccess, setDeploySuccess] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
@@ -766,6 +769,85 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
     chatHistoryId.current = null;
   };
 
+  // Parse AI optimization response into deployable link recommendations
+  const parseRecommendations = useCallback((content: string) => {
+    const recs: Array<{ source_url: string; target_url: string; anchor_text: string; action: 'add_link' | 'update_anchor' }> = [];
+    // Match patterns like: "page-source → page-cible (ancre: texte)" or URLs with arrows
+    const linkRegex = /(?:depuis|from|crear.*desde)\s+["`]?([^\s"`→]+)["`]?\s*→\s*["`]?([^\s"`(]+)["`]?\s*\(?(?:ancre|anchor|texto)[:\s]*["`]?([^"`)\n]+)/gi;
+    let match;
+    while ((match = linkRegex.exec(content)) !== null) {
+      recs.push({
+        source_url: match[1],
+        target_url: match[2],
+        anchor_text: match[3].trim(),
+        action: 'add_link',
+      });
+    }
+    // Also try to find URL pairs in bullet points
+    const urlPairRegex = /(?:https?:\/\/[^\s)]+)\s*(?:→|->|vers|to)\s*(https?:\/\/[^\s)]+)/gi;
+    while ((match = urlPairRegex.exec(content)) !== null) {
+      if (!recs.some(r => r.target_url === match![1])) {
+        recs.push({
+          source_url: match[0].split(/→|->|vers|to/)[0].trim(),
+          target_url: match[1],
+          anchor_text: 'lien interne',
+          action: 'add_link',
+        });
+      }
+    }
+    return recs;
+  }, []);
+
+  // Check if an assistant message is an optimization response (follows an optimize prompt)
+  const isOptimizationResponse = useCallback((msgIndex: number) => {
+    if (msgIndex === 0) return false;
+    const prevMsg = messages[msgIndex - 1];
+    return prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content);
+  }, [messages]);
+
+  // Deploy recommendations to the site
+  const handleDeployLinks = useCallback(async (content: string) => {
+    if (!trackedSiteId || !user || isDeploying) return;
+    setIsDeploying(true);
+    setDeploySuccess(false);
+
+    try {
+      const recs = parseRecommendations(content);
+      if (recs.length === 0) {
+        // Fallback: send the raw content for manual processing
+        const { data, error } = await supabase.functions.invoke('cocoon-deploy-links', {
+          body: {
+            tracked_site_id: trackedSiteId,
+            recommendations: nodes.slice(0, 10).flatMap((n: any) =>
+              (n.similarity_edges || [])
+                .filter((e: any) => e.type === 'suggested' || e.score > 0.6)
+                .slice(0, 2)
+                .map((e: any) => ({
+                  source_url: n.url,
+                  target_url: e.target_url,
+                  anchor_text: e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien',
+                  action: 'add_link',
+                }))
+            ),
+          },
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke('cocoon-deploy-links', {
+          body: { tracked_site_id: trackedSiteId, recommendations: recs },
+        });
+        if (error) throw error;
+      }
+
+      setDeploySuccess(true);
+      setTimeout(() => setDeploySuccess(false), 5000);
+    } catch (e) {
+      console.error('[Cocoon] Deploy failed:', e);
+    } finally {
+      setIsDeploying(false);
+    }
+  }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes]);
+
   return (
     <div className="relative">
       {/* Floating chat window — opens upward */}
@@ -868,6 +950,25 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                     <CopyButton text={msg.content} />
                   )}
                 </div>
+                {/* Deploy button after optimization responses */}
+                {isAssistant && !isLoading && isOptimizationResponse(i) && trackedSiteId && (
+                  <div className="mt-2 flex justify-start">
+                    <button
+                      onClick={() => handleDeployLinks(msg.content)}
+                      disabled={isDeploying || deploySuccess}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                        deploySuccess
+                          ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-300'
+                          : isDeploying
+                            ? 'bg-white/5 border border-white/10 text-white/40 animate-pulse'
+                            : 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
+                      }`}
+                    >
+                      <Rocket className="w-3.5 h-3.5" />
+                      {deploySuccess ? '✓ Déployé' : isDeploying ? 'Déploiement…' : 'Déployer sur le site'}
+                    </button>
+                  </div>
+                )}
               </div>
               );
             })}
