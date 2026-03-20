@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense, memo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
