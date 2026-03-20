@@ -472,7 +472,7 @@ export default function MatricePrompt() {
                   </SelectContent>
                 </Select>
               ) : (
-                <span className="text-sm text-muted-foreground">Aucun CSV importé</span>
+                <span className="text-sm text-muted-foreground">Aucun fichier importé</span>
               )}
               <input ref={fileInputRef} type="file" accept=".csv,.doc,.docx" className="hidden" onChange={handleFileImport} />
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2">
