@@ -1,0 +1,1 @@
+ALTER TABLE public.bundle_subscriptions ADD COLUMN IF NOT EXISTS display_order jsonb DEFAULT '[]'::jsonb;

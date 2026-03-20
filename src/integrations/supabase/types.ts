@@ -936,6 +936,7 @@ export type Database = {
         Row: {
           api_count: number
           created_at: string | null
+          display_order: Json | null
           id: string
           monthly_price_cents: number
           selected_apis: string[]
@@ -947,6 +948,7 @@ export type Database = {
         Insert: {
           api_count?: number
           created_at?: string | null
+          display_order?: Json | null
           id?: string
           monthly_price_cents?: number
           selected_apis?: string[]
@@ -958,6 +960,7 @@ export type Database = {
         Update: {
           api_count?: number
           created_at?: string | null
+          display_order?: Json | null
           id?: string
           monthly_price_cents?: number
           selected_apis?: string[]
