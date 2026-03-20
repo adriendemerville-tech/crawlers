@@ -1728,6 +1728,26 @@ export function MyTracking() {
                     isRefreshing={refreshingSerp}
                   />
 
+                  {/* Keyword Cloud */}
+                  {latestSerpData?.sample_keywords?.length > 0 && (
+                    <KeywordCloud keywords={latestSerpData.sample_keywords} />
+                  )}
+
+                  {/* Top Keywords List */}
+                  {latestSerpData?.sample_keywords?.length > 0 && (
+                    <TopKeywordsList keywords={latestSerpData.sample_keywords} />
+                  )}
+
+                  {/* Quick Wins */}
+                  {latestSerpData?.sample_keywords?.length > 0 && currentSite && user && (
+                    <QuickWinsCard
+                      keywords={latestSerpData.sample_keywords}
+                      domain={currentSite.domain}
+                      trackedSiteId={currentSite.id}
+                      userId={user.id}
+                    />
+                  )}
+
                   {/* IAS — Indice d'Alignement Stratégique */}
                   {currentSite && user && gscConnected && (
                     <IASCard
