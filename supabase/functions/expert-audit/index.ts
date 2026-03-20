@@ -1352,6 +1352,49 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       ]
     });
   }
+
+  // Meta description length check
+  if (htmlAnalysis.hasMetaDesc && htmlAnalysis.metaDescLength > 160) {
+    recommendations.push({
+      id: 'meta-desc-too-long',
+      priority: 'important',
+      category: 'contenu',
+      icon: '🟠',
+      title: `Meta Description trop longue (${htmlAnalysis.metaDescLength} car.) — risque de troncature`,
+      description: `Votre meta description fait ${htmlAnalysis.metaDescLength} caractères. Google tronque les descriptions au-delà de 155-160 caractères, ce qui peut couper votre message et réduire le taux de clic.`,
+      weaknesses: [
+        `${htmlAnalysis.metaDescLength} caractères détectés (max recommandé : 155)`,
+        "Le texte sera tronqué dans les résultats de recherche",
+        "Message incomplet = moins d'incitation au clic",
+        "Les LLM peuvent aussi utiliser un extrait tronqué comme résumé"
+      ],
+      fixes: [
+        "Raccourcir la meta description à 150-155 caractères",
+        "Placer les informations clés et le CTA en début de phrase",
+        "Supprimer les mots superflus sans perdre le sens",
+        "Tester l'affichage avec un outil de prévisualisation SERP"
+      ]
+    });
+  } else if (htmlAnalysis.hasMetaDesc && htmlAnalysis.metaDescLength < 70) {
+    recommendations.push({
+      id: 'meta-desc-too-short',
+      priority: 'optional',
+      category: 'contenu',
+      icon: '🟡',
+      title: `Meta Description trop courte (${htmlAnalysis.metaDescLength} car.) — potentiel sous-exploité`,
+      description: `Votre meta description ne fait que ${htmlAnalysis.metaDescLength} caractères. Vous disposez d'espace supplémentaire pour convaincre les utilisateurs de cliquer et donner plus de contexte aux moteurs IA.`,
+      weaknesses: [
+        `Seulement ${htmlAnalysis.metaDescLength} caractères (objectif : 120-155)`,
+        "Espace gaspillé dans les résultats de recherche",
+        "Moins de contexte sémantique pour les LLM"
+      ],
+      fixes: [
+        "Enrichir la description jusqu'à 120-155 caractères",
+        "Ajouter un bénéfice utilisateur ou un appel à l'action",
+        "Inclure des mots-clés secondaires pertinents"
+      ]
+    });
+  }
   
   if (htmlAnalysis.h1Count === 0) {
     recommendations.push({
