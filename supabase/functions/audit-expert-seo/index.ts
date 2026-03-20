@@ -902,7 +902,184 @@ function analyzeLinkProfile(doc: HTMLDocument, baseUrl: string): LinkProfile {
   };
 }
 
-function analyzeSemanticConsistency(title: string, h1: string): SemanticConsistency {
+// ==================== HEADING HIERARCHY ANALYSIS ====================
+
+function analyzeHeadingHierarchy(doc: HTMLDocument): HeadingHierarchy {
+  const headings: { level: number; text: string }[] = [];
+  const allHeadings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  
+  for (let i = 0; i < allHeadings.length; i++) {
+    const el = allHeadings[i] as Element;
+    const tagName = el.tagName?.toLowerCase() || '';
+    const level = parseInt(tagName.replace('h', ''), 10);
+    const text = el.textContent?.trim() || '';
+    if (level >= 1 && level <= 6 && text.length > 0) {
+      headings.push({ level, text });
+    }
+  }
+  
+  const levels = [...new Set(headings.map(h => h.level))].sort();
+  const gaps: string[] = [];
+  const hasMultipleH1 = headings.filter(h => h.level === 1).length > 1;
+  
+  // Check for hierarchy gaps (e.g. H1→H3 without H2)
+  for (let i = 0; i < headings.length - 1; i++) {
+    const current = headings[i].level;
+    const next = headings[i + 1].level;
+    // Only flag when going deeper (e.g. H1→H3 is a gap, H3→H1 is not)
+    if (next > current + 1) {
+      const missing = [];
+      for (let m = current + 1; m < next; m++) missing.push(`H${m}`);
+      const gap = `H${current}→H${next} (${missing.join(', ')} manquant${missing.length > 1 ? 's' : ''})`;
+      if (!gaps.includes(gap)) gaps.push(gap);
+    }
+  }
+  
+  let verdict: 'optimal' | 'warning' | 'critical' = 'optimal';
+  if (hasMultipleH1 && gaps.length > 0) verdict = 'critical';
+  else if (hasMultipleH1 || gaps.length > 2) verdict = 'critical';
+  else if (gaps.length > 0) verdict = 'warning';
+  
+  console.log(`[HeadingHierarchy] ${headings.length} headings, ${gaps.length} gaps, multiH1: ${hasMultipleH1}`);
+  
+  return { levels, gaps, hasMultipleH1, verdict };
+}
+
+// ==================== SITEMAP / ROBOTS.TXT COHERENCE ====================
+
+async function checkSitemapRobotsCoherence(url: string, robotsContent: string, robotsExists: boolean): Promise<SitemapRobotsCoherence> {
+  console.log('[SitemapCoherence] Vérification cohérence sitemap/robots.txt...');
+  
+  const origin = new URL(url).origin;
+  const isHttpsSite = url.startsWith('https://');
+  const issues: { type: string; description: string; severity: 'critical' | 'important' }[] = [];
+  let sitemapUrls: string[] = [];
+  let sitemapExists = false;
+  let sitemapDeclaredInRobots = false;
+  
+  // 1. Check if sitemap is declared in robots.txt
+  if (robotsExists && robotsContent) {
+    const sitemapDeclarations = robotsContent.match(/^Sitemap:\s*(.+)/gmi) || [];
+    sitemapDeclaredInRobots = sitemapDeclarations.length > 0;
+    
+    // Check for HTTP sitemap URLs on HTTPS site
+    for (const decl of sitemapDeclarations) {
+      const sitemapUrl = decl.replace(/^Sitemap:\s*/i, '').trim();
+      if (isHttpsSite && sitemapUrl.startsWith('http://')) {
+        issues.push({
+          type: 'http_sitemap_on_https',
+          description: `Sitemap déclaré en HTTP (${sitemapUrl}) sur un site HTTPS. Google pourrait ignorer ce sitemap.`,
+          severity: 'important'
+        });
+      }
+    }
+    
+    // Check if robots.txt blocks CSS/JS resources
+    const blocksCSS = /Disallow:.*\.css/i.test(robotsContent);
+    const blocksJS = /Disallow:.*\.js/i.test(robotsContent);
+    if (blocksCSS || blocksJS) {
+      const blocked = [blocksCSS && 'CSS', blocksJS && 'JS'].filter(Boolean).join(' et ');
+      issues.push({
+        type: 'blocks_rendering_resources',
+        description: `Le robots.txt bloque des ressources ${blocked} nécessaires au rendu. Google ne peut pas rendre correctement les pages.`,
+        severity: 'critical'
+      });
+    }
+  } else if (robotsExists && !robotsContent) {
+    // robots exists but empty - not ideal but not a coherence issue
+  }
+  
+  // 2. Fetch and parse sitemap.xml
+  try {
+    const sitemapUrl = `${origin}/sitemap.xml`;
+    const resp = await fetch(sitemapUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0)' },
+      redirect: 'follow',
+    });
+    
+    if (resp.ok) {
+      sitemapExists = true;
+      const sitemapXml = await resp.text();
+      
+      // Extract URLs from sitemap
+      const locMatches = sitemapXml.match(/<loc>([^<]+)<\/loc>/gi) || [];
+      sitemapUrls = locMatches.map(m => m.replace(/<\/?loc>/gi, '').trim()).slice(0, 100);
+      
+      // Check for HTTP URLs in sitemap on HTTPS site
+      if (isHttpsSite) {
+        const httpUrls = sitemapUrls.filter(u => u.startsWith('http://'));
+        if (httpUrls.length > 0) {
+          issues.push({
+            type: 'http_urls_in_sitemap',
+            description: `${httpUrls.length} URL(s) en HTTP dans le sitemap d'un site HTTPS. Ces URLs créent des signaux contradictoires.`,
+            severity: 'critical'
+          });
+        }
+      }
+      
+      // 3. Check for noindex pages in sitemap (sample up to 10 pages)
+      const samplesToCheck = sitemapUrls.slice(0, 10);
+      let noindexInSitemap = 0;
+      const noindexUrls: string[] = [];
+      
+      const checkPromises = samplesToCheck.map(async (sUrl) => {
+        try {
+          const pageResp = await fetch(sUrl, {
+            method: 'GET',
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0)' },
+            redirect: 'follow',
+          });
+          if (pageResp.ok) {
+            const pageHtml = await pageResp.text();
+            const hasNoindex = /<meta[^>]*name=["']robots["'][^>]*content=["'][^"']*noindex[^"']*["']/i.test(pageHtml)
+              || /<meta[^>]*content=["'][^"']*noindex[^"']*["'][^>]*name=["']robots["']/i.test(pageHtml);
+            if (hasNoindex) {
+              return sUrl;
+            }
+          }
+        } catch { /* skip */ }
+        return null;
+      });
+      
+      const noindexResults = await Promise.all(checkPromises);
+      for (const result of noindexResults) {
+        if (result) {
+          noindexInSitemap++;
+          noindexUrls.push(result);
+        }
+      }
+      
+      if (noindexInSitemap > 0) {
+        issues.push({
+          type: 'noindex_in_sitemap',
+          description: `${noindexInSitemap} page(s) en noindex trouvée(s) dans le sitemap. Le sitemap et les meta robots se contredisent.${noindexUrls.length > 0 ? ` Ex: ${noindexUrls[0].substring(0, 60)}` : ''}`,
+          severity: 'critical'
+        });
+      }
+      
+      // Check if sitemap is not declared in robots.txt
+      if (!sitemapDeclaredInRobots) {
+        issues.push({
+          type: 'sitemap_not_in_robots',
+          description: 'Le sitemap.xml existe mais n\'est pas déclaré dans le robots.txt. Les moteurs comptent sur cette déclaration pour le découvrir.',
+          severity: 'important'
+        });
+      }
+    }
+  } catch (e) {
+    console.log('[SitemapCoherence] Erreur fetch sitemap:', e);
+  }
+  
+  let verdict: 'optimal' | 'warning' | 'critical' = 'optimal';
+  const criticalCount = issues.filter(i => i.severity === 'critical').length;
+  if (criticalCount > 0) verdict = 'critical';
+  else if (issues.length > 0) verdict = 'warning';
+  
+  console.log(`[SitemapCoherence] ✅ ${issues.length} issues trouvées (${criticalCount} critiques)`);
+  
+  return { sitemapExists, sitemapUrls, sitemapDeclaredInRobots, issues, verdict };
+}
+
   const similarity = calculateTextSimilarity(title, h1);
   
   let verdict: string;
