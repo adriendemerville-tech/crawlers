@@ -224,9 +224,65 @@ export function SeoAgentDashboard() {
 
       {/* Logs */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Registre des modifications</CardTitle>
-          <CardDescription>{logs.length} intervention(s) enregistrée(s)</CardDescription>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle className="text-base">Registre des modifications</CardTitle>
+            <CardDescription>{logs.length} intervention(s) enregistrée(s)</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={refreshingJournal}
+              onClick={async () => {
+                setRefreshingJournal(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('agent-seo', {
+                    body: { base_url: 'https://crawlers.lovable.app' },
+                  });
+                  if (error) throw error;
+                  toast({ title: '✅ Registre mis à jour', description: `${data?.improvements_count || 0} améliorations détectées` });
+                  fetchLogs();
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de relancer l\'analyse.', variant: 'destructive' });
+                } finally {
+                  setRefreshingJournal(false);
+                }
+              }}
+            >
+              {refreshingJournal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              Mettre à jour
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs text-destructive hover:text-destructive"
+              disabled={clearing || logs.length === 0}
+              onClick={async () => {
+                if (!confirm('Supprimer toutes les entrées du registre ?')) return;
+                setClearing(true);
+                try {
+                  const { error } = await supabase
+                    .from('seo_agent_logs' as any)
+                    .delete()
+                    .neq('id', '00000000-0000-0000-0000-000000000000');
+                  if (error) throw error;
+                  setLogs([]);
+                  toast({ title: '🗑️ Registre vidé', description: 'Toutes les entrées ont été supprimées.' });
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de vider le registre.', variant: 'destructive' });
+                } finally {
+                  setClearing(false);
+                }
+              }}
+            >
+              {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              Vider
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
