@@ -129,7 +129,7 @@ export function MyReportsTab() {
   const tr = t[language];
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
-  const [selectedSite, setSelectedSite] = useState<string | null>(null);
+  const [selectedSite, setSelectedSite] = useState<string>('__all__');
   const [folders, setFolders] = useState<ReportFolder[]>([]);
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [archivedFolders, setArchivedFolders] = useState<ReportFolder[]>([]);
@@ -152,19 +152,30 @@ export function MyReportsTab() {
       .order('position')
       .then(({ data }) => {
         setSites(data || []);
-        if (data?.length && !selectedSite) setSelectedSite(data[0].id);
       });
   }, [user]);
 
   // Get domain for selected site
-  const selectedDomain = sites.find(s => s.id === selectedSite)?.domain || '';
+  const selectedDomain = selectedSite === '__all__' || selectedSite === '__other__'
+    ? null
+    : sites.find(s => s.id === selectedSite)?.domain || '';
+
+  // Helper: extract domain from URL
+  const getDomain = (url: string) => {
+    try {
+      const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+      return u.hostname.replace('www.', '');
+    } catch { return ''; }
+  };
 
   // Fetch folders & reports for selected site + current folder
   const fetchData = useCallback(async () => {
-    if (!user || !selectedDomain) return;
+    if (!user) return;
+    // Need at least a selection
+    if (!selectedSite) return;
     setLoading(true);
 
-    // Get all reports matching domain
+    // Folders query
     let foldersQ = supabase
       .from('report_folders')
       .select('*')
@@ -176,7 +187,7 @@ export function MyReportsTab() {
       foldersQ = foldersQ.eq('parent_id', currentFolderId);
     }
 
-    // Reports matching domain
+    // Reports query — fetch ALL for this user, filter client-side
     let reportsQ = supabase
       .from('saved_reports')
       .select('*')
@@ -194,19 +205,31 @@ export function MyReportsTab() {
     ]);
 
     const allFolders = (fRes.data || []) as ReportFolder[];
-    const allReports = (rRes.data || []).filter((r: any) => {
-      try {
-        const u = new URL(r.url.startsWith('http') ? r.url : `https://${r.url}`);
-        return u.hostname.replace('www.', '') === selectedDomain.replace('www.', '');
-      } catch { return false; }
-    }) as SavedReport[];
+    let allReports = (rRes.data || []) as SavedReport[];
+
+    // Filter by site selection
+    if (selectedSite === '__all__') {
+      // Show all reports — no domain filter
+    } else if (selectedSite === '__other__') {
+      // Show reports not matching any tracked site domain
+      const trackedDomains = sites.map(s => s.domain.replace('www.', ''));
+      allReports = allReports.filter(r => {
+        const rd = getDomain(r.url);
+        return !trackedDomains.some(td => rd === td.replace('www.', ''));
+      });
+    } else if (selectedDomain) {
+      allReports = allReports.filter(r => {
+        const rd = getDomain(r.url);
+        return rd === selectedDomain.replace('www.', '');
+      });
+    }
 
     setFolders(allFolders.filter(f => !f.is_archived));
     setReports(allReports.filter(r => !r.is_archived));
     setArchivedFolders(allFolders.filter(f => f.is_archived));
     setArchivedReports(allReports.filter(r => r.is_archived));
     setLoading(false);
-  }, [user, selectedDomain, currentFolderId]);
+  }, [user, selectedSite, selectedDomain, currentFolderId, sites]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -297,15 +320,22 @@ export function MyReportsTab() {
     <Card>
       <CardHeader className="pb-2 pt-3 px-4" />
       <CardContent>
-        {sites.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p>{tr.noSites}</p>
-          </div>
-        ) : (
-          <div className="flex gap-4">
+        <div className="flex gap-4">
             {/* Site sidebar */}
             <div className="flex flex-col gap-1 shrink-0 w-36">
+              {/* All reports */}
+              <button
+                onClick={() => { setSelectedSite('__all__'); setCurrentFolderId(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
+                  selectedSite === '__all__'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                }`}
+              >
+                {language === 'fr' ? 'Tous' : language === 'es' ? 'Todos' : 'All'}
+              </button>
+
+              {/* Tracked sites */}
               {sites.map(site => (
                 <button
                   key={site.id}
@@ -319,6 +349,18 @@ export function MyReportsTab() {
                   <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
                 </button>
               ))}
+
+              {/* Other reports (unmatched domains) */}
+              <button
+                onClick={() => { setSelectedSite('__other__'); setCurrentFolderId(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
+                  selectedSite === '__other__'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                }`}
+              >
+                {language === 'fr' ? 'Autres' : language === 'es' ? 'Otros' : 'Others'}
+              </button>
             </div>
 
             {/* Main content */}
@@ -460,9 +502,8 @@ export function MyReportsTab() {
                   )}
                 </div>
               )}
-            </div>
           </div>
-        )}
+        </div>
       </CardContent>
 
       {/* New Folder Dialog */}
