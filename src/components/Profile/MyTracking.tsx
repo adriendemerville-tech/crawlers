@@ -1093,7 +1093,7 @@ export function MyTracking() {
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground/70">
                         {t.lastAudit} : {currentSite.last_audit_at 
                           ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
                           : t.never}
