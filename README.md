@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
 > **Dernière mise à jour** : 20 mars 2026  
-> **Version** : 2.9.0  
-> **Lignes de code** : ~150 000 (Backend: 42 000 · Frontend: 108 000)
+> **Version** : 2.10.0  
+> **Lignes de code** : ~155 000 (Backend: 43 500 · Frontend: 108 000)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (94 fonctions + 21 modules partagés)
+### 2.1 Edge Functions (95 fonctions + 21 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
@@ -36,7 +36,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Crawl & Analyse** | `crawl-site`, `process-crawl-queue`, `fetch-sitemap-tree`, `validate-url` | Crawl multi-pages (max 500), file d'attente |
 | **Tracking & SERP** | `fetch-serp-kpis`, `refresh-serp-all`, `refresh-llm-visibility-all`, `calculate-llm-volumes`, `snapshot-audit-impact`, `measure-audit-impact` | Suivi hebdomadaire SEO/GEO, autorité sémantique |
 | **Paiement** | `create-checkout`, `create-subscription-session`, `create-credit-checkout`, `create-customer-portal`, `stripe-webhook`, `stripe-actions`, `apply-affiliate`, `apply-referral`, `apply-retention-offer` | Stripe, crédits, affiliation, rétention |
-| **Auth & Email** | `auth-actions`, `auth-email-hook`, `send-password-reset`, `send-verification-code`, `verify-email-code`, `check-email-exists`, `process-email-queue`, `ensure-profile` | Authentification, emails transactionnels (PGMQ), suppression/archivage utilisateurs |
+| **Auth & Email** | `auth-actions`, `auth-email-hook`, `send-password-reset`, `send-verification-code`, `verify-email-code`, `check-email-exists`, `process-email-queue`, `ensure-profile`, `delete-account` | Authentification, emails transactionnels (PGMQ), suppression/archivage utilisateurs |
 | **Injection & SDK** | `serve-client-script`, `process-script-queue`, `generate-corrective-code`, `dry-run-script`, `get-final-script`, `verify-injection`, `widget-connect`, `check-widget-health`, `sdk-status`, `watchdog-scripts` | Scripts correctifs, widget JS, monitoring |
 | **Content & Blog** | `generate-blog-from-news`, `fetch-news`, `generate-infotainment`, `rss-feed`, `sitemap` | Génération de contenu, flux RSS |
 | **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO), supervision par Supervisor |
@@ -147,8 +147,12 @@ Organisées en **13 domaines fonctionnels** :
 - Modal d'inscription contextuelle en mode ouvert (après 60s sur une feature) avec tracking admin (affichages, fermetures, signups abandonnés, emails envoyés)
 
 ### 4.6 Gestion utilisateurs (Admin)
-- Suppression = archivage complet dans `archived_users` (profil, crédits, plan, branding)
-- Suppression effective du compte auth (Supabase Admin API) pour libérer l'email
+- **Suppression dédiée** : Edge Function `delete-account` en 4 étapes :
+  1. Archivage complet dans `archived_users` (profil, crédits, plan, branding, snapshot)
+  2. Nettoyage exhaustif de **60+ tables** dans l'ordre des dépendances FK (leaves → parents)
+  3. Suppression du compte `auth.users` pour libérer définitivement l'email
+  4. Vérification post-suppression (profile, auth, tracked_sites) avec rapport d'anomalies
+- Aucun faux positif : un email archivé ne remonte plus comme « déjà inscrit »
 - Réinscription possible : modal "Welcome Back" proposant la restauration des données
 - Interface utilisateurs condensée (sans scroll horizontal), actions au survol
 - Session admin auto-expirée après 12h
