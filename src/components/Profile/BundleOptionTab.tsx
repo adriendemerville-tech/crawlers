@@ -205,13 +205,13 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
             'Aucune API sélectionnée'
           )}
         </span>
-        <Button
+        <button
           onClick={() => onSubscribe(Array.from(selected))}
           disabled={selected.size === 0}
-          size="sm"
+          className="px-5 py-2 rounded-lg text-sm font-semibold text-amber-300 bg-gradient-to-br from-[hsl(262,83%,45%)] to-[hsl(262,83%,58%)] shadow-md shadow-[hsl(262,83%,30%)]/30 hover:shadow-lg hover:from-[hsl(262,83%,50%)] hover:to-[hsl(262,83%,62%)] active:scale-[0.97] transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
           S'abonner
-        </Button>
+        </button>
       </div>
     </div>
   );
