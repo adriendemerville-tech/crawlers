@@ -48,7 +48,7 @@ export function BundleManagement() {
   const fetchAll = async () => {
     setRefreshing(true);
     try {
-      const [subsRes, catalogRes, errorsRes] = await Promise.all([
+      const [subsRes, catalogRes, errorsRes, tokenRes, paidRes] = await Promise.all([
         supabase
           .from('bundle_subscriptions')
           .select('id, user_id, selected_apis, api_count, monthly_price_cents, status, created_at, stripe_subscription_id')
@@ -63,10 +63,43 @@ export function BundleManagement() {
           .like('event_type', '%bundle%error%')
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'ai_token_usage')
+          .order('created_at', { ascending: false })
+          .limit(1000),
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'paid_api_call')
+          .order('created_at', { ascending: false })
+          .limit(1000),
       ]);
       if (subsRes.data) setSubs(subsRes.data as unknown as BundleSub[]);
       if (catalogRes.data) setCatalog(catalogRes.data as unknown as CatalogApi[]);
       if (errorsRes.data) setErrors(errorsRes.data as unknown as BundleError[]);
+
+      // Aggregate costs per function
+      const costMap: Record<string, { total_tokens: number; call_count: number }> = {};
+      (tokenRes.data || []).forEach((row: any) => {
+        const fn = row.event_data?.function_name;
+        if (!fn) return;
+        if (!costMap[fn]) costMap[fn] = { total_tokens: 0, call_count: 0 };
+        costMap[fn].total_tokens += (row.event_data?.total_tokens || 0);
+        costMap[fn].call_count += 1;
+      });
+      (paidRes.data || []).forEach((row: any) => {
+        const fn = row.event_data?.function_name;
+        if (!fn) return;
+        if (!costMap[fn]) costMap[fn] = { total_tokens: 0, call_count: 0 };
+        costMap[fn].call_count += 1;
+      });
+      const costEntries = Object.entries(costMap)
+        .filter(([, v]) => v.total_tokens > 0 || v.call_count > 0)
+        .sort(([, a], [, b]) => b.total_tokens - a.total_tokens)
+        .map(([fn, v]) => ({ function_name: fn, ...v }));
+      setApiCosts(costEntries);
     } catch (err) {
       console.error('BundleManagement fetch error:', err);
     } finally {
