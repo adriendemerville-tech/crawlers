@@ -3352,6 +3352,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_archived: boolean
           name: string
           parent_id: string | null
           position: number
@@ -3361,6 +3362,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_archived?: boolean
           name: string
           parent_id?: string | null
           position?: number
@@ -3370,6 +3372,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_archived?: boolean
           name?: string
           parent_id?: string | null
           position?: number
@@ -3474,6 +3477,7 @@ export type Database = {
           created_at: string
           folder_id: string | null
           id: string
+          is_archived: boolean
           pdf_url: string | null
           position: number
           report_data: Json
@@ -3487,6 +3491,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_archived?: boolean
           pdf_url?: string | null
           position?: number
           report_data: Json
@@ -3500,6 +3505,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_archived?: boolean
           pdf_url?: string | null
           position?: number
           report_data?: Json
