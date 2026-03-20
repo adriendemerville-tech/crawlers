@@ -2249,6 +2249,9 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
 CONTENU PAGE: Titre="${title||'?'}", Desc="${(metaDesc||'?').substring(0,200)}", H1="${h1||'?'}"
 Utilise ces informations pour identifier le core business.`;
       console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
+      // Extract SEO terms from balises for jargon intentionality
+      const balisesText = `${title} ${metaDesc} ${h1}`.toLowerCase();
+      ctaSeoSignals.seoTermsInBalises = balisesText.split(/\s+/).filter(w => w.length > 4);
     }
     
     html = '';
@@ -2256,7 +2259,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandSignals, eeatSignals };
+  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals: ctaSeoSignals || { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false } };
 }
 
 // ==================== MAIN HANDLER ====================
