@@ -1094,8 +1094,8 @@ export function MyTracking() {
                         <ExternalLink className="h-3.5 w-3.5" />
                         <span>{language === 'fr' ? 'Visiter le site' : language === 'es' ? 'Visitar sitio' : 'Visit site'}</span>
                       </a>
-                      <p className="text-xs text-muted-foreground">
-                        {t.lastAudit}: {currentSite.last_audit_at 
+                      <p className="text-sm text-muted-foreground">
+                        {t.lastAudit} : {currentSite.last_audit_at 
                           ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
                           : t.never}
                         {refreshingSites.has(currentSite.id) && (
