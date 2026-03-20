@@ -137,6 +137,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
+  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const { notifications } = useAdminNotifications();
 
   useEffect(() => {
@@ -149,14 +150,13 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
         const config = data.card_order as Record<string, unknown>;
         setDocsHiddenForViewers(!!config.docs_hidden_for_viewers);
+        setSimulatedDataEnabled(config.simulated_data_enabled !== false);
       }
     };
     loadDocVisibility();
   }, []);
 
-  const toggleDocsVisibility = async () => {
-    const newValue = !docsHiddenForViewers;
-    setDocsHiddenForViewers(newValue);
+  const updateAdminConfig = async (patch: Record<string, unknown>) => {
     const { data: existing } = await supabase
       .from('admin_dashboard_config')
       .select('id, card_order')
@@ -168,9 +168,21 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         : {};
       await supabase
         .from('admin_dashboard_config')
-        .update({ card_order: { ...currentConfig, docs_hidden_for_viewers: newValue } })
+        .update({ card_order: { ...currentConfig, ...patch } as Record<string, unknown> as any })
         .eq('id', existing.id);
     }
+  };
+
+  const toggleDocsVisibility = async () => {
+    const newValue = !docsHiddenForViewers;
+    setDocsHiddenForViewers(newValue);
+    await updateAdminConfig({ docs_hidden_for_viewers: newValue });
+  };
+
+  const toggleSimulatedData = async () => {
+    const newValue = !simulatedDataEnabled;
+    setSimulatedDataEnabled(newValue);
+    await updateAdminConfig({ simulated_data_enabled: newValue });
   };
 
   const showDocs = canSeeDocs && !(readOnly && docsHiddenForViewers);
@@ -294,7 +306,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
             ))}
 
             {!readOnly && (
-              <div className="pt-2 border-t border-border/40">
+              <div className="pt-2 border-t border-border/40 space-y-1">
                 <button
                   onClick={toggleDocsVisibility}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
@@ -305,6 +317,18 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                 {docsHiddenForViewers && (
                   <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
                     Masqué
+                  </Badge>
+                )}
+                <button
+                  onClick={toggleSimulatedData}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                >
+                  {simulatedDataEnabled ? <Eye className="h-3 w-3 shrink-0" /> : <EyeOff className="h-3 w-3 shrink-0" />}
+                  <span className="truncate">{simulatedDataEnabled ? 'Données simulées ON' : 'Données simulées OFF'}</span>
+                </button>
+                {simulatedDataEnabled && (
+                  <Badge variant="outline" className="text-[9px] mt-1 ml-2 border-orange-500/40 text-orange-500">
+                    Simulé
                   </Badge>
                 )}
               </div>
