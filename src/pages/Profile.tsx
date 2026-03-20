@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ const MyTracking = lazy(() => import('@/components/Profile/MyTracking').then(m =
 const MyCrawls = lazy(() => import('@/components/Profile/MyCrawls').then(m => ({ default: m.MyCrawls })));
 const GMBDashboard = lazy(() => import('@/components/Profile/GMBDashboard').then(m => ({ default: m.GMBDashboard })));
 const MyReportsTab = lazy(() => import('@/components/Profile/MyReportsTab').then(m => ({ default: m.MyReportsTab })));
+const BundleOptionTab = lazy(() => import('@/components/Profile/BundleOptionTab').then(m => ({ default: m.BundleOptionTab })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
@@ -270,6 +271,15 @@ export default function Profile() {
                     <ProfileSettings />
                   </TabsContent>
                 )}
+                {isAdmin && (
+                  <TabsTrigger
+                    value="bundle"
+                    className="flex-1 gap-2"
+                  >
+                    <Blocks className="h-4 w-4 text-orange-500" />
+                    <span className="hidden sm:inline">Bundle</span>
+                  </TabsTrigger>
+                )}
 
                 <TabsContent value="reports">
                   <MyReports />
@@ -298,6 +308,12 @@ export default function Profile() {
                 {isProUser && (
                   <TabsContent value="reports-tab">
                     <MyReportsTab />
+                  </TabsContent>
+                )}
+
+                {isAdmin && (
+                  <TabsContent value="bundle">
+                    <BundleOptionTab />
                   </TabsContent>
                 )}
 
