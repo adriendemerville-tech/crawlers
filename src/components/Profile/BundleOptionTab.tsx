@@ -74,10 +74,16 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [segmentSort, setSegmentSort] = useState<'asc' | 'desc' | null>(null);
   const [featureSort, setFeatureSort] = useState<'asc' | 'desc' | null>(null);
+  const [nameSort, setNameSort] = useState<'asc' | 'desc' | null>(null);
 
   const sortedApis = useMemo(() => {
     let sorted = [...apis];
-    if (segmentSort) {
+    if (nameSort) {
+      sorted.sort((a, b) => {
+        const cmp = a.api_name.localeCompare(b.api_name, 'fr');
+        return nameSort === 'asc' ? cmp : -cmp;
+      });
+    } else if (segmentSort) {
       sorted.sort((a, b) => {
         const cmp = a.seo_segment.localeCompare(b.seo_segment, 'fr');
         return segmentSort === 'asc' ? cmp : -cmp;
@@ -89,7 +95,7 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
       });
     }
     return sorted;
-  }, [apis, segmentSort, featureSort]);
+  }, [apis, segmentSort, featureSort, nameSort]);
 
   const toggleSegmentSort = () => {
     setFeatureSort(null);
