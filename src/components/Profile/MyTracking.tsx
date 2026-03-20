@@ -1721,6 +1721,7 @@ export function MyTracking() {
                    {/* LLM Visibility Dashboard */}
                    {currentSite && user && (
                     <LLMVisibilityDashboard
+                      key={`llm-vis-${currentSite.id}-${llmBenchmarkRefreshKey}`}
                       trackedSiteId={currentSite.id}
                       userId={user.id}
                       domain={currentSite.domain}
