@@ -481,8 +481,14 @@ function CorrelationMonitor() {
     const backendErrors = allErrors.filter(e => e.source === 'backend').length;
     const silentErrors = allErrors.filter(e => e.source === 'silent').length;
     const injectionErrors = allErrors.filter(e => e.source === 'injection').length;
-    return { total, warning, info, frontendErrors, backendErrors, silentErrors, injectionErrors };
-  }, [correlations, allErrors]);
+    // Success = CTO changes (non no_change) with zero correlated errors
+    const activeChanges = ctoChanges.filter(c => c.decision !== 'no_change');
+    const failedIds = new Set(correlations.map(c => c.ctoChange.id));
+    const successes = activeChanges.filter(c => !failedIds.has(c.id));
+    const successCount = successes.length;
+    const successRate = activeChanges.length > 0 ? Math.round((successCount / activeChanges.length) * 100) : 100;
+    return { total, warning, info, frontendErrors, backendErrors, silentErrors, injectionErrors, successCount, successRate, activeChanges: activeChanges.length, successes };
+  }, [correlations, allErrors, ctoChanges]);
 
   if (loading) {
     return (
@@ -496,7 +502,17 @@ function CorrelationMonitor() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Badge variant="outline" className="text-xs">30 jours — Corrélations CTO ↔ Erreurs</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">30 jours — Corrélations CTO ↔ Erreurs</Badge>
+          <Badge className={cn(
+            "text-xs font-semibold",
+            stats.successRate >= 70
+              ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+              : "bg-destructive/15 text-destructive border-destructive/30"
+          )}>
+            {stats.successRate}% succès ({stats.successCount}/{stats.activeChanges})
+          </Badge>
+        </div>
         <Button variant="ghost" size="sm" onClick={fetchData} disabled={refreshing}>
           <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
           Actualiser
@@ -614,8 +630,37 @@ function CorrelationMonitor() {
                   ))}
                   {corr.relatedErrors.length > 5 && (
                     <p className="text-[10px] text-muted-foreground">+{corr.relatedErrors.length - 5} autres</p>
-                  )}
-                </div>
+      )}
+
+      {/* Successes list */}
+      {stats.successes.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            Réussites CTO ({stats.successes.length})
+          </h4>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {stats.successes.slice(0, 20).map((change) => (
+              <Card key={change.id} className="border-l-4 border-l-emerald-500">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <span className="font-mono text-xs font-medium">{change.function_analyzed}</span>
+                      <Badge variant="default" className="text-[10px] px-1.5 py-0">{change.decision}</Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(change.created_at), 'dd/MM HH:mm', { locale: fr })}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">{change.analysis_summary}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
               </CardContent>
             </Card>
           ))}
