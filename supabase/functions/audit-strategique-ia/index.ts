@@ -1951,7 +1951,16 @@ RÈGLES:
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals }> {
+interface CtaSeoSignals {
+  ctaCount: number;
+  ctaTypes: string[]; // 'devis', 'demo', 'achat', 'telecharger', 'contact', 'generic'
+  ctaAggressive: boolean;
+  seoTermsInBalises: string[];
+  jargonTermsInBalises: string[];
+  toneExplanatory: boolean; // detected "c'est-à-dire", parenthèses explicatives, etc.
+}
+
+async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals; ctaSeoSignals: CtaSeoSignals }> {
   let pageContentContext = '';
   const brandSignals: BrandSignal[] = [];
   const eeatSignals: EEATSignals = {
