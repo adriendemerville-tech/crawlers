@@ -580,7 +580,6 @@ export default function Signup() {
                       </div>
                     </FormControl>
                     <PasswordStrengthBar password={watchedPassword} compact />
-                    <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
