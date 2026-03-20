@@ -325,12 +325,6 @@ export default function Profile() {
               </Suspense>
             </Tabs>
 
-            <div className="flex justify-end mt-8">
-              <Button variant="outline" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                {t.logout}
-              </Button>
-            </div>
           </motion.div>
         </main>
         <Suspense fallback={null}>
