@@ -226,9 +226,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             Carte d'identité
             <Badge variant="outline" className="text-[10px]">{site.domain}</Badge>
             <span className="text-xs text-muted-foreground ml-auto tabular-nums">{filledCount}/{TAXONOMY_FIELDS.length}</span>
-            {site.identity_confidence != null && (
-              <Badge variant={site.identity_confidence >= 70 ? 'default' : 'secondary'} className="text-[10px]">{site.identity_confidence}%</Badge>
-            )}
+          </DialogTitle>
           </DialogTitle>
         </DialogHeader>
 
