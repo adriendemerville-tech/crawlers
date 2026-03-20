@@ -2545,6 +2545,7 @@ Deno.serve(async (req) => {
         hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
         hasExpertCitations: false, detectedSocialUrls: [],
       };
+      const extractedCtaSeoSignals = metadataResult?.ctaSeoSignals || { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
       rankingOverview = rkOverviewResult;
 
       const context = detectBusinessContext(domain, pageContentContext);
