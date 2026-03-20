@@ -66,12 +66,29 @@ interface JsonLdValidation {
   isJsGenerated: boolean;
 }
 
+interface HeadingHierarchy {
+  levels: number[]; // all heading levels found (1,2,3,4,5,6)
+  gaps: string[];   // e.g. ["H1→H3 (H2 manquant)"]
+  hasMultipleH1: boolean;
+  verdict: 'optimal' | 'warning' | 'critical';
+}
+
+interface SitemapRobotsCoherence {
+  sitemapExists: boolean;
+  sitemapUrls: string[];
+  sitemapDeclaredInRobots: boolean;
+  issues: { type: string; description: string; severity: 'critical' | 'important' }[];
+  verdict: 'optimal' | 'warning' | 'critical';
+}
+
 interface ExpertInsights {
   semanticConsistency: SemanticConsistency;
   contentDensity: ContentDensity;
   linkProfile: LinkProfile;
   jsonLdValidation: JsonLdValidation;
   brokenLinks?: BrokenLinksAnalysis;
+  headingHierarchy?: HeadingHierarchy;
+  sitemapRobotsCoherence?: SitemapRobotsCoherence;
 }
 
 interface HtmlAnalysis {
