@@ -228,6 +228,7 @@ export default function Signup() {
   const checkUserExistsFirst = async () => {
     const email = signupForm.getValues('email');
     if (!email || !z.string().email().safeParse(email).success) {
+      // Let normal form validation handle it
       signupForm.handleSubmit(handleSignup)();
       return;
     }
@@ -236,26 +237,40 @@ export default function Signup() {
     setShowExistsBanner(false);
 
     try {
-      // Check user existence via profiles table (email column)
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', email.toLowerCase().trim())
-        .maybeSingle();
+      // Attempt signup with the provided password to check existence
+      const password = signupForm.getValues('password');
+      const { error } = await signUpWithEmail(
+        email,
+        password || 'temp_check_123456',
+        signupForm.getValues('firstName') || '',
+        signupForm.getValues('lastName') || ''
+      );
 
-      if (existingProfile) {
-        // User already exists - show banner without password validation
+      if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
+        // User exists - show banner directly, skip password validation
         setShowExistsBanner(true);
         setIsLoading(false);
         return;
       }
-    } catch {
-      // If check fails, fall through to normal flow
-    }
 
-    setIsLoading(false);
-    // User doesn't exist - proceed with full form validation (including passwords)
-    signupForm.handleSubmit(handleSignup)();
+      if (!error) {
+        // Signup succeeded - proceed to verification
+        trackAnalyticsEvent('signup_complete');
+        trackAnalyticsEvent('verification_email_sent' as any);
+        setVerificationEmail(email);
+        supabase.functions.invoke('send-verification-code', { body: { email } });
+        setIsLoading(false);
+        setStep('verify');
+        return;
+      }
+
+      // Other error - fall through to normal form validation
+      setIsLoading(false);
+      signupForm.handleSubmit(handleSignup)();
+    } catch {
+      setIsLoading(false);
+      signupForm.handleSubmit(handleSignup)();
+    }
   };
 
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
