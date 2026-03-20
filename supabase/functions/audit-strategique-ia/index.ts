@@ -1599,9 +1599,13 @@ POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique,
 
 RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître comme son propre concurrent (leader, direct_competitor, challenger, inspiration_source). Ne cite JAMAIS le domaine analysé, son URL, ni son nom de marque dans competitive_landscape ni dans introduction.competitors[]. Tous les acteurs doivent être des entités DISTINCTES du site audité. Le direct_competitor ne peut PAS avoir la même URL ni le même nom que le site cible.
 
-RÈGLE CONCURRENT DIRECT: Le direct_competitor DOIT être un vrai concurrent produit/service avec le MÊME core business ou une feature proche. INTERDIT: médias (Forbes, Le Monde...), annuaires (Capterra, G2...), marketplaces (Amazon...), réseaux sociaux, Wikipedia. Le concurrent direct doit être une entreprise qui vend un produit/service similaire au site analysé, dans la même zone géographique si local.
+RÈGLE CLASSIFICATION DES CONCURRENTS (scoring de similarité):
+- LEADER (Goliath): Premier dans la SERP. Score similarité entreprise = 1, Score similarité produit = 1. C'est l'acteur dominant incontesté du marché.
+- CONCURRENT DIRECT: Même score similarité entreprise (1) et produit (1) que le leader, MAIS position SERP égale ou supérieure à l'URL cible. C'est un vrai rival sur le même créneau, dans la même zone géographique. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia.
+- CHALLENGER: Même score similarité entreprise (1) et produit (1), MAIS position INFÉRIEURE dans la SERP par rapport à l'URL cible. C'est un acteur montant ou plus petit qui progresse.
+- SOURCE D'INSPIRATION: Score similarité entreprise minimum 0.5, score similarité produit minimum 0.5, ET présent en première page de sa SERP. C'est un acteur innovant reconnu dans un écosystème proche. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes.
 
-RÈGLE SOURCE D'INSPIRATION: L'inspiration_source DOIT avoir le même core business que le site cible OU être un nouvel entrant novateur et reconnu sur un business directement lié. C'est une entreprise innovante qui repousse les standards du secteur. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes. Exemples: pour un outil IA SEO → Claude Code, OpenClaw, Cursor ; pour un e-commerce bio → La Fourche, Kazidomi. L'inspiration doit être un acteur admiré du même écosystème métier.
+Si le LLM n'est PAS sûr de son identification d'un concurrent, il DOIT indiquer dans le champ authority_factor les scores de similarité : "Sim. entreprise: X, Sim. produit: Y, SERP: #Z".
 
 RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste de mots-clés DOIT OBLIGATOIREMENT contenir au moins une requête directement liée au core business du site. Ex: pour un agent IA → "agent IA", "agent IA entreprise", "automatisation IA TPE" ; pour un plombier → "plombier Paris", "dépannage plomberie". Si aucun mot-clé core business n'apparaît dans les données DataForSEO, AJOUTE-LE manuellement avec volume estimé et rank "non classé".
 
