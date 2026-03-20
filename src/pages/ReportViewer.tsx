@@ -226,9 +226,9 @@ export default function ReportViewer() {
 
   const badgeLabel =
     report.report_type === 'seo_technical'
-      ? (language === 'fr' ? 'Audit Technique' : language === 'es' ? 'Auditoría Técnica' : 'Technical Audit')
+      ? (language === 'fr' ? 'Audit Technique SEO' : language === 'es' ? 'Auditoría Técnica SEO' : 'Technical SEO Audit')
       : report.report_type === 'seo_strategic'
-      ? (language === 'fr' ? 'Audit Stratégique' : language === 'es' ? 'Auditoría Estratégica' : 'Strategic Audit')
+      ? (language === 'fr' ? 'Audit Stratégique GEO' : language === 'es' ? 'Auditoría Estratégica GEO' : 'Strategic GEO Audit')
       : report.report_type.toUpperCase();
 
   return (
