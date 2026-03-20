@@ -173,7 +173,7 @@ export default function Signup() {
   }, [step]);
 
   useEffect(() => {
-    if (user && step === 'form') {
+    if (user && step === 'form' && !isSigningUp) {
       const returnPath = sessionStorage.getItem('audit_return_path');
       const downloadReturnPath = sessionStorage.getItem('download_return_path');
       if (returnPath) {
@@ -185,7 +185,7 @@ export default function Signup() {
         navigate('/');
       }
     }
-  }, [user, navigate, step]);
+  }, [user, navigate, step, isSigningUp]);
 
   const verifyTurnstile = async (): Promise<boolean> => {
     // Non-blocking: if token isn't ready yet, skip silently
