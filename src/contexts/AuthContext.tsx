@@ -106,12 +106,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ensureProfile(session.user.id).then(setProfile);
           }, 0);
 
-          // Auto-trigger Google OAuth (GSC+GA4+GMB+GTM) on first signup
+          // Auto-trigger Google OAuth (GSC+GA4+GMB+GTM) on first signup or admin re-consent
           if (event === 'SIGNED_IN') {
             const googleOauthKey = `google_oauth_prompted_${session.user.id}`;
-            if (!localStorage.getItem(googleOauthKey)) {
+            const adminResetKey = `google_oauth_admin_reset_${session.user.id}`;
+            
+            let shouldTrigger = !localStorage.getItem(googleOauthKey);
+            
+            // Admins can force re-consent by setting a reset flag
+            if (localStorage.getItem(adminResetKey)) {
+              shouldTrigger = true;
+              localStorage.removeItem(adminResetKey);
+            }
+            
+            if (shouldTrigger) {
               localStorage.setItem(googleOauthKey, 'true');
-              // Delay slightly to let the app settle after auth
               setTimeout(async () => {
                 try {
                   const { data, error } = await supabase.functions.invoke('gsc-auth', {
