@@ -71,6 +71,13 @@ const services: ServiceButton[] = [
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#FBBC04" d="M3.2 15.3l4.9-8.5c.6-1 1.9-1.4 2.9-.8l4.9 2.8c1 .6 1.4 1.9.8 2.9l-4.9 8.5c-.6 1-1.9 1.4-2.9.8L4 18.2c-1-.6-1.4-1.9-.8-2.9z"/><path fill="#4285F4" d="M12.9 9.7l4.9-8.5c.6-1 1.9-1.4 2.9-.8.5.3.8.7 1 1.2.1.5.1 1-.2 1.5L16.6 12c-.3-.4-.6-.7-1-.9l-2.7-1.4z"/><circle fill="#34A853" cx="5.5" cy="19.5" r="3"/></svg>`,
   },
   {
+    id: 'gmb',
+    name: 'Google My Business',
+    category: 'analytics',
+    available: true,
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4285F4" d="M22 12l-4-4v3H8V8l-4 4 4 4v-3h10v3z"/><path fill="#34A853" d="M12 22c5.523 0 10-4.477 10-10h-4a6 6 0 01-6 6v4z"/><path fill="#FBBC05" d="M2 12c0 5.523 4.477 10 10 10v-4a6 6 0 01-6-6H2z"/><path fill="#EA4335" d="M12 2C6.477 2 2 6.477 2 12h4a6 6 0 016-6V2z"/><path fill="#4285F4" d="M22 12c0-5.523-4.477-10-10-10v4a6 6 0 016 6h4z"/></svg>`,
+  },
+  {
     id: 'wordpress',
     name: 'WordPress',
     category: 'cms',
@@ -160,6 +167,29 @@ export function ExternalApisTab() {
       } catch (err) {
         console.error('[ExternalApis] Google Ads auth error:', err);
         toast.error(language === 'fr' ? 'Erreur de connexion Google Ads' : language === 'es' ? 'Error de conexión Google Ads' : 'Google Ads connection error');
+      } finally {
+        setConnectingId(null);
+      }
+      return;
+    }
+
+    // Google My Business — uses same GSC OAuth (which includes business.manage scope)
+    if (service.id === 'gmb') {
+      setConnectingId(service.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
+        });
+        if (error) throw error;
+        if (data?.auth_url) {
+          window.location.href = data.auth_url;
+        } else {
+          throw new Error('No auth URL returned');
+        }
+      } catch (err) {
+        console.error('[ExternalApis] GMB auth error:', err);
+        toast.error(language === 'fr' ? 'Erreur de connexion GMB' : language === 'es' ? 'Error de conexión GMB' : 'GMB connection error');
       } finally {
         setConnectingId(null);
       }
