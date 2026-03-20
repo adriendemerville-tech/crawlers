@@ -187,15 +187,11 @@ export default function Signup() {
   }, [user, navigate, step]);
 
   const verifyTurnstile = async (): Promise<boolean> => {
-    if (!token) {
-      toast.error(language === 'fr' ? 'Veuillez compléter la vérification' : 'Please complete the verification');
-      return false;
-    }
-    if (token === 'TURNSTILE_UNAVAILABLE') return true;
+    // Non-blocking: if token isn't ready yet, skip silently
+    if (!token || token === 'TURNSTILE_UNAVAILABLE') return true;
     try {
       const { data, error } = await supabase.functions.invoke('verify-turnstile', { body: { token } });
       if (error || !data?.success) {
-        toast.error(language === 'fr' ? 'Vérification échouée, réessayez' : 'Verification failed, please retry');
         resetTurnstile();
         return false;
       }
@@ -584,7 +580,6 @@ export default function Signup() {
                       </div>
                     </FormControl>
                     <PasswordStrengthBar password={watchedPassword} compact />
-                    <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
