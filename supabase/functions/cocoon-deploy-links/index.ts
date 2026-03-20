@@ -256,34 +256,31 @@ async function deployViaSiteRules(
 
 // Generate vanilla JS that injects internal links
 function generateLinkInjectionScript(links: Array<{ source: string; target: string; anchor: string; action: string }>): string {
-  return `(function(){
-  'use strict';
-  var links = ${JSON.stringify(links)};
-  var currentPath = window.location.pathname;
-  
-  links.forEach(function(link) {
-    try {
-      var sourcePath = new URL(link.source, window.location.origin).pathname;
-      if (sourcePath !== currentPath) return;
-      
-      if (link.action === 'add_link') {
-        // Find first text node containing the anchor text and wrap it
-        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-        var node;
-        var regex = new RegExp('\\\\b' + link.anchor.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + '\\\\b', 'i');
-        while (node = walker.nextNode()) {
-          if (node.parentElement && node.parentElement.tagName === 'A') continue;
-          if (regex.test(node.textContent || '')) {
-            var span = document.createElement('span');
-            span.innerHTML = (node.textContent || '').replace(regex, '<a href="' + link.target + '" style="color:inherit;text-decoration:underline">' + link.anchor + '</a>');
-            node.parentNode.replaceChild(span, node);
-            break;
-          }
-        }
-      }
-    } catch(e) {}
-  });
-})();`
+  const escFn = 'function esc(s){return s.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g,"\\\\\\\\$&")}'
+  return [
+    '(function(){',
+    '"use strict";',
+    escFn + ';',
+    'var links=' + JSON.stringify(links) + ';',
+    'var cp=window.location.pathname;',
+    'links.forEach(function(l){',
+    'try{',
+    'var sp=new URL(l.source,window.location.origin).pathname;',
+    'if(sp!==cp)return;',
+    'if(l.action==="add_link"){',
+    'var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false);',
+    'var n;var re=new RegExp(esc(l.anchor),"i");',
+    'while(n=w.nextNode()){',
+    'if(n.parentElement&&n.parentElement.tagName==="A")continue;',
+    'if(re.test(n.textContent||"")){',
+    'var s=document.createElement("span");',
+    's.innerHTML=(n.textContent||"").replace(re,\'<a href="\'+l.target+\'" style="color:inherit;text-decoration:underline">\'+l.anchor+"</a>");',
+    'n.parentNode.replaceChild(s,n);break;',
+    '}}}',
+    '}catch(e){}',
+    '});',
+    '})();',
+  ].join('\n')
 }
 
 function extractSlug(url: string): string | null {
