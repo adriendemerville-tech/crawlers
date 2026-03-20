@@ -227,7 +227,6 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             <Badge variant="outline" className="text-[10px]">{site.domain}</Badge>
             <span className="text-xs text-muted-foreground ml-auto tabular-nums">{filledCount}/{TAXONOMY_FIELDS.length}</span>
           </DialogTitle>
-          </DialogTitle>
         </DialogHeader>
 
         {/* Voice enrichment hero — always visible */}
