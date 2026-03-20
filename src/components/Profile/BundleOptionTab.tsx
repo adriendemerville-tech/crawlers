@@ -200,7 +200,12 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
                   selected.has(api.id) ? 'bg-primary/[0.03]' : ''
                 }`}
               >
-                <td className="px-4 py-3 text-sm font-medium">{api.api_name}</td>
+                <td className="px-4 py-3 text-sm font-medium">
+                  <span className="flex items-center gap-2">
+                    <ApiFavicon url={api.api_url} />
+                    {api.api_name}
+                  </span>
+                </td>
                 <td className="px-1 py-3">
                   <a href={api.api_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                     <ExternalLink className="h-3.5 w-3.5" />
