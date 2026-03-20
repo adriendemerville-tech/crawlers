@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
