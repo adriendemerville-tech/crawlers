@@ -309,13 +309,12 @@ export function UserManagement() {
         // Continue with deletion even if archiving fails
       }
 
-      // 2. Delete user profile (cascade will handle related data)
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', selectedUser.user_id);
+      // 2. Delete from auth.users (cascades to profiles)
+      const { data: delResult, error } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'delete-user', user_id: selectedUser.user_id },
+      });
 
-      if (error) throw error;
+      if (error || delResult?.error) throw new Error(delResult?.error || error?.message || 'Delete failed');
 
       toast.success('Utilisateur archivé et supprimé');
       setDeleteDialogOpen(false);
