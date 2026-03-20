@@ -269,6 +269,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
   const [fontSize, setFontSize] = useState(12); // px base for messages
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploySuccess, setDeploySuccess] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
