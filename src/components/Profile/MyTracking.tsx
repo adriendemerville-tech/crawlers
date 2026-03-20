@@ -1077,11 +1077,6 @@ export function MyTracking() {
                   {/* Site header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {!isCollaborator && (
-                        <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
                       <button
                         onClick={() => setShowIdentityModal(true)}
                         className="flex items-center justify-center w-9 h-9 rounded-lg border border-muted-foreground/25 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors bg-transparent"
@@ -1089,20 +1084,27 @@ export function MyTracking() {
                       >
                         <IdCard className="h-4 w-4" />
                       </button>
-                      <div>
-                        <h3 className="font-semibold text-lg">{currentSite.domain}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {t.lastAudit}: {currentSite.last_audit_at 
-                            ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
-                            : t.never}
-                          {refreshingSites.has(currentSite.id) && (
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                              {t.refreshing}
-                            </Badge>
-                          )}
-                        </p>
-                      </div>
+                      <a
+                        href={`https://${currentSite.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        title={currentSite.domain}
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span>{language === 'fr' ? 'Visiter le site' : language === 'es' ? 'Visitar sitio' : 'Visit site'}</span>
+                      </a>
+                      <p className="text-xs text-muted-foreground">
+                        {t.lastAudit}: {currentSite.last_audit_at 
+                          ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
+                          : t.never}
+                        {refreshingSites.has(currentSite.id) && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            {t.refreshing}
+                          </Badge>
+                        )}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
 
