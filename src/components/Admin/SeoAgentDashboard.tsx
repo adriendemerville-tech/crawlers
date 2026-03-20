@@ -29,6 +29,8 @@ export function SeoAgentDashboard() {
   const [logs, setLogs] = useState<SeoLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [refreshingJournal, setRefreshingJournal] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { fetchLogs(); }, []);
