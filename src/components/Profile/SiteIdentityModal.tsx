@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, ChevronDown, ChevronUp, Loader2, Pencil, Check, X, Search } from 'lucide-react';
+import { Mic, MicOff, ChevronDown, ChevronUp, Loader2, Pencil, Check, X, Search, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -40,6 +40,8 @@ const TAXONOMY_FIELDS = [
   { key: 'main_serp_competitor', label: 'Concurrent SERP principal' },
   { key: 'confusion_risk', label: 'Risque de confusion' },
 ];
+
+const MAX_EMPTY_SHOWN = 3;
 
 function formatTargetSummary(target: any): string {
   const parts: string[] = [];
@@ -78,20 +80,20 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
 
   return (
     <div
-      className="flex items-start gap-2 py-1.5 border-b border-border/20 last:border-0 group"
+      className="flex items-center gap-3 py-2 border-b border-border/15 last:border-0 group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <span className="text-[11px] font-medium text-muted-foreground w-[130px] shrink-0 pt-1 leading-tight">
+      <span className="text-xs font-medium text-muted-foreground w-[140px] shrink-0">
         {label}
       </span>
-      <div className="flex-1 min-w-0 flex items-center gap-1">
+      <div className="flex-1 min-w-0 flex items-center gap-1.5">
         {isEditing ? (
-          <div className="flex items-center gap-1 w-full">
+          <div className="flex items-center gap-1.5 w-full">
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="h-6 text-xs py-0 px-1.5"
+              className="h-7 text-sm py-0 px-2"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSave();
@@ -99,25 +101,25 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
               }}
             />
             <button onClick={handleSave} className="text-emerald-500 hover:text-emerald-400 shrink-0">
-              <Check className="h-3 w-3" />
+              <Check className="h-3.5 w-3.5" />
             </button>
             <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground shrink-0">
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         ) : (
           <>
             {isEmpty ? (
-              <span className="text-muted-foreground/40 italic text-[11px]">Non renseigné</span>
+              <span className="text-muted-foreground/40 italic text-xs">Non renseigné</span>
             ) : (
-              <span className="text-xs text-foreground leading-tight">{value}</span>
+              <span className="text-sm text-foreground">{value}</span>
             )}
             {isHovered && (
               <button
                 onClick={() => { setEditValue(value || ''); setIsEditing(true); }}
                 className="text-muted-foreground/50 hover:text-foreground transition-colors shrink-0 ml-auto"
               >
-                <Pencil className="h-3 w-3" />
+                <Pencil className="h-3.5 w-3.5" />
               </button>
             )}
           </>
@@ -151,6 +153,31 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
       setDynamicFields(fields);
     }
   }, [open, site]);
+
+  // Split fields: filled first, then max 3 empty + "..."
+  const { leftFields, rightFields, hasHiddenEmpty } = useMemo(() => {
+    const filled: typeof TAXONOMY_FIELDS = [];
+    const empty: typeof TAXONOMY_FIELDS = [];
+
+    for (const f of TAXONOMY_FIELDS) {
+      const val = dynamicFields[f.key];
+      if (val && val !== 'null' && val !== 'undefined') {
+        filled.push(f);
+      } else {
+        empty.push(f);
+      }
+    }
+
+    const shownEmpty = empty.slice(0, MAX_EMPTY_SHOWN);
+    const allShown = [...filled, ...shownEmpty];
+    const mid = Math.ceil(allShown.length / 2);
+
+    return {
+      leftFields: allShown.slice(0, mid),
+      rightFields: allShown.slice(mid),
+      hasHiddenEmpty: empty.length > MAX_EMPTY_SHOWN,
+    };
+  }, [dynamicFields]);
 
   const handleFieldSave = async (key: string, value: string) => {
     setDynamicFields(prev => ({ ...prev, [key]: value }));
@@ -197,15 +224,15 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             .from('tracked_sites')
             .update(updates as any)
             .eq('id', site.id);
-          toast.success(`${Object.keys(updates).length} champ(s) enrichi(s) via societe.com`);
+          toast.success(`${Object.keys(updates).length} champ(s) enrichi(s)`);
           onUpdate?.();
         } else {
-          toast.info('Aucune nouvelle donnée trouvée sur societe.com');
+          toast.info('Aucune nouvelle donnée trouvée');
         }
       }
     } catch (err) {
       console.warn('Societe.com scraping error:', err);
-      toast.error('Impossible de récupérer les données de societe.com');
+      toast.error('Impossible de récupérer les données');
     } finally {
       setIsScraping(false);
     }
@@ -265,15 +292,14 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
     }
   };
 
-  const midpoint = Math.ceil(TAXONOMY_FIELDS.length / 2);
-  const leftFields = TAXONOMY_FIELDS.slice(0, midpoint);
-  const rightFields = TAXONOMY_FIELDS.slice(midpoint);
-
   const hasTargets = site.client_targets && (
     site.client_targets.primary?.length > 0 ||
     site.client_targets.secondary?.length > 0 ||
     site.client_targets.untapped?.length > 0
   );
+
+  // Count filled fields for confidence display
+  const filledCount = Object.values(dynamicFields).filter(v => v && v !== 'null' && v !== 'undefined').length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -282,16 +308,70 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
           <DialogTitle className="flex items-center gap-2 text-base">
             Carte d'identité
             <Badge variant="outline" className="text-[10px]">{site.domain}</Badge>
+            <span className="text-xs text-muted-foreground ml-auto tabular-nums">{filledCount}/{TAXONOMY_FIELDS.length}</span>
             {site.identity_confidence != null && (
-              <Badge variant={site.identity_confidence >= 70 ? 'default' : 'secondary'} className="text-[10px] ml-auto">
-                Confiance {site.identity_confidence}%
+              <Badge variant={site.identity_confidence >= 70 ? 'default' : 'secondary'} className="text-[10px]">
+                {site.identity_confidence}%
               </Badge>
             )}
           </DialogTitle>
         </DialogHeader>
 
+        {/* Voice enrichment hero */}
+        <div className={`relative rounded-xl p-4 border-2 transition-all duration-300 ${
+          isRecording
+            ? 'border-destructive bg-destructive/5 shadow-lg shadow-destructive/10'
+            : 'border-[hsl(var(--brand-violet))]/40 bg-gradient-to-r from-[hsl(var(--brand-violet))]/[0.06] to-destructive/[0.04] hover:border-[hsl(var(--brand-violet))]/60'
+        }`}>
+          <div className="flex items-center gap-4">
+            <Button
+              variant={isRecording ? 'destructive' : 'default'}
+              size="icon"
+              className={`rounded-full w-12 h-12 shrink-0 transition-all ${
+                isRecording
+                  ? 'animate-pulse shadow-lg shadow-destructive/40'
+                  : 'bg-[hsl(var(--brand-violet))] hover:bg-[hsl(var(--brand-violet))]/90 shadow-md shadow-[hsl(var(--brand-violet))]/20'
+              }`}
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </Button>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-[hsl(var(--brand-violet))]" />
+                {isProcessing ? 'Analyse en cours…' : isRecording ? 'Parlez maintenant — cliquez pour arrêter' : 'Enrichir vocalement'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Décrivez votre activité, vos objectifs et vos concurrents en quelques phrases
+              </p>
+            </div>
+            <Collapsible open={showInstructions} onOpenChange={setShowInstructions}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground shrink-0">
+                  Aide {showInstructions ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </CollapsibleTrigger>
+            </Collapsible>
+          </div>
+
+          {showInstructions && (
+            <div className="mt-3 p-3 rounded-lg bg-background/60 border border-border/30 space-y-2 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground text-[10px] uppercase tracking-wide">Conseils</p>
+              <p>• Soyez bref, faites des phrases courtes</p>
+              <p>• Soyez précis, utilisez des mots clés, des chiffres</p>
+              <div className="border-t border-border/40 pt-2 mt-2 space-y-1.5">
+                <p className="font-medium text-foreground text-[10px]">Répondez à ces questions :</p>
+                <p>❶ Quel est votre objectif business à court terme ? À moyen terme ?</p>
+                <p>❷ Qui est votre principal concurrent dans la SERP ? En général ?</p>
+                <p>❸ Avec qui Crawlers ne doit pas confondre votre entreprise ?</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Two-column taxonomy grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-0 mt-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-0 mt-1">
           <div>
             {leftFields.map((field) => (
               <EditableField
@@ -314,8 +394,12 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
           </div>
         </div>
 
+        {hasHiddenEmpty && (
+          <p className="text-center text-muted-foreground/50 text-sm tracking-widest select-none">…</p>
+        )}
+
         {/* Societe.com scrape button */}
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end">
           <Button
             variant="outline"
             size="sm"
@@ -324,7 +408,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             className="text-xs gap-1.5"
           >
             {isScraping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
-            Enrichir via societe.com
+            Enrichir
           </Button>
         </div>
 
@@ -357,45 +441,6 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Microphone + Instructions */}
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30">
-          <Button
-            variant={isRecording ? 'destructive' : 'outline'}
-            size="sm"
-            className={`rounded-full w-10 h-10 p-0 shrink-0 transition-all ${isRecording ? 'animate-pulse shadow-lg shadow-destructive/30' : ''}`}
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={isProcessing}
-          >
-            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <p className="text-[11px] text-muted-foreground">
-            {isProcessing ? 'Analyse en cours…' : isRecording ? 'Parlez maintenant — cliquez pour arrêter' : 'Enrichissez la carte vocalement'}
-          </p>
-          <div className="ml-auto">
-            <Collapsible open={showInstructions} onOpenChange={setShowInstructions}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1 text-[10px] text-muted-foreground">
-                  Mode d'emploi {showInstructions ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
-              </CollapsibleTrigger>
-            </Collapsible>
-          </div>
-        </div>
-
-        {showInstructions && (
-          <div className="p-3 rounded-lg bg-muted/30 border space-y-2 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground text-[10px] uppercase tracking-wide">Conseils</p>
-            <p>• Soyez bref, faites des phrases courtes</p>
-            <p>• Soyez précis, utilisez des mots clés, des chiffres</p>
-            <div className="border-t border-border/40 pt-2 mt-2 space-y-1.5">
-              <p className="font-medium text-foreground text-[10px]">Répondez à ces questions :</p>
-              <p>❶ Quel est votre objectif business à court terme ? À moyen terme ?</p>
-              <p>❷ Qui est votre principal concurrent dans la SERP ? En général ?</p>
-              <p>❸ Avec qui Crawlers ne doit pas confondre votre entreprise ?</p>
             </div>
           </div>
         )}
