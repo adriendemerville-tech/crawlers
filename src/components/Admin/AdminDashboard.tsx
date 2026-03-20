@@ -150,6 +150,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
         const config = data.card_order as Record<string, unknown>;
         setDocsHiddenForViewers(!!config.docs_hidden_for_viewers);
+        setSimulatedDataEnabled(config.simulated_data_enabled !== false);
       }
     };
     loadDocVisibility();
