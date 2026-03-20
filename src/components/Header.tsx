@@ -215,10 +215,7 @@ export function Header() {
                   </svg>
                   <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>
                     {isProfilePage ? (
-                      <>
-                        <span className="text-foreground">Console</span>
-                        <span className="text-yellow-500 ml-1.5">∞</span>
-                      </>
+                      <span className="text-foreground">Console</span>
                     ) : 'Crawlers'}
                   </span>
                 </div>
