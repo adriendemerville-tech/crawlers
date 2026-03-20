@@ -1238,6 +1238,15 @@ export function MyTracking() {
                     </div>
                   </div>
 
+                  {/* Identity Card button */}
+                  <button
+                    onClick={() => setShowIdentityModal(true)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors text-xs font-medium bg-transparent mb-4"
+                  >
+                    <IdCard className="h-4 w-4" />
+                    Carte d'identité
+                  </button>
+
                   {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
                     const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
