@@ -77,7 +77,7 @@ const translations = {
     adding: 'Ajout...',
     remove: 'Retirer',
     removeConfirm: 'Site retiré du suivi',
-    lastAudit: 'Dernier audit',
+    lastAudit: 'Dernier audit complet',
     never: 'Jamais',
     aiVisibility: 'Visibilité IA',
     seoScore: 'Score SEO',
