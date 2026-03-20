@@ -458,6 +458,11 @@ Deno.serve(async (req) => {
       'cocoon-pagerank': 'calculate-internal-pagerank',
       'cocoon-session': 'persist-cocoon-session',
       'matrice': 'audit-matrice',
+      'rankmath': 'rankmath-connector',
+      'gtmetrix': 'gtmetrix-connector',
+      'linkwhisper': 'linkwhisper-connector',
+      'google-ads': 'google-ads-connector',
+      'jargon-distance': 'audit-strategique-ia',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
