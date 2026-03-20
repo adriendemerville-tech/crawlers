@@ -235,7 +235,7 @@ function MiniProgressRing({ iteration, found }: { iteration: number; found: bool
   );
 }
 
-export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
+export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData, onDepthComplete }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
