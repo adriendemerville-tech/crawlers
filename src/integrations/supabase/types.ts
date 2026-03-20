@@ -3606,6 +3606,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sdk_toggle_confirmations: {
+        Row: {
+          confirmed: boolean | null
+          confirmed_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          requested_by: string
+          requested_value: boolean
+          token: string
+        }
+        Insert: {
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          requested_by: string
+          requested_value: boolean
+          token: string
+        }
+        Update: {
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          requested_by?: string
+          requested_value?: boolean
+          token?: string
+        }
+        Relationships: []
+      }
       semantic_nodes: {
         Row: {
           audit_report_id: string | null

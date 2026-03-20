@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { ShieldAlert, Globe, Power, Loader2, Plus, X, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { ShieldAlert, Globe, Power, Loader2, Plus, X, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -32,6 +34,14 @@ const translations = {
     watchdogDesc: 'Lancer manuellement le watchdog de supervision des scripts.',
     runWatchdog: 'Lancer le Watchdog',
     running: 'En cours...',
+    sdkConfirmTitle: 'Confirmation requise',
+    sdkConfirmEnable: 'Vous êtes sur le point d\'ACTIVER le SDK Global sur l\'ensemble du parc client. Cette action impacte tous les scripts injectés.',
+    sdkConfirmDisable: 'Vous êtes sur le point de DÉSACTIVER le SDK Global sur l\'ensemble du parc client. Tous les scripts injectés seront neutralisés.',
+    sdkConfirmStep2: 'Un email de confirmation vous sera envoyé. Vous devrez cliquer sur le lien pour valider la modification.',
+    sdkConfirmBtn: 'Confirmer et envoyer l\'email',
+    sdkConfirmSent: 'Email de confirmation envoyé. Vérifiez votre boîte mail.',
+    sdkConfirmSuccess: 'SDK Global modifié avec succès via le lien de confirmation.',
+    cancel: 'Annuler',
   },
   en: {
     title: 'Kill Switches — Injected Scripts',
@@ -51,6 +61,14 @@ const translations = {
     watchdogDesc: 'Manually trigger the script supervision watchdog.',
     runWatchdog: 'Run Watchdog',
     running: 'Running...',
+    sdkConfirmTitle: 'Confirmation required',
+    sdkConfirmEnable: 'You are about to ENABLE the Global SDK across the entire client fleet. This affects all injected scripts.',
+    sdkConfirmDisable: 'You are about to DISABLE the Global SDK across the entire client fleet. All injected scripts will be neutralized.',
+    sdkConfirmStep2: 'A confirmation email will be sent to you. You must click the link to validate the change.',
+    sdkConfirmBtn: 'Confirm and send email',
+    sdkConfirmSent: 'Confirmation email sent. Check your inbox.',
+    sdkConfirmSuccess: 'Global SDK changed successfully via confirmation link.',
+    cancel: 'Cancel',
   },
   es: {
     title: 'Kill Switches — Scripts Inyectados',
@@ -70,6 +88,14 @@ const translations = {
     watchdogDesc: 'Ejecutar manualmente el watchdog de supervisión de scripts.',
     runWatchdog: 'Ejecutar Watchdog',
     running: 'Ejecutando...',
+    sdkConfirmTitle: 'Confirmación requerida',
+    sdkConfirmEnable: 'Está a punto de ACTIVAR el SDK Global en toda la flota de clientes. Esto afecta todos los scripts inyectados.',
+    sdkConfirmDisable: 'Está a punto de DESACTIVAR el SDK Global en toda la flota de clientes. Todos los scripts inyectados serán neutralizados.',
+    sdkConfirmStep2: 'Se le enviará un email de confirmación. Debe hacer clic en el enlace para validar el cambio.',
+    sdkConfirmBtn: 'Confirmar y enviar email',
+    sdkConfirmSent: 'Email de confirmación enviado. Revise su bandeja de entrada.',
+    sdkConfirmSuccess: 'SDK Global modificado con éxito mediante el enlace de confirmación.',
+    cancel: 'Cancelar',
   },
 };
 
@@ -77,6 +103,7 @@ export function ScriptKillSwitches() {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
@@ -87,6 +114,11 @@ export function ScriptKillSwitches() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [runningWatchdog, setRunningWatchdog] = useState(false);
+
+  // SDK double confirmation state
+  const [sdkConfirmOpen, setSdkConfirmOpen] = useState(false);
+  const [sdkPendingValue, setSdkPendingValue] = useState(false);
+  const [sdkConfirmLoading, setSdkConfirmLoading] = useState(false);
 
   const fetchConfig = useCallback(async () => {
     setLoading(true);
@@ -112,6 +144,38 @@ export function ScriptKillSwitches() {
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
+  // Handle email confirmation link (?confirm_sdk=TOKEN)
+  useEffect(() => {
+    const confirmToken = searchParams.get('confirm_sdk');
+    if (!confirmToken) return;
+
+    const confirmSdk = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) return;
+
+        const { data, error } = await supabase.functions.invoke('auth-actions', {
+          body: { action: 'confirm-sdk-toggle', token: confirmToken },
+        });
+
+        if (error || data?.error) {
+          toast({ title: data?.error || 'Token invalide ou expiré', variant: 'destructive' });
+        } else {
+          setSdkEnabled(data.sdk_enabled);
+          toast({ title: t.sdkConfirmSuccess });
+        }
+      } catch {
+        toast({ title: 'Erreur de confirmation', variant: 'destructive' });
+      }
+
+      // Clean URL
+      searchParams.delete('confirm_sdk');
+      setSearchParams(searchParams, { replace: true });
+    };
+
+    confirmSdk();
+  }, [searchParams]);
+
   const saveConfig = useCallback(async (key: string, value: unknown) => {
     setSaving(true);
     try {
@@ -132,9 +196,30 @@ export function ScriptKillSwitches() {
     await saveConfig('enable_multipage_router', checked);
   };
 
-  const handleToggleSdk = async (checked: boolean) => {
-    setSdkEnabled(checked);
-    await saveConfig('sdk_enabled', checked);
+  // SDK toggle now opens confirmation modal instead of directly toggling
+  const handleToggleSdk = (checked: boolean) => {
+    setSdkPendingValue(checked);
+    setSdkConfirmOpen(true);
+  };
+
+  const handleSdkConfirmSend = async () => {
+    setSdkConfirmLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'request-sdk-toggle', requested_value: sdkPendingValue },
+      });
+
+      if (error || data?.error) {
+        toast({ title: data?.error || 'Erreur', variant: 'destructive' });
+      } else {
+        toast({ title: t.sdkConfirmSent });
+        setSdkConfirmOpen(false);
+      }
+    } catch {
+      toast({ title: 'Erreur', variant: 'destructive' });
+    } finally {
+      setSdkConfirmLoading(false);
+    }
   };
 
   const handleToggleFreemium = async (checked: boolean) => {
@@ -227,7 +312,7 @@ export function ScriptKillSwitches() {
 
         <Separator />
 
-        {/* Level 2: Global SDK */}
+        {/* Level 2: Global SDK — with double confirmation */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
             <Label className="text-sm font-medium">{t.level2}</Label>
@@ -334,6 +419,40 @@ export function ScriptKillSwitches() {
         </div>
       </CardContent>
     </Card>
+
+    {/* SDK Double Confirmation Modal */}
+    <Dialog open={sdkConfirmOpen} onOpenChange={setSdkConfirmOpen}>
+      <DialogContent className="sm:max-w-md border-destructive/30">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            {t.sdkConfirmTitle}
+          </DialogTitle>
+          <DialogDescription className="text-sm pt-2">
+            {sdkPendingValue ? t.sdkConfirmEnable : t.sdkConfirmDisable}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-start gap-3 rounded-lg border border-muted bg-muted/30 p-3 my-2">
+          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">{t.sdkConfirmStep2}</p>
+        </div>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <DialogClose asChild>
+            <Button variant="ghost" size="sm">{t.cancel}</Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleSdkConfirmSend}
+            disabled={sdkConfirmLoading}
+            className="gap-1.5"
+          >
+            {sdkConfirmLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+            {t.sdkConfirmBtn}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }
