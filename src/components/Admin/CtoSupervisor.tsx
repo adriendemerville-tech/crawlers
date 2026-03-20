@@ -45,24 +45,25 @@ interface Correlation {
   verdict: string;
 }
 
-interface Recommendation {
-  id: number;
-  title: string;
-  description: string;
-  benefit: string;
-  risk: string;
-  risk_level: 'green' | 'orange';
-  risk_mitigation: string;
-  code_change: string;
-  affected_lines: string;
+interface CorrectionAudit {
+  cto_log_id: string;
+  function: string;
+  cto_intent: string;
+  solution_quality: 'green' | 'orange';
+  logic_assessment: string;
+  edge_cases: string[];
+  performance_impact: string;
+  regression_detected: boolean;
+  regression_details: string;
+  improvement_suggestion: string | null;
 }
 
 interface SupervisorAnalysis {
-  analysis: string;
-  error_patterns: string[];
-  recommendations: Recommendation[];
-  overall_assessment: string;
-  contournements_applied: string[];
+  summary: string;
+  corrections_audited: CorrectionAudit[];
+  overall_cto_score: number | string;
+  patterns_observed: string[];
+  strategic_recommendations: string[];
 }
 
 // ─── Kill Switches Panel ──────────────────────────────────────────────
@@ -137,12 +138,10 @@ function KillSwitchesPanel() {
 function SupervisorAnalysisPanel() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<SupervisorAnalysis | null>(null);
-  const [errorCount, setErrorCount] = useState(0);
-  const [expandedReco, setExpandedReco] = useState<number | null>(null);
-  const [ctoCode, setCtoCode] = useState('');
-  const [codeVisible, setCodeVisible] = useState(false);
-  const [loadingCode, setLoadingCode] = useState(false);
-  const [deploying, setDeploying] = useState(false);
+  const [correctionCount, setCorrectionCount] = useState(0);
+  const [functionsAudited, setFunctionsAudited] = useState<string[]>([]);
+  const [postDeployErrors, setPostDeployErrors] = useState(0);
+  const [expandedAudit, setExpandedAudit] = useState<string | null>(null);
 
   const runAnalysis = async () => {
     setAnalyzing(true);
@@ -152,49 +151,15 @@ function SupervisorAnalysisPanel() {
       });
       if (error) throw error;
       setAnalysis(data.analysis);
-      setErrorCount(data.error_count || 0);
-      toast.success(`Analyse terminée — ${data.analysis?.recommendations?.length || 0} recommandations`);
+      setCorrectionCount(data.correction_count || 0);
+      setFunctionsAudited(data.functions_audited || []);
+      setPostDeployErrors(data.post_deploy_errors || 0);
+      toast.success(`Audit terminé — ${data.analysis?.corrections_audited?.length || 0} corrections auditées`);
     } catch (err: any) {
-      console.error('Supervisor analysis error:', err);
-      toast.error('Erreur lors de l\'analyse');
+      console.error('Supervisor audit error:', err);
+      toast.error('Erreur lors de l\'audit');
     } finally {
       setAnalyzing(false);
-    }
-  };
-
-  const loadCtoCode = async () => {
-    setLoadingCode(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('supervisor-actions', {
-        body: { action: 'read_cto_code' },
-      });
-      if (error) throw error;
-      setCtoCode(data.code || '');
-      setCodeVisible(true);
-    } catch (err: any) {
-      toast.error('Erreur de lecture du code CTO');
-    } finally {
-      setLoadingCode(false);
-    }
-  };
-
-  const deployCtoChanges = async () => {
-    if (!ctoCode.trim()) return;
-    setDeploying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('supervisor-actions', {
-        body: { action: 'apply_changes', new_code: ctoCode },
-      });
-      if (error) throw error;
-      if (data.success) {
-        toast.success('Code CTO mis à jour avec succès');
-      } else {
-        toast.error(data.error || 'Erreur de déploiement');
-      }
-    } catch (err: any) {
-      toast.error('Erreur lors du déploiement');
-    } finally {
-      setDeploying(false);
     }
   };
 
@@ -204,119 +169,155 @@ function SupervisorAnalysisPanel() {
       <div className="flex items-center gap-2 flex-wrap">
         <Button onClick={runAnalysis} disabled={analyzing} className="gap-2" size="sm">
           {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-          {analyzing ? 'Analyse en cours...' : 'Lancer l\'analyse'}
-        </Button>
-        <Button variant="outline" onClick={loadCtoCode} disabled={loadingCode} className="gap-2" size="sm">
-          {loadingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCode className="h-4 w-4" />}
-          Code CTO
+          {analyzing ? 'Audit en cours...' : 'Auditer les corrections CTO'}
         </Button>
       </div>
 
-      {/* Analysis results */}
+      {/* Audit results */}
       {analysis && (
         <div className="space-y-4">
-          {/* Summary */}
+          {/* Summary card */}
           <Card className="border-border/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
-                Analyse Supervisor
-                <Badge variant="outline" className="text-xs ml-auto">{errorCount} erreurs compilées</Badge>
+                Audit des corrections CTO
+                <Badge variant="outline" className="text-xs ml-auto">{correctionCount} corrections</Badge>
+                {postDeployErrors > 0 && (
+                  <Badge className="text-[10px] bg-orange-500/15 text-orange-400 border-orange-500/30">{postDeployErrors} erreurs post-deploy</Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">{analysis.analysis}</p>
-              
-              {/* Error patterns */}
-              {analysis.error_patterns?.length > 0 && (
+              <p className="text-xs text-muted-foreground leading-relaxed">{analysis.summary}</p>
+
+              {/* CTO Score */}
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-medium text-muted-foreground">Score CTO :</span>
+                <Badge className={cn(
+                  "text-xs",
+                  Number(analysis.overall_cto_score) >= 80
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                    : Number(analysis.overall_cto_score) >= 50
+                    ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                    : "bg-destructive/15 text-destructive border-destructive/30"
+                )}>{analysis.overall_cto_score}/100</Badge>
+              </div>
+
+              {/* Functions audited */}
+              {functionsAudited.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[11px] font-medium text-muted-foreground">Patterns d'erreurs détectés :</p>
+                  <p className="text-[11px] font-medium text-muted-foreground">Fonctions modifiées :</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {analysis.error_patterns.map((p, i) => (
-                      <Badge key={i} variant="outline" className="text-[10px]">{p}</Badge>
+                    {functionsAudited.map((fn, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px] font-mono">{fn}</Badge>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Contournements */}
-              {analysis.contournements_applied?.length > 0 && (
-                <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3 space-y-1">
-                  <p className="text-[11px] font-semibold text-orange-400">🔄 Contournements appliqués (rouge → orange) :</p>
-                  {analysis.contournements_applied.map((c, i) => (
-                    <p key={i} className="text-[11px] text-muted-foreground">• {c}</p>
-                  ))}
+              {/* Patterns observed */}
+              {analysis.patterns_observed?.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-medium text-muted-foreground">Patterns observés :</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {analysis.patterns_observed.map((p, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px]">{p}</Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Recommendations */}
-          {analysis.recommendations?.length > 0 && (
+          {/* Corrections audited */}
+          {analysis.corrections_audited?.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">
-                Recommandations ({analysis.recommendations.length})
+                Corrections auditées ({analysis.corrections_audited.length})
               </h4>
-              {analysis.recommendations.map((rec) => (
+              {analysis.corrections_audited.map((audit, idx) => (
                 <Card
-                  key={rec.id}
+                  key={audit.cto_log_id || idx}
                   className={cn(
                     "border-l-4 cursor-pointer transition-colors hover:bg-muted/30",
-                    rec.risk_level === 'green' ? "border-l-emerald-500" : "border-l-orange-500"
+                    audit.solution_quality === 'green' ? "border-l-emerald-500" : "border-l-orange-500"
                   )}
-                  onClick={() => setExpandedReco(expandedReco === rec.id ? null : rec.id)}
+                  onClick={() => setExpandedAudit(expandedAudit === (audit.cto_log_id || String(idx)) ? null : (audit.cto_log_id || String(idx)))}
                 >
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        {expandedReco === rec.id ? (
+                        {expandedAudit === (audit.cto_log_id || String(idx)) ? (
                           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         ) : (
                           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         )}
-                        <span className="text-sm font-medium">{rec.title}</span>
+                        <div>
+                          <span className="text-sm font-medium font-mono">{audit.function}</span>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{audit.cto_intent}</p>
+                        </div>
                       </div>
-                      <Badge
-                        className={cn(
-                          "text-[10px] shrink-0",
-                          rec.risk_level === 'green'
-                            ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
-                            : "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {audit.regression_detected && (
+                          <Badge className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">Régression</Badge>
                         )}
-                      >
-                        {rec.risk_level === 'green' ? '🟢 Safe' : '🟠 Attention'}
-                      </Badge>
+                        <Badge
+                          className={cn(
+                            "text-[10px]",
+                            audit.solution_quality === 'green'
+                              ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                              : "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                          )}
+                        >
+                          {audit.solution_quality === 'green' ? '🟢 Sain' : '🟠 Réserves'}
+                        </Badge>
+                      </div>
                     </div>
 
-                    {expandedReco === rec.id && (
+                    {expandedAudit === (audit.cto_log_id || String(idx)) && (
                       <div className="space-y-3 mt-2 pl-5">
-                        <p className="text-xs text-muted-foreground">{rec.description}</p>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded p-2">
-                            <p className="text-[10px] font-semibold text-emerald-500 mb-1">✅ Bénéfice</p>
-                            <p className="text-[11px] text-muted-foreground">{rec.benefit}</p>
-                          </div>
-                          <div className="bg-orange-500/5 border border-orange-500/20 rounded p-2">
-                            <p className="text-[10px] font-semibold text-orange-400 mb-1">⚠️ Risque</p>
-                            <p className="text-[11px] text-muted-foreground">{rec.risk}</p>
-                          </div>
-                        </div>
-
+                        {/* Logic assessment */}
                         <div className="bg-muted/30 rounded p-2">
-                          <p className="text-[10px] font-medium text-muted-foreground mb-1">🛡️ Atténuation du risque :</p>
-                          <p className="text-[11px] text-foreground/80">{rec.risk_mitigation}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground mb-1">🔍 Logique de la solution :</p>
+                          <p className="text-[11px] text-foreground/80">{audit.logic_assessment}</p>
                         </div>
 
-                        {rec.code_change && (
-                          <div className="bg-background border border-border rounded-lg overflow-hidden">
-                            <div className="px-2 py-1 bg-muted/50 border-b border-border flex items-center gap-1.5">
-                              <Code2 className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-[10px] text-muted-foreground font-mono">{rec.affected_lines}</span>
-                            </div>
-                            <pre className="p-2 text-[11px] font-mono text-foreground/80 overflow-x-auto max-h-48">
-                              {rec.code_change}
-                            </pre>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Performance impact */}
+                          <div className="bg-muted/30 rounded p-2">
+                            <p className="text-[10px] font-medium text-muted-foreground mb-1">⚡ Impact performance :</p>
+                            <p className="text-[11px] text-foreground/80">{audit.performance_impact}</p>
+                          </div>
+
+                          {/* Edge cases */}
+                          <div className="bg-muted/30 rounded p-2">
+                            <p className="text-[10px] font-medium text-muted-foreground mb-1">🔲 Edge cases :</p>
+                            {audit.edge_cases?.length > 0 ? (
+                              <ul className="space-y-0.5">
+                                {audit.edge_cases.map((ec, i) => (
+                                  <li key={i} className="text-[11px] text-foreground/80">• {ec}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-emerald-500">Aucun détecté</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Regression details */}
+                        {audit.regression_detected && audit.regression_details && (
+                          <div className="bg-destructive/5 border border-destructive/20 rounded p-2">
+                            <p className="text-[10px] font-semibold text-destructive mb-1">🚨 Régression détectée :</p>
+                            <p className="text-[11px] text-foreground/80">{audit.regression_details}</p>
+                          </div>
+                        )}
+
+                        {/* Improvement suggestion */}
+                        {audit.improvement_suggestion && (
+                          <div className="bg-orange-500/5 border border-orange-500/20 rounded p-2">
+                            <p className="text-[10px] font-semibold text-orange-400 mb-1">💡 Suggestion d'amélioration :</p>
+                            <p className="text-[11px] text-foreground/80">{audit.improvement_suggestion}</p>
                           </div>
                         )}
                       </div>
@@ -327,54 +328,23 @@ function SupervisorAnalysisPanel() {
             </div>
           )}
 
-          {/* Overall assessment */}
-          <Card className="border-border/50">
-            <CardContent className="p-3">
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Évaluation globale :</p>
-              <p className="text-xs text-foreground/80">{analysis.overall_assessment}</p>
-            </CardContent>
-          </Card>
+          {/* Strategic recommendations */}
+          {analysis.strategic_recommendations?.length > 0 && (
+            <Card className="border-border/50">
+              <CardContent className="p-3 space-y-2">
+                <p className="text-[11px] font-medium text-muted-foreground">📋 Recommandations stratégiques :</p>
+                <ul className="space-y-1">
+                  {analysis.strategic_recommendations.map((r, i) => (
+                    <li key={i} className="text-[11px] text-foreground/80 flex items-start gap-1.5">
+                      <span className="text-primary mt-0.5">→</span>
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      )}
-
-      {/* CTO Code Editor */}
-      {codeVisible && (
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileCode className="h-4 w-4" />
-                Code Agent CTO (backend)
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="gap-2"
-                  disabled={deploying || !ctoCode.trim()}
-                  onClick={deployCtoChanges}
-                >
-                  {deploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Rocket className="h-3.5 w-3.5" />}
-                  Déployer
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setCodeVisible(false)}>
-                  Fermer
-                </Button>
-              </div>
-            </div>
-            <CardDescription className="text-[11px]">
-              Modifiez le code de l'Agent CTO. Seul le backend (edge function) est modifiable.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={ctoCode}
-              onChange={(e) => setCtoCode(e.target.value)}
-              className="font-mono text-[11px] min-h-[400px] resize-y bg-background"
-              spellCheck={false}
-            />
-          </CardContent>
-        </Card>
       )}
     </div>
   );
