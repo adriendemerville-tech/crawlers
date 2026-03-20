@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
-> **Dernière mise à jour** : 19 mars 2026  
-> **Version** : 2.8.0  
-> **Lignes de code** : ~147 600 (Backend: 41 060 · Frontend: 106 600)
+> **Dernière mise à jour** : 20 mars 2026  
+> **Version** : 2.9.0  
+> **Lignes de code** : ~150 000 (Backend: 42 000 · Frontend: 108 000)
 
 ---
 
@@ -36,10 +36,10 @@ Organisées en **13 domaines fonctionnels** :
 | **Crawl & Analyse** | `crawl-site`, `process-crawl-queue`, `fetch-sitemap-tree`, `validate-url` | Crawl multi-pages (max 500), file d'attente |
 | **Tracking & SERP** | `fetch-serp-kpis`, `refresh-serp-all`, `refresh-llm-visibility-all`, `calculate-llm-volumes`, `snapshot-audit-impact`, `measure-audit-impact` | Suivi hebdomadaire SEO/GEO, autorité sémantique |
 | **Paiement** | `create-checkout`, `create-subscription-session`, `create-credit-checkout`, `create-customer-portal`, `stripe-webhook`, `stripe-actions`, `apply-affiliate`, `apply-referral`, `apply-retention-offer` | Stripe, crédits, affiliation, rétention |
-| **Auth & Email** | `auth-actions`, `auth-email-hook`, `send-password-reset`, `send-verification-code`, `verify-email-code`, `check-email-exists`, `process-email-queue`, `ensure-profile` | Authentification, emails transactionnels (PGMQ) |
+| **Auth & Email** | `auth-actions`, `auth-email-hook`, `send-password-reset`, `send-verification-code`, `verify-email-code`, `check-email-exists`, `process-email-queue`, `ensure-profile` | Authentification, emails transactionnels (PGMQ), suppression/archivage utilisateurs |
 | **Injection & SDK** | `serve-client-script`, `process-script-queue`, `generate-corrective-code`, `dry-run-script`, `get-final-script`, `verify-injection`, `widget-connect`, `check-widget-health`, `sdk-status`, `watchdog-scripts` | Scripts correctifs, widget JS, monitoring |
 | **Content & Blog** | `generate-blog-from-news`, `fetch-news`, `generate-infotainment`, `rss-feed`, `sitemap` | Génération de contenu, flux RSS |
-| **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO) |
+| **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO), supervision par Supervisor |
 | **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
 | **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress |
 | **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
@@ -50,11 +50,22 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.3 Base de données
 
-- **~50 tables** PostgreSQL avec RLS
-- **160 migrations** versionnées
-- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`
+- **~52 tables** PostgreSQL avec RLS
+- **160+ migrations** versionnées
+- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`
 - Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
 - File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
+
+### 2.4 Agents IA — Architecture CTO / Supervisor
+
+| Agent | Rôle | Périmètre |
+|-------|------|-----------|
+| **CTO** | Analyse les erreurs des Edge Functions, propose et déploie des correctifs automatiques | Toutes les fonctions sauf `supervisor-actions` |
+| **Supervisor** | Contrôle les actions correctives de CTO : analyse la solution déployée, sa logique, son impact | Revue post-déploiement des correctifs CTO |
+
+- Le CTO **ne peut pas** analyser ni enregistrer les erreurs de Supervisor
+- Le Supervisor dispose de son propre **registre d'erreurs** (`supervisor_error_log`) visible en admin
+- Le Supervisor valide/invalide les correctifs CTO avec un score de confiance et un verdict
 
 ---
 
@@ -73,13 +84,13 @@ Organisées en **13 domaines fonctionnels** :
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (261 fichiers, 12 modules)
+### 3.2 Composants (270+ fichiers, 12 modules)
 
 | Module | Rôle |
 |--------|------|
-| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions |
+| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor |
 | **Cocoon/** | Graphe 3D (Three.js), assistant IA, rapport, recommandations, tâches |
-| **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif |
+| **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif, lecteur Spotify (prev/next) |
 | **Profile/** | Mes sites, crawls, rapports, wallet, scripts, intégrations, GMB |
 | **Blog/** | Articles, carrousel actualités |
 | **Lexique/** | Glossaire SEO interactif |
@@ -93,6 +104,7 @@ Organisées en **13 domaines fonctionnels** :
 - `LanguageContext` — i18n (FR, EN, ES)
 - `CreditsContext` — Solde crédits temps réel
 - `ThemeProvider` — Dark/Light mode
+- `AdminContext` — Droits admin (readOnly, canSeeDocs, canSeeAlgos, isAuditor)
 
 ---
 
@@ -112,6 +124,7 @@ Organisées en **13 domaines fonctionnels** :
 - Audit local SEO (GMB, NAP, avis)
 - Code correctif généré par IA (JSON-LD, meta, robots.txt)
 - Architecte Génératif : injection de scripts via widget JS
+- Lecteur Spotify intégré avec contrôles prev/play/next
 
 ### 4.3 Suivi & Monitoring
 - Tracking hebdomadaire automatique (SEO score, GEO score, visibilité LLM, autorité sémantique)
@@ -125,6 +138,21 @@ Organisées en **13 domaines fonctionnels** :
 - Système d'affiliation et parrainage
 - Paiement Stripe (abonnements + crédits à la carte)
 
+### 4.5 Onboarding & Inscription
+- Segmentation PersonaGate (type d'utilisateur) à l'inscription
+- Double champ mot de passe avec indicateur de force (jaune minimum)
+- Pré-vérification email : détection des comptes existants avec bannière violette de connexion
+- Vérification OTP inline (code 6 chiffres) avec auto-détection et vibration visuelle sur erreur
+- Confirmation par lien email avec redirection intelligente (attend l'onglet actif)
+- Modal d'inscription contextuelle en mode ouvert (après 60s sur une feature) avec tracking admin (affichages, fermetures, signups abandonnés, emails envoyés)
+
+### 4.6 Gestion utilisateurs (Admin)
+- Suppression = archivage complet dans `archived_users` (profil, crédits, plan, branding)
+- Suppression effective du compte auth (Supabase Admin API) pour libérer l'email
+- Réinscription possible : modal "Welcome Back" proposant la restauration des données
+- Interface utilisateurs condensée (sans scroll horizontal), actions au survol
+- Session admin auto-expirée après 12h
+
 ---
 
 ## 5. Sécurité
@@ -136,6 +164,8 @@ Organisées en **13 domaines fonctionnels** :
 - **Protection profils** : triggers `protect_profile_fields` et `protect_billing_fields`
 - **Tokens OAuth** : stockage chiffré (Google, CMS)
 - **Turnstile** : vérification CAPTCHA Cloudflare sur les formulaires publics
+- **Session admin** : TTL 12h avec déconnexion automatique
+- **Archivage** : les utilisateurs supprimés sont archivés, jamais perdus
 
 ---
 
@@ -162,7 +192,17 @@ Organisées en **13 domaines fonctionnels** :
 
 ---
 
-## 8. Roadmap (Phase de design)
+## 8. Console (/console)
+
+- Header épuré : pas de picto illimité, pas de bouton Console redondant sur /console
+- Bouton **Crawl** : icône `Bug` en violet (`text-purple-500`)
+- Bouton **Matrice** : mention BETA alignée sur le design Cocoon (texte simple, pas de badge)
+- Bouton **API** détaché en bas de la sidebar pour accès direct aux connexions CMS/API
+- Accès modules premium conditionné par le statut Pro Agency (sauf Matrice)
+
+---
+
+## 9. Roadmap (Phase de design)
 
 - **CMS Adapters** : Application automatique des recommandations Cocoon via API WordPress, Shopify, Webflow, Wix (voir `docs/cms-adapter-architecture.md`)
 - **URL Registry** : Référentiel centralisé `url_registry` pour la déduplication et le cache inter-modules
@@ -170,7 +210,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ---
 
-## 9. Conventions de développement
+## 10. Conventions de développement
 
 - **Backend** : Routeurs consolidés (ex: `stripe-actions`, `auth-actions`) pour minimiser les cold starts
 - **Extraction** : Autorisée uniquement si une fonction dépasse 500 lignes ou est partagée par ≥3 services
