@@ -127,7 +127,7 @@ Réponds UNIQUEMENT en JSON valide.`
     }
 
     // Step 3: Persist to tracked_sites (only known DB columns)
-    const dbColumns = ['market_sector', 'products_services', 'target_audience', 'commercial_area', 'company_size', 'business_type']
+    const dbColumns = ['market_sector', 'products_services', 'target_audience', 'commercial_area', 'company_size', 'business_type', 'short_term_goal', 'mid_term_goal', 'main_serp_competitor', 'confusion_risk']
     const updatePayload: Record<string, string> = {}
     for (const col of dbColumns) {
       if (enrichedFields[col]) {
