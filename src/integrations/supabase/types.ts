@@ -346,6 +346,63 @@ export type Database = {
         }
         Relationships: []
       }
+      archived_users: {
+        Row: {
+          affiliate_code_used: string | null
+          archive_reason: string | null
+          archived_at: string | null
+          archived_by: string | null
+          credits_balance: number | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          original_created_at: string | null
+          original_user_id: string
+          persona_type: string | null
+          plan_type: string | null
+          profile_snapshot: Json | null
+          referral_code: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          affiliate_code_used?: string | null
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          credits_balance?: number | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          original_created_at?: string | null
+          original_user_id: string
+          persona_type?: string | null
+          plan_type?: string | null
+          profile_snapshot?: Json | null
+          referral_code?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          affiliate_code_used?: string | null
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          credits_balance?: number | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          original_created_at?: string | null
+          original_user_id?: string
+          persona_type?: string | null
+          plan_type?: string | null
+          profile_snapshot?: Json | null
+          referral_code?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
       async_jobs: {
         Row: {
           completed_at: string | null

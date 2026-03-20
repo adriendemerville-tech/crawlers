@@ -4,7 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -15,6 +17,9 @@ interface UserProfile {
   credits_balance: number;
   created_at: string;
   plan_type?: string;
+  persona_type?: string | null;
+  updated_at?: string;
+  affiliate_code_used?: string | null;
 }
 
 interface UserKpis {
@@ -42,9 +47,17 @@ interface UserKpiModalProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDeleteUser?: (user: UserProfile) => void;
+  onToggleRole?: (userId: string, role: string) => void;
+  onManageCredits?: (user: UserProfile) => void;
+  onStripPro?: (user: UserProfile) => void;
+  adminUserIds?: Set<string>;
+  viewerUserIds?: Set<string>;
+  viewer2UserIds?: Set<string>;
+  auditorUserIds?: Set<string>;
 }
 
-export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
+export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
   const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
@@ -247,6 +260,64 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
             {' · '}<Badge variant={user && user.credits_balance > 0 ? 'default' : 'secondary'}>{user?.credits_balance} crédits</Badge>
           </DialogDescription>
         </DialogHeader>
+
+        {/* Action buttons row */}
+        {user && (onDeleteUser || onToggleRole || onManageCredits) && (
+          <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-border">
+            {onToggleRole && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Rôle
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Rôles</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onToggleRole(user.user_id, 'admin')}>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    {adminUserIds?.has(user.user_id) ? '✓ Créateur' : 'Créateur'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onToggleRole(user.user_id, 'viewer')}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    {viewerUserIds?.has(user.user_id) ? '✓ Viewer' : 'Viewer'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onToggleRole(user.user_id, 'viewer_level2')}>
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    {viewer2UserIds?.has(user.user_id) ? '✓ Viewer L2' : 'Viewer L2'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Cumulable (2h)</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onToggleRole(user.user_id, 'auditor')}>
+                    <FileSearch className="h-4 w-4 mr-2" />
+                    {auditorUserIds?.has(user.user_id) ? '✓ Auditeur' : 'Auditeur'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {onManageCredits && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onManageCredits(user)}>
+                <CreditCard className="h-3.5 w-3.5" />
+                Crédits
+              </Button>
+            )}
+            {onStripPro && (user as any).plan_type === 'agency_pro' && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs border-amber-500 text-amber-600" onClick={() => onStripPro(user)}>
+                <Crown className="h-3.5 w-3.5" />
+                Retirer Pro
+              </Button>
+            )}
+            {onDeleteUser && (
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto" onClick={() => onDeleteUser(user)}>
+                <Trash2 className="h-3.5 w-3.5" />
+                Supprimer
+              </Button>
+            )}
+          </div>
+        )}
 
         <Tabs defaultValue="kpis" className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="w-full">
