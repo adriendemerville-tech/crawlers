@@ -221,6 +221,15 @@ export default function Profile() {
                     <span className="hidden sm:inline">GMB</span>
                   </TabsTrigger>
                 )}
+                {isProUser && (
+                  <TabsTrigger
+                    value="reports-tab"
+                    className="flex-1 gap-2"
+                  >
+                    <FileBox className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.myReports}</span>
+                  </TabsTrigger>
+                )}
                 {!isProUser && (
                   <TabsTrigger value="reports" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />
