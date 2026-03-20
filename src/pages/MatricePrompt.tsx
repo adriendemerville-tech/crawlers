@@ -604,7 +604,7 @@ export default function MatricePrompt() {
           {rows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Upload className="h-10 w-10 mb-3 opacity-30" />
-              <p className="text-sm">Importez un fichier .csv pour commencer</p>
+              <p className="text-sm">Importez un fichier .csv ou .doc pour commencer</p>
               <p className="text-xs mt-1">Colonnes supportées : prompt, poids, axe, seuil_bon, seuil_moyen, seuil_mauvais, llm_name</p>
             </div>
           )}
