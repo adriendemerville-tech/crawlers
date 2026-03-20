@@ -386,6 +386,47 @@ Deno.serve(async (req) => {
       })
     }
 
+    // ─── Mode: Manual re-analyze (admin "Mettre à jour" button) ───
+    if (body.action === 'analyze') {
+      const supabase = getServiceClient()
+
+      const { data: latestRaw, error: rawError } = await supabase
+        .from('audit_raw_data')
+        .select('audit_type, url, domain, raw_payload')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (rawError || !latestRaw) {
+        return new Response(JSON.stringify({
+          success: false,
+          analysis_summary: 'Aucune donnée d\'audit récente à analyser — lancez un audit depuis la console.',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const selfUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/agent-cto`
+      const selfResponse = await fetch(selfUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({
+          auditResult: latestRaw.raw_payload,
+          auditType: latestRaw.audit_type,
+          url: latestRaw.url,
+          domain: latestRaw.domain,
+        }),
+      })
+
+      const selfResult = await selfResponse.json()
+      return new Response(JSON.stringify(selfResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // ─── Mode: Standard audit analysis ────────────────────────────
     const { auditResult, auditType, url, domain } = body
 
