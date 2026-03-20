@@ -249,6 +249,23 @@ export function MyTracking() {
   const [showApiPanel, setShowApiPanel] = useState(false);
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
+  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+
+  // Fetch admin config for simulated data toggle
+  useEffect(() => {
+    const loadSimulatedFlag = async () => {
+      const { data } = await supabase
+        .from('admin_dashboard_config')
+        .select('card_order')
+        .limit(1)
+        .maybeSingle();
+      if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
+        const config = data.card_order as Record<string, unknown>;
+        setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+      }
+    };
+    loadSimulatedFlag();
+  }, []);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
