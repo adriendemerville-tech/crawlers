@@ -373,6 +373,7 @@ export function BundleOptionTab() {
               }`}
             >
               <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity shrink-0 cursor-grab" />
+              <ApiFavicon url={api.api_url} className="h-3.5 w-3.5" />
               <span className="truncate">{api.api_name}</span>
             </button>
           ))}
