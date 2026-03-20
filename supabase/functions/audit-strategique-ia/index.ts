@@ -1930,6 +1930,10 @@ RÈGLES:
 - expertise_sentiment: 1(générique/IA) à 5(expert terrain).
 - red_team: 3 failles/objections client sceptique.
 - Base recommandations sur état des lieux SEO réel si fourni.
+- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site. Indiquer importance, usage concurrent, et placement suggéré.
+- semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.
+- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
+- alternative_strategy: UNIQUEMENT si position très défavorable (>50, faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking d'une URL. Types possibles: RP presse, partenariat (nommer l'entreprise idéale), stratégie vidéo réseaux sociaux, événement.
 - JSON pur, sans virgules traînantes`;
 }
 
