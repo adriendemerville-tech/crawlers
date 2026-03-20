@@ -2991,6 +2991,22 @@ Deno.serve(async (req) => {
       } catch {}
     }
 
+    // ═══ PERSIST CLIENT TARGETS TO IDENTITY CARD ═══
+    if (parsedAnalysis?.client_targets && domain) {
+      try {
+        const svcUrl = Deno.env.get('SUPABASE_URL')!;
+        const svcKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const svcSb = createClient(svcUrl, svcKey);
+        await svcSb
+          .from('tracked_sites')
+          .update({ client_targets: parsedAnalysis.client_targets })
+          .ilike('domain', `%${domain}%`);
+        console.log(`[audit-strategique-ia] client_targets persisted for ${domain}`);
+      } catch (e) {
+        console.warn('[audit-strategique-ia] Failed to persist client_targets:', e);
+      }
+    }
+
     // ═══ ASYNC JOB: Save result if running as background job ═══
     if (jobSb && jobId) {
       await jobSb.from('async_jobs').update({

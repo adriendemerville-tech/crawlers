@@ -42,6 +42,30 @@ const TAXONOMY_FIELDS = [
   { key: 'confusion_risk', label: 'Risque de confusion' },
 ];
 
+const MARKET_LABELS: Record<string, string> = {
+  B2B: 'B2B',
+  B2C: 'B2C',
+  B2B2C: 'B2B2C',
+};
+
+function formatTargetSummary(target: any): string {
+  const parts: string[] = [];
+  if (target.market) parts.push(target.market);
+  if (target.b2b) {
+    if (target.b2b.segment) parts.push(target.b2b.segment);
+    if (target.b2b.sector) parts.push(target.b2b.sector);
+    if (target.b2b.job_segment) parts.push(target.b2b.job_segment);
+  }
+  if (target.b2c) {
+    if (target.b2c.gender && target.b2c.gender !== 'Tous') parts.push(target.b2c.gender);
+    if (target.b2c.age_range) parts.push(target.b2c.age_range);
+    if (target.b2c.csp) parts.push(target.b2c.csp);
+    if (target.b2c.purchasing_power) parts.push(target.b2c.purchasing_power);
+  }
+  if (target.geo_scope) parts.push(target.geo_scope);
+  return parts.join(' · ') || 'Non défini';
+}
+
 export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteIdentityModalProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
