@@ -97,12 +97,20 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
     return sorted;
   }, [apis, segmentSort, featureSort, nameSort]);
 
+  const toggleNameSort = () => {
+    setSegmentSort(null);
+    setFeatureSort(null);
+    setNameSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
+  };
+
   const toggleSegmentSort = () => {
+    setNameSort(null);
     setFeatureSort(null);
     setSegmentSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   };
 
   const toggleFeatureSort = () => {
+    setNameSort(null);
     setSegmentSort(null);
     setFeatureSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   };
