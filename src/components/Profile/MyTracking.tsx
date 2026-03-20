@@ -313,7 +313,7 @@ export function MyTracking() {
     
     if (data) {
       setSites(data as TrackedSite[]);
-      if (data.length > 0 && !selectedSite) {
+      if (data.length > 0 && !selectedSite && !showApiPanel) {
         setSelectedSite(data[0].id);
       }
     }
