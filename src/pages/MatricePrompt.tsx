@@ -166,80 +166,109 @@ export default function MatricePrompt() {
     await loadBatch(batchId);
   };
 
-  /* --- CSV Import + persist prompt items --- */
+  /* --- Parse raw rows into MatrixRow[] and persist --- */
+  const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
+    if (!user) return;
+    const newBatchId = crypto.randomUUID();
+    const parsed: MatrixRow[] = rawRows.map((raw: any, i: number) => {
+      const isDefault: Record<string, boolean> = {};
+      const val = (key: string, def: any) => {
+        const v = raw[key];
+        if (v === undefined || v === null || v === '') {
+          isDefault[key] = true;
+          return def;
+        }
+        isDefault[key] = false;
+        return typeof def === 'number' ? Number(v) : String(v);
+      };
+      return {
+        id: `row-${i}-${Date.now()}`,
+        prompt: raw.prompt || raw.Prompt || raw.kpi || raw.KPI || `KPI #${i + 1}`,
+        poids: val('poids', DEFAULTS.poids),
+        axe: val('axe', DEFAULTS.axe),
+        seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
+        seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
+        seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
+        llm_name: val('llm_name', DEFAULTS.llm_name),
+        selected: true,
+        isDefault,
+      };
+    });
+
+    const dbRows = parsed.map(p => ({
+      user_id: user.id,
+      batch_id: newBatchId,
+      batch_label: fileName,
+      prompt: p.prompt,
+      poids: p.poids,
+      axe: p.axe,
+      seuil_bon: p.seuil_bon,
+      seuil_moyen: p.seuil_moyen,
+      seuil_mauvais: p.seuil_mauvais,
+      llm_name: p.llm_name,
+      is_default_flags: p.isDefault,
+    }));
+
+    const { data: inserted, error } = await supabase
+      .from('prompt_matrix_items')
+      .insert(dbRows)
+      .select('id');
+
+    if (!error && inserted) {
+      parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+    }
+
+    const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
+    setBatches(prev => [newBatch, ...prev]);
+    setActiveBatchId(newBatchId);
+    localStorage.setItem(LAST_BATCH_KEY, newBatchId);
+
+    setRows(parsed);
+    setResults(null);
+    toast.success(`${parsed.length} KPIs importés — "${fileName}"`);
+  }, [user]);
+
+  /* --- File Import (CSV + DOC/DOCX) --- */
+  const [docParsing, setDocParsing] = useState(false);
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    const fileName = file.name.replace(/\.csv$/i, '');
-    const newBatchId = crypto.randomUUID();
+    const ext = file.name.split('.').pop()?.toLowerCase();
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        const parsed: MatrixRow[] = result.data.map((raw: any, i: number) => {
-          const isDefault: Record<string, boolean> = {};
-          const val = (key: string, def: any) => {
-            const v = raw[key];
-            if (v === undefined || v === null || v === '') {
-              isDefault[key] = true;
-              return def;
-            }
-            isDefault[key] = false;
-            return typeof def === 'number' ? Number(v) : String(v);
-          };
-          return {
-            id: `row-${i}-${Date.now()}`,
-            prompt: raw.prompt || raw.Prompt || raw.kpi || raw.KPI || `KPI #${i + 1}`,
-            poids: val('poids', DEFAULTS.poids),
-            axe: val('axe', DEFAULTS.axe),
-            seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
-            seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
-            seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
-            llm_name: val('llm_name', DEFAULTS.llm_name),
-            selected: true,
-            isDefault,
-          };
-        });
-
-        // Persist with batch_id
-        const dbRows = parsed.map(p => ({
-          user_id: user.id,
-          batch_id: newBatchId,
-          batch_label: fileName,
-          prompt: p.prompt,
-          poids: p.poids,
-          axe: p.axe,
-          seuil_bon: p.seuil_bon,
-          seuil_moyen: p.seuil_moyen,
-          seuil_mauvais: p.seuil_mauvais,
-          llm_name: p.llm_name,
-          is_default_flags: p.isDefault,
-        }));
-
-        const { data: inserted, error } = await supabase
-          .from('prompt_matrix_items')
-          .insert(dbRows)
-          .select('id');
-
-        if (!error && inserted) {
-          parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+    if (ext === 'csv') {
+      const fileName = file.name.replace(/\.csv$/i, '');
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (result) => {
+          await processImportedRows(result.data, fileName);
+        },
+        error: () => toast.error('Erreur de parsing CSV'),
+      });
+    } else if (ext === 'doc' || ext === 'docx') {
+      // Send to edge function for AI extraction
+      setDocParsing(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      supabase.functions.invoke('parse-doc-matrix', {
+        body: formData,
+      }).then(({ data, error }) => {
+        setDocParsing(false);
+        if (error || !data?.rows?.length) {
+          toast.error(error?.message || 'Aucune donnée exploitable trouvée dans le document');
+          return;
         }
-
-        // Update batches list
-        const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
-        setBatches(prev => [newBatch, ...prev]);
-        setActiveBatchId(newBatchId);
-        localStorage.setItem(LAST_BATCH_KEY, newBatchId);
-
-        setRows(parsed);
-        setResults(null);
-        toast.success(`${parsed.length} KPIs importés — "${fileName}"`);
-      },
-      error: () => toast.error('Erreur de parsing CSV'),
-    });
+        const fileName = file.name.replace(/\.(doc|docx)$/i, '');
+        processImportedRows(data.rows, fileName);
+      }).catch(() => {
+        setDocParsing(false);
+        toast.error('Erreur lors du parsing du document');
+      });
+    } else {
+      toast.error('Format non supporté. Utilisez .csv, .doc ou .docx');
+    }
     e.target.value = '';
-  }, [user]);
+  }, [user, processImportedRows]);
 
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
