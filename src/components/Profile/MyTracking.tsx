@@ -1088,11 +1088,10 @@ export function MyTracking() {
                         href={`https://${currentSite.domain}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
                         title={currentSite.domain}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
-                        <span>{language === 'fr' ? 'Visiter le site' : language === 'es' ? 'Visitar sitio' : 'Visit site'}</span>
                       </a>
                       <p className="text-sm text-muted-foreground">
                         {t.lastAudit} : {currentSite.last_audit_at 
