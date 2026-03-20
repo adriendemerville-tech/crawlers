@@ -173,11 +173,45 @@ Deno.serve(async (req) => {
 
     console.log(`[fetch-external-site] Success — ${html.length} chars from ${finalUrl}`);
 
+    // If extract_fields is requested (e.g. societe.com scraping), parse and return JSON
+    if (extract_fields && Array.isArray(extract_fields) && targetUrl.includes('societe.com')) {
+      const extracted: Record<string, string> = {};
+      
+      // Try to extract founding year (Création / Date de création)
+      if (extract_fields.includes('founding_year')) {
+        const yearMatch = html.match(/(?:Cr[ée]ation|Date de cr[ée]ation|Immatriculation)[^<]*?(\d{2}[/-]\d{2}[/-]\d{4}|\d{4})/i);
+        if (yearMatch) {
+          const fullDate = yearMatch[1];
+          extracted.founding_year = fullDate.length === 4 ? fullDate : fullDate.slice(-4);
+        }
+      }
+      
+      // Try to extract legal structure (Forme juridique)
+      if (extract_fields.includes('legal_structure')) {
+        const legalMatch = html.match(/(?:Forme juridique|Statut juridique)[^<]*?<[^>]*>([^<]+)/i);
+        if (legalMatch) {
+          extracted.legal_structure = legalMatch[1].trim();
+        }
+      }
+      
+      // Try to extract SIREN/SIRET
+      if (extract_fields.includes('siren_siret')) {
+        const sirenMatch = html.match(/(?:SIREN|SIRET)[^<]*?(\d{3}\s?\d{3}\s?\d{3}(?:\s?\d{5})?)/i);
+        if (sirenMatch) {
+          extracted.siren_siret = sirenMatch[1].replace(/\s/g, '');
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ extracted, source: finalUrl }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(html, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/html; charset=utf-8',
-        // Explicitly allow framing
         'X-Frame-Options': 'ALLOWALL',
       },
     });
