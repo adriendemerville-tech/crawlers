@@ -229,12 +229,24 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
       return;
     }
 
-    const { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+    let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
     setIsLoading(false);
 
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        toast.error(t.userExists);
+        try {
+          const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
+            body: { action: 'check-email', email: data.email },
+          });
+
+          if (!emailCheckError && emailCheck?.exists === true) {
+            toast.error(t.userExists);
+          } else {
+            toast.error(t.signupError);
+          }
+        } catch {
+          toast.error(t.signupError);
+        }
       } else {
         toast.error(t.signupError);
       }
