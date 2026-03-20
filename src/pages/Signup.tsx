@@ -124,6 +124,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(!!sessionStorage.getItem('pending_persona_type'));
+  const [isSigningUp, setIsSigningUp] = useState(false); // blocks auto-redirect during signup flow
 
   // Verification state
   const [step, setStep] = useState<'form' | 'verify' | 'success'>('form');
