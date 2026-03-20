@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
