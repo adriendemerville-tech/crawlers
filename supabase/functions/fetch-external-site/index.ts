@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, extract_fields } = await req.json();
 
     if (!url || typeof url !== 'string') {
       return new Response(
