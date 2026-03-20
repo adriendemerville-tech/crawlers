@@ -553,7 +553,7 @@ export default function Signup() {
             </div>
 
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-2.5">
+              <form onSubmit={(e) => { e.preventDefault(); checkUserExistsFirst(); }} className="space-y-2.5">
                 {showExistsBanner && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
                     <AlertCircle className="h-4 w-4 text-primary shrink-0" />
