@@ -145,7 +145,7 @@ const GenerativeEngineOptimization = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <title>GEO : Generative Engine Optimization — Définition & Guide Complet 2026 | Crawlers.fr</title>
-        <meta name="description" content="Le GEO (Generative Engine Optimization) optimise votre contenu pour être cité par ChatGPT, Claude, Perplexity et Google SGE. Définition, 5 piliers, stratégie actionnable et score GEO." />
+        <meta name="description" content="GEO (Generative Engine Optimization) : optimisez votre contenu pour ChatGPT, Claude et Perplexity. Définition, 5 piliers et score GEO." />
         <link rel="canonical" href="https://crawlers.fr/generative-engine-optimization" />
         <meta property="og:title" content="Generative Engine Optimization (GEO) — Guide Complet 2026" />
         <meta property="og:description" content="Tout comprendre sur le GEO : optimisez votre site pour être cité par les moteurs de recherche IA. Définition, stratégie, outils." />

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense, memo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -580,6 +581,10 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <title>Crawlers.fr — Audit SEO & GEO, Visibilité IA pour PME</title>
+        <meta name="description" content="Crawlers.fr audite votre site sur 200 points SEO et GEO. Mesurez votre visibilité sur ChatGPT, Claude, Perplexity. Code correctif inclus." />
+      </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Contenu principal">
         <HeroSection 

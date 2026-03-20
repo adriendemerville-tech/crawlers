@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -296,6 +297,11 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+      <Helmet>
+        <title>Connexion | Crawlers.fr</title>
+        <meta name="description" content="Connectez-vous à Crawlers.fr pour accéder à vos audits SEO & GEO, suivre vos sites et optimiser votre visibilité IA." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

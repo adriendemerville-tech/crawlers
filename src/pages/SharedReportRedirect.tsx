@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Download, Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -189,6 +190,11 @@ export default function SharedReportRedirect() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Rapport partagé | Crawlers.fr</title>
+        <meta name="description" content="Consultez un rapport d'audit SEO & GEO partagé via Crawlers.fr." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Header with actions — same style as ExpertReportPreviewModal */}
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-card sticky top-0 z-50">
         {!isMobile && <h2 className="text-lg font-semibold">{t.report}</h2>}
