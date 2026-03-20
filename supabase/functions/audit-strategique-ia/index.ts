@@ -1944,6 +1944,7 @@ RÈGLES:
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.
 - serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
 - alternative_strategy: UNIQUEMENT si position très défavorable (>50, faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking d'une URL. Types possibles: RP presse, partenariat (nommer l'entreprise idéale), stratégie vidéo réseaux sociaux, événement.
+- client_targets: OBLIGATOIRE. Analyse le contenu, le pricing, le positionnement pour déduire les cibles. primary: 1-2 cibles (confidence>0.7). secondary: 1-2 cibles (confidence 0.4-0.7). untapped: exactement 2 cibles non adressées avec rationale. Pour chaque cible, remplir SOIT b2b SOIT b2c selon le market.
 - JSON pur, sans virgules traînantes`;
 }
 
