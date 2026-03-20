@@ -41,6 +41,7 @@ export function BundleManagement() {
   const [subs, setSubs] = useState<BundleSub[]>([]);
   const [catalog, setCatalog] = useState<CatalogApi[]>([]);
   const [errors, setErrors] = useState<BundleError[]>([]);
+  const [apiCosts, setApiCosts] = useState<ApiCostEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
