@@ -64,40 +64,64 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
   const [isHovered, setIsHovered] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSave = () => { onSave(editValue); setIsEditing(false); };
-  const handleCancel = () => { setEditValue(value || ''); setIsEditing(false); };
   const isEmpty = !value || value === 'null' || value === 'undefined';
+
+  const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      autoResize(textareaRef.current);
+      // Place cursor at end
+      const len = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }, [isEditing, autoResize]);
+
+  const handleSave = () => {
+    onSave(editValue);
+    setIsEditing(false);
+  };
 
   return (
     <div
-      className="flex items-center gap-3 py-2 border-b border-border/15 last:border-0 group"
+      className="flex items-start gap-3 py-2 border-b border-border/15 last:border-0 group cursor-text"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => { if (!isEditing) { setEditValue(value || ''); setIsEditing(true); } }}
     >
-      <span className="text-xs font-medium text-muted-foreground w-[140px] shrink-0">{label}</span>
-      <div className="flex-1 min-w-0 flex items-center gap-1.5">
+      <span className="text-xs font-medium text-muted-foreground w-[140px] shrink-0 pt-0.5">{label}</span>
+      <div className="flex-1 min-w-0">
         {isEditing ? (
-          <div className="flex items-center gap-1.5 w-full">
-            <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-sm py-0 px-2" autoFocus
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') handleCancel(); }} />
-            <button onClick={handleSave} className="text-emerald-500 hover:text-emerald-400 shrink-0"><Check className="h-3.5 w-3.5" /></button>
-            <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground shrink-0"><X className="h-3.5 w-3.5" /></button>
-          </div>
+          <textarea
+            ref={textareaRef}
+            value={editValue}
+            onChange={(e) => { setEditValue(e.target.value); autoResize(e.target); }}
+            onBlur={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave(); }
+              if (e.key === 'Escape') { setEditValue(value || ''); setIsEditing(false); }
+            }}
+            className="w-full text-sm text-foreground bg-transparent border border-[hsl(var(--brand-violet))]/40 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 resize-none overflow-hidden min-h-[28px]"
+            rows={1}
+          />
         ) : (
-          <>
+          <div className="flex items-center gap-1.5 min-h-[28px]">
             {isEmpty ? (
               <span className="text-muted-foreground/40 italic text-xs">Non renseigné</span>
             ) : (
               <span className="text-sm text-foreground">{value}</span>
             )}
             {isHovered && (
-              <button onClick={() => { setEditValue(value || ''); setIsEditing(true); }}
-                className="text-muted-foreground/50 hover:text-foreground transition-colors shrink-0 ml-auto">
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
+              <Pencil className="h-3 w-3 text-muted-foreground/40 shrink-0 ml-auto" />
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
