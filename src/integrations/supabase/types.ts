@@ -4141,6 +4141,71 @@ export type Database = {
           },
         ]
       }
+      serpapi_cache: {
+        Row: {
+          ads_results: Json | null
+          country: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          knowledge_graph: Json | null
+          language: string | null
+          location: string | null
+          organic_results: Json | null
+          query_text: string
+          related_searches: Json | null
+          result_data: Json
+          search_engine: string
+          search_metadata: Json | null
+          tracked_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          ads_results?: Json | null
+          country?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          knowledge_graph?: Json | null
+          language?: string | null
+          location?: string | null
+          organic_results?: Json | null
+          query_text: string
+          related_searches?: Json | null
+          result_data?: Json
+          search_engine?: string
+          search_metadata?: Json | null
+          tracked_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          ads_results?: Json | null
+          country?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          knowledge_graph?: Json | null
+          language?: string | null
+          location?: string | null
+          organic_results?: Json | null
+          query_text?: string
+          related_searches?: Json | null
+          result_data?: Json
+          search_engine?: string
+          search_metadata?: Json | null
+          tracked_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serpapi_cache_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_link_clicks: {
         Row: {
           created_at: string
