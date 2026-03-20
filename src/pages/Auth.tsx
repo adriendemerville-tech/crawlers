@@ -295,7 +295,7 @@ export default function Auth() {
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
-          <CardHeader className="text-center">
+          <CardHeader className="text-center pb-2 pt-4">
             <CardTitle className="text-2xl font-bold">
               {isLogin ? t.loginTitle : t.signupTitle}
             </CardTitle>
@@ -303,7 +303,7 @@ export default function Auth() {
               {isLogin ? t.loginDesc : t.signupDesc}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 pb-4">
             {/* Google OAuth Button */}
             <Button
               variant="outline"
