@@ -133,6 +133,34 @@ async function handleResetPassword(body: any) {
   return json({ success: true });
 }
 
+// ─── delete-user (admin only) ───
+
+async function handleDeleteUser(body: any, req: Request) {
+  const { user_id } = body;
+  if (!user_id) return json({ error: 'user_id required' }, 400);
+
+  // Verify caller is admin
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  // Delete from auth.users (cascades to profiles via FK)
+  const { error } = await supabase.auth.admin.deleteUser(user_id);
+  if (error) {
+    console.error('Delete auth user error:', error);
+    return json({ error: error.message }, 500);
+  }
+
+  return json({ success: true });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
@@ -147,6 +175,7 @@ Deno.serve(async (req) => {
       case 'send-code':       return await handleSendCode(body);
       case 'verify-code':     return await handleVerifyCode(body);
       case 'reset-password':  return await handleResetPassword(body);
+      case 'delete-user':     return await handleDeleteUser(body, req);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
