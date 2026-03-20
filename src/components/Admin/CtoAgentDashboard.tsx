@@ -39,6 +39,7 @@ export function CtoAgentDashboard() {
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [alertDismissed, setAlertDismissed] = useState(false);
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [cacheHealth, setCacheHealth] = useState<CacheHealthReport | null>(null);
   const [checkingCache, setCheckingCache] = useState(false);
