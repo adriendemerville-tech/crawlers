@@ -367,8 +367,64 @@ export function CtoAgentDashboard() {
 
       {/* Recent logs */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Journal des analyses récentes</CardTitle>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle className="text-base">Journal des analyses récentes</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={refreshingJournal}
+              onClick={async () => {
+                setRefreshingJournal(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('agent-cto', {
+                    body: { action: 'analyze' },
+                  });
+                  if (error) throw error;
+                  toast({ title: '✅ Journal mis à jour', description: data?.analysis_summary || 'Analyse terminée' });
+                  fetchData();
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de relancer l\'analyse CTO.', variant: 'destructive' });
+                } finally {
+                  setRefreshingJournal(false);
+                }
+              }}
+            >
+              {refreshingJournal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              Mettre à jour
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs text-destructive hover:text-destructive"
+              disabled={clearing || logs.length === 0}
+              onClick={async () => {
+                if (!confirm('Supprimer toutes les entrées du journal CTO ?')) return;
+                setClearing(true);
+                try {
+                  const { error } = await supabase
+                    .from('cto_agent_logs')
+                    .delete()
+                    .neq('id', '00000000-0000-0000-0000-000000000000');
+                  if (error) throw error;
+                  setLogs([]);
+                  toast({ title: '🗑️ Journal vidé', description: 'Toutes les entrées ont été supprimées.' });
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de vider le journal.', variant: 'destructive' });
+                } finally {
+                  setClearing(false);
+                }
+              }}
+            >
+              {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              Vider
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
