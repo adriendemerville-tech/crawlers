@@ -236,6 +236,7 @@ export default function Signup() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
+      trackAnalyticsEvent('verification_email_sent' as any);
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
