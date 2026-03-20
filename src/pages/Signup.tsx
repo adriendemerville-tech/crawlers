@@ -126,6 +126,7 @@ const translations = {
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(!!sessionStorage.getItem('pending_persona_type'));
@@ -448,13 +449,13 @@ export default function Signup() {
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
-          <CardHeader className="text-center pb-3">
-            <CardTitle className="text-xl font-bold">{t.signupTitle}</CardTitle>
-            <CardDescription className="text-sm">{t.signupDesc}</CardDescription>
+          <CardHeader className="text-center pb-2 pt-4 px-5">
+            <CardTitle className="text-lg font-bold">{t.signupTitle}</CardTitle>
+            <CardDescription className="text-xs">{t.signupDesc}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 px-5 pb-4 pt-1">
             {/* Google OAuth */}
-            <Button variant="outline" className="w-full gap-2 h-10" onClick={handleGoogleLogin} disabled={isLoading}>
+            <Button variant="outline" className="w-full gap-2 h-9" onClick={handleGoogleLogin} disabled={isLoading}>
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -523,8 +524,8 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.password}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input {...field} type={showPassword ? 'text' : 'password'} className="pl-9 pr-9 h-9 text-sm" />
+                        {!field.value && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />}
+                        <Input {...field} type={showPassword ? 'text' : 'password'} className={`${field.value ? 'pl-3' : 'pl-9'} pr-9 h-9 text-sm`} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                           {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
@@ -540,8 +541,11 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.confirmPassword}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input {...field} type={showPassword ? 'text' : 'password'} className="pl-9 h-9 text-sm" />
+                        {!field.value && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />}
+                        <Input {...field} type={showConfirmPassword ? 'text' : 'password'} className={`${field.value ? 'pl-3' : 'pl-9'} pr-9 h-9 text-sm`} />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
                       </div>
                     </FormControl>
                     <FormMessage className="text-xs" />
