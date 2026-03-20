@@ -1,9 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY') || ''
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
-
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
   const supabase = getServiceClient()
@@ -15,142 +12,147 @@ async function isSupervisorEnabled(): Promise<boolean> {
   return data?.value?.enabled === true
 }
 
-// ─── Read CTO function code ──────────────────────────────────────────
-async function readCtoCode(): Promise<string> {
-  // Read the agent-cto function source via Supabase management API
-  // Since we can't read filesystem in edge functions, we fetch from the deployed source
-  const supabase = getServiceClient()
-  
-  // Read from a stored version in system_config or fetch the function metadata
+// ─── Collect CTO corrective actions (approved/deployed) ─────────────
+async function collectCtoCorrections(supabase: any): Promise<any[]> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: logs } = await supabase
+    .from('cto_agent_logs')
+    .select('*')
+    .in('decision', ['approved', 'needs_review'])
+    .gte('created_at', thirtyDaysAgo)
+    .order('created_at', { ascending: false })
+    .limit(40)
+
+  return (logs || []).map((log: any) => ({
+    id: log.id,
+    function_analyzed: log.function_analyzed,
+    decision: log.decision,
+    confidence: log.confidence_score,
+    analysis_summary: log.analysis_summary,
+    self_critique: log.self_critique,
+    proposed_change: log.proposed_change,
+    change_diff_pct: log.change_diff_pct,
+    prompt_version_before: log.prompt_version_before,
+    prompt_version_after: log.prompt_version_after,
+    metadata: log.metadata,
+    date: log.created_at,
+  }))
+}
+
+// ─── Read deployed function source from system_config ────────────────
+async function readFunctionSource(supabase: any, functionName: string): Promise<string> {
   const { data } = await supabase
     .from('system_config')
     .select('value')
-    .eq('key', 'cto_function_source')
+    .eq('key', `function_source:${functionName}`)
     .single()
-  
-  return data?.value?.source || 'Source non disponible. Veuillez synchroniser le code CTO.'
+
+  if (data?.value?.source) return data.value.source
+
+  // Fallback: try the legacy cto_function_source key
+  if (functionName === 'agent-cto') {
+    const { data: legacy } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'cto_function_source')
+      .single()
+    return legacy?.value?.source || ''
+  }
+
+  return ''
 }
 
-// ─── Compile errors from multiple sources ────────────────────────────
-async function compileErrors(supabase: any): Promise<any[]> {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  
-  const [ctoLogs, backendErrors, silentErrors, injectionErrors] = await Promise.all([
-    supabase.from('cto_agent_logs')
-      .select('*')
-      .gte('created_at', thirtyDaysAgo)
-      .order('created_at', { ascending: false })
-      .limit(50),
-    supabase.from('analytics_events')
-      .select('*')
-      .in('event_type', ['edge_function_error', 'error', 'scan_error'])
-      .gte('created_at', thirtyDaysAgo)
-      .order('created_at', { ascending: false })
-      .limit(100),
-    supabase.from('analytics_events')
-      .select('*')
-      .eq('event_type', 'silent_error')
-      .gte('created_at', thirtyDaysAgo)
-      .limit(50),
-    supabase.from('analytics_events')
-      .select('*')
-      .eq('event_type', 'injection_error')
-      .gte('created_at', thirtyDaysAgo)
-      .limit(50),
-  ])
+// ─── Post-deployment error check for modified functions ──────────────
+async function getPostDeployErrors(supabase: any, functionNames: string[]): Promise<any[]> {
+  if (!functionNames.length) return []
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const errors: any[] = []
-  
-  // CTO rejected/needs_review decisions
-  for (const log of (ctoLogs.data || [])) {
-    if (log.decision === 'rejected' || log.decision === 'needs_review') {
-      errors.push({
-        type: 'cto_decision',
-        function: log.function_analyzed,
-        decision: log.decision,
-        confidence: log.confidence_score,
-        summary: log.analysis_summary,
-        critique: log.self_critique,
-        date: log.created_at,
-      })
-    }
-  }
+  const { data } = await supabase
+    .from('analytics_events')
+    .select('*')
+    .in('event_type', ['edge_function_error', 'error', 'silent_error'])
+    .gte('created_at', sevenDaysAgo)
+    .order('created_at', { ascending: false })
+    .limit(200)
 
-  // Backend errors related to agent-cto
-  for (const evt of (backendErrors.data || [])) {
-    const d = evt.event_data || {}
-    errors.push({
-      type: 'backend_error',
-      function: d.function_name || 'unknown',
-      message: d.error_message || d.message || d.error || '',
-      url: evt.url || '',
-      date: evt.created_at,
-    })
-  }
-
-  // Silent errors
-  for (const evt of (silentErrors.data || [])) {
-    const d = evt.event_data || {}
-    errors.push({
-      type: 'silent_error',
-      function: d.function_name || 'unknown',
-      message: d.error_message || d.message || '',
-      date: evt.created_at,
-    })
-  }
-
-  return errors
+  // Filter to only errors mentioning one of the modified functions
+  return (data || []).filter((evt: any) => {
+    const fn = evt.event_data?.function_name || evt.url || ''
+    return functionNames.some(name => fn.includes(name))
+  })
 }
 
-// ─── AI Analysis with benefit/risk and forced green/orange rating ─────
-async function analyzeAndPropose(ctoCode: string, errors: any[]): Promise<any> {
-  const errorSummary = JSON.stringify(errors.slice(0, 30), null, 2)
-  
-  const systemPrompt = `Tu es le SUPERVISOR, un système de contrôle qualité qui supervise l'Agent CTO.
+// ─── AI: Audit CTO corrections quality & impact ─────────────────────
+async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[]): Promise<any> {
+  const systemPrompt = `Tu es le SUPERVISOR, un auditeur qualité des corrections déployées par l'Agent CTO.
 
-TON RÔLE :
-- Analyser les erreurs compilées et le code source de l'Agent CTO
-- Proposer des modifications PRÉCISES au code CTO pour corriger les problèmes
-- Évaluer le ratio bénéfice/risque de chaque modification
+TON RÔLE (NOUVEAU) :
+Tu ne cherches PAS les erreurs. Tu audites les SOLUTIONS que le CTO a déployées :
+1. Analyser chaque action corrective du CTO (approved/deployed)
+2. Lire le code source de la fonction modifiée
+3. Évaluer la QUALITÉ de la solution : logique, robustesse, edge cases, impact sur les performances
+4. Vérifier si des erreurs post-déploiement sont apparues sur ces fonctions (régression)
+5. Noter le ratio bénéfice/risque de chaque correction
+
+CE QUE TU AUDITES PAR CORRECTION :
+- La logique du changement est-elle correcte ?
+- Y a-t-il des edge cases non gérés ?
+- Le changement peut-il causer des régressions ?
+- L'impact sur les performances est-il acceptable ?
+- Le code respecte-t-il les patterns existants ?
+- Des erreurs sont-elles apparues APRÈS le déploiement de cette correction ?
 
 RÈGLES CRITIQUES DE NOTATION :
-- Tu ne peux noter qu'en VERT (🟢 safe, pas de risque) ou ORANGE (🟠 attention, risque modéré)
-- Le ROUGE est INTERDIT. Si un problème semble critique (rouge), tu DOIS trouver une solution intermédiaire ou de contournement qui ramène le risque à ORANGE
-- Pour chaque modification proposée, explique pourquoi tu ne la classes PAS en rouge
+- VERT (🟢) : correction saine, bien implémentée, pas de risque
+- ORANGE (🟠) : correction fonctionnelle mais avec des réserves (edge cases, perf, etc.)
+- Le ROUGE est INTERDIT. Si un problème semble critique, tu DOIS proposer un correctif intermédiaire qui ramène le risque à ORANGE
 
 FORMAT DE RÉPONSE (JSON strict) :
 {
-  "analysis": "Résumé de l'analyse des erreurs compilées",
-  "error_patterns": ["pattern 1", "pattern 2"],
-  "recommendations": [
+  "summary": "Vue d'ensemble de la qualité des corrections CTO sur la période",
+  "corrections_audited": [
     {
-      "id": 1,
-      "title": "Titre court de la modification",
-      "description": "Description détaillée du changement proposé",
-      "benefit": "Bénéfice attendu",
-      "risk": "Risque identifié",
-      "risk_level": "green" | "orange",
-      "risk_mitigation": "Comment le risque est atténué (pourquoi pas rouge)",
-      "code_change": "Le diff ou le nouveau code à appliquer",
-      "affected_lines": "Description des lignes/fonctions affectées"
+      "cto_log_id": "id du log CTO",
+      "function": "nom de la fonction modifiée",
+      "cto_intent": "Ce que le CTO voulait corriger",
+      "solution_quality": "green" | "orange",
+      "logic_assessment": "Évaluation de la logique du code déployé",
+      "edge_cases": ["Edge case non géré 1", ...],
+      "performance_impact": "Impact estimé sur la perf",
+      "regression_detected": true | false,
+      "regression_details": "Détail si des erreurs post-deploy existent",
+      "improvement_suggestion": "Suggestion d'amélioration si orange, null si green"
     }
   ],
-  "overall_assessment": "Évaluation globale de la santé du CTO",
-  "contournements_applied": ["Liste des problèmes critiques ramenés en orange avec explication"]
+  "overall_cto_score": "Score global sur 100 de la qualité des corrections CTO",
+  "patterns_observed": ["Patterns récurrents dans les corrections (bons ou mauvais)"],
+  "strategic_recommendations": ["Recommandations stratégiques pour le CTO"]
 }`
 
-  const userPrompt = `CODE SOURCE ACTUEL DE L'AGENT CTO :
-\`\`\`typescript
-${ctoCode.substring(0, 8000)}
-\`\`\`
+  const correctionsData = JSON.stringify(corrections.slice(0, 20), null, 2)
+  const sourcesData = Object.entries(functionSources)
+    .map(([name, src]) => `=== ${name} ===\n${(src || '').substring(0, 4000)}`)
+    .join('\n\n')
+  const errorsData = JSON.stringify(postErrors.slice(0, 30), null, 2)
 
-ERREURS COMPILÉES (30 derniers jours) :
+  const userPrompt = `ACTIONS CORRECTIVES DU CTO (30 derniers jours, approuvées/déployées) :
 \`\`\`json
-${errorSummary}
+${correctionsData}
 \`\`\`
 
-Analyse ce code et ces erreurs. Propose des modifications concrètes au code CTO.
-Rappel : JAMAIS de notation rouge — trouve des contournements pour tout ramener en orange maximum.`
+CODE SOURCE DES FONCTIONS MODIFIÉES :
+\`\`\`typescript
+${sourcesData.substring(0, 12000)}
+\`\`\`
+
+ERREURS POST-DÉPLOIEMENT sur ces fonctions (7 derniers jours) :
+\`\`\`json
+${errorsData}
+\`\`\`
+
+Audite chaque correction : logique, impact, régressions. Note chaque correction en vert/orange.
+Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.`
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -173,17 +175,17 @@ Rappel : JAMAIS de notation rouge — trouve des contournements pour tout ramene
 
   const data = await response.json()
   const content = data.choices?.[0]?.message?.content || ''
-  
+
   try {
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
-      // Enforce: no red ratings - force any red to orange
-      if (parsed.recommendations) {
-        for (const rec of parsed.recommendations) {
-          if (rec.risk_level === 'red') {
-            rec.risk_level = 'orange'
-            rec.risk_mitigation = `[FORCÉ EN ORANGE] ${rec.risk_mitigation || 'Solution de contournement appliquée par le Supervisor'}`
+      // Enforce: no red ratings
+      if (parsed.corrections_audited) {
+        for (const c of parsed.corrections_audited) {
+          if (c.solution_quality === 'red') {
+            c.solution_quality = 'orange'
+            c.improvement_suggestion = `[FORCÉ EN ORANGE] ${c.improvement_suggestion || 'Le Supervisor recommande un correctif intermédiaire'}`
           }
         }
       }
@@ -192,31 +194,15 @@ Rappel : JAMAIS de notation rouge — trouve des contournements pour tout ramene
   } catch (e) {
     console.error('[SUPERVISOR] Parse error:', e)
   }
-  
+
   return {
-    analysis: 'Erreur d\'analyse',
-    error_patterns: [],
-    recommendations: [],
-    overall_assessment: content.substring(0, 500),
-    contournements_applied: [],
+    summary: 'Erreur d\'analyse',
+    corrections_audited: [],
+    overall_cto_score: 0,
+    patterns_observed: [],
+    strategic_recommendations: [],
+    raw_response: content.substring(0, 500),
   }
-}
-
-// ─── Apply code changes to CTO function ──────────────────────────────
-async function applyCtoChanges(newCode: string): Promise<{ success: boolean; error?: string }> {
-  // Store the new version in system_config for tracking
-  const supabase = getServiceClient()
-  
-  // Save the new code to system_config for audit trail
-  await supabase
-    .from('system_config')
-    .upsert({
-      key: 'cto_function_source',
-      value: { source: newCode, updated_at: new Date().toISOString(), updated_by: 'supervisor' },
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' })
-
-  return { success: true }
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
@@ -272,80 +258,73 @@ Deno.serve(async (req) => {
     const body = await req.json()
     const { action } = body
 
-    // ─── Action: Compile errors ──────────────────────────────────
-    if (action === 'compile_errors') {
-      const errors = await compileErrors(supabase)
-      return new Response(JSON.stringify({ success: true, errors, count: errors.length }), {
+    // ─── Action: List CTO corrections ────────────────────────────
+    if (action === 'list_corrections') {
+      const corrections = await collectCtoCorrections(supabase)
+      return new Response(JSON.stringify({ success: true, corrections, count: corrections.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // ─── Action: Read CTO code ───────────────────────────────────
-    if (action === 'read_cto_code') {
-      const code = await readCtoCode()
-      return new Response(JSON.stringify({ success: true, code }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // ─── Action: Analyze & propose changes ───────────────────────
+    // ─── Action: Audit CTO corrections ───────────────────────────
     if (action === 'analyze') {
-      const [code, errors] = await Promise.all([
-        readCtoCode(),
-        compileErrors(supabase),
-      ])
-      
-      const analysis = await analyzeAndPropose(code, errors)
-      
-      // Log the analysis
-      await supabase.from('cto_agent_logs').insert({
-        audit_id: `supervisor_analysis_${Date.now()}`,
-        function_analyzed: 'supervisor-analysis',
-        analysis_summary: analysis.analysis || '',
-        self_critique: analysis.overall_assessment || '',
-        confidence_score: 0,
-        decision: 'needs_review',
-        metadata: {
-          source: 'supervisor',
-          error_count: errors.length,
-          recommendation_count: analysis.recommendations?.length || 0,
-          contournements: analysis.contournements_applied || [],
-        },
-      })
+      const corrections = await collectCtoCorrections(supabase)
 
-      return new Response(JSON.stringify({ success: true, analysis, error_count: errors.length }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // ─── Action: Apply changes to CTO ────────────────────────────
-    if (action === 'apply_changes') {
-      const { new_code } = body
-      if (!new_code) {
-        return new Response(JSON.stringify({ error: 'Missing new_code' }), {
-          status: 400,
+      if (!corrections.length) {
+        return new Response(JSON.stringify({
+          success: true,
+          analysis: {
+            summary: 'Aucune action corrective CTO à auditer sur les 30 derniers jours.',
+            corrections_audited: [],
+            overall_cto_score: 100,
+            patterns_observed: [],
+            strategic_recommendations: [],
+          },
+          correction_count: 0,
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
-      const result = await applyCtoChanges(new_code)
+      // Extract unique function names modified by CTO
+      const functionNames = [...new Set(corrections.map((c: any) => c.function_analyzed).filter(Boolean))]
 
-      // Log the deployment
+      // Read source code for each modified function + check post-deploy errors
+      const [functionSources, postErrors] = await Promise.all([
+        Promise.all(functionNames.map(async (name: string) => {
+          const src = await readFunctionSource(supabase, name)
+          return [name, src] as [string, string]
+        })).then(entries => Object.fromEntries(entries)),
+        getPostDeployErrors(supabase, functionNames as string[]),
+      ])
+
+      const analysis = await auditCorrections(corrections, functionSources, postErrors)
+
+      // Log the audit
       await supabase.from('cto_agent_logs').insert({
-        audit_id: `supervisor_deploy_${Date.now()}`,
-        function_analyzed: 'agent-cto',
-        analysis_summary: `Supervisor a déployé une modification du code CTO (${new_code.length} caractères)`,
-        self_critique: 'Modification appliquée par le Supervisor admin',
-        confidence_score: 100,
-        decision: 'approved',
+        audit_id: `supervisor_audit_${Date.now()}`,
+        function_analyzed: 'supervisor-audit',
+        analysis_summary: analysis.summary || '',
+        self_critique: `Score CTO: ${analysis.overall_cto_score || 'N/A'}/100`,
+        confidence_score: 0,
+        decision: 'needs_review',
         metadata: {
           source: 'supervisor',
-          action: 'deploy',
-          code_length: new_code.length,
+          type: 'correction_audit',
+          correction_count: corrections.length,
+          functions_audited: functionNames,
+          post_deploy_errors: postErrors.length,
+          cto_score: analysis.overall_cto_score,
         },
       })
 
-      return new Response(JSON.stringify({ success: result.success, error: result.error }), {
+      return new Response(JSON.stringify({
+        success: true,
+        analysis,
+        correction_count: corrections.length,
+        functions_audited: functionNames,
+        post_deploy_errors: postErrors.length,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
