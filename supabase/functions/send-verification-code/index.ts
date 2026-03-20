@@ -48,6 +48,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    const confirmLink = `https://crawlers.fr/signup?verified=true`;
+
     // Enqueue the verification email via the email queue
     const emailPayload = {
       run_id: crypto.randomUUID(),
@@ -63,6 +65,14 @@ Deno.serve(async (req) => {
           <div style="background: #f4f4f5; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #111;">${code}</span>
           </div>
+          <p style="color: #555; font-size: 14px; margin-bottom: 16px;">
+            Ou cliquez sur le lien ci-dessous pour confirmer directement :
+          </p>
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${confirmLink}" style="display: inline-block; background: #6366f1; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
+              Confirmer mon inscription
+            </a>
+          </div>
           <p style="color: #999; font-size: 12px;">
             Ce code expire dans 15 minutes. Si vous n'avez pas demandé ce code, ignorez cet email.
           </p>
@@ -72,7 +82,7 @@ Deno.serve(async (req) => {
       sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
       label: 'verification-code',
-      text: `Votre code de vérification Crawlers : ${code}`,
+      text: `Votre code de vérification Crawlers : ${code}. Ou confirmez directement : ${confirmLink}`,
       queued_at: new Date().toISOString(),
     };
 
@@ -83,7 +93,6 @@ Deno.serve(async (req) => {
 
     if (queueError) {
       console.error('Queue error:', queueError);
-      // Fallback: still return success since the code is stored
     }
 
     return new Response(JSON.stringify({ success: true }), {
