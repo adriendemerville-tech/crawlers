@@ -471,6 +471,45 @@ export interface GoogleMyBusinessData {
   quick_wins?: string[];
 }
 
+// ============= CLIENT TARGETS ANALYSIS =============
+
+export interface ClientTargetB2B {
+  segment: string; // TPE/Indépendants, PME, ETI/Grands comptes, etc.
+  sector: string; // Tech/SaaS, E-commerce, Industrie, etc.
+  job_segment: string; // Marketing/Communication, SEO/SEA, Dev/IT, etc.
+  role: string; // Dirigeant/CEO, CMO, CTO, etc.
+  buying_frequency: string; // Ponctuel, Régulier, Récurrent, etc.
+  payment_mode: string; // Abonnement mensuel, Licence unique, etc.
+}
+
+export interface ClientTargetB2C {
+  gender: string; // Homme, Femme, Enfant/Ado, Tous
+  age_range: string; // <18, 18-25, 26-35, etc.
+  csp: string; // Étudiant, Employé, Cadre, etc.
+  purchasing_power: string; // Contraint, Classe moyenne, Aisé, etc.
+  buying_frequency: string; // Ponctuel, Régulier, Récurrent, Saisonnier, etc.
+  payment_mode: string; // Abonnement mensuel, Achat unique, etc.
+}
+
+export interface ClientTarget {
+  market: 'B2B' | 'B2C' | 'B2B2C';
+  b2b?: ClientTargetB2B;
+  b2c?: ClientTargetB2C;
+  geo_scope: string; // Local, Régional, National, International
+  geo_country?: string;
+  intent: string; // Acheteur direct, Prescripteur, Utilisateur final, Chercheur d'info
+  maturity: string; // Awareness, Consideration, Decision, Loyalty
+  confidence: number; // 0-1
+  evidence: string;
+  rationale?: string; // For untapped targets
+}
+
+export interface ClientTargetsAnalysis {
+  primary: ClientTarget[];
+  secondary: ClientTarget[];
+  untapped: ClientTarget[];
+}
+
 // UPDATED: Premium Strategic Analysis
 export type AuditPageType = 'homepage' | 'editorial' | 'product' | 'deep';
 
