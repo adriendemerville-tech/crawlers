@@ -67,7 +67,7 @@ const services: ServiceButton[] = [
     id: 'google-ads',
     name: 'Google Ads',
     category: 'analytics',
-    available: false,
+    available: true,
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#FBBC04" d="M3.2 15.3l4.9-8.5c.6-1 1.9-1.4 2.9-.8l4.9 2.8c1 .6 1.4 1.9.8 2.9l-4.9 8.5c-.6 1-1.9 1.4-2.9.8L4 18.2c-1-.6-1.4-1.9-.8-2.9z"/><path fill="#4285F4" d="M12.9 9.7l4.9-8.5c.6-1 1.9-1.4 2.9-.8.5.3.8.7 1 1.2.1.5.1 1-.2 1.5L16.6 12c-.3-.4-.6-.7-1-.9l-2.7-1.4z"/><circle fill="#34A853" cx="5.5" cy="19.5" r="3"/></svg>`,
   },
   {
