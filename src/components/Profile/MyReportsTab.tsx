@@ -87,7 +87,7 @@ const t = {
     save: 'Save',
     reportTypes: {
       seo_technical: 'Technical SEO Audit',
-      seo_strategic: 'Strategic AI Audit',
+      seo_strategic: 'Strategic GEO Audit',
       llm: 'LLM Analysis',
       geo: 'GEO Analysis',
       pagespeed: 'PageSpeed',
