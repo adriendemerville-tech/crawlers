@@ -230,6 +230,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // For admins: set reset flag so next login replays the full Google OAuth flow
+    if (user) {
+      try {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        if (roleData) {
+          localStorage.setItem(`google_oauth_admin_reset_${user.id}`, 'true');
+          localStorage.removeItem(`google_oauth_prompted_${user.id}`);
+        }
+      } catch (_) { /* best effort */ }
+    }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
