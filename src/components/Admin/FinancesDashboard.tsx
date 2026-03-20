@@ -196,16 +196,24 @@ export function FinancesDashboard() {
       setActiveUsersCount(activeUserIds.size);
 
       // Business metrics
-      const { data: payingProfiles } = await supabase
-        .from('profiles').select('user_id')
-        .eq('plan_type', 'agency_pro').eq('subscription_status', 'active')
-        .not('stripe_subscription_id', 'is', null);
+      const [payingRes, purchaseRes, bundleRes] = await Promise.all([
+        supabase
+          .from('profiles').select('user_id')
+          .eq('plan_type', 'agency_pro').eq('subscription_status', 'active')
+          .not('stripe_subscription_id', 'is', null),
+        supabase
+          .from('credit_transactions').select('amount').eq('transaction_type', 'purchase'),
+        supabase
+          .from('bundle_subscriptions')
+          .select('monthly_price_cents')
+          .eq('status', 'active'),
+      ]);
+      const payingProfiles = payingRes.data;
       const payingCount = payingProfiles?.length || 0;
-      const { data: purchaseTx } = await supabase
-        .from('credit_transactions').select('amount').eq('transaction_type', 'purchase');
-      const creditsPurchased = (purchaseTx || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-      const mrr = payingCount * 59;
-      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr });
+      const creditsPurchased = (purchaseRes.data || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+      const bundleMrr = (bundleRes.data || []).reduce((sum: number, s: any) => sum + ((s.monthly_price_cents || 0) / 100), 0);
+      const mrr = payingCount * 59 + bundleMrr;
+      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr, bundleMrr });
 
       // ACPU per subscriber
       if (payingProfiles && payingProfiles.length > 0) {
