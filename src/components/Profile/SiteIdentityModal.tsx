@@ -42,6 +42,30 @@ const TAXONOMY_FIELDS = [
   { key: 'confusion_risk', label: 'Risque de confusion' },
 ];
 
+const MARKET_LABELS: Record<string, string> = {
+  B2B: 'B2B',
+  B2C: 'B2C',
+  B2B2C: 'B2B2C',
+};
+
+function formatTargetSummary(target: any): string {
+  const parts: string[] = [];
+  if (target.market) parts.push(target.market);
+  if (target.b2b) {
+    if (target.b2b.segment) parts.push(target.b2b.segment);
+    if (target.b2b.sector) parts.push(target.b2b.sector);
+    if (target.b2b.job_segment) parts.push(target.b2b.job_segment);
+  }
+  if (target.b2c) {
+    if (target.b2c.gender && target.b2c.gender !== 'Tous') parts.push(target.b2c.gender);
+    if (target.b2c.age_range) parts.push(target.b2c.age_range);
+    if (target.b2c.csp) parts.push(target.b2c.csp);
+    if (target.b2c.purchasing_power) parts.push(target.b2c.purchasing_power);
+  }
+  if (target.geo_scope) parts.push(target.geo_scope);
+  return parts.join(' · ') || 'Non défini';
+}
+
 export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteIdentityModalProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -184,6 +208,45 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             </Badge>
             {site.identity_source && (
               <Badge variant="outline" className="text-[10px]">{site.identity_source}</Badge>
+            )}
+          </div>
+        )}
+
+        {/* Client Targets (from strategic audit) */}
+        {site.client_targets && (site.client_targets.primary?.length > 0 || site.client_targets.secondary?.length > 0 || site.client_targets.untapped?.length > 0) && (
+          <div className="mt-4 pt-3 border-t border-border/30 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Cibles Clients
+            </p>
+            {site.client_targets.primary?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-emerald-500 font-medium">Principales</p>
+                {site.client_targets.primary.map((t: any, i: number) => (
+                  <p key={`p-${i}`} className="text-sm text-foreground pl-2 border-l-2 border-emerald-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
+            )}
+            {site.client_targets.secondary?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-500 font-medium">Secondaires</p>
+                {site.client_targets.secondary.map((t: any, i: number) => (
+                  <p key={`s-${i}`} className="text-sm text-foreground pl-2 border-l-2 border-amber-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
+            )}
+            {site.client_targets.untapped?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-violet-500 font-medium">Potentielles non adressées</p>
+                {site.client_targets.untapped.map((t: any, i: number) => (
+                  <p key={`u-${i}`} className="text-sm text-foreground/70 italic pl-2 border-l-2 border-violet-500/30">
+                    {formatTargetSummary(t)}
+                  </p>
+                ))}
+              </div>
             )}
           </div>
         )}

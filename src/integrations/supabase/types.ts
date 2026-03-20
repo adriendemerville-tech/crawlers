@@ -4767,6 +4767,7 @@ export type Database = {
           api_key: string
           brand_name: string | null
           business_type: string | null
+          client_targets: Json | null
           cms_platform: string | null
           commercial_area: string | null
           company_size: string | null
@@ -4807,6 +4808,7 @@ export type Database = {
           api_key?: string
           brand_name?: string | null
           business_type?: string | null
+          client_targets?: Json | null
           cms_platform?: string | null
           commercial_area?: string | null
           company_size?: string | null
@@ -4847,6 +4849,7 @@ export type Database = {
           api_key?: string
           brand_name?: string | null
           business_type?: string | null
+          client_targets?: Json | null
           cms_platform?: string | null
           commercial_area?: string | null
           company_size?: string | null
