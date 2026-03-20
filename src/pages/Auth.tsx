@@ -407,7 +407,7 @@ export default function Auth() {
                     <motion.div
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3"
+                      className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3"
                     >
                       <AlertCircle className="h-4 w-4 text-warning shrink-0" />
                       <p className="text-sm text-foreground flex-1">
