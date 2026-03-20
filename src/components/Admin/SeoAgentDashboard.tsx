@@ -126,9 +126,9 @@ export function SeoAgentDashboard() {
                 </CardDescription>
               </div>
             </div>
-            <Button onClick={runAgent} disabled={running} className="gap-2">
-              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-              Lancer une passe
+            <Button onClick={runAgent} disabled={running} variant="outline" size="sm" className="gap-1.5 text-xs">
+              {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              Lancer
             </Button>
           </div>
         </CardHeader>
