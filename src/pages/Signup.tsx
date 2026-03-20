@@ -590,7 +590,7 @@ export default function Signup() {
                         </button>
                       </div>
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage className="text-xs text-primary" />
                   </FormItem>
                 )} />
 
