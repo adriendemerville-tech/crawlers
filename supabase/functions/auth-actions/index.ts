@@ -1,6 +1,10 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getAnonClient, getUserClient } from '../_shared/supabaseClient.ts';
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -14,13 +18,51 @@ async function handleCheckEmail(body: any) {
   const { email } = body;
   if (!email || typeof email !== 'string') return json({ exists: false });
 
+  const normalizedEmail = normalizeEmail(email);
   const supabase = getServiceClient();
   const { count } = await supabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
-    .eq('email', email.toLowerCase().trim());
+    .eq('email', normalizedEmail);
 
-  return json({ exists: (count ?? 0) > 0 });
+  if ((count ?? 0) > 0) {
+    return json({ exists: true });
+  }
+
+  const { data: archivedUser } = await supabase
+    .from('archived_users')
+    .select('id, original_user_id')
+    .eq('email', normalizedEmail)
+    .order('archived_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (archivedUser) {
+    const { data: authList, error: authListError } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+
+    if (!authListError) {
+      const staleUser = authList.users.find((user) => normalizeEmail(user.email ?? '') === normalizedEmail);
+
+      if (staleUser) {
+        const { count: linkedProfileCount } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', staleUser.id);
+
+        if ((linkedProfileCount ?? 0) === 0) {
+          const { error: deleteError } = await supabase.auth.admin.deleteUser(staleUser.id);
+          if (deleteError) {
+            console.error('Failed to cleanup stale auth user during check-email:', deleteError);
+          }
+        }
+      }
+    }
+  }
+
+  return json({ exists: false });
 }
 
 // ─── send-code ───
