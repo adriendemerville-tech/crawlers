@@ -227,7 +227,7 @@ export default function Signup() {
   // Check if user already exists before doing password validation
   const checkUserExistsFirst = async () => {
     const email = signupForm.getValues('email');
-    if (!email) {
+    if (!email || !z.string().email().safeParse(email).success) {
       signupForm.handleSubmit(handleSignup)();
       return;
     }
@@ -236,39 +236,26 @@ export default function Signup() {
     setShowExistsBanner(false);
 
     try {
-      // Try signing up with a dummy call won't work, so we attempt signup and catch "already exists"
-      // Instead, use a lightweight check: try signInWithOtp which returns a specific error for existing users
-      // Actually the cleanest way: attempt the signup and handle the error
-      // But first, let's just trigger the normal validation for non-email fields
-      const emailValid = z.string().email().safeParse(email);
-      if (!emailValid.success) {
-        signupForm.handleSubmit(handleSignup)();
-        setIsLoading(false);
-        return;
-      }
+      // Check user existence via profiles table (email column)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
 
-      // Check existence by attempting signUp - Supabase will tell us if user exists
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: 'check_existence_dummy_' + Date.now(),
-        options: { data: { _existence_check: true } },
-      });
-
-      if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
+      if (existingProfile) {
+        // User already exists - show banner without password validation
         setShowExistsBanner(true);
         setIsLoading(false);
         return;
       }
-
-      // User doesn't exist - now run the full form validation (passwords etc.)
-      // We need to clean up the dummy signup attempt - it won't have created anything meaningful
-      // since it would have sent a confirmation email at worst, but with random password it's fine
-      setIsLoading(false);
-      signupForm.handleSubmit(handleSignup)();
     } catch {
-      setIsLoading(false);
-      signupForm.handleSubmit(handleSignup)();
+      // If check fails, fall through to normal flow
     }
+
+    setIsLoading(false);
+    // User doesn't exist - proceed with full form validation (including passwords)
+    signupForm.handleSubmit(handleSignup)();
   };
 
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
