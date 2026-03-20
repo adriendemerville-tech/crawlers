@@ -24,6 +24,9 @@ import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, Bar, BarChart, ComposedChart } from 'recharts';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
 import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
+import { KeywordCloud } from '@/components/Profile/KeywordCloud';
+import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
+import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
@@ -1724,6 +1727,26 @@ export function MyTracking() {
                     }}
                     isRefreshing={refreshingSerp}
                   />
+
+                  {/* Keyword Cloud */}
+                  {latestSerpData?.sample_keywords?.length > 0 && (
+                    <KeywordCloud keywords={latestSerpData.sample_keywords} />
+                  )}
+
+                  {/* Top Keywords List */}
+                  {latestSerpData?.sample_keywords?.length > 0 && (
+                    <TopKeywordsList keywords={latestSerpData.sample_keywords} />
+                  )}
+
+                  {/* Quick Wins */}
+                  {latestSerpData?.sample_keywords?.length > 0 && currentSite && user && (
+                    <QuickWinsCard
+                      keywords={latestSerpData.sample_keywords}
+                      domain={currentSite.domain}
+                      trackedSiteId={currentSite.id}
+                      userId={user.id}
+                    />
+                  )}
 
                   {/* IAS — Indice d'Alignement Stratégique */}
                   {currentSite && user && gscConnected && (
