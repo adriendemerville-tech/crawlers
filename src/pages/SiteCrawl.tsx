@@ -591,9 +591,10 @@ export default function SiteCrawl() {
         if (!cancelled && data?.data?.indexed_pages != null) {
           const count = data.data.indexed_pages as number;
           setIndexedPagesCount(count);
-          // Auto-cap slider if current value exceeds indexed pages
-          if (count > 0 && maxPages > Math.min(20, count)) {
-            setMaxPages(Math.min(20, count));
+          // Auto-cap slider if current value exceeds indexed pages (admins get 50 max)
+          const capMax = isAdmin ? 50 : 20;
+          if (count > 0 && maxPages > Math.min(capMax, count)) {
+            setMaxPages(Math.min(capMax, count));
           }
         }
       } catch {
