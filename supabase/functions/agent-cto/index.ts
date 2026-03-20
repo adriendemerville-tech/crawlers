@@ -416,6 +416,7 @@ Deno.serve(async (req) => {
       'cocoon-chat': 'cocoon-chat',
       'cocoon-pagerank': 'calculate-internal-pagerank',
       'cocoon-session': 'persist-cocoon-session',
+      'matrice': 'audit-matrice',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
