@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ExternalLink, Plus, GripVertical } from 'lucide-react';
+import { ExternalLink, Plus, GripVertical, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,19 +72,34 @@ function getFeatureColor(feature: string): string {
 // ── Catalog view (marketplace) ──────────────────────────────────
 function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
-  const [featureFilter, setFeatureFilter] = useState<string | null>(null);
+  const [segmentSort, setSegmentSort] = useState<'asc' | 'desc' | null>(null);
+  const [featureSort, setFeatureSort] = useState<'asc' | 'desc' | null>(null);
 
-  const segments = useMemo(() => [...new Set(apis.map(a => getSegmentKey(a.seo_segment)))], [apis]);
-  const features = useMemo(() => [...new Set(apis.map(a => getFeatureKey(a.crawlers_feature)))], [apis]);
+  const sortedApis = useMemo(() => {
+    let sorted = [...apis];
+    if (segmentSort) {
+      sorted.sort((a, b) => {
+        const cmp = a.seo_segment.localeCompare(b.seo_segment, 'fr');
+        return segmentSort === 'asc' ? cmp : -cmp;
+      });
+    } else if (featureSort) {
+      sorted.sort((a, b) => {
+        const cmp = a.crawlers_feature.localeCompare(b.crawlers_feature, 'fr');
+        return featureSort === 'asc' ? cmp : -cmp;
+      });
+    }
+    return sorted;
+  }, [apis, segmentSort, featureSort]);
 
-  const filteredApis = useMemo(() => {
-    return apis.filter(api => {
-      if (segmentFilter && !api.seo_segment.toLowerCase().includes(segmentFilter.toLowerCase())) return false;
-      if (featureFilter && !api.crawlers_feature.toLowerCase().includes(featureFilter.toLowerCase())) return false;
-      return true;
-    });
-  }, [apis, segmentFilter, featureFilter]);
+  const toggleSegmentSort = () => {
+    setFeatureSort(null);
+    setSegmentSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
+  };
+
+  const toggleFeatureSort = () => {
+    setSegmentSort(null);
+    setFeatureSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
+  };
 
   const toggle = (id: string) => {
     setSelected(prev => {
@@ -96,6 +111,12 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
   };
 
   const price = selected.size;
+
+  const SortIcon = ({ state }: { state: 'asc' | 'desc' | null }) => {
+    if (state === 'asc') return <ArrowUp className="h-3 w-3" />;
+    if (state === 'desc') return <ArrowDown className="h-3 w-3" />;
+    return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+  };
 
   return (
     <div className="space-y-5">
@@ -111,13 +132,29 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
             <tr className="border-b border-border/20">
               <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5 w-[180px]">API</th>
               <th className="w-[36px]" />
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5">Segment</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5">Fonction Crawlers</th>
+              <th className="text-left text-xs font-medium px-4 py-2.5">
+                <button
+                  onClick={toggleSegmentSort}
+                  className={`inline-flex items-center gap-1.5 transition-colors ${segmentSort ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Segment SEO
+                  <SortIcon state={segmentSort} />
+                </button>
+              </th>
+              <th className="text-left text-xs font-medium px-4 py-2.5">
+                <button
+                  onClick={toggleFeatureSort}
+                  className={`inline-flex items-center gap-1.5 transition-colors ${featureSort ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Fonction Crawlers
+                  <SortIcon state={featureSort} />
+                </button>
+              </th>
               <th className="text-center text-xs font-medium text-muted-foreground px-4 py-2.5 w-[48px]">✓</th>
             </tr>
           </thead>
           <tbody>
-            {filteredApis.map(api => (
+            {sortedApis.map(api => (
               <tr
                 key={api.id}
                 className={`border-b border-border/10 transition-colors hover:bg-muted/20 ${
@@ -145,10 +182,10 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
                 </td>
               </tr>
             ))}
-            {filteredApis.length === 0 && (
+            {sortedApis.length === 0 && (
               <tr>
                 <td colSpan={5} className="text-center text-sm text-muted-foreground py-8">
-                  Aucune API ne correspond à ces filtres.
+                  Aucune API disponible.
                 </td>
               </tr>
             )}
