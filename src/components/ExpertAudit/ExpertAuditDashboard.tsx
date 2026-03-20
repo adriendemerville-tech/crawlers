@@ -1063,7 +1063,7 @@ export function ExpertAuditDashboard() {
           trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
           const retryDomain = new URL(normalizedUrl).hostname;
           fetchStoredCorrections(retryDomain);
-          toast({ title: t.strategicComplete, description: t.strategicDesc2 });
+          // Toast removed
         } catch (retryError) {
           console.error('Strategic audit retry also failed:', retryError);
           // Increment fail counter for this URL
