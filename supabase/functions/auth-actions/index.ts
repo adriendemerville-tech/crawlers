@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { getServiceClient, getAnonClient } from '../_shared/supabaseClient.ts';
+import { getServiceClient, getAnonClient, getUserClient } from '../_shared/supabaseClient.ts';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
