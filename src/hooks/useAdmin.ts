@@ -5,7 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const AUDITOR_DEADLINE_KEY = 'auditor_session_deadline';
+const ADMIN_SESSION_KEY = 'admin_session_start';
 const AUDITOR_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const ADMIN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 export function useAdmin() {
   const { user } = useAuth();
