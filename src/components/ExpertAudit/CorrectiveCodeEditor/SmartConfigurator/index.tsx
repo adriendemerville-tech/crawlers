@@ -1641,14 +1641,38 @@ export function SmartConfigurator({
 
                 {/* Generate / Reset Button */}
                 {generatedCode ? (
-                  <Button
-                    onClick={() => setGeneratedCode('')}
-                    variant="outline"
-                    className="gap-1.5 text-xs h-8 px-3"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    Modifier
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => setGeneratedCode('')}
+                      variant="outline"
+                      className="gap-1.5 text-xs h-8 px-3"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Modifier
+                    </Button>
+                    <Button
+                      onClick={handleApplyToWordPress}
+                      disabled={isApplying || applySuccess}
+                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-0 text-xs h-8 px-3"
+                    >
+                      {isApplying ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Injection...
+                        </>
+                      ) : applySuccess ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          Injecté ✓
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3 h-3" />
+                          Injecter
+                        </>
+                      )}
+                    </Button>
+                  </>
                 ) : (
                   <Button
                     onClick={handleGenerate}
