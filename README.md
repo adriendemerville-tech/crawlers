@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
 > **Dernière mise à jour** : 20 mars 2026  
-> **Version** : 2.9.0  
-> **Lignes de code** : ~150 000 (Backend: 42 000 · Frontend: 108 000)
+> **Version** : 2.10.0  
+> **Lignes de code** : ~155 000 (Backend: 43 500 · Frontend: 108 000)
 
 ---
 
