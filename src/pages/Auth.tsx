@@ -23,7 +23,7 @@ const translations = {
   fr: {
     login: 'Connexion',
     signup: 'Inscription',
-    loginTitle: 'Bienvenue',
+    loginTitle: 'Bienvenue !',
     loginDesc: 'Connectez-vous pour accéder à vos rapports',
     signupTitle: 'Créer un compte',
     signupDesc: 'Rejoignez Crawlers AI pour sauvegarder vos analyses',
@@ -295,7 +295,7 @@ export default function Auth() {
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
-          <CardHeader className="text-center">
+          <CardHeader className="text-center pb-2 pt-4">
             <CardTitle className="text-2xl font-bold">
               {isLogin ? t.loginTitle : t.signupTitle}
             </CardTitle>
@@ -303,7 +303,7 @@ export default function Auth() {
               {isLogin ? t.loginDesc : t.signupDesc}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 pb-4">
             {/* Google OAuth Button */}
             <Button
               variant="outline"
@@ -407,9 +407,9 @@ export default function Auth() {
                     <motion.div
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3"
+                      className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3"
                     >
-                      <AlertCircle className="h-4 w-4 text-warning shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-primary shrink-0" />
                       <p className="text-sm text-foreground flex-1">
                         {language === 'en' ? 'Already registered, would you like to ' : language === 'es' ? 'Ya registrado, ¿desea ' : 'Déjà inscrit, voulez-vous vous '}{' '}
                         <button

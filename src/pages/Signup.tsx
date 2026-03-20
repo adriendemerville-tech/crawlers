@@ -224,6 +224,55 @@ export default function Signup() {
     setPersonaSelected(true);
   };
 
+  // Check if user already exists before doing password validation
+  const checkUserExistsFirst = async () => {
+    const email = signupForm.getValues('email');
+    if (!email || !z.string().email().safeParse(email).success) {
+      // Let normal form validation handle it
+      signupForm.handleSubmit(handleSignup)();
+      return;
+    }
+
+    setIsLoading(true);
+    setShowExistsBanner(false);
+
+    try {
+      // Attempt signup with the provided password to check existence
+      const password = signupForm.getValues('password');
+      const { error } = await signUpWithEmail(
+        email,
+        password || 'temp_check_123456',
+        signupForm.getValues('firstName') || '',
+        signupForm.getValues('lastName') || ''
+      );
+
+      if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
+        // User exists - show banner directly, skip password validation
+        setShowExistsBanner(true);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!error) {
+        // Signup succeeded - proceed to verification
+        trackAnalyticsEvent('signup_complete');
+        trackAnalyticsEvent('verification_email_sent' as any);
+        setVerificationEmail(email);
+        supabase.functions.invoke('send-verification-code', { body: { email } });
+        setIsLoading(false);
+        setStep('verify');
+        return;
+      }
+
+      // Other error - fall through to normal form validation
+      setIsLoading(false);
+      signupForm.handleSubmit(handleSignup)();
+    } catch {
+      setIsLoading(false);
+      signupForm.handleSubmit(handleSignup)();
+    }
+  };
+
   const handleSignup = async (data: { email: string; password: string; confirmPassword: string; firstName?: string; lastName?: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
@@ -497,11 +546,11 @@ export default function Signup() {
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
-          <CardHeader className="text-center pb-2 pt-4 px-5">
+          <CardHeader className="text-center pb-1 pt-3 px-5">
             <CardTitle className="text-lg font-bold">{t.signupTitle}</CardTitle>
             <CardDescription className="text-xs">{t.signupDesc}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 px-5 pb-4 pt-1">
+          <CardContent className="space-y-2.5 px-5 pb-3 pt-1">
             {/* Google OAuth */}
             <Button variant="outline" className="w-full gap-2 h-9" onClick={handleGoogleLogin} disabled={isLoading}>
               <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -519,7 +568,7 @@ export default function Signup() {
             </div>
 
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-2.5">
+              <form onSubmit={(e) => { e.preventDefault(); checkUserExistsFirst(); }} className="space-y-2.5">
                 {showExistsBanner && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
                     <AlertCircle className="h-4 w-4 text-primary shrink-0" />
