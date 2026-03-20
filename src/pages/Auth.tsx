@@ -23,7 +23,7 @@ const translations = {
   fr: {
     login: 'Connexion',
     signup: 'Inscription',
-    loginTitle: 'Bienvenue',
+    loginTitle: 'Bienvenue !',
     loginDesc: 'Connectez-vous pour accéder à vos rapports',
     signupTitle: 'Créer un compte',
     signupDesc: 'Rejoignez Crawlers AI pour sauvegarder vos analyses',
