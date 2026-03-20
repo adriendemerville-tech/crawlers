@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ExternalLink, Plus, GripVertical } from 'lucide-react';
+import { ExternalLink, Plus, GripVertical, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
