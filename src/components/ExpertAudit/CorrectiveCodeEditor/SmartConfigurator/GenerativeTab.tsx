@@ -34,7 +34,7 @@ export function GenerativeTab({ fixes, onToggle, disabled }: GenerativeTabProps)
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 mb-3">
         <Rocket className="w-4 h-4 text-emerald-500" />
-        <h3 className="font-semibold text-xs">Super-Capacités Génératives</h3>
+        <h3 className="font-semibold text-xs">Super-Capacités</h3>
         <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
           <Crown className="w-2.5 h-2.5 mr-0.5" />
           Premium
