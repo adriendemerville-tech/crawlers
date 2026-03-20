@@ -288,35 +288,19 @@ export function UserManagement() {
     
     setActionLoading(true);
     try {
-      // 1. Archive the user first
-      const { error: archiveError } = await supabase
-        .from('archived_users')
-        .insert({
-          original_user_id: selectedUser.user_id,
-          email: selectedUser.email,
-          first_name: selectedUser.first_name,
-          last_name: selectedUser.last_name,
-          credits_balance: selectedUser.credits_balance,
-          plan_type: selectedUser.plan_type,
-          persona_type: selectedUser.persona_type,
-          affiliate_code_used: selectedUser.affiliate_code_used || null,
-          original_created_at: selectedUser.created_at,
-          profile_snapshot: selectedUser,
-        } as any);
-
-      if (archiveError) {
-        console.error('Archive error:', archiveError);
-        // Continue with deletion even if archiving fails
-      }
-
-      // 2. Delete from auth.users (cascades to profiles)
-      const { data: delResult, error } = await supabase.functions.invoke('auth-actions', {
-        body: { action: 'delete-user', user_id: selectedUser.user_id },
+      const { data: result, error } = await supabase.functions.invoke('delete-account', {
+        body: { user_id: selectedUser.user_id, reason: 'admin_delete' },
       });
 
-      if (error || delResult?.error) throw new Error(delResult?.error || error?.message || 'Delete failed');
+      if (error || result?.error) throw new Error(result?.error || error?.message || 'Delete failed');
 
-      toast.success('Utilisateur archivé et supprimé');
+      const verification = result?.verification;
+      if (verification && !verification.clean) {
+        console.warn('Deletion verification issues:', verification.issues);
+        toast.warning('Supprimé avec avertissements — vérifiez les logs');
+      } else {
+        toast.success('Utilisateur archivé et supprimé intégralement');
+      }
       setDeleteDialogOpen(false);
       fetchUsers();
     } catch (error) {
