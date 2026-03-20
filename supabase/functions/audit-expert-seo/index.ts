@@ -1086,6 +1086,7 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
   return { sitemapExists, sitemapUrls, sitemapDeclaredInRobots, issues, verdict };
 }
 
+function analyzeSemanticConsistency(title: string, h1: string): SemanticConsistency {
   const similarity = calculateTextSimilarity(title, h1);
   
   let verdict: string;
