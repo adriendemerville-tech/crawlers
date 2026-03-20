@@ -168,7 +168,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         : {};
       await supabase
         .from('admin_dashboard_config')
-        .update({ card_order: { ...currentConfig, ...patch } })
+        .update({ card_order: { ...currentConfig, ...patch } as Record<string, unknown> as any })
         .eq('id', existing.id);
     }
   };
