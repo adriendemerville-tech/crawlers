@@ -2074,6 +2074,59 @@ export type Database = {
           },
         ]
       }
+      google_ads_connections: {
+        Row: {
+          access_token: string | null
+          account_name: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status: string
+          token_expiry: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_name?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expiry?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_name?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expiry?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_ads_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_connections: {
         Row: {
           access_token: string
@@ -4616,6 +4669,7 @@ export type Database = {
           commercial_area: string | null
           company_size: string | null
           competitors: Json | null
+          confusion_risk: string | null
           created_at: string
           current_config: Json
           domain: string
@@ -4632,11 +4686,14 @@ export type Database = {
           last_sov_update: string | null
           last_widget_ping: string | null
           legal_structure: string | null
+          main_serp_competitor: string | null
           market_sector: string | null
           media_specialties: string[] | null
+          mid_term_goal: string | null
           previous_config: Json
           primary_language: string | null
           products_services: string | null
+          short_term_goal: string | null
           siren_siret: string | null
           site_name: string
           social_profiles: Json | null
@@ -4652,6 +4709,7 @@ export type Database = {
           commercial_area?: string | null
           company_size?: string | null
           competitors?: Json | null
+          confusion_risk?: string | null
           created_at?: string
           current_config?: Json
           domain: string
@@ -4668,11 +4726,14 @@ export type Database = {
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          main_serp_competitor?: string | null
           market_sector?: string | null
           media_specialties?: string[] | null
+          mid_term_goal?: string | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
+          short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string
           social_profiles?: Json | null
@@ -4688,6 +4749,7 @@ export type Database = {
           commercial_area?: string | null
           company_size?: string | null
           competitors?: Json | null
+          confusion_risk?: string | null
           created_at?: string
           current_config?: Json
           domain?: string
@@ -4704,11 +4766,14 @@ export type Database = {
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          main_serp_competitor?: string | null
           market_sector?: string | null
           media_specialties?: string[] | null
+          mid_term_goal?: string | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
+          short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string
           social_profiles?: Json | null
