@@ -372,11 +372,6 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
     }, 2500);
   };
 
-  const handleRejectSummary = () => {
-    setVoiceStep('idle');
-    setSummaryKeywords([]);
-    setPendingFields({});
-  };
 
   const hasTargets = site.client_targets && (site.client_targets.primary?.length > 0 || site.client_targets.secondary?.length > 0 || site.client_targets.untapped?.length > 0);
   const filledCount = Object.values(dynamicFields).filter(v => v && v !== 'null' && v !== 'undefined').length;
