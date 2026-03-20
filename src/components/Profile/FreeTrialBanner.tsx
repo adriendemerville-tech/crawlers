@@ -1,30 +1,27 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
-import { Crown, Gift } from 'lucide-react';
+import { Gift, X } from 'lucide-react';
 
 export function FreeTrialBanner() {
   const { profile } = useAuth();
-  const { isAgencyPro, planType } = useCredits();
+  const { isAgencyPro } = useCredits();
+  const [dismissed, setDismissed] = useState(() => {
+    return localStorage.getItem('free_trial_banner_dismissed') === 'true';
+  });
 
-  if (!profile || !isAgencyPro) return null;
+  if (!profile || !isAgencyPro || dismissed) return null;
 
-  // Detect if user is on a gifted 6-month trial:
-  // The welcome trigger sets subscription_expires_at = created_at + 6 months
-  // and stripe_subscription_id remains null (no Stripe sub)
   const expiresAt = profile.subscription_expires_at;
   const stripeSubId = profile.stripe_subscription_id;
   
-  // If user has a Stripe subscription, it's a paid plan — no banner
   if (stripeSubId) return null;
   if (!expiresAt) return null;
 
   const now = new Date();
   const expiry = new Date(expiresAt);
-  
-  // If expired, no banner
   if (expiry <= now) return null;
 
-  // Calculate remaining full months
   const diffMs = expiry.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   const remainingMonths = Math.floor(diffDays / 30);
@@ -40,12 +37,20 @@ export function FreeTrialBanner() {
     label = 'Dernier jour d\'abonnement Pro Agency gratuit';
   }
 
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem('free_trial_banner_dismissed', 'true');
+  };
+
   return (
     <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50/80 dark:bg-amber-950/30 dark:border-amber-700/40 px-4 py-2.5 mb-4">
       <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-      <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+      <p className="text-sm font-medium text-amber-800 dark:text-amber-300 flex-1">
         🎉 {label}
       </p>
+      <button onClick={handleDismiss} className="shrink-0 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors">
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 }
