@@ -964,6 +964,8 @@ export function ExpertAuditDashboard() {
         setStrategicCachedContext(data.data._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Signal expert audit completion for signup prompt
+      window.dispatchEvent(new Event('expert-audit-complete'));
       // Save to domain-level strategic cache for future audits
       if (domain) {
         setStrategicCache(domain, strategicData);
