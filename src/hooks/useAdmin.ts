@@ -145,7 +145,24 @@ export function useAdmin() {
     };
   }, [isAuditor, auditorExpired, checkAuditorDeadline]);
 
-  // Hierarchy: admin (créateur) > viewer > auditor > viewer_level2
+  // Admin auto-logout after 12h
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const checkAdminSession = () => {
+      const start = localStorage.getItem(ADMIN_SESSION_KEY);
+      if (start && Date.now() - parseInt(start, 10) >= ADMIN_TTL_MS) {
+        localStorage.removeItem(ADMIN_SESSION_KEY);
+        toast.error('Session admin expirée (12h). Déconnexion automatique.', { duration: 8000 });
+        supabase.auth.signOut();
+      }
+    };
+
+    checkAdminSession();
+    const interval = setInterval(checkAdminSession, 30_000); // check every 30s
+    return () => clearInterval(interval);
+  }, [isAdmin]);
+
   const hasAdminAccess = isAdmin || isViewer || isViewerLevel2 || isAuditor;
   const isReadOnly = (isViewer || isViewerLevel2 || isAuditor) && !isAdmin;
   // viewer_level2 & auditor can't see docs; auditor can't see intelligence, finances, users
