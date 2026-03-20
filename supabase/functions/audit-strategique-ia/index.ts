@@ -2985,6 +2985,110 @@ Deno.serve(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ JARGON DISTANCE: Separate LLM call (anti-circularité) ═══
+    let jargonDistance: any = null;
+    if (parsedAnalysis.client_targets && pageContentContext && !isOverDeadline()) {
+      try {
+        console.log('🔤 Computing jargon distance (separate LLM call)...');
+        const clientTargets = parsedAnalysis.client_targets;
+        const primaryLabel = clientTargets.primary?.[0] ? JSON.stringify(clientTargets.primary[0]) : 'Non détecté';
+        const secondaryLabel = clientTargets.secondary?.[0] ? JSON.stringify(clientTargets.secondary[0]) : 'Non détecté';
+        const untappedLabel = clientTargets.untapped?.[0] ? JSON.stringify(clientTargets.untapped[0]) : 'Non détecté';
+
+        const jargonPrompt = `Tu es un expert en linguistique appliquée au marketing. Analyse la DISTANCE SÉMANTIQUE entre le vocabulaire utilisé par ce contenu et le niveau de compréhension de chaque cible.
+
+CONTENU ANALYSÉ:
+${pageContentContext}
+${(parsedAnalysis.lexical_footprint?.jargonRatio != null) ? `Ratio jargon brut détecté: ${parsedAnalysis.lexical_footprint.jargonRatio}%` : ''}
+
+CIBLE PRIMAIRE: ${primaryLabel}
+CIBLE SECONDAIRE: ${secondaryLabel}
+CIBLE POTENTIELLE: ${untappedLabel}
+
+RÈGLE CRITIQUE: Le "jargon" est RELATIF. Un terme technique n'est du jargon QUE s'il dépasse le niveau de compréhension de la cible. "Ostéosynthèse" n'est PAS du jargon pour un chirurgien, MAIS en est pour un patient lambda.
+
+Pour chaque cible, évalue:
+- distance: score 0-100 (0=parfaitement adapté, 100=totalement opaque)
+- qualifier: "Adapté" (<25) | "Accessible" (25-45) | "Spécialisé" (45-65) | "Très distant" (65-85) | "Opaque" (>85)
+- terms_causing_distance: les 3-5 termes du contenu qui créent la distance pour CETTE cible spécifiquement
+- confidence: 0-1 score de confiance de ton évaluation
+
+Évalue aussi la cohérence du ton:
+- tone_consistency: 0-1 (1=niveau de langue uniforme, 0=mélange incohérent)
+- tone_assertive_ratio: 0-1 (1=100% assertif expert, 0=100% pédagogique/vulgarisateur)
+
+Réponds en JSON STRICT:
+{"primary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"secondary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"untapped":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
+
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+        if (LOVABLE_API_KEY) {
+          const jargonResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [{ role: 'user', content: jargonPrompt }],
+              temperature: 0.3,
+            }),
+          });
+
+          if (jargonResp.ok) {
+            const jargonResult = await jargonResp.json();
+            const jargonText = jargonResult.choices?.[0]?.message?.content || '';
+            const jargonJson = jargonText.replace(/```json\s*/g, '').replace(/```/g, '').trim();
+            try {
+              const jargonParsed = JSON.parse(jargonJson);
+
+              // ═══ INTENTIONALITY SCORE (hybrid: algorithmic + LLM tone) ═══
+              const cta = ctaSeoSignalsForJargon;
+              // CTA aggressiveness: 0-1
+              const ctaScore = Math.min(1, (cta.ctaAggressive ? 0.6 : 0) + (cta.ctaCount >= 3 ? 0.2 : cta.ctaCount >= 1 ? 0.1 : 0) + (cta.ctaTypes.filter(t => t !== 'generic').length >= 2 ? 0.2 : 0));
+              // SEO pattern alignment: check if jargon terms appear in SEO balises
+              const primaryTerms = jargonParsed.primary?.terms_causing_distance || [];
+              const balisesJoined = (cta.seoTermsInBalises || []).join(' ');
+              const termsInBalises = primaryTerms.filter((t: string) => balisesJoined.includes(t.toLowerCase())).length;
+              const seoAlignment = primaryTerms.length > 0 ? Math.min(1, termsInBalises / Math.max(1, primaryTerms.length)) : 0.5;
+              // Tone assertiveness from LLM
+              const toneAssertive = jargonParsed.tone_assertive_ratio ?? 0.5;
+              // Structural consistency from LLM
+              const toneConsistency = jargonParsed.tone_consistency ?? 0.5;
+
+              const intentionalityScore = (ctaScore * 0.30) + (seoAlignment * 0.30) + (toneAssertive * 0.20) + (toneConsistency * 0.20);
+              const intentionalityLabel = intentionalityScore > 0.65 ? 'Spécialisation assumée' : intentionalityScore > 0.35 ? 'Positionnement ambigu' : 'Distance non maîtrisée';
+
+              jargonDistance = {
+                primary: jargonParsed.primary,
+                secondary: jargonParsed.secondary,
+                untapped: jargonParsed.untapped,
+                intentionality: {
+                  score: Math.round(intentionalityScore * 100) / 100,
+                  label: intentionalityLabel,
+                  components: {
+                    cta_aggressiveness: Math.round(ctaScore * 100) / 100,
+                    seo_pattern_alignment: Math.round(seoAlignment * 100) / 100,
+                    tone_assertiveness: Math.round(toneAssertive * 100) / 100,
+                    structural_consistency: Math.round(toneConsistency * 100) / 100,
+                  },
+                },
+              };
+              // Replace old lexical_footprint with enriched version
+              parsedAnalysis.lexical_footprint = {
+                ...parsedAnalysis.lexical_footprint,
+                jargon_distance: jargonDistance,
+              };
+              console.log(`✅ Jargon distance computed: primary=${jargonParsed.primary?.distance}, secondary=${jargonParsed.secondary?.distance}, untapped=${jargonParsed.untapped?.distance}, intentionality=${intentionalityScore.toFixed(2)} (${intentionalityLabel})`);
+            } catch (parseErr) {
+              console.warn('⚠️ Jargon distance JSON parse failed:', parseErr);
+            }
+          } else {
+            console.warn(`⚠️ Jargon distance LLM failed: ${jargonResp.status}`);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Jargon distance computation failed:', e);
+      }
+    }
+
     // ═══ BUILD FINAL RESULT ═══
     const result = {
       success: true,
