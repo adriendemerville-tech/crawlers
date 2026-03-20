@@ -31,6 +31,12 @@ interface BundleError {
   created_at: string;
 }
 
+interface ApiCostEntry {
+  function_name: string;
+  total_tokens: number;
+  call_count: number;
+}
+
 export function BundleManagement() {
   const [subs, setSubs] = useState<BundleSub[]>([]);
   const [catalog, setCatalog] = useState<CatalogApi[]>([]);
