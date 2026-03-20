@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3 } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -283,9 +283,9 @@ export function Header() {
           {isAuditExpertPage ? (
             <>
               <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Crawl</span>
+                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                  <Bug className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Crawl</span>
                 </Button>
               </a>
               <a href="/integration-gtm" target="_blank" rel="noopener noreferrer">
@@ -297,9 +297,9 @@ export function Header() {
             </>
           ) : (
             <Link to="/site-crawl">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Globe className="h-4 w-4" />
-                <span className="text-sm">Crawl</span>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                <Bug className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Crawl</span>
               </Button>
             </Link>
           )}
