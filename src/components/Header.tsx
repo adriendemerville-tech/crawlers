@@ -350,8 +350,8 @@ export function Header() {
           )}
 
 
-          {/* Console button (logged in) or Sign in button (logged out) */}
-          {!loading && user && (
+          {/* Console button (logged in, hidden on /console) */}
+          {!loading && user && !isProfilePage && (
               <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" asChild>
                 <Link to="/console" aria-label={t.console}>
                   <LayoutDashboard className="h-4 w-4" />
