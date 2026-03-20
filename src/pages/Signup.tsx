@@ -199,7 +199,7 @@ export default function Signup() {
   const signupSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
     password: z.string().min(6, t.passwordMin).refine(isPasswordAcceptable, { message: t.passwordWeak }),
-    confirmPassword: z.string().min(1, t.passwordMin),
+    confirmPassword: z.string(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
   }).refine((data) => data.password === data.confirmPassword, {
