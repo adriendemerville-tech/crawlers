@@ -463,7 +463,7 @@ export function UserManagement() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="rounded-md border overflow-hidden">
+          <div className="rounded-md border overflow-hidden overflow-x-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
