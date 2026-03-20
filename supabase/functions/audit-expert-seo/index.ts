@@ -692,6 +692,11 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   // Content density (code vs text ratio)
   const contentDensity = analyzeContentDensity(html, cleanText);
 
+  // Heading hierarchy analysis (before DOM cleanup removed headings)
+  // Re-parse since we already cleaned the DOM above
+  const freshDoc = new DOMParser().parseFromString(html, 'text/html');
+  const headingHierarchy = freshDoc ? analyzeHeadingHierarchy(freshDoc) : undefined;
+
   // HTML size in bytes
   const htmlSizeBytes = new TextEncoder().encode(html).length;
   
@@ -699,7 +704,8 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
     semanticConsistency,
     contentDensity,
     linkProfile,
-    jsonLdValidation
+    jsonLdValidation,
+    headingHierarchy
   };
   
   return {
