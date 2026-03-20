@@ -1951,7 +1951,16 @@ RÈGLES:
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals }> {
+interface CtaSeoSignals {
+  ctaCount: number;
+  ctaTypes: string[]; // 'devis', 'demo', 'achat', 'telecharger', 'contact', 'generic'
+  ctaAggressive: boolean;
+  seoTermsInBalises: string[];
+  jargonTermsInBalises: string[];
+  toneExplanatory: boolean; // detected "c'est-à-dire", parenthèses explicatives, etc.
+}
+
+async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals; ctaSeoSignals: CtaSeoSignals }> {
   let pageContentContext = '';
   const brandSignals: BrandSignal[] = [];
   const eeatSignals: EEATSignals = {
@@ -2130,6 +2139,40 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
     
+    // ═══ CTA & SEO PATTERN EXTRACTION (before HTML strip) ═══
+    const ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    {
+      // CTA detection
+      const ctaPatterns: Array<{ re: RegExp; type: string }> = [
+        { re: /(?:demander?\s+(?:un\s+)?devis|request\s+(?:a\s+)?quote|obtenir\s+un\s+devis)/gi, type: 'devis' },
+        { re: /(?:réserver?\s+(?:une?\s+)?(?:démo|demo)|book\s+(?:a\s+)?demo|essai\s+gratuit|free\s+trial|tester?\s+gratuitement)/gi, type: 'demo' },
+        { re: /(?:acheter|achetez|commander|ajouter\s+au\s+panier|buy\s+now|add\s+to\s+cart|order\s+now)/gi, type: 'achat' },
+        { re: /(?:télécharger|download|obtenir\s+le\s+guide)/gi, type: 'telecharger' },
+        { re: /(?:nous\s+contacter|contactez|contact\s+us|prendre\s+rendez-vous|appeler)/gi, type: 'contact' },
+        { re: /(?:s[''](?:inscrire|abonner)|sign\s+up|subscribe|créer\s+(?:un\s+)?compte|get\s+started|commencer)/gi, type: 'inscription' },
+      ];
+      const detectedTypes = new Set<string>();
+      for (const { re, type } of ctaPatterns) {
+        const matches = html.match(re) || [];
+        if (matches.length > 0) {
+          ctaSeoSignals.ctaCount += matches.length;
+          detectedTypes.add(type);
+        }
+      }
+      // Generic CTA buttons/links
+      const btnMatches = html.match(/<(?:a|button)[^>]*class="[^"]*(?:btn|cta|button)[^"]*"[^>]*>/gi) || [];
+      ctaSeoSignals.ctaCount += btnMatches.length;
+      if (btnMatches.length > 0 && detectedTypes.size === 0) detectedTypes.add('generic');
+      ctaSeoSignals.ctaTypes = [...detectedTypes];
+      ctaSeoSignals.ctaAggressive = detectedTypes.has('achat') || detectedTypes.has('devis') || (ctaSeoSignals.ctaCount >= 3 && detectedTypes.size >= 2);
+
+      // Explanatory tone detection
+      const explPatterns = /(?:c['']est[- ]à[- ]dire|autrement\s+dit|en\s+d['']autres\s+termes|i\.e\.|e\.g\.|that\s+is\s+to\s+say|\(.*?(?:signifie|désigne|définition).*?\))/gi;
+      ctaSeoSignals.toneExplanatory = explPatterns.test(html);
+
+      console.log(`🎯 CTA signals: count=${ctaSeoSignals.ctaCount}, types=[${ctaSeoSignals.ctaTypes}], aggressive=${ctaSeoSignals.ctaAggressive}, explanatory=${ctaSeoSignals.toneExplanatory}`);
+    }
+
     // ═══ NOW strip HTML to metadata only ═══
     const headMatch2 = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
     const h1Match2 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
@@ -2206,6 +2249,9 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
 CONTENU PAGE: Titre="${title||'?'}", Desc="${(metaDesc||'?').substring(0,200)}", H1="${h1||'?'}"
 Utilise ces informations pour identifier le core business.`;
       console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
+      // Extract SEO terms from balises for jargon intentionality
+      const balisesText = `${title} ${metaDesc} ${h1}`.toLowerCase();
+      ctaSeoSignals.seoTermsInBalises = balisesText.split(/\s+/).filter(w => w.length > 4);
     }
     
     html = '';
@@ -2213,7 +2259,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandSignals, eeatSignals };
+  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals: ctaSeoSignals || { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false } };
 }
 
 // ==================== MAIN HANDLER ====================
@@ -2453,6 +2499,7 @@ Deno.serve(async (req) => {
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
     let gmbData: GMBData | null = null;
     let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
+    let ctaSeoSignalsForJargon: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
@@ -2499,6 +2546,7 @@ Deno.serve(async (req) => {
         hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
         hasExpertCitations: false, detectedSocialUrls: [],
       };
+      ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
       rankingOverview = rkOverviewResult;
 
       const context = detectBusinessContext(domain, pageContentContext);
@@ -2937,6 +2985,110 @@ Deno.serve(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ JARGON DISTANCE: Separate LLM call (anti-circularité) ═══
+    let jargonDistance: any = null;
+    if (parsedAnalysis.client_targets && pageContentContext && !isOverDeadline()) {
+      try {
+        console.log('🔤 Computing jargon distance (separate LLM call)...');
+        const clientTargets = parsedAnalysis.client_targets;
+        const primaryLabel = clientTargets.primary?.[0] ? JSON.stringify(clientTargets.primary[0]) : 'Non détecté';
+        const secondaryLabel = clientTargets.secondary?.[0] ? JSON.stringify(clientTargets.secondary[0]) : 'Non détecté';
+        const untappedLabel = clientTargets.untapped?.[0] ? JSON.stringify(clientTargets.untapped[0]) : 'Non détecté';
+
+        const jargonPrompt = `Tu es un expert en linguistique appliquée au marketing. Analyse la DISTANCE SÉMANTIQUE entre le vocabulaire utilisé par ce contenu et le niveau de compréhension de chaque cible.
+
+CONTENU ANALYSÉ:
+${pageContentContext}
+${(parsedAnalysis.lexical_footprint?.jargonRatio != null) ? `Ratio jargon brut détecté: ${parsedAnalysis.lexical_footprint.jargonRatio}%` : ''}
+
+CIBLE PRIMAIRE: ${primaryLabel}
+CIBLE SECONDAIRE: ${secondaryLabel}
+CIBLE POTENTIELLE: ${untappedLabel}
+
+RÈGLE CRITIQUE: Le "jargon" est RELATIF. Un terme technique n'est du jargon QUE s'il dépasse le niveau de compréhension de la cible. "Ostéosynthèse" n'est PAS du jargon pour un chirurgien, MAIS en est pour un patient lambda.
+
+Pour chaque cible, évalue:
+- distance: score 0-100 (0=parfaitement adapté, 100=totalement opaque)
+- qualifier: "Adapté" (<25) | "Accessible" (25-45) | "Spécialisé" (45-65) | "Très distant" (65-85) | "Opaque" (>85)
+- terms_causing_distance: les 3-5 termes du contenu qui créent la distance pour CETTE cible spécifiquement
+- confidence: 0-1 score de confiance de ton évaluation
+
+Évalue aussi la cohérence du ton:
+- tone_consistency: 0-1 (1=niveau de langue uniforme, 0=mélange incohérent)
+- tone_assertive_ratio: 0-1 (1=100% assertif expert, 0=100% pédagogique/vulgarisateur)
+
+Réponds en JSON STRICT:
+{"primary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"secondary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"untapped":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
+
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+        if (LOVABLE_API_KEY) {
+          const jargonResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [{ role: 'user', content: jargonPrompt }],
+              temperature: 0.3,
+            }),
+          });
+
+          if (jargonResp.ok) {
+            const jargonResult = await jargonResp.json();
+            const jargonText = jargonResult.choices?.[0]?.message?.content || '';
+            const jargonJson = jargonText.replace(/```json\s*/g, '').replace(/```/g, '').trim();
+            try {
+              const jargonParsed = JSON.parse(jargonJson);
+
+              // ═══ INTENTIONALITY SCORE (hybrid: algorithmic + LLM tone) ═══
+              const cta = ctaSeoSignalsForJargon;
+              // CTA aggressiveness: 0-1
+              const ctaScore = Math.min(1, (cta.ctaAggressive ? 0.6 : 0) + (cta.ctaCount >= 3 ? 0.2 : cta.ctaCount >= 1 ? 0.1 : 0) + (cta.ctaTypes.filter(t => t !== 'generic').length >= 2 ? 0.2 : 0));
+              // SEO pattern alignment: check if jargon terms appear in SEO balises
+              const primaryTerms = jargonParsed.primary?.terms_causing_distance || [];
+              const balisesJoined = (cta.seoTermsInBalises || []).join(' ');
+              const termsInBalises = primaryTerms.filter((t: string) => balisesJoined.includes(t.toLowerCase())).length;
+              const seoAlignment = primaryTerms.length > 0 ? Math.min(1, termsInBalises / Math.max(1, primaryTerms.length)) : 0.5;
+              // Tone assertiveness from LLM
+              const toneAssertive = jargonParsed.tone_assertive_ratio ?? 0.5;
+              // Structural consistency from LLM
+              const toneConsistency = jargonParsed.tone_consistency ?? 0.5;
+
+              const intentionalityScore = (ctaScore * 0.30) + (seoAlignment * 0.30) + (toneAssertive * 0.20) + (toneConsistency * 0.20);
+              const intentionalityLabel = intentionalityScore > 0.65 ? 'Spécialisation assumée' : intentionalityScore > 0.35 ? 'Positionnement ambigu' : 'Distance non maîtrisée';
+
+              jargonDistance = {
+                primary: jargonParsed.primary,
+                secondary: jargonParsed.secondary,
+                untapped: jargonParsed.untapped,
+                intentionality: {
+                  score: Math.round(intentionalityScore * 100) / 100,
+                  label: intentionalityLabel,
+                  components: {
+                    cta_aggressiveness: Math.round(ctaScore * 100) / 100,
+                    seo_pattern_alignment: Math.round(seoAlignment * 100) / 100,
+                    tone_assertiveness: Math.round(toneAssertive * 100) / 100,
+                    structural_consistency: Math.round(toneConsistency * 100) / 100,
+                  },
+                },
+              };
+              // Replace old lexical_footprint with enriched version
+              parsedAnalysis.lexical_footprint = {
+                ...parsedAnalysis.lexical_footprint,
+                jargon_distance: jargonDistance,
+              };
+              console.log(`✅ Jargon distance computed: primary=${jargonParsed.primary?.distance}, secondary=${jargonParsed.secondary?.distance}, untapped=${jargonParsed.untapped?.distance}, intentionality=${intentionalityScore.toFixed(2)} (${intentionalityLabel})`);
+            } catch (parseErr) {
+              console.warn('⚠️ Jargon distance JSON parse failed:', parseErr);
+            }
+          } else {
+            console.warn(`⚠️ Jargon distance LLM failed: ${jargonResp.status}`);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Jargon distance computation failed:', e);
+      }
+    }
+
     // ═══ BUILD FINAL RESULT ═══
     const result = {
       success: true,
@@ -2991,19 +3143,22 @@ Deno.serve(async (req) => {
       } catch {}
     }
 
-    // ═══ PERSIST CLIENT TARGETS TO IDENTITY CARD ═══
-    if (parsedAnalysis?.client_targets && domain) {
+    // ═══ PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
+    if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
         const svcUrl = Deno.env.get('SUPABASE_URL')!;
         const svcKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const svcSb = createClient(svcUrl, svcKey);
+        const updatePayload: Record<string, any> = {};
+        if (parsedAnalysis?.client_targets) updatePayload.client_targets = parsedAnalysis.client_targets;
+        if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
         await svcSb
           .from('tracked_sites')
-          .update({ client_targets: parsedAnalysis.client_targets })
+          .update(updatePayload)
           .ilike('domain', `%${domain}%`);
-        console.log(`[audit-strategique-ia] client_targets persisted for ${domain}`);
+        console.log(`[audit-strategique-ia] client_targets + jargon_distance persisted for ${domain}`);
       } catch (e) {
-        console.warn('[audit-strategique-ia] Failed to persist client_targets:', e);
+        console.warn('[audit-strategique-ia] Failed to persist identity data:', e);
       }
     }
 
