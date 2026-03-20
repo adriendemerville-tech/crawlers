@@ -1619,7 +1619,16 @@ D. MOTS CLÉS: 11.5 Principaux avec volumes réels 12.Opportunités 13.Gaps Conc
 E. TECHNIQUE: 14.Accessibilité Bots IA 15.Performance 16.Cohérence Sémantique
 F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats IA-Ready 20.First-Party Data 21.Changelog Marque
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
-H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
+H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt
+I. CIBLES CLIENTS: 28.Cibles principales (B2B/B2C, segment, CSP, pouvoir d'achat, fréquence d'achat, mode paiement) 29.Cibles secondaires 30.Cibles potentielles non adressées
+
+RÈGLE CIBLES CLIENTS:
+- Analyser le contenu, le pricing, le ton, les CTA et les produits/services pour déduire les cibles.
+- Pour B2B: qualifier taille, secteur d'activité, segment métier (marketing, SEO, IT, etc.), rôle décisionnel, fréquence d'achat et mode de paiement.
+- Pour B2C: qualifier genre, tranche d'âge, CSP, pouvoir d'achat, fréquence d'achat et mode de paiement.
+- PRIMARY: 1-2 cibles les plus évidentes (confidence > 0.7). SECONDARY: 1-2 cibles secondaires (confidence 0.4-0.7). UNTAPPED: exactement 2 cibles potentielles non adressées avec rationale.
+- Remplir UNIQUEMENT b2b OU b2c selon le market, jamais les deux pour la même cible.
+- La zone géographique (geo_scope) et le pays sont transversaux B2B/B2C.`;
 
 const EDITORIAL_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
 
