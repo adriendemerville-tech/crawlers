@@ -409,7 +409,7 @@ export default function Auth() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3"
                     >
-                      <AlertCircle className="h-4 w-4 text-warning shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-primary shrink-0" />
                       <p className="text-sm text-foreground flex-1">
                         {language === 'en' ? 'Already registered, would you like to ' : language === 'es' ? 'Ya registrado, ¿desea ' : 'Déjà inscrit, voulez-vous vous '}{' '}
                         <button

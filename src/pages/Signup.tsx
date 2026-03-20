@@ -497,11 +497,11 @@ export default function Signup() {
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
-          <CardHeader className="text-center pb-2 pt-4 px-5">
+          <CardHeader className="text-center pb-1 pt-3 px-5">
             <CardTitle className="text-lg font-bold">{t.signupTitle}</CardTitle>
             <CardDescription className="text-xs">{t.signupDesc}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 px-5 pb-4 pt-1">
+          <CardContent className="space-y-2.5 px-5 pb-3 pt-1">
             {/* Google OAuth */}
             <Button variant="outline" className="w-full gap-2 h-9" onClick={handleGoogleLogin} disabled={isLoading}>
               <svg className="h-4 w-4" viewBox="0 0 24 24">
