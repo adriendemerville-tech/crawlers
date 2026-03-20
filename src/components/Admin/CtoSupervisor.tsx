@@ -481,8 +481,14 @@ function CorrelationMonitor() {
     const backendErrors = allErrors.filter(e => e.source === 'backend').length;
     const silentErrors = allErrors.filter(e => e.source === 'silent').length;
     const injectionErrors = allErrors.filter(e => e.source === 'injection').length;
-    return { total, warning, info, frontendErrors, backendErrors, silentErrors, injectionErrors };
-  }, [correlations, allErrors]);
+    // Success = CTO changes (non no_change) with zero correlated errors
+    const activeChanges = ctoChanges.filter(c => c.decision !== 'no_change');
+    const failedIds = new Set(correlations.map(c => c.ctoChange.id));
+    const successes = activeChanges.filter(c => !failedIds.has(c.id));
+    const successCount = successes.length;
+    const successRate = activeChanges.length > 0 ? Math.round((successCount / activeChanges.length) * 100) : 100;
+    return { total, warning, info, frontendErrors, backendErrors, silentErrors, injectionErrors, successCount, successRate, activeChanges: activeChanges.length, successes };
+  }, [correlations, allErrors, ctoChanges]);
 
   if (loading) {
     return (
