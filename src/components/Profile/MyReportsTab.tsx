@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, Loader2, Download, ArrowLeft, Pencil, Archive, ChevronDown, Undo2, Folder, AlertTriangle } from 'lucide-react';
+import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, Loader2, Download, ArrowLeft, Pencil, Archive, ChevronDown, Undo2, Folder, AlertTriangle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -129,6 +129,8 @@ export function MyReportsTab() {
   const tr = t[language];
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
+  const [orderedSites, setOrderedSites] = useState<TrackedSite[]>([]);
+  const [draggedSiteIdx, setDraggedSiteIdx] = useState<number | null>(null);
   const [selectedSite, setSelectedSite] = useState<string>('__all__');
   const [folders, setFolders] = useState<ReportFolder[]>([]);
   const [reports, setReports] = useState<SavedReport[]>([]);
@@ -152,6 +154,7 @@ export function MyReportsTab() {
       .order('position')
       .then(({ data }) => {
         setSites(data || []);
+        setOrderedSites(data || []);
       });
   }, [user]);
 
@@ -335,17 +338,30 @@ export function MyReportsTab() {
                 {language === 'fr' ? 'Tous' : language === 'es' ? 'Todos' : 'All'}
               </button>
 
-              {/* Tracked sites */}
-              {sites.map(site => (
+              {/* Tracked sites — drag to reorder */}
+              {orderedSites.map((site, idx) => (
                 <button
                   key={site.id}
+                  draggable
+                  onDragStart={() => setDraggedSiteIdx(idx)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (draggedSiteIdx === null || draggedSiteIdx === idx) return;
+                    const next = [...orderedSites];
+                    const [dragged] = next.splice(draggedSiteIdx, 1);
+                    next.splice(idx, 0, dragged);
+                    setOrderedSites(next);
+                    setDraggedSiteIdx(idx);
+                  }}
+                  onDragEnd={() => setDraggedSiteIdx(null)}
                   onClick={() => { setSelectedSite(site.id); setCurrentFolderId(null); }}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate group ${
                     selectedSite === site.id
                       ? 'bg-primary/10 text-primary border border-primary/20'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                   }`}
                 >
+                  <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity shrink-0 cursor-grab" />
                   <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
                 </button>
               ))}
