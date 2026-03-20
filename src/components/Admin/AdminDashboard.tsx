@@ -83,6 +83,7 @@ const adminTranslations = {
     docs: 'Docs',
     functions: 'Functions',
     surveys: 'Surveys',
+    bundle: 'Bundle',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
