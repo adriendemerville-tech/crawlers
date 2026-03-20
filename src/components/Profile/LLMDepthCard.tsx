@@ -484,6 +484,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
               } else if (responseData?.results?.length > 0) {
                 setData(responseData);
                 setHasPreviousData(true);
+                onDepthComplete?.();
               }
             }
           } catch {
