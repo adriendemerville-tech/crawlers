@@ -9,7 +9,8 @@ import {
   Target, TrendingUp, TrendingDown, Zap, 
   AlertTriangle, Lightbulb, Trophy,
   BarChart3, Search, Loader2, Layers, Compass,
-  ChevronDown, ChevronUp, BrainCircuit
+  ChevronDown, ChevronUp, BrainCircuit, FileWarning,
+  Gauge, Rocket, Megaphone
 } from 'lucide-react';
 import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem, KeywordStrategicAnalysis, RankingOverview } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
