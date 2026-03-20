@@ -1745,6 +1745,7 @@ export function MyTracking() {
                         entity_type: currentSite.entity_type || undefined,
                         media_specialties: currentSite.media_specialties || undefined,
                       }}
+                      onDepthComplete={() => setLlmBenchmarkRefreshKey(k => k + 1)}
                     />
                    )}
 
