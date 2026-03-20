@@ -17,6 +17,9 @@ interface UserProfile {
   credits_balance: number;
   created_at: string;
   plan_type?: string;
+  persona_type?: string | null;
+  updated_at?: string;
+  affiliate_code_used?: string | null;
 }
 
 interface UserKpis {
