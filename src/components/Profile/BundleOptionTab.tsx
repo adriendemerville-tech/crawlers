@@ -74,10 +74,16 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [segmentSort, setSegmentSort] = useState<'asc' | 'desc' | null>(null);
   const [featureSort, setFeatureSort] = useState<'asc' | 'desc' | null>(null);
+  const [nameSort, setNameSort] = useState<'asc' | 'desc' | null>(null);
 
   const sortedApis = useMemo(() => {
     let sorted = [...apis];
-    if (segmentSort) {
+    if (nameSort) {
+      sorted.sort((a, b) => {
+        const cmp = a.api_name.localeCompare(b.api_name, 'fr');
+        return nameSort === 'asc' ? cmp : -cmp;
+      });
+    } else if (segmentSort) {
       sorted.sort((a, b) => {
         const cmp = a.seo_segment.localeCompare(b.seo_segment, 'fr');
         return segmentSort === 'asc' ? cmp : -cmp;
@@ -89,14 +95,22 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
       });
     }
     return sorted;
-  }, [apis, segmentSort, featureSort]);
+  }, [apis, segmentSort, featureSort, nameSort]);
+
+  const toggleNameSort = () => {
+    setSegmentSort(null);
+    setFeatureSort(null);
+    setNameSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
+  };
 
   const toggleSegmentSort = () => {
+    setNameSort(null);
     setFeatureSort(null);
     setSegmentSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   };
 
   const toggleFeatureSort = () => {
+    setNameSort(null);
     setSegmentSort(null);
     setFeatureSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   };
@@ -130,7 +144,15 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
         <table className="w-full">
           <thead>
             <tr className="border-b border-border/20">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5 w-[180px]">API</th>
+              <th className="text-left text-xs font-medium px-4 py-2.5 w-[180px]">
+                <button
+                  onClick={toggleNameSort}
+                  className={`inline-flex items-center gap-1.5 transition-colors ${nameSort ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  API
+                  <SortIcon state={nameSort} />
+                </button>
+              </th>
               <th className="w-[36px]" />
               <th className="text-left text-xs font-medium px-4 py-2.5">
                 <button
