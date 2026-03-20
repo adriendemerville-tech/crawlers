@@ -320,6 +320,38 @@ export interface ContentGap {
   action: string;
 }
 
+export interface MissingTerm {
+  term: string;
+  importance: 'critical' | 'important' | 'optional';
+  competitor_usage: string;
+  suggested_placement: string;
+}
+
+export interface SemanticDensityAnalysis {
+  score: number; // 0-100
+  verdict: 'optimal' | 'acceptable' | 'thin' | 'critical';
+  analysis: string;
+  vs_competitors: string;
+  top_missing_clusters: string[];
+}
+
+export interface SerpRecommendation {
+  action: string;
+  expected_impact: 'high' | 'medium' | 'low';
+  difficulty: 'easy' | 'medium' | 'hard';
+  timeframe: string;
+}
+
+export interface AlternativeStrategy {
+  trigger_reason: string;
+  strategy_type: 'RP' | 'partnership' | 'video_social' | 'event' | 'other';
+  what: string;
+  how: string;
+  estimated_cost: string;
+  ideal_partner?: string;
+  offsite_seo_impact: string;
+}
+
 export interface KeywordPositioning {
   main_keywords: KeywordItem[];
   quick_wins: QuickWinKeyword[];
@@ -327,6 +359,10 @@ export interface KeywordPositioning {
   opportunities: string[];
   competitive_gaps: string[];
   recommendations: string[];
+  missing_terms?: MissingTerm[];
+  semantic_density?: SemanticDensityAnalysis;
+  serp_recommendations?: SerpRecommendation[];
+  alternative_strategy?: AlternativeStrategy | null;
 }
 
 export interface MarketDataSummary {
