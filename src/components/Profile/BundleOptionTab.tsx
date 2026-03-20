@@ -104,55 +104,6 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
         <p className="text-sm text-muted-foreground">Sélectionnez les API tierces à intégrer à votre stack Crawlers.</p>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-muted/40 border border-border/30">
-        <button
-          onClick={() => { setSegmentFilter(null); setFeatureFilter(null); }}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground mr-1 shrink-0 transition-colors"
-        >
-          Segment SEO
-        </button>
-        {segments.map(seg => (
-          <button
-            key={seg}
-            onClick={() => setSegmentFilter(prev => prev === seg ? null : seg)}
-            className={`text-[11px] px-2.5 py-1 rounded-full border transition-all duration-200 font-medium ${
-              segmentFilter === seg
-                ? 'ring-2 ring-primary/30 scale-105 ' + getSegmentColor(seg)
-                : 'opacity-70 hover:opacity-100 ' + getSegmentColor(seg)
-            }`}
-          >
-            {seg}
-          </button>
-        ))}
-
-        <div className="w-px h-5 bg-border/40 mx-2 shrink-0" />
-
-        <span className="text-xs font-medium text-muted-foreground mr-1 shrink-0">Fonction</span>
-        {features.map(feat => (
-          <button
-            key={feat}
-            onClick={() => setFeatureFilter(prev => prev === feat ? null : feat)}
-            className={`text-[11px] px-2.5 py-1 rounded-full border transition-all duration-200 font-medium ${
-              featureFilter === feat
-                ? 'ring-2 ring-primary/30 scale-105 ' + getFeatureColor(feat)
-                : 'opacity-70 hover:opacity-100 ' + getFeatureColor(feat)
-            }`}
-          >
-            {feat}
-          </button>
-        ))}
-
-        {(segmentFilter || featureFilter) && (
-          <button
-            onClick={() => { setSegmentFilter(null); setFeatureFilter(null); }}
-            className="text-[10px] px-2 py-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors ml-auto"
-          >
-            ✕ Reset
-          </button>
-        )}
-      </div>
-
       {/* Table */}
       <div className="border border-border/30 rounded-lg overflow-hidden">
         <table className="w-full">
