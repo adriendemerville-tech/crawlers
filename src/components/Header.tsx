@@ -297,9 +297,9 @@ export function Header() {
             </>
           ) : (
             <Link to="/site-crawl">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Globe className="h-4 w-4" />
-                <span className="text-sm">Crawl</span>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                <Bug className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Crawl</span>
               </Button>
             </Link>
           )}
