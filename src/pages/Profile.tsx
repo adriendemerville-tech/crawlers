@@ -168,6 +168,7 @@ export default function Profile() {
 
   return (
     <>
+      <WelcomeBackModal />
       <Helmet>
         <title>{t.pageTitle}</title>
       </Helmet>
