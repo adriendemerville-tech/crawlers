@@ -1032,7 +1032,7 @@ export function MyTracking() {
                         label={site.domain.replace(/^www\./, '')}
                         isActive={selectedSite === site.id}
                         isRefreshing={refreshingSites.has(site.id)}
-                        onClick={() => setSelectedSite(site.id)}
+                        onClick={() => { setSelectedSite(site.id); setShowApiPanel(false); }}
                       />
                     ))}
                     <button
