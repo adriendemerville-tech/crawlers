@@ -158,6 +158,40 @@ export function CtoAgentDashboard() {
     return { total, approved, rejected, avgConfidence, latestVersion };
   }, [logs]);
 
+  // Priority alert: detect recurring issues from recent logs
+  const priorityAlert = useMemo(() => {
+    if (logs.length < 3) return null;
+
+    // Count issues per function (rejected or low confidence)
+    const recentLogs = [...logs].reverse().slice(0, 50);
+    const functionIssues: Record<string, { rejected: number; lowConf: number; total: number; lastSummary: string }> = {};
+
+    for (const log of recentLogs) {
+      if (!functionIssues[log.function_analyzed]) {
+        functionIssues[log.function_analyzed] = { rejected: 0, lowConf: 0, total: 0, lastSummary: '' };
+      }
+      const fi = functionIssues[log.function_analyzed];
+      fi.total++;
+      if (log.decision === 'rejected') fi.rejected++;
+      if (log.confidence_score < 60) fi.lowConf++;
+      if (!fi.lastSummary) fi.lastSummary = log.analysis_summary;
+    }
+
+    // Find recurring problems (≥2 rejections or ≥3 low confidence)
+    const problems = Object.entries(functionIssues)
+      .filter(([, fi]) => fi.rejected >= 2 || fi.lowConf >= 3)
+      .sort(([, a], [, b]) => (b.rejected + b.lowConf) - (a.rejected + a.lowConf));
+
+    if (problems.length === 0) return null;
+
+    const severity = problems.some(([, fi]) => fi.rejected >= 3) ? 'critical' : 'warning';
+    const summaryLines = problems.map(([fn, fi]) =>
+      `• ${fn} : ${fi.rejected} rejet(s), ${fi.lowConf} analyse(s) basse confiance sur ${fi.total} — "${fi.lastSummary.substring(0, 100)}…"`
+    );
+
+    return { severity, problems: summaryLines, count: problems.length };
+  }, [logs]);
+
   if (loading) {
     return (
       <div className="space-y-6">
