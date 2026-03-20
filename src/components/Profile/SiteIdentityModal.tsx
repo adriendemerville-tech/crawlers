@@ -149,8 +149,45 @@ function FlameButton({ isRecording, isProcessing, onClick, audioLevel }: {
     </div>
   );
 }
+function EditableKeyword({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-type ModalView = 'attributes' | 'instructions';
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+  useEffect(() => { setDraft(value); }, [value]);
+
+  const commit = () => {
+    setEditing(false);
+    onChange(draft);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') commit(); }}
+        className="text-xs px-2 py-0.5 rounded-md border border-[hsl(var(--brand-violet))]/40 bg-background text-foreground outline-none focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 w-auto min-w-[60px]"
+        style={{ width: `${Math.max(draft.length, 4)}ch` }}
+      />
+    );
+  }
+
+  return (
+    <Badge
+      variant="secondary"
+      className="text-xs bg-[hsl(var(--brand-violet))]/10 text-[hsl(var(--brand-violet))] border-[hsl(var(--brand-violet))]/20 cursor-pointer hover:bg-[hsl(var(--brand-violet))]/20 transition-colors"
+      onClick={() => setEditing(true)}
+    >
+      {value}
+    </Badge>
+  );
+}
+
+
 type VoiceStep = 'idle' | 'recording' | 'processing' | 'summary' | 'confirming' | 'done';
 
 export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteIdentityModalProps) {
