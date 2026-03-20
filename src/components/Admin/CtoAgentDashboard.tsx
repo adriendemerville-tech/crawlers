@@ -236,10 +236,10 @@ export function CtoAgentDashboard() {
       </Card>
 
       {/* Priority Alert */}
-      {priorityAlert && (
-        <Alert variant={priorityAlert.severity === 'critical' ? 'destructive' : 'default'} className={priorityAlert.severity === 'critical' ? '' : 'border-orange-500/40 bg-orange-500/5'}>
+      {priorityAlert && !alertDismissed && (
+        <Alert variant={priorityAlert.severity === 'critical' ? 'destructive' : 'default'} className={`relative ${priorityAlert.severity === 'critical' ? '' : 'border-orange-500/40 bg-orange-500/5'}`}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-sm">
+          <AlertTitle className="text-sm pr-6">
             {priorityAlert.severity === 'critical' ? '🔴' : '🟠'} {priorityAlert.count} problème(s) récurrent(s) détecté(s)
           </AlertTitle>
           <AlertDescription className="mt-1 space-y-0.5">
@@ -247,6 +247,12 @@ export function CtoAgentDashboard() {
               <p key={i} className="text-xs text-muted-foreground">{line}</p>
             ))}
           </AlertDescription>
+          <button
+            onClick={() => setAlertDismissed(true)}
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </Alert>
       )}
 
