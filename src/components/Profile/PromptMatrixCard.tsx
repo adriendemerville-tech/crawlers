@@ -250,19 +250,67 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     fetchData();
   }, [fetchData]);
 
-  // ── CSV Upload handler ──
+  // ── File Upload handler (CSV, TSV, DOC, DOCX) ──
+  const [docParsing, setDocParsing] = useState(false);
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.endsWith('.csv') && !file.name.endsWith('.tsv')) {
-      toast.error('Format non supporté. Utilisez un fichier .csv');
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const isDoc = ext === 'doc' || ext === 'docx';
+    const isCsv = ext === 'csv' || ext === 'tsv';
+
+    if (!isDoc && !isCsv) {
+      toast.error('Format non supporté. Utilisez .csv, .doc ou .docx');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Fichier trop volumineux (max 5 Mo)');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 10 Mo)');
       return;
     }
 
+    if (isDoc) {
+      // Send to edge function for AI extraction
+      setDocParsing(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      supabase.functions.invoke('parse-doc-matrix', {
+        body: formData,
+      }).then(({ data, error }) => {
+        setDocParsing(false);
+        if (error || !data?.rows?.length) {
+          toast.error(error?.message || 'Aucune donnée exploitable trouvée dans le document');
+          return;
+        }
+        // Convert AI rows to CSV-like format for existing mapping flow
+        const headers = Object.keys(data.rows[0]);
+        setCsvHeaders(headers);
+        setCsvRawRows(data.rows);
+        setPendingFileName(file.name);
+        // Auto-detect mapping
+        const autoMap: Record<string, string> = {};
+        headers.forEach(h => {
+          const lower = h.toLowerCase().trim();
+          if (/prompt|question|query|requête|critère|criteria/i.test(lower)) autoMap.prompt = h;
+          if (/poids|weight|coefficient|coeff|pondéra/i.test(lower)) autoMap.poids = h;
+          if (/axe|axis|module|catégorie|category|type/i.test(lower)) autoMap.axe = h;
+          if (/seuil.*bon|threshold.*good|bon|good/i.test(lower) && !/moyen|mauvais/i.test(lower)) autoMap.seuil_bon = h;
+          if (/seuil.*moyen|threshold.*medium|moyen|medium|average/i.test(lower)) autoMap.seuil_moyen = h;
+          if (/seuil.*mauvais|threshold.*bad|mauvais|bad|poor/i.test(lower)) autoMap.seuil_mauvais = h;
+          if (/llm|model|modèle|engine/i.test(lower)) autoMap.llm_name = h;
+          if (/score|note|rating/i.test(lower)) autoMap.score = h;
+          if (/brand|marque|found|trouvé/i.test(lower)) autoMap.brand_found = h;
+        });
+        setColumnMapping(autoMap);
+        setShowMappingDialog(true);
+      }).catch(() => {
+        setDocParsing(false);
+        toast.error('Erreur lors du parsing du document');
+      });
+      e.target.value = '';
+      return;
+    }
+
+    // CSV/TSV flow
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -583,10 +631,10 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                 <Button variant="outline" size="sm" className="gap-1.5" asChild>
                   <span>
                     <Upload className="h-3.5 w-3.5" />
-                    {hasImport ? 'Remplacer CSV' : 'Importer CSV'}
+                    {docParsing ? 'Parsing…' : hasImport ? 'Remplacer' : 'Importer'}
                   </span>
                 </Button>
-                <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
+                <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
               </label>
             </div>
           </div>
@@ -608,10 +656,10 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   <Button size="sm" className="gap-1.5" asChild>
                     <span>
                       <Upload className="h-3.5 w-3.5" />
-                      Choisir un fichier CSV
+                      Choisir un fichier
                     </span>
                   </Button>
-                  <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
+                  <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
                 </label>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
                   <FlaskConical className="h-3.5 w-3.5" />
