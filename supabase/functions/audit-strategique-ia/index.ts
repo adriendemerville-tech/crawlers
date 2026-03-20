@@ -1866,7 +1866,7 @@ GÉNÈRE un JSON:
 "llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
 "conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au contenu"],"recommendations":[]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par 3/4 concurrents en H2 et corps de texte","suggested_placement":"Intégrer dans le H2 et le premier paragraphe"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"...","vs_competitors":"Comparaison densité sémantique vs top 3 SERP","top_missing_clusters":["cluster thématique manquant 1","2"]},"serp_recommendations":[{"action":"Action concrète pour remonter","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"2-4 semaines"}],"alternative_strategy":null},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Contenu|Autorité|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"2-3ph résumé du potentiel de cette page","overallScore":0-100,
@@ -1882,6 +1882,10 @@ RÈGLES:
 - NE génère PAS: social_signals, market_intelligence, priority_content
 - executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
 - quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team: obligatoires
+- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais que cette page n'utilise pas. Analyse le contenu réel.
+- semantic_density: compare la richesse sémantique de la page vs les 3 premiers concurrents SERP. Score objectif.
+- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
+- alternative_strategy: UNIQUEMENT si le site est en position très défavorable (position >50, domaine faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre à quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking. Types: RP presse, partenariat avec entreprise complémentaire (nommer qui), stratégie vidéo réseaux sociaux, événement.
 - JSON pur, sans virgules traînantes`;
   }
 
@@ -1902,7 +1906,7 @@ GÉNÈRE un JSON:
 "conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au business"],"recommendations":[]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
 "priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":[],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[{"keyword":"...","volume":0,"current_rank":15,"action":"..."}],"content_gaps":[{"keyword":"mot-clé pertinent non classé","volume":100,"priority":"high|medium|low","action":"Créer une page dédiée..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[{"keyword":"...","volume":0,"current_rank":15,"action":"..."}],"content_gaps":[{"keyword":"mot-clé pertinent non classé","volume":100,"priority":"high|medium|low","action":"Créer une page dédiée..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par X concurrents","suggested_placement":"Où et comment l'intégrer"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"Analyse densité sémantique","vs_competitors":"Comparaison vs top SERP","top_missing_clusters":["cluster 1","cluster 2"]},"serp_recommendations":[{"action":"Action concrète","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"délai estimé"}],"alternative_strategy":null},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"3-4ph CEO/CMO","overallScore":0-100,
@@ -1926,6 +1930,10 @@ RÈGLES:
 - expertise_sentiment: 1(générique/IA) à 5(expert terrain).
 - red_team: 3 failles/objections client sceptique.
 - Base recommandations sur état des lieux SEO réel si fourni.
+- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site. Indiquer importance, usage concurrent, et placement suggéré.
+- semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.
+- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
+- alternative_strategy: UNIQUEMENT si position très défavorable (>50, faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking d'une URL. Types possibles: RP presse, partenariat (nommer l'entreprise idéale), stratégie vidéo réseaux sociaux, événement.
 - JSON pur, sans virgules traînantes`;
 }
 

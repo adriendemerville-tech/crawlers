@@ -9,7 +9,8 @@ import {
   Target, TrendingUp, TrendingDown, Zap, 
   AlertTriangle, Lightbulb, Trophy,
   BarChart3, Search, Loader2, Layers, Compass,
-  ChevronDown, ChevronUp, BrainCircuit
+  ChevronDown, ChevronUp, BrainCircuit, FileWarning,
+  Gauge, Rocket, Megaphone
 } from 'lucide-react';
 import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem, KeywordStrategicAnalysis, RankingOverview } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
@@ -661,6 +662,126 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Missing Terms */}
+            {positioning.missing_terms && positioning.missing_terms.length > 0 && (
+              <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <FileWarning className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  Termes clés manquants
+                </h3>
+                <div className="space-y-3">
+                  {positioning.missing_terms.map((term, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 p-3 rounded-md bg-background/50 border border-border/50">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={term.importance === 'critical' ? 'destructive' : term.importance === 'important' ? 'default' : 'outline'} className="text-[10px]">
+                          {term.importance === 'critical' ? 'Critique' : term.importance === 'important' ? 'Important' : 'Optionnel'}
+                        </Badge>
+                        <span className="text-sm font-medium text-foreground">{term.term}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{term.competitor_usage}</p>
+                      <p className="text-xs text-primary/80">💡 {term.suggested_placement}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Semantic Density */}
+            {positioning.semantic_density && (
+              <div className="p-4 rounded-lg bg-accent/30 border border-border/50">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <Gauge className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Densité sémantique
+                  <Badge variant={positioning.semantic_density.verdict === 'optimal' ? 'default' : positioning.semantic_density.verdict === 'acceptable' ? 'secondary' : 'destructive'} className="ml-auto text-[10px]">
+                    {positioning.semantic_density.score}/100
+                  </Badge>
+                </h3>
+                <p className="text-sm text-muted-foreground mb-2">{positioning.semantic_density.analysis}</p>
+                <p className="text-sm text-foreground">{positioning.semantic_density.vs_competitors}</p>
+                {positioning.semantic_density.top_missing_clusters?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {positioning.semantic_density.top_missing_clusters.map((cluster, idx) => (
+                      <Badge key={idx} variant="outline" className="text-[10px] text-muted-foreground">
+                        {cluster}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SERP Recommendations */}
+            {positioning.serp_recommendations && positioning.serp_recommendations.length > 0 && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <Rocket className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Actions pour remonter dans la SERP
+                </h3>
+                <div className="space-y-3">
+                  {positioning.serp_recommendations.map((rec, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-3 rounded-md bg-background/50 border border-border/50">
+                      <span className="text-primary font-bold text-sm shrink-0">{idx + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground">{rec.action}</p>
+                        <div className="flex flex-wrap gap-2 mt-1.5">
+                          <Badge variant={rec.expected_impact === 'high' ? 'default' : 'outline'} className="text-[10px]">
+                            Impact {rec.expected_impact === 'high' ? 'élevé' : rec.expected_impact === 'medium' ? 'moyen' : 'faible'}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            {rec.difficulty === 'easy' ? '🟢 Facile' : rec.difficulty === 'medium' ? '🟡 Moyen' : '🔴 Difficile'}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                            ⏱ {rec.timeframe}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Alternative Strategy (only for disadvantaged sites) */}
+            {positioning.alternative_strategy && (
+              <div className="p-5 rounded-lg bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/30">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-1">
+                  <Megaphone className="h-5 w-5 text-warning" aria-hidden="true" />
+                  Stratégie alternative
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4">{positioning.alternative_strategy.trigger_reason}</p>
+                
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="p-3 rounded-md bg-background/60 border border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Quoi</p>
+                      <p className="text-sm text-foreground">{positioning.alternative_strategy.what}</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-background/60 border border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Comment</p>
+                      <p className="text-sm text-foreground">{positioning.alternative_strategy.how}</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-background/60 border border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Combien</p>
+                      <p className="text-sm text-foreground">{positioning.alternative_strategy.estimated_cost}</p>
+                    </div>
+                  </div>
+                  {positioning.alternative_strategy.ideal_partner && (
+                    <p className="text-sm text-foreground">
+                      🤝 Partenaire idéal : <span className="font-medium">{positioning.alternative_strategy.ideal_partner}</span>
+                    </p>
+                  )}
+                  <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
+                    <p className="text-xs text-foreground">
+                      <span className="font-semibold">💡 Impact SEO :</span> {positioning.alternative_strategy.offsite_seo_impact}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Une action offsite a toujours des répercussions positives sur le ranking d'une URL.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             <MethodologyPopover variant="keyword_positioning" />
