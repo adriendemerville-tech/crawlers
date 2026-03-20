@@ -112,7 +112,12 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-muted/40 border border-border/30">
-        <span className="text-xs font-medium text-muted-foreground mr-1 shrink-0">Segment SEO</span>
+        <button
+          onClick={() => { setSegmentFilter(null); setFeatureFilter(null); }}
+          className="text-xs font-medium text-muted-foreground hover:text-foreground mr-1 shrink-0 transition-colors"
+        >
+          Segment SEO
+        </button>
         {segments.map(seg => (
           <button
             key={seg}
