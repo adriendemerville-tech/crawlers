@@ -243,6 +243,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
       case 'surveys': return <SurveyManagement />;
+      case 'bundle': return <BundleManagement />;
       default: return <AnalyticsDashboard />;
     }
   };
