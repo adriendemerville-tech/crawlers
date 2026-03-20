@@ -209,7 +209,7 @@ export default function Profile() {
                   className="flex-1 gap-2"
                   disabled={!isProUser}
                 >
-                  <Bug className="h-4 w-4 text-purple-500" />
+                  <Bug className="h-4 w-4 text-muted-foreground" />
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
@@ -218,7 +218,7 @@ export default function Profile() {
                     value="gmb"
                     className="flex-1 gap-2"
                   >
-                    <Store className="h-4 w-4 text-emerald-500" />
+                    <Store className="h-4 w-4 text-muted-foreground" />
                     <span className="hidden sm:inline">GMB</span>
                   </TabsTrigger>
                 )}
