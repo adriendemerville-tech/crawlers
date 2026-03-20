@@ -601,10 +601,10 @@ export function UserManagement() {
         user={kpiUser}
         open={kpiModalOpen}
         onOpenChange={setKpiModalOpen}
-        onDeleteUser={(u) => { setSelectedUser(u); setDeleteDialogOpen(true); setKpiModalOpen(false); }}
+        onDeleteUser={(u: any) => { setSelectedUser(u); setDeleteDialogOpen(true); setKpiModalOpen(false); }}
         onToggleRole={(userId, role) => toggleRole(userId, role)}
-        onManageCredits={(u) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
-        onStripPro={(u) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
+        onManageCredits={(u: any) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
+        onStripPro={(u: any) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
         adminUserIds={adminUserIds}
         viewerUserIds={viewerUserIds}
         viewer2UserIds={viewer2UserIds}
