@@ -162,6 +162,15 @@ export default function Signup() {
     }
   }, [searchParams]);
 
+  // Track abandoned signups: user reached verify step but navigated away
+  useEffect(() => {
+    return () => {
+      if (step === 'verify') {
+        trackAnalyticsEvent('signup_abandoned' as any);
+      }
+    };
+  }, [step]);
+
   useEffect(() => {
     if (user && step === 'form') {
       const returnPath = sessionStorage.getItem('audit_return_path');
@@ -236,6 +245,7 @@ export default function Signup() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
+      trackAnalyticsEvent('verification_email_sent' as any);
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
