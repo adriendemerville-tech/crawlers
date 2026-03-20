@@ -104,21 +104,79 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
   );
 }
 
+/** Flame-like mic button with voice-reactive glow */
+function FlameButton({ isRecording, isProcessing, onClick, audioLevel }: {
+  isRecording: boolean; isProcessing: boolean; onClick: () => void; audioLevel: number;
+}) {
+  // audioLevel 0-1 controls glow intensity
+  const glowSize = isRecording ? 8 + audioLevel * 24 : 0;
+  const glowOpacity = isRecording ? 0.3 + audioLevel * 0.5 : 0;
+
+  return (
+    <div className="relative shrink-0">
+      {/* Outer glow layers */}
+      {isRecording && (
+        <>
+          <div
+            className="absolute inset-0 rounded-full transition-all duration-200"
+            style={{
+              boxShadow: `0 0 ${glowSize}px ${glowSize / 2}px hsla(262, 83%, 58%, ${glowOpacity * 0.6}), 0 0 ${glowSize * 1.5}px ${glowSize}px hsla(30, 90%, 55%, ${glowOpacity * 0.4})`,
+            }}
+          />
+          <div
+            className="absolute -inset-1 rounded-full opacity-60"
+            style={{
+              background: `radial-gradient(circle, hsla(30, 90%, 55%, ${glowOpacity * 0.3}) 0%, hsla(262, 83%, 58%, ${glowOpacity * 0.2}) 60%, transparent 100%)`,
+              transform: `scale(${1 + audioLevel * 0.3})`,
+              transition: 'transform 150ms ease-out, background 150ms ease-out',
+            }}
+          />
+        </>
+      )}
+      <Button
+        variant="default"
+        size="icon"
+        className={`relative rounded-full w-12 h-12 transition-all duration-300 ${
+          isRecording
+            ? 'bg-gradient-to-br from-[hsl(262,83%,58%)] via-[hsl(300,70%,50%)] to-[hsl(30,90%,55%)] shadow-lg border-0'
+            : 'bg-[hsl(var(--brand-violet))] hover:bg-[hsl(var(--brand-violet))]/90 shadow-md shadow-[hsl(var(--brand-violet))]/20'
+        }`}
+        onClick={onClick}
+        disabled={isProcessing}
+      >
+        {isProcessing ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : isRecording ? <MicOff className="h-5 w-5 text-white" /> : <Mic className="h-5 w-5 text-white" />}
+      </Button>
+    </div>
+  );
+}
+
 type ModalView = 'attributes' | 'instructions';
+type VoiceStep = 'idle' | 'recording' | 'processing' | 'summary' | 'confirming' | 'done';
 
 export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteIdentityModalProps) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [activeView, setActiveView] = useState<ModalView>('attributes');
   const [dynamicFields, setDynamicFields] = useState<Record<string, string>>({});
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animFrameRef = useRef<number>(0);
+
+  // Voice flow state
+  const [voiceStep, setVoiceStep] = useState<VoiceStep>('idle');
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [summaryKeywords, setSummaryKeywords] = useState<string[]>([]);
+  const [pendingFields, setPendingFields] = useState<Record<string, string>>({});
+  const [thankYouShown, setThankYouShown] = useState(false);
 
   useEffect(() => {
     if (open) {
       setActiveView('attributes');
+      setVoiceStep('idle');
+      setSummaryKeywords([]);
+      setPendingFields({});
+      setThankYouShown(false);
       const fields: Record<string, string> = {};
       for (const f of TAXONOMY_FIELDS) {
         const val = site[f.key];
@@ -129,6 +187,10 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
         }
       }
       setDynamicFields(fields);
+    } else {
+      // Cleanup audio on close
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     }
   }, [open, site]);
 
@@ -179,26 +241,57 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
     finally { setIsScraping(false); }
   };
 
+  // --- Audio level monitoring ---
+  const startAudioLevelMonitoring = useCallback((stream: MediaStream) => {
+    try {
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.7;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const tick = () => {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        setAudioLevel(Math.min(avg / 128, 1)); // normalize 0-1
+        animFrameRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch { /* fallback: no visualisation */ }
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      startAudioLevelMonitoring(stream);
+
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRecorder.onstop = async () => { stream.getTracks().forEach(t => t.stop()); await processAudio(new Blob(chunksRef.current, { type: 'audio/webm' })); };
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        setAudioLevel(0);
+        await processAudio(new Blob(chunksRef.current, { type: 'audio/webm' }));
+      };
       mediaRecorder.start();
-      setIsRecording(true);
+      setVoiceStep('recording');
     } catch (err) { console.error('Microphone access error:', err); toast.error("Impossible d'accéder au microphone."); }
-  }, []);
+  }, [startAudioLevelMonitoring]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) { mediaRecorderRef.current.stop(); setIsRecording(false); }
-  }, [isRecording]);
+    if (mediaRecorderRef.current && voiceStep === 'recording') {
+      mediaRecorderRef.current.stop();
+      setVoiceStep('processing');
+    }
+  }, [voiceStep]);
 
   const processAudio = async (blob: Blob) => {
-    setIsProcessing(true);
     try {
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => { reader.onloadend = () => resolve((reader.result as string).split(',')[1]); });
@@ -208,15 +301,52 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
         body: { audio_base64: audioBase64, site_id: site.id, domain: site.domain, current_fields: dynamicFields },
       });
       if (error) throw error;
-      if (data?.enriched_fields) { setDynamicFields(prev => ({ ...prev, ...data.enriched_fields })); toast.success("Carte d'identité enrichie avec succès"); onUpdate?.(); }
-    } catch (err) { console.error('Voice processing error:', err); toast.error('Erreur lors du traitement vocal'); }
-    finally { setIsProcessing(false); }
+      if (data?.enriched_fields && Object.keys(data.enriched_fields).length > 0) {
+        // Extract keywords from enriched fields values
+        const keywords = Object.values(data.enriched_fields as Record<string, string>)
+          .flatMap((v: string) => v.split(/[,·;]/).map((s: string) => s.trim()))
+          .filter((s: string) => s.length > 1)
+          .slice(0, 8);
+        setSummaryKeywords(keywords);
+        setPendingFields(data.enriched_fields);
+        setVoiceStep('summary');
+      } else {
+        toast.info('Aucune information exploitable détectée');
+        setVoiceStep('idle');
+      }
+    } catch (err) { console.error('Voice processing error:', err); toast.error('Erreur lors du traitement vocal'); setVoiceStep('idle'); }
+  };
+
+  const handleConfirmSummary = async () => {
+    setVoiceStep('confirming');
+    // Apply fields to local state
+    setDynamicFields(prev => ({ ...prev, ...pendingFields }));
+    setThankYouShown(true);
+    setVoiceStep('done');
+    onUpdate?.();
+
+    // Auto-dismiss thank you after 2.5s
+    setTimeout(() => {
+      setThankYouShown(false);
+      setVoiceStep('idle');
+      setSummaryKeywords([]);
+      setPendingFields({});
+    }, 2500);
+  };
+
+  const handleRejectSummary = () => {
+    setVoiceStep('idle');
+    setSummaryKeywords([]);
+    setPendingFields({});
   };
 
   const hasTargets = site.client_targets && (site.client_targets.primary?.length > 0 || site.client_targets.secondary?.length > 0 || site.client_targets.untapped?.length > 0);
   const filledCount = Object.values(dynamicFields).filter(v => v && v !== 'null' && v !== 'undefined').length;
 
   const toggleView = () => setActiveView(prev => prev === 'attributes' ? 'instructions' : 'attributes');
+
+  const isRecording = voiceStep === 'recording';
+  const isProcessing = voiceStep === 'processing' || voiceStep === 'confirming';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -229,26 +359,52 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
           </DialogTitle>
         </DialogHeader>
 
-        {/* Voice enrichment hero — always visible */}
-        <div className={`relative rounded-xl p-4 border-2 transition-all duration-300 ${
+        {/* Voice enrichment hero */}
+        <div className={`relative rounded-xl p-4 border-2 transition-all duration-500 ${
           isRecording
-            ? 'border-destructive bg-destructive/5 shadow-lg shadow-destructive/10'
+            ? 'border-[hsl(30,90%,55%)]/50 bg-gradient-to-r from-[hsl(262,83%,58%)]/[0.08] via-[hsl(300,70%,50%)]/[0.05] to-[hsl(30,90%,55%)]/[0.08]'
             : 'border-[hsl(var(--brand-violet))]/40 bg-gradient-to-r from-[hsl(var(--brand-violet))]/[0.06] to-destructive/[0.04] hover:border-[hsl(var(--brand-violet))]/60'
         }`}>
+          {/* Summary overlay — post-speech keywords */}
+          {voiceStep === 'summary' && (
+            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4 animate-fade-in">
+              <p className="text-sm font-medium text-foreground">Mots-clés détectés :</p>
+              <div className="flex flex-wrap gap-1.5 justify-center max-w-md">
+                {summaryKeywords.map((kw, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs bg-[hsl(var(--brand-violet))]/10 text-[hsl(var(--brand-violet))] border-[hsl(var(--brand-violet))]/20">
+                    {kw}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <Button size="sm" onClick={handleConfirmSummary} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Check className="h-3.5 w-3.5" />
+                  C'est bien ça
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleRejectSummary} className="text-muted-foreground">
+                  <X className="h-3.5 w-3.5 mr-1" /> Annuler
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Thank you overlay */}
+          {thankYouShown && (
+            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+              <div className="text-center space-y-2">
+                <Sparkles className="h-6 w-6 text-[hsl(var(--brand-violet))] mx-auto" />
+                <p className="text-sm font-medium text-foreground">Merci ! Nous intégrons ces informations.</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-4">
-            <Button
-              variant={isRecording ? 'destructive' : 'default'}
-              size="icon"
-              className={`rounded-full w-12 h-12 shrink-0 transition-all ${
-                isRecording
-                  ? 'animate-pulse shadow-lg shadow-destructive/40'
-                  : 'bg-[hsl(var(--brand-violet))] hover:bg-[hsl(var(--brand-violet))]/90 shadow-md shadow-[hsl(var(--brand-violet))]/20'
-              }`}
+            <FlameButton
+              isRecording={isRecording}
+              isProcessing={isProcessing}
               onClick={isRecording ? stopRecording : startRecording}
-              disabled={isProcessing}
-            >
-              {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </Button>
+              audioLevel={audioLevel}
+            />
             <div className="flex-1">
               <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                 <Sparkles className="h-4 w-4 text-[hsl(var(--brand-violet))]" />
