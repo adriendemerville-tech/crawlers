@@ -502,9 +502,8 @@ export function MyReportsTab() {
                   )}
                 </div>
               )}
-            </div>
           </div>
-        )}
+        </div>
       </CardContent>
 
       {/* New Folder Dialog */}
