@@ -22,6 +22,7 @@ const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings'
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
+import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 
 const translations = {
@@ -167,6 +168,7 @@ export default function Profile() {
 
   return (
     <>
+      <WelcomeBackModal />
       <Helmet>
         <title>{t.pageTitle}</title>
       </Helmet>
