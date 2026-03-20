@@ -321,10 +321,33 @@ Deno.serve(async (req) => {
     // ── Use sitemap URLs as primary source, Firecrawl map as fallback ──
     let urls: string[] = [];
 
+    // Extensions non-HTML à exclure (sitemap XML, assets, documents…)
+    const NON_PAGE_EXTENSIONS = /\.(xml|xsl|xslt|pdf|zip|gz|tar|rar|7z|exe|dmg|iso|bin|css|js|json|woff|woff2|ttf|eot|otf|svg|ico|png|jpg|jpeg|gif|webp|avif|mp3|mp4|avi|mov|wmv|flv|swf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|log|bak|sql|db)$/i;
+    
+    // Patterns d'URL non-page à exclure
+    const NON_PAGE_PATTERNS = /\/(sitemap[^/]*\.xml|feed\/?|rss\/?|atom\/?|wp-json\/?|wp-admin|wp-includes|xmlrpc\.php|robots\.txt)/i;
+
+    const filterNonPageUrls = (rawUrls: string[]): string[] => {
+      return rawUrls.filter(u => {
+        try {
+          const parsed = new URL(u);
+          const path = parsed.pathname;
+          // Exclure les extensions non-HTML
+          if (NON_PAGE_EXTENSIONS.test(path)) return false;
+          // Exclure les patterns non-page
+          if (NON_PAGE_PATTERNS.test(path)) return false;
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    };
+
     if (sitemapUrls.length > 0) {
-      // Use sitemap URLs (already validated by fetch-sitemap-tree)
-      urls = sitemapUrls.slice(0, pageLimit);
-      console.log(`[${crawlId}] Using ${urls.length} URLs from sitemap (primary source)`);
+      // Use sitemap URLs, but filter out non-page URLs (xml, pdf, assets…)
+      const cleanedUrls = filterNonPageUrls(sitemapUrls);
+      urls = cleanedUrls.slice(0, pageLimit);
+      console.log(`[${crawlId}] Using ${urls.length} URLs from sitemap (filtered from ${sitemapUrls.length}, primary source)`);
     } else {
       // Fallback to Firecrawl map
       console.log(`[${crawlId}] No sitemap URLs, falling back to Firecrawl map`);
@@ -342,7 +365,7 @@ Deno.serve(async (req) => {
           status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      urls = mapData.links.slice(0, pageLimit);
+      urls = filterNonPageUrls(mapData.links).slice(0, pageLimit);
     }
 
     // Pre-filter URLs by regex if provided
