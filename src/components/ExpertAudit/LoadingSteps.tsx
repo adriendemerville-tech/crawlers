@@ -254,16 +254,36 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
           </motion.div>
         )}
 
-        <div
-          className="w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
-          style={{ clipPath: 'inset(0 round 12px)' }}
-        >
+        <div className="flex items-center gap-2">
+          {!isCustomPlaylist && (
+            <button
+              onClick={goPrev}
+              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Précédent"
+            >
+              <SkipBack className="h-4 w-4" />
+            </button>
+          )}
           <div
-            ref={embedContainerRef}
-            className="w-full"
-            style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
-            aria-label={isCustomPlaylist ? 'Ma Playlist' : 'Playlist Crawlers'}
-          />
+            className="flex-1 w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
+            style={{ clipPath: 'inset(0 round 12px)' }}
+          >
+            <div
+              ref={embedContainerRef}
+              className="w-full"
+              style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
+              aria-label={isCustomPlaylist ? 'Ma Playlist' : 'Playlist Crawlers'}
+            />
+          </div>
+          {!isCustomPlaylist && (
+            <button
+              onClick={goNext}
+              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Suivant"
+            >
+              <SkipForward className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
           Connectez votre Spotify en paramètres
