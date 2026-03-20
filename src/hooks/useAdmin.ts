@@ -76,7 +76,19 @@ export function useAdmin() {
             .filter((r: any) => !r.expires_at || new Date(r.expires_at) > now)
             .map((r: any) => r.role);
 
-          setIsAdmin(activeRoles.includes('admin'));
+          const adminActive = activeRoles.includes('admin');
+          setIsAdmin(adminActive);
+
+          // Admin 12h session tracking
+          if (adminActive) {
+            const sessionStart = localStorage.getItem(ADMIN_SESSION_KEY);
+            if (!sessionStart) {
+              localStorage.setItem(ADMIN_SESSION_KEY, Date.now().toString());
+            }
+          } else {
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+          }
+
           setIsViewer(activeRoles.includes('viewer'));
           setIsViewerLevel2(activeRoles.includes('viewer_level2'));
 
