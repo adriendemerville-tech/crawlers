@@ -1,0 +1,1 @@
+ALTER TABLE public.tracked_sites ADD COLUMN IF NOT EXISTS jargon_distance jsonb DEFAULT null;

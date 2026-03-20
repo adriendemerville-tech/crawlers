@@ -4785,6 +4785,7 @@ export type Database = {
           identity_confidence: number | null
           identity_enriched_at: string | null
           identity_source: string | null
+          jargon_distance: Json | null
           last_audit_at: string | null
           last_sov_update: string | null
           last_widget_ping: string | null
@@ -4826,6 +4827,7 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
@@ -4867,6 +4869,7 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
