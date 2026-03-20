@@ -152,7 +152,6 @@ export function MyReportsTab() {
       .order('position')
       .then(({ data }) => {
         setSites(data || []);
-        if (data?.length && !selectedSite) setSelectedSite(data[0].id);
       });
   }, [user]);
 
