@@ -320,15 +320,22 @@ export function MyReportsTab() {
     <Card>
       <CardHeader className="pb-2 pt-3 px-4" />
       <CardContent>
-        {sites.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p>{tr.noSites}</p>
-          </div>
-        ) : (
-          <div className="flex gap-4">
+        <div className="flex gap-4">
             {/* Site sidebar */}
             <div className="flex flex-col gap-1 shrink-0 w-36">
+              {/* All reports */}
+              <button
+                onClick={() => { setSelectedSite('__all__'); setCurrentFolderId(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
+                  selectedSite === '__all__'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                }`}
+              >
+                {language === 'fr' ? 'Tous' : language === 'es' ? 'Todos' : 'All'}
+              </button>
+
+              {/* Tracked sites */}
               {sites.map(site => (
                 <button
                   key={site.id}
@@ -342,6 +349,18 @@ export function MyReportsTab() {
                   <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
                 </button>
               ))}
+
+              {/* Other reports (unmatched domains) */}
+              <button
+                onClick={() => { setSelectedSite('__other__'); setCurrentFolderId(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
+                  selectedSite === '__other__'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                }`}
+              >
+                {language === 'fr' ? 'Autres' : language === 'es' ? 'Otros' : 'Others'}
+              </button>
             </div>
 
             {/* Main content */}
