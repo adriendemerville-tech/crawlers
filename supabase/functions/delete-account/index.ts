@@ -227,7 +227,7 @@ async function fullCleanup(supabase: any, userId: string) {
     'gsc_history_log', 'backlink_snapshots', 'serp_geo_correlations',
     'ias_history', 'ga4_history_log', 'prompt_matrix_imports',
     'prompt_matrix_items', 'cocoon_errors', 'cocoon_chat_histories',
-    'revenue_events', 'revenue_weekly_summary', 'cms_connections',
+    'revenue_events', 'cms_connections',
   ];
   for (const table of trackedSiteDeps) {
     await del(table, 'user_id');
