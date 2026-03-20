@@ -130,6 +130,7 @@ export function useSpotifyTrackRotation(active = true) {
   const controllerRef = useRef<SpotifyEmbedController | null>(null);
   const playTimeoutRef = useRef<number | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const manualSkipRef = useRef(false);
 
   // Check for user-defined playlist in localStorage
   const customPlaylistUri = useMemo(() => {
