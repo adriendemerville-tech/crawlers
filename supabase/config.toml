@@ -119,3 +119,9 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.iktracker-actions]
     verify_jwt = false
+  [functions.gtmetrix-actions]
+    verify_jwt = false
+  [functions.rankmath-actions]
+    verify_jwt = false
+  [functions.linkwhisper-actions]
+    verify_jwt = false

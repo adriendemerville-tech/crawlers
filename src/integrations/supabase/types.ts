@@ -4659,6 +4659,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string | null
+          tool_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          tool_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          tool_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tracked_sites: {
         Row: {
           address: string | null
