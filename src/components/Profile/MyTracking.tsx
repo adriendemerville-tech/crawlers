@@ -1728,25 +1728,45 @@ export function MyTracking() {
                     isRefreshing={refreshingSerp}
                   />
 
-                  {/* Keyword Cloud */}
-                  {latestSerpData?.sample_keywords?.length > 0 && (
-                    <KeywordCloud keywords={latestSerpData.sample_keywords} />
-                  )}
-
-                  {/* Top Keywords List */}
-                  {latestSerpData?.sample_keywords?.length > 0 && (
-                    <TopKeywordsList keywords={latestSerpData.sample_keywords} />
-                  )}
-
-                  {/* Quick Wins */}
-                  {latestSerpData?.sample_keywords?.length > 0 && currentSite && user && (
-                    <QuickWinsCard
-                      keywords={latestSerpData.sample_keywords}
-                      domain={currentSite.domain}
-                      trackedSiteId={currentSite.id}
-                      userId={user.id}
-                    />
-                  )}
+                  {/* Keywords, Quick Wins — real or simulated (admin only) */}
+                  {(() => {
+                    const realKw = latestSerpData?.sample_keywords?.length > 0 ? latestSerpData.sample_keywords : null;
+                    const shouldSimulate = !realKw && isAdmin;
+                    const simKw = shouldSimulate ? [
+                      { keyword: 'agence seo paris', position: 3, search_volume: 2400, url: `https://${currentSite?.domain}/` },
+                      { keyword: 'audit seo gratuit', position: 7, search_volume: 1900, url: `https://${currentSite?.domain}/audit` },
+                      { keyword: 'référencement naturel', position: 12, search_volume: 6500, url: `https://${currentSite?.domain}/seo` },
+                      { keyword: 'consultant seo', position: 5, search_volume: 3200, url: `https://${currentSite?.domain}/` },
+                      { keyword: 'optimisation seo', position: 18, search_volume: 1200, url: `https://${currentSite?.domain}/services` },
+                      { keyword: 'stratégie seo 2026', position: 9, search_volume: 880, url: `https://${currentSite?.domain}/blog` },
+                      { keyword: 'backlinks qualité', position: 22, search_volume: 720, url: `https://${currentSite?.domain}/blog/backlinks` },
+                      { keyword: 'maillage interne', position: 14, search_volume: 1400, url: `https://${currentSite?.domain}/guide` },
+                      { keyword: 'core web vitals', position: 8, search_volume: 2100, url: `https://${currentSite?.domain}/performance` },
+                      { keyword: 'seo local', position: 11, search_volume: 1800, url: `https://${currentSite?.domain}/local` },
+                      { keyword: 'contenu seo', position: 25, search_volume: 950, url: `https://${currentSite?.domain}/blog/contenu` },
+                      { keyword: 'indexation google', position: 6, search_volume: 1600, url: `https://${currentSite?.domain}/indexation` },
+                      { keyword: 'rich snippets', position: 19, search_volume: 600, url: `https://${currentSite?.domain}/schema` },
+                      { keyword: 'seo ecommerce', position: 15, search_volume: 1100, url: `https://${currentSite?.domain}/ecommerce` },
+                      { keyword: 'search console', position: 30, search_volume: 4200, url: `https://${currentSite?.domain}/outils` },
+                    ] : null;
+                    const kw = realKw || simKw;
+                    if (!kw) return null;
+                    return (
+                      <>
+                        {shouldSimulate && (
+                          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-xs font-medium">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            Données simulées — aucune donnée SERP réelle disponible pour ce site
+                          </div>
+                        )}
+                        <KeywordCloud keywords={kw} />
+                        <TopKeywordsList keywords={kw} />
+                        {currentSite && user && (
+                          <QuickWinsCard keywords={kw} domain={currentSite.domain} trackedSiteId={currentSite.id} userId={user.id} />
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {/* IAS — Indice d'Alignement Stratégique */}
                   {currentSite && user && gscConnected && (
