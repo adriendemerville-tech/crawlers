@@ -65,6 +65,7 @@ export function CtoAgentDashboard() {
       }
       if (logsRes.data) {
         setLogs((logsRes.data as unknown as AgentLog[]) || []);
+        setAlertDismissed(false);
       }
     } catch (e) {
       console.error('Error fetching CTO agent data:', e);
