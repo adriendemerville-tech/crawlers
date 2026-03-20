@@ -515,11 +515,11 @@ export default function Signup() {
             <Form {...signupForm}>
               <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-2.5">
                 {showExistsBanner && (
-                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-                    <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
+                    <AlertCircle className="h-4 w-4 text-primary shrink-0" />
                     <p className="text-sm text-foreground flex-1">
                       {language === 'en' ? 'Already registered, would you like to ' : language === 'es' ? 'Ya registrado, ¿desea ' : 'Déjà inscrit, voulez-vous vous '}{' '}
-                      <Link to="/auth" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
+                      <Link to={`/auth?email=${encodeURIComponent(signupForm.getValues('email'))}`} className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
                         {language === 'en' ? 'sign in' : language === 'es' ? 'iniciar sesión' : 'connecter'}
                       </Link> ?
                     </p>
