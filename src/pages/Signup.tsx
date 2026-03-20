@@ -524,8 +524,8 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.password}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input {...field} type={showPassword ? 'text' : 'password'} className="pl-9 pr-9 h-9 text-sm" />
+                        {!field.value && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />}
+                        <Input {...field} type={showPassword ? 'text' : 'password'} className={`${field.value ? 'pl-3' : 'pl-9'} pr-9 h-9 text-sm`} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                           {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
