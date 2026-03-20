@@ -3,12 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Shield, AlertTriangle, CheckCircle2, XCircle, Loader2, RefreshCw,
-  GitCompare, Play, Code2, Rocket, Eye, ChevronDown, ChevronRight,
-  Power, Zap, FileCode,
+  GitCompare, Play, Code2, Eye, ChevronDown, ChevronRight,
+  Power, Zap,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
