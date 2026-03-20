@@ -4,6 +4,7 @@ import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { SeoAgentDashboard } from './SeoAgentDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { CtoSupervisor } from './CtoSupervisor';
+import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
 
 export function IntelligenceHub() {
   return (
@@ -38,6 +39,9 @@ export function IntelligenceHub() {
 
         <TabsContent value="supervisor" forceMount className="data-[state=inactive]:hidden">
           <CtoSupervisor />
+          <div className="mt-6">
+            <SupervisorErrorsRegistry />
+          </div>
         </TabsContent>
 
         <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
