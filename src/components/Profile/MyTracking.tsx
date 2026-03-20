@@ -245,6 +245,7 @@ export function MyTracking() {
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
