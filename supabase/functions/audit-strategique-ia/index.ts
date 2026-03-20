@@ -1882,6 +1882,10 @@ RÈGLES:
 - NE génère PAS: social_signals, market_intelligence, priority_content
 - executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
 - quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team: obligatoires
+- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais que cette page n'utilise pas. Analyse le contenu réel.
+- semantic_density: compare la richesse sémantique de la page vs les 3 premiers concurrents SERP. Score objectif.
+- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
+- alternative_strategy: UNIQUEMENT si le site est en position très défavorable (position >50, domaine faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre à quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking. Types: RP presse, partenariat avec entreprise complémentaire (nommer qui), stratégie vidéo réseaux sociaux, événement.
 - JSON pur, sans virgules traînantes`;
   }
 
