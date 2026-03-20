@@ -314,10 +314,10 @@ export function Header() {
               </Link>
               {user && (
                 <Link to="/matrice">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
                     <Grid3X3 className="h-3.5 w-3.5" />
-                    Matrice
-                    <Badge variant="secondary" className="text-[9px] px-1 py-0 text-muted-foreground">BETA</Badge>
+                    <span className="text-sm font-semibold">Matrice</span>
                   </Button>
                 </Link>
               )}
