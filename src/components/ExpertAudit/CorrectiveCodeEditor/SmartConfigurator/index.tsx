@@ -1387,16 +1387,9 @@ export function SmartConfigurator({
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
-        <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
-          {/* Title - left aligned */}
-          <DialogTitle className="absolute left-4 flex items-center gap-2">
-            <span className="text-sm font-medium bg-gradient-to-r from-violet-600 via-violet-400 to-amber-400 bg-clip-text text-transparent">
-              Architecte
-            </span>
-          </DialogTitle>
-          
-          {/* Centered URL */}
-          <DialogDescription className="text-sm text-muted-foreground font-normal truncate max-w-md">
+        <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center">
+          <DialogTitle className="sr-only">Architecte</DialogTitle>
+          <DialogDescription className="text-sm font-medium text-foreground truncate max-w-lg text-center">
             {siteUrl}
           </DialogDescription>
         </DialogHeader>
