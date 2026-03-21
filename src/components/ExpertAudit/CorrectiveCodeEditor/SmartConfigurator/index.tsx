@@ -10,9 +10,10 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText
+  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
+import { ScribeTab } from './ScribeTab';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1446,13 +1447,23 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
-                {canGenerateCode && (
+                {isAdmin && !openMode && (
                   <TabsTrigger 
                     value="content-advisor" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
                   >
                     <FileText className="w-4 h-4 mr-1" />
                     Contenu
+                  </TabsTrigger>
+                )}
+                {isAdmin && !openMode && (
+                  <TabsTrigger 
+                    value="scribe" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent py-3 px-3"
+                  >
+                    <PenTool className="w-4 h-4 mr-1" />
+                    <span>Scribe</span>
+                    <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 h-4 border-orange-500/50 text-orange-500">β</Badge>
                   </TabsTrigger>
                 )}
                 {canGenerateCode && (
@@ -1489,11 +1500,20 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                {canGenerateCode && (
+                {isAdmin && !openMode && (
                   <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ContentArchitectureAdvisor 
                       defaultUrl={siteUrl}
                       trackedSiteId={activeSiteId || undefined}
+                    />
+                  </TabsContent>
+                )}
+
+                {isAdmin && !openMode && (
+                  <TabsContent forceMount value="scribe" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                    <ScribeTab
+                      defaultUrl={siteUrl}
+                      trackedSiteId={activeSiteId}
                     />
                   </TabsContent>
                 )}
