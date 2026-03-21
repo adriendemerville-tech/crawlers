@@ -269,9 +269,16 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
   }, [open, site]);
 
   const { leftFields, rightFields, hasHiddenEmpty } = useMemo(() => {
+    // Hide nonprofit_type when commercial_model is not 'non_commercial'
+    const isNonCommercial = dynamicFields['commercial_model']?.toLowerCase()?.includes('non');
+    const visibleTaxonomy = TAXONOMY_FIELDS.filter(f => {
+      if (f.key === 'nonprofit_type' && !isNonCommercial) return false;
+      return true;
+    });
+    
     const filled: typeof TAXONOMY_FIELDS = [];
     const empty: typeof TAXONOMY_FIELDS = [];
-    for (const f of TAXONOMY_FIELDS) {
+    for (const f of visibleTaxonomy) {
       const val = dynamicFields[f.key];
       if (val && val !== 'null' && val !== 'undefined') filled.push(f);
       else empty.push(f);
