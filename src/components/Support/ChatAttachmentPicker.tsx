@@ -52,10 +52,21 @@ export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerP
       } else {
         const { data } = await supabase
           .from('site_script_rules')
-          .select('id, url_pattern, payload_type, created_at, tracked_sites!site_script_rules_domain_id_fkey(domain)')
+          .select('id, url_pattern, payload_type, created_at, domain_id')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(20);
+
+        // Fetch domains for the rules
+        const domainIds = [...new Set((data || []).map((s: any) => s.domain_id).filter(Boolean))];
+        let domainMap: Record<string, string> = {};
+        if (domainIds.length > 0) {
+          const { data: sites } = await supabase
+            .from('tracked_sites')
+            .select('id, domain')
+            .in('id', domainIds);
+          domainMap = Object.fromEntries((sites || []).map((s: any) => [s.id, s.domain]));
+        }
 
         (data || []).forEach((s: any) => {
           results.push({
