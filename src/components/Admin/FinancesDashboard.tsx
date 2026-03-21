@@ -461,16 +461,29 @@ export function FinancesDashboard() {
               statusLabel="✅ Pay-as-you-go"
             />
 
-            {/* Firecrawl */}
+            {/* Spider.cloud (Primary) */}
             <ApiQuotaGauge
-              name="Firecrawl"
+              name="Spider.cloud"
+              icon={<Globe className="h-4 w-4" />}
+              calls={tokenUsage.spiderCalls}
+              quota={null}
+              costPerCall={0.001}
+              color="emerald"
+              status="ok"
+              statusLabel={tokenUsage.spiderCalls > 0 ? `✅ Primaire actif` : '💤 Aucun appel'}
+              estimatedCost={tokenUsage.spiderEstimatedCost}
+            />
+
+            {/* Firecrawl (Fallback) */}
+            <ApiQuotaGauge
+              name="Firecrawl (fallback)"
               icon={<Flame className="h-4 w-4" />}
               calls={tokenUsage.firecrawlCalls}
               quota={500}
               costPerCall={0.005}
               color="orange"
               status={tokenUsage.firecrawlCalls >= 500 ? 'exhausted' : tokenUsage.firecrawlCalls >= 400 ? 'warning' : 'ok'}
-              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ OK'}
+              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ Fallback'}
             />
 
             {/* OpenRouter */}
