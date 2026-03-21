@@ -5,6 +5,7 @@ import { SeoAgentDashboard } from './SeoAgentDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { CtoSupervisor } from './CtoSupervisor';
 import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
+import { AssistantPrecisionCard } from './AssistantPrecisionCard';
 
 export function IntelligenceHub() {
   return (
