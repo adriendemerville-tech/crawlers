@@ -259,6 +259,7 @@ function getSessionHash(): string {
 export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -274,8 +275,17 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [fontSize, setFontSize] = useState(12); // px base for messages
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
+  const [showArchitectModal, setShowArchitectModal] = useState(false);
+  const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
+
+  // Check CMS connection
+  useEffect(() => {
+    if (!user || !trackedSiteId) return;
+    supabase.from('cms_connections').select('id').eq('tracked_site_id', trackedSiteId).limit(1)
+      .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
+  }, [user, trackedSiteId]);
 
   // Keep ref in sync with state
   useEffect(() => {
