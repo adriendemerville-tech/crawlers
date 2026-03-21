@@ -211,6 +211,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
+        { id: 'sav-ia', label: 'SAV IA', icon: Bot, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
         { id: 'surveys', label: t.surveys, icon: ClipboardList, group: 'content' },
       ],
