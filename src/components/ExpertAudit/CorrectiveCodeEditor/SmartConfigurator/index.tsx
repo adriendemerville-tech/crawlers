@@ -10,8 +10,9 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable, Crown
+  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText
 } from 'lucide-react';
+import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1447,6 +1448,15 @@ export function SmartConfigurator({
                 </TabsTrigger>
                 {canGenerateCode && (
                   <TabsTrigger 
+                    value="content-advisor" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Contenu
+                  </TabsTrigger>
+                )}
+                {canGenerateCode && (
+                  <TabsTrigger 
                     value="multipage" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent py-3 px-3"
                   >
@@ -1478,6 +1488,15 @@ export function SmartConfigurator({
                     disabled={isCodeLocked}
                   />
                 </TabsContent>
+
+                {canGenerateCode && (
+                  <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                    <ContentArchitectureAdvisor 
+                      defaultUrl={siteUrl}
+                      trackedSiteId={activeSiteId || undefined}
+                    />
+                  </TabsContent>
+                )}
 
                 {canGenerateCode && (
                   <TabsContent forceMount value="multipage" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
