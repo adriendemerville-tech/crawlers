@@ -6,6 +6,7 @@ import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
+const SPIDER_API = 'https://api.spider.cloud';
 
 /**
  * crawl-site v3 — Lightweight launcher with advanced options
