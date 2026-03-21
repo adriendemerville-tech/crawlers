@@ -1616,6 +1616,17 @@ export default function SiteCrawl() {
             </Card>
           )}
 
+          {/* CTA Cocoon */}
+          <div className="flex justify-center mt-12 mb-8">
+            <Link
+              to="/cocoon"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
+            >
+              <Sparkles className="h-4 w-4" />
+              Cocoon · Assistant Sémantique
+            </Link>
+          </div>
+
         </div>
       </main>
 
