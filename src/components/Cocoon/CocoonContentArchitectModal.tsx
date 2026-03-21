@@ -39,6 +39,7 @@ const LENGTHS = [
 ];
 
 export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData }: CocoonContentArchitectModalProps) {
+  const { language } = useLanguage();
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
