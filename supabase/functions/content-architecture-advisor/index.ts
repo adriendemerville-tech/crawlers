@@ -248,6 +248,13 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO et architecte de contenu. Tu analyses des données de SERP, de concurrents et d'audits pour recommander la structure de contenu optimale.
 
+RÈGLE ABSOLUE — GARDE-FOU DE COHÉRENCE :
+1. **Continuité tonale** : La page recommandée DOIT rester cohérente avec le ton, le design et le vocabulaire des autres pages du même domaine. Ne recommande jamais un style éditorial radicalement différent du site existant.
+2. **Prudence sectorielle** : Si le secteur est conservateur (juridique, médical, institutionnel, finance, assurance, services publics, ONG), pondère à la baisse les structures novatrices (FAQ interactive, tone of voice disruptif, etc.). Privilégie la lisibilité et la confiance.
+3. **Lisibilité > originalité** : Un contenu lu et compris par sa cible vaut mieux qu'une page au taux de rebond énorme. Si la cible a un jargon_distance élevé (>6), simplifie au maximum. Si la cible est B2C grand public, évite le jargon technique même si les concurrents l'utilisent.
+4. **Score d'innovation** : Pour chaque recommandation, évalue si elle est "conservatrice" (proche des pratiques du secteur), "modérée" (légère évolution) ou "disruptive" (très différente). Si disruptive, BAISSE le confidence_score de 15-25 points et ajoute un avertissement explicite dans le rationale.
+5. **Non-marchand** : Pour les services publics, associations, ONG, fédérations — le ton doit rester sobre, institutionnel, factuel. Aucun CTA agressif, aucun wording commercial.
+
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
 {
   "content_structure": {
@@ -274,9 +281,23 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "anchor_strategy": [{"anchor_text":"...","target_intent":"..."}],
     "cluster_opportunities": ["..."]
   },
+  "coherence_check": {
+    "innovation_level": "conservative|moderate|disruptive",
+    "sector_fit": "high|medium|low",
+    "tone_continuity": "aligned|slight_shift|breaking",
+    "bounce_risk": "low|medium|high",
+    "warnings": ["...si applicable"]
+  },
   "confidence_score": number,
   "rationale": "Explication courte de la stratégie recommandée"
 }`
+
+    // Determine sector conservatism for the prompt
+    const conservativeSectors = ['juridique', 'médical', 'santé', 'finance', 'assurance', 'banque', 'institutionnel', 'service public', 'administration', 'éducation', 'pharmacie']
+    const sectorStr = (siteIdentity?.sector || '').toLowerCase()
+    const isConservativeSector = conservativeSectors.some(s => sectorStr.includes(s))
+    const isNonProfit = ['service_public', 'association', 'ong', 'organisation_internationale', 'federation_sportive', 'syndicat'].includes(siteIdentity?.nonprofit_type || '')
+    const jargonDist = typeof siteIdentity?.jargon_distance === 'number' ? siteIdentity.jargon_distance : null
 
     const userPrompt = `Analyse et recommande l'architecture de contenu optimale pour:
 
@@ -303,11 +324,14 @@ ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
-Adapte tes recommandations au:
-- Type de business (${siteIdentity?.commercial_model || 'inconnu'}: ${siteIdentity?.nonprofit_type || ''})
-- Distance jargon (${siteIdentity?.jargon_distance || 'inconnue'}) — plus c'est élevé, plus le contenu doit être vulgarisé
-- Cible (${siteIdentity?.targets || 'inconnue'})
-- Intent SERP détecté (${serpData?.featured_snippet ? 'Featured Snippet présent' : 'Pas de FS'}, ${serpData?.people_also_ask?.length || 0} PAA)
+⚠️ CONTRAINTES DE COHÉRENCE :
+- Secteur ${isConservativeSector ? 'CONSERVATEUR — privilégie la sobriété et la crédibilité' : 'standard'}
+- Organisation ${isNonProfit ? 'NON MARCHANDE — ton institutionnel, pas de CTA commercial agressif' : 'marchande ou indéterminée'}
+- Distance jargon: ${jargonDist !== null ? `${jargonDist}/10 — ${jargonDist > 6 ? 'VULGARISE au maximum, la cible ne maîtrise pas le jargon' : jargonDist > 3 ? 'Équilibre technique/accessible' : 'Public expert, le jargon est attendu'}` : 'inconnue'}
+- Business type: ${siteIdentity?.business_type || 'inconnu'}, Model: ${siteIdentity?.commercial_model || 'inconnu'}
+- Cible: ${siteIdentity?.targets || 'inconnue'}
+
+IMPORTANT : Le contenu recommandé NE DOIT PAS être en rupture de ton/style avec le reste du site. Reste dans la continuité de ce qui existe déjà. Si tu proposes quelque chose de très différent, SIGNALE-LE dans coherence_check.warnings et BAISSE le confidence_score.
 
 Le ratio sémantique doit refléter la distance jargon: jargon_distance 1-3 → contenu technique, 7-10 → très vulgarisé.
 Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
