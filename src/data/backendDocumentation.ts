@@ -322,7 +322,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-target-queries\` | ✅ | 1 | Génère des requêtes cibles LLM |
 | \`generate-more-keywords\` | ✅ | 1 | Extension de mots-clés |
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
-| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
+| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (recherche Perplexity, maillage interne auto, quality guardrails, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
 | \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
