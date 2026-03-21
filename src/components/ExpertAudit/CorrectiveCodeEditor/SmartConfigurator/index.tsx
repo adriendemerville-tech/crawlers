@@ -10,7 +10,7 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText
+  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
 import { ScribeTab } from './ScribeTab';
