@@ -4,13 +4,25 @@ Updated: now
 ## Agent SAV "Crawler"
 - Modèle : Gemini Flash via Lovable AI Gateway (`LOVABLE_API_KEY`)
 - Limite stricte : 1000 caractères par message
-- Base de connaissance : documentation /aide + taxonomie front-end complète
+- Base de connaissance : documentation /aide + taxonomie front-end complète (routes, onglets, positions des composants)
 - Accès aux données backend : `tracked_sites`, `crawl_pages`, `site_crawls`, `cocoon_sessions`, `profiles`
 - Consigne : ne produit pas (pas d'audits, crawls, génération de code) — explique et conseille uniquement
-- Détection automatique de la langue de l'utilisateur
+- Détection automatique de la langue de l'utilisateur (FR/EN/ES)
 - Utilise le prénom si disponible dans `profiles`
 - Peut envoyer des liens internes (ex: `/cocoon`, `/matrice`, `/console`)
 - Logo robot Crawlers dans la conversation (remplace emoji et "Crawler" texte)
+
+## Fonctionnalités avancées
+- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES), transcription en temps réel
+- **Pièces jointes** : Bouton + — charge un rapport (`pdf_audits`) ou script (`site_script_rules`) du compte de l'utilisateur, avec bouton "Explique-moi"
+- **Suggestions opérationnelles** : rappels de scans, suggestions Cocoon, recommandations d'audit
+
+## Scoring de précision (`sav_quality_scores`)
+- `precision_score` (0-100) : qualité globale
+- `route_match` : navigation vers la destination suggérée (proximité logique)
+- `repeated_intent_count` : reformulations du même motif (détecté par mots-clés)
+- `escalated_to_phone` : escalade vers rappel
+- Dashboard monitoring : Admin → Intelligence → Supervisor → Carte "Précision Assistant SAV"
 
 ## Escalade
 - Après 3 itérations sans satisfaction → propose rappel téléphonique
@@ -24,10 +36,8 @@ Updated: now
 - Indicateurs de satisfaction
 - Registre des demandes de rappel
 - Toutes les conversations enregistrées dans `sav_conversations`
+- Score de pertinence dans Intelligence → Supervisor (AssistantPrecisionCard)
 
-## Suggestions opérationnelles
-L'agent peut formuler des suggestions basées sur les données réelles du client :
-- Rappels de scans non effectués depuis longtemps
-- Suggestions d'utilisation de Cocoon pour les gaps détectés
-- Recommandations suite aux résultats d'audit (notoriété, maillage, etc.)
-- Suivi des scripts injectés et de leur efficacité
+## Supervision
+- **Supervisor** : audite l'assistant SAV (avg precision, escalation rate, repeated intents, route match rate)
+- **Agent CTO** : ne monitore PAS l'assistant SAV (hors scope)

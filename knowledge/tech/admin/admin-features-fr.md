@@ -9,6 +9,20 @@ Updated: now
 - **Finances** : Suivi coûts API (Spider, Firecrawl, DataForSEO, SerpAPI), revenus Stripe
 - **Algo Training** : Entraînement et monitoring des modèles de scoring (GEO, SEO, prédictions)
 - **Bundle Option** : Catalogue APIs tierces (`bundle_api_catalog`), abonnements bundle
+- **Intelligence Hub** : Supervisor (agents + assistant SAV), Agent CTO, Error Registry
+
+### Intelligence Hub — Supervisor
+- **Carte Précision Assistant SAV** (`AssistantPrecisionCard`) :
+  - Score moyen de précision (0-100, color-coded)
+  - Taux de route match (navigation correcte)
+  - Taux d'escalade téléphonique
+  - Taux d'intentions répétées
+  - Engagement moyen (messages/session)
+  - Données depuis `sav_quality_scores` + `sav_conversations` (7 derniers jours)
+
+### Agent CTO
+- Monitore désormais `content-architecture-advisor` en plus des autres edge functions
+- Registry dans `AUDIT_TYPE_TO_FUNCTION`
 
 ### Architecte (Script) — Onglets restreints admin
 - **Basique** : Fixes techniques SEO automatiques (title, meta, H1, schema.org, etc.)
@@ -55,9 +69,16 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - DataForSEO (keywords, SERP live)
 - Firecrawl (TF-IDF concurrents)
 
+### Signup — Code d'affiliation
+- Bouton "J'ai un code d'affiliation" dans la couche persona (PersonaGate)
+- Vérification automatique debounced (600ms) contre `affiliate_codes`
+- Coche verte si valide, vibration + effacement si invalide
+- Code persisté dans `profiles.affiliate_code_used` au signup via sessionStorage
+
 ### Edge Functions associées
 - `content-architecture-advisor` : Analyse et recommandations de structure de contenu
 - `generate-infotainment` : Génération de cartes news/tips SEO/GEO
 - `generate-blog-from-news` : Articles de blog auto-générés depuis les news
 - `agent-seo-v2` : Audit SEO avancé 7 axes
 - `process-script-queue` : File d'attente FIFO pour génération de scripts
+- `supervisor-actions` : Audit des agents + assistant SAV

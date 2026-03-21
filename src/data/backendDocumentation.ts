@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor et générateur Scribe :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  110+ fonctions serverless + 21 modules partagés        │
+│  111+ fonctions serverless + 21 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -74,7 +74,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 110+ fonctions serverless + 21 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 111+ fonctions serverless + 21 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -154,7 +154,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
-| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\`, \`market_sector\`, \`client_targets\`, \`jargon_distance\`, \`api_key\` |
+| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\`, \`market_sector\`, \`client_targets\`, \`jargon_distance\`, \`api_key\`, \`is_commercial_service\`, \`nonprofit_type\`, \`entity_type\` |
 | \`user_stats_history\` | Historique KPIs hebdomadaire | \`tracked_site_id\`, \`seo_score\`, \`geo_score\`, \`llm_citation_rate\`, \`raw_data\` (SERP, perf, LLM) |
 | \`serp_snapshots\` | Snapshots SERP DataForSEO | \`tracked_site_id\`, \`total_keywords\`, \`avg_position\`, \`top_3/10/50\`, \`sample_keywords\` |
 | \`backlink_snapshots\` | Snapshots backlinks hebdo | \`tracked_site_id\`, \`referring_domains\`, \`backlinks_total\`, \`domain_rank\` |
@@ -172,6 +172,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`prompt_registry\` | Registre des prompts versionnés | \`function_name\`, \`prompt_text\`, \`version\`, \`is_champion\` |
 | \`hallucination_corrections\` | Corrections d'hallucinations | \`url\`, \`original_values\`, \`corrected_values\`, \`discrepancies\` |
 | \`llm_depth_conversations\` | Conversations LLM Depth | \`domain\`, \`model\`, \`messages\`, \`expires_at\` |
+| \`sav_quality_scores\` | Scoring précision agent SAV | \`conversation_id\`, \`precision_score\`, \`route_match\`, \`repeated_intent_count\`, \`escalated_to_phone\` |
 
 ### Cocoon (Architecture Sémantique)
 
@@ -224,7 +225,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
 | \`revenue_events\` | Événements de revenus e-commerce | \`tracked_site_id\`, \`amount\`, \`currency\`, \`transaction_date\`, \`source\` |
-| \`affiliate_codes\` | Codes affiliés | \`code\`, \`discount_percent\`, \`max_activations\`, \`current_activations\` |
+| \`affiliate_codes\` | Codes affiliés (vérifiés au signup) | \`code\`, \`discount_percent\`, \`max_activations\`, \`current_activations\`, \`assigned_to_user_id\` |
 
 ### Emails & Notifications
 
@@ -283,7 +284,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (110+ fonctions)
+# API — Edge Functions (111+ fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -326,9 +327,11 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
 | \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
+| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO conditionnels, garde-fous tonaux, TF-IDF concurrents) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
+| \`process-script-queue\` | ✅ | 0 | File d'attente FIFO multi-pages pour Scribe |
 
 ## Calculs & Métriques
 
@@ -438,10 +441,10 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
-| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
+| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts, monitore content-architecture-advisor) |
 | \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, stealthFetch, persistance recommandations) |
-| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, fallback humain) |
-| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
+| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, scoring précision, fallback humain) |
+| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents + audit assistant SAV) |
 | \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
@@ -1096,35 +1099,59 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 ### Architecture
 
 - **Modèle** : Gemini 2.5 Flash via Lovable AI
-- **Nom** : "Crawler" — assistant SAV officiel
+- **Nom** : "Crawler" — assistant SAV officiel (logo robot)
 - **Limite** : 1000 caractères max par réponse
 - **Ton** : Professionnel, vouvoiement systématique
+- **Détection langue** : FR/EN/ES dès le premier message
+- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`)
 
 ### Sources de données
 
 | Source | Description |
 |--------|-------------|
 | Documentation SAV | /aide — base de connaissance publique |
-| Lexique | Définitions SEO/GEO |
-| Articles blog | Actualités et guides |
-| Infotainments | Contenus de patience |
-| Données utilisateur | Résultats d'audit, crawl, stats Mes sites |
+| Taxonomie frontend | Routes, onglets, positions des composants |
+| Données utilisateur | \\\`tracked_sites\\\`, \\\`crawl_pages\\\`, \\\`cocoon_sessions\\\`, audits |
+
+### Fonctionnalités avancées
+
+- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
+- **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
+- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
+
+### Scoring de précision (\\\`sav_quality_scores\\\`)
+
+- **precision_score** (0-100), **route_match**, **repeated_intent_count**, **escalated_to_phone**
+- Dashboard : Admin → Intelligence → Supervisor
 
 ### Protocole d'escalade
 
-- **3 itérations max** sans satisfaction → proposition de rappel téléphonique
-- Numéro (06) demandé, non stocké, effacé de la conversation sous 48h
-- Escalade immédiate pour : remboursement, bug bloquant, facturation, suppression compte
-
-### Registre
-
-Toutes les conversations sont enregistrées dans \`sav_conversations\` et consultables dans Admin → SAV.
+- 3 itérations max → rappel téléphonique (06/07)
+- Purge auto 48h via \\\`cleanup_expired_phone_callbacks()\\\`
 
 ### Sécurité
 
-- Ne mentionne jamais les technologies internes (Supabase, Deno, Lovable)
-- Ne peut pas lancer d'audit, crawl, scrap ou cocoon
+- Ne mentionne jamais les technologies internes
 - Explique, ne produit pas
+
+---
+
+## Content Architecture Advisor
+
+- **Edge Function** : \\\`content-architecture-advisor\\\`
+- **Accès** : Admin only (onglet Contenu dans Architecte), masqué en démo
+- **Monitoré par** : Agent CTO
+- **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
+- **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
+
+---
+
+## Scribe (β)
+
+- **Accès** : Admin only, masqué en démo
+- **13 paramètres** : Prompt, URL, Type page, Longueur, Photo, CTA, Mot-clé, Ton, Langue, Persona, Jargon (1-10), Maillage Cocoon, URLs concurrentes
+- **7 champs auto-remplis** via carte d'identité + cache SERP + Cocoon
+- **File d'attente** : \\\`process-script-queue\\\` (FIFO)
 `,
   },
 ];
@@ -1134,14 +1161,14 @@ Toutes les conversations sont enregistrées dans \`sav_conversations\` et consul
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '4.0.0',
+  version: '4.1.0',
   lastUpdated: '2026-03-21',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 110,
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Content Advisor + Scribe + Cocoon + GMB + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 111,
   totalSharedModules: 21,
-  totalTables: '55+',
-  totalLinesOfCode: '160 000+',
-  totalMigrations: 186,
+  totalTables: '57+',
+  totalLinesOfCode: '165 000+',
+  totalMigrations: 190,
   totalPages: 40,
-  totalComponents: 280,
+  totalComponents: 285,
 };
