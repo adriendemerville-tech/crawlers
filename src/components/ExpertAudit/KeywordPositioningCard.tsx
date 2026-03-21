@@ -389,7 +389,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <TrendingUp className="h-4 w-4 text-success mx-auto mb-1" />
                   <p className="text-lg font-bold text-foreground">
-                    {marketSummary.average_position > 0 ? `#${marketSummary.average_position.toFixed(1)}` : 'N/A'}
+                    {typeof marketSummary.average_position === 'number' && marketSummary.average_position > 0 ? `#${marketSummary.average_position.toFixed(1)}` : 'N/A'}
                   </p>
                   <p className="text-xs text-muted-foreground">Position moyenne</p>
                 </div>
