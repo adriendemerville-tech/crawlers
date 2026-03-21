@@ -130,6 +130,22 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     return parts.join('\n\n');
   }, [result]);
 
+  // Sync original code when AI generates result
+  useEffect(() => {
+    if (htmlPreview) {
+      setOriginalCode(htmlPreview);
+      setEditedCode(null); // reset manual edits
+    }
+  }, [htmlPreview]);
+
+  const isManuallyEdited = editedCode !== null && editedCode !== originalCode;
+  const finalCode = editedCode ?? htmlPreview;
+
+  const handleResetCode = useCallback(() => {
+    setEditedCode(null);
+    toast.info('Code restauré à la version originale');
+  }, []);
+
   if (!isOpen) return null;
 
   return (
