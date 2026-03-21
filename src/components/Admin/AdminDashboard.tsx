@@ -250,6 +250,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
+      case 'sav-ia': return <SavDashboard />;
       case 'affiliates': return wrap(<AffiliateManagement />);
       case 'crawls': return wrap(<CrawlManagement />);
       case 'scripts': return wrap(<ScriptKillSwitches />);
