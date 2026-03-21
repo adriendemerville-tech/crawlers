@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { t3 } from '@/utils/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
