@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { 
   Link2, Copy, Check, ShieldCheck, ShieldAlert, AlertTriangle
@@ -132,7 +133,46 @@ export function ScribeResultsPanel({ result }: ScribeResultsPanelProps) {
           </Card>
         )}
 
-        {/* Internal links (Cocoon) */}
+        {/* GEO Criteria Applied */}
+        {result.geo_criteria_applied && result.geo_criteria_applied.length > 0 && (
+          <Card className="border-primary/20">
+            <CardContent className="p-3">
+              <span className="text-sm font-medium block mb-2">🎯 Critères GEO activés</span>
+              <div className="space-y-2">
+                {result.geo_criteria_applied.map((c: any, i: number) => (
+                  <TooltipProvider key={i}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={c.activated ? "default" : "outline"} 
+                            className={`text-[10px] ${c.activated 
+                              ? c.weight === 'reinforced' 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-primary/20 text-primary border-primary/30'
+                              : 'opacity-50'
+                            }`}
+                          >
+                            {c.criterion}. {c.name}
+                            {c.weight === 'reinforced' && ' ⚡'}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground truncate">{c.reason}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <p className="text-xs">{c.reason}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Poids : {c.weight === 'reinforced' ? 'Renforcé' : 'Standard'}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {result.internal_links && result.internal_links.length > 0 && (
           <Card className="border-primary/20">
             <CardContent className="p-3">

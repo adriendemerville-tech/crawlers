@@ -202,12 +202,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4: Existing audit data ──
-    console.log(`[content-advisor] Step 4: Fetching existing audit data`)
+    // ── Step 4: Existing audit data + GEO score + LLM visibility + Backlinks ──
+    console.log(`[content-advisor] Step 4: Fetching existing audit/GEO/LLM/backlink data`)
     let existingAuditData: any = null
     let cocoonData: any = null
+    let geoScoreData: any = null
+    let llmVisibilityData: any = null
+    let backlinkData: any = null
 
-    const [auditRes, cocoonRes] = await Promise.allSettled([
+    const [auditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -216,6 +219,20 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', tracked_site_id)
             .order('created_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
+      // GEO score from audit cache or domain_data_cache
+      serviceClient.from('domain_data_cache').select('result_data')
+        .eq('domain', domain).eq('data_type', 'geo_score')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // LLM visibility/depth data
+      serviceClient.from('domain_data_cache').select('result_data')
+        .eq('domain', domain).eq('data_type', 'llm_visibility')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // Backlink snapshot
+      tracked_site_id
+        ? serviceClient.from('backlink_snapshots').select('referring_domains, backlinks_total, domain_rank, anchor_distribution')
+            .eq('tracked_site_id', tracked_site_id)
+            .order('measured_at', { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
@@ -223,6 +240,15 @@ Deno.serve(async (req) => {
     }
     if (cocoonRes.status === 'fulfilled' && (cocoonRes.value as any)?.data) {
       cocoonData = (cocoonRes.value as any).data
+    }
+    if (geoRes.status === 'fulfilled' && (geoRes.value as any)?.data) {
+      geoScoreData = (geoRes.value as any).data.result_data
+    }
+    if (llmRes.status === 'fulfilled' && (llmRes.value as any)?.data) {
+      llmVisibilityData = (llmRes.value as any).data.result_data
+    }
+    if (backlinkRes.status === 'fulfilled' && (backlinkRes.value as any)?.data) {
+      backlinkData = (backlinkRes.value as any).data
     }
 
     // ── Step 5: LLM Synthesis ──
@@ -244,16 +270,61 @@ Deno.serve(async (req) => {
       jargon_distance: siteContext.jargon_distance,
       language: siteContext.primary_language,
       competitors: siteContext.competitors,
+      company_size: (siteContext as any).company_size,
+      gmb_presence: (siteContext as any).gmb_presence,
+      gmb_city: (siteContext as any).gmb_city,
+      entity_type: (siteContext as any).entity_type,
+      target_audience: (siteContext as any).target_audience,
     } : null
 
-    const systemPrompt = `Tu es un expert SEO et architecte de contenu. Tu analyses des données de SERP, de concurrents et d'audits pour recommander la structure de contenu optimale.
+    // Derive contextual flags for conditional criteria activation
+    const hasGMB = siteIdentity?.gmb_presence === true
+    const geoScore = typeof geoScoreData?.score === 'number' ? geoScoreData.score : null
+    const isLLMVisible = llmVisibilityData?.is_visible === true || (llmVisibilityData?.mention_count > 0)
+    const serpPosition = serpData?.top_organic?.findIndex((r: any) => r.domain?.includes(domain)) ?? -1
+    const isInSERP = serpPosition >= 0 && serpPosition < 10
+    const hasBacklinks = backlinkData?.referring_domains > 0
+    const domainRank = backlinkData?.domain_rank || null
+
+    const systemPrompt = `Tu es un expert SEO/GEO et architecte de contenu. Tu analyses des données de SERP, de concurrents, de score GEO, de visibilité LLM et d'audits pour recommander la structure de contenu optimale.
 
 RÈGLE ABSOLUE — GARDE-FOU DE COHÉRENCE :
-1. **Continuité tonale** : La page recommandée DOIT rester cohérente avec le ton, le design et le vocabulaire des autres pages du même domaine. Ne recommande jamais un style éditorial radicalement différent du site existant.
-2. **Prudence sectorielle** : Si le secteur est conservateur (juridique, médical, institutionnel, finance, assurance, services publics, ONG), pondère à la baisse les structures novatrices (FAQ interactive, tone of voice disruptif, etc.). Privilégie la lisibilité et la confiance.
-3. **Lisibilité > originalité** : Un contenu lu et compris par sa cible vaut mieux qu'une page au taux de rebond énorme. Si la cible a un jargon_distance élevé (>6), simplifie au maximum. Si la cible est B2C grand public, évite le jargon technique même si les concurrents l'utilisent.
-4. **Score d'innovation** : Pour chaque recommandation, évalue si elle est "conservatrice" (proche des pratiques du secteur), "modérée" (légère évolution) ou "disruptive" (très différente). Si disruptive, BAISSE le confidence_score de 15-25 points et ajoute un avertissement explicite dans le rationale.
-5. **Non-marchand** : Pour les services publics, associations, ONG, fédérations — le ton doit rester sobre, institutionnel, factuel. Aucun CTA agressif, aucun wording commercial.
+1. **Continuité tonale** : La page recommandée DOIT rester cohérente avec le ton, le design et le vocabulaire des autres pages du même domaine.
+2. **Prudence sectorielle** : Si le secteur est conservateur (juridique, médical, institutionnel, finance, assurance, services publics, ONG), pondère à la baisse les structures novatrices. Privilégie la lisibilité et la confiance.
+3. **Lisibilité > originalité** : Un contenu lu et compris par sa cible vaut mieux qu'une page au taux de rebond énorme.
+4. **Score d'innovation** : Pour chaque recommandation, évalue si elle est "conservatrice", "modérée" ou "disruptive". Si disruptive, BAISSE le confidence_score et ajoute un avertissement.
+5. **Non-marchand** : Pour les services publics, associations, ONG, fédérations — ton sobre, institutionnel, factuel. Aucun CTA agressif.
+
+── 5 CRITÈRES GEO (à appliquer individuellement ou cumulativement selon le contexte) ──
+
+Chaque critère s'active conditionnellement. Applique-les SI ET SEULEMENT SI le contexte le justifie :
+
+**CRITÈRE 1 — Répondre clairement aux questions clés**
+→ ACTIF SI : type de page = article/faq/landing OU featured_snippet possible OU people_also_ask détectés dans la SERP
+→ ACTION : Sous-titres H2 sous forme de questions. Réponse directe dès les premières lignes (pattern "question → réponse en 1-2 phrases → développement"). Paragraphes courts (3-4 lignes max).
+→ POIDS RENFORCÉ SI : GEO score < 50 ou visibilité LLM absente (le site doit maximiser sa citabilité)
+
+**CRITÈRE 2 — Structurer pour la compréhension**
+→ ACTIF SI : word_count cible > 800 OU page technique OU jargon_distance > 4
+→ ACTION : H2/H3 clairs et descriptifs. Listes à puces. Tableaux comparatifs si pertinent. Définitions simples pour les termes techniques.
+→ POIDS RENFORCÉ SI : cible B2C grand public, étudiant, ou audience locale
+
+**CRITÈRE 3 — Ajouter des passages "citables"**
+→ ACTIF SI : GEO score < 70 OU visibilité LLM absente OU pas de featured snippet pour ce mot-clé
+→ ACTION : Définitions précises (1-2 phrases). Étapes numérotées. Mini-résumé (TL;DR) en haut de page. Checklist actionnable.
+→ POIDS RENFORCÉ SI : entité non reconnue par les LLMs, faible notoriété (domain_rank < 30), pas de backlinks
+
+**CRITÈRE 4 — Multiplier les signaux d'expertise et de légitimité (E-E-A-T)**
+→ ACTIF SI : secteur YMYL (santé, finance, juridique) OU business_type B2B OU cible = expert/décideur
+→ ACTION : Inclure données chiffrées, exemples concrets, citations d'experts, expérience terrain. Recommander un auteur identifié.
+→ POIDS RENFORCÉ SI : pas de GMB associée (signal de confiance manquant), faible domain_rank, secteur à forte concurrence
+
+**CRITÈRE 5 — Enrichir la sémantique**
+→ TOUJOURS ACTIF (mais poids variable)
+→ ACTION : Utiliser des synonymes et variantes. Couvrir un sujet avec précision en explicitant les concepts évoqués. Intégrer les questions dérivées (People Also Ask).
+→ POIDS RENFORCÉ SI : forte concurrence SERP (>5 résultats organiques pertinents), keyword density basse chez les concurrents, cible = expert technique
+
+Pour chaque critère, indique dans ta réponse s'il a été activé et pourquoi, dans un nouveau champ "geo_criteria_applied".
 
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
 {
@@ -261,7 +332,8 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "recommended_h1": "Le H1 optimal",
     "hn_hierarchy": [{"level":"h2","text":"...","purpose":"..."},{"level":"h3","text":"...","parent_h2":"..."}],
     "word_count_range": {"min":number,"max":number,"ideal":number},
-    "sections": [{"title":"...","purpose":"...","word_count":number,"priority":"high|medium|low"}]
+    "sections": [{"title":"...","purpose":"...","word_count":number,"priority":"high|medium|low"}],
+    "tldr_summary": "Mini-résumé en 2-3 phrases (si critère 3 actif)"
   },
   "keyword_strategy": {
     "primary_keyword": {"keyword":"...","target_density_percent":number},
@@ -281,6 +353,13 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "anchor_strategy": [{"anchor_text":"...","target_intent":"..."}],
     "cluster_opportunities": ["..."]
   },
+  "geo_criteria_applied": [
+    {"criterion": 1, "name": "Questions clés", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 2, "name": "Structure compréhension", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 3, "name": "Passages citables", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 4, "name": "Signaux E-E-A-T", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 5, "name": "Enrichissement sémantique", "activated": true, "reason": "...", "weight": "standard|reinforced"}
+  ],
   "coherence_check": {
     "innovation_level": "conservative|moderate|disruptive",
     "sector_fit": "high|medium|low",
@@ -324,12 +403,37 @@ ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
+**Score GEO actuel:**
+${geoScore !== null ? `${geoScore}/100` : 'Non mesuré'}
+
+**Visibilité LLM (ChatGPT, Perplexity, etc.):**
+${llmVisibilityData ? JSON.stringify(llmVisibilityData, null, 2) : 'Non mesurée'}
+
+**Backlinks & Autorité:**
+${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Total backlinks: ${backlinkData.backlinks_total || 0}, Domain rank: ${backlinkData.domain_rank || 'N/A'}` : 'Non mesuré'}
+
+**GMB associée:** ${hasGMB ? `Oui (${siteIdentity?.gmb_city || 'ville inconnue'})` : 'Non'}
+**Position SERP actuelle:** ${isInSERP ? `Position ${serpPosition + 1}` : 'Hors top 10 ou inconnu'}
+
 ⚠️ CONTRAINTES DE COHÉRENCE :
 - Secteur ${isConservativeSector ? 'CONSERVATEUR — privilégie la sobriété et la crédibilité' : 'standard'}
 - Organisation ${isNonProfit ? 'NON MARCHANDE — ton institutionnel, pas de CTA commercial agressif' : 'marchande ou indéterminée'}
 - Distance jargon: ${jargonDist !== null ? `${jargonDist}/10 — ${jargonDist > 6 ? 'VULGARISE au maximum, la cible ne maîtrise pas le jargon' : jargonDist > 3 ? 'Équilibre technique/accessible' : 'Public expert, le jargon est attendu'}` : 'inconnue'}
 - Business type: ${siteIdentity?.business_type || 'inconnu'}, Model: ${siteIdentity?.commercial_model || 'inconnu'}
 - Cible: ${siteIdentity?.targets || 'inconnue'}
+- Taille entreprise: ${siteIdentity?.company_size || 'inconnue'}
+- Entity type: ${siteIdentity?.entity_type || 'inconnu'}
+
+⚠️ ACTIVATION DES 5 CRITÈRES GEO :
+Active chaque critère selon les signaux disponibles. Voici l'état des signaux :
+- Featured snippet possible: ${serpData?.featured_snippet ? 'OUI' : 'NON'}
+- People Also Ask détectés: ${serpData?.people_also_ask?.length > 0 ? `OUI (${serpData.people_also_ask.length})` : 'NON'}
+- Score GEO: ${geoScore !== null ? `${geoScore}/100 ${geoScore < 50 ? '— FAIBLE, renforcer citabilité' : geoScore < 70 ? '— MOYEN' : '— BON'}` : 'inconnu'}
+- Visible par les LLMs: ${isLLMVisible ? 'OUI' : 'NON — priorité haute sur passages citables'}
+- GMB: ${hasGMB ? 'OUI' : 'NON — signal de confiance manquant'}
+- Domain rank: ${domainRank !== null ? `${domainRank} ${domainRank < 30 ? '— FAIBLE, renforcer E-E-A-T' : ''}` : 'inconnu'}
+- Backlinks: ${hasBacklinks ? `${backlinkData?.referring_domains} domaines référents` : 'AUCUN — renforcer légitimité'}
+- Concurrence SERP: ${serpData?.items_count > 5 ? 'FORTE' : 'MODÉRÉE'}
 
 IMPORTANT : Le contenu recommandé NE DOIT PAS être en rupture de ton/style avec le reste du site. Reste dans la continuité de ce qui existe déjà. Si tu proposes quelque chose de très différent, SIGNALE-LE dans coherence_check.warnings et BAISSE le confidence_score.
 
@@ -363,6 +467,7 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
                     hn_hierarchy: { type: 'array', items: { type: 'object' } },
                     word_count_range: { type: 'object', properties: { min: { type: 'number' }, max: { type: 'number' }, ideal: { type: 'number' } } },
                     sections: { type: 'array', items: { type: 'object' } },
+                    tldr_summary: { type: 'string' },
                   },
                   required: ['recommended_h1', 'hn_hierarchy', 'word_count_range', 'sections'],
                 },
@@ -406,10 +511,24 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
                   },
                   required: ['innovation_level', 'sector_fit', 'tone_continuity', 'bounce_risk'],
                 },
+                geo_criteria_applied: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      criterion: { type: 'number' },
+                      name: { type: 'string' },
+                      activated: { type: 'boolean' },
+                      reason: { type: 'string' },
+                      weight: { type: 'string', enum: ['standard', 'reinforced'] },
+                    },
+                    required: ['criterion', 'name', 'activated', 'reason', 'weight'],
+                  },
+                },
                 confidence_score: { type: 'number' },
                 rationale: { type: 'string' },
               },
-              required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'coherence_check', 'confidence_score', 'rationale'],
+              required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'coherence_check', 'geo_criteria_applied', 'confidence_score', 'rationale'],
             },
           },
         }],
@@ -543,6 +662,19 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
           competitor_scraping: competitorInsights.length,
           existing_audit: !!existingAuditData,
           cocoon_data: !!cocoonData,
+          geo_score: geoScore !== null,
+          llm_visibility: !!llmVisibilityData,
+          backlinks: !!backlinkData,
+          gmb: hasGMB,
+        },
+        context_signals: {
+          geo_score: geoScore,
+          llm_visible: isLLMVisible,
+          serp_position: isInSERP ? serpPosition + 1 : null,
+          domain_rank: domainRank,
+          has_gmb: hasGMB,
+          has_backlinks: hasBacklinks,
+          referring_domains: backlinkData?.referring_domains || 0,
         },
         guardrails: {
           conservative_sector: isConservativeSector,
