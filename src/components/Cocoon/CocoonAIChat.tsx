@@ -590,6 +590,23 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
               }).then(({ error }) => {
                 if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
               });
+
+              // Extract structured fields for Content Architect (background, non-blocking)
+              const prevMsg = prev.length >= 2 ? prev[prev.length - 2] : null;
+              if (prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content)) {
+                supabase.functions.invoke('extract-architect-fields', {
+                  body: {
+                    message_content: contentToCheck,
+                    domain,
+                    tracked_site_id: trackedSiteId,
+                    nodes_context: nodes.slice(0, 30).map((n: any) => ({
+                      url: n.url, id: n.id, pageType: n.page_type, seoScore: n.seo_score,
+                    })),
+                  },
+                }).then(({ data }) => {
+                  if (data?.draft) setArchitectDraft(data.draft);
+                }).catch(() => { /* silent */ });
+              }
             }
           }
         }
