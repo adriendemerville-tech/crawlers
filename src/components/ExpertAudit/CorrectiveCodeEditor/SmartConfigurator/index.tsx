@@ -1447,13 +1447,23 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
-                {canGenerateCode && (
+                {isAdmin && !openMode && (
                   <TabsTrigger 
                     value="content-advisor" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
                   >
                     <FileText className="w-4 h-4 mr-1" />
                     Contenu
+                  </TabsTrigger>
+                )}
+                {isAdmin && !openMode && (
+                  <TabsTrigger 
+                    value="scribe" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent py-3 px-3"
+                  >
+                    <PenTool className="w-4 h-4 mr-1" />
+                    <span>Scribe</span>
+                    <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 h-4 border-orange-500/50 text-orange-500">β</Badge>
                   </TabsTrigger>
                 )}
                 {canGenerateCode && (
