@@ -4,6 +4,7 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
+const SPIDER_API = 'https://api.spider.cloud';
 const MAX_GLOBAL_CONCURRENT = 20;
 
 // ── Types ──────────────────────────────────────────────────
