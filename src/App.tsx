@@ -67,6 +67,7 @@ const Cocoon = lazy(() => import("./pages/Cocoon"));
 const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
 const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
+const Aide = lazy(() => import("./pages/Aide"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -145,6 +146,7 @@ const App = () => (
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
                           <Route path="/rapport/matrice" element={<RapportMatrice />} />
+                          <Route path="/aide" element={<Aide />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
