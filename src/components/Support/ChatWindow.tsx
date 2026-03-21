@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Send, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ interface ChatWindowProps {
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -34,6 +36,41 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSent, setPhoneSent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatOpenTimeRef = useRef(Date.now());
+  const conversationIdRef = useRef<string | null>(null);
+
+  // Keep ref in sync
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  // Track post-chat navigation for quality scoring
+  const trackPostChatRoute = useCallback(async (route: string) => {
+    const convId = conversationIdRef.current;
+    if (!convId || !user) return;
+    const delaySec = Math.round((Date.now() - chatOpenTimeRef.current) / 1000);
+    try {
+      await supabase.functions.invoke('sav-agent', {
+        body: {
+          action: 'track_post_chat',
+          conversation_id: convId,
+          user_id: user.id,
+          post_chat_route: route,
+          delay_seconds: delaySec,
+        },
+      });
+    } catch {
+      // non-blocking
+    }
+  }, [user]);
+
+  // On close, track the current route
+  const handleClose = useCallback(() => {
+    if (conversationIdRef.current && messages.length > 0) {
+      trackPostChatRoute(location.pathname);
+    }
+    onClose();
+  }, [onClose, messages.length, location.pathname, trackPostChatRoute]);
 
   // Load existing conversation
   useEffect(() => {
@@ -200,7 +237,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               Nouveau
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>

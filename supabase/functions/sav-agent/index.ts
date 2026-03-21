@@ -8,25 +8,39 @@ const corsHeaders = {
 };
 
 const FRONTEND_TAXONOMY = `
-# TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte)
+# TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte — positions visuelles)
 
-## Header principal (toutes pages connectées)
+## Header principal (barre noire en haut, toutes pages connectées)
+Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice | [avatar profil à droite]
 - Console → /console (tableau de bord principal)
 - Audit → /audit-expert (audit technique SEO 200 points)
 - Crawl → /site-crawl (crawl multi-pages)
-- BETA Cocoon → /cocoon (cocon sémantique 3D)
-- BETA Matrice → /matrice (matrice de prompts LLM)
+- BETA Cocoon → /cocoon (cocon sémantique 3D, texte orange)
+- BETA Matrice → /matrice (matrice de prompts LLM, texte orange)
 
-## Onglets dans /console
-- Pro Agency → section gestion abonnement Pro Agency
-- Mes sites → gestion des sites trackés (ajout, scores, évolution)
+## Sous-menu de /console (barre d'onglets horizontale sous le header)
+Position gauche→droite : Pro Agency | Mes sites | Plans d'Action | <Scripts> | Crawls | GMB | Rapports | Bundle | Créateur
+- Pro Agency → section gestion abonnement Pro Agency (tout à gauche, texte rouge)
+- Mes sites → gestion des sites trackés, scores, évolution (icône engrenage)
 - Plans d'Action → plans d'action générés par les audits
 - <Scripts> → scripts correctifs injectés via SDK/GTM/WordPress
-- Crawls → historique des crawls multi-pages
-- GMB → Google My Business (audit local)
-- Rapports → rapports exportables (PDF white-label)
-- Bundle → bundle APIs SEO tierces
-- Créateur → gestion blog articles
+- Crawls → historique des crawls multi-pages (icône insecte)
+- GMB → Google My Business, audit local (icône magasin)
+- Rapports → rapports exportables PDF white-label (à DROITE de GMB)
+- Bundle → bundle APIs SEO tierces (icône brique Lego)
+- Créateur → gestion blog articles (tout à droite, texte bleu pour admin)
+
+⚠ IMPORTANT: "Rapports" est le 7e onglet en partant de la gauche, juste après "GMB" et avant "Bundle". Il n'existe PAS d'onglet "Mes Audits" ou "Historique des Audits" — ce sont des termes INEXISTANTS.
+
+## Sous-menu Mes sites (sidebar gauche dans Mes sites)
+- Liste des sites trackés (nom + domaine)
+- Bouton "+ Ajouter un site" en bas de la liste
+- Bouton "API" (icône engrenage) → gestion connexions CMS (Rank Math, Link Whisper, etc.)
+
+## Cards KPI dans Mes sites (grille 4 colonnes, puis 4 en dessous)
+Ligne 1 : Perf. Mobile | Perf. Desktop | Score SEO | Score GEO
+Ligne 2 : Taux de citation LLM | Sentiment IA | Autorité sémantique | Part de voix (estimation)
+En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de citation LLM, Autorité sémantique
 
 ## Onglets API/CMS dans /console > API
 - APIs Connectées → Rank Math, Link Whisper, GTMetrix, SerpAPI
@@ -41,6 +55,15 @@ const FRONTEND_TAXONOMY = `
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
 - /cocoon → cocon sémantique 3D (Three.js, TF-IDF, chat IA intégré)
 - /architecte-generatif → générateur de codes correctifs JSON-LD
+
+## Architecte Génératif (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
+Onglets internes : Basique | Super | Stratégie | Contenu (admin) | Scribe β (admin) | Multi (admin)
+- Basique = fixes techniques SEO (title, meta, H1, etc.)
+- Super = fixes génératifs (FAQ, info box expert, contenus enrichis)
+- Stratégie = roadmap stratégique, action plans
+- Contenu = Content Architecture Advisor (admin seulement)
+- Scribe β = générateur contenu avancé 13 paramètres (admin seulement)
+- Multi = router multi-pages
 
 ## Pages publiques
 - / → page d'accueil (GEO Score, bots IA, PageSpeed gratuits)
@@ -76,6 +99,10 @@ Affiche l'historique hebdomadaire de : Score SEO, Score GEO, Taux de citation LL
 - Crédits (solde, historique, recharge)
 - Connexions Google (GSC, GA4)
 - Suppression de compte
+
+## Bouton SAV (bulle chat en bas à droite de toutes les pages connectées)
+- Ouvre le chat Crawler (assistant SAV actuel)
+- Bouton "Nouveau" → réinitialise la conversation
 `;
 
 const SYSTEM_PROMPT = `Tu es "Crawler", l'assistant SAV officiel de Crawlers.fr, la première plateforme francophone d'audit SEO, GEO et visibilité IA.
@@ -189,7 +216,42 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { messages, conversation_id, user_id } = await req.json();
+    const body = await req.json();
+
+    // ── Post-chat route tracking (separate lightweight action) ──
+    if (body.action === "track_post_chat") {
+      const sb = getServiceClient();
+      const { conversation_id: convId, post_chat_route, delay_seconds } = body;
+      if (convId && post_chat_route) {
+        // Get the suggested route from existing score
+        const { data: score } = await sb
+          .from("sav_quality_scores")
+          .select("id, suggested_route, precision_score")
+          .eq("conversation_id", convId)
+          .maybeSingle();
+
+        if (score) {
+          const routeMatch = score.suggested_route
+            ? post_chat_route.startsWith(score.suggested_route) || score.suggested_route.startsWith(post_chat_route)
+            : null;
+
+          let updatedScore = score.precision_score;
+          if (routeMatch === true) updatedScore = Math.min(100, updatedScore + 30);
+
+          await sb.from("sav_quality_scores").update({
+            post_chat_route,
+            route_match: routeMatch,
+            post_chat_delay_seconds: delay_seconds || null,
+            precision_score: updatedScore,
+          }).eq("id", score.id);
+        }
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, conversation_id, user_id } = body;
     if (!messages || !Array.isArray(messages) || !user_id) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
@@ -361,10 +423,46 @@ serve(async (req) => {
       reply = reply.substring(0, 997) + "...";
     }
 
-    // Save conversation
+    // Save conversation + quality scoring
+    let savedConvId = conversation_id;
     try {
       const allMessages = [...messages, { role: "assistant", content: reply }];
       const userMsgCount = allMessages.filter((m: any) => m.role === "user").length;
+
+      // ── Intent detection via keywords ──
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const intentKeywords = lastUserMsg
+        .toLowerCase()
+        .replace(/[^a-zà-ÿ0-9\s]/g, "")
+        .split(/\s+/)
+        .filter((w: string) => w.length > 3)
+        .slice(0, 10);
+
+      // Detect repeated intent (same keywords appearing in multiple user messages)
+      const allUserMsgs = messages.filter((m: any) => m.role === "user").map((m: any) => m.content.toLowerCase());
+      let repeatedIntentCount = 0;
+      if (allUserMsgs.length >= 2) {
+        const prevKeywords = new Set(
+          allUserMsgs.slice(0, -1).join(" ").replace(/[^a-zà-ÿ0-9\s]/g, "").split(/\s+/).filter((w: string) => w.length > 3)
+        );
+        const overlap = intentKeywords.filter((kw: string) => prevKeywords.has(kw));
+        if (overlap.length >= 3) repeatedIntentCount = allUserMsgs.length - 1;
+      }
+
+      // Detect intent category
+      const msgLower = lastUserMsg.toLowerCase();
+      let detectedIntent = "general";
+      if (msgLower.match(/où|comment accéder|trouver|cherche|onglet|bouton|menu|page/)) detectedIntent = "navigation";
+      else if (msgLower.match(/score|geo|seo|llm|citation|sentiment/)) detectedIntent = "score";
+      else if (msgLower.match(/crédit|abonnement|prix|tarif|payer|facturer/)) detectedIntent = "billing";
+      else if (msgLower.match(/bug|erreur|marche pas|bloqué|problème/)) detectedIntent = "bug";
+      else if (msgLower.match(/crawl|scan|audit|analyse/)) detectedIntent = "feature";
+
+      // Extract suggested route from agent reply
+      const routeMatch = reply.match(/https:\/\/crawlers\.fr(\/[a-z0-9\-/]*)/i);
+      const suggestedRoute = routeMatch ? routeMatch[1] : null;
+
+      const escalatedToPhone = reply.includes("numéro de téléphone") || reply.includes("rappelé");
 
       if (conversation_id) {
         await sb
@@ -390,7 +488,52 @@ serve(async (req) => {
           .select("id")
           .single();
 
-        return new Response(JSON.stringify({ reply, conversation_id: newConv?.id }), {
+        savedConvId = newConv?.id;
+      }
+
+      // ── Upsert quality score ──
+      if (savedConvId) {
+        // Calculate precision score
+        let precisionScore = 50;
+        if (userMsgCount <= 2) precisionScore += 20;  // Short conv = likely resolved
+        precisionScore -= repeatedIntentCount * 20;    // Repeated intent = bad
+        if (escalatedToPhone) precisionScore -= 50;    // Phone escalation = failure
+        precisionScore = Math.max(0, Math.min(100, precisionScore));
+
+        // Upsert (update if exists, insert if not)
+        const { data: existing } = await sb
+          .from("sav_quality_scores")
+          .select("id")
+          .eq("conversation_id", savedConvId)
+          .maybeSingle();
+
+        if (existing) {
+          await sb.from("sav_quality_scores").update({
+            message_count: userMsgCount,
+            repeated_intent_count: repeatedIntentCount,
+            escalated_to_phone: escalatedToPhone,
+            precision_score: precisionScore,
+            detected_intent: detectedIntent,
+            intent_keywords: intentKeywords,
+            suggested_route: suggestedRoute,
+          }).eq("id", existing.id);
+        } else {
+          await sb.from("sav_quality_scores").insert({
+            conversation_id: savedConvId,
+            user_id,
+            message_count: userMsgCount,
+            repeated_intent_count: repeatedIntentCount,
+            escalated_to_phone: escalatedToPhone,
+            precision_score: precisionScore,
+            detected_intent: detectedIntent,
+            intent_keywords: intentKeywords,
+            suggested_route: suggestedRoute,
+          });
+        }
+      }
+
+      if (!conversation_id && savedConvId) {
+        return new Response(JSON.stringify({ reply, conversation_id: savedConvId }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
