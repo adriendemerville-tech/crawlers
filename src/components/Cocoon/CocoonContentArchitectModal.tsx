@@ -40,6 +40,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [editedCode, setEditedCode] = useState<string | null>(null);
+  const [originalCode, setOriginalCode] = useState<string>('');
 
   // Form fields
   const [url, setUrl] = useState('');
