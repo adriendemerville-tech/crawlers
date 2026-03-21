@@ -146,6 +146,7 @@ const App = () => (
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
                           <Route path="/rapport/matrice" element={<RapportMatrice />} />
+                          <Route path="/aide" element={<Aide />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
