@@ -467,6 +467,7 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
                     hn_hierarchy: { type: 'array', items: { type: 'object' } },
                     word_count_range: { type: 'object', properties: { min: { type: 'number' }, max: { type: 'number' }, ideal: { type: 'number' } } },
                     sections: { type: 'array', items: { type: 'object' } },
+                    tldr_summary: { type: 'string' },
                   },
                   required: ['recommended_h1', 'hn_hierarchy', 'word_count_range', 'sections'],
                 },
