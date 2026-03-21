@@ -148,7 +148,7 @@ ${p.outro}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: "Tu es un extracteur de données structurées. Réponds uniquement en JSON valide." },
+          { role: "system", content: lang === 'en' ? "You are a structured data extractor. Respond only in valid JSON. All text must be in English." : lang === 'es' ? "Eres un extractor de datos estructurados. Responde solo en JSON válido. Todo el texto debe estar en español." : "Tu es un extracteur de données structurées. Réponds uniquement en JSON valide. Tout le texte doit être en français." },
           { role: "user", content: extractionPrompt },
         ],
         response_format: { type: "json_object" },
