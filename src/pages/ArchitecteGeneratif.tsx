@@ -133,12 +133,21 @@ export default function ArchitecteGeneratif() {
   return (
     <>
       <Helmet>
-        <title>{title} | Crawlers.fr</title>
-        <meta name="description" content={metaDesc} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={metaDesc} />
+        <title>Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr</title>
+        <meta name="description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${SITE_URL}/architecte-generatif`} />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/architecte-generatif" />
+        <meta property="og:title" content="Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
+        <meta property="og:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
+        <meta name="twitter:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
