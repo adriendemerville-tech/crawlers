@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
