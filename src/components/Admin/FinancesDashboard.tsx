@@ -83,6 +83,7 @@ export function FinancesDashboard() {
     byFunction: {}, byModel: {},
     paidApiCalls: 0, totalEstimatedCost: 0,
     dataforseoCalls: 0, openrouterCalls: 0, browserlessCalls: 0, firecrawlCalls: 0,
+    spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
 
