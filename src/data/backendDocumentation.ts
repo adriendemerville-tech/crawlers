@@ -80,7 +80,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
 | Payments | Stripe | Abonnements, crédits, webhooks |
 | AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu |
-| Crawling | Firecrawl API | Map + scrape multi-pages |
+| Crawling | Spider Cloud API + Firecrawl (fallback) | Map + scrape multi-pages |
 | Anti-détection | StealthFetch (custom) | User-Agent rotation, headers, retries |
 | SEO Data | DataForSEO API | SERP rankings, backlinks, indexed pages |
 | Analytics | Google Analytics 4 + GSC | Trafic, Search Console |
