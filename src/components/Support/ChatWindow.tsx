@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatMessage } from './ChatMessage';
 import { useToast } from '@/hooks/use-toast';
-import { getDeviceInfo } from '@/utils/deviceInfo';
+import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-interface Message {
-  id: string;
+interface ChatMessage {
+  role: 'user' | 'assistant';
   content: string;
-  is_admin: boolean;
-  sender_id: string;
-  created_at: string;
+  timestamp: string;
 }
 
 interface ChatWindowProps {
@@ -24,87 +24,44 @@ interface ChatWindowProps {
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showPhonePrompt, setShowPhonePrompt] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneSent, setPhoneSent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch or create conversation
+  // Load existing conversation
   useEffect(() => {
     if (!user) return;
-
-    const fetchConversation = async () => {
-      // Try to find existing open conversation
-      const { data: existing, error: fetchError } = await supabase
-        .from('support_conversations')
-        .select('id')
+    const loadConversation = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('sav_conversations')
+        .select('id, messages')
         .eq('user_id', user.id)
-        .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (fetchError) {
-        console.error('Error fetching conversation:', fetchError);
-        setLoading(false);
-        return;
-      }
-
-      if (existing) {
-        setConversationId(existing.id);
+      if (data) {
+        setConversationId(data.id);
+        const msgs = (data.messages as any[]) || [];
+        setMessages(msgs.map((m: any) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp || new Date().toISOString(),
+        })));
       }
       setLoading(false);
     };
-
-    fetchConversation();
+    loadConversation();
   }, [user]);
 
-  // Fetch messages when conversation is found
-  useEffect(() => {
-    if (!conversationId) return;
-
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('support_messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching messages:', error);
-        return;
-      }
-
-      setMessages(data || []);
-    };
-
-    fetchMessages();
-
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`messages:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'support_messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversationId]);
-
-  // Auto scroll to bottom
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -112,56 +69,95 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || sending) return;
 
-    setSending(true);
-    const messageContent = newMessage.trim();
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: newMessage.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setNewMessage('');
+    setSending(true);
 
     try {
-      let currentConversationId = conversationId;
+      const { data, error } = await supabase.functions.invoke('sav-agent', {
+        body: {
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          conversation_id: conversationId,
+          user_id: user.id,
+        },
+      });
 
-      // Create conversation if it doesn't exist
-      if (!currentConversationId) {
-        const { data: newConv, error: convError } = await supabase
-          .from('support_conversations')
-          .insert({
-            user_id: user.id,
-            subject: 'Nouvelle conversation',
-            status: 'open',
-          })
-          .select('id')
-          .single();
+      if (error) throw error;
 
-        if (convError) throw convError;
-        currentConversationId = newConv.id;
-        setConversationId(currentConversationId);
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: data.reply || "Je transmets votre question à l'équipe.",
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, assistantMsg]);
+
+      if (data.conversation_id && !conversationId) {
+        setConversationId(data.conversation_id);
       }
 
-      // Send message with device info
-      const deviceInfo = getDeviceInfo();
-      const { error: msgError } = await supabase
-        .from('support_messages')
-        .insert({
-          conversation_id: currentConversationId,
-          sender_id: user.id,
-          content: messageContent,
-          is_admin: false,
-          device_info: deviceInfo as any,
-        });
-
-      if (msgError) throw msgError;
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible d'envoyer le message",
-        variant: 'destructive',
-      });
-      setNewMessage(messageContent);
+      // Check if escalation should show phone prompt (after 3+ user messages)
+      const userCount = updatedMessages.filter(m => m.role === 'user').length;
+      if (userCount >= 3 && !phoneSent) {
+        setShowPhonePrompt(true);
+      }
+    } catch (err) {
+      console.error('SAV agent error:', err);
+      const fallbackMsg: ChatMessage = {
+        role: 'assistant',
+        content: "Je transmets votre question à l'équipe Crawlers.fr. Vous recevrez une réponse sous 24h ouvrées.",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, fallbackMsg]);
     } finally {
       setSending(false);
     }
+  };
+
+  const handlePhoneSubmit = async () => {
+    if (!phoneNumber.match(/^0[67]\d{8}$/) || !conversationId) {
+      toast({ title: 'Format invalide', description: 'Entrez un numéro au format 06 ou 07.', variant: 'destructive' });
+      return;
+    }
+
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+    await supabase
+      .from('sav_conversations')
+      .update({
+        phone_callback: phoneNumber,
+        phone_callback_expires_at: expiresAt,
+      })
+      .eq('id', conversationId);
+
+    setPhoneSent(true);
+    setShowPhonePrompt(false);
+    setPhoneNumber('');
+
+    const confirmMsg: ChatMessage = {
+      role: 'assistant',
+      content: "Merci ! Un membre de l'équipe vous rappellera rapidement. Votre numéro sera automatiquement effacé sous 48h.",
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, confirmMsg]);
+
+    toast({ title: 'Demande enregistrée', description: 'Vous serez rappelé rapidement.' });
+  };
+
+  const handleNewConversation = async () => {
+    setMessages([]);
+    setConversationId(null);
+    setShowPhonePrompt(false);
+    setPhoneSent(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -175,12 +171,10 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     return (
       <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl">
         <div className="flex items-center justify-between border-b p-3">
-          <h3 className="font-semibold">Support</h3>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          <h3 className="font-semibold text-sm">Assistant Crawler</h3>
+          <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
         </div>
-        <div className="p-6 text-center text-muted-foreground">
+        <div className="p-6 text-center text-muted-foreground text-sm">
           <p>Connectez-vous pour contacter le support.</p>
         </div>
       </div>
@@ -191,10 +185,20 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[70vh]">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3 shrink-0">
-        <h3 className="font-semibold">Support</h3>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <h3 className="font-semibold text-sm">Crawler · Assistant SAV</h3>
+        </div>
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={handleNewConversation}>
+              Nouveau
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -204,45 +208,86 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p className="text-sm">Bonjour ! Comment pouvons-nous vous aider ?</p>
+          <div className="text-center text-muted-foreground py-8 space-y-2">
+            <p className="text-sm font-medium">Bonjour ! Je suis Crawler 👋</p>
+            <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {messages.map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                content={msg.content}
-                isAdmin={msg.is_admin}
-                isOwn={msg.sender_id === user.id}
-                createdAt={msg.created_at}
-              />
+            {messages.map((msg, i) => (
+              <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
+                <div className={cn(
+                  'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                  msg.role === 'assistant'
+                    ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
+                    : 'bg-primary text-primary-foreground'
+                )}>
+                  {msg.role === 'assistant' && (
+                    <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">Crawler</span>
+                  )}
+                  <div className="whitespace-pre-wrap break-words prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                  <span className={cn(
+                    'text-[10px] block mt-1',
+                    msg.role === 'assistant' ? 'text-violet-500 dark:text-violet-400' : 'text-primary-foreground/70'
+                  )}>
+                    {format(new Date(msg.timestamp), 'HH:mm', { locale: fr })}
+                  </span>
+                </div>
+              </div>
             ))}
+            {sending && (
+              <div className="flex justify-start">
+                <div className="bg-violet-100 dark:bg-violet-900/40 rounded-lg px-3 py-2">
+                  <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">Crawler</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </ScrollArea>
+
+      {/* Phone callback prompt */}
+      {showPhonePrompt && !phoneSent && (
+        <div className="border-t px-3 py-2 bg-amber-50 dark:bg-amber-900/20 shrink-0">
+          <p className="text-xs text-amber-800 dark:text-amber-200 mb-2">
+            <Phone className="h-3 w-3 inline mr-1" />
+            Souhaitez-vous être rappelé ? (donnée effacée sous 48h)
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={phoneNumber}
+              onChange={e => setPhoneNumber(e.target.value)}
+              placeholder="06 XX XX XX XX"
+              className="flex-1 h-8 text-xs"
+              maxLength={10}
+            />
+            <Button size="sm" className="h-8 text-xs" onClick={handlePhoneSubmit}>Envoyer</Button>
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowPhonePrompt(false)}>Non</Button>
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="border-t p-3 shrink-0">
         <div className="flex gap-2">
           <Input
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={e => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Écrivez votre message..."
+            placeholder="Votre question..."
             disabled={sending}
             className="flex-1"
+            maxLength={500}
           />
-          <Button
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            size="icon"
-          >
-            {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon">
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
       </div>
