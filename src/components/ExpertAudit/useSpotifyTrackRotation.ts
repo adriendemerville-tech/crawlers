@@ -146,16 +146,7 @@ export function useSpotifyTrackRotation(active = true) {
   const trackQueue = useMemo(() => shuffleTrackIds(PLAYLIST_TRACK_IDS), []);
   const currentTrackId = trackQueue[currentTrackIndex];
 
-  // Only rotate tracks when NOT using a custom playlist
-  useEffect(() => {
-    if (customPlaylistUri) return; // Spotify handles rotation internally for playlists
-
-    const rotateInterval = window.setInterval(() => {
-      setCurrentTrackIndex((previousIndex) => (previousIndex + 1) % trackQueue.length);
-    }, TRACK_ROTATION_MS);
-
-    return () => window.clearInterval(rotateInterval);
-  }, [trackQueue.length, customPlaylistUri]);
+  // No auto-rotation — tracks play fully until the user skips manually
 
   useEffect(() => {
     let isCancelled = false;
