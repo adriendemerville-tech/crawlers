@@ -277,6 +277,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
   const [hasCmsConnection, setHasCmsConnection] = useState(false);
+  const [architectDraft, setArchitectDraft] = useState<Record<string, any> | null>(null);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
