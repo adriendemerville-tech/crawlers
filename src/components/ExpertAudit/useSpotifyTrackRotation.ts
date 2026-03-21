@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-
-const TRACK_ROTATION_MS = 30000;
 const STORAGE_KEY = 'crawlers_custom_spotify_playlist';
 const SPOTIFY_IFRAME_API_SRC = 'https://open.spotify.com/embed/iframe-api/v1';
 
@@ -148,16 +146,7 @@ export function useSpotifyTrackRotation(active = true) {
   const trackQueue = useMemo(() => shuffleTrackIds(PLAYLIST_TRACK_IDS), []);
   const currentTrackId = trackQueue[currentTrackIndex];
 
-  // Only rotate tracks when NOT using a custom playlist
-  useEffect(() => {
-    if (customPlaylistUri) return; // Spotify handles rotation internally for playlists
-
-    const rotateInterval = window.setInterval(() => {
-      setCurrentTrackIndex((previousIndex) => (previousIndex + 1) % trackQueue.length);
-    }, TRACK_ROTATION_MS);
-
-    return () => window.clearInterval(rotateInterval);
-  }, [trackQueue.length, customPlaylistUri]);
+  // No auto-rotation — tracks play fully until the user skips manually
 
   useEffect(() => {
     let isCancelled = false;
