@@ -387,9 +387,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                       : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
                   >
                     {hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />Publier</>
+                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}</>
                     ) : (
-                      <><Plug className="w-4 h-4 mr-2" />Connecter mon CMS</>
+                      <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
                     )}
                   </Button>
                 </div>
