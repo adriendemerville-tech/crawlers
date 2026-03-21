@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,12 +13,18 @@ interface ChatMicButtonProps {
 export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMicButtonProps) {
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const recognitionRef = useRef<any>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number>(0);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSpeechRef = useRef<number>(Date.now());
+
+  const SILENCE_THRESHOLD = 5; // 5 seconds of silence to auto-stop
+  const AUDIO_SILENCE_LEVEL = 0.04; // Below this = silence
 
   // Audio level monitoring via Web Audio API
   const startAudioMonitor = useCallback(async () => {
@@ -38,7 +44,14 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
       const tick = () => {
         analyser.getByteFrequencyData(dataArray);
         const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        setAudioLevel(Math.min(1, avg / 128));
+        const level = Math.min(1, avg / 128);
+        setAudioLevel(level);
+
+        // Track silence for auto-stop
+        if (level > AUDIO_SILENCE_LEVEL) {
+          lastSpeechRef.current = Date.now();
+        }
+
         rafRef.current = requestAnimationFrame(tick);
       };
       tick();
@@ -57,7 +70,36 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
     setAudioLevel(0);
   }, []);
 
-  useEffect(() => () => stopAudioMonitor(), [stopAudioMonitor]);
+  useEffect(() => () => {
+    stopAudioMonitor();
+    if (silenceTimerRef.current) clearInterval(silenceTimerRef.current);
+  }, [stopAudioMonitor]);
+
+  // Silence detection interval
+  useEffect(() => {
+    if (recording) {
+      lastSpeechRef.current = Date.now();
+      silenceTimerRef.current = setInterval(() => {
+        const elapsed = (Date.now() - lastSpeechRef.current) / 1000;
+        if (elapsed >= SILENCE_THRESHOLD) {
+          // Auto-stop after silence
+          if (recognitionRef.current) {
+            setProcessing(true);
+            recognitionRef.current.stop();
+          }
+          if (silenceTimerRef.current) clearInterval(silenceTimerRef.current);
+        }
+      }, 500);
+    } else {
+      if (silenceTimerRef.current) {
+        clearInterval(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (silenceTimerRef.current) clearInterval(silenceTimerRef.current);
+    };
+  }, [recording]);
 
   const startRecording = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -82,6 +124,7 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           fullTranscript += (fullTranscript ? ' ' : '') + event.results[i][0].transcript;
+          lastSpeechRef.current = Date.now();
         }
       }
     };
@@ -93,10 +136,13 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
         onTranscript(fullTranscript.trim());
       }
       recognitionRef.current = null;
+      // Small delay so user sees the spinner briefly
+      setTimeout(() => setProcessing(false), 600);
     };
 
     recognition.onerror = (event: any) => {
       setRecording(false);
+      setProcessing(false);
       stopAudioMonitor();
       recognitionRef.current = null;
       if (event.error === 'not-allowed') {
@@ -111,18 +157,20 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
     recognitionRef.current = recognition;
     recognition.start();
     setRecording(true);
+    setProcessing(false);
     startAudioMonitor();
   }, [onTranscript, toast, startAudioMonitor, stopAudioMonitor]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
+      setProcessing(true);
       recognitionRef.current.stop();
     }
     setRecording(false);
     stopAudioMonitor();
   }, [stopAudioMonitor]);
 
-  // Glow parameters — same style as FlameButton in SiteIdentityModal
+  // Glow parameters
   const glowSize = recording ? 6 + audioLevel * 16 : 0;
   const glowOpacity = recording ? 0.25 + audioLevel * 0.45 : 0;
   const size = compact ? 'h-8 w-8' : 'h-10 w-10';
@@ -155,13 +203,26 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
         className={`relative rounded-full transition-all duration-300 ${size} ${
           recording
             ? 'bg-gradient-to-br from-[hsl(262,83%,58%)] via-[hsl(300,70%,50%)] to-[hsl(30,90%,55%)] text-white shadow-md border-0 hover:opacity-90'
-            : 'text-muted-foreground hover:text-foreground'
+            : processing
+              ? 'text-muted-foreground'
+              : 'text-muted-foreground hover:text-foreground'
         }`}
         onClick={recording ? stopRecording : startRecording}
-        disabled={disabled}
-        title={recording ? 'Arrêter l\'enregistrement' : 'Parler au micro'}
+        disabled={disabled || processing}
+        title={recording ? 'Arrêter l\'enregistrement' : processing ? 'Traitement...' : 'Parler au micro'}
       >
-        {recording ? (
+        {processing ? (
+          <svg
+            className={`${iconSize} animate-[spin_2s_linear_infinite]`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          >
+            <path d="M12 2a10 10 0 0 1 10 10" />
+          </svg>
+        ) : recording ? (
           <MicOff className={iconSize} />
         ) : (
           <Mic className={iconSize} />

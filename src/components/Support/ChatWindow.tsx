@@ -225,7 +225,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[70vh]">
+    <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[90vh]">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3 shrink-0">
         <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-3" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-3 [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&_[data-radix-scroll-area-scrollbar]]:opacity-100 [&_[data-radix-scroll-area-scrollbar]]:w-1.5 [&_[data-radix-scroll-area-thumb]]:bg-muted-foreground/25" ref={scrollRef}>
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
