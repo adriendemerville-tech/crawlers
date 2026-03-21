@@ -17,6 +17,7 @@ interface CocoonContentArchitectModalProps {
   domain?: string;
   trackedSiteId?: string;
   hasCmsConnection?: boolean;
+  draftData?: Record<string, any> | null;
 }
 
 const PAGE_TYPES = [
