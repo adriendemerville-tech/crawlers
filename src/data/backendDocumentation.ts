@@ -225,7 +225,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
 | \`revenue_events\` | Événements de revenus e-commerce | \`tracked_site_id\`, \`amount\`, \`currency\`, \`transaction_date\`, \`source\` |
-| \`affiliate_codes\` | Codes affiliés | \`code\`, \`discount_percent\`, \`max_activations\`, \`current_activations\` |
+| \`affiliate_codes\` | Codes affiliés (vérifiés au signup) | \`code\`, \`discount_percent\`, \`max_activations\`, \`current_activations\`, \`assigned_to_user_id\` |
 
 ### Emails & Notifications
 
