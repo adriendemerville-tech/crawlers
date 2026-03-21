@@ -176,6 +176,7 @@ export function FinancesDashboard() {
         if (service === 'openrouter') openrouterCalls++;
         if (service === 'browserless') browserlessCalls++;
         if (service === 'firecrawl') firecrawlCalls++;
+        if (service === 'spider') spiderCalls++;
         if (service === 'fly-playwright') flyPlaywrightCalls++;
         totalPaidApiCost += API_COST_ESTIMATES[service] || 0.005;
       });
