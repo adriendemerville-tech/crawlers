@@ -1014,6 +1014,119 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Classification** | Spécialisation assumée (> 0.65), Positionnement ambigu (0.35-0.65), Distance non maîtrisée (< 0.35). |
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : AGENTS AUTONOMES
+  // ───────────────────────────────────────────────
+  {
+    id: 'agents',
+    title: 'Agents Autonomes',
+    icon: 'Package',
+    content: \`
+# Agents Autonomes
+
+## Agent SEO v2
+
+L'Agent SEO autonome analyse et optimise le contenu des pages du site de manière automatisée.
+
+### Architecture
+
+- **Edge Function** : \\\`agent-seo\\\`
+- **Modèle** : Gemini 2.5 Flash via Lovable AI
+- **Anti-détection** : Utilise \\\`stealthFetch\\\` au lieu de fetch basique
+- **Contexte enrichi** : Injecte le contexte du site (secteur, audience, zone commerciale) via \\\`getSiteContext\\\`
+
+### Scoring 7 axes
+
+| Axe | Poids | Description |
+|-----|-------|-------------|
+| Profondeur de contenu | 20% | Longueur, richesse sémantique |
+| Structure Hn | 15% | Hiérarchie H1-H6, sauts de niveaux |
+| Mots-clés | 15% | Densité, placement, variantes |
+| Maillage interne | 15% | Détection ancres toxiques ("cliquez ici"), densité liens |
+| Métadonnées | 15% | Title, description, JSON-LD |
+| E-E-A-T | 10% | Signaux d'autorité, expertise |
+| Densité contenu | 10% | Ratio texte/HTML |
+
+### Persistance
+
+Les recommandations sont automatiquement persistées dans \\\`audit_recommendations_registry\\\` avec :
+- \\\`recommendation_id\\\` unique
+- \\\`priority\\\` (critical, high, medium, low)
+- \\\`category\\\` et \\\`fix_type\\\`
+- \\\`is_resolved\\\` pour le suivi
+
+### Modes de fonctionnement
+
+| Mode | Cible | Modification max |
+|------|-------|-----------------|
+| **Carte blanche** | Articles blog | 100% réécriture autorisée |
+| **Prudent** | Landing pages | Max 10% de modification |
+| **Interdit** | Home, Console, Audits | Aucune modification |
+
+---
+
+## Agent Blog v2 (\\\`generate-blog-from-news\\\`)
+
+### Recherche intelligente
+
+1. **Perplexity Sonar** : Récupère les dernières actualités et stats vérifiées
+2. **DataForSEO** : Identifie les mots-clés trending pour le sujet
+
+### Maillage interne automatique
+
+Système de keyword-mapping vers 10 pages internes clés :
+- \\\`/audit-expert\\\`, \\\`/cocoon\\\`, \\\`/matrice\\\`, \\\`/console\\\`, etc.
+- Liens contextuels insérés automatiquement dans le contenu
+
+### Quality Guardrails
+
+Scoring post-génération sur 100 points :
+- E-E-A-T, longueur, densité de données, liens
+- **Seuil minimal : 30/100** — en dessous, régénération automatique
+
+### Traductions
+
+Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
+
+---
+
+## Agent SAV IA (\\\`sav-chat\\\`)
+
+### Architecture
+
+- **Modèle** : Gemini 2.5 Flash via Lovable AI
+- **Nom** : "Crawler" — assistant SAV officiel
+- **Limite** : 1000 caractères max par réponse
+- **Ton** : Professionnel, vouvoiement systématique
+
+### Sources de données
+
+| Source | Description |
+|--------|-------------|
+| Documentation SAV | \\\`/aide\\\` — base de connaissance publique |
+| Lexique | Définitions SEO/GEO |
+| Articles blog | Actualités et guides |
+| Infotainments | Contenus de patience |
+| Données utilisateur | Résultats d'audit, crawl, stats "Mes sites" |
+
+### Protocole d'escalade
+
+- **3 itérations max** sans satisfaction → proposition de rappel téléphonique
+- Numéro (06) demandé, non stocké, effacé de la conversation sous 48h
+- Escalade immédiate pour : remboursement, bug bloquant, facturation, suppression compte
+
+### Registre
+
+Toutes les conversations sont enregistrées dans \\\`sav_conversations\\\` et consultables dans Admin → SAV.
+
+### Sécurité
+
+- Ne mentionne jamais les technologies internes (Supabase, Deno, Lovable)
+- Ne peut pas lancer d'audit, crawl, scrap ou cocoon
+- Explique, ne produit pas
+\`,
+  },
 ];
 
 /**
