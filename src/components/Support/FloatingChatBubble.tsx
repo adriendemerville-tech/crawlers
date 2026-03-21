@@ -107,7 +107,8 @@ export function FloatingChatBubble() {
     }
   };
 
-  if (isMobile) return null;
+  // Hide on mobile and on /cocoon (cocoon has its own assistant)
+  if (isMobile || location.pathname === '/cocoon') return null;
 
   return (
     <>
