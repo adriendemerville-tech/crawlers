@@ -964,25 +964,6 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                     <CopyButton text={msg.content} />
                   )}
                 </div>
-                {/* Deploy button after optimization responses */}
-                {isAssistant && !isLoading && isOptimizationResponse(i) && trackedSiteId && (
-                  <div className="mt-2 flex justify-start">
-                    <button
-                      onClick={() => handleDeployLinks(msg.content)}
-                      disabled={isDeploying || deploySuccess}
-                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-medium transition-all ${
-                        deploySuccess
-                          ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-300'
-                          : isDeploying
-                            ? 'bg-white/5 border border-white/10 text-white/40 animate-pulse'
-                            : 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
-                      }`}
-                    >
-                      <Syringe className="w-3.5 h-3.5" />
-                      {deploySuccess ? '✓' : isDeploying ? '…' : ''}
-                    </button>
-                  </div>
-                )}
               </div>
               );
             })}
