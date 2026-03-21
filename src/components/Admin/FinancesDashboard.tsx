@@ -192,6 +192,7 @@ export function FinancesDashboard() {
         callCount: tokenEvents.length, byFunction, byModel,
         paidApiCalls: paidApiEvents.length, totalEstimatedCost,
         dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
+        spiderCalls, spiderEstimatedCost,
         flyPlaywrightCalls, flyEstimatedCost, byApiService,
       });
 
