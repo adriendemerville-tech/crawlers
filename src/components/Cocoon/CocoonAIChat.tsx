@@ -1038,8 +1038,15 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            {/* Admin: Construire les pages button */}
-            {isAdmin && (
+            {/* Admin: Construire les pages button — only after maillage response */}
+            {isAdmin && (() => {
+              const hasOptimizeResponse = messages.some((m, i) => {
+                if (m.role !== 'assistant' || i === 0) return false;
+                const prev = messages[i - 1];
+                return prev?.role === 'user' && isOptimizePrompt(prev.content);
+              });
+              return hasOptimizeResponse;
+            })() && (
               <button
                 onClick={() => setShowArchitectModal(true)}
                 className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 text-violet-300 text-[11px] font-medium hover:from-violet-500/25 hover:to-indigo-500/25 transition-all"
