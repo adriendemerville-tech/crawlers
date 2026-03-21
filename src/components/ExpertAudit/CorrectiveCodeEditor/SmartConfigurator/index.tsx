@@ -1500,11 +1500,20 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                {canGenerateCode && (
+                {isAdmin && !openMode && (
                   <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ContentArchitectureAdvisor 
                       defaultUrl={siteUrl}
                       trackedSiteId={activeSiteId || undefined}
+                    />
+                  </TabsContent>
+                )}
+
+                {isAdmin && !openMode && (
+                  <TabsContent forceMount value="scribe" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                    <ScribeTab
+                      defaultUrl={siteUrl}
+                      trackedSiteId={activeSiteId}
                     />
                   </TabsContent>
                 )}
