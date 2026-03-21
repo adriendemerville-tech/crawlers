@@ -215,7 +215,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <CrawlersLogo size={20} />
             <h3 className="font-semibold text-sm">Assistant SAV</h3>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
         </div>
         <div className="p-6 text-center text-muted-foreground text-sm">
           <p>Connectez-vous pour contacter le support.</p>
@@ -235,12 +235,12 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={handleNewConversation}>
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleNewConversation}>
               Nouveau
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClose}>
-            <X className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleClose}>
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -327,8 +327,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               className="flex-1 h-8 text-xs"
               maxLength={10}
             />
-            <Button size="sm" className="h-8 text-xs" onClick={handlePhoneSubmit}>Envoyer</Button>
-            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowPhonePrompt(false)}>Non</Button>
+            <Button size="sm" className="h-7 text-xs rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handlePhoneSubmit}>Envoyer</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs rounded-none border border-[hsl(var(--brand-violet))]/30 text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={() => setShowPhonePrompt(false)}>Non</Button>
           </div>
         </div>
       )}
@@ -357,8 +357,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             className="flex-1"
             maxLength={500}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon" className="h-8 w-8 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10 disabled:opacity-30">
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>
       </div>
