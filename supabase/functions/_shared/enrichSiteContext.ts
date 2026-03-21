@@ -251,6 +251,8 @@ export async function ensureSiteContext(
     address: site.address as string | undefined,
     entity_type: (site.entity_type as string) || 'business',
     media_specialties: (site.media_specialties as string[]) || [],
+    commercial_model: site.commercial_model as string | undefined,
+    nonprofit_type: site.nonprofit_type as string | undefined,
     identity_confidence: site.identity_confidence as number | undefined,
     identity_source: site.identity_source as string | undefined,
     identity_enriched_at: site.identity_enriched_at as string | undefined,
