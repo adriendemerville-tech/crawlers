@@ -572,7 +572,21 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
     }
   }
   
-  // ── ÉTAPE 4 : Firecrawl (API payante, dernier recours anti-WAF) ──
+  // ── ÉTAPE 4 : Spider.cloud (API ~20x moins chère, prioritaire) ──
+  const spiderHtml = await trySpider(url);
+  if (spiderHtml) {
+    const doc = new DOMParser().parseFromString(spiderHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, spiderHtml.length);
+      return {
+        html: spiderHtml,
+        renderingMode: 'dynamic_rendered',
+        selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.80) },
+      };
+    }
+  }
+
+  // ── ÉTAPE 5 : Firecrawl (fallback payant, dernier recours anti-WAF) ──
   const firecrawlHtml = await tryFirecrawl(url);
   if (firecrawlHtml) {
     const doc = new DOMParser().parseFromString(firecrawlHtml, 'text/html');
