@@ -65,6 +65,7 @@ interface TokenUsageStats {
   firecrawlCalls: number;
   spiderCalls: number;
   spiderEstimatedCost: number;
+  flyPlaywrightCalls: number;
   flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
