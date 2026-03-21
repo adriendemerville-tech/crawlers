@@ -420,12 +420,46 @@ async function tryFlyPlaywright(url: string): Promise<string | null> {
   return null;
 }
 
+async function trySpider(url: string): Promise<string | null> {
+  const apiKey = Deno.env.get('SPIDER_API_KEY');
+  if (!apiKey) return null;
+
+  try {
+    console.log(`[SmartFetch] 🕷️ Tentative Spider.cloud...`);
+    const response = await fetch('https://api.spider.cloud/crawl', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, limit: 1, return_format: 'raw', request: 'http' }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const page = Array.isArray(data) ? data[0] : data;
+      const html = page?.content || '';
+      if (html.length > 500) {
+        console.log(`[SmartFetch] ✅ Spider.cloud OK (${html.length} chars)`);
+        return html;
+      }
+    } else {
+      console.log(`[SmartFetch] ⚠️ Spider.cloud erreur ${response.status}`);
+    }
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.log(`[SmartFetch] ⚠️ Spider.cloud exception: ${err.message}`);
+  }
+  return null;
+}
+
 async function tryFirecrawl(url: string): Promise<string | null> {
   const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!apiKey) return null;
 
   try {
-    console.log(`[SmartFetch] 🔄 Tentative Firecrawl (dernier recours)...`);
+    console.log(`[SmartFetch] 🔄 Tentative Firecrawl (fallback)...`);
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -538,7 +572,21 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
     }
   }
   
-  // ── ÉTAPE 4 : Firecrawl (API payante, dernier recours anti-WAF) ──
+  // ── ÉTAPE 4 : Spider.cloud (API ~20x moins chère, prioritaire) ──
+  const spiderHtml = await trySpider(url);
+  if (spiderHtml) {
+    const doc = new DOMParser().parseFromString(spiderHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, spiderHtml.length);
+      return {
+        html: spiderHtml,
+        renderingMode: 'dynamic_rendered',
+        selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.80) },
+      };
+    }
+  }
+
+  // ── ÉTAPE 5 : Firecrawl (fallback payant, dernier recours anti-WAF) ──
   const firecrawlHtml = await tryFirecrawl(url);
   if (firecrawlHtml) {
     const doc = new DOMParser().parseFromString(firecrawlHtml, 'text/html');

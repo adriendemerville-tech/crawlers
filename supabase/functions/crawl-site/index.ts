@@ -6,6 +6,7 @@ import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
+const SPIDER_API = 'https://api.spider.cloud';
 
 /**
  * crawl-site v3 — Lightweight launcher with advanced options
@@ -349,23 +350,56 @@ Deno.serve(async (req) => {
       urls = cleanedUrls.slice(0, pageLimit);
       console.log(`[${crawlId}] Using ${urls.length} URLs from sitemap (filtered from ${sitemapUrls.length}, primary source)`);
     } else {
-      // Fallback to Firecrawl map
-      console.log(`[${crawlId}] No sitemap URLs, falling back to Firecrawl map`);
-      const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalizedUrl, limit: pageLimit, includeSubdomains: false }),
-      });
+      // Fallback: Spider.cloud (primary) → Firecrawl (fallback) for URL mapping
+      console.log(`[${crawlId}] No sitemap URLs, trying Spider.cloud map...`);
+      const spiderKey = Deno.env.get('SPIDER_API_KEY');
+      let mapSuccess = false;
 
-      const mapData = await mapResponse.json();
-      await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
-      if (!mapResponse.ok || !mapData.links?.length) {
-        await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
-        return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
-          status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      if (spiderKey) {
+        try {
+          const spiderRes = await fetch(`${SPIDER_API}/crawl`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: normalizedUrl, limit: pageLimit, return_format: 'raw', depth: 0, request: 'http' }),
+          });
+          if (spiderRes.ok) {
+            const spiderData = await spiderRes.json();
+            const spiderUrls = Array.isArray(spiderData) 
+              ? spiderData.map((p: any) => p.url).filter(Boolean) 
+              : [];
+            if (spiderUrls.length > 0) {
+              urls = filterNonPageUrls(spiderUrls).slice(0, pageLimit);
+              mapSuccess = true;
+              await trackPaidApiCall('crawl-site', 'spider', '/crawl', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-spider-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+              console.log(`[${crawlId}] ✅ Spider.cloud map: ${urls.length} URLs`);
+            }
+          } else {
+            console.warn(`[${crawlId}] Spider.cloud map failed (${spiderRes.status}), falling back to Firecrawl`);
+          }
+        } catch (e) {
+          console.warn(`[${crawlId}] Spider.cloud exception, falling back to Firecrawl:`, e);
+        }
       }
-      urls = filterNonPageUrls(mapData.links).slice(0, pageLimit);
+
+      // Firecrawl fallback
+      if (!mapSuccess) {
+        console.log(`[${crawlId}] Falling back to Firecrawl map`);
+        const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: normalizedUrl, limit: pageLimit, includeSubdomains: false }),
+        });
+
+        const mapData = await mapResponse.json();
+        await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+        if (!mapResponse.ok || !mapData.links?.length) {
+          await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
+          return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
+            status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        urls = filterNonPageUrls(mapData.links).slice(0, pageLimit);
+      }
     }
 
     // Pre-filter URLs by regex if provided
