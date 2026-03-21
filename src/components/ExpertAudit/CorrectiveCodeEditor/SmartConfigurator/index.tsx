@@ -1490,6 +1490,15 @@ export function SmartConfigurator({
                 </TabsContent>
 
                 {canGenerateCode && (
+                  <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                    <ContentArchitectureAdvisor 
+                      defaultUrl={siteUrl}
+                      trackedSiteId={activeSiteId || undefined}
+                    />
+                  </TabsContent>
+                )}
+
+                {canGenerateCode && (
                   <TabsContent forceMount value="multipage" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <MultiPageRouter domain={siteDomain} siteId={activeSiteId} />
                   </TabsContent>
