@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { CrawlersLogo } from './CrawlersLogo';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -171,7 +172,10 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     return (
       <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl">
         <div className="flex items-center justify-between border-b p-3">
-          <h3 className="font-semibold text-sm">Assistant Crawler</h3>
+          <div className="flex items-center gap-2">
+            <CrawlersLogo size={20} />
+            <h3 className="font-semibold text-sm">Assistant SAV</h3>
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
         </div>
         <div className="p-6 text-center text-muted-foreground text-sm">
@@ -186,8 +190,9 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3 shrink-0">
         <div className="flex items-center gap-2">
+          <CrawlersLogo size={22} />
           <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <h3 className="font-semibold text-sm">Crawler · Assistant SAV</h3>
+          <h3 className="font-semibold text-sm">Assistant SAV</h3>
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
@@ -208,8 +213,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 space-y-2">
-            <p className="text-sm font-medium">Bonjour ! Je suis Crawler 👋</p>
+          <div className="text-center text-muted-foreground py-8 space-y-3">
+            <div className="flex justify-center">
+              <CrawlersLogo size={36} />
+            </div>
+            <p className="text-sm font-medium">Bonjour ! Je suis votre assistant SAV.</p>
             <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
           </div>
         ) : (
@@ -223,10 +231,20 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                     : 'bg-primary text-primary-foreground'
                 )}>
                   {msg.role === 'assistant' && (
-                    <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">Crawler</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <CrawlersLogo size={14} />
+                    </div>
                   )}
-                  <div className="whitespace-pre-wrap break-words prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <div className="whitespace-pre-wrap break-words prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >{msg.content}</ReactMarkdown>
                   </div>
                   <span className={cn(
                     'text-[10px] block mt-1',
@@ -240,7 +258,9 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             {sending && (
               <div className="flex justify-start">
                 <div className="bg-violet-100 dark:bg-violet-900/40 rounded-lg px-3 py-2">
-                  <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">Crawler</span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <CrawlersLogo size={14} />
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
