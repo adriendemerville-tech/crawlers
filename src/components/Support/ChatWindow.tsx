@@ -357,8 +357,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             className="flex-1"
             maxLength={500}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon" className="h-8 w-8 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10 disabled:opacity-30">
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>
       </div>
