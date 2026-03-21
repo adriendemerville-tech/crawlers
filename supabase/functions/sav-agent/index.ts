@@ -388,10 +388,46 @@ serve(async (req) => {
       reply = reply.substring(0, 997) + "...";
     }
 
-    // Save conversation
+    // Save conversation + quality scoring
+    let savedConvId = conversation_id;
     try {
       const allMessages = [...messages, { role: "assistant", content: reply }];
       const userMsgCount = allMessages.filter((m: any) => m.role === "user").length;
+
+      // ── Intent detection via keywords ──
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const intentKeywords = lastUserMsg
+        .toLowerCase()
+        .replace(/[^a-zà-ÿ0-9\s]/g, "")
+        .split(/\s+/)
+        .filter((w: string) => w.length > 3)
+        .slice(0, 10);
+
+      // Detect repeated intent (same keywords appearing in multiple user messages)
+      const allUserMsgs = messages.filter((m: any) => m.role === "user").map((m: any) => m.content.toLowerCase());
+      let repeatedIntentCount = 0;
+      if (allUserMsgs.length >= 2) {
+        const prevKeywords = new Set(
+          allUserMsgs.slice(0, -1).join(" ").replace(/[^a-zà-ÿ0-9\s]/g, "").split(/\s+/).filter((w: string) => w.length > 3)
+        );
+        const overlap = intentKeywords.filter((kw: string) => prevKeywords.has(kw));
+        if (overlap.length >= 3) repeatedIntentCount = allUserMsgs.length - 1;
+      }
+
+      // Detect intent category
+      const msgLower = lastUserMsg.toLowerCase();
+      let detectedIntent = "general";
+      if (msgLower.match(/où|comment accéder|trouver|cherche|onglet|bouton|menu|page/)) detectedIntent = "navigation";
+      else if (msgLower.match(/score|geo|seo|llm|citation|sentiment/)) detectedIntent = "score";
+      else if (msgLower.match(/crédit|abonnement|prix|tarif|payer|facturer/)) detectedIntent = "billing";
+      else if (msgLower.match(/bug|erreur|marche pas|bloqué|problème/)) detectedIntent = "bug";
+      else if (msgLower.match(/crawl|scan|audit|analyse/)) detectedIntent = "feature";
+
+      // Extract suggested route from agent reply
+      const routeMatch = reply.match(/https:\/\/crawlers\.fr(\/[a-z0-9\-/]*)/i);
+      const suggestedRoute = routeMatch ? routeMatch[1] : null;
+
+      const escalatedToPhone = reply.includes("numéro de téléphone") || reply.includes("rappelé");
 
       if (conversation_id) {
         await sb
@@ -417,7 +453,52 @@ serve(async (req) => {
           .select("id")
           .single();
 
-        return new Response(JSON.stringify({ reply, conversation_id: newConv?.id }), {
+        savedConvId = newConv?.id;
+      }
+
+      // ── Upsert quality score ──
+      if (savedConvId) {
+        // Calculate precision score
+        let precisionScore = 50;
+        if (userMsgCount <= 2) precisionScore += 20;  // Short conv = likely resolved
+        precisionScore -= repeatedIntentCount * 20;    // Repeated intent = bad
+        if (escalatedToPhone) precisionScore -= 50;    // Phone escalation = failure
+        precisionScore = Math.max(0, Math.min(100, precisionScore));
+
+        // Upsert (update if exists, insert if not)
+        const { data: existing } = await sb
+          .from("sav_quality_scores")
+          .select("id")
+          .eq("conversation_id", savedConvId)
+          .maybeSingle();
+
+        if (existing) {
+          await sb.from("sav_quality_scores").update({
+            message_count: userMsgCount,
+            repeated_intent_count: repeatedIntentCount,
+            escalated_to_phone: escalatedToPhone,
+            precision_score: precisionScore,
+            detected_intent: detectedIntent,
+            intent_keywords: intentKeywords,
+            suggested_route: suggestedRoute,
+          }).eq("id", existing.id);
+        } else {
+          await sb.from("sav_quality_scores").insert({
+            conversation_id: savedConvId,
+            user_id,
+            message_count: userMsgCount,
+            repeated_intent_count: repeatedIntentCount,
+            escalated_to_phone: escalatedToPhone,
+            precision_score: precisionScore,
+            detected_intent: detectedIntent,
+            intent_keywords: intentKeywords,
+            suggested_route: suggestedRoute,
+          });
+        }
+      }
+
+      if (!conversation_id && savedConvId) {
+        return new Response(JSON.stringify({ reply, conversation_id: savedConvId }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
