@@ -36,7 +36,7 @@ const LENGTHS = [
   { value: 'pillar', label: 'Pilier (3000+ mots)' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData }: CocoonContentArchitectModalProps) {
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,6 +54,43 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [photoUrl, setPhotoUrl] = useState('');
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
+
+  // Auto-fill from draft data (from Cocoon assistant extraction)
+  useEffect(() => {
+    if (!isOpen) return;
+    const draft = draftData;
+    if (!draft) {
+      // Fallback: load from database
+      if (trackedSiteId && domain) {
+        supabase
+          .from('cocoon_architect_drafts')
+          .select('draft_data')
+          .eq('domain', domain)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.draft_data) applyDraft(data.draft_data as Record<string, any>);
+          });
+      }
+      return;
+    }
+    applyDraft(draft);
+  }, [isOpen, draftData, trackedSiteId, domain]);
+
+  const applyDraft = (draft: Record<string, any>) => {
+    if (draft.url) setUrl(draft.url);
+    if (draft.keyword) setKeyword(draft.keyword);
+    if (draft.page_type && PAGE_TYPES.some(p => p.value === draft.page_type)) setPageType(draft.page_type);
+    if (draft.content_length && LENGTHS.some(l => l.value === draft.content_length)) setLength(draft.content_length);
+    if (draft.tone) setTone(draft.tone);
+    if (draft.custom_prompt) setPrompt(draft.custom_prompt);
+    if (draft.cta_suggestion) setCtaLink(draft.cta_suggestion);
+    if (draft.h1_suggestion) {
+      // Use H1 suggestion as part of custom prompt if no custom_prompt
+      if (!draft.custom_prompt) setPrompt(`H1 suggéré : ${draft.h1_suggestion}`);
+    }
+  };
 
   // Counters from result
   const counters = useMemo(() => {
