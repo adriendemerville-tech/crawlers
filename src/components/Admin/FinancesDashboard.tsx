@@ -183,7 +183,8 @@ export function FinancesDashboard() {
 
       const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
       const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
-      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + totalPaidApiCost;
+      const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
+      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + spiderEstimatedCost + totalPaidApiCost;
       setTotalPlatformCost(grandTotalCost);
 
       setTokenUsage({
