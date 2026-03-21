@@ -147,13 +147,17 @@ export function ExternalApisTab() {
       if (!user) return;
       const { data } = await supabase
         .from('cms_connections')
-        .select('id, site_url')
+        .select('id, site_url, capabilities')
         .eq('user_id', user.id)
         .eq('platform', 'wordpress')
         .eq('status', 'active')
         .limit(1)
         .maybeSingle();
-      setWpConnection(data as { id: string; site_url: string } | null);
+      if (data) {
+        setWpConnection({ id: data.id, site_url: data.site_url });
+        const caps = data.capabilities as Record<string, unknown> | null;
+        if (caps?.rankmath_authorized) setRankMathConnected(true);
+      }
     };
     checkWpConnection();
   }, [cmsDialogOpen]);
@@ -231,6 +235,7 @@ export function ExternalApisTab() {
     if (!wpConnection) return;
     setRankMathLoading(true);
     try {
+      // Step 1: Test Rank Math access via WordPress REST API
       const { data, error } = await supabase.functions.invoke('rankmath-actions', {
         body: {
           action: 'bulk-get-seo',
@@ -240,15 +245,33 @@ export function ExternalApisTab() {
         },
       });
       if (error) throw error;
-      if (data?.success) {
-        setRankMathConnected(true);
-        toast.success(t.rankMathSuccess);
-        setRankMathDialogOpen(false);
-      } else {
-        throw new Error(data?.error || 'Unknown error');
-      }
+      if (!data?.success) throw new Error(data?.error || 'Rank Math inaccessible');
+
+      // Step 2: Persist authorization in cms_connections.capabilities
+      const { data: conn } = await supabase
+        .from('cms_connections')
+        .select('capabilities')
+        .eq('id', wpConnection.id)
+        .maybeSingle();
+
+      const currentCaps = (conn?.capabilities as Record<string, unknown>) || {};
+      await supabase
+        .from('cms_connections')
+        .update({
+          capabilities: {
+            ...currentCaps,
+            rankmath_authorized: true,
+            rankmath_authorized_at: new Date().toISOString(),
+            rankmath_permissions: ['read_meta', 'write_meta', 'bulk_read'],
+          } as any,
+        })
+        .eq('id', wpConnection.id);
+
+      setRankMathConnected(true);
+      toast.success(t.rankMathSuccess);
+      setRankMathDialogOpen(false);
     } catch (err) {
-      console.error('[ExternalApis] Rank Math test error:', err);
+      console.error('[ExternalApis] Rank Math authorization error:', err);
       toast.error(t.rankMathError);
     } finally {
       setRankMathLoading(false);
