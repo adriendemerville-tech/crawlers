@@ -334,7 +334,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       )}
 
       {/* Input */}
-      <div className="border-t p-3 shrink-0 relative">
+      <div className="border-t px-3 py-1.5 shrink-0 relative">
         <ChatAttachmentPicker
           userId={user.id}
           onAttach={(item) => {
