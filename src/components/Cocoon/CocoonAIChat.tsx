@@ -964,8 +964,8 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                             : 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
                       }`}
                     >
-                      <Rocket className="w-3.5 h-3.5" />
-                      {deploySuccess ? '✓ Déployé' : isDeploying ? 'Déploiement…' : 'Déployer sur le site'}
+                      <Syringe className="w-3.5 h-3.5" />
+                      {deploySuccess ? '✓' : isDeploying ? '…' : ''}
                     </button>
                   </div>
                 )}
