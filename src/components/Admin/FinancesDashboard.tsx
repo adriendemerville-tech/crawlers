@@ -63,7 +63,8 @@ interface TokenUsageStats {
   openrouterCalls: number;
   browserlessCalls: number;
   firecrawlCalls: number;
-  flyPlaywrightCalls: number;
+  spiderCalls: number;
+  spiderEstimatedCost: number;
   flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
