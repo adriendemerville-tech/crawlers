@@ -327,9 +327,11 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
 | \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
+| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO conditionnels, garde-fous tonaux, TF-IDF concurrents) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
+| \`process-script-queue\` | ✅ | 0 | File d'attente FIFO multi-pages pour Scribe |
 
 ## Calculs & Métriques
 
