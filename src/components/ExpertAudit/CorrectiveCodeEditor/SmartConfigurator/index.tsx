@@ -1448,6 +1448,15 @@ export function SmartConfigurator({
                 </TabsTrigger>
                 {canGenerateCode && (
                   <TabsTrigger 
+                    value="content-advisor" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Contenu
+                  </TabsTrigger>
+                )}
+                {canGenerateCode && (
+                  <TabsTrigger 
                     value="multipage" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent py-3 px-3"
                   >
