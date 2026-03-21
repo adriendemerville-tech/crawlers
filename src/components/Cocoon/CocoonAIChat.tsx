@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Rocket } from 'lucide-react';
+import { Syringe } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -956,7 +956,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                     <button
                       onClick={() => handleDeployLinks(msg.content)}
                       disabled={isDeploying || deploySuccess}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-medium transition-all ${
                         deploySuccess
                           ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-300'
                           : isDeploying
@@ -964,8 +964,8 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                             : 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
                       }`}
                     >
-                      <Rocket className="w-3.5 h-3.5" />
-                      {deploySuccess ? '✓ Déployé' : isDeploying ? 'Déploiement…' : 'Déployer sur le site'}
+                      <Syringe className="w-3.5 h-3.5" />
+                      {deploySuccess ? '✓' : isDeploying ? '…' : ''}
                     </button>
                   </div>
                 )}
