@@ -3561,6 +3561,48 @@ export type Database = {
           },
         ]
       }
+      sav_conversations: {
+        Row: {
+          created_at: string
+          escalated: boolean
+          id: string
+          message_count: number
+          messages: Json
+          phone_callback: string | null
+          phone_callback_expires_at: string | null
+          satisfaction_resolved: boolean | null
+          updated_at: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          escalated?: boolean
+          id?: string
+          message_count?: number
+          messages?: Json
+          phone_callback?: string | null
+          phone_callback_expires_at?: string | null
+          satisfaction_resolved?: boolean | null
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          escalated?: boolean
+          id?: string
+          message_count?: number
+          messages?: Json
+          phone_callback?: string | null
+          phone_callback_expires_at?: string | null
+          satisfaction_resolved?: boolean | null
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_corrective_codes: {
         Row: {
           code: string
@@ -5302,6 +5344,7 @@ export type Database = {
       }
       cleanup_audit_cache_ttl: { Args: never; Returns: number }
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
+      cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
