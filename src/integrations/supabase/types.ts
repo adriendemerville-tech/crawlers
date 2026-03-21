@@ -1116,6 +1116,50 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_diagnostic_results: {
+        Row: {
+          created_at: string
+          diagnostic_type: string
+          domain: string
+          findings: Json
+          id: string
+          metadata: Json | null
+          scores: Json
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diagnostic_type: string
+          domain: string
+          findings?: Json
+          id?: string
+          metadata?: Json | null
+          scores?: Json
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diagnostic_type?: string
+          domain?: string
+          findings?: Json
+          id?: string
+          metadata?: Json | null
+          scores?: Json
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_diagnostic_results_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_errors: {
         Row: {
           ai_response: string | null
@@ -1305,6 +1349,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      cocoon_strategy_plans: {
+        Row: {
+          created_at: string
+          diagnostic_ids: string[]
+          domain: string
+          id: string
+          status: string
+          strategy: Json
+          task_budget: number
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diagnostic_ids?: string[]
+          domain: string
+          id?: string
+          status?: string
+          strategy?: Json
+          task_budget?: number
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diagnostic_ids?: string[]
+          domain?: string
+          id?: string
+          status?: string
+          strategy?: Json
+          task_budget?: number
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_strategy_plans_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cocoon_tasks: {
         Row: {
