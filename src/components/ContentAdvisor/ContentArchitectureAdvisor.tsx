@@ -450,6 +450,7 @@ export function ContentArchitectureAdvisor({ defaultUrl = '', defaultKeyword = '
             </CardContent>
           </Card>
         </Tabs>
+        </div>
       )}
     </div>
   );
