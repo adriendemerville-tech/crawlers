@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
+import { SavDashboard } from './SavDashboard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { BrowserlessAlert } from './BrowserlessAlert';
 import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
@@ -210,6 +211,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
+        { id: 'sav-ia', label: 'SAV IA', icon: Bot, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
         { id: 'surveys', label: t.surveys, icon: ClipboardList, group: 'content' },
       ],
@@ -248,6 +250,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
+      case 'sav-ia': return <SavDashboard />;
       case 'affiliates': return wrap(<AffiliateManagement />);
       case 'crawls': return wrap(<CrawlManagement />);
       case 'scripts': return wrap(<ScriptKillSwitches />);
