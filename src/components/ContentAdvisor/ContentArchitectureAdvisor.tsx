@@ -113,6 +113,55 @@ export function ContentArchitectureAdvisor({ defaultUrl = '', defaultKeyword = '
 
       {/* Results */}
       {result && (
+        <div className="space-y-4">
+          {/* Coherence Guardrail Banner */}
+          {result.coherence_check && (
+            <Card className={`border-l-4 ${
+              result.coherence_check.warnings?.length > 0 
+                ? 'border-l-amber-500 bg-amber-500/5' 
+                : 'border-l-emerald-500 bg-emerald-500/5'
+            }`}>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-start gap-3">
+                  {result.coherence_check.warnings?.length > 0 ? (
+                    <ShieldAlert className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                  ) : (
+                    <ShieldCheck className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+                  )}
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={result.coherence_check.innovation_level === 'conservative' ? 'secondary' : result.coherence_check.innovation_level === 'moderate' ? 'default' : 'destructive'}>
+                        Innovation: {result.coherence_check.innovation_level}
+                      </Badge>
+                      <Badge variant={result.coherence_check.sector_fit === 'high' ? 'secondary' : result.coherence_check.sector_fit === 'medium' ? 'default' : 'destructive'}>
+                        Fit secteur: {result.coherence_check.sector_fit}
+                      </Badge>
+                      <Badge variant={result.coherence_check.tone_continuity === 'aligned' ? 'secondary' : result.coherence_check.tone_continuity === 'slight_shift' ? 'default' : 'destructive'}>
+                        Ton: {result.coherence_check.tone_continuity === 'aligned' ? 'cohérent' : result.coherence_check.tone_continuity === 'slight_shift' ? 'léger décalage' : 'rupture'}
+                      </Badge>
+                      <Badge variant={result.coherence_check.bounce_risk === 'low' ? 'secondary' : result.coherence_check.bounce_risk === 'medium' ? 'default' : 'destructive'}>
+                        Risque rebond: {result.coherence_check.bounce_risk === 'low' ? 'faible' : result.coherence_check.bounce_risk === 'medium' ? 'moyen' : 'élevé'}
+                      </Badge>
+                      <Badge variant="outline" className="ml-auto">
+                        Confiance: {result.confidence_score}%
+                      </Badge>
+                    </div>
+                    {result.coherence_check.warnings?.length > 0 && (
+                      <div className="space-y-1">
+                        {result.coherence_check.warnings.map((w: string, i: number) => (
+                          <p key={i} className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5">
+                            <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                            {w}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
         <Tabs defaultValue="structure" className="space-y-4">
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="structure" className="text-xs sm:text-sm">
