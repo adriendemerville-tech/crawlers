@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  109 fonctions serverless + 21 modules partagés        │
+│  110+ fonctions serverless + 21 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -74,13 +74,13 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 109 fonctions serverless + 21 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 110+ fonctions serverless + 21 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
 | Payments | Stripe | Abonnements, crédits, webhooks |
 | AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu |
-| Crawling | Firecrawl API | Map + scrape multi-pages |
+| Crawling | Spider Cloud API + Firecrawl (fallback) | Map + scrape multi-pages |
 | Anti-détection | StealthFetch (custom) | User-Agent rotation, headers, retries |
 | SEO Data | DataForSEO API | SERP rankings, backlinks, indexed pages |
 | Analytics | Google Analytics 4 + GSC | Trafic, Search Console |
@@ -283,7 +283,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (109 fonctions)
+# API — Edge Functions (110+ fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -322,7 +322,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-target-queries\` | ✅ | 1 | Génère des requêtes cibles LLM |
 | \`generate-more-keywords\` | ✅ | 1 | Extension de mots-clés |
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
-| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
+| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (recherche Perplexity, maillage interne auto, quality guardrails, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
 | \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
@@ -439,7 +439,8 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
-| \`agent-seo\` | ✅ | Agent SEO autonome |
+| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, stealthFetch, persistance recommandations) |
+| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, fallback humain) |
 | \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
@@ -609,7 +610,8 @@ Ces secrets sont configurés dans Lovable Cloud :
 |--------|-------------|-------------|
 | \`STRIPE_SECRET_KEY\` | billing, webhooks | Clé secrète Stripe |
 | \`STRIPE_WEBHOOK_SECRET\` | \`stripe-webhook\` | Secret de signature webhook |
-| \`FIRECRAWL_API_KEY\` | crawl engine | Clé API Firecrawl (scraping) |
+| \`FIRECRAWL_API_KEY\` | crawl engine (fallback) | Clé API Firecrawl (scraping fallback) |
+| \`SPIDER_API_KEY\` | crawl engine (primary) | Clé API Spider Cloud (scraping principal) |
 | \`GOOGLE_PAGESPEED_API_KEY\` | \`check-pagespeed\` | Clé API Google PageSpeed Insights |
 | \`GOOGLE_GSC_CLIENT_ID\` | \`gsc-auth\` | OAuth Google Search Console |
 | \`GOOGLE_GSC_CLIENT_SECRET\` | \`gsc-auth\` | OAuth Google Search Console |
@@ -1012,6 +1014,119 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Classification** | Spécialisation assumée (> 0.65), Positionnement ambigu (0.35-0.65), Distance non maîtrisée (< 0.35). |
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : AGENTS AUTONOMES
+  // ───────────────────────────────────────────────
+  {
+    id: 'agents',
+    title: 'Agents Autonomes',
+    icon: 'Package',
+    content: `
+# Agents Autonomes
+
+## Agent SEO v2
+
+L'Agent SEO autonome analyse et optimise le contenu des pages du site de manière automatisée.
+
+### Architecture
+
+- **Edge Function** : \`agent-seo\`
+- **Modèle** : Gemini 2.5 Flash via Lovable AI
+- **Anti-détection** : Utilise \`stealthFetch\` au lieu de fetch basique
+- **Contexte enrichi** : Injecte le contexte du site (secteur, audience, zone commerciale) via \`getSiteContext\`
+
+### Scoring 7 axes
+
+| Axe | Poids | Description |
+|-----|-------|-------------|
+| Profondeur de contenu | 20% | Longueur, richesse sémantique |
+| Structure Hn | 15% | Hiérarchie H1-H6, sauts de niveaux |
+| Mots-clés | 15% | Densité, placement, variantes |
+| Maillage interne | 15% | Détection ancres toxiques, densité liens |
+| Métadonnées | 15% | Title, description, JSON-LD |
+| E-E-A-T | 10% | Signaux d'autorité, expertise |
+| Densité contenu | 10% | Ratio texte/HTML |
+
+### Persistance
+
+Les recommandations sont automatiquement persistées dans \`audit_recommendations_registry\` avec :
+- \`recommendation_id\` unique
+- \`priority\` (critical, high, medium, low)
+- \`category\` et \`fix_type\`
+- \`is_resolved\` pour le suivi
+
+### Modes de fonctionnement
+
+| Mode | Cible | Modification max |
+|------|-------|-----------------|
+| **Carte blanche** | Articles blog | 100% réécriture autorisée |
+| **Prudent** | Landing pages | Max 10% de modification |
+| **Interdit** | Home, Console, Audits | Aucune modification |
+
+---
+
+## Agent Blog v2 (generate-blog-from-news)
+
+### Recherche intelligente
+
+1. **Perplexity Sonar** : Récupère les dernières actualités et stats vérifiées
+2. **DataForSEO** : Identifie les mots-clés trending pour le sujet
+
+### Maillage interne automatique
+
+Système de keyword-mapping vers 10 pages internes clés :
+- /audit-expert, /cocoon, /matrice, /console, etc.
+- Liens contextuels insérés automatiquement dans le contenu
+
+### Quality Guardrails
+
+Scoring post-génération sur 100 points :
+- E-E-A-T, longueur, densité de données, liens
+- **Seuil minimal : 30/100** — en dessous, régénération automatique
+
+### Traductions
+
+Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
+
+---
+
+## Agent SAV IA (sav-chat)
+
+### Architecture
+
+- **Modèle** : Gemini 2.5 Flash via Lovable AI
+- **Nom** : "Crawler" — assistant SAV officiel
+- **Limite** : 1000 caractères max par réponse
+- **Ton** : Professionnel, vouvoiement systématique
+
+### Sources de données
+
+| Source | Description |
+|--------|-------------|
+| Documentation SAV | /aide — base de connaissance publique |
+| Lexique | Définitions SEO/GEO |
+| Articles blog | Actualités et guides |
+| Infotainments | Contenus de patience |
+| Données utilisateur | Résultats d'audit, crawl, stats Mes sites |
+
+### Protocole d'escalade
+
+- **3 itérations max** sans satisfaction → proposition de rappel téléphonique
+- Numéro (06) demandé, non stocké, effacé de la conversation sous 48h
+- Escalade immédiate pour : remboursement, bug bloquant, facturation, suppression compte
+
+### Registre
+
+Toutes les conversations sont enregistrées dans \`sav_conversations\` et consultables dans Admin → SAV.
+
+### Sécurité
+
+- Ne mentionne jamais les technologies internes (Supabase, Deno, Lovable)
+- Ne peut pas lancer d'audit, crawl, scrap ou cocoon
+- Explique, ne produit pas
+`,
+  },
 ];
 
 /**
@@ -1019,14 +1134,14 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '3.0.0',
-  lastUpdated: '2026-03-20',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Intégrations',
-  totalEdgeFunctions: 109,
+  version: '4.0.0',
+  lastUpdated: '2026-03-21',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 110,
   totalSharedModules: 21,
   totalTables: '55+',
-  totalLinesOfCode: '157 000+',
+  totalLinesOfCode: '160 000+',
   totalMigrations: 186,
-  totalPages: 39,
-  totalComponents: 275,
+  totalPages: 40,
+  totalComponents: 280,
 };
