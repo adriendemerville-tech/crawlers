@@ -39,6 +39,7 @@ const API_COST_ESTIMATES: Record<string, number> = {
   dataforseo: 0.01,
   browserless: 0.008,
   firecrawl: 0.005,
+  spider: 0.001,
   'fly-playwright': 0.0001,
   openrouter: 0,
 };
