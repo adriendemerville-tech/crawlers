@@ -38,6 +38,23 @@ Updated: now
 - Filtrage CTAs agressifs pour services publics/ONG
 - Continuité tonale vérifiée par rapport au ton existant du domaine
 
+### 5 Critères GEO (conditionnels, individuels ou cumulatifs)
+Chaque critère s'active selon le contexte (entité, taille, business, cible, SERP, concurrence, GEO score, visibilité LLM, GMB, backlinks) :
+1. **Répondre aux questions clés** — ACTIF si article/FAQ/landing, featured snippet, PAA détectés. Renforcé si GEO < 50 ou invisible LLM.
+2. **Structurer pour la compréhension** — ACTIF si word_count > 800, page technique, jargon_distance > 4. Renforcé si B2C/étudiant/local.
+3. **Passages citables** — ACTIF si GEO < 70, invisible LLM, pas de featured snippet. Renforcé si faible domain_rank, pas de backlinks.
+4. **Signaux E-E-A-T** — ACTIF si secteur YMYL, B2B, cible expert. Renforcé si pas de GMB, faible domain_rank, forte concurrence.
+5. **Enrichissement sémantique** — TOUJOURS ACTIF. Renforcé si forte concurrence SERP, cible expert technique.
+
+### Sources de données du Content Architecture Advisor
+- `tracked_sites` (carte d'identité : secteur, cible, GMB, entity_type, nonprofit_type, jargon_distance, competitors)
+- `domain_data_cache` (geo_score, llm_visibility, serp_keywords)
+- `backlink_snapshots` (referring_domains, domain_rank)
+- `audit_raw_data` (derniers audits)
+- `cocoon_sessions` (maillage, clusters)
+- DataForSEO (keywords, SERP live)
+- Firecrawl (TF-IDF concurrents)
+
 ### Edge Functions associées
 - `content-architecture-advisor` : Analyse et recommandations de structure de contenu
 - `generate-infotainment` : Génération de cartes news/tips SEO/GEO
