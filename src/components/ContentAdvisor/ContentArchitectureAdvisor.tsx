@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Loader2, FileText, Search, Link2, Code2, Sparkles, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, FileText, Search, Link2, Code2, Sparkles, Copy, ChevronDown, ChevronUp, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 interface ContentAdvisorProps {
   defaultUrl?: string;
