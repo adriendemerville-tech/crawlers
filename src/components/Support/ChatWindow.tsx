@@ -215,7 +215,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <CrawlersLogo size={20} />
             <h3 className="font-semibold text-sm">Assistant SAV</h3>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
         </div>
         <div className="p-6 text-center text-muted-foreground text-sm">
           <p>Connectez-vous pour contacter le support.</p>
