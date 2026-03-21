@@ -13,6 +13,7 @@ import {
   Download, Link2, AlertCircle, Plug, Cable, Crown, FileText
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
+import { ScribeTab } from './ScribeTab';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
