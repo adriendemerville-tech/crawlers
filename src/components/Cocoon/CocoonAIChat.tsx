@@ -311,28 +311,29 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     }
   }, [messages]);
 
-  // Save chat history anonymously
+  // Save chat history to shared sav_conversations table
   const saveHistory = useCallback(async (msgs: Msg[]) => {
-    if (!trackedSiteId || !domain || msgs.length === 0) return;
+    if (!trackedSiteId || !domain || msgs.length === 0 || !user) return;
     try {
-      const sessionHash = getSessionHash();
       if (chatHistoryId.current) {
-        await (supabase.from as any)('cocoon_chat_histories').update({
+        await supabase.from('sav_conversations').update({
           messages: msgs,
           message_count: msgs.length,
         }).eq('id', chatHistoryId.current);
       } else {
-        const { data } = await (supabase.from as any)('cocoon_chat_histories').insert({
-          session_hash: sessionHash,
-          tracked_site_id: trackedSiteId,
-          domain,
+        const { data } = await supabase.from('sav_conversations').insert({
+          user_id: user.id,
+          user_email: user.email || '',
           messages: msgs,
           message_count: msgs.length,
-        }).select('id').single();
+          assistant_type: 'cocoon',
+          source_domain: domain,
+          tracked_site_id: trackedSiteId,
+        } as any).select('id').single();
         if (data) chatHistoryId.current = data.id;
       }
     } catch { /* silent */ }
-  }, [trackedSiteId, domain]);
+  }, [trackedSiteId, domain, user]);
 
   const buildContext = useCallback(() => {
     if (!nodes.length) return '';
