@@ -216,7 +216,42 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { messages, conversation_id, user_id } = await req.json();
+    const body = await req.json();
+
+    // ── Post-chat route tracking (separate lightweight action) ──
+    if (body.action === "track_post_chat") {
+      const sb = getServiceClient();
+      const { conversation_id: convId, post_chat_route, delay_seconds } = body;
+      if (convId && post_chat_route) {
+        // Get the suggested route from existing score
+        const { data: score } = await sb
+          .from("sav_quality_scores")
+          .select("id, suggested_route, precision_score")
+          .eq("conversation_id", convId)
+          .maybeSingle();
+
+        if (score) {
+          const routeMatch = score.suggested_route
+            ? post_chat_route.startsWith(score.suggested_route) || score.suggested_route.startsWith(post_chat_route)
+            : null;
+
+          let updatedScore = score.precision_score;
+          if (routeMatch === true) updatedScore = Math.min(100, updatedScore + 30);
+
+          await sb.from("sav_quality_scores").update({
+            post_chat_route,
+            route_match: routeMatch,
+            post_chat_delay_seconds: delay_seconds || null,
+            precision_score: updatedScore,
+          }).eq("id", score.id);
+        }
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, conversation_id, user_id } = body;
     if (!messages || !Array.isArray(messages) || !user_id) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
