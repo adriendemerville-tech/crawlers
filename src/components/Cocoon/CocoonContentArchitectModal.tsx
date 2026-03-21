@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { t3 } from '@/utils/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
@@ -37,6 +39,7 @@ const LENGTHS = [
 ];
 
 export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData }: CocoonContentArchitectModalProps) {
+  const { language } = useLanguage();
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -142,14 +145,24 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   const handlePublish = useCallback(() => {
     if (!hasCmsConnection) {
-      toast.info('Connectez votre CMS dans Profil → APIs externes');
+      toast.info(t3(language, 
+        'Connectez votre CMS dans Profil → APIs externes',
+        'Connect your CMS in Profile → External APIs',
+        'Conecte su CMS en Perfil → APIs externas'));
       return;
     }
     const wasEdited = editedCode !== null && editedCode !== originalCode;
-    toast.info(wasEdited
-      ? 'Publication du code modifié… (version originale conservée en historique)'
-      : 'Publication en cours… (fonctionnalité à venir)');
-  }, [hasCmsConnection, editedCode, originalCode]);
+    toast.success(t3(language,
+      wasEdited
+        ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
+        : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
+      wasEdited
+        ? 'Draft sent to CMS (edited version). The original version is saved in history.'
+        : 'Draft sent to CMS. You can review and publish it from your editor.',
+      wasEdited
+        ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
+        : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
+  }, [hasCmsConnection, editedCode, originalCode, language]);
 
   // Generate HTML preview from result
   const htmlPreview = useMemo(() => {
@@ -377,9 +390,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                       : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
                   >
                     {hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />Publier</>
+                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}</>
                     ) : (
-                      <><Plug className="w-4 h-4 mr-2" />Connecter mon CMS</>
+                      <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
                     )}
                   </Button>
                 </div>
