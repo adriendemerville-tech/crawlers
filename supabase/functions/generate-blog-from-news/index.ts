@@ -1,7 +1,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders } from '../_shared/cors.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
-// Pool d'images Unsplash variées pour éviter les doublons
+/**
+ * Blog Article Generator v2
+ * 
+ * Inspiré des moteurs d'audit technique et stratégique :
+ * - getSiteContext pour l'identité de marque contextuelle
+ * - Scoring qualité post-génération multi-axes (heading, E-E-A-T, maillage, keyword)
+ * - DataForSEO trending keywords pour guider le choix de sujet
+ * - Maillage interne intelligent basé sur les pages existantes
+ * - Validation contenu rigoureuse avant publication
+ * - Lovable AI Gateway avec tool calling
+ */
+
+// Pool d'images Unsplash variées
 const IMAGE_POOL = [
   "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1200&q=80",
   "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=1200&q=80",
@@ -23,6 +37,20 @@ const IMAGE_POOL = [
   "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80",
   "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&q=80",
   "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1200&q=80",
+];
+
+// ─── Key internal pages for smart linking (from audit patterns) ──────
+const INTERNAL_PAGES = [
+  { path: '/audit-expert', label: 'audit SEO technique', keywords: ['audit', 'technique', 'seo', '200 points', 'expert'] },
+  { path: '/generative-engine-optimization', label: 'GEO Score', keywords: ['geo', 'generative', 'llm', 'visibilité ia', 'chatgpt'] },
+  { path: '/tarifs', label: 'tarifs et crédits', keywords: ['prix', 'tarif', 'crédit', 'abonnement', 'pro agency'] },
+  { path: '/blog', label: 'blog Crawlers.fr', keywords: ['article', 'actualité', 'tendance'] },
+  { path: '/lexique', label: 'lexique SEO/GEO', keywords: ['définition', 'glossaire', 'lexique', 'terme'] },
+  { path: '/methodologie', label: 'méthodologie', keywords: ['algorithme', 'méthode', 'score', 'calcul'] },
+  { path: '/indice-alignement-strategique', label: 'IAS', keywords: ['ias', 'alignement', 'stratégique', 'indice'] },
+  { path: '/aide', label: 'centre d\'aide', keywords: ['aide', 'documentation', 'support', 'faq'] },
+  { path: '/cocoon', label: 'cocon sémantique', keywords: ['cocon', 'sémantique', 'maillage', 'cluster'] },
+  { path: '/faq', label: 'FAQ', keywords: ['question', 'fréquente', 'réponse'] },
 ];
 
 async function getUsedImages(supabase: any): Promise<string[]> {
@@ -53,6 +81,129 @@ async function getRecentArticleTitles(supabase: any): Promise<string[]> {
   return (data || []).map((a: any) => `${a.title} (/${a.slug})`);
 }
 
+// ─── Post-generation quality scoring (inspired by expert-audit) ──────
+interface ArticleQualityScore {
+  overall: number;
+  heading_structure: number;
+  internal_linking: number;
+  keyword_density: number;
+  eeat_signals: number;
+  data_density: number;
+  content_length: number;
+  issues: string[];
+}
+
+function scoreGeneratedArticle(htmlContent: string): ArticleQualityScore {
+  const issues: string[] = [];
+  const textOnly = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const lowerText = textOnly.toLowerCase();
+
+  // Heading structure
+  const h2Count = (htmlContent.match(/<h2/gi) || []).length;
+  const h3Count = (htmlContent.match(/<h3/gi) || []).length;
+  let headingScore = 0;
+  if (h2Count >= 1) headingScore += 30;
+  if (h3Count >= 2) headingScore += 30;
+  if (h2Count + h3Count >= 4) headingScore += 40;
+  else if (h2Count + h3Count < 2) issues.push('Structure Hn insuffisante');
+
+  // Internal linking
+  const internalLinks = (htmlContent.match(/href=["']\/[^"']*["']/gi) || []).length;
+  const crawlersLinks = (htmlContent.match(/crawlers\.fr/gi) || []).length;
+  let linkScore = Math.min(100, internalLinks * 15 + crawlersLinks * 10);
+  if (internalLinks < 2) issues.push('Maillage interne insuffisant');
+
+  // Keyword density (SEO/GEO terms)
+  const seoTerms = ['seo', 'geo', 'audit', 'llm', 'ia', 'google', 'optimisation', 'référencement', 'visibilité', 'chatgpt', 'perplexity', 'gemini', 'json-ld', 'e-e-a-t'];
+  const hits = seoTerms.filter(t => lowerText.includes(t)).length;
+  const kwScore = Math.min(100, Math.round((hits / 8) * 100));
+
+  // E-E-A-T signals
+  let eeatScore = 0;
+  if (/\d+\s*%/.test(textOnly)) eeatScore += 20; // has percentages
+  if (/selon|d'après|étude|rapport|source/i.test(textOnly)) eeatScore += 20; // has citations
+  if (/<a[^>]*href=["']https?:\/\//i.test(htmlContent)) eeatScore += 20; // external authority links
+  if (/expert|spécialiste|consultant|analyste/i.test(textOnly)) eeatScore += 20; // expertise markers
+  if (/\d{4}/.test(textOnly)) eeatScore += 20; // has dates/years
+
+  // Data density
+  const numberMatches = textOnly.match(/\d+[\.,]?\d*\s*(%|€|\$|x|fois|points?|jours?|mois|milliard|million)/gi) || [];
+  const dataScore = Math.min(100, numberMatches.length * 20);
+  if (numberMatches.length < 3) issues.push('Données chiffrées insuffisantes');
+
+  // Content length
+  const contentLength = textOnly.length;
+  let lengthScore = 0;
+  if (contentLength >= 4000 && contentLength <= 4600) lengthScore = 100;
+  else if (contentLength >= 3500 && contentLength <= 5000) lengthScore = 70;
+  else if (contentLength >= 3000) lengthScore = 40;
+  else { lengthScore = 20; issues.push(`Contenu trop court: ${contentLength} car. (cible: 4000-4600)`); }
+
+  // Summary/impact cards
+  if (!htmlContent.includes('summary-card')) issues.push('Bloc résumé manquant');
+  if (!htmlContent.includes('impact-card')) issues.push('Bloc impact manquant');
+
+  const overall = Math.round(
+    headingScore * 0.15 +
+    linkScore * 0.20 +
+    kwScore * 0.15 +
+    eeatScore * 0.20 +
+    dataScore * 0.15 +
+    lengthScore * 0.15
+  );
+
+  return {
+    overall,
+    heading_structure: headingScore,
+    internal_linking: linkScore,
+    keyword_density: kwScore,
+    eeat_signals: eeatScore,
+    data_density: dataScore,
+    content_length: lengthScore,
+    issues,
+  };
+}
+
+// ─── Suggest internal links based on article content (from audit link profile) ──
+function suggestInternalLinks(content: string): string[] {
+  const lowerContent = content.toLowerCase();
+  const suggestions: string[] = [];
+
+  for (const page of INTERNAL_PAGES) {
+    const hasLink = content.includes(`href="${page.path}"`) || content.includes(`href="https://crawlers.fr${page.path}"`);
+    if (hasLink) continue;
+
+    const relevance = page.keywords.filter(kw => lowerContent.includes(kw)).length;
+    if (relevance >= 2) {
+      suggestions.push(`Ajouter un lien vers ${page.path} (${page.label}) — ${relevance} mots-clés trouvés`);
+    }
+  }
+
+  return suggestions;
+}
+
+// ─── Fetch trending keywords from DataForSEO cache ──────────────────
+async function getTrendingKeywords(supabase: any): Promise<string[]> {
+  try {
+    const { data } = await supabase
+      .from('domain_data_cache')
+      .select('result_data')
+      .eq('domain', 'crawlers.fr')
+      .eq('data_type', 'ranked_keywords')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (data?.result_data?.top_keywords) {
+      return data.result_data.top_keywords
+        .slice(0, 10)
+        .map((k: any) => k.keyword)
+        .filter(Boolean);
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -65,21 +216,31 @@ Deno.serve(async (req) => {
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    console.log("[blog-gen] Starting blog article generation from news...");
+    console.log("[blog-gen v2] Starting blog article generation...");
 
-    // ─── STEP 0: Get existing articles for dedup + image uniqueness ───
-    const [recentTitles, usedImages] = await Promise.all([
+    // ─── STEP 0: Parallel context gathering (like strategic audit WAVE pattern) ───
+    const [recentTitles, usedImages, siteContext, trendingKeywords] = await Promise.all([
       getRecentArticleTitles(supabase),
       getUsedImages(supabase),
+      getSiteContext(supabase, { domain: 'crawlers.fr' }).catch(() => null),
+      getTrendingKeywords(supabase),
     ]);
 
     const dedupContext = recentTitles.length > 0
       ? `\n\nARTICLES DÉJÀ PUBLIÉS (NE PAS DUPLIQUER) :\n${recentTitles.map((t) => `- ${t}`).join("\n")}`
       : "";
 
-    console.log("[blog-gen] Existing articles for dedup:", recentTitles.length);
+    const trendingContext = trendingKeywords.length > 0
+      ? `\n\nMOTS-CLÉS TENDANCE (DataForSEO) à intégrer naturellement :\n${trendingKeywords.map(k => `- ${k}`).join('\n')}`
+      : "";
 
-    // ─── STEP 1: Get latest active news cards (< 30 days only) ───
+    const siteIdentity = siteContext
+      ? `\n\nIDENTITÉ SITE :\n- Marque : ${siteContext.brand_name || siteContext.site_name || 'Crawlers.fr'}\n- Secteur : ${siteContext.market_sector || 'SEO/GEO'}\n- Audience : ${siteContext.target_audience || 'Agences SEO, freelances, PME'}\n- Zone : ${siteContext.commercial_area || 'France, Europe francophone'}`
+      : "";
+
+    console.log(`[blog-gen v2] Context: ${recentTitles.length} recent articles, ${trendingKeywords.length} trending keywords, site identity: ${!!siteContext}`);
+
+    // ─── STEP 1: Get latest active news cards (< 30 days) ───
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: newsCards, error: newsErr } = await supabase
       .from("patience_cards")
@@ -91,7 +252,7 @@ Deno.serve(async (req) => {
       .limit(5);
 
     if (newsErr || !newsCards || newsCards.length === 0) {
-      console.log("[blog-gen] No fresh news cards (< 30 days) found, skipping");
+      console.log("[blog-gen v2] No fresh news cards (< 30 days) found, skipping");
       return new Response(
         JSON.stringify({ success: true, generated: 0, reason: "no_fresh_news" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -102,37 +263,29 @@ Deno.serve(async (req) => {
       .map((c: any) => `[${c.category.toUpperCase()}] (${new Date(c.created_at).toLocaleDateString("fr-FR")}) ${c.content}`)
       .join("\n\n");
 
-    console.log("[blog-gen] Aggregated", newsCards.length, "fresh news cards");
+    console.log("[blog-gen v2] Aggregated", newsCards.length, "fresh news cards");
 
-    // ─── STEP 2: Perplexity Sonar — recherche web en temps réel ───
+    // ─── STEP 2: Perplexity Sonar — web research ───
     const searchPrompt = `Voici des actualités SEO/GEO/IA récentes :
 
 ${newsContext}
 
-Identifie LE sujet le plus impactant parmi ces actualités. Puis effectue une recherche approfondie sur ce sujet.
+Identifie LE sujet le plus impactant parmi ces actualités. Puis effectue une recherche approfondie.
 IMPORTANT : Nous sommes en ${new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}. Ne traite QUE des faits de 2026.
 ${dedupContext}
+${trendingContext}
 
 Retourne UNIQUEMENT un JSON valide avec :
 {
   "topic": "Le sujet principal identifié",
-  "facts": [
-    {"stat": "chiffre ou pourcentage précis", "source": "nom de la source", "url": "URL de la source", "date": "date de la stat"},
-    ...au moins 5 faits
-  ],
-  "quotes": [
-    {"text": "citation exacte", "author": "nom complet", "role": "poste/titre", "source_url": "URL"},
-    ...au moins 2 citations
-  ],
-  "authority_links": [
-    {"title": "titre descriptif", "url": "URL vers source d'autorité"},
-    ...au moins 4 liens
-  ],
-  "entities": ["liste de noms propres, entreprises, outils mentionnés"],
-  "summary": "Résumé factuel en 200 mots du sujet avec données vérifiées"
+  "facts": [{"stat": "chiffre précis", "source": "nom source", "url": "URL", "date": "date stat"}],
+  "quotes": [{"text": "citation exacte", "author": "nom complet", "role": "poste", "source_url": "URL"}],
+  "authority_links": [{"title": "titre", "url": "URL vers source d'autorité"}],
+  "entities": ["liste de noms propres, entreprises, outils"],
+  "summary": "Résumé factuel en 200 mots"
 }`;
 
-    console.log("[blog-gen] Step 2: Calling Perplexity Sonar via OpenRouter for web search...");
+    console.log("[blog-gen v2] Step 2: Calling Perplexity Sonar...");
 
     const searchRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -140,7 +293,7 @@ Retourne UNIQUEMENT un JSON valide avec :
         "Content-Type": "application/json",
         Authorization: `Bearer ${openRouterKey}`,
         "HTTP-Referer": "https://crawlers.fr",
-        "X-Title": "Crawlers.fr Blog Generator",
+        "X-Title": "Crawlers.fr Blog Generator v2",
       },
       body: JSON.stringify({
         model: "perplexity/sonar",
@@ -154,7 +307,7 @@ Retourne UNIQUEMENT un JSON valide avec :
 
     if (!searchRes.ok) {
       const errText = await searchRes.text();
-      console.error("[blog-gen] Perplexity search failed:", searchRes.status, errText);
+      console.error("[blog-gen v2] Perplexity search failed:", searchRes.status, errText);
       throw new Error(`Web search failed: ${searchRes.status}`);
     }
 
@@ -162,98 +315,83 @@ Retourne UNIQUEMENT un JSON valide avec :
     const searchRaw = searchData.choices?.[0]?.message?.content || "";
     const searchCleaned = searchRaw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
 
+    trackPaidApiCall('generate-blog-from-news', 'openrouter', 'perplexity/sonar');
+
     let researchData: any;
     try {
       researchData = JSON.parse(searchCleaned);
     } catch {
-      console.error("[blog-gen] Failed to parse search JSON, using raw text as context");
+      console.error("[blog-gen v2] Failed to parse search JSON, using raw text");
       researchData = { summary: searchCleaned, facts: [], quotes: [], authority_links: [], entities: [] };
     }
 
-    console.log("[blog-gen] Research data obtained:", researchData.topic || "topic extracted");
+    console.log("[blog-gen v2] Research data obtained:", researchData.topic || "topic extracted");
 
-    // ─── STEP 3: Gemini — rédaction de l'article avec données sourcées ───
+    // ─── STEP 3: Gemini article writing with enriched context ───
     const currentDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-    
+
+    // Build internal linking instructions (from audit link profile pattern)
+    const linkingInstructions = INTERNAL_PAGES
+      .filter(() => Math.random() > 0.4) // Select ~60% of pages to avoid over-linking
+      .slice(0, 5)
+      .map(p => `- <a href="https://crawlers.fr${p.path}">${p.label}</a> (si pertinent pour : ${p.keywords.slice(0, 3).join(', ')})`)
+      .join('\n');
+
     const articlePrompt = `Tu es le rédacteur en chef de Crawlers.fr, plateforme d'audit SEO et GEO (Generative Engine Optimization).
 DATE ACTUELLE : ${currentDate}. Tous les contenus doivent refléter l'actualité de 2026.
+${siteIdentity}
 
 ## CONTRAINTE ANTI-REDONDANCE CRITIQUE :
-Voici les articles DÉJÀ PUBLIÉS ce mois-ci. Tu DOIS traiter un angle DIFFÉRENT :
 ${recentTitles.map((t) => `- ${t}`).join("\n") || "Aucun article récent."}
+Tu DOIS traiter un angle DIFFÉRENT.
 
-Si le sujet est similaire à un article existant, trouve un ANGLE NEUF (ex: impact sectoriel, guide pratique, analyse concurrentielle, étude de cas).
-
-## DONNÉES DE RECHERCHE VÉRIFIÉES (utilisées comme sources primaires) :
-
+## DONNÉES DE RECHERCHE VÉRIFIÉES :
 **Sujet :** ${researchData.topic || "SEO et visibilité IA en 2026"}
-
-**Faits et chiffres sourcés :**
+**Faits sourcés :**
 ${(researchData.facts || []).map((f: any) => `- ${f.stat} (Source: ${f.source}, ${f.date || "2026"}) [${f.url || ""}]`).join("\n")}
-
-**Citations exactes :**
+**Citations :**
 ${(researchData.quotes || []).map((q: any) => `- « ${q.text} » — ${q.author}, ${q.role} [${q.source_url || ""}]`).join("\n")}
-
-**Liens d'autorité disponibles :**
+**Liens d'autorité :**
 ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`).join("\n")}
-
-**Entités nommées :** ${(researchData.entities || []).join(", ")}
-
+**Entités :** ${(researchData.entities || []).join(", ")}
 **Contexte :** ${researchData.summary || newsContext}
+${trendingContext}
 
-## CONTRAINTES DE RÉDACTION STRICTES :
+## MAILLAGE INTERNE OBLIGATOIRE (stratégie cocon sémantique) :
+Inclure AU MOINS 3 liens internes parmi :
+${linkingInstructions}
+Les liens doivent être contextuels (dans le corps du texte), PAS dans un bloc séparé.
+IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir plus".
 
-1. **Longueur : entre 4000 et 4600 caractères** (espaces inclus). Compte les caractères du HTML brut sans les balises. C'est CRITIQUE et NON NÉGOCIABLE.
+## SIGNAUX E-E-A-T À RENFORCER :
+- Citer au moins 1 expert nommé avec son titre
+- Inclure au moins 3 statistiques vérifiées avec sources
+- Référencer au moins 2 études ou rapports d'autorité avec liens
+- Utiliser un vocabulaire technique précis et varié (pas de répétitions)
+- Mentionner des entités nommées (entreprises, outils, standards)
 
-2. **Structure HTML obligatoire :**
-   - Un <h2> principal (titre éditorial différent du titre SEO)
-   - 3-4 <h3> pour structurer les sous-parties
-   - Des <p> pour le corps de texte
-   - Des <strong> et <em> pour la mise en emphase sémantique
-
+## CONTRAINTES DE RÉDACTION :
+1. **Longueur : 4000-4600 caractères** (texte brut sans balises HTML). NON NÉGOCIABLE.
+2. **Structure HTML :**
+   - Un <h2> principal
+   - 3-4 <h3> pour structurer
+   - Des <p>, <strong>, <em>
 3. **Bloc résumé AU DÉBUT :**
 <div class="summary-card">
   <h4>📋 L'essentiel en 30 secondes</h4>
-  <ul>
-    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026 OBLIGATOIRE dans au moins un point)</li>
-    <li>Point clé 2</li>
-    <li>Point clé 3</li>
-    <li>Point clé 4</li>
-  </ul>
+  <ul><li>4 points clés avec AU MOINS 1 chiffre vérifié et 1 mention de 2026</li></ul>
 </div>
-
 4. **Bloc impact À LA FIN :**
 <div class="impact-card">
   <h4>🏢 Qu'est-ce que cela change pour mon entreprise ?</h4>
-  <table>
-    <thead><tr><th>Impact</th><th>Action recommandée</th></tr></thead>
-    <tbody>
-      <tr><td>Impact concret 1</td><td>Action précise 1</td></tr>
-      <tr><td>Impact concret 2</td><td>Action précise 2</td></tr>
-      <tr><td>Impact concret 3</td><td>Action précise 3</td></tr>
-    </tbody>
-  </table>
+  <table><thead><tr><th>Impact</th><th>Action recommandée</th></tr></thead>
+  <tbody>3 lignes impact/action</tbody></table>
 </div>
+5. Crawlers.fr mentionné UNE SEULE FOIS, naturellement
+6. Utiliser UNIQUEMENT les chiffres des données de recherche
+7. AU MOINS 3 liens <a href="URL" target="_blank" rel="noopener"> vers sources d'autorité`;
 
-5. **Obligations de contenu :**
-   - Utiliser UNIQUEMENT les chiffres fournis dans les données de recherche ci-dessus. NE PAS inventer de statistiques.
-   - Inclure AU MOINS 3 liens <a href="URL_RÉELLE" target="_blank" rel="noopener"> vers les sources d'autorité listées.
-   - Inclure AU MOINS 1 citation avec attribution (nom, poste).
-   - Vocabulaire riche : synonymes, termes techniques variés, entités nommées.
-   - Mentionner Crawlers.fr UNE SEULE FOIS, naturellement, comme outil de diagnostic SEO/GEO.
-   - Le titre SEO ne doit PAS obligatoirement contenir 2026, mais le bloc résumé (summary-card) DOIT mentionner 2026 au moins une fois.
-
-6. **Retourne UNIQUEMENT un JSON valide (pas de markdown) :**
-{
-  "title": "Titre SEO < 60 caractères avec mot-clé principal",
-  "slug": "slug-url-minuscules-tirets-sans-accents",
-  "excerpt": "Meta description < 155 caractères, accrocheuse, mot-clé inclus",
-  "content": "<div class='summary-card'>...</div><h2>...</h2>...<div class='impact-card'>...</div>",
-  "category": "seo|geo|llm|ia",
-  "keywords": "mot-clé 1, mot-clé 2, mot-clé 3, mot-clé 4, mot-clé 5"
-}`;
-
-    console.log("[blog-gen] Step 3: Calling Gemini for article writing with tool calling...");
+    console.log("[blog-gen v2] Step 3: Calling Gemini with tool calling...");
 
     const genRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -266,7 +404,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
         messages: [
           {
             role: "system",
-            content: "Tu es un rédacteur SEO/GEO expert. Tu produis du contenu factuel basé exclusivement sur les données de recherche fournies. Nous sommes en 2026.",
+            content: "Tu es un rédacteur SEO/GEO expert produisant du contenu factuel sourcé. Nous sommes en 2026. Renforce les signaux E-E-A-T dans chaque article.",
           },
           { role: "user", content: articlePrompt },
         ],
@@ -280,10 +418,10 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
               parameters: {
                 type: "object",
                 properties: {
-                  title: { type: "string", description: "SEO title < 60 chars with 2026" },
+                  title: { type: "string", description: "SEO title < 60 chars" },
                   slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
                   excerpt: { type: "string", description: "Meta description < 155 chars" },
-                  content: { type: "string", description: "Full HTML article content with summary-card and impact-card divs" },
+                  content: { type: "string", description: "Full HTML article with summary-card, impact-card, internal links, external authority links" },
                   category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
                   keywords: { type: "string", description: "Comma-separated keywords" },
                 },
@@ -299,32 +437,42 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 
     if (!genRes.ok) {
       const errText = await genRes.text();
-      console.error("[blog-gen] Generation failed:", genRes.status, errText);
+      console.error("[blog-gen v2] Generation failed:", genRes.status, errText);
+
+      // Handle rate limit / payment errors
+      if (genRes.status === 429) {
+        return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded, retry later" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (genRes.status === 402) {
+        return new Response(JSON.stringify({ success: false, error: "Payment required for AI credits" }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       throw new Error(`AI generation failed: ${genRes.status}`);
     }
 
     const genData = await genRes.json();
-    
+
     let article: any;
-    
-    // Try tool call first
     const toolCall = genData.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {
         article = JSON.parse(toolCall.function.arguments);
       } catch {
-        console.error("[blog-gen] Failed to parse tool call arguments");
+        console.error("[blog-gen v2] Failed to parse tool call arguments");
       }
     }
-    
-    // Fallback to content parsing
+
     if (!article) {
       const rawText = genData.choices?.[0]?.message?.content || "";
       const cleaned = rawText.replace(/```json\n?/g, "").replace(/```/g, "").trim();
       try {
         article = JSON.parse(cleaned);
       } catch {
-        console.error("[blog-gen] Failed to parse JSON fallback:", cleaned.slice(0, 500));
+        console.error("[blog-gen v2] Failed to parse JSON fallback:", cleaned.slice(0, 500));
         throw new Error("Failed to parse AI response");
       }
     }
@@ -333,16 +481,34 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
       throw new Error("AI returned incomplete article data");
     }
 
-    // Validate content length (text only, no HTML tags)
-    const textOnly = article.content.replace(/<[^>]*>/g, "");
-    const contentLength = textOnly.length;
-    console.log("[blog-gen] Content length:", contentLength, "chars (target: 4000-4600)");
+    // ─── STEP 4: Quality scoring (inspired by expert-audit) ───
+    const qualityScore = scoreGeneratedArticle(article.content);
+    console.log(`[blog-gen v2] Quality score: ${qualityScore.overall}/100 | heading=${qualityScore.heading_structure} links=${qualityScore.internal_linking} kw=${qualityScore.keyword_density} eeat=${qualityScore.eeat_signals} data=${qualityScore.data_density}`);
 
-    if (contentLength < 3500) {
-      console.warn("[blog-gen] Content too short, may need regeneration");
+    if (qualityScore.issues.length > 0) {
+      console.warn(`[blog-gen v2] Quality issues: ${qualityScore.issues.join(', ')}`);
     }
 
-    // ─── STEP 4: Check for duplicate slug ───
+    // Suggest missing internal links
+    const linkSuggestions = suggestInternalLinks(article.content);
+    if (linkSuggestions.length > 0) {
+      console.log(`[blog-gen v2] Link suggestions: ${linkSuggestions.join(' | ')}`);
+    }
+
+    const textOnly = article.content.replace(/<[^>]*>/g, "");
+    const contentLength = textOnly.length;
+    console.log(`[blog-gen v2] Content length: ${contentLength} chars (target: 4000-4600)`);
+
+    // ─── STEP 5: Reject if quality too low (regeneration needed) ───
+    if (qualityScore.overall < 30 || contentLength < 2000) {
+      console.error(`[blog-gen v2] Quality too low (${qualityScore.overall}/100) or content too short (${contentLength}), rejecting`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Generated content quality too low", score: qualityScore.overall, issues: qualityScore.issues }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── STEP 6: Slug dedup ───
     const { data: existing } = await supabase
       .from("blog_articles")
       .select("id")
@@ -353,30 +519,22 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
       article.slug = `${article.slug}-${new Date().toISOString().slice(0, 10)}`;
     }
 
-    // ─── STEP 5: Pick unique image ───
     const imageUrl = pickUniqueImage(usedImages);
 
-    // ─── STEP 6: Generate EN + ES translations ───
-    console.log("[blog-gen] Step 6: Generating EN + ES translations...");
+    // ─── STEP 7: EN + ES translations (parallel) ───
+    console.log("[blog-gen v2] Step 7: Generating translations...");
 
     const translationPrompt = (lang: string, langLabel: string) => `You are a professional SEO translator. Translate this French blog article to ${langLabel}.
 
 RULES:
-- Keep ALL HTML structure intact (tags, classes, attributes)
-- Keep brand names (Crawlers.fr, Google, ChatGPT, etc.) unchanged
+- Keep ALL HTML structure intact
+- Keep brand names unchanged
 - Keep URLs unchanged
-- Adapt cultural references naturally
-- The translation must be fluent and native-sounding, NOT literal
-- Keep technical SEO/GEO terms that are commonly used in ${langLabel}
-- Return ONLY a JSON object with exactly these fields:
+- Native-sounding translation, NOT literal
+- Return ONLY a JSON object:
+{"title": "Translated title < 60 chars", "excerpt": "Translated meta < 155 chars", "content": "Full translated HTML"}
 
-{
-  "title": "Translated SEO title < 60 chars",
-  "excerpt": "Translated meta description < 155 chars",
-  "content": "Full translated HTML content"
-}
-
-FRENCH ARTICLE TO TRANSLATE:
+FRENCH ARTICLE:
 Title: ${article.title}
 Excerpt: ${article.excerpt}
 Content: ${article.content}`;
@@ -384,14 +542,11 @@ Content: ${article.content}`;
     const [enRes, esRes] = await Promise.all([
       fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${lovableApiKey}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
-            { role: "system", content: "You are a professional translator. Return only valid JSON." },
+            { role: "system", content: "Professional translator. Return only valid JSON." },
             { role: "user", content: translationPrompt("en", "English") },
           ],
           temperature: 0.3,
@@ -399,14 +554,11 @@ Content: ${article.content}`;
       }),
       fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${lovableApiKey}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
-            { role: "system", content: "You are a professional translator. Return only valid JSON." },
+            { role: "system", content: "Professional translator. Return only valid JSON." },
             { role: "user", content: translationPrompt("es", "Spanish") },
           ],
           temperature: 0.3,
@@ -426,16 +578,14 @@ Content: ${article.content}`;
           const parsed = JSON.parse(cleaned);
           if (lang === "en") enArticle = parsed;
           else esArticle = parsed;
-          console.log(`[blog-gen] ✅ ${lang.toUpperCase()} translation ready`);
-        } else {
-          console.warn(`[blog-gen] ⚠️ ${lang.toUpperCase()} translation failed: ${res.status}`);
+          console.log(`[blog-gen v2] ✅ ${lang.toUpperCase()} translation ready`);
         }
       } catch (e) {
-        console.warn(`[blog-gen] ⚠️ ${lang.toUpperCase()} translation parse error:`, e);
+        console.warn(`[blog-gen v2] ⚠️ ${lang.toUpperCase()} translation error:`, e);
       }
     }
 
-    // ─── STEP 7: Insert into blog_articles ───
+    // ─── STEP 8: Insert with quality metadata ───
     const now = new Date().toISOString();
     const { data: inserted, error: insertErr } = await supabase
       .from("blog_articles")
@@ -458,13 +608,16 @@ Content: ${article.content}`;
       .single();
 
     if (insertErr) {
-      console.error("[blog-gen] Insert error:", insertErr);
+      console.error("[blog-gen v2] Insert error:", insertErr);
       throw insertErr;
     }
 
-    console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars, image: ${imageUrl}, EN: ${!!enArticle}, ES: ${!!esArticle})`);
+    // Track tokens
+    await trackTokenUsage('generate-blog-from-news', 'google/gemini-2.5-flash', genData.usage).catch(() => {});
 
-    // ─── STEP 8: Ping Google sitemap for instant indexation ───
+    console.log(`[blog-gen v2] ✅ Published: ${inserted.slug} (${contentLength} chars, quality: ${qualityScore.overall}/100, EN: ${!!enArticle}, ES: ${!!esArticle})`);
+
+    // ─── STEP 9: Ping search engines ───
     const sitemapUrl = `${supabaseUrl}/functions/v1/sitemap`;
     const pingUrls = [
       `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
@@ -474,9 +627,9 @@ Content: ${article.content}`;
     for (const pingUrl of pingUrls) {
       try {
         const pingRes = await fetch(pingUrl, { method: "GET" });
-        console.log(`[blog-gen] Ping ${new URL(pingUrl).hostname}: ${pingRes.status}`);
+        console.log(`[blog-gen v2] Ping ${new URL(pingUrl).hostname}: ${pingRes.status}`);
       } catch (e) {
-        console.warn(`[blog-gen] Ping failed for ${pingUrl}:`, e);
+        console.warn(`[blog-gen v2] Ping failed:`, e);
       }
     }
 
@@ -491,12 +644,26 @@ Content: ${article.content}`;
           keywords: article.keywords,
           contentLength,
           imageUrl,
+          qualityScore: {
+            overall: qualityScore.overall,
+            axes: {
+              heading: qualityScore.heading_structure,
+              links: qualityScore.internal_linking,
+              keywords: qualityScore.keyword_density,
+              eeat: qualityScore.eeat_signals,
+              data: qualityScore.data_density,
+              length: qualityScore.content_length,
+            },
+            issues: qualityScore.issues,
+          },
+          linkSuggestions,
+          translations: { en: !!enArticle, es: !!esArticle },
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("[blog-gen] Error:", err);
+    console.error("[blog-gen v2] Error:", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
