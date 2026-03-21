@@ -73,7 +73,7 @@ export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerP
             id: s.id,
             type: 'script',
             title: `${s.payload_type} — ${s.url_pattern}`,
-            domain: s.tracked_sites?.domain,
+            domain: domainMap[s.domain_id] || undefined,
             created_at: s.created_at,
           });
         });
