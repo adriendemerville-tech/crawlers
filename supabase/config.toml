@@ -125,3 +125,11 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.linkwhisper-actions]
     verify_jwt = false
+  [functions.cocoon-diag-content]
+    verify_jwt = false
+  [functions.cocoon-diag-semantic]
+    verify_jwt = false
+  [functions.cocoon-diag-structure]
+    verify_jwt = false
+  [functions.cocoon-diag-authority]
+    verify_jwt = false
