@@ -3563,6 +3563,7 @@ export type Database = {
       }
       sav_conversations: {
         Row: {
+          assistant_type: string
           created_at: string
           escalated: boolean
           id: string
@@ -3571,11 +3572,14 @@ export type Database = {
           phone_callback: string | null
           phone_callback_expires_at: string | null
           satisfaction_resolved: boolean | null
+          source_domain: string | null
+          tracked_site_id: string | null
           updated_at: string
           user_email: string | null
           user_id: string
         }
         Insert: {
+          assistant_type?: string
           created_at?: string
           escalated?: boolean
           id?: string
@@ -3584,11 +3588,14 @@ export type Database = {
           phone_callback?: string | null
           phone_callback_expires_at?: string | null
           satisfaction_resolved?: boolean | null
+          source_domain?: string | null
+          tracked_site_id?: string | null
           updated_at?: string
           user_email?: string | null
           user_id: string
         }
         Update: {
+          assistant_type?: string
           created_at?: string
           escalated?: boolean
           id?: string
@@ -3597,6 +3604,8 @@ export type Database = {
           phone_callback?: string | null
           phone_callback_expires_at?: string | null
           satisfaction_resolved?: boolean | null
+          source_domain?: string | null
+          tracked_site_id?: string | null
           updated_at?: string
           user_email?: string | null
           user_id?: string

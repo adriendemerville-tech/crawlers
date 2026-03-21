@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Syringe } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
+import { Syringe, Hammer } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +9,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
+import { ChatMicButton } from '@/components/Support/ChatMicButton';
+import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
@@ -256,6 +259,7 @@ function getSessionHash(): string {
 export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -271,8 +275,17 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [fontSize, setFontSize] = useState(12); // px base for messages
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
+  const [showArchitectModal, setShowArchitectModal] = useState(false);
+  const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
+
+  // Check CMS connection
+  useEffect(() => {
+    if (!user || !trackedSiteId) return;
+    supabase.from('cms_connections').select('id').eq('tracked_site_id', trackedSiteId).limit(1)
+      .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
+  }, [user, trackedSiteId]);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -298,28 +311,29 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     }
   }, [messages]);
 
-  // Save chat history anonymously
+  // Save chat history to shared sav_conversations table
   const saveHistory = useCallback(async (msgs: Msg[]) => {
-    if (!trackedSiteId || !domain || msgs.length === 0) return;
+    if (!trackedSiteId || !domain || msgs.length === 0 || !user) return;
     try {
-      const sessionHash = getSessionHash();
       if (chatHistoryId.current) {
-        await (supabase.from as any)('cocoon_chat_histories').update({
+        await supabase.from('sav_conversations').update({
           messages: msgs,
           message_count: msgs.length,
         }).eq('id', chatHistoryId.current);
       } else {
-        const { data } = await (supabase.from as any)('cocoon_chat_histories').insert({
-          session_hash: sessionHash,
-          tracked_site_id: trackedSiteId,
-          domain,
+        const { data } = await supabase.from('sav_conversations').insert({
+          user_id: user.id,
+          user_email: user.email || '',
           messages: msgs,
           message_count: msgs.length,
-        }).select('id').single();
+          assistant_type: 'cocoon',
+          source_domain: domain,
+          tracked_site_id: trackedSiteId,
+        } as any).select('id').single();
         if (data) chatHistoryId.current = data.id;
       }
     } catch { /* silent */ }
-  }, [trackedSiteId, domain]);
+  }, [trackedSiteId, domain, user]);
 
   const buildContext = useCallback(() => {
     if (!nodes.length) return '';
@@ -1024,7 +1038,17 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            <div className="flex gap-2">
+            {/* Admin: Construire les pages button */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowArchitectModal(true)}
+                className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 text-violet-300 text-[11px] font-medium hover:from-violet-500/25 hover:to-indigo-500/25 transition-all"
+              >
+                <Hammer className="w-3 h-3" />
+                Construire les pages
+              </button>
+            )}
+            <div className="flex gap-2 items-end">
               <Textarea
                 value={input}
                 onChange={(e) => {
@@ -1038,6 +1062,12 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                 placeholder={t.placeholder}
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
+              />
+              <ChatMicButton
+                onTranscript={(text) => {
+                  setInput(prev => prev ? prev + ' ' + text : text);
+                }}
+                disabled={isLoading}
               />
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
@@ -1063,6 +1093,18 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
         )}
       </button>
+
+      {/* Content Architect Modal — admin only */}
+      {isAdmin && (
+        <CocoonContentArchitectModal
+          isOpen={showArchitectModal}
+          onClose={() => setShowArchitectModal(false)}
+          nodes={nodes}
+          domain={domain}
+          trackedSiteId={trackedSiteId}
+          hasCmsConnection={hasCmsConnection}
+        />
+      )}
     </div>
   );
 }
