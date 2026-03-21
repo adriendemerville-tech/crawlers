@@ -956,7 +956,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                     <button
                       onClick={() => handleDeployLinks(msg.content)}
                       disabled={isDeploying || deploySuccess}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-medium transition-all ${
                         deploySuccess
                           ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-300'
                           : isDeploying
