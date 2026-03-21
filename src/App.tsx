@@ -67,6 +67,7 @@ const Cocoon = lazy(() => import("./pages/Cocoon"));
 const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
 const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
+const Aide = lazy(() => import("./pages/Aide"));
 
 // Loading fallback
 const PageLoader = () => (
