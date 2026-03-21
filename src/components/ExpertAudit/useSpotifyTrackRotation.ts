@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-
-const TRACK_ROTATION_MS = 30000;
 const STORAGE_KEY = 'crawlers_custom_spotify_playlist';
 const SPOTIFY_IFRAME_API_SRC = 'https://open.spotify.com/embed/iframe-api/v1';
 
