@@ -28,6 +28,8 @@ export interface SiteContext {
   address?: string
   entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
   media_specialties?: string[] // e.g. ['politique', 'économie', 'tech']
+  commercial_model?: string   // 'commercial' | 'non_commercial'
+  nonprofit_type?: string     // 'service_public' | 'association_locale' | 'ong' | 'organisation_internationale' | 'federation_sportive' | 'syndicat' | 'autre'
   identity_confidence?: number
   identity_source?: string
   identity_enriched_at?: string
