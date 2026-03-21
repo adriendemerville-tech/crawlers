@@ -1139,6 +1139,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
           domain={domain}
           trackedSiteId={trackedSiteId}
           hasCmsConnection={hasCmsConnection}
+          draftData={architectDraft}
         />
       )}
     </div>
