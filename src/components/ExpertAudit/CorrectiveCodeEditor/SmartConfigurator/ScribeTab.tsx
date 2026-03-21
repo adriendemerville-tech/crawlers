@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,9 @@ import { toast } from 'sonner';
 import { 
   Loader2, Sparkles, Link2, FileText, Globe, Search, Image, 
   Target, Users, Languages, Gauge, Swords, PenTool, Copy, Check,
-  ShieldCheck, ShieldAlert, AlertTriangle
+  ShieldCheck, ShieldAlert, AlertTriangle, Wand2
 } from 'lucide-react';
+import { ScribeResultsPanel } from './ScribeResultsPanel';
 
 const PAGE_TYPES = [
   { value: 'homepage', label: 'Page d\'accueil' },
@@ -54,6 +55,76 @@ interface ScribeTabProps {
   trackedSiteId?: string | null;
 }
 
+// --- Helpers to map identity card data to form values ---
+
+function mapTargetAudienceToPersona(target?: string | null, businessType?: string | null): string {
+  if (!target) {
+    if (businessType === 'B2B') return 'b2b_decision';
+    return 'b2c_general';
+  }
+  const t = target.toLowerCase();
+  if (t.includes('b2b') || t.includes('décideur') || t.includes('entreprise') || t.includes('professionnel'))
+    return 'b2b_decision';
+  if (t.includes('premium') || t.includes('luxe') || t.includes('haut de gamme'))
+    return 'b2c_premium';
+  if (t.includes('expert') || t.includes('technique') || t.includes('développeur') || t.includes('ingénieur'))
+    return 'expert_tech';
+  if (t.includes('étudiant') || t.includes('formation') || t.includes('apprenant'))
+    return 'student';
+  if (t.includes('local') || t.includes('proximité') || t.includes('quartier'))
+    return 'local';
+  return 'b2c_general';
+}
+
+function mapEntityTypeToTone(entityType?: string | null, nonprofitType?: string | null): string {
+  if (nonprofitType) {
+    if (['service_public', 'ong', 'organisation_internationale'].includes(nonprofitType))
+      return 'institutional';
+    if (['association_locale', 'federation_sportive'].includes(nonprofitType))
+      return 'friendly';
+    return 'professional';
+  }
+  if (!entityType) return 'auto';
+  const e = entityType.toLowerCase();
+  if (e.includes('public') || e.includes('government') || e.includes('institution')) return 'institutional';
+  if (e.includes('startup') || e.includes('saas')) return 'conversational';
+  return 'auto';
+}
+
+function extractJargonLevel(jargonDistance?: any): number {
+  if (!jargonDistance) return 4;
+  if (typeof jargonDistance === 'number') return Math.min(10, Math.max(1, Math.round(jargonDistance)));
+  if (typeof jargonDistance === 'object' && jargonDistance.score != null)
+    return Math.min(10, Math.max(1, Math.round(jargonDistance.score)));
+  return 4;
+}
+
+function extractCompetitorUrls(competitors?: any, mainSerpCompetitor?: string | null): string {
+  const urls: string[] = [];
+  if (mainSerpCompetitor) urls.push(mainSerpCompetitor);
+  if (Array.isArray(competitors)) {
+    competitors.slice(0, 3).forEach((c: any) => {
+      const u = typeof c === 'string' ? c : c?.url || c?.domain;
+      if (u && !urls.includes(u)) urls.push(u);
+    });
+  } else if (competitors && typeof competitors === 'object') {
+    Object.values(competitors).slice(0, 3).forEach((c: any) => {
+      const u = typeof c === 'string' ? c : c?.url || c?.domain;
+      if (u && !urls.includes(u)) urls.push(u);
+    });
+  }
+  return urls.slice(0, 3).join('\n');
+}
+
+function mapLanguage(lang?: string | null): string {
+  if (!lang) return 'auto';
+  const l = lang.toLowerCase();
+  if (l.startsWith('fr')) return 'fr';
+  if (l.startsWith('en')) return 'en';
+  if (l.startsWith('es')) return 'es';
+  return 'auto';
+}
+
 export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
   // Form state
   const [prompt, setPrompt] = useState('');
@@ -70,10 +141,93 @@ export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
   const [competitors, setCompetitors] = useState('');
   const [enableCocoonLinks, setEnableCocoonLinks] = useState(true);
 
+  // Auto-fill state
+  const [autoFilled, setAutoFilled] = useState(false);
+  const [siteData, setSiteData] = useState<any>(null);
+
   // Results
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
+
+  // Auto-fill from tracked site identity card
+  useEffect(() => {
+    if (!trackedSiteId || autoFilled) return;
+    
+    const fetchAndFill = async () => {
+      try {
+        const { data: site } = await supabase
+          .from('tracked_sites')
+          .select('domain, market_sector, target_audience, business_type, primary_language, competitors, entity_type, nonprofit_type, commercial_model, jargon_distance, client_targets, brand_name, main_serp_competitor, products_services')
+          .eq('id', trackedSiteId)
+          .maybeSingle();
+
+        if (!site) return;
+        setSiteData(site);
+
+        // Language
+        setLanguage(mapLanguage(site.primary_language));
+
+        // Persona from target_audience + business_type
+        setPersona(mapTargetAudienceToPersona(site.target_audience, site.business_type));
+
+        // Tone from entity_type + nonprofit_type
+        setTone(mapEntityTypeToTone(site.entity_type, site.nonprofit_type));
+
+        // Jargon level
+        setJargonLevel([extractJargonLevel(site.jargon_distance)]);
+
+        // Competitors
+        const compUrls = extractCompetitorUrls(site.competitors, site.main_serp_competitor);
+        if (compUrls) setCompetitors(compUrls);
+
+        // Auto-generate a smart prompt from identity
+        const parts: string[] = [];
+        if (site.brand_name) parts.push(`Marque : ${site.brand_name}`);
+        if (site.market_sector) parts.push(`Secteur : ${site.market_sector}`);
+        if (site.products_services) parts.push(`Offre : ${site.products_services}`);
+        if (site.target_audience) parts.push(`Cible : ${site.target_audience}`);
+        if (parts.length > 0) {
+          setPrompt(`Contexte : ${parts.join(' | ')}. Génère un contenu optimisé pour ce profil.`);
+        }
+
+        // Suggest CTA link from domain
+        if (site.commercial_model === 'marchand' || site.business_type === 'B2C' || site.business_type === 'B2B') {
+          setCtaLink(`https://${site.domain}/contact`);
+        }
+
+        // Try to fetch a top keyword from recent audits/SERP data
+        const { data: serpData } = await supabase
+          .from('domain_data_cache')
+          .select('result_data')
+          .eq('domain', site.domain)
+          .eq('data_type', 'serp_keywords')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (serpData?.result_data) {
+          const kws = serpData.result_data as any;
+          const topKw = Array.isArray(kws) ? kws[0] : kws?.items?.[0] || kws?.keywords?.[0];
+          if (topKw) {
+            const kwText = typeof topKw === 'string' ? topKw : topKw?.keyword || topKw?.query;
+            if (kwText) setKeyword(kwText);
+          }
+        }
+
+        setAutoFilled(true);
+        toast.success('Champs pré-remplis depuis la carte d\'identité du site');
+      } catch (err) {
+        console.error('Auto-fill error:', err);
+      }
+    };
+
+    fetchAndFill();
+  }, [trackedSiteId, autoFilled]);
+
+  // Update URL if defaultUrl changes
+  useEffect(() => {
+    if (defaultUrl) setUrl(defaultUrl);
+  }, [defaultUrl]);
 
   const handleGenerate = async () => {
     if (!url || !keyword) {
@@ -89,7 +243,6 @@ export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
           keyword,
           page_type: pageType,
           tracked_site_id: trackedSiteId || undefined,
-          // Extended Scribe fields
           scribe_mode: true,
           prompt: prompt || undefined,
           target_length: length,
@@ -115,13 +268,6 @@ export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success('Copié !');
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -132,6 +278,12 @@ export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
         <span className="text-xs text-muted-foreground">
           Scribe génère une architecture de contenu optimisée SEO/GEO via Content Architecture Advisor
         </span>
+        {autoFilled && (
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs ml-auto">
+            <Wand2 className="w-3 h-3 mr-1" />
+            Auto-rempli
+          </Badge>
+        )}
       </div>
 
       {/* Form Grid */}
@@ -367,136 +519,7 @@ export function ScribeTab({ defaultUrl = '', trackedSiteId }: ScribeTabProps) {
       </Button>
 
       {/* Results */}
-      {result && (
-        <ScrollArea className="max-h-[400px]">
-          <div className="space-y-4">
-            {/* Coherence guardrail banner */}
-            {result.coherence_check && (
-              <Card className={`border ${
-                result.coherence_check.innovation_level === 'disruptive' 
-                  ? 'border-amber-500/50 bg-amber-500/5' 
-                  : 'border-emerald-500/50 bg-emerald-500/5'
-              }`}>
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    {result.coherence_check.innovation_level === 'disruptive' ? (
-                      <ShieldAlert className="w-4 h-4 text-amber-500" />
-                    ) : (
-                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    )}
-                    <span className="text-xs font-medium">Garde-fous cohérence</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-[10px]">
-                      Innovation: {result.coherence_check.innovation_level}
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px]">
-                      Fit secteur: {result.coherence_check.sector_fit}%
-                    </Badge>
-                    {result.coherence_check.tone_continuity && (
-                      <Badge variant="outline" className="text-[10px]">
-                        Ton: {result.coherence_check.tone_continuity}%
-                      </Badge>
-                    )}
-                  </div>
-                  {result.guardrail_warnings?.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {result.guardrail_warnings.map((w: string, i: number) => (
-                        <div key={i} className="flex items-start gap-1 text-[10px] text-amber-600">
-                          <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                          <span>{w}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Recommended structure */}
-            {result.recommended_structure && (
-              <Card className="border-primary/20">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Structure recommandée</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(JSON.stringify(result.recommended_structure, null, 2))}
-                    >
-                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    </Button>
-                  </div>
-                  <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap overflow-hidden font-mono bg-muted/50 p-2 rounded">
-                    {JSON.stringify(result.recommended_structure, null, 2)}
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Schema.org / Metadata */}
-            {result.recommended_metadata && (
-              <Card className="border-primary/20">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Métadonnées & Schema.org</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(JSON.stringify(result.recommended_metadata, null, 2))}
-                    >
-                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    </Button>
-                  </div>
-                  <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap overflow-hidden font-mono bg-muted/50 p-2 rounded">
-                    {JSON.stringify(result.recommended_metadata, null, 2)}
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Keywords */}
-            {result.keyword_analysis && (
-              <Card className="border-primary/20">
-                <CardContent className="p-3">
-                  <span className="text-sm font-medium block mb-2">Analyse mots-clés</span>
-                  <div className="flex flex-wrap gap-1">
-                    {(result.keyword_analysis.primary_keywords || []).map((kw: any, i: number) => (
-                      <Badge key={i} className="text-[10px] bg-primary/10 text-primary">
-                        {typeof kw === 'string' ? kw : kw.keyword} 
-                        {kw.volume && <span className="ml-1 opacity-60">({kw.volume})</span>}
-                      </Badge>
-                    ))}
-                    {(result.keyword_analysis.secondary_keywords || []).map((kw: any, i: number) => (
-                      <Badge key={`s-${i}`} variant="outline" className="text-[10px]">
-                        {typeof kw === 'string' ? kw : kw.keyword}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Internal links (Cocoon) */}
-            {result.internal_links && result.internal_links.length > 0 && (
-              <Card className="border-primary/20">
-                <CardContent className="p-3">
-                  <span className="text-sm font-medium block mb-2">🕸️ Maillage interne suggéré</span>
-                  <div className="space-y-1">
-                    {result.internal_links.map((link: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
-                        <Link2 className="w-3 h-3 text-muted-foreground shrink-0" />
-                        <span className="text-primary truncate">{link.anchor || link.url}</span>
-                        <span className="text-muted-foreground text-[10px]">→ {link.url}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </ScrollArea>
-      )}
+      {result && <ScribeResultsPanel result={result} />}
     </div>
   );
 }
