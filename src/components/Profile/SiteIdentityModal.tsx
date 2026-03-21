@@ -14,10 +14,22 @@ interface SiteIdentityModalProps {
   onUpdate?: () => void;
 }
 
+const NONPROFIT_LABELS: Record<string, string> = {
+  'service_public': 'Service public',
+  'association_locale': 'Association locale',
+  'ong': 'ONG',
+  'organisation_internationale': 'Organisation internationale',
+  'federation_sportive': 'Fédération sportive',
+  'syndicat': 'Syndicat',
+  'autre': 'Autre (fondation, mutuelle…)',
+};
+
 const TAXONOMY_FIELDS = [
   { key: 'site_name', label: 'Nom du site' },
   { key: 'brand_name', label: 'Nom de marque' },
   { key: 'entity_type', label: "Type d'entité" },
+  { key: 'commercial_model', label: 'Modèle commercial', hint: 'commercial / non_commercial' },
+  { key: 'nonprofit_type', label: 'Type d\'organisation non marchande', hint: Object.keys(NONPROFIT_LABELS).join(', ') },
   { key: 'market_sector', label: "Secteur d'activité" },
   { key: 'products_services', label: 'Produits / Services' },
   { key: 'target_audience', label: 'Audience cible' },
