@@ -225,7 +225,7 @@ serve(async (req) => {
       ? 'You MUST reply entirely in English.'
       : language === 'es'
         ? 'Debes responder SIEMPRE en español.'
-        : 'Tu DOIS répondre entièrement en français.';
+        : `DÉTECTION DE LANGUE : Détecte la langue du premier message de l'utilisateur. Si l'utilisateur écrit en anglais, réponds ENTIÈREMENT en anglais. Si en espagnol, réponds ENTIÈREMENT en espagnol. Sinon, réponds en français. Conserve cette langue pour TOUTE la conversation.`;
 
     const basePrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
 
