@@ -110,16 +110,21 @@ function BlogIndexComponent() {
   return (
     <>
       <Helmet>
-        <title>{t.metaTitle}</title>
-        <meta name="description" content={t.metaDescription} />
-        {/* canonical managed by useCanonicalHreflang */}
-        <meta property="og:title" content={t.metaTitle} />
-        <meta property="og:description" content={t.metaDescription} />
+        <title>Blog Crawlers.fr — Actualités SEO, GEO et IA | Crawlers.fr</title>
+        <meta name="description" content="Blog Crawlers.fr — actualités SEO, GEO et visibilité IA. Guides pratiques, études de cas, veille algorithmique Google et LLMs." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/blog" />
-        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/blog?lang=fr" />
-        <link rel="alternate" hrefLang="en" href="https://crawlers.fr/blog?lang=en" />
-        <link rel="alternate" hrefLang="es" href="https://crawlers.fr/blog?lang=es" />
-        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/blog" />
+        <meta property="og:title" content="Blog Crawlers.fr — Actualités SEO, GEO et IA | Crawlers.fr" />
+        <meta property="og:description" content="Blog Crawlers.fr — actualités SEO, GEO et visibilité IA. Guides pratiques, études de cas, veille algorithmique Google et LLMs." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Blog Crawlers.fr — Actualités SEO, GEO et IA | Crawlers.fr" />
+        <meta name="twitter:description" content="Blog Crawlers.fr — actualités SEO, GEO et visibilité IA. Guides pratiques, études de cas, veille algorithmique Google et LLMs." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
