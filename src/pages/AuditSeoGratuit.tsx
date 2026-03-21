@@ -128,13 +128,20 @@ const AuditSeoGratuit = () => {
       <Helmet>
         <title>Audit SEO en Ligne 2026 — Score 200 Points, Visibilité IA | Crawlers.fr</title>
         <meta name="description" content="Audit SEO gratuit sur 200 points : Core Web Vitals, JSON-LD, robots.txt, visibilité LLM. Résultats en 2 min, code correctif inclus." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/audit-seo-gratuit" />
-        <meta property="og:title" content="Audit SEO 2026 — Score 200 Points | Crawlers.fr" />
-        <meta property="og:description" content="Analysez votre site sur 200 points : performance, technique, sémantique, IA/GEO et sécurité. Code correctif personnalisé inclus." />
-        <meta property="og:url" content="https://crawlers.fr/audit-seo-gratuit" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://crawlers.fr/og-audit-seo-gratuit.webp" />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/audit-seo-gratuit" />
+        <meta property="og:title" content="Audit SEO 2026 — Score 200 Points | Crawlers.fr" />
+        <meta property="og:description" content="Audit SEO gratuit sur 200 points : Core Web Vitals, JSON-LD, robots.txt, visibilité LLM. Résultats en 2 min, code correctif inclus." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Audit SEO 2026 — Score 200 Points | Crawlers.fr" />
+        <meta name="twitter:description" content="Audit SEO gratuit sur 200 points : Core Web Vitals, JSON-LD, robots.txt, visibilité LLM. Résultats en 2 min, code correctif inclus." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

@@ -359,17 +359,22 @@ export default function ProAgency() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>{t.pageTitle}</title>
-        <meta name="description" content={t.metaDescription} />
+        <title>Pro Agency — 59€/mois garanti à vie | Crawlers.fr</title>
+        <meta name="description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/pro-agency" />
-        <meta property="og:title" content={t.pageTitle} />
-        <meta property="og:description" content={t.metaDescription} />
         <meta property="og:type" content="product" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/pro-agency" />
-        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/pro-agency?lang=fr" />
-        <link rel="alternate" hrefLang="en" href="https://crawlers.fr/pro-agency?lang=en" />
-        <link rel="alternate" hrefLang="es" href="https://crawlers.fr/pro-agency?lang=es" />
-        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/pro-agency" />
+        <meta property="og:title" content="Pro Agency — 59€/mois garanti à vie | Crawlers.fr" />
+        <meta property="og:description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Pro Agency — 59€/mois garanti à vie | Crawlers.fr" />
+        <meta name="twitter:description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>

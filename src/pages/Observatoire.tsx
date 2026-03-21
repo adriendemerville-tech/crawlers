@@ -347,7 +347,7 @@ const Observatoire = () => {
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDesc} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-        <meta name="twitter:site" content="@crawlers_fr" />
+        <meta name="twitter:site" content="@crawlersfr" />
 
         {/* Author & geo */}
         <meta name="author" content="Crawlers.fr" />

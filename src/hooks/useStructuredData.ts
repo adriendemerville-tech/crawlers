@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 
 /**
- * Injects JSON-LD structured data into the document head.
- * Moved from inline HTML to dynamic injection to reduce critical HTML payload size
- * and shorten the critical request chain for better LCP.
+ * Injects global JSON-LD structured data (SoftwareApplication + Organization)
+ * into the document head. Runs once on homepage mount.
  */
 export function useStructuredData() {
   useEffect(() => {
@@ -13,39 +12,64 @@ export function useStructuredData() {
         data: {
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "Crawlers.fr - Audit SEO & GEO Expert",
-          "alternateName": ["Audit Technique SEO Gratuit", "Score GEO IA", "Analyse LLM Marketing"],
-          "description": "Audit technique SEO expert gratuit et rapide sur 200 points. Score GEO pour ChatGPT, Google Gemini et LLM. Référencement IA pour moteurs de recherche. Analyse marketing instantanée.",
+          "name": "Crawlers.fr",
+          "alternateName": "Crawlers",
+          "applicationCategory": "SEO & GEO Audit Tool",
+          "abstract": "Premier outil francophone combinant audit SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables.",
+          "description": "Crawlers.fr est une plateforme SaaS française lancée en mars 2026. Premier outil francophone à couvrir simultanément le SEO technique, le GEO (Generative Engine Optimization), l'AEO (Answer Engine Optimization) et l'E-E-A-T. 7 algorithmes propriétaires en production. Architecture serverless avec multi-fallback sur toutes les APIs critiques. Hébergement européen, RGPD natif.",
           "url": "https://crawlers.fr",
-          "applicationCategory": "BusinessApplication",
-          "applicationSubCategory": "SEO Tool",
-          "operatingSystem": "Web",
-          "browserRequirements": "Requires JavaScript",
+          "sameAs": [
+            "https://crawlers.fr/a-propos",
+            "https://crawlers.fr/methodologie"
+          ],
           "offers": {
             "@type": "Offer",
-            "price": "0",
+            "price": "59",
             "priceCurrency": "EUR",
-            "availability": "https://schema.org/InStock",
-            "priceValidUntil": "2026-12-31"
+            "description": "Pro Agency — offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 99€/mois.",
+            "availability": "https://schema.org/LimitedAvailability"
           },
           "featureList": [
-            "Audit technique SEO sur 200 points",
-            "Score GEO pour moteurs génératifs (ChatGPT, Gemini, Perplexity)",
-            "Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)",
-            "Analyse PageSpeed Insights avec Core Web Vitals",
-            "Référencement expert gratuit et rapide",
-            "Analyse marketing pour LLM et IA",
-            "Vérification des données structurées JSON-LD",
-            "Recommandations SEO et GEO personnalisées"
+            "Audit SEO technique 200 points",
+            "GEO Score visibilité moteurs IA",
+            "Visibilité LLM multi-modèles (ChatGPT, Perplexity, Gemini, Claude)",
+            "Benchmark LLM parallèle multi-modèles",
+            "Profondeur LLM analyse conversationnelle 5 tours",
+            "Diagnostic de hallucination",
+            "Cocon sémantique 3D (Three.js, TF-IDF)",
+            "Score IAS Indice d'Alignement Stratégique 23 variables",
+            "Audit Stratégique IA scoring multi-axes",
+            "Audit Comparé benchmark vs 3 concurrents",
+            "Audit Local SEO Google My Business Pack Local",
+            "Audit Matrice de Prompts test multi-LLM",
+            "Tracking SERP hebdomadaire positions Google",
+            "Historique Google Search Console",
+            "Historique Google Analytics 4",
+            "Suivi backlinks referring domains",
+            "Part de Voix SEO score pondéré multi-canaux",
+            "Prédiction de trafic Triangle Prédictif MAPE < 15%",
+            "Architecte Génératif code correctif multi-pages",
+            "Crawl multi-pages sitemap-first jusqu'à 5000 pages",
+            "Scanner WordPress plugins thèmes sécurité",
+            "Injection de scripts via SDK et GTM",
+            "Agent SEO autonome optimisation contenu",
+            "Agent CTO maintenance algorithmique automatique"
           ],
-          "screenshot": "https://crawlers.fr/og-image.png",
+          "operatingSystem": "Web",
           "inLanguage": ["fr", "en", "es"],
-          "isAccessibleForFree": true,
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "ratingCount": "1250",
-            "bestRating": "5"
+          "datePublished": "2026-03-18",
+          "audience": {
+            "@type": "Audience",
+            "audienceType": "Agences SEO, Freelances SEO, PME e-commerce, Startups SaaS"
+          },
+          "creator": {
+            "@type": "Organization",
+            "name": "Crawlers.fr",
+            "url": "https://crawlers.fr"
+          },
+          "potentialAction": {
+            "@type": "UseAction",
+            "target": "https://crawlers.fr/audit-expert"
           }
         }
       },
@@ -55,20 +79,24 @@ export function useStructuredData() {
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "Crawlers.fr",
-          "alternateName": "Audit SEO & GEO Expert",
           "url": "https://crawlers.fr",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://crawlers.fr/favicon.svg",
-            "contentUrl": "https://crawlers.fr/favicon.svg",
-            "width": 512,
-            "height": 512,
-            "encodingFormat": "image/svg+xml"
-          },
-          "image": "https://crawlers.fr/og-image.png",
-          "description": "Plateforme experte d'audit technique SEO et GEO pour IA, ChatGPT, Google Gemini et moteurs de recherche. Référencement rapide et gratuit.",
-          "areaServed": ["France", "Europe", "North America", "South America"],
-          "sameAs": []
+          "logo": "https://crawlers.fr/favicon.svg",
+          "foundingDate": "2026",
+          "description": "Éditeur de la plateforme d'audit SEO, GEO et visibilité IA Crawlers.fr. Premier outil francophone couvrant simultanément SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables.",
+          "areaServed": ["FR", "BE", "CH", "CA"],
+          "knowsAbout": [
+            "SEO technique",
+            "Generative Engine Optimization",
+            "Answer Engine Optimization",
+            "Visibilité LLM",
+            "Cocon sémantique",
+            "Audit SEO",
+            "GEO Score",
+            "E-E-A-T"
+          ],
+          "sameAs": [
+            "https://crawlers.fr"
+          ]
         }
       },
       {
@@ -128,7 +156,6 @@ export function useStructuredData() {
       }
     ];
 
-    // Inject all schemas
     schemas.forEach(({ id, data }) => {
       const script = document.createElement('script');
       script.type = 'application/ld+json';

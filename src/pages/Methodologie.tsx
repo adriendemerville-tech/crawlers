@@ -242,29 +242,22 @@ export default function Methodologie() {
   return (
     <>
       <Helmet>
-        <title>{t3(language,
-          'Méthodologie d\'audit SEO & GEO 2026 — 150+ points analysés | Crawlers.fr',
-          'SEO & GEO Audit Methodology 2026 — 150+ Points Analyzed | Crawlers.fr',
-          'Metodología de auditoría SEO & GEO 2026 — 150+ puntos analizados | Crawlers.fr'
-        )}</title>
-        <meta name="description" content={t3(language,
-          'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming, code correctif JSON-LD. Périmètre complet.',
-          'How Crawlers.fr audits your site in 2026: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming, JSON-LD corrective code.',
-          'Cómo Crawlers.fr audita su sitio en 2026: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming, código correctivo JSON-LD.'
-        )} />
+        <title>Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr</title>
+        <meta name="description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/methodologie" />
-        <meta property="og:title" content={t3(language,
-          'Méthodologie d\'audit SEO & GEO — Crawlers.fr',
-          'SEO & GEO Audit Methodology — Crawlers.fr',
-          'Metodología de auditoría SEO & GEO — Crawlers.fr'
-        )} />
-        <meta property="og:description" content={t3(language,
-          'Plus de 150 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
-          '150+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
-          'Más de 150 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
-        )} />
-        <meta property="og:url" content="https://crawlers.fr/methodologie" />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/methodologie" />
+        <meta property="og:title" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr" />
+        <meta property="og:description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr" />
+        <meta name="twitter:description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
       <Header />
@@ -274,60 +267,203 @@ export default function Methodologie() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground mb-6">
               <BookOpen className="h-4 w-4 text-primary" />
-              <span>{t3(language, 'Transparence & Rigueur', 'Transparency & Rigor', 'Transparencia y rigor')}</span>
+              <span>Transparence &amp; Rigueur</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              {t3(language,
-                'Comment Crawlers.fr audite votre site pour le SEO et l\'IA générative',
-                'How Crawlers.fr Audits Your Site for SEO & Generative AI',
-                'Cómo Crawlers.fr audita su sitio para SEO e IA generativa'
-              )}
+              Méthodologie Crawlers.fr
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t3(language,
-                'Plus de 150 points d\'audit répartis en 9 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM, l\'analyse de résilience du contenu et la génération de code correctif. Voici le périmètre complet de nos analyses.',
-                'Over 150 audit points across 9 categories — from AI bot crawlability to Core Web Vitals, LLM citability, content resilience analysis and corrective code generation. Here is the full scope of our analysis.',
-                'Más de 150 puntos de auditoría en 9 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM, análisis de resiliencia del contenido y generación de código correctivo.'
-              )}
+              7 algorithmes propriétaires, architecture multi-fallback, plus de 150 000 lignes de code, RGPD natif. Comment nous calculons vos scores SEO et GEO.
             </p>
           </div>
         </section>
 
-        {/* Chapô éditorial */}
+        {/* Qu'est-ce que Crawlers.fr */}
+        <section className="py-10 px-4">
+          <div className="mx-auto max-w-3xl prose prose-lg dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground">
+            <h2>Qu'est-ce que Crawlers.fr ?</h2>
+            <p>
+              Crawlers.fr est une plateforme SaaS française lancée en mars 2026, conçue pour auditer et optimiser la visibilité d'un site web sur les moteurs de recherche traditionnels (Google) ET les moteurs de réponse IA (ChatGPT, Perplexity, Gemini, Claude). C'est le premier outil francophone à couvrir simultanément le SEO technique, le GEO (Generative Engine Optimization), l'AEO (Answer Engine Optimization) et l'E-E-A-T dans une seule interface.
+            </p>
+
+            <h2>À qui s'adresse Crawlers.fr ?</h2>
+            <ul>
+              <li>Agences SEO/SEA (5 à 50 personnes)</li>
+              <li>Freelances SEO</li>
+              <li>PME e-commerce</li>
+              <li>Startups SaaS avec des besoins en croissance organique</li>
+            </ul>
+
+            <h2>Ce qui différencie Crawlers.fr</h2>
+            <p>
+              Contrairement aux outils concurrents (Meteoria, AthenaHQ, Peec AI, Otterly) qui font du monitoring GEO uniquement, Crawlers.fr va jusqu'à la correction : il génère des codes correctifs directement intégrables dans WordPress, GTM ou via SDK. Il couvre 4 couches simultanément :
+            </p>
+            <ol>
+              <li><strong>SEO technique</strong> — audit 200 points, crawl jusqu'à 5000 pages</li>
+              <li><strong>GEO/LLM</strong> — score de visibilité dans ChatGPT, Perplexity, Gemini, Claude</li>
+              <li><strong>Cocon sémantique</strong> — visualisation 3D de l'architecture sémantique du site</li>
+              <li><strong>Correctifs actionnables</strong> — génération automatique de code correctif (JSON-LD, balises, maillage)</li>
+            </ol>
+          </div>
+        </section>
+
+        {/* Fonctionnalités principales */}
+        <section className="py-10 px-4 bg-muted/20">
+          <div className="mx-auto max-w-3xl prose prose-lg dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground">
+            <h2>Fonctionnalités principales</h2>
+
+            <h3>Audits</h3>
+            <ul>
+              <li>Audit Expert SEO (technique, sémantique, performance, sécurité)</li>
+              <li>Audit Stratégique IA (scoring multi-axes)</li>
+              <li>Audit Comparé (benchmark vs 3 concurrents, Radar Chart)</li>
+              <li>Audit Local SEO (Google My Business, Pack Local)</li>
+              <li>Audit Matrice de Prompts (test multi-LLM)</li>
+              <li>Score IAS (Indice d'Alignement Stratégique — 23 variables)</li>
+            </ul>
+
+            <h3>Visibilité IA</h3>
+            <ul>
+              <li>GEO Score (optimisation pour moteurs de réponse IA)</li>
+              <li>Visibilité LLM (taux de citation dans ChatGPT, Gemini, Perplexity, Claude)</li>
+              <li>Benchmark LLM (interrogation parallèle multi-modèles)</li>
+              <li>Profondeur LLM (analyse conversationnelle en 5 tours)</li>
+              <li>Diagnostic de hallucination</li>
+            </ul>
+
+            <h3>Tracking &amp; Monitoring</h3>
+            <ul>
+              <li>Suivi SERP hebdomadaire (positions Google)</li>
+              <li>Historique GSC (Search Console)</li>
+              <li>Historique GA4</li>
+              <li>Suivi backlinks</li>
+              <li>Part de Voix SEO (40% LLM + 35% SERP + 25% ETV)</li>
+              <li>Prédiction de trafic (Triangle Prédictif, corrélation GSC/GA4, MAPE &lt; 15%)</li>
+            </ul>
+
+            <h3>Outils techniques</h3>
+            <ul>
+              <li>Architecte Génératif (code correctif multi-pages)</li>
+              <li>Cocon Sémantique 3D (Three.js, TF-IDF, clusters)</li>
+              <li>Crawl multi-pages (sitemap-first, jusqu'à 5000 pages)</li>
+              <li>Scanner WordPress (plugins, thèmes, sécurité)</li>
+              <li>Injection de scripts via SDK/GTM</li>
+              <li>Agent SEO autonome</li>
+              <li>Agent CTO (maintenance algorithmique)</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Architecture technique */}
+        <section className="py-10 px-4">
+          <div className="mx-auto max-w-3xl prose prose-lg dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground">
+            <h2>Architecture technique — Ce qui garantit la fiabilité</h2>
+            <p>
+              Crawlers.fr n'est pas un wrapper IA. C'est une infrastructure serverless construite sur plus de 150 000 lignes de code, conçue pour la résilience et la scalabilité.
+            </p>
+
+            <h3>Robustesse &amp; résilience</h3>
+            <ul>
+              <li><strong>Multi-fallback</strong> sur toutes les APIs critiques — aucun point de défaillance unique</li>
+              <li><strong>Circuit Breaker</strong> — protection contre les cascades d'erreurs sur les APIs de données SERP et Search Console</li>
+              <li><strong>Queue asynchrone</strong> — les audits longs s'exécutent en arrière-plan avec suivi de progression en temps réel</li>
+              <li><strong>Watchdog</strong> — surveillance automatique des tâches critiques avec timeout et alertes</li>
+              <li><strong>Cache intelligent</strong> — réduction des appels API redondants via cache TTL</li>
+            </ul>
+
+            <h3>Sécurité &amp; conformité</h3>
+            <ul>
+              <li><strong>RGPD natif</strong> — hébergement européen, suppression de compte, export de données</li>
+              <li><strong>Row-Level Security</strong> — isolation stricte des données par utilisateur</li>
+              <li><strong>Protection financière</strong> — triggers bloquant toute modification de crédits côté client</li>
+              <li><strong>Anti-bot</strong> — protection Cloudflare Turnstile sur tous les formulaires publics</li>
+              <li><strong>Sessions sécurisées</strong> — expiration automatique, double confirmation sur les actions sensibles</li>
+            </ul>
+
+            <h3>Intelligence des données</h3>
+            <ul>
+              <li>7 algorithmes propriétaires en production : Score IAS, GEO Score, Triangle Prédictif, Part de Voix, Empreinte Lexicale, TF-IDF sémantique, PageRank interne</li>
+              <li>Interrogation parallèle multi-LLM — les scores de visibilité sont calculés en interrogeant simultanément plusieurs modèles IA</li>
+              <li>Prédiction de trafic — corrélation croisée GSC/GA4 avec une précision MAPE inférieure à 15%</li>
+              <li>Agents autonomes — maintenance algorithmique et optimisation de contenu automatisées avec self-critique intégrée</li>
+            </ul>
+
+            <h3>Intégrations de données (10+ sources)</h3>
+            <ul>
+              <li>Données SERP et backlinks (sources multiples avec redondance)</li>
+              <li>Google Search Console, Google Analytics 4</li>
+              <li>Google My Business, Google PageSpeed</li>
+              <li>Moteurs LLM : ChatGPT, Gemini, Perplexity, Claude</li>
+              <li>Paiement : Stripe (abonnements + crédits à l'unité)</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Algorithmes propriétaires */}
+        <section className="py-10 px-4 bg-muted/20">
+          <div className="mx-auto max-w-3xl prose prose-lg dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground">
+            <h2>Algorithmes propriétaires</h2>
+            <ul>
+              <li><strong>TF-IDF / Cocon Sémantique</strong> — pertinence thématique et visualisation 3D</li>
+              <li><strong>Score IAS</strong> — Indice d'Alignement Stratégique (23 variables)</li>
+              <li><strong>GEO Score</strong> — visibilité dans les moteurs de réponse IA</li>
+              <li><strong>Triangle Prédictif</strong> — prédiction trafic corrélée GSC/GA4 (MAPE &lt; 15%)</li>
+              <li><strong>Part de Voix</strong> — score pondéré multi-canaux (40% LLM + 35% SERP + 25% ETV)</li>
+              <li><strong>Empreinte Lexicale</strong> — signature sémantique unique par entité</li>
+              <li><strong>PageRank Interne</strong> — calcul du maillage et distribution de jus</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Tarification */}
         <section className="py-10 px-4">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              {t3(language,
-                'Pourquoi une méthodologie transparente ?',
-                'Why a Transparent Methodology?',
-                '¿Por qué una metodología transparente?'
-              )}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              {t3(language,
-                'En 2026, les règles du jeu ont changé. Google n\'est plus le seul arbitre de votre visibilité : ChatGPT, Perplexity, Claude et Gemini génèrent désormais des réponses directes en citant — ou en ignorant — votre site. Un audit SEO classique ne suffit plus. Il faut analyser simultanément votre accessibilité aux robots IA, votre citabilité par les modèles de langage, et la qualité technique de votre code.',
-                'In 2026, the rules have changed. Google is no longer the sole arbiter of your visibility: ChatGPT, Perplexity, Claude and Gemini now generate direct answers by citing — or ignoring — your site. A classic SEO audit is no longer enough. You need to simultaneously analyze your AI bot accessibility, your LLM citability, and your code technical quality.',
-                'En 2026, las reglas han cambiado. Google ya no es el único árbitro de su visibilidad: ChatGPT, Perplexity, Claude y Gemini generan respuestas directas citando — o ignorando — su sitio.'
-              )}
-            </p>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              {t3(language,
-                'Crawlers.fr a été conçu pour couvrir ces deux fronts. Notre plateforme croise les signaux techniques classiques (Core Web Vitals, données structurées, architecture sémantique) avec des indicateurs propres à l\'ère générative : taux de citation par les LLM, détection d\'hallucinations, score d\'autorité sémantique et risque Zero-Click. Le tout est synthétisé dans un score GEO unique et des recommandations actionnables.',
-                'Crawlers.fr was built to cover both fronts. Our platform cross-references classic technical signals (Core Web Vitals, structured data, semantic architecture) with generative-era indicators: LLM citation rate, hallucination detection, semantic authority score and Zero-Click risk. Everything is synthesized into a unique GEO score and actionable recommendations.',
-                'Crawlers.fr fue diseñado para cubrir ambos frentes. Nuestra plataforma cruza señales técnicas clásicas con indicadores de la era generativa: tasa de citación LLM, detección de alucinaciones, score de autoridad semántica y riesgo Zero-Click.'
-              )}
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              {t3(language,
-                'Cette page détaille l\'intégralité de notre périmètre d\'analyse — sans révéler nos algorithmes propriétaires. Vous saurez exactement ce que nous vérifions, et quels types de recommandations nous formulons pour améliorer votre visibilité SEO et GEO.',
-                'This page details our full analysis scope — without revealing our proprietary algorithms. You\'ll know exactly what we check, and what types of recommendations we make to improve your SEO and GEO visibility.',
-                'Esta página detalla todo nuestro alcance de análisis — sin revelar nuestros algoritmos propietarios. Sabrá exactamente qué verificamos y qué tipos de recomendaciones formulamos.'
-              )}
+            <h2 className="text-2xl font-bold text-foreground mb-6">Tarification</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Offre</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Prix</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Inclus</th>
+                  </tr>
+                </thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/50">
+                    <td className="py-3 px-4">Freemium</td>
+                    <td className="py-3 px-4">Gratuit</td>
+                    <td className="py-3 px-4">Bots IA, Score GEO, Visibilité LLM, PageSpeed</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <td className="py-3 px-4">Freemium inscrit</td>
+                    <td className="py-3 px-4">Gratuit</td>
+                    <td className="py-3 px-4">Audit SEO 200 points (1/jour)</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <td className="py-3 px-4 font-medium text-foreground">Pro Agency</td>
+                    <td className="py-3 px-4 font-medium text-foreground">59€/mois*</td>
+                    <td className="py-3 px-4">Audits illimités, crawl 5000p, cocon, tracking</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <td className="py-3 px-4">Pack Crédits</td>
+                    <td className="py-3 px-4">À l'unité</td>
+                    <td className="py-3 px-4">Audit comparé, crawl ponctuel</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4">Pack Ultime</td>
+                    <td className="py-3 px-4">99€ one-shot</td>
+                    <td className="py-3 px-4">500 crédits</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              *Offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 99€/mois.
             </p>
           </div>
         </section>
 
-        {/* Audit points */}
+        {/* Audit detail cards (existing) */}
         <section className="py-12 px-4 bg-muted/30">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
@@ -406,6 +542,24 @@ export default function Methodologie() {
           </div>
         </section>
 
+        {/* Liens utiles */}
+        <section className="py-10 px-4 bg-muted/20">
+          <div className="mx-auto max-w-3xl prose prose-lg dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground">
+            <h2>Langues supportées</h2>
+            <p>Français, Anglais, Espagnol</p>
+
+            <h2>Liens utiles</h2>
+            <ul>
+              <li><Link to="/" className="text-primary hover:underline">Site : crawlers.fr</Link></li>
+              <li><Link to="/audit-expert" className="text-primary hover:underline">Audit gratuit : crawlers.fr/audit-expert</Link></li>
+              <li><Link to="/tarifs" className="text-primary hover:underline">Tarifs : crawlers.fr/tarifs</Link></li>
+              <li><Link to="/blog" className="text-primary hover:underline">Blog : crawlers.fr/blog</Link></li>
+              <li><Link to="/lexique" className="text-primary hover:underline">Lexique SEO/GEO/IA : crawlers.fr/lexique</Link></li>
+              <li><Link to="/faq" className="text-primary hover:underline">FAQ : crawlers.fr/faq</Link></li>
+            </ul>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="py-12 px-4 bg-gradient-to-b from-background to-primary/5">
           <div className="mx-auto max-w-3xl text-center">
@@ -443,14 +597,10 @@ export default function Methodologie() {
         <section className="py-8 px-4 bg-muted/20 border-t border-border">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm text-muted-foreground italic">
-              {t3(language,
-                'Les algorithmes, pondérations et modes de calcul utilisés par Crawlers.fr sont propriétaires et ne sont pas divulgués. Cette page présente uniquement le périmètre d\'analyse, pas la méthodologie de scoring.',
-                'The algorithms, weightings and calculation methods used by Crawlers.fr are proprietary and not disclosed. This page presents only the analysis scope, not the scoring methodology.',
-                'Los algoritmos, ponderaciones y métodos de cálculo utilizados por Crawlers.fr son propietarios y no se divulgan. Esta página presenta solo el alcance del análisis, no la metodología de puntuación.'
-              )}
+              Les algorithmes, pondérations et modes de calcul utilisés par Crawlers.fr sont propriétaires et ne sont pas divulgués. Cette page présente uniquement le périmètre d'analyse, pas la méthodologie de scoring.
             </p>
             <p className="text-xs text-muted-foreground mt-3">
-              {t3(language, 'Dernière mise à jour : Mars 2026', 'Last updated: March 2026', 'Última actualización: Marzo 2026')}
+              Dernière mise à jour : Mars 2026
             </p>
           </div>
         </section>

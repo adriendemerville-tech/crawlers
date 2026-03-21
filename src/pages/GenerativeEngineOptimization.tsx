@@ -144,16 +144,24 @@ const GenerativeEngineOptimization = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>GEO : Generative Engine Optimization — Définition & Guide Complet 2026 | Crawlers.fr</title>
-        <meta name="description" content="GEO (Generative Engine Optimization) : optimisez votre contenu pour ChatGPT, Claude et Perplexity. Définition, 5 piliers et score GEO." />
+        <title>GEO : Generative Engine Optimization — Guide Complet 2026 | Crawlers.fr</title>
+        <meta name="description" content="Qu'est-ce que le GEO ? Guide complet de la Generative Engine Optimization : définition, différences avec le SEO, stratégies d'optimisation pour ChatGPT, Perplexity, Gemini." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/generative-engine-optimization" />
-        <meta property="og:title" content="Generative Engine Optimization (GEO) — Guide Complet 2026" />
-        <meta property="og:description" content="Tout comprendre sur le GEO : optimisez votre site pour être cité par les moteurs de recherche IA. Définition, stratégie, outils." />
-        <meta property="og:url" content="https://crawlers.fr/generative-engine-optimization" />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/generative-engine-optimization" />
+        <meta property="og:title" content="GEO : Generative Engine Optimization — Guide Complet 2026 | Crawlers.fr" />
+        <meta property="og:description" content="Qu'est-ce que le GEO ? Guide complet de la Generative Engine Optimization : définition, différences avec le SEO, stratégies d'optimisation pour ChatGPT, Perplexity, Gemini." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
         <meta property="article:published_time" content={publishDate} />
         <meta property="article:author" content="Adrien de Volontat" />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="GEO : Generative Engine Optimization — Guide Complet 2026 | Crawlers.fr" />
+        <meta name="twitter:description" content="Qu'est-ce que le GEO ? Guide complet de la Generative Engine Optimization : définition, différences avec le SEO, stratégies d'optimisation pour ChatGPT, Perplexity, Gemini." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

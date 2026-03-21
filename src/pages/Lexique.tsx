@@ -621,17 +621,23 @@ export default function Lexique() {
   return (
     <>
       <Helmet>
-        <title>{content.metaTitle}</title>
-        <meta name="description" content={content.metaDescription} />
+        <title>Lexique SEO, GEO et IA 2026 | Crawlers.fr</title>
+        <meta name="description" content="Lexique SEO, GEO et IA 2026 — définitions complètes : GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, Triangle Prédictif." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="keywords" content="lexique SEO, glossaire GEO, définitions performance web, LCP, CLS, LLM, SGE, E-E-A-T, Core Web Vitals, 2026" />
         <link rel="canonical" href="https://crawlers.fr/lexique" />
-        <meta property="og:title" content={content.metaTitle} />
-        <meta property="og:description" content={content.metaDescription} />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/lexique" />
+        <meta property="og:title" content="Lexique SEO, GEO et IA 2026 | Crawlers.fr" />
+        <meta property="og:description" content="Lexique SEO, GEO et IA 2026 — définitions complètes : GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, Triangle Prédictif." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={content.metaTitle} />
-        <meta name="twitter:description" content={content.metaDescription} />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Lexique SEO, GEO et IA 2026 | Crawlers.fr" />
+        <meta name="twitter:description" content="Lexique SEO, GEO et IA 2026 — définitions complètes : GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, Triangle Prédictif." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLdDefinedTermSet)}</script>
       </Helmet>
       <SoftwareApplicationSchema />

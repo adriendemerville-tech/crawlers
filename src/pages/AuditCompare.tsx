@@ -1272,8 +1272,21 @@ const AuditCompare = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>{t.pageTitle}</title>
-        <meta name="description" content={t.pageDesc} />
+        <title>Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr</title>
+        <meta name="description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/audit-compare" />
+        <meta property="og:title" content="Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr" />
+        <meta property="og:description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr" />
+        <meta name="twitter:description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
       <main className="flex-1">

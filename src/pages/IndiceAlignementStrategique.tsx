@@ -66,16 +66,21 @@ export default function IndiceAlignementStrategique() {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <title>{title}</title>
-        <meta name="description" content={description} />
+        <meta name="description" content="Score IAS — Indice d'Alignement Stratégique. 23 variables mesurant la cohérence entre votre contenu et les attentes des moteurs IA et traditionnels." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/indice-alignement-strategique" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/indice-alignement-strategique" />
-        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/indice-alignement-strategique?lang=fr" />
-        <link rel="alternate" hrefLang="en" href="https://crawlers.fr/indice-alignement-strategique?lang=en" />
-        <link rel="alternate" hrefLang="es" href="https://crawlers.fr/indice-alignement-strategique?lang=es" />
-        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/indice-alignement-strategique" />
+        <meta property="og:title" content={`${title} | Crawlers.fr`} />
+        <meta property="og:description" content="Score IAS — Indice d'Alignement Stratégique. 23 variables mesurant la cohérence entre votre contenu et les attentes des moteurs IA et traditionnels." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content={`${title} | Crawlers.fr`} />
+        <meta name="twitter:description" content="Score IAS — Indice d'Alignement Stratégique. 23 variables mesurant la cohérence entre votre contenu et les attentes des moteurs IA et traditionnels." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
       </Helmet>

@@ -527,17 +527,23 @@ export default function Tarifs() {
   return (
     <>
       <Helmet>
-        <title>{t.pageTitle}</title>
-        <meta name="description" content={`${t.subtitle}. Audit SEO technique, Score GEO IA, packs de crédits dès 5€, abonnement Pro Agency 50€/mois avec marque blanche.`} />
-        <meta property="og:title" content={t.pageTitle} />
-        <meta property="og:description" content={`${t.subtitle}. Audit Flash, packs crédits, abonnement Pro Agency illimité.`} />
+        <title>Tarifs Crawlers.fr — SEO + GEO à 59€/mois | Crawlers.fr</title>
+        <meta name="description" content="Crawlers.fr à 59€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/tarifs" />
-        {/* Open Graph pricing for main offer */}
-        <meta property="og:price:amount" content="50.00" />
+        <meta property="og:title" content="Tarifs Crawlers.fr — SEO + GEO à 59€/mois | Crawlers.fr" />
+        <meta property="og:description" content="Crawlers.fr à 59€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:price:amount" content="59.00" />
         <meta property="og:price:currency" content="EUR" />
-        <meta property="product:price:amount" content="50.00" />
-        <meta property="product:price:currency" content="EUR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Tarifs Crawlers.fr — SEO + GEO à 59€/mois | Crawlers.fr" />
+        <meta name="twitter:description" content="Crawlers.fr à 59€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
