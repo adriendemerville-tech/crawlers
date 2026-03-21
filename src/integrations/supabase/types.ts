@@ -4880,6 +4880,7 @@ export type Database = {
           client_targets: Json | null
           cms_platform: string | null
           commercial_area: string | null
+          commercial_model: string | null
           company_size: string | null
           competitors: Json | null
           confusion_risk: string | null
@@ -4904,6 +4905,7 @@ export type Database = {
           market_sector: string | null
           media_specialties: string[] | null
           mid_term_goal: string | null
+          nonprofit_type: string | null
           previous_config: Json
           primary_language: string | null
           products_services: string | null
@@ -4922,6 +4924,7 @@ export type Database = {
           client_targets?: Json | null
           cms_platform?: string | null
           commercial_area?: string | null
+          commercial_model?: string | null
           company_size?: string | null
           competitors?: Json | null
           confusion_risk?: string | null
@@ -4946,6 +4949,7 @@ export type Database = {
           market_sector?: string | null
           media_specialties?: string[] | null
           mid_term_goal?: string | null
+          nonprofit_type?: string | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
@@ -4964,6 +4968,7 @@ export type Database = {
           client_targets?: Json | null
           cms_platform?: string | null
           commercial_area?: string | null
+          commercial_model?: string | null
           company_size?: string | null
           competitors?: Json | null
           confusion_risk?: string | null
@@ -4988,6 +4993,7 @@ export type Database = {
           market_sector?: string | null
           media_specialties?: string[] | null
           mid_term_goal?: string | null
+          nonprofit_type?: string | null
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null

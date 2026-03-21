@@ -14,10 +14,22 @@ interface SiteIdentityModalProps {
   onUpdate?: () => void;
 }
 
+const NONPROFIT_LABELS: Record<string, string> = {
+  'service_public': 'Service public',
+  'association_locale': 'Association locale',
+  'ong': 'ONG',
+  'organisation_internationale': 'Organisation internationale',
+  'federation_sportive': 'Fédération sportive',
+  'syndicat': 'Syndicat',
+  'autre': 'Autre (fondation, mutuelle…)',
+};
+
 const TAXONOMY_FIELDS = [
   { key: 'site_name', label: 'Nom du site' },
   { key: 'brand_name', label: 'Nom de marque' },
   { key: 'entity_type', label: "Type d'entité" },
+  { key: 'commercial_model', label: 'Modèle commercial', hint: 'commercial / non_commercial' },
+  { key: 'nonprofit_type', label: 'Type d\'organisation non marchande', hint: Object.keys(NONPROFIT_LABELS).join(', ') },
   { key: 'market_sector', label: "Secteur d'activité" },
   { key: 'products_services', label: 'Produits / Services' },
   { key: 'target_audience', label: 'Audience cible' },
@@ -116,7 +128,7 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
             {isEmpty ? (
               <span className="text-muted-foreground/40 italic text-xs">Non renseigné</span>
             ) : (
-              <span className="text-sm text-foreground">{value}</span>
+              <span className="text-sm text-foreground">{NONPROFIT_LABELS[value as string] || value}</span>
             )}
             {isHovered && (
               <Pencil className="h-3 w-3 text-muted-foreground/40 shrink-0 ml-auto" />
@@ -257,9 +269,16 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
   }, [open, site]);
 
   const { leftFields, rightFields, hasHiddenEmpty } = useMemo(() => {
+    // Hide nonprofit_type when commercial_model is not 'non_commercial'
+    const isNonCommercial = dynamicFields['commercial_model']?.toLowerCase()?.includes('non');
+    const visibleTaxonomy = TAXONOMY_FIELDS.filter(f => {
+      if (f.key === 'nonprofit_type' && !isNonCommercial) return false;
+      return true;
+    });
+    
     const filled: typeof TAXONOMY_FIELDS = [];
     const empty: typeof TAXONOMY_FIELDS = [];
-    for (const f of TAXONOMY_FIELDS) {
+    for (const f of visibleTaxonomy) {
       const val = dynamicFields[f.key];
       if (val && val !== 'null' && val !== 'undefined') filled.push(f);
       else empty.push(f);

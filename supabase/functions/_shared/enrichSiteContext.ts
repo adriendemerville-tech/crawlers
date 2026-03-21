@@ -28,6 +28,8 @@ export interface SiteContext {
   address?: string
   entity_type?: string        // 'business' | 'media' | 'blog' | 'institutional'
   media_specialties?: string[] // e.g. ['politique', 'économie', 'tech']
+  commercial_model?: string   // 'commercial' | 'non_commercial'
+  nonprofit_type?: string     // 'service_public' | 'association_locale' | 'ong' | 'organisation_internationale' | 'federation_sportive' | 'syndicat' | 'autre'
   identity_confidence?: number
   identity_source?: string
   identity_enriched_at?: string
@@ -134,13 +136,15 @@ Déduis les informations suivantes sur cette entreprise/ce site web. Sois préci
 Réponds UNIQUEMENT en JSON valide avec ces champs :
 {
   "entity_type": "Le type d'entité : 'business' (entreprise qui vend produits/services), 'media' (site d'information, journal, magazine), 'blog' (blog personnel ou thématique), 'institutional' (administration, gouvernement, association). IMPORTANT: un média/blog ne vend PAS de produits/services, il produit du contenu.",
+  "commercial_model": "'commercial' si l'entité vend des produits/services à but lucratif, 'non_commercial' si c'est un service public, une association, une ONG, une fédération sportive, un syndicat ou toute organisation sans but lucratif.",
+  "nonprofit_type": "Si commercial_model est 'non_commercial', précise le sous-type parmi : 'service_public' (mairie, préfecture, ministère, hôpital public, école publique), 'association_locale' (association loi 1901, club local, comité de quartier), 'ong' (ONG humanitaire, caritative, environnementale), 'organisation_internationale' (ONU, UNESCO, Croix-Rouge internationale), 'federation_sportive' (fédération, ligue, comité olympique), 'syndicat' (syndicat professionnel, patronal, interprofessionnel), 'autre' (fondation, mutuelle, coopérative). Si commercial_model est 'commercial', mettre null.",
   "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech', 'sport']. Pour 'business', mettre []"],
   "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
-  "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres')",
+  "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres'). Pour un non_commercial: les services rendus ou missions principales.",
   "target_audience": "La cible principale (ex: 'Grand public', 'Citoyens français intéressés par la politique')",
   "commercial_area": "La zone géographique couverte",
   "company_size": "Estimation de la taille",
-  "site_name": "Le vrai nom de la marque/entreprise/média"
+  "site_name": "Le vrai nom de la marque/entreprise/média/organisation"
 }
 
 Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laisse aucun champ vide.`
@@ -247,6 +251,8 @@ export async function ensureSiteContext(
     address: site.address as string | undefined,
     entity_type: (site.entity_type as string) || 'business',
     media_specialties: (site.media_specialties as string[]) || [],
+    commercial_model: site.commercial_model as string | undefined,
+    nonprofit_type: site.nonprofit_type as string | undefined,
     identity_confidence: site.identity_confidence as number | undefined,
     identity_source: site.identity_source as string | undefined,
     identity_enriched_at: site.identity_enriched_at as string | undefined,
@@ -293,6 +299,8 @@ export async function ensureSiteContext(
     address: currentContext.address,
     entity_type: inferred.entity_type || currentContext.entity_type || 'business',
     media_specialties: inferred.media_specialties?.length ? inferred.media_specialties : (currentContext.media_specialties || []),
+    commercial_model: inferred.commercial_model || currentContext.commercial_model,
+    nonprofit_type: inferred.nonprofit_type || currentContext.nonprofit_type,
   }
 
   // Persist enriched data to tracked_sites
@@ -313,6 +321,8 @@ export async function ensureSiteContext(
       if (merged.company_size) updatePayload.company_size = merged.company_size
       if (merged.entity_type) updatePayload.entity_type = merged.entity_type
       if (merged.media_specialties?.length) updatePayload.media_specialties = merged.media_specialties
+      if (merged.commercial_model) updatePayload.commercial_model = merged.commercial_model
+      if (merged.nonprofit_type) updatePayload.nonprofit_type = merged.nonprofit_type
       if (merged.site_name && merged.site_name !== domain) {
         updatePayload.site_name = merged.site_name
       }
