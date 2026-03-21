@@ -299,6 +299,8 @@ export async function ensureSiteContext(
     address: currentContext.address,
     entity_type: inferred.entity_type || currentContext.entity_type || 'business',
     media_specialties: inferred.media_specialties?.length ? inferred.media_specialties : (currentContext.media_specialties || []),
+    commercial_model: inferred.commercial_model || currentContext.commercial_model,
+    nonprofit_type: inferred.nonprofit_type || currentContext.nonprofit_type,
   }
 
   // Persist enriched data to tracked_sites
