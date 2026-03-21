@@ -161,7 +161,7 @@ export function FinancesDashboard() {
       });
 
       const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
-      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, flyPlaywrightCalls = 0;
+      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
       let totalPaidApiCost = 0;
 
       paidApiEvents.forEach(e => {
