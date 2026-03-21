@@ -1137,14 +1137,14 @@ Toutes les conversations sont enregistrées dans \`sav_conversations\` et consul
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '4.0.0',
+  version: '4.1.0',
   lastUpdated: '2026-03-21',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 110,
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Content Advisor + Scribe + Cocoon + GMB + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 111,
   totalSharedModules: 21,
-  totalTables: '55+',
-  totalLinesOfCode: '160 000+',
-  totalMigrations: 186,
+  totalTables: '57+',
+  totalLinesOfCode: '165 000+',
+  totalMigrations: 190,
   totalPages: 40,
-  totalComponents: 280,
+  totalComponents: 285,
 };

@@ -14,6 +14,13 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - Table : `sav_conversations` (messages JSON, phone_callback, phone_callback_expires_at)
 - Logo robot Crawlers au lieu d'emoji dans la conversation
 - Peut envoyer des liens internes vers les fonctionnalités pertinentes
+- **Voice input** : Web Speech API (FR/EN/ES)
+- **Pièces jointes** : rapports et scripts du compte utilisateur (bouton "Explique-moi")
+
+## Scoring de précision (`sav_quality_scores`)
+- precision_score (0-100), route_match, repeated_intent_count, escalated_to_phone
+- Monitoring dans Admin → Intelligence → Supervisor → AssistantPrecisionCard
+- Supervisor audite l'assistant (avg precision, escalation rate, repeated intents, route match rate)
 
 ## Agent Cocoon (Assistant Maillage)
 - Détection automatique de la langue
