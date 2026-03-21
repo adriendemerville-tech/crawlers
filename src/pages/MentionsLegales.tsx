@@ -17,11 +17,11 @@ const MentionsLegales = () => {
       <Helmet>
         <html lang={language} />
         <title>{t3(language, 'Mentions légales | Crawlers.fr', 'Legal Notice | Crawlers.fr', 'Aviso legal | Crawlers.fr')}</title>
-        <meta name="description" content={t3(language, 'Mentions légales de Crawlers.fr', 'Legal notice for Crawlers.fr', 'Aviso legal de Crawlers.fr')} />
-        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
-        <meta property="og:locale:alternate" content="fr_FR" />
-        <meta property="og:locale:alternate" content="en_US" />
-        <meta property="og:locale:alternate" content="es_ES" />
+        <meta name="description" content={t3(language, 'Mentions légales de Crawlers.fr — éditeur, hébergement, conditions.', 'Legal notice for Crawlers.fr', 'Aviso legal de Crawlers.fr')} />
+        <meta name="robots" content="noindex, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:locale" content="fr_FR" />
       </Helmet>
       <Header />
       <main className="flex-1 py-12">
