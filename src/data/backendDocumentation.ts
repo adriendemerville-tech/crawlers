@@ -610,7 +610,8 @@ Ces secrets sont configurés dans Lovable Cloud :
 |--------|-------------|-------------|
 | \`STRIPE_SECRET_KEY\` | billing, webhooks | Clé secrète Stripe |
 | \`STRIPE_WEBHOOK_SECRET\` | \`stripe-webhook\` | Secret de signature webhook |
-| \`FIRECRAWL_API_KEY\` | crawl engine | Clé API Firecrawl (scraping) |
+| \`FIRECRAWL_API_KEY\` | crawl engine (fallback) | Clé API Firecrawl (scraping fallback) |
+| \`SPIDER_API_KEY\` | crawl engine (primary) | Clé API Spider Cloud (scraping principal) |
 | \`GOOGLE_PAGESPEED_API_KEY\` | \`check-pagespeed\` | Clé API Google PageSpeed Insights |
 | \`GOOGLE_GSC_CLIENT_ID\` | \`gsc-auth\` | OAuth Google Search Console |
 | \`GOOGLE_GSC_CLIENT_SECRET\` | \`gsc-auth\` | OAuth Google Search Console |
