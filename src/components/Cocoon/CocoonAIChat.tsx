@@ -1065,7 +1065,7 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                   )}
                 </div>
               );
-            })()
+            })()}
             <div className="flex gap-2 items-end">
               <Textarea
                 value={input}
