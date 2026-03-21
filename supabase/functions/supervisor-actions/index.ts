@@ -366,6 +366,29 @@ Deno.serve(async (req) => {
       })
     }
 
+    // ─── Action: Audit SAV Assistant quality ─────────────────────
+    if (action === 'audit_assistant') {
+      const assistantReport = await auditAssistantQuality(supabase)
+
+      // Log into supervisor_logs
+      await supabase.from('supervisor_logs').insert({
+        audit_id: `supervisor_assistant_${Date.now()}`,
+        analysis_summary: `Assistant SAV — Score moyen: ${assistantReport.avg_precision_score ?? 'N/A'}/100, ${assistantReport.total_conversations} conversations, ${assistantReport.escalation_rate}% escalade`,
+        self_critique: `Status: ${assistantReport.status}`,
+        confidence_score: 0,
+        decision: assistantReport.status === 'critical' ? 'needs_review' : 'approved',
+        cto_score: assistantReport.avg_precision_score || 0,
+        correction_count: assistantReport.scored_conversations,
+        functions_audited: ['sav-agent'],
+        post_deploy_errors: 0,
+        metadata: { type: 'assistant_audit', ...assistantReport },
+      })
+
+      return new Response(JSON.stringify({ success: true, assistant_report: assistantReport }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // ─── Action: Toggle kill switches ────────────────────────────
     if (action === 'toggle_killswitch') {
       const { target, enabled: newState } = body
