@@ -239,8 +239,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               Nouveau
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClose}>
-            <X className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleClose}>
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
