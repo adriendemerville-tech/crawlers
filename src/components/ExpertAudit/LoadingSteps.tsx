@@ -285,9 +285,24 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
             </button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
-          Connectez votre Spotify en paramètres
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <a
+            href="/profil?tab=settings"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2 opacity-60 hover:opacity-100 transition-all"
+          >
+            Connectez votre Spotify en paramètres
+          </a>
+          <a
+            href="/profil?tab=settings"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] px-2 py-0.5 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-colors font-medium"
+          >
+            Connecter
+          </a>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground text-center">
