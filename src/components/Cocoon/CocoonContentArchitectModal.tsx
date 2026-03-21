@@ -107,8 +107,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       toast.info('Connectez votre CMS dans Profil → APIs externes');
       return;
     }
-    toast.info('Publication en cours… (fonctionnalité à venir)');
-  }, [hasCmsConnection]);
+    // Pass finalCode (edited or original) + flag
+    toast.info(isManuallyEdited
+      ? 'Publication du code modifié… (version originale conservée en historique)'
+      : 'Publication en cours… (fonctionnalité à venir)');
+  }, [hasCmsConnection, isManuallyEdited]);
 
   // Generate HTML preview from result
   const htmlPreview = useMemo(() => {
