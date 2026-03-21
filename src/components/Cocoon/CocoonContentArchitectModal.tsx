@@ -314,9 +314,14 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 </div>
               )}
               {result && viewMode === 'code' && (
-                <pre className="text-xs text-green-300/80 font-mono whitespace-pre-wrap bg-black/30 rounded-lg p-4 border border-white/5">
-                  {htmlPreview}
-                </pre>
+                <div className="relative h-full">
+                  <textarea
+                    value={finalCode}
+                    onChange={e => setEditedCode(e.target.value)}
+                    spellCheck={false}
+                    className="w-full h-full min-h-[400px] text-xs text-emerald-300/80 font-mono whitespace-pre bg-black/30 rounded-lg p-4 border border-white/5 resize-none focus:outline-none focus:border-[#fbbf24]/30 transition-colors"
+                  />
+                </div>
               )}
             </ScrollArea>
 
