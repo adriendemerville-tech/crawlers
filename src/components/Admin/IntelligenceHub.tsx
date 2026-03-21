@@ -38,11 +38,10 @@ export function IntelligenceHub() {
           <CtoAgentDashboard />
         </TabsContent>
 
-        <TabsContent value="supervisor" forceMount className="data-[state=inactive]:hidden">
+        <TabsContent value="supervisor" forceMount className="data-[state=inactive]:hidden space-y-6">
+          <AssistantPrecisionCard />
           <CtoSupervisor />
-          <div className="mt-6">
-            <SupervisorErrorsRegistry />
-          </div>
+          <SupervisorErrorsRegistry />
         </TabsContent>
 
         <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
