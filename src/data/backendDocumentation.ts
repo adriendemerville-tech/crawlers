@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor et générateur Scribe :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
