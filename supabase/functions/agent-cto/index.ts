@@ -463,6 +463,7 @@ Deno.serve(async (req) => {
       'linkwhisper': 'linkwhisper-connector',
       'google-ads': 'google-ads-connector',
       'jargon-distance': 'audit-strategique-ia',
+      'content-architecture': 'content-architecture-advisor',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 

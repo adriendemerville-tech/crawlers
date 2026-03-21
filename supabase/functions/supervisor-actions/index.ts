@@ -83,6 +83,44 @@ async function getPostDeployErrors(supabase: any, functionNames: string[]): Prom
   })
 }
 
+// ─── AI: Audit SAV Assistant quality ─────────────────────────────────
+async function auditAssistantQuality(supabase: any): Promise<any> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: scores } = await supabase
+    .from('sav_quality_scores')
+    .select('*')
+    .gte('scored_at', sevenDaysAgo)
+    .order('scored_at', { ascending: false })
+    .limit(100)
+
+  const { data: convos } = await supabase
+    .from('sav_conversations')
+    .select('id, messages, phone_callback, created_at')
+    .gte('created_at', sevenDaysAgo)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  const totalConvos = (convos || []).length
+  const avgScore = (scores || []).length > 0
+    ? Math.round((scores || []).reduce((s: number, q: any) => s + (q.precision_score || 0), 0) / scores.length)
+    : null
+  const escalations = (scores || []).filter((s: any) => s.escalated_to_phone).length
+  const repeatedIntents = (scores || []).filter((s: any) => s.repeated_intent_count > 0).length
+  const routeMatches = (scores || []).filter((s: any) => s.route_match === true).length
+
+  return {
+    period: '7 days',
+    total_conversations: totalConvos,
+    scored_conversations: (scores || []).length,
+    avg_precision_score: avgScore,
+    escalation_rate: totalConvos > 0 ? Math.round((escalations / totalConvos) * 100) : 0,
+    repeated_intent_rate: (scores || []).length > 0 ? Math.round((repeatedIntents / (scores || []).length) * 100) : 0,
+    route_match_rate: (scores || []).length > 0 ? Math.round((routeMatches / (scores || []).length) * 100) : 0,
+    status: avgScore === null ? 'no_data' : avgScore >= 70 ? 'healthy' : avgScore >= 40 ? 'needs_attention' : 'critical',
+  }
+}
+
 // ─── AI: Audit CTO corrections quality & impact ─────────────────────
 async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[]): Promise<any> {
   const systemPrompt = `Tu es le SUPERVISOR, un auditeur qualité des corrections déployées par l'Agent CTO.
