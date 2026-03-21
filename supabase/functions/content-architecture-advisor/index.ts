@@ -202,12 +202,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4: Existing audit data ──
-    console.log(`[content-advisor] Step 4: Fetching existing audit data`)
+    // ── Step 4: Existing audit data + GEO score + LLM visibility + Backlinks ──
+    console.log(`[content-advisor] Step 4: Fetching existing audit/GEO/LLM/backlink data`)
     let existingAuditData: any = null
     let cocoonData: any = null
+    let geoScoreData: any = null
+    let llmVisibilityData: any = null
+    let backlinkData: any = null
 
-    const [auditRes, cocoonRes] = await Promise.allSettled([
+    const [auditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -216,6 +219,20 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', tracked_site_id)
             .order('created_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
+      // GEO score from audit cache or domain_data_cache
+      serviceClient.from('domain_data_cache').select('result_data')
+        .eq('domain', domain).eq('data_type', 'geo_score')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // LLM visibility/depth data
+      serviceClient.from('domain_data_cache').select('result_data')
+        .eq('domain', domain).eq('data_type', 'llm_visibility')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // Backlink snapshot
+      tracked_site_id
+        ? serviceClient.from('backlink_snapshots').select('referring_domains, backlinks_total, domain_rank, anchor_distribution')
+            .eq('tracked_site_id', tracked_site_id)
+            .order('measured_at', { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
@@ -223,6 +240,15 @@ Deno.serve(async (req) => {
     }
     if (cocoonRes.status === 'fulfilled' && (cocoonRes.value as any)?.data) {
       cocoonData = (cocoonRes.value as any).data
+    }
+    if (geoRes.status === 'fulfilled' && (geoRes.value as any)?.data) {
+      geoScoreData = (geoRes.value as any).data.result_data
+    }
+    if (llmRes.status === 'fulfilled' && (llmRes.value as any)?.data) {
+      llmVisibilityData = (llmRes.value as any).data.result_data
+    }
+    if (backlinkRes.status === 'fulfilled' && (backlinkRes.value as any)?.data) {
+      backlinkData = (backlinkRes.value as any).data
     }
 
     // ── Step 5: LLM Synthesis ──
