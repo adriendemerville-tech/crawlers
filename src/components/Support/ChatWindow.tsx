@@ -235,7 +235,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={handleNewConversation}>
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleNewConversation}>
               Nouveau
             </Button>
           )}
