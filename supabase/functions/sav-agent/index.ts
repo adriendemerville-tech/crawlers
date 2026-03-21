@@ -8,25 +8,39 @@ const corsHeaders = {
 };
 
 const FRONTEND_TAXONOMY = `
-# TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte)
+# TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte — positions visuelles)
 
-## Header principal (toutes pages connectées)
+## Header principal (barre noire en haut, toutes pages connectées)
+Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice | [avatar profil à droite]
 - Console → /console (tableau de bord principal)
 - Audit → /audit-expert (audit technique SEO 200 points)
 - Crawl → /site-crawl (crawl multi-pages)
-- BETA Cocoon → /cocoon (cocon sémantique 3D)
-- BETA Matrice → /matrice (matrice de prompts LLM)
+- BETA Cocoon → /cocoon (cocon sémantique 3D, texte orange)
+- BETA Matrice → /matrice (matrice de prompts LLM, texte orange)
 
-## Onglets dans /console
-- Pro Agency → section gestion abonnement Pro Agency
-- Mes sites → gestion des sites trackés (ajout, scores, évolution)
+## Sous-menu de /console (barre d'onglets horizontale sous le header)
+Position gauche→droite : Pro Agency | Mes sites | Plans d'Action | <Scripts> | Crawls | GMB | Rapports | Bundle | Créateur
+- Pro Agency → section gestion abonnement Pro Agency (tout à gauche, texte rouge)
+- Mes sites → gestion des sites trackés, scores, évolution (icône engrenage)
 - Plans d'Action → plans d'action générés par les audits
 - <Scripts> → scripts correctifs injectés via SDK/GTM/WordPress
-- Crawls → historique des crawls multi-pages
-- GMB → Google My Business (audit local)
-- Rapports → rapports exportables (PDF white-label)
-- Bundle → bundle APIs SEO tierces
-- Créateur → gestion blog articles
+- Crawls → historique des crawls multi-pages (icône insecte)
+- GMB → Google My Business, audit local (icône magasin)
+- Rapports → rapports exportables PDF white-label (à DROITE de GMB)
+- Bundle → bundle APIs SEO tierces (icône brique Lego)
+- Créateur → gestion blog articles (tout à droite, texte bleu pour admin)
+
+⚠ IMPORTANT: "Rapports" est le 7e onglet en partant de la gauche, juste après "GMB" et avant "Bundle". Il n'existe PAS d'onglet "Mes Audits" ou "Historique des Audits" — ce sont des termes INEXISTANTS.
+
+## Sous-menu Mes sites (sidebar gauche dans Mes sites)
+- Liste des sites trackés (nom + domaine)
+- Bouton "+ Ajouter un site" en bas de la liste
+- Bouton "API" (icône engrenage) → gestion connexions CMS (Rank Math, Link Whisper, etc.)
+
+## Cards KPI dans Mes sites (grille 4 colonnes, puis 4 en dessous)
+Ligne 1 : Perf. Mobile | Perf. Desktop | Score SEO | Score GEO
+Ligne 2 : Taux de citation LLM | Sentiment IA | Autorité sémantique | Part de voix (estimation)
+En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de citation LLM, Autorité sémantique
 
 ## Onglets API/CMS dans /console > API
 - APIs Connectées → Rank Math, Link Whisper, GTMetrix, SerpAPI
@@ -41,6 +55,15 @@ const FRONTEND_TAXONOMY = `
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
 - /cocoon → cocon sémantique 3D (Three.js, TF-IDF, chat IA intégré)
 - /architecte-generatif → générateur de codes correctifs JSON-LD
+
+## Architecte Génératif (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
+Onglets internes : Basique | Super | Stratégie | Contenu (admin) | Scribe β (admin) | Multi (admin)
+- Basique = fixes techniques SEO (title, meta, H1, etc.)
+- Super = fixes génératifs (FAQ, info box expert, contenus enrichis)
+- Stratégie = roadmap stratégique, action plans
+- Contenu = Content Architecture Advisor (admin seulement)
+- Scribe β = générateur contenu avancé 13 paramètres (admin seulement)
+- Multi = router multi-pages
 
 ## Pages publiques
 - / → page d'accueil (GEO Score, bots IA, PageSpeed gratuits)
@@ -76,6 +99,10 @@ Affiche l'historique hebdomadaire de : Score SEO, Score GEO, Taux de citation LL
 - Crédits (solde, historique, recharge)
 - Connexions Google (GSC, GA4)
 - Suppression de compte
+
+## Bouton SAV (bulle chat en bas à droite de toutes les pages connectées)
+- Ouvre le chat Crawler (assistant SAV actuel)
+- Bouton "Nouveau" → réinitialise la conversation
 `;
 
 const SYSTEM_PROMPT = `Tu es "Crawler", l'assistant SAV officiel de Crawlers.fr, la première plateforme francophone d'audit SEO, GEO et visibilité IA.

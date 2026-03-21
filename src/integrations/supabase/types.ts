@@ -3603,6 +3603,68 @@ export type Database = {
         }
         Relationships: []
       }
+      sav_quality_scores: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          detected_intent: string | null
+          escalated_to_phone: boolean
+          id: string
+          intent_keywords: string[] | null
+          message_count: number
+          post_chat_delay_seconds: number | null
+          post_chat_route: string | null
+          precision_score: number
+          repeated_intent_count: number
+          route_match: boolean | null
+          suggested_route: string | null
+          user_id: string
+          user_thumbs_up: boolean | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          detected_intent?: string | null
+          escalated_to_phone?: boolean
+          id?: string
+          intent_keywords?: string[] | null
+          message_count?: number
+          post_chat_delay_seconds?: number | null
+          post_chat_route?: string | null
+          precision_score?: number
+          repeated_intent_count?: number
+          route_match?: boolean | null
+          suggested_route?: string | null
+          user_id: string
+          user_thumbs_up?: boolean | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          detected_intent?: string | null
+          escalated_to_phone?: boolean
+          id?: string
+          intent_keywords?: string[] | null
+          message_count?: number
+          post_chat_delay_seconds?: number | null
+          post_chat_route?: string | null
+          precision_score?: number
+          repeated_intent_count?: number
+          route_match?: boolean | null
+          suggested_route?: string | null
+          user_id?: string
+          user_thumbs_up?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sav_quality_scores_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "sav_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_corrective_codes: {
         Row: {
           code: string
