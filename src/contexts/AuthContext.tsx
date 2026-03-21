@@ -187,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Create profile after successful signup
     if (data.user) {
       const personaType = sessionStorage.getItem('pending_persona_type');
+      const affiliateCode = sessionStorage.getItem('pending_affiliate_code');
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -195,8 +196,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_name: lastName,
           email: email,
           ...(personaType ? { persona_type: personaType } : {}),
+          ...(affiliateCode ? { affiliate_code_used: affiliateCode } : {}),
         });
       if (personaType) sessionStorage.removeItem('pending_persona_type');
+      if (affiliateCode) sessionStorage.removeItem('pending_affiliate_code');
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
