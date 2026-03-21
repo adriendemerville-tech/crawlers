@@ -35,7 +35,8 @@ serve(async (req) => {
       });
     }
 
-    const { message_content, domain, tracked_site_id, nodes_context } = await req.json();
+    const { message_content, domain, tracked_site_id, nodes_context, language } = await req.json();
+    const lang = (language === 'en' || language === 'es') ? language : 'fr';
     
     if (!message_content || !domain) {
       return new Response(JSON.stringify({ error: "message_content and domain required" }), {
@@ -47,37 +48,96 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     // Build extraction prompt with nodes context
+    const nodesLabel = { fr: 'Pages du cocon sémantique', en: 'Semantic cocoon pages', es: 'Páginas del capullo semántico' }[lang];
     const nodesInfo = nodes_context?.length
-      ? `\n\nPages du cocon sémantique :\n${nodes_context.slice(0, 30).map((n: any) => `- ${n.url || n.id} (${n.pageType || 'page'}, score: ${n.seoScore || 'N/A'})`).join('\n')}`
+      ? `\n\n${nodesLabel} :\n${nodes_context.slice(0, 30).map((n: any) => `- ${n.url || n.id} (${n.pageType || 'page'}, score: ${n.seoScore || 'N/A'})`).join('\n')}`
       : '';
 
-    const extractionPrompt = `Analyse cette recommandation d'optimisation de maillage interne et extrais les champs structurés pour construire une page de contenu optimisée.
+    const promptsByLang: Record<string, { intro: string; fieldDescs: Record<string, string>; outro: string }> = {
+      fr: {
+        intro: `Analyse cette recommandation d'optimisation de maillage interne et extrais les champs structurés pour construire une page de contenu optimisée.`,
+        fieldDescs: {
+          url: "URL de la page principale à créer ou optimiser",
+          keyword: "mot-clé principal identifié",
+          secondary_keywords: "mots-clés secondaires mentionnés",
+          page_type: "type de page",
+          content_length: "longueur de contenu recommandée",
+          tone: "ton recommandé (professionnel, expert, pédagogique, etc.)",
+          h1_suggestion: "suggestion de H1",
+          internal_links: "URLs de pages à lier",
+          cta_suggestion: "CTA suggéré",
+          competitor_insights: "résumé des insights concurrentiels",
+          priority_actions: "actions prioritaires",
+          custom_prompt: "instruction de contenu synthétisée",
+        },
+        outro: "Réponds UNIQUEMENT avec le JSON, sans markdown ni explication. Rédige TOUS les textes en français.",
+      },
+      en: {
+        intro: `Analyze this internal linking optimization recommendation and extract structured fields to build an optimized content page.`,
+        fieldDescs: {
+          url: "Main page URL to create or optimize",
+          keyword: "Main keyword identified",
+          secondary_keywords: "Secondary keywords mentioned",
+          page_type: "Page type",
+          content_length: "Recommended content length",
+          tone: "Recommended tone (professional, expert, educational, etc.)",
+          h1_suggestion: "H1 suggestion",
+          internal_links: "Page URLs to link to",
+          cta_suggestion: "Suggested CTA",
+          competitor_insights: "Summary of competitive insights",
+          priority_actions: "Priority actions",
+          custom_prompt: "Synthesized content instruction",
+        },
+        outro: "Respond ONLY with the JSON, no markdown or explanation. Write ALL text in English.",
+      },
+      es: {
+        intro: `Analiza esta recomendación de optimización de enlazado interno y extrae los campos estructurados para construir una página de contenido optimizada.`,
+        fieldDescs: {
+          url: "URL de la página principal a crear u optimizar",
+          keyword: "Palabra clave principal identificada",
+          secondary_keywords: "Palabras clave secundarias mencionadas",
+          page_type: "Tipo de página",
+          content_length: "Longitud de contenido recomendada",
+          tone: "Tono recomendado (profesional, experto, pedagógico, etc.)",
+          h1_suggestion: "Sugerencia de H1",
+          internal_links: "URLs de páginas a enlazar",
+          cta_suggestion: "CTA sugerido",
+          competitor_insights: "Resumen de insights competitivos",
+          priority_actions: "Acciones prioritarias",
+          custom_prompt: "Instrucción de contenido sintetizada",
+        },
+        outro: "Responde ÚNICAMENTE con el JSON, sin markdown ni explicación. Redacta TODOS los textos en español.",
+      },
+    };
 
-RECOMMANDATION DE L'ASSISTANT COCOON :
+    const p = promptsByLang[lang];
+    const extractionPrompt = `${p.intro}
+
+RECOMMENDATION:
 """
 ${message_content.slice(0, 3000)}
 """
 ${nodesInfo}
 
-DOMAINE : ${domain}
+DOMAIN: ${domain}
 
-Extrais un JSON avec ces champs (tous optionnels sauf keyword) :
+Extract a JSON with these fields (all optional except keyword):
 {
-  "url": "URL de la page principale à créer ou optimiser (déduis-la des recommandations)",
-  "keyword": "mot-clé principal identifié dans les recommandations",
-  "secondary_keywords": ["mots-clés secondaires mentionnés"],
+  "url": "${p.fieldDescs.url}",
+  "keyword": "${p.fieldDescs.keyword}",
+  "secondary_keywords": ["${p.fieldDescs.secondary_keywords}"],
   "page_type": "article|product|faq|landing|category|homepage",
   "content_length": "short|medium|long|pillar",
-  "tone": "ton recommandé (professionnel, expert, pédagogique, etc.)",
-  "h1_suggestion": "suggestion de H1 basée sur les recommandations",
-  "internal_links": ["URLs de pages à lier mentionnées dans les recommandations"],
-  "cta_suggestion": "CTA suggéré si applicable",
-  "competitor_insights": "résumé des insights concurrentiels mentionnés",
-  "priority_actions": ["actions prioritaires extraites des recommandations"],
-  "custom_prompt": "instruction de contenu synthétisée à partir des recommandations"
+  "tone": "${p.fieldDescs.tone}",
+  "h1_suggestion": "${p.fieldDescs.h1_suggestion}",
+  "internal_links": ["${p.fieldDescs.internal_links}"],
+  "cta_suggestion": "${p.fieldDescs.cta_suggestion}",
+  "competitor_insights": "${p.fieldDescs.competitor_insights}",
+  "priority_actions": ["${p.fieldDescs.priority_actions}"],
+  "custom_prompt": "${p.fieldDescs.custom_prompt}"
 }
 
-Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.`;
+${p.outro}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
