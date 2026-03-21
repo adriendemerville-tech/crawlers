@@ -1019,23 +1019,53 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            {/* Admin: Construire les pages button — only after maillage response */}
-            {isAdmin && (() => {
+            {/* Action buttons — only after maillage response */}
+            {(() => {
               const hasOptimizeResponse = messages.some((m, i) => {
                 if (m.role !== 'assistant' || i === 0) return false;
                 const prev = messages[i - 1];
                 return prev?.role === 'user' && isOptimizePrompt(prev.content);
               });
-              return hasOptimizeResponse;
-            })() && (
-              <button
-                onClick={() => setShowArchitectModal(true)}
-                className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 text-violet-300 text-[11px] font-medium hover:from-violet-500/25 hover:to-indigo-500/25 transition-all"
-              >
-                <Hammer className="w-3 h-3" />
-                Construire les pages
-              </button>
-            )}
+              if (!hasOptimizeResponse) return null;
+              // Find last optimization response content for deploy
+              const lastOptContent = [...messages].reverse().find((m, _, arr) => {
+                const idx = messages.indexOf(m);
+                if (m.role !== 'assistant' || idx === 0) return false;
+                const prev = messages[idx - 1];
+                return prev?.role === 'user' && isOptimizePrompt(prev.content);
+              })?.content;
+              return (
+                <div className="mb-2 flex gap-2">
+                  {/* Deploy injection button */}
+                  {trackedSiteId && lastOptContent && (
+                    <button
+                      onClick={() => handleDeployLinks(lastOptContent)}
+                      disabled={isDeploying || deploySuccess}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
+                        deploySuccess
+                          ? 'border border-emerald-500/40 text-emerald-300 bg-transparent'
+                          : isDeploying
+                            ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
+                            : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
+                      }`}
+                    >
+                      <Syringe className="w-3 h-3" />
+                      {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
+                    </button>
+                  )}
+                  {/* Architect button — admin only */}
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowArchitectModal(true)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
+                    >
+                      <Hammer className="w-3 h-3" />
+                      Architecte contenu
+                    </button>
+                  )}
+                </div>
+              );
+            })()
             <div className="flex gap-2 items-end">
               <Textarea
                 value={input}
