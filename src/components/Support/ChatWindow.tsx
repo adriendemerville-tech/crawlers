@@ -327,8 +327,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               className="flex-1 h-8 text-xs"
               maxLength={10}
             />
-            <Button size="sm" className="h-8 text-xs" onClick={handlePhoneSubmit}>Envoyer</Button>
-            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowPhonePrompt(false)}>Non</Button>
+            <Button size="sm" className="h-7 text-xs rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handlePhoneSubmit}>Envoyer</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs rounded-none border border-[hsl(var(--brand-violet))]/30 text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={() => setShowPhonePrompt(false)}>Non</Button>
           </div>
         </div>
       )}
