@@ -439,7 +439,8 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
-| \`agent-seo\` | ✅ | Agent SEO autonome |
+| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, stealthFetch, persistance recommandations) |
+| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, fallback humain) |
 | \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
