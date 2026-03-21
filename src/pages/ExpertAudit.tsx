@@ -180,8 +180,21 @@ const ExpertAudit = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Audit Expert SEO & IA — Score 200 points | Crawlers.fr</title>
-        <meta name="description" content="Audit SEO expert sur 200 points : performance, technique, sémantique, préparation IA et GEO. Analysez et corrigez votre site en 2 minutes." />
+        <title>Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr</title>
+        <meta name="description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/audit-expert" />
+        <meta property="og:title" content="Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr" />
+        <meta property="og:description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr" />
+        <meta name="twitter:description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">

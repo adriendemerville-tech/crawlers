@@ -582,8 +582,21 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Crawlers.fr — Audit SEO & GEO, Visibilité IA pour PME</title>
-        <meta name="description" content="Crawlers.fr audite votre site sur 200 points SEO et GEO. Mesurez votre visibilité sur ChatGPT, Claude, Perplexity. Code correctif inclus." />
+        <title>Crawlers.fr — Premier outil francophone SEO + GEO</title>
+        <meta name="description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/" />
+        <meta property="og:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
+        <meta property="og:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
+        <meta name="twitter:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Contenu principal">

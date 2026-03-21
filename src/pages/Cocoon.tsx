@@ -591,8 +591,21 @@ export default function Cocoon() {
   return (
     <>
       <Helmet>
-        <title>{t.title}</title>
-        <meta name="description" content={t.metaDesc} />
+        <title>Cocon Sémantique 3D — Architecture SEO | Crawlers.fr</title>
+        <meta name="description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/cocoon" />
+        <meta property="og:title" content="Cocon Sémantique 3D — Architecture SEO | Crawlers.fr" />
+        <meta property="og:description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Cocon Sémantique 3D — Architecture SEO | Crawlers.fr" />
+        <meta name="twitter:description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
 
       {/* Access gate overlay for non-subscribers */}
