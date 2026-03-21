@@ -4409,6 +4409,7 @@ export type Database = {
           generation_status: string
           id: string
           is_active: boolean
+          is_manually_edited: boolean | null
           payload_data: Json
           payload_type: string
           previous_payload_data: Json | null
@@ -4429,6 +4430,7 @@ export type Database = {
           generation_status?: string
           id?: string
           is_active?: boolean
+          is_manually_edited?: boolean | null
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null
@@ -4449,6 +4451,7 @@ export type Database = {
           generation_status?: string
           id?: string
           is_active?: boolean
+          is_manually_edited?: boolean | null
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null

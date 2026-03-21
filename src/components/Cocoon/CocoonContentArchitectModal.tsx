@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [editedCode, setEditedCode] = useState<string | null>(null);
+  const [originalCode, setOriginalCode] = useState<string>('');
 
   // Form fields
   const [url, setUrl] = useState('');
@@ -105,8 +107,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       toast.info('Connectez votre CMS dans Profil → APIs externes');
       return;
     }
-    toast.info('Publication en cours… (fonctionnalité à venir)');
-  }, [hasCmsConnection]);
+    const wasEdited = editedCode !== null && editedCode !== originalCode;
+    toast.info(wasEdited
+      ? 'Publication du code modifié… (version originale conservée en historique)'
+      : 'Publication en cours… (fonctionnalité à venir)');
+  }, [hasCmsConnection, editedCode, originalCode]);
 
   // Generate HTML preview from result
   const htmlPreview = useMemo(() => {
@@ -127,6 +132,22 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     }
     return parts.join('\n\n');
   }, [result]);
+
+  // Sync original code when AI generates result
+  useEffect(() => {
+    if (htmlPreview) {
+      setOriginalCode(htmlPreview);
+      setEditedCode(null); // reset manual edits
+    }
+  }, [htmlPreview]);
+
+  const isManuallyEdited = editedCode !== null && editedCode !== originalCode;
+  const finalCode = editedCode ?? htmlPreview;
+
+  const handleResetCode = useCallback(() => {
+    setEditedCode(null);
+    toast.info('Code restauré à la version originale');
+  }, []);
 
   if (!isOpen) return null;
 
@@ -222,6 +243,16 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <span className={`text-xs ${viewMode === 'page' ? 'text-white' : 'text-white/40'}`}>Page</span>
                 <Switch checked={viewMode === 'code'} onCheckedChange={v => setViewMode(v ? 'code' : 'page')} />
                 <span className={`text-xs ${viewMode === 'code' ? 'text-white' : 'text-white/40'}`}>Code HTML</span>
+                {isManuallyEdited && (
+                  <Badge className="ml-2 bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
+                    <PenLine className="w-2.5 h-2.5 mr-1" />Modifié manuellement
+                  </Badge>
+                )}
+                {isManuallyEdited && (
+                  <button onClick={handleResetCode} className="ml-auto flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors">
+                    <RotateCcw className="w-3 h-3" />Restaurer
+                  </button>
+                )}
               </div>
             )}
 
@@ -286,9 +317,14 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 </div>
               )}
               {result && viewMode === 'code' && (
-                <pre className="text-xs text-green-300/80 font-mono whitespace-pre-wrap bg-black/30 rounded-lg p-4 border border-white/5">
-                  {htmlPreview}
-                </pre>
+                <div className="relative h-full">
+                  <textarea
+                    value={finalCode}
+                    onChange={e => setEditedCode(e.target.value)}
+                    spellCheck={false}
+                    className="w-full h-full min-h-[400px] text-xs text-emerald-300/80 font-mono whitespace-pre bg-black/30 rounded-lg p-4 border border-white/5 resize-none focus:outline-none focus:border-[#fbbf24]/30 transition-colors"
+                  />
+                </div>
               )}
             </ScrollArea>
 

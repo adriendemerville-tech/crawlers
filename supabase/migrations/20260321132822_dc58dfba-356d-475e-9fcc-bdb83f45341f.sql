@@ -1,0 +1,1 @@
+ALTER TABLE public.site_script_rules ADD COLUMN IF NOT EXISTS is_manually_edited boolean DEFAULT false;
