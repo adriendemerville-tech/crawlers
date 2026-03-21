@@ -128,7 +128,7 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
             {isEmpty ? (
               <span className="text-muted-foreground/40 italic text-xs">Non renseigné</span>
             ) : (
-              <span className="text-sm text-foreground">{value}</span>
+              <span className="text-sm text-foreground">{NONPROFIT_LABELS[value as string] || value}</span>
             )}
             {isHovered && (
               <Pencil className="h-3 w-3 text-muted-foreground/40 shrink-0 ml-auto" />
