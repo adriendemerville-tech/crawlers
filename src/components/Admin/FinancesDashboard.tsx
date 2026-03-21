@@ -39,6 +39,7 @@ const API_COST_ESTIMATES: Record<string, number> = {
   dataforseo: 0.01,
   browserless: 0.008,
   firecrawl: 0.005,
+  spider: 0.001,
   'fly-playwright': 0.0001,
   openrouter: 0,
 };
@@ -62,6 +63,8 @@ interface TokenUsageStats {
   openrouterCalls: number;
   browserlessCalls: number;
   firecrawlCalls: number;
+  spiderCalls: number;
+  spiderEstimatedCost: number;
   flyPlaywrightCalls: number;
   flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
@@ -81,6 +84,7 @@ export function FinancesDashboard() {
     byFunction: {}, byModel: {},
     paidApiCalls: 0, totalEstimatedCost: 0,
     dataforseoCalls: 0, openrouterCalls: 0, browserlessCalls: 0, firecrawlCalls: 0,
+    spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
 
@@ -158,7 +162,7 @@ export function FinancesDashboard() {
       });
 
       const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
-      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, flyPlaywrightCalls = 0;
+      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
       let totalPaidApiCost = 0;
 
       paidApiEvents.forEach(e => {
@@ -173,13 +177,15 @@ export function FinancesDashboard() {
         if (service === 'openrouter') openrouterCalls++;
         if (service === 'browserless') browserlessCalls++;
         if (service === 'firecrawl') firecrawlCalls++;
+        if (service === 'spider') spiderCalls++;
         if (service === 'fly-playwright') flyPlaywrightCalls++;
         totalPaidApiCost += API_COST_ESTIMATES[service] || 0.005;
       });
 
       const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
       const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
-      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + totalPaidApiCost;
+      const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
+      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + spiderEstimatedCost + totalPaidApiCost;
       setTotalPlatformCost(grandTotalCost);
 
       setTokenUsage({
@@ -187,6 +193,7 @@ export function FinancesDashboard() {
         callCount: tokenEvents.length, byFunction, byModel,
         paidApiCalls: paidApiEvents.length, totalEstimatedCost,
         dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
+        spiderCalls, spiderEstimatedCost,
         flyPlaywrightCalls, flyEstimatedCost, byApiService,
       });
 
@@ -454,16 +461,29 @@ export function FinancesDashboard() {
               statusLabel="✅ Pay-as-you-go"
             />
 
-            {/* Firecrawl */}
+            {/* Spider.cloud (Primary) */}
             <ApiQuotaGauge
-              name="Firecrawl"
+              name="Spider.cloud"
+              icon={<Globe className="h-4 w-4" />}
+              calls={tokenUsage.spiderCalls}
+              quota={null}
+              costPerCall={0.001}
+              color="emerald"
+              status="ok"
+              statusLabel={tokenUsage.spiderCalls > 0 ? `✅ Primaire actif` : '💤 Aucun appel'}
+              estimatedCost={tokenUsage.spiderEstimatedCost}
+            />
+
+            {/* Firecrawl (Fallback) */}
+            <ApiQuotaGauge
+              name="Firecrawl (fallback)"
               icon={<Flame className="h-4 w-4" />}
               calls={tokenUsage.firecrawlCalls}
               quota={500}
               costPerCall={0.005}
               color="orange"
               status={tokenUsage.firecrawlCalls >= 500 ? 'exhausted' : tokenUsage.firecrawlCalls >= 400 ? 'warning' : 'ok'}
-              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ OK'}
+              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ Fallback'}
             />
 
             {/* OpenRouter */}
