@@ -225,7 +225,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[70vh]">
+    <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[90vh]">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3 shrink-0">
         <div className="flex items-center gap-2">
