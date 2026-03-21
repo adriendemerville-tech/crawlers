@@ -248,6 +248,13 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO et architecte de contenu. Tu analyses des données de SERP, de concurrents et d'audits pour recommander la structure de contenu optimale.
 
+RÈGLE ABSOLUE — GARDE-FOU DE COHÉRENCE :
+1. **Continuité tonale** : La page recommandée DOIT rester cohérente avec le ton, le design et le vocabulaire des autres pages du même domaine. Ne recommande jamais un style éditorial radicalement différent du site existant.
+2. **Prudence sectorielle** : Si le secteur est conservateur (juridique, médical, institutionnel, finance, assurance, services publics, ONG), pondère à la baisse les structures novatrices (FAQ interactive, tone of voice disruptif, etc.). Privilégie la lisibilité et la confiance.
+3. **Lisibilité > originalité** : Un contenu lu et compris par sa cible vaut mieux qu'une page au taux de rebond énorme. Si la cible a un jargon_distance élevé (>6), simplifie au maximum. Si la cible est B2C grand public, évite le jargon technique même si les concurrents l'utilisent.
+4. **Score d'innovation** : Pour chaque recommandation, évalue si elle est "conservatrice" (proche des pratiques du secteur), "modérée" (légère évolution) ou "disruptive" (très différente). Si disruptive, BAISSE le confidence_score de 15-25 points et ajoute un avertissement explicite dans le rationale.
+5. **Non-marchand** : Pour les services publics, associations, ONG, fédérations — le ton doit rester sobre, institutionnel, factuel. Aucun CTA agressif, aucun wording commercial.
+
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
 {
   "content_structure": {
@@ -274,9 +281,23 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "anchor_strategy": [{"anchor_text":"...","target_intent":"..."}],
     "cluster_opportunities": ["..."]
   },
+  "coherence_check": {
+    "innovation_level": "conservative|moderate|disruptive",
+    "sector_fit": "high|medium|low",
+    "tone_continuity": "aligned|slight_shift|breaking",
+    "bounce_risk": "low|medium|high",
+    "warnings": ["...si applicable"]
+  },
   "confidence_score": number,
   "rationale": "Explication courte de la stratégie recommandée"
 }`
+
+    // Determine sector conservatism for the prompt
+    const conservativeSectors = ['juridique', 'médical', 'santé', 'finance', 'assurance', 'banque', 'institutionnel', 'service public', 'administration', 'éducation', 'pharmacie']
+    const sectorStr = (siteIdentity?.sector || '').toLowerCase()
+    const isConservativeSector = conservativeSectors.some(s => sectorStr.includes(s))
+    const isNonProfit = ['service_public', 'association', 'ong', 'organisation_internationale', 'federation_sportive', 'syndicat'].includes(siteIdentity?.nonprofit_type || '')
+    const jargonDist = typeof siteIdentity?.jargon_distance === 'number' ? siteIdentity.jargon_distance : null
 
     const userPrompt = `Analyse et recommande l'architecture de contenu optimale pour:
 
@@ -303,11 +324,14 @@ ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
-Adapte tes recommandations au:
-- Type de business (${siteIdentity?.commercial_model || 'inconnu'}: ${siteIdentity?.nonprofit_type || ''})
-- Distance jargon (${siteIdentity?.jargon_distance || 'inconnue'}) — plus c'est élevé, plus le contenu doit être vulgarisé
-- Cible (${siteIdentity?.targets || 'inconnue'})
-- Intent SERP détecté (${serpData?.featured_snippet ? 'Featured Snippet présent' : 'Pas de FS'}, ${serpData?.people_also_ask?.length || 0} PAA)
+⚠️ CONTRAINTES DE COHÉRENCE :
+- Secteur ${isConservativeSector ? 'CONSERVATEUR — privilégie la sobriété et la crédibilité' : 'standard'}
+- Organisation ${isNonProfit ? 'NON MARCHANDE — ton institutionnel, pas de CTA commercial agressif' : 'marchande ou indéterminée'}
+- Distance jargon: ${jargonDist !== null ? `${jargonDist}/10 — ${jargonDist > 6 ? 'VULGARISE au maximum, la cible ne maîtrise pas le jargon' : jargonDist > 3 ? 'Équilibre technique/accessible' : 'Public expert, le jargon est attendu'}` : 'inconnue'}
+- Business type: ${siteIdentity?.business_type || 'inconnu'}, Model: ${siteIdentity?.commercial_model || 'inconnu'}
+- Cible: ${siteIdentity?.targets || 'inconnue'}
+
+IMPORTANT : Le contenu recommandé NE DOIT PAS être en rupture de ton/style avec le reste du site. Reste dans la continuité de ce qui existe déjà. Si tu proposes quelque chose de très différent, SIGNALE-LE dans coherence_check.warnings et BAISSE le confidence_score.
 
 Le ratio sémantique doit refléter la distance jargon: jargon_distance 1-3 → contenu technique, 7-10 → très vulgarisé.
 Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
@@ -371,10 +395,21 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
                     cluster_opportunities: { type: 'array', items: { type: 'string' } },
                   },
                 },
+                coherence_check: {
+                  type: 'object',
+                  properties: {
+                    innovation_level: { type: 'string', enum: ['conservative', 'moderate', 'disruptive'] },
+                    sector_fit: { type: 'string', enum: ['high', 'medium', 'low'] },
+                    tone_continuity: { type: 'string', enum: ['aligned', 'slight_shift', 'breaking'] },
+                    bounce_risk: { type: 'string', enum: ['low', 'medium', 'high'] },
+                    warnings: { type: 'array', items: { type: 'string' } },
+                  },
+                  required: ['innovation_level', 'sector_fit', 'tone_continuity', 'bounce_risk'],
+                },
                 confidence_score: { type: 'number' },
                 rationale: { type: 'string' },
               },
-              required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'confidence_score', 'rationale'],
+              required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'coherence_check', 'confidence_score', 'rationale'],
             },
           },
         }],
@@ -435,6 +470,65 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
 
     trackTokenUsage('content-architecture-advisor', aiJson?.usage?.total_tokens || 0, user.id)
 
+    // ── POST-PROCESSING GUARDRAIL: Coherence enforcement ──
+    // Even if the LLM ignores our prompt constraints, we enforce them here
+    const coherence = recommendation.coherence_check || {}
+    let adjustedConfidence = recommendation.confidence_score || 70
+    const guardrailWarnings: string[] = [...(coherence.warnings || [])]
+
+    // Penalty: disruptive innovation in conservative sector
+    if (isConservativeSector && coherence.innovation_level === 'disruptive') {
+      adjustedConfidence = Math.max(20, adjustedConfidence - 25)
+      guardrailWarnings.push('⚠️ Secteur conservateur : recommandation très innovante, à valider manuellement avant implémentation.')
+    } else if (coherence.innovation_level === 'disruptive') {
+      adjustedConfidence = Math.max(30, adjustedConfidence - 15)
+      guardrailWarnings.push('⚠️ Structure de contenu très différente des standards du secteur — risque de taux de rebond élevé.')
+    }
+
+    // Penalty: tone break
+    if (coherence.tone_continuity === 'breaking') {
+      adjustedConfidence = Math.max(25, adjustedConfidence - 20)
+      guardrailWarnings.push('⚠️ Rupture de ton détectée avec le reste du site — le contenu risque de paraître incohérent pour les visiteurs réguliers.')
+    }
+
+    // Penalty: high bounce risk
+    if (coherence.bounce_risk === 'high') {
+      adjustedConfidence = Math.max(25, adjustedConfidence - 15)
+      guardrailWarnings.push('⚠️ Risque de rebond élevé : le contenu est potentiellement trop dense ou trop technique pour la cible.')
+    }
+
+    // Nonprofit override: strip aggressive CTAs from sections
+    if (isNonProfit) {
+      const sections = recommendation.content_structure?.sections || []
+      for (const section of sections) {
+        if (typeof section.title === 'string') {
+          const aggressiveCTA = /achetez|commandez|profitez|offre exclusive|promo/i
+          if (aggressiveCTA.test(section.title)) {
+            section.title = section.title.replace(aggressiveCTA, '').trim()
+            guardrailWarnings.push(`Section "${section.title}" : CTA commercial retiré (organisation non marchande).`)
+          }
+        }
+      }
+    }
+
+    // Jargon distance override: cap technical jargon %
+    if (jargonDist !== null && jargonDist > 6) {
+      const sr = recommendation.keyword_strategy?.semantic_ratio
+      if (sr && sr.technical_jargon_percent > 25) {
+        guardrailWarnings.push(`Jargon technique ramené de ${sr.technical_jargon_percent}% à 25% max (cible non-experte, jargon_distance=${jargonDist}).`)
+        sr.technical_jargon_percent = 25
+        sr.accessible_language_percent = 75
+      }
+    }
+
+    // Apply guardrail results
+    recommendation.confidence_score = Math.round(adjustedConfidence)
+    recommendation.coherence_check = {
+      ...coherence,
+      guardrail_applied: true,
+      warnings: guardrailWarnings,
+    }
+
     // ── Enrich with source metadata ──
     const result = {
       ...recommendation,
@@ -449,6 +543,12 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
           competitor_scraping: competitorInsights.length,
           existing_audit: !!existingAuditData,
           cocoon_data: !!cocoonData,
+        },
+        guardrails: {
+          conservative_sector: isConservativeSector,
+          nonprofit: isNonProfit,
+          jargon_distance: jargonDist,
+          warnings_count: guardrailWarnings.length,
         },
         generated_at: new Date().toISOString(),
         duration_ms: Date.now() - startTime,
