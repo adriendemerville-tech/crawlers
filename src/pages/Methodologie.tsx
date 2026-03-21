@@ -242,29 +242,22 @@ export default function Methodologie() {
   return (
     <>
       <Helmet>
-        <title>{t3(language,
-          'Méthodologie d\'audit SEO & GEO 2026 — 150+ points analysés | Crawlers.fr',
-          'SEO & GEO Audit Methodology 2026 — 150+ Points Analyzed | Crawlers.fr',
-          'Metodología de auditoría SEO & GEO 2026 — 150+ puntos analizados | Crawlers.fr'
-        )}</title>
-        <meta name="description" content={t3(language,
-          'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming, code correctif JSON-LD. Périmètre complet.',
-          'How Crawlers.fr audits your site in 2026: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming, JSON-LD corrective code.',
-          'Cómo Crawlers.fr audita su sitio en 2026: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming, código correctivo JSON-LD.'
-        )} />
+        <title>Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr</title>
+        <meta name="description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/methodologie" />
-        <meta property="og:title" content={t3(language,
-          'Méthodologie d\'audit SEO & GEO — Crawlers.fr',
-          'SEO & GEO Audit Methodology — Crawlers.fr',
-          'Metodología de auditoría SEO & GEO — Crawlers.fr'
-        )} />
-        <meta property="og:description" content={t3(language,
-          'Plus de 150 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
-          '150+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
-          'Más de 150 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
-        )} />
-        <meta property="og:url" content="https://crawlers.fr/methodologie" />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:url" content="https://crawlers.fr/methodologie" />
+        <meta property="og:title" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr" />
+        <meta property="og:description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@crawlersfr" />
+        <meta name="twitter:title" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires | Crawlers.fr" />
+        <meta name="twitter:description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, architecture multi-fallback, 111 Edge Functions, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
       <Header />
