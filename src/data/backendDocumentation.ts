@@ -154,7 +154,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 
 | Table | Description | Colonnes clés |
 |-------|-------------|---------------|
-| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\`, \`market_sector\`, \`client_targets\`, \`jargon_distance\`, \`api_key\` |
+| \`tracked_sites\` | Sites suivis (monitoring) | \`user_id\`, \`url\`, \`domain\`, \`check_frequency\`, \`market_sector\`, \`client_targets\`, \`jargon_distance\`, \`api_key\`, \`is_commercial_service\`, \`nonprofit_type\`, \`entity_type\` |
 | \`user_stats_history\` | Historique KPIs hebdomadaire | \`tracked_site_id\`, \`seo_score\`, \`geo_score\`, \`llm_citation_rate\`, \`raw_data\` (SERP, perf, LLM) |
 | \`serp_snapshots\` | Snapshots SERP DataForSEO | \`tracked_site_id\`, \`total_keywords\`, \`avg_position\`, \`top_3/10/50\`, \`sample_keywords\` |
 | \`backlink_snapshots\` | Snapshots backlinks hebdo | \`tracked_site_id\`, \`referring_domains\`, \`backlinks_total\`, \`domain_rank\` |
