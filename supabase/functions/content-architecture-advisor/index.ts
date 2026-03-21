@@ -459,6 +459,65 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
 
     trackTokenUsage('content-architecture-advisor', aiJson?.usage?.total_tokens || 0, user.id)
 
+    // ── POST-PROCESSING GUARDRAIL: Coherence enforcement ──
+    // Even if the LLM ignores our prompt constraints, we enforce them here
+    const coherence = recommendation.coherence_check || {}
+    let adjustedConfidence = recommendation.confidence_score || 70
+    const guardrailWarnings: string[] = [...(coherence.warnings || [])]
+
+    // Penalty: disruptive innovation in conservative sector
+    if (isConservativeSector && coherence.innovation_level === 'disruptive') {
+      adjustedConfidence = Math.max(20, adjustedConfidence - 25)
+      guardrailWarnings.push('⚠️ Secteur conservateur : recommandation très innovante, à valider manuellement avant implémentation.')
+    } else if (coherence.innovation_level === 'disruptive') {
+      adjustedConfidence = Math.max(30, adjustedConfidence - 15)
+      guardrailWarnings.push('⚠️ Structure de contenu très différente des standards du secteur — risque de taux de rebond élevé.')
+    }
+
+    // Penalty: tone break
+    if (coherence.tone_continuity === 'breaking') {
+      adjustedConfidence = Math.max(25, adjustedConfidence - 20)
+      guardrailWarnings.push('⚠️ Rupture de ton détectée avec le reste du site — le contenu risque de paraître incohérent pour les visiteurs réguliers.')
+    }
+
+    // Penalty: high bounce risk
+    if (coherence.bounce_risk === 'high') {
+      adjustedConfidence = Math.max(25, adjustedConfidence - 15)
+      guardrailWarnings.push('⚠️ Risque de rebond élevé : le contenu est potentiellement trop dense ou trop technique pour la cible.')
+    }
+
+    // Nonprofit override: strip aggressive CTAs from sections
+    if (isNonProfit) {
+      const sections = recommendation.content_structure?.sections || []
+      for (const section of sections) {
+        if (typeof section.title === 'string') {
+          const aggressiveCTA = /achetez|commandez|profitez|offre exclusive|promo/i
+          if (aggressiveCTA.test(section.title)) {
+            section.title = section.title.replace(aggressiveCTA, '').trim()
+            guardrailWarnings.push(`Section "${section.title}" : CTA commercial retiré (organisation non marchande).`)
+          }
+        }
+      }
+    }
+
+    // Jargon distance override: cap technical jargon %
+    if (jargonDist !== null && jargonDist > 6) {
+      const sr = recommendation.keyword_strategy?.semantic_ratio
+      if (sr && sr.technical_jargon_percent > 25) {
+        guardrailWarnings.push(`Jargon technique ramené de ${sr.technical_jargon_percent}% à 25% max (cible non-experte, jargon_distance=${jargonDist}).`)
+        sr.technical_jargon_percent = 25
+        sr.accessible_language_percent = 75
+      }
+    }
+
+    // Apply guardrail results
+    recommendation.confidence_score = Math.round(adjustedConfidence)
+    recommendation.coherence_check = {
+      ...coherence,
+      guardrail_applied: true,
+      warnings: guardrailWarnings,
+    }
+
     // ── Enrich with source metadata ──
     const result = {
       ...recommendation,
@@ -473,6 +532,12 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
           competitor_scraping: competitorInsights.length,
           existing_audit: !!existingAuditData,
           cocoon_data: !!cocoonData,
+        },
+        guardrails: {
+          conservative_sector: isConservativeSector,
+          nonprofit: isNonProfit,
+          jargon_distance: jargonDist,
+          warnings_count: guardrailWarnings.length,
         },
         generated_at: new Date().toISOString(),
         duration_ms: Date.now() - startTime,
