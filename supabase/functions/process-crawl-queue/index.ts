@@ -476,26 +476,59 @@ async function scrapePage(
         console.warn(`[Worker] stealthFetch failed for ${pageUrl}:`, stealthErr);
       }
 
-      // ── Firecrawl FALLBACK (only if stealthFetch failed) ──
+      // ── Spider.cloud PRIMARY → Firecrawl FALLBACK (only if stealthFetch failed) ──
       if (!html || html.length < 500) {
-        console.log(`[Worker] stealthFetch insufficient for ${pageUrl}, falling back to Firecrawl...`);
-        const fetchStart = Date.now();
-        const res = await fetch(`${FIRECRAWL_API}/scrape`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
-        });
-        responseTime = Date.now() - fetchStart;
-        const data = await res.json();
-        html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
-        statusCode = data?.data?.metadata?.statusCode || 200;
+        const spiderKey = Deno.env.get('SPIDER_API_KEY');
+        let spiderOk = false;
 
-        const sourceUrl = data?.data?.metadata?.sourceURL;
-        if (sourceUrl && sourceUrl !== pageUrl) {
-          redirectUrl = sourceUrl;
+        if (spiderKey) {
+          try {
+            console.log(`[Worker] stealthFetch insufficient for ${pageUrl}, trying Spider.cloud...`);
+            const fetchStart2 = Date.now();
+            const spiderRes = await fetch(`${SPIDER_API}/crawl`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: pageUrl, limit: 1, return_format: 'raw', request: 'http' }),
+            });
+            responseTime = Date.now() - fetchStart2;
+            if (spiderRes.ok) {
+              const spiderData = await spiderRes.json();
+              const page = Array.isArray(spiderData) ? spiderData[0] : spiderData;
+              const spiderHtml = page?.content || '';
+              if (spiderHtml.length > 500) {
+                html = spiderHtml;
+                statusCode = page?.status || 200;
+                spiderOk = true;
+                console.log(`[Worker] ✅ Spider.cloud OK for ${pageUrl} (${html.length} chars)`);
+                await trackPaidApiCall('process-crawl-queue', 'spider', '/crawl', pageUrl).catch(() => {});
+              }
+            }
+          } catch (e) {
+            console.warn(`[Worker] Spider.cloud failed for ${pageUrl}:`, e);
+          }
         }
 
-        await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
+        // Firecrawl fallback
+        if (!spiderOk) {
+          console.log(`[Worker] Falling back to Firecrawl for ${pageUrl}...`);
+          const fetchStart3 = Date.now();
+          const res = await fetch(`${FIRECRAWL_API}/scrape`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
+          });
+          responseTime = Date.now() - fetchStart3;
+          const data = await res.json();
+          html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
+          statusCode = data?.data?.metadata?.statusCode || 200;
+
+          const sourceUrl = data?.data?.metadata?.sourceURL;
+          if (sourceUrl && sourceUrl !== pageUrl) {
+            redirectUrl = sourceUrl;
+          }
+
+          await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
+        }
       }
       
       if (!html) return null;
