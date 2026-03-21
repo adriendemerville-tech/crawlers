@@ -147,13 +147,17 @@ export function ExternalApisTab() {
       if (!user) return;
       const { data } = await supabase
         .from('cms_connections')
-        .select('id, site_url')
+        .select('id, site_url, capabilities')
         .eq('user_id', user.id)
         .eq('platform', 'wordpress')
         .eq('status', 'active')
         .limit(1)
         .maybeSingle();
-      setWpConnection(data as { id: string; site_url: string } | null);
+      if (data) {
+        setWpConnection({ id: data.id, site_url: data.site_url });
+        const caps = data.capabilities as Record<string, unknown> | null;
+        if (caps?.rankmath_authorized) setRankMathConnected(true);
+      }
     };
     checkWpConnection();
   }, [cmsDialogOpen]);
