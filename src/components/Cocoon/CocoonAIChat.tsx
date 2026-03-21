@@ -1038,7 +1038,17 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            <div className="flex gap-2">
+            {/* Admin: Construire les pages button */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowArchitectModal(true)}
+                className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 text-violet-300 text-[11px] font-medium hover:from-violet-500/25 hover:to-indigo-500/25 transition-all"
+              >
+                <Hammer className="w-3 h-3" />
+                Construire les pages
+              </button>
+            )}
+            <div className="flex gap-2 items-end">
               <Textarea
                 value={input}
                 onChange={(e) => {
@@ -1052,6 +1062,12 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                 placeholder={t.placeholder}
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
+              />
+              <ChatMicButton
+                onTranscript={(text) => {
+                  setInput(prev => prev ? prev + ' ' + text : text);
+                }}
+                disabled={isLoading}
               />
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
@@ -1077,6 +1093,18 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
         )}
       </button>
+
+      {/* Content Architect Modal — admin only */}
+      {isAdmin && (
+        <CocoonContentArchitectModal
+          isOpen={showArchitectModal}
+          onClose={() => setShowArchitectModal(false)}
+          nodes={nodes}
+          domain={domain}
+          trackedSiteId={trackedSiteId}
+          hasCmsConnection={hasCmsConnection}
+        />
+      )}
     </div>
   );
 }
