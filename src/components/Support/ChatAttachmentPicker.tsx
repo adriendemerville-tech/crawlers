@@ -32,13 +32,13 @@ export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerP
       const results: AttachmentItem[] = [];
 
       if (tab === 'report') {
-        const { data } = await supabase
-          .from('pdf_audits')
+        const { data } = await (supabase
+          .from('pdf_audits' as any)
           .select('id, report_name, domain, created_at')
           .eq('user_id', userId)
           .eq('status', 'processed')
           .order('created_at', { ascending: false })
-          .limit(20);
+          .limit(20) as any);
 
         (data || []).forEach((r: any) => {
           results.push({
