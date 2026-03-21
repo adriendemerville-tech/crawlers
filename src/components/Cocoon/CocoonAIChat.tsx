@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Syringe } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
+import { Syringe, Hammer } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +9,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
+import { ChatMicButton } from '@/components/Support/ChatMicButton';
+import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
