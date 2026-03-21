@@ -5,6 +5,7 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
+import { SavDashboard } from './SavDashboard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { BrowserlessAlert } from './BrowserlessAlert';
 import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
