@@ -246,7 +246,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-3" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-3 [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&_[data-radix-scroll-area-scrollbar]]:opacity-100 [&_[data-radix-scroll-area-scrollbar]]:w-1.5 [&_[data-radix-scroll-area-thumb]]:bg-muted-foreground/25" ref={scrollRef}>
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
