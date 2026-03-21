@@ -1099,35 +1099,59 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 ### Architecture
 
 - **Modèle** : Gemini 2.5 Flash via Lovable AI
-- **Nom** : "Crawler" — assistant SAV officiel
+- **Nom** : "Crawler" — assistant SAV officiel (logo robot)
 - **Limite** : 1000 caractères max par réponse
 - **Ton** : Professionnel, vouvoiement systématique
+- **Détection langue** : FR/EN/ES dès le premier message
+- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`)
 
 ### Sources de données
 
 | Source | Description |
 |--------|-------------|
 | Documentation SAV | /aide — base de connaissance publique |
-| Lexique | Définitions SEO/GEO |
-| Articles blog | Actualités et guides |
-| Infotainments | Contenus de patience |
-| Données utilisateur | Résultats d'audit, crawl, stats Mes sites |
+| Taxonomie frontend | Routes, onglets, positions des composants |
+| Données utilisateur | \\\`tracked_sites\\\`, \\\`crawl_pages\\\`, \\\`cocoon_sessions\\\`, audits |
+
+### Fonctionnalités avancées
+
+- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
+- **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
+- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
+
+### Scoring de précision (\\\`sav_quality_scores\\\`)
+
+- **precision_score** (0-100), **route_match**, **repeated_intent_count**, **escalated_to_phone**
+- Dashboard : Admin → Intelligence → Supervisor
 
 ### Protocole d'escalade
 
-- **3 itérations max** sans satisfaction → proposition de rappel téléphonique
-- Numéro (06) demandé, non stocké, effacé de la conversation sous 48h
-- Escalade immédiate pour : remboursement, bug bloquant, facturation, suppression compte
-
-### Registre
-
-Toutes les conversations sont enregistrées dans \`sav_conversations\` et consultables dans Admin → SAV.
+- 3 itérations max → rappel téléphonique (06/07)
+- Purge auto 48h via \\\`cleanup_expired_phone_callbacks()\\\`
 
 ### Sécurité
 
-- Ne mentionne jamais les technologies internes (Supabase, Deno, Lovable)
-- Ne peut pas lancer d'audit, crawl, scrap ou cocoon
+- Ne mentionne jamais les technologies internes
 - Explique, ne produit pas
+
+---
+
+## Content Architecture Advisor
+
+- **Edge Function** : \\\`content-architecture-advisor\\\`
+- **Accès** : Admin only (onglet Contenu dans Architecte), masqué en démo
+- **Monitoré par** : Agent CTO
+- **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
+- **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
+
+---
+
+## Scribe (β)
+
+- **Accès** : Admin only, masqué en démo
+- **13 paramètres** : Prompt, URL, Type page, Longueur, Photo, CTA, Mot-clé, Ton, Langue, Persona, Jargon (1-10), Maillage Cocoon, URLs concurrentes
+- **7 champs auto-remplis** via carte d'identité + cache SERP + Cocoon
+- **File d'attente** : \\\`process-script-queue\\\` (FIFO)
 `,
   },
 ];
