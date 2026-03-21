@@ -1022,7 +1022,7 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
     id: 'agents',
     title: 'Agents Autonomes',
     icon: 'Package',
-    content: \`
+    content: `
 # Agents Autonomes
 
 ## Agent SEO v2
@@ -1031,10 +1031,10 @@ L'Agent SEO autonome analyse et optimise le contenu des pages du site de manièr
 
 ### Architecture
 
-- **Edge Function** : \\\`agent-seo\\\`
+- **Edge Function** : \`agent-seo\`
 - **Modèle** : Gemini 2.5 Flash via Lovable AI
-- **Anti-détection** : Utilise \\\`stealthFetch\\\` au lieu de fetch basique
-- **Contexte enrichi** : Injecte le contexte du site (secteur, audience, zone commerciale) via \\\`getSiteContext\\\`
+- **Anti-détection** : Utilise \`stealthFetch\` au lieu de fetch basique
+- **Contexte enrichi** : Injecte le contexte du site (secteur, audience, zone commerciale) via \`getSiteContext\`
 
 ### Scoring 7 axes
 
@@ -1043,18 +1043,18 @@ L'Agent SEO autonome analyse et optimise le contenu des pages du site de manièr
 | Profondeur de contenu | 20% | Longueur, richesse sémantique |
 | Structure Hn | 15% | Hiérarchie H1-H6, sauts de niveaux |
 | Mots-clés | 15% | Densité, placement, variantes |
-| Maillage interne | 15% | Détection ancres toxiques ("cliquez ici"), densité liens |
+| Maillage interne | 15% | Détection ancres toxiques, densité liens |
 | Métadonnées | 15% | Title, description, JSON-LD |
 | E-E-A-T | 10% | Signaux d'autorité, expertise |
 | Densité contenu | 10% | Ratio texte/HTML |
 
 ### Persistance
 
-Les recommandations sont automatiquement persistées dans \\\`audit_recommendations_registry\\\` avec :
-- \\\`recommendation_id\\\` unique
-- \\\`priority\\\` (critical, high, medium, low)
-- \\\`category\\\` et \\\`fix_type\\\`
-- \\\`is_resolved\\\` pour le suivi
+Les recommandations sont automatiquement persistées dans \`audit_recommendations_registry\` avec :
+- \`recommendation_id\` unique
+- \`priority\` (critical, high, medium, low)
+- \`category\` et \`fix_type\`
+- \`is_resolved\` pour le suivi
 
 ### Modes de fonctionnement
 
@@ -1066,7 +1066,7 @@ Les recommandations sont automatiquement persistées dans \\\`audit_recommendati
 
 ---
 
-## Agent Blog v2 (\\\`generate-blog-from-news\\\`)
+## Agent Blog v2 (generate-blog-from-news)
 
 ### Recherche intelligente
 
@@ -1076,7 +1076,7 @@ Les recommandations sont automatiquement persistées dans \\\`audit_recommendati
 ### Maillage interne automatique
 
 Système de keyword-mapping vers 10 pages internes clés :
-- \\\`/audit-expert\\\`, \\\`/cocoon\\\`, \\\`/matrice\\\`, \\\`/console\\\`, etc.
+- /audit-expert, /cocoon, /matrice, /console, etc.
 - Liens contextuels insérés automatiquement dans le contenu
 
 ### Quality Guardrails
@@ -1091,7 +1091,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA (\\\`sav-chat\\\`)
+## Agent SAV IA (sav-chat)
 
 ### Architecture
 
@@ -1104,11 +1104,11 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 | Source | Description |
 |--------|-------------|
-| Documentation SAV | \\\`/aide\\\` — base de connaissance publique |
+| Documentation SAV | /aide — base de connaissance publique |
 | Lexique | Définitions SEO/GEO |
 | Articles blog | Actualités et guides |
 | Infotainments | Contenus de patience |
-| Données utilisateur | Résultats d'audit, crawl, stats "Mes sites" |
+| Données utilisateur | Résultats d'audit, crawl, stats Mes sites |
 
 ### Protocole d'escalade
 
@@ -1118,14 +1118,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ### Registre
 
-Toutes les conversations sont enregistrées dans \\\`sav_conversations\\\` et consultables dans Admin → SAV.
+Toutes les conversations sont enregistrées dans \`sav_conversations\` et consultables dans Admin → SAV.
 
 ### Sécurité
 
 - Ne mentionne jamais les technologies internes (Supabase, Deno, Lovable)
 - Ne peut pas lancer d'audit, crawl, scrap ou cocoon
 - Explique, ne produit pas
-\`,
+`,
   },
 ];
 
@@ -1134,14 +1134,14 @@ Toutes les conversations sont enregistrées dans \\\`sav_conversations\\\` et co
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '3.0.0',
-  lastUpdated: '2026-03-20',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Intégrations',
-  totalEdgeFunctions: 109,
+  version: '4.0.0',
+  lastUpdated: '2026-03-21',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon + GMB + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 110,
   totalSharedModules: 21,
   totalTables: '55+',
-  totalLinesOfCode: '157 000+',
+  totalLinesOfCode: '160 000+',
   totalMigrations: 186,
-  totalPages: 39,
-  totalComponents: 275,
+  totalPages: 40,
+  totalComponents: 280,
 };
