@@ -12,60 +12,63 @@ interface ChatMicButtonProps {
 export function ChatMicButton({ onTranscript, disabled }: ChatMicButtonProps) {
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        
-        if (blob.size < 1000) {
-          toast({ title: 'Enregistrement trop court', variant: 'destructive' });
-          return;
-        }
-
-        setProcessing(true);
-        try {
-          // Use Web Speech API as primary STT (free, no API key needed)
-          const text = await transcribeWithWebSpeech(blob);
-          if (text) {
-            onTranscript(text);
-          } else {
-            toast({ title: 'Impossible de transcrire', description: 'Réessayez en parlant plus fort.', variant: 'destructive' });
-          }
-        } catch {
-          toast({ title: 'Erreur de transcription', variant: 'destructive' });
-        } finally {
-          setProcessing(false);
-        }
-      };
-
-      mediaRecorder.start();
-      setRecording(true);
-    } catch {
+  const startRecording = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       toast({
-        title: 'Microphone inaccessible',
-        description: 'Autorisez l\'accès au micro dans les paramètres du navigateur.',
+        title: 'Non supporté',
+        description: 'Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.',
         variant: 'destructive',
       });
+      return;
     }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language?.startsWith('en') ? 'en-US' : navigator.language?.startsWith('es') ? 'es-ES' : 'fr-FR';
+    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+
+    let fullTranscript = '';
+
+    recognition.onresult = (event: any) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          fullTranscript += (fullTranscript ? ' ' : '') + event.results[i][0].transcript;
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+      if (fullTranscript.trim()) {
+        onTranscript(fullTranscript.trim());
+      }
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = (event: any) => {
+      setRecording(false);
+      recognitionRef.current = null;
+      if (event.error === 'not-allowed') {
+        toast({
+          title: 'Microphone inaccessible',
+          description: 'Autorisez l\'accès au micro dans les paramètres du navigateur.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setRecording(true);
   }, [onTranscript, toast]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
     }
     setRecording(false);
   }, []);
@@ -79,49 +82,14 @@ export function ChatMicButton({ onTranscript, disabled }: ChatMicButtonProps) {
         recording && 'bg-destructive/10 text-destructive animate-pulse'
       )}
       onClick={recording ? stopRecording : startRecording}
-      disabled={disabled || processing}
+      disabled={disabled}
       title={recording ? 'Arrêter l\'enregistrement' : 'Parler au micro'}
     >
-      {processing ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : recording ? (
+      {recording ? (
         <MicOff className="h-4 w-4" />
       ) : (
         <Mic className="h-4 w-4" />
       )}
     </Button>
   );
-}
-
-/** Use the Web Speech API (SpeechRecognition) for free STT */
-function transcribeWithWebSpeech(_blob: Blob): Promise<string | null> {
-  return new Promise((resolve) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      resolve(null);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = navigator.language || 'fr-FR';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.continuous = false;
-
-    let result: string | null = null;
-
-    recognition.onresult = (event: any) => {
-      result = event.results[0]?.[0]?.transcript || null;
-    };
-
-    recognition.onend = () => resolve(result);
-    recognition.onerror = () => resolve(null);
-
-    recognition.start();
-
-    // Auto-stop after 15 seconds
-    setTimeout(() => {
-      try { recognition.stop(); } catch {}
-    }, 15000);
-  });
 }
