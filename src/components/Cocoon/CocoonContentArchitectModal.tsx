@@ -433,15 +433,25 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {/* Bottom: Publish + Guide */}
             {result && (
               <div className="border-t border-white/10 px-4 py-3 space-y-2">
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between">
+                  {isEdited && (
+                    <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
+                      <RotateCcw className="w-3 h-3" />
+                      {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
+                    </button>
+                  )}
+                  {!isEdited && <div />}
                   <Button
                     onClick={handlePublish}
+                    disabled={publishing}
                     className={hasCmsConnection
                       ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold'
                       : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
                   >
-                    {hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}</>
+                    {publishing ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
+                    ) : hasCmsConnection ? (
+                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}{isEdited ? ' ✎' : ''}</>
                     ) : (
                       <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
                     )}
