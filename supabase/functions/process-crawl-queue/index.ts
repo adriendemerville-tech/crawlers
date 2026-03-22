@@ -42,6 +42,7 @@ interface PageAnalysis {
   custom_extraction: Record<string, string>;
   crawl_depth: number;
   html_size_bytes: number;
+  body_text_truncated: string | null;
 }
 
 interface CustomSelector {
