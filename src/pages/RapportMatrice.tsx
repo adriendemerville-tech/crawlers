@@ -41,7 +41,7 @@ function generateMatriceHTML(data: MatriceReportData, branding?: { logoUrl?: str
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:40px;color:#1a1a2e;}table{width:100%;border-collapse:collapse;margin:24px 0;}th{background:${primary};color:white;padding:10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}h1{color:${primary};font-size:22px;}h2{font-size:16px;margin-top:32px;color:#555;}</style></head><body>
     ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="height:32px;margin-bottom:16px;" />` : ''}
-    <h1>Rapport Matrice</h1>
+    <h1>Rapport Matrice d'audit</h1>
     <p style="color:#666;font-size:14px;">URL analysée : <strong>${data.url}</strong></p>
     <p style="font-size:18px;margin:16px 0;">Score pondéré global : <strong style="color:${primary}">${data.weightedScore}/100</strong></p>
     <table><thead><tr><th>Prompt / KPI</th><th>Axe</th><th>Poids</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
