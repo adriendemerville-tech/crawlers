@@ -239,7 +239,7 @@ const FeatureShowcase = memo(() => {
               {/* CTA — transparent with violet border */}
               <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
-                   <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
+                   <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-violet-600 hover:from-violet-700 hover:to-amber-600 shadow-md">
                     {item.cta}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -290,7 +290,7 @@ const IdentityFirstSection = memo(() => {
 
         <div className="text-center mt-10">
           <Link to="/mes-sites">
-             <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
+             <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-violet-600 hover:from-violet-700 hover:to-amber-600 shadow-md">
               {t.idCta}
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -338,7 +338,7 @@ const HybridSection = memo(() => {
 
         <div className="text-center mt-8">
           <Link to="/">
-            <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
+            <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-violet-600 hover:from-violet-700 hover:to-amber-600 shadow-md">
               {t.hybridCta}
               <ArrowRight className="h-4 w-4" />
             </Button>
