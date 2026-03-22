@@ -351,34 +351,49 @@ const HybridSection = memo(() => {
 HybridSection.displayName = 'HybridSection';
 
 /* ─── Section 5: Trust Banner ─── */
+const googleApis = [
+  'Google Search Console',
+  'Google Analytics 4',
+  'Google Business Profile',
+  'Google Ads',
+  'Google PageSpeed Insights',
+];
+const cmsApis = [
+  'WordPress (REST API)',
+  'Shopify',
+  'Webflow',
+  'Wix',
+  'Prestashop',
+];
+
 const TrustBanner = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
-      <div className="container mx-auto px-4 text-center max-w-3xl">
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-violet mb-4">{t.trustTitle}</p>
-        <p className="text-muted-foreground text-sm mb-8 max-w-2xl mx-auto">{t.trustText}</p>
-        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={45000} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustUrls}</p>
+    <section className="py-14 md:py-20 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <p className="text-sm font-bold uppercase tracking-widest text-brand-violet mb-5 text-center">{t.trustTitle}</p>
+        <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
+
+        {/* API Table */}
+        <div className="overflow-hidden rounded-xl border border-border max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 bg-muted/50 text-sm font-semibold text-foreground">
+            <div className="p-3 text-center">{t.trustApiGoogle}</div>
+            <div className="p-3 text-center border-l border-border">{t.trustApiCms}</div>
           </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={12000} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustAudits}</p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={850} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustSites}</p>
-          </div>
+          {googleApis.map((api, i) => (
+            <div key={i} className={cn('grid grid-cols-2 text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+              <div className="p-3 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="text-foreground">{api}</span>
+              </div>
+              <div className="p-3 flex items-center gap-2 border-l border-border">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="text-foreground">{cmsApis[i]}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
