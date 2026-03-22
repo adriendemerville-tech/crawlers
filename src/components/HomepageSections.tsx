@@ -2,9 +2,10 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  ArrowRight, Shield, Fingerprint, Brain, Search, BarChart3, 
-  Layers, Target, Bot, CheckCircle2, XCircle, Zap, Globe, 
-  FileSearch, Network, TrendingUp
+  ArrowRight, Shield, Fingerprint, Brain, 
+  Target, FileSearch, Network, Layers,
+  CheckCircle2, XCircle, TrendingUp, BarChart3,
+  Bot, Globe, Zap, Search
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -43,29 +44,37 @@ function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffi
 const i18n = {
   fr: {
     momentumTitle: 'Le SEO évolue. Et vous ?',
+    momentumText: "En 2024, plus de 18 millions de Français utilisent ChatGPT chaque mois. Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs (Large Language Models), vous êtes déjà invisible pour une part croissante de vos prospects.",
     stat1: '18M', stat1Label: "d'utilisateurs ChatGPT en France",
     stat2: '168', stat2Label: "critères d'audit analysés",
     stat3: '4', stat3Label: 'LLMs interrogés simultanément',
     stat4: '30s', stat4Label: "pour votre Score GEO",
     // Features
-    feat1Title: 'Score GEO', feat1Desc: "Mesurez votre visibilité dans ChatGPT, Gemini, Perplexity et Claude. Score sur 100, recommandations actionnables.",
+    feat1Title: 'Score GEO — Visibilité IA en temps réel',
+    feat1Desc: "Votre site est-il cité par ChatGPT, Gemini, Perplexity ou Claude ? Le Score GEO est le premier indicateur français qui mesure votre présence dans les réponses générées par l'intelligence artificielle. En 30 secondes, obtenez un score sur 100 avec des recommandations actionnables : données structurées manquantes, fichiers robots.txt mal configurés, absence de llms.txt, sémantique insuffisante. Chaque point gagné améliore votre probabilité d'être cité comme source par les LLMs.",
     feat1Cta: 'Tester mon Score GEO',
-    feat2Title: 'Audit Expert 168 critères', feat2Desc: "Diagnostic technique et sémantique complet : balises, données structurées, performance, sécurité, accessibilité.",
+    feat2Title: 'Audit Expert — 168 critères techniques et sémantiques',
+    feat2Desc: "L'Audit Expert de Crawlers analyse votre site sur 168 critères répartis en 6 catégories : balises HTML (title, meta, Hn), données structurées (JSON-LD, Schema.org), performance (Core Web Vitals, temps de chargement), sécurité (HTTPS, headers), accessibilité et optimisation pour les moteurs génératifs. Chaque critère est pondéré selon son impact réel sur votre référencement. Le rapport inclut un plan d'action priorisé et du code correctif prêt à déployer.",
     feat2Cta: "Lancer l'Audit Expert",
-    feat3Title: 'Cocon Sémantique 3D', feat3Desc: "Visualisez et construisez votre architecture de contenu avec l'IA. Stratège conversationnel et graphe interactif.",
+    feat3Title: 'Cocon Sémantique 3D — Architecture de contenu intelligente',
+    feat3Desc: "Le module Cocon 3D combine un stratège conversationnel IA et un graphe interactif en trois dimensions pour concevoir votre architecture de contenu. L'IA analyse votre domaine, identifie les clusters thématiques, détecte les risques de cannibalisation et propose un maillage interne optimisé. Chaque nœud du graphe représente une page avec son score E-E-A-T, son potentiel de trafic et ses liens internes recommandés.",
     feat3Cta: 'Découvrir Cocon 3D',
-    feat4Title: "Matrice d'audit", feat4Desc: "Moteur d'audit sur-mesure avec KPIs pondérés, import CSV/DOCX, prompts LLM et score global /100.",
+    feat4Title: "Matrice d'audit — Votre moteur d'audit personnalisé",
+    feat4Desc: "La Matrice d'audit est un outil unique qui vous permet de créer vos propres grilles d'évaluation. Importez vos KPIs depuis un fichier CSV ou DOCX, définissez des seuils et pondérations personnalisés, et testez vos pages contre des prompts LLM. Le moteur supporte 6 types de KPIs : balises, données structurées, performance, sécurité, prompts LLM et métriques combinées. Score pondéré global sur 100.",
     feat4Cta: "Ouvrir la Matrice",
     // Identity First
-    idTitle: "L'approche Identity-First",
-    idSubtitle: "Les LLMs ne crawlent pas comme Google. Ils cherchent votre identité sémantique.",
-    idPoint1: 'Carte d\'identité sémantique de votre entreprise',
-    idPoint2: 'Taxonomie dynamique enrichie par IA vocale',
-    idPoint3: 'Différenciation face aux concurrents SERP et IA',
+    idTitle: "L'approche Identity-First : être reconnu, pas seulement indexé",
+    idSubtitle: "Les LLMs ne crawlent pas votre site comme Googlebot. Ils cherchent à comprendre qui vous êtes, ce que vous faites et ce qui vous différencie. Sans identité sémantique claire, l'IA vous confond avec vos concurrents — ou vous ignore complètement.",
+    idPoint1Title: 'Carte d\'identité sémantique',
+    idPoint1: 'Définissez votre entreprise en classes structurées que les LLMs comprennent : activité, zone géographique, cibles, concurrents, différenciateurs.',
+    idPoint2Title: 'Taxonomie enrichie par IA vocale',
+    idPoint2: 'Dictez votre positionnement au micro. L\'IA transcrit, résume et structure vos réponses en taxonomie exploitable par les moteurs génératifs.',
+    idPoint3Title: 'Différenciation concurrentielle',
+    idPoint3: 'Identifiez précisément avec qui les IA vous confondent et corrigez votre empreinte sémantique pour vous démarquer dans les réponses générées.',
     idCta: 'Créer ma carte d\'identité',
     // Hybrid
-    hybridTitle: 'SEO + GEO : le duo gagnant',
-    hybridSubtitle: "Le premier outil français qui combine optimisation moteurs classiques ET moteurs génératifs.",
+    hybridTitle: 'SEO + GEO : le premier outil français hybride',
+    hybridSubtitle: "Les outils SEO classiques analysent votre site pour Google. Crawlers.fr est le premier outil francophone à combiner l'optimisation pour les moteurs de recherche traditionnels ET pour les moteurs génératifs (ChatGPT, Gemini, Perplexity, Claude). Cette approche hybride vous garantit une visibilité maximale, quel que soit le canal de recherche utilisé par vos prospects.",
     colSeo: 'SEO classique', colCrawlers: 'Crawlers.fr',
     row1: 'Audit technique complet',
     row2: 'Score de visibilité IA',
@@ -76,66 +85,85 @@ const i18n = {
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: '1er outil français SEO + GEO',
+    trustText: "Des milliers de professionnels du marketing digital utilisent Crawlers.fr pour auditer et optimiser leur visibilité sur Google et les moteurs d'IA. Rejoignez-les.",
     trustUrls: 'URLs analysées',
     trustAudits: 'Audits générés',
     trustSites: 'Sites suivis',
   },
   en: {
     momentumTitle: 'SEO is evolving. Are you?',
+    momentumText: "In 2024, over 18 million French users rely on ChatGPT monthly. Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
     stat1: '18M', stat1Label: 'ChatGPT users in France',
     stat2: '168', stat2Label: 'audit criteria analyzed',
     stat3: '4', stat3Label: 'LLMs queried simultaneously',
     stat4: '30s', stat4Label: 'for your GEO Score',
-    feat1Title: 'GEO Score', feat1Desc: 'Measure your visibility in ChatGPT, Gemini, Perplexity and Claude. Score out of 100 with actionable recommendations.',
+    feat1Title: 'GEO Score — Real-time AI Visibility',
+    feat1Desc: 'Is your site cited by ChatGPT, Gemini, Perplexity or Claude? The GEO Score is the first French indicator measuring your presence in AI-generated answers. In 30 seconds, get a score out of 100 with actionable recommendations: missing structured data, misconfigured robots.txt, absent llms.txt, insufficient semantics. Every point gained improves your probability of being cited as a source by LLMs.',
     feat1Cta: 'Test my GEO Score',
-    feat2Title: '168-Criteria Expert Audit', feat2Desc: 'Complete technical & semantic diagnosis: tags, structured data, performance, security, accessibility.',
+    feat2Title: 'Expert Audit — 168 Technical & Semantic Criteria',
+    feat2Desc: "Crawlers' Expert Audit analyzes your site across 168 criteria in 6 categories: HTML tags (title, meta, Hn), structured data (JSON-LD, Schema.org), performance (Core Web Vitals, load time), security (HTTPS, headers), accessibility and generative engine optimization. Each criterion is weighted by real SEO impact. The report includes a prioritized action plan and deploy-ready corrective code.",
     feat2Cta: 'Launch Expert Audit',
-    feat3Title: '3D Semantic Cocoon', feat3Desc: 'Visualize and build your content architecture with AI. Conversational strategist and interactive graph.',
+    feat3Title: '3D Semantic Cocoon — Intelligent Content Architecture',
+    feat3Desc: 'The Cocoon 3D module combines a conversational AI strategist and an interactive 3D graph to design your content architecture. The AI analyzes your domain, identifies thematic clusters, detects cannibalization risks and proposes optimized internal linking. Each graph node represents a page with its E-E-A-T score, traffic potential and recommended internal links.',
     feat3Cta: 'Discover Cocoon 3D',
-    feat4Title: 'Audit Matrix', feat4Desc: 'Custom audit engine with weighted KPIs, CSV/DOCX import, LLM prompts and global /100 score.',
+    feat4Title: 'Audit Matrix — Your Custom Audit Engine',
+    feat4Desc: 'The Audit Matrix lets you create your own evaluation grids. Import KPIs from CSV or DOCX files, define custom thresholds and weights, and test your pages against LLM prompts. The engine supports 6 KPI types: tags, structured data, performance, security, LLM prompts and combined metrics. Global weighted score out of 100.',
     feat4Cta: 'Open the Matrix',
-    idTitle: 'The Identity-First Approach',
-    idSubtitle: "LLMs don't crawl like Google. They seek your semantic identity.",
-    idPoint1: 'Semantic identity card for your business',
-    idPoint2: 'Dynamic taxonomy enriched by voice AI',
-    idPoint3: 'Differentiation from SERP and AI competitors',
+    idTitle: 'The Identity-First Approach: Be Recognized, Not Just Indexed',
+    idSubtitle: "LLMs don't crawl your site like Googlebot. They seek to understand who you are, what you do and what differentiates you. Without a clear semantic identity, AI confuses you with competitors — or ignores you entirely.",
+    idPoint1Title: 'Semantic Identity Card',
+    idPoint1: 'Define your business in structured classes that LLMs understand: activity, geographic zone, targets, competitors, differentiators.',
+    idPoint2Title: 'Voice AI-Enriched Taxonomy',
+    idPoint2: 'Dictate your positioning via microphone. AI transcribes, summarizes and structures your answers into taxonomy usable by generative engines.',
+    idPoint3Title: 'Competitive Differentiation',
+    idPoint3: 'Identify precisely who AI confuses you with and correct your semantic footprint to stand out in generated answers.',
     idCta: 'Create my identity card',
-    hybridTitle: 'SEO + GEO: the winning duo',
-    hybridSubtitle: 'The first French tool combining classic search engine optimization AND generative engine optimization.',
+    hybridTitle: 'SEO + GEO: The First French Hybrid Tool',
+    hybridSubtitle: "Classic SEO tools analyze your site for Google. Crawlers.fr is the first French tool combining optimization for traditional search engines AND generative engines (ChatGPT, Gemini, Perplexity, Claude). This hybrid approach guarantees maximum visibility, regardless of the search channel used by your prospects.",
     colSeo: 'Classic SEO', colCrawlers: 'Crawlers.fr',
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Predictive drop detection', row6: 'AI content architect',
     hybridCta: 'Try for free',
     trustTitle: '#1 French SEO + GEO tool',
+    trustText: 'Thousands of digital marketing professionals use Crawlers.fr to audit and optimize their visibility on Google and AI engines. Join them.',
     trustUrls: 'URLs analyzed', trustAudits: 'Audits generated', trustSites: 'Sites tracked',
   },
   es: {
     momentumTitle: 'El SEO evoluciona. ¿Y tú?',
+    momentumText: 'En 2024, más de 18 millones de franceses usan ChatGPT cada mes. Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
     stat1: '18M', stat1Label: 'usuarios de ChatGPT en Francia',
     stat2: '168', stat2Label: 'criterios de auditoría',
     stat3: '4', stat3Label: 'LLMs consultados simultáneamente',
     stat4: '30s', stat4Label: 'para tu Score GEO',
-    feat1Title: 'Score GEO', feat1Desc: 'Mide tu visibilidad en ChatGPT, Gemini, Perplexity y Claude. Puntuación sobre 100 con recomendaciones.',
+    feat1Title: 'Score GEO — Visibilidad IA en tiempo real',
+    feat1Desc: '¿Tu sitio es citado por ChatGPT, Gemini, Perplexity o Claude? El Score GEO es el primer indicador francés que mide tu presencia en las respuestas generadas por IA. En 30 segundos, obtén una puntuación sobre 100 con recomendaciones accionables: datos estructurados faltantes, robots.txt mal configurado, ausencia de llms.txt, semántica insuficiente.',
     feat1Cta: 'Probar mi Score GEO',
-    feat2Title: 'Auditoría Experta 168 criterios', feat2Desc: 'Diagnóstico técnico y semántico completo: etiquetas, datos estructurados, rendimiento, seguridad.',
+    feat2Title: 'Auditoría Experta — 168 criterios técnicos y semánticos',
+    feat2Desc: 'La Auditoría Experta de Crawlers analiza tu sitio en 168 criterios en 6 categorías: etiquetas HTML, datos estructurados (JSON-LD, Schema.org), rendimiento (Core Web Vitals), seguridad (HTTPS, headers), accesibilidad y optimización para motores generativos. Cada criterio está ponderado por su impacto real. El informe incluye un plan de acción priorizado y código correctivo listo para implementar.',
     feat2Cta: 'Lanzar Auditoría Experta',
-    feat3Title: 'Cocón Semántico 3D', feat3Desc: 'Visualiza y construye tu arquitectura de contenido con IA. Estratega conversacional y grafo interactivo.',
+    feat3Title: 'Cocón Semántico 3D — Arquitectura de contenido inteligente',
+    feat3Desc: 'El módulo Cocón 3D combina un estratega conversacional IA y un grafo interactivo en 3D para diseñar tu arquitectura de contenido. La IA analiza tu dominio, identifica clusters temáticos, detecta riesgos de canibalización y propone un enlazado interno optimizado.',
     feat3Cta: 'Descubrir Cocón 3D',
-    feat4Title: 'Matriz de auditoría', feat4Desc: 'Motor de auditoría personalizado con KPIs ponderados, importación CSV/DOCX, prompts LLM y puntuación global /100.',
+    feat4Title: 'Matriz de auditoría — Tu motor de auditoría personalizado',
+    feat4Desc: 'La Matriz de auditoría te permite crear tus propias grillas de evaluación. Importa KPIs desde CSV o DOCX, define umbrales y ponderaciones personalizados, y prueba tus páginas contra prompts LLM. Puntuación ponderada global sobre 100.',
     feat4Cta: 'Abrir la Matriz',
-    idTitle: 'El enfoque Identity-First',
-    idSubtitle: 'Los LLMs no rastrean como Google. Buscan tu identidad semántica.',
-    idPoint1: 'Tarjeta de identidad semántica de tu empresa',
-    idPoint2: 'Taxonomía dinámica enriquecida por IA de voz',
-    idPoint3: 'Diferenciación frente a competidores SERP e IA',
+    idTitle: 'El enfoque Identity-First: ser reconocido, no solo indexado',
+    idSubtitle: 'Los LLMs no rastrean tu sitio como Googlebot. Buscan entender quién eres, qué haces y qué te diferencia. Sin una identidad semántica clara, la IA te confunde con tus competidores — o te ignora completamente.',
+    idPoint1Title: 'Tarjeta de identidad semántica',
+    idPoint1: 'Define tu empresa en clases estructuradas que los LLMs entienden: actividad, zona geográfica, targets, competidores, diferenciadores.',
+    idPoint2Title: 'Taxonomía enriquecida por IA de voz',
+    idPoint2: 'Dicta tu posicionamiento al micrófono. La IA transcribe, resume y estructura tus respuestas en taxonomía explotable por motores generativos.',
+    idPoint3Title: 'Diferenciación competitiva',
+    idPoint3: 'Identifica con quién la IA te confunde y corrige tu huella semántica para destacar en las respuestas generadas.',
     idCta: 'Crear mi tarjeta de identidad',
-    hybridTitle: 'SEO + GEO: el dúo ganador',
-    hybridSubtitle: 'La primera herramienta francesa que combina optimización SEO clásica Y optimización para motores generativos.',
+    hybridTitle: 'SEO + GEO: la primera herramienta francesa híbrida',
+    hybridSubtitle: 'Las herramientas SEO clásicas analizan tu sitio para Google. Crawlers.fr es la primera herramienta francófona que combina optimización para motores tradicionales Y motores generativos (ChatGPT, Gemini, Perplexity, Claude).',
     colSeo: 'SEO clásico', colCrawlers: 'Crawlers.fr',
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
     row4: 'Cocón semántico IA', row5: 'Detección predictiva de caída', row6: 'Arquitecto de contenido IA',
     hybridCta: 'Probar gratis',
     trustTitle: '1ª herramienta francesa SEO + GEO',
+    trustText: 'Miles de profesionales del marketing digital usan Crawlers.fr para auditar y optimizar su visibilidad en Google y los motores IA. Únete.',
     trustUrls: 'URLs analizadas', trustAudits: 'Auditorías generadas', trustSites: 'Sitios monitorizados',
   },
 };
@@ -145,20 +173,21 @@ const MomentumSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const stats = [
-    { value: 18000000, label: t.stat1Label, suffix: '', prefix: '' },
-    { value: 168, label: t.stat2Label, suffix: '', prefix: '' },
-    { value: 4, label: t.stat3Label, suffix: '', prefix: '' },
-    { value: 30, label: t.stat4Label, suffix: 's', prefix: '' },
+    { value: 18000000, label: t.stat1Label },
+    { value: 168, label: t.stat2Label },
+    { value: 4, label: t.stat3Label },
+    { value: 30, label: t.stat4Label, suffix: 's' },
   ];
   return (
-    <section className="border-y border-border bg-card/50 py-10 md:py-14">
-      <div className="container mx-auto px-4">
-        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-8">{t.momentumTitle}</h2>
+    <section className="border-y border-border bg-card/50 py-12 md:py-16">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
+        <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
               <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">
-                <AnimatedCounter end={s.value} suffix={s.suffix} prefix={s.prefix} />
+                <AnimatedCounter end={s.value} suffix={s.suffix || ''} />
               </p>
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
             </div>
@@ -170,12 +199,12 @@ const MomentumSection = memo(() => {
 });
 MomentumSection.displayName = 'MomentumSection';
 
-/* ─── Section 2: Feature Showcase ─── */
+/* ─── Section 2: Feature Showcase (redesigned — small icons, no card bg, more text) ─── */
 const features = [
-  { icon: Target, ctaLink: '/?tab=geo', gradient: 'from-violet-500/10 to-primary/5', iconColor: 'text-brand-violet' },
-  { icon: FileSearch, ctaLink: '/audit-expert', gradient: 'from-primary/10 to-sky-500/5', iconColor: 'text-primary' },
-  { icon: Network, ctaLink: '/cocoon', gradient: 'from-emerald-500/10 to-teal-500/5', iconColor: 'text-success' },
-  { icon: Layers, ctaLink: '/matrice', gradient: 'from-amber-500/10 to-orange-500/5', iconColor: 'text-warning' },
+  { icon: Target, ctaLink: '/?tab=geo' },
+  { icon: FileSearch, ctaLink: '/audit-expert' },
+  { icon: Network, ctaLink: '/cocoon' },
+  { icon: Layers, ctaLink: '/matrice' },
 ];
 
 const FeatureShowcase = memo(() => {
@@ -190,29 +219,23 @@ const FeatureShowcase = memo(() => {
 
   return (
     <section className="py-16 md:py-24">
-      <div className="container mx-auto px-4 space-y-16 md:space-y-24">
+      <div className="container mx-auto px-4 max-w-4xl space-y-14 md:space-y-20">
         {items.map((item, i) => {
           const feat = features[i];
           const Icon = feat.icon;
-          const isReversed = i % 2 !== 0;
           return (
-            <div key={i} className={cn(
-              'flex flex-col md:flex-row items-center gap-8 md:gap-14',
-              isReversed && 'md:flex-row-reverse'
-            )}>
-              {/* Visual block */}
-              <div className={cn(
-                'flex-1 flex items-center justify-center rounded-2xl p-10 md:p-16 bg-gradient-to-br min-h-[200px]',
-                feat.gradient
-              )}>
-                <Icon className={cn('h-20 w-20 md:h-28 md:w-28', feat.iconColor)} strokeWidth={1.2} />
+            <div key={i} className="space-y-3">
+              {/* Icon + Title inline */}
+              <div className="flex items-center gap-3">
+                <Icon className="h-5 w-5 text-brand-violet shrink-0" strokeWidth={1.8} />
+                <h3 className="text-xl font-bold text-foreground sm:text-2xl">{item.title}</h3>
               </div>
-              {/* Text block */}
-              <div className="flex-1 space-y-4">
-                <h3 className="text-2xl font-bold text-foreground sm:text-3xl">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+              {/* Description — rich text for SEO */}
+              <p className="text-muted-foreground leading-relaxed pl-8">{item.desc}</p>
+              {/* CTA — transparent with violet border */}
+              <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
-                  <Button variant="hero" className="gap-2 mt-2">
+                  <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
                     {item.cta}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -232,38 +255,43 @@ const IdentityFirstSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const points = [
-    { icon: Fingerprint, text: t.idPoint1 },
-    { icon: Brain, text: t.idPoint2 },
-    { icon: Shield, text: t.idPoint3 },
+    { icon: Fingerprint, title: t.idPoint1Title, text: t.idPoint1 },
+    { icon: Brain, title: t.idPoint2Title, text: t.idPoint2 },
+    { icon: Shield, title: t.idPoint3Title, text: t.idPoint3 },
   ];
 
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-brand-violet-muted/30 via-background to-background">
-      <div className="container mx-auto px-4 max-w-4xl text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 border border-brand-violet/20 px-4 py-1.5 text-sm font-semibold text-brand-violet mb-5">
-          <Fingerprint className="h-4 w-4" />
-          Identity-First
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 border border-brand-violet/20 px-4 py-1.5 text-sm font-semibold text-brand-violet mb-5">
+            <Fingerprint className="h-3.5 w-3.5" />
+            Identity-First
+          </div>
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.idTitle}</h2>
+          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.idSubtitle}</p>
         </div>
-        <h2 className="text-2xl font-bold text-foreground sm:text-4xl mb-3">{t.idTitle}</h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto mb-10">{t.idSubtitle}</p>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="space-y-8">
           {points.map((pt, i) => (
-            <div key={i} className="rounded-xl border border-border bg-card p-6 text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-violet/10">
-                <pt.icon className="h-6 w-6 text-brand-violet" />
+            <div key={i} className="flex items-start gap-4">
+              <pt.icon className="h-5 w-5 text-brand-violet shrink-0 mt-0.5" strokeWidth={1.8} />
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">{pt.title}</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{pt.text}</p>
               </div>
-              <p className="text-sm font-medium text-foreground">{pt.text}</p>
             </div>
           ))}
         </div>
 
-        <Link to="/mes-sites" className="mt-8 inline-block">
-          <Button variant="hero" className="gap-2">
-            {t.idCta}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="text-center mt-10">
+          <Link to="/mes-sites">
+            <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+              {t.idCta}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -279,41 +307,39 @@ const HybridSection = memo(() => {
 
   return (
     <section className="py-16 md:py-24 bg-card/50 border-y border-border">
-      <div className="container mx-auto px-4 max-w-3xl text-center">
-        <h2 className="text-2xl font-bold text-foreground sm:text-4xl mb-3">{t.hybridTitle}</h2>
-        <p className="text-muted-foreground mb-10">{t.hybridSubtitle}</p>
+      <div className="container mx-auto px-4 max-w-3xl">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.hybridTitle}</h2>
+          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
+        </div>
 
         <div className="overflow-hidden rounded-xl border border-border">
-          {/* Header */}
           <div className="grid grid-cols-3 bg-muted/50 text-sm font-semibold text-foreground">
             <div className="p-3 text-left">&nbsp;</div>
             <div className="p-3 text-center border-l border-border">{t.colSeo}</div>
             <div className="p-3 text-center border-l border-border text-brand-violet">{t.colCrawlers}</div>
           </div>
-          {/* Rows */}
           {rows.map((row, i) => (
             <div key={i} className={cn('grid grid-cols-3 text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
               <div className="p-3 text-left text-foreground font-medium">{row}</div>
               <div className="p-3 flex items-center justify-center border-l border-border">
-                {seoHas[i] ? (
-                  <CheckCircle2 className="h-5 w-5 text-success" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-muted-foreground/40" />
-                )}
+                {seoHas[i] ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
               </div>
               <div className="p-3 flex items-center justify-center border-l border-border">
-                <CheckCircle2 className="h-5 w-5 text-success" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               </div>
             </div>
           ))}
         </div>
 
-        <Link to="/" className="mt-8 inline-block">
-          <Button variant="hero" className="gap-2">
-            {t.hybridCta}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="text-center mt-8">
+          <Link to="/">
+            <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+              {t.hybridCta}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -327,8 +353,9 @@ const TrustBanner = memo(() => {
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
-      <div className="container mx-auto px-4 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-violet mb-6">{t.trustTitle}</p>
+      <div className="container mx-auto px-4 text-center max-w-3xl">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-violet mb-4">{t.trustTitle}</p>
+        <p className="text-muted-foreground text-sm mb-8 max-w-2xl mx-auto">{t.trustText}</p>
         <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
           <div>
             <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
@@ -355,5 +382,4 @@ const TrustBanner = memo(() => {
 });
 TrustBanner.displayName = 'TrustBanner';
 
-/* ─── Export all sections ─── */
 export { MomentumSection, FeatureShowcase, IdentityFirstSection, HybridSection, TrustBanner };
