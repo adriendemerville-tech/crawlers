@@ -49,7 +49,7 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 ## Pages d'audit
 - /audit-expert → audit SEO gratuit 200 points (1/jour freemium, illimité Pro)
 - /audit-compare → benchmark vs 3 concurrents (4 crédits)
-- /matrice → matrice de prompts (test visibilité multi-LLM)
+- /matrice → matrice d'audit (moteur d'audit sur-mesure multi-critères)
 
 ## Pages outils
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
