@@ -921,6 +921,10 @@ Termina con un resumen ejecutivo y próximos pasos.`,
   const clearChat = () => {
     setMessages([]);
     chatHistoryId.current = null;
+    setStrategistCompleted(false);
+    setIsStrategistMode(false);
+    setStrategyPlan(null);
+  };
   };
 
   // Parse AI optimization response into deployable link recommendations
