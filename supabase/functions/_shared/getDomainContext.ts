@@ -167,8 +167,8 @@ export async function getDomainContext(
   }
 
   const results = await Promise.all(promises);
-  const [crawlRes, crawlPagesRes, auditRes, serpRes, backlinkRes, gscRes, ga4Res, indexHistoryRes, adsRes, anomalyRes] = results;
-  const baseIdx = 10; // first optional index
+  const [crawlRes, crawlPagesRes, auditRes, serpRes, backlinkRes, gscRes, ga4Res, indexHistoryRes, adsRes, anomalyRes, auditTechRes, auditStratRes] = results;
+  const baseIdx = 12; // first optional index
   const diagRes = options?.includeDiagnostics ? results[baseIdx] : { data: null };
   const recoRes = options?.includeRecos ? results[baseIdx + (options?.includeDiagnostics ? 1 : 0)] : { data: null };
 
