@@ -213,6 +213,21 @@ export async function getDomainContext(
 - GSC indexées: ${latest.gsc_indexed_count || 'N/A'}`);
   }
 
+  if (adsRes?.data?.length) {
+    const latest = adsRes.data[0];
+    const costEur = ((Number(latest.cost_micros) || 0) / 1_000_000).toFixed(2);
+    blocks.push(`GOOGLE ADS (semaine ${latest.week_start_date}):
+- Impressions: ${latest.impressions}, Clics: ${latest.clicks}, CTR: ${((Number(latest.ctr) || 0) * 100).toFixed(1)}%
+- Coût: ${costEur}€, Conversions: ${latest.conversions}, Taux conv.: ${((Number(latest.conversion_rate) || 0) * 100).toFixed(1)}%`);
+  }
+
+  if (anomalyRes?.data?.length) {
+    const alertLines = anomalyRes.data.map((a: any) =>
+      `  - [${a.severity?.toUpperCase()}] ${a.metric_name} (${a.metric_source}): ${a.description}`
+    ).join('\n');
+    blocks.push(`ANOMALIES DÉTECTÉES:\n${alertLines}`);
+  }
+
   return {
     blocks,
     raw: {
@@ -223,9 +238,11 @@ export async function getDomainContext(
       backlinks: backlinkRes.data?.[0] || null,
       gsc: gscRes.data || [],
       ga4: ga4Res.data || [],
+      googleAds: adsRes?.data || [],
       indexHistory: indexHistoryRes.data || [],
       diagnostics: diagRes?.data || [],
       strategistRecos: recoRes?.data || [],
+      anomalyAlerts: anomalyRes?.data || [],
     },
   };
 }
