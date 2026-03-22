@@ -404,7 +404,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               <CrawlersLogo size={36} />
             </div>
             <p className="text-sm font-medium">Bonjour ! Je suis votre assistant SAV.</p>
-            <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+            {isAdmin ? (
+              <p className="text-xs">Mode Créateur actif. Posez vos questions sur le backend, les tables, les métriques ou les fonctions.</p>
+            ) : (
+              <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
