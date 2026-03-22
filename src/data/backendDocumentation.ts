@@ -1160,6 +1160,32 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
+## Diagnostics Cocoon (4 fonctions spécialisées)
+
+| Fonction | Axe d'analyse | Données croisées |
+|----------|--------------|------------------|
+| \\\`cocoon-diag-authority\\\` | Autorité & E-E-A-T | PageRank interne, backlinks, signaux sociaux |
+| \\\`cocoon-diag-content\\\` | Qualité contenu | Thin content, duplicata, content gaps, word count |
+| \\\`cocoon-diag-semantic\\\` | Sémantique & clusters | Cannibalization, intent distribution, TF-IDF |
+| \\\`cocoon-diag-structure\\\` | Structure technique | Profondeur Hn, pages orphelines, maillage |
+
+- **Table** : \\\`cocoon_diagnostic_results\\\` (type, scores, findings, metadata)
+- **Accès** : Utilisateurs avec site tracké
+- **Monitoré par** : Agent CTO
+
+---
+
+## Stratège Cocoon (\\\`cocoon-strategist\\\`)
+
+- **Rôle** : Recommandations stratégiques par URL, avec mémoire persistante
+- **Table mémoire** : \\\`strategist_recommendations\\\` (user_id, url, tracked_site_id, recommandations, résultats)
+- **Croisement** : GSC (CTR, positions) + GA4 (conversions, pages vues) pour évaluer l'impact
+- **3 axes de développement** : Proposés à l'utilisateur, sélection unique → définit l'objectif
+- **Placement mot-clé** : Arbitrage intelligent dans le title et la première phrase selon les bonnes pratiques SEO
+- **Monitoré par** : Agent CTO
+
+---
+
 ## Content Architecture Advisor
 
 - **Edge Function** : \\\`content-architecture-advisor\\\`
@@ -1167,6 +1193,17 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 - **Monitoré par** : Agent CTO
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
+- **Publication CMS** : Via \\\`cms-publish-draft\\\` (WP, Drupal, Shopify) avec versionnement
+
+---
+
+## Détection d'anomalies (\\\`detect-anomalies\\\`)
+
+- **Méthode** : Z-score sur fenêtre glissante (8 semaines baseline)
+- **Métriques surveillées** : Pages vues, CTR SERP, taux de conversion, ranking, IAS, Google Ads (impressions, clics, coût)
+- **Seuils** : |z| ≥ 2 → alerte, |z| ≥ 3 → critique
+- **Table** : \\\`anomaly_alerts\\\` (metric_name, z_score, severity, direction, change_pct)
+- **Affichage** : Bandeau défilant dans /console avec codes couleur (vert/orange/rouge)
 
 ---
 
