@@ -16,13 +16,38 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - Peut envoyer des liens internes vers les fonctionnalités pertinentes
 - **Voice input** : Web Speech API (FR/EN/ES)
 - **Pièces jointes** : rapports et scripts du compte utilisateur (bouton "Explique-moi")
+- **Signalement bugs** : Détection NLP → bouton "Signaler" → pré-traduction CTO → `user_bug_reports`
+- **Mode Créateur** (admin + is_creator) : accès lecture complète backend (tables, functions, logs), interrogation croisée multi-tables, consultation code source edge functions. Modification logique interdite.
+- **Notification résolution** : badge sur bouton assistant quand un `user_bug_reports` passe à `resolved`
 
 ## Scoring de précision (`sav_quality_scores`)
 - precision_score (0-100), route_match, repeated_intent_count, escalated_to_phone
 - Monitoring dans Admin → Intelligence → Supervisor → AssistantPrecisionCard
 - Supervisor audite l'assistant (avg precision, escalation rate, repeated intents, route match rate)
 
-## Agent Cocoon (Assistant Maillage)
+## Agent Cocoon → Stratège Cocoon (Assistant Maillage)
+- Renommé "Stratège Cocoon" en front-end
 - Détection automatique de la langue
 - Bouton seringue pour injecter les instructions de maillage
 - Historique : `cocoon_chat_histories`
+- **Mémoire persistante** : reprend la conversation précédente avec contexte ("Bonjour Prénom, nous avions travaillé sur...")
+- **Bouton horloge** : accès historique des sessions passées
+- **Signalement bugs** : même circuit que Crawler → `user_bug_reports` → CTO → notification résolution
+- **Changement auto** : historique et conversation changent quand l'utilisateur sélectionne un autre site/URL
+
+## Circuit de Signalement (Recettage)
+- Table : `user_bug_reports` (raw_message, translated_message, route, context_data, category, status, cto_response, notified_user)
+- Catégorisation IA : `bug_ui`, `bug_data`, `feature_request`, `question`
+- Statuts : `open` → `investigating` → `resolved`
+- Admin CTO : onglet "Recettage" dans Intelligence → CTO
+- Notification user : le premier assistant disponible (Crawler ou Stratège Cocoon) avertit via badge
+- Rate-limit : 3 signalements/jour/user, anti-doublon hash message+route (<24h)
+
+## Détection de Chute (Drop Detector)
+- Edge Function : `drop-detector` (exécution automatique quotidienne + manuelle admin)
+- Détection réactive (baseline 4 semaines) + prédictive (régression 8 semaines, seuil ≥80%)
+- Cross-analyse : GSC, audits techniques, E-E-A-T, backlinks
+- Tables : `drop_diagnostics`, `drop_detector_config`, `drop_detector_logs`
+- Alertes dans `anomaly_alerts` (bandeau défilant /console)
+- Admin : bouton ON/OFF dans Scripts, registre des analyses et alertes
+- Gratuit Pro Agency/Admin, 3 crédits autres

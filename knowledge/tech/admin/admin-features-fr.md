@@ -9,7 +9,7 @@ Updated: now
 - **Finances** : Suivi coûts API (Spider, Firecrawl, DataForSEO, SerpAPI), revenus Stripe
 - **Algo Training** : Entraînement et monitoring des modèles de scoring (GEO, SEO, prédictions)
 - **Bundle Option** : Catalogue APIs tierces (`bundle_api_catalog`), abonnements bundle
-- **Intelligence Hub** : Supervisor (agents + assistant SAV), Agent CTO, Error Registry
+- **Intelligence Hub** : Supervisor (agents + assistant SAV), Agent CTO + Recettage, Error Registry
 
 ### Intelligence Hub — Supervisor
 - **Carte Précision Assistant SAV** (`AssistantPrecisionCard`) :
@@ -20,9 +20,23 @@ Updated: now
   - Engagement moyen (messages/session)
   - Données depuis `sav_quality_scores` + `sav_conversations` (7 derniers jours)
 
+### Intelligence Hub — CTO — Recettage
+- Nouvel onglet "Recettage" dans CTO
+- Liste des signalements utilisateurs (`user_bug_reports`)
+- Statuts : `open` → `investigating` → `resolved`
+- Catégories IA : `bug_ui`, `bug_data`, `feature_request`, `question`
+- Le CTO peut marquer "resolved" + ajouter une réponse
+- À la résolution, notification automatique à l'utilisateur via assistant (Crawler ou Stratège Cocoon)
+
 ### Agent CTO
-- Monitore désormais `content-architecture-advisor` en plus des autres edge functions
+- Monitore désormais `content-architecture-advisor` + `drop-detector` en plus des autres edge functions
 - Registry dans `AUDIT_TYPE_TO_FUNCTION`
+
+### Scripts — Drop Detector
+- Bouton ON/OFF pour le détecteur de chute (`drop_detector_config`)
+- Registre des exécutions (`drop_detector_logs`) : sites scannés, alertes générées, durée
+- Bouton "Run Now" pour exécution manuelle
+- Registre des diagnostics récents (`drop_diagnostics`)
 
 ### Architecte (Script) — Onglets restreints admin
 - **Basique** : Fixes techniques SEO automatiques (title, meta, H1, schema.org, etc.)
@@ -82,3 +96,4 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `agent-seo-v2` : Audit SEO avancé 7 axes
 - `process-script-queue` : File d'attente FIFO pour génération de scripts
 - `supervisor-actions` : Audit des agents + assistant SAV
+- `drop-detector` : Détection de chute réactive + prédictive
