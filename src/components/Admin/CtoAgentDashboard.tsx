@@ -1,15 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X, Plug, PlugZap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface CacheHealthReport {
   total_entries: number;
@@ -35,6 +36,43 @@ interface AgentLog {
   prompt_version_after: number | null;
 }
 
+// All functions CTO can supervise, grouped by category
+const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] = [
+  // Audits
+  { key: 'audit-expert-seo', label: 'Audit Expert SEO', category: 'Audits' },
+  { key: 'audit-strategique-ia', label: 'Audit Stratégique IA', category: 'Audits' },
+  { key: 'audit-compare', label: 'Audit Comparatif', category: 'Audits' },
+  { key: 'audit-local-seo', label: 'Audit SEO Local', category: 'Audits' },
+  { key: 'audit-matrice', label: 'Matrice', category: 'Audits' },
+  // Crawl & Cocoon
+  { key: 'crawl-site', label: 'Crawl multi-pages', category: 'Crawl & Cocoon' },
+  { key: 'calculate-cocoon-logic', label: 'Cocoon Logic', category: 'Crawl & Cocoon' },
+  { key: 'calculate-internal-pagerank', label: 'PageRank interne', category: 'Crawl & Cocoon' },
+  { key: 'cocoon-chat', label: 'Assistant Cocoon', category: 'Crawl & Cocoon' },
+  { key: 'persist-cocoon-session', label: 'Session Cocoon', category: 'Crawl & Cocoon' },
+  // Diagnostics
+  { key: 'cocoon-diag-content', label: 'Diag. Contenu', category: 'Diagnostics' },
+  { key: 'cocoon-diag-semantic', label: 'Diag. Sémantique', category: 'Diagnostics' },
+  { key: 'cocoon-diag-structure', label: 'Diag. Structure', category: 'Diagnostics' },
+  { key: 'cocoon-diag-authority', label: 'Diag. Autorité', category: 'Diagnostics' },
+  // Strategy
+  { key: 'cocoon-strategist', label: 'Stratège', category: 'Stratégie' },
+  { key: 'content-architecture-advisor', label: 'Content Architect', category: 'Stratégie' },
+  { key: 'detect-anomalies', label: 'Détection anomalies', category: 'Stratégie' },
+  // Visibility
+  { key: 'check-llm', label: 'Visibilité LLM', category: 'Visibilité' },
+  { key: 'check-llm-depth', label: 'Profondeur LLM', category: 'Visibilité' },
+  { key: 'diagnose-hallucination', label: 'Hallucination', category: 'Visibilité' },
+  { key: 'calculate-llm-volumes', label: 'Volumes LLM', category: 'Visibilité' },
+  // Connectors
+  { key: 'rankmath-connector', label: 'RankMath', category: 'Connecteurs' },
+  { key: 'gtmetrix-connector', label: 'GTmetrix', category: 'Connecteurs' },
+  { key: 'linkwhisper-connector', label: 'LinkWhisper', category: 'Connecteurs' },
+  { key: 'google-ads-connector', label: 'Google Ads', category: 'Connecteurs' },
+  // Code
+  { key: 'generate-corrective-code', label: 'Code correctif', category: 'Code' },
+];
+
 export function CtoAgentDashboard() {
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,6 +83,8 @@ export function CtoAgentDashboard() {
   const [checkingCache, setCheckingCache] = useState(false);
   const [refreshingJournal, setRefreshingJournal] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [functionToggles, setFunctionToggles] = useState<Record<string, boolean>>({});
+  const [savingToggles, setSavingToggles] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,11 +93,12 @@ export function CtoAgentDashboard() {
 
   async function fetchData() {
     try {
-      const [configRes, logsRes] = await Promise.all([
+      const [configRes, logsRes, togglesRes] = await Promise.all([
         supabase.from('system_config' as any).select('value').eq('key', 'cto_agent_enabled').single(),
         supabase.from('cto_agent_logs' as any)
           .select('id, function_analyzed, confidence_score, decision, created_at, change_diff_pct, analysis_summary, self_critique, prompt_version_before, prompt_version_after')
           .order('created_at', { ascending: true }),
+        supabase.from('system_config' as any).select('value').eq('key', 'cto_function_toggles').single(),
       ]);
 
       if (configRes.data) {
@@ -66,6 +107,15 @@ export function CtoAgentDashboard() {
       if (logsRes.data) {
         setLogs((logsRes.data as unknown as AgentLog[]) || []);
         setAlertDismissed(false);
+      }
+      // Load function toggles — default all to true if no config exists
+      if (togglesRes.data) {
+        setFunctionToggles((togglesRes.data as any).value || {});
+      } else {
+        // Initialize all functions as enabled
+        const defaults: Record<string, boolean> = {};
+        CTO_FUNCTION_REGISTRY.forEach(f => { defaults[f.key] = true; });
+        setFunctionToggles(defaults);
       }
     } catch (e) {
       console.error('Error fetching CTO agent data:', e);
@@ -97,6 +147,41 @@ export function CtoAgentDashboard() {
       setToggling(false);
     }
   }
+
+  const handleFunctionToggle = useCallback(async (fnKey: string, checked: boolean) => {
+    const updated = { ...functionToggles, [fnKey]: checked };
+    setFunctionToggles(updated);
+    setSavingToggles(true);
+    try {
+      // Upsert the toggles config
+      const { error } = await supabase
+        .from('system_config' as any)
+        .upsert({ key: 'cto_function_toggles', value: updated, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
+      if (error) throw error;
+      toast({
+        title: checked ? '✅ Connexion activée' : '⚠️ Connexion désactivée',
+        description: `CTO ${checked ? 'supervise' : 'ne supervise plus'} ${fnKey}`,
+      });
+    } catch (e) {
+      console.error('Toggle error:', e);
+      // Revert
+      setFunctionToggles(prev => ({ ...prev, [fnKey]: !checked }));
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder.', variant: 'destructive' });
+    } finally {
+      setSavingToggles(false);
+    }
+  }, [functionToggles, toast]);
+
+  const groupedFunctions = useMemo(() => {
+    const groups: Record<string, typeof CTO_FUNCTION_REGISTRY> = {};
+    CTO_FUNCTION_REGISTRY.forEach(fn => {
+      if (!groups[fn.category]) groups[fn.category] = [];
+      groups[fn.category].push(fn);
+    });
+    return groups;
+  }, []);
+
+  const enabledCount = CTO_FUNCTION_REGISTRY.filter(f => functionToggles[f.key] !== false).length;
 
   async function runCacheHealthCheck() {
     setCheckingCache(true);
@@ -353,6 +438,50 @@ export function CtoAgentDashboard() {
             )}
           </CardContent>
         )}
+      </Card>
+
+      {/* Function Connections Registry */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PlugZap className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Connexions CTO → Fonctions</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {enabledCount}/{CTO_FUNCTION_REGISTRY.length} actives
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            Activez ou désactivez la supervision CTO sur chaque fonction. Un toggle désactivé empêche l'Agent CTO d'analyser et modifier les prompts de cette fonction.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+            {Object.entries(groupedFunctions).map(([category, fns]) => (
+              <div key={category} className="space-y-1.5 mb-3">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{category}</p>
+                {fns.map(fn => {
+                  const isOn = functionToggles[fn.key] !== false;
+                  return (
+                    <div key={fn.key} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-muted/40 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Plug className={cn('h-3 w-3', isOn ? 'text-emerald-500' : 'text-muted-foreground/40')} />
+                        <span className={cn('text-xs', isOn ? 'text-foreground' : 'text-muted-foreground')}>{fn.label}</span>
+                      </div>
+                      <Switch
+                        checked={isOn}
+                        onCheckedChange={(checked) => handleFunctionToggle(fn.key, checked)}
+                        disabled={savingToggles}
+                        className="scale-75"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </CardContent>
       </Card>
 
       {/* Chart */}
