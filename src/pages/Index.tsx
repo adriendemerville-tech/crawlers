@@ -567,7 +567,7 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background animate-fade-in">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground text-sm">Chargement de votre console…</p>
+          <p className="text-muted-foreground text-sm">{language === 'fr' ? 'Chargement de votre console…' : language === 'es' ? 'Cargando su consola…' : 'Loading your console…'}</p>
         </div>
       </div>
     );
