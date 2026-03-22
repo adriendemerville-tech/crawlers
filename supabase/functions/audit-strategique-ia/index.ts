@@ -1258,7 +1258,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
     const sbUrl = Deno.env.get('SUPABASE_URL');
     const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (sbUrl && sbKey) {
-      const sb = createClient(sbUrl, sbKey);
+      const sb = getServiceClient();
       const { data: locations } = await sb
         .from('gmb_locations')
         .select('id, location_name, address, category, website')
