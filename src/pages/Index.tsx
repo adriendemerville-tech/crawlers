@@ -33,7 +33,14 @@ const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ def
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
 
-// Lazy load Footer - not needed for initial render
+// Lazy load individual homepage sections
+
+// Lazy load individual homepage sections
+const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
+const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.FeatureShowcase })));
+const IdentityFirstSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.IdentityFirstSection })));
+const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
+const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
@@ -607,6 +614,23 @@ const Index = () => {
           onTabChange={handleTabChange}
           currentUrl={currentUrl}
         />
+
+        {/* ─── Homepage marketing sections ─── */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <MomentumSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <FeatureShowcase />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <IdentityFirstSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <HybridSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <TrustBanner />
+        </Suspense>
 
         {/* Pro Agency hero — visible only in leadmagnet mode */}
         {hideLeadmagnet && (
