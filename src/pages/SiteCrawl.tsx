@@ -456,6 +456,8 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
+  const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
+  const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
 
   // Advanced options
@@ -571,9 +573,11 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Pre-scan: detect indexed pages when URL changes (debounced)
+  // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
   useEffect(() => {
     setIndexedPagesCount(null);
+    setSitemapPagesCount(null);
+    setTotalEstimatedPages(null);
     if (!url || url.length < 5) return;
 
     let cancelled = false;
@@ -585,16 +589,29 @@ export default function SiteCrawl() {
         if (!domain || domain.length < 3) return;
 
         setIsDetectingPages(true);
-        const { data } = await supabase.functions.invoke('fetch-serp-kpis', {
-          body: { domain },
-        });
-        if (!cancelled && data?.data?.indexed_pages != null) {
-          const count = data.data.indexed_pages as number;
-          setIndexedPagesCount(count);
-          // Auto-cap slider if current value exceeds indexed pages (admins get 50 max)
+
+        // Query SERP (indexed pages) and sitemap in parallel
+        const [serpRes, sitemapRes] = await Promise.all([
+          supabase.functions.invoke('fetch-serp-kpis', { body: { domain } }),
+          supabase.functions.invoke('fetch-sitemap-tree', { body: { domain } }),
+        ]);
+
+        if (cancelled) return;
+
+        const indexed = serpRes.data?.data?.indexed_pages as number | undefined;
+        const sitemapTotal = sitemapRes.data?.totalUrls as number | undefined;
+
+        if (indexed != null) setIndexedPagesCount(indexed);
+        if (sitemapTotal != null) setSitemapPagesCount(sitemapTotal);
+
+        // Total = max of sitemap and indexed (they overlap, so we take the greater)
+        const total = Math.max(indexed || 0, sitemapTotal || 0);
+        if (total > 0) {
+          setTotalEstimatedPages(total);
+          // Auto-cap slider
           const capMax = isAdmin ? 50 : 20;
-          if (count > 0 && maxPages > Math.min(capMax, count)) {
-            setMaxPages(Math.min(capMax, count));
+          if (maxPages > Math.min(capMax, total)) {
+            setMaxPages(Math.min(capMax, total));
           }
         }
       } catch {
@@ -971,10 +988,18 @@ export default function SiteCrawl() {
                       <span className="flex items-center gap-2">
                         {t.pagesToAnalyze}
                         {isDetectingPages && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
-                        {indexedPagesCount != null && indexedPagesCount > 0 && (
+                        {totalEstimatedPages != null && totalEstimatedPages > 0 && (
                           <Badge variant="secondary" className="text-[10px] font-normal gap-1">
                             <FileText className="h-2.5 w-2.5" />
-                            {indexedPagesCount.toLocaleString()} {language === 'fr' ? 'indexées' : language === 'es' ? 'indexadas' : 'indexed'}
+                            {totalEstimatedPages.toLocaleString()} {language === 'fr' ? 'pages détectées' : language === 'es' ? 'páginas detectadas' : 'pages detected'}
+                          </Badge>
+                        )}
+                        {indexedPagesCount != null && indexedPagesCount > 0 && sitemapPagesCount != null && sitemapPagesCount > 0 && (
+                          <Badge variant="outline" className="text-[9px] font-normal gap-0.5">
+                            {indexedPagesCount.toLocaleString()} {language === 'fr' ? 'indexées' : 'indexed'}
+                            {sitemapPagesCount !== indexedPagesCount && (
+                              <> + {Math.max(0, sitemapPagesCount - indexedPagesCount).toLocaleString()} {language === 'fr' ? 'sitemap' : 'sitemap'}</>
+                            )}
                           </Badge>
                         )}
                       </span>
@@ -984,18 +1009,18 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={isAdmin ? 50 : (indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(20, Math.max(10, indexedPagesCount)) : 20)}
+                      max={isAdmin ? 50 : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20)}
                       step={10}
                       disabled={isLoading}
                       className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-orange-400 [&_[role=slider]]:to-violet-500 [&_[role=slider]]:border-violet-500/50 [&_.relative>div]:bg-gradient-to-r [&_.relative>div]:from-orange-400 [&_.relative>div]:to-violet-500"
                     />
-                    {!isAdmin && indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
+                    {!isAdmin && totalEstimatedPages != null && totalEstimatedPages > 0 && totalEstimatedPages < 500 && (
                       <p className="text-[10px] text-muted-foreground">
                         {language === 'fr' 
-                          ? `Maximum limité à ${Math.min(20, indexedPagesCount)} pages (pages indexées détectées par Google)` 
+                          ? `Maximum limité à ${Math.min(20, totalEstimatedPages)} pages (${indexedPagesCount || 0} indexées + ${Math.max(0, (sitemapPagesCount || 0) - (indexedPagesCount || 0))} sitemap)` 
                           : language === 'es' 
-                          ? `Máximo limitado a ${Math.min(20, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
-                          : `Max limited to ${Math.min(20, indexedPagesCount)} pages (Google indexed pages detected)`}
+                          ? `Máximo limitado a ${Math.min(20, totalEstimatedPages)} páginas detectadas` 
+                          : `Max limited to ${Math.min(20, totalEstimatedPages)} pages (${indexedPagesCount || 0} indexed + ${Math.max(0, (sitemapPagesCount || 0) - (indexedPagesCount || 0))} sitemap)`}
                       </p>
                     )}
                   </div>
