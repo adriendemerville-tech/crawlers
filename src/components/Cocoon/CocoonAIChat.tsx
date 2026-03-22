@@ -124,6 +124,12 @@ function getOptimizeLabel(lang: string): string {
   return '🔗 Optimisation du maillage interne';
 }
 
+function getStrategyLabel(lang: string): string {
+  if (lang === 'en') return '🧭 360° Strategy — Diagnosis & Prescription';
+  if (lang === 'es') return '🧭 Estrategia 360° — Diagnóstico y Prescripción';
+  return '🧭 Stratégie 360° — Diagnostic & Prescription';
+}
+
 // ─── Copy button ───
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
