@@ -422,6 +422,7 @@ const HybridSection = memo(() => {
     </section>
   );
 });
+HybridSection.displayName = 'HybridSection';
 
 /* ─── Section 5: Trust Banner ─── */
 const googleApis = [
