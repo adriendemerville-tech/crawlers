@@ -179,31 +179,32 @@ Deno.serve(async (req) => {
   try {
     const { action, site_url, user_id, frontend_origin, start_date, end_date } = await req.json();
 
-    // Check if GA4 scope is enabled via system_config
+    // Check if full Google access is enabled via system_config
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    let ga4Enabled = false;
-    const { data: ga4Config } = await supabase
+    let fullGoogleAccess = false;
+    const { data: accessConfig } = await supabase
       .from('system_config')
       .select('value')
       .eq('key', 'ga4_oauth_enabled')
       .maybeSingle();
-    if (ga4Config?.value && typeof ga4Config.value === 'object' && (ga4Config.value as any).active === true) {
-      ga4Enabled = true;
+    if (accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true) {
+      fullGoogleAccess = true;
     }
 
     // === LOGIN: Generate OAuth URL ===
     if (action === 'login') {
       // state carries user_id + frontend origin for the GET callback redirect
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
-      // Build scopes dynamically based on enabled features
+      // Build scopes: GSC always included; all others only when full access is enabled
       const scopes = ['https://www.googleapis.com/auth/webmasters.readonly'];
-      if (ga4Enabled) scopes.push('https://www.googleapis.com/auth/analytics.readonly');
-      // Always include GTM scope for 1-click tag deployment
-      scopes.push('https://www.googleapis.com/auth/tagmanager.edit.containers');
-      scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
-      // GMB & Indexing scopes
-      scopes.push('https://www.googleapis.com/auth/business.manage');
-      scopes.push('https://www.googleapis.com/auth/indexing');
+      if (fullGoogleAccess) {
+        scopes.push('https://www.googleapis.com/auth/analytics.readonly');
+        scopes.push('https://www.googleapis.com/auth/tagmanager.edit.containers');
+        scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
+        scopes.push('https://www.googleapis.com/auth/business.manage');
+        scopes.push('https://www.googleapis.com/auth/indexing');
+        scopes.push('https://www.googleapis.com/auth/adwords.readonly');
+      }
 
       const params = new URLSearchParams({
         client_id: clientId,
