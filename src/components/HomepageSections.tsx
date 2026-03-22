@@ -52,7 +52,7 @@ const i18n = {
     momentumText: "Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs, vous êtes déjà invisible pour une part croissante de vos prospects.",
     stat1: '200M', stat1Label: "d'utilisateurs de LLMs en Europe",
     stat2: 'x3', stat2Label: "taux de conversion LLM vs Google",
-    stat3: '5', stat3Label: 'LLMs interrogés simultanément',
+    stat3: '7', stat3Label: 'LLMs interrogés simultanément',
     stat4: '30s', stat4Label: "pour votre Score GEO",
     // Features
     feat1Title: 'Score GEO — Visibilité IA en temps réel',
