@@ -207,6 +207,7 @@ const LABELS: Record<string, Record<string, string>> = {
     restructure: 'Réorganiser l\'arborescence du site',
     create_pillar: 'Créer une page pilier pour ce cluster',
     backlink_target: 'Cibler des backlinks vers cette page',
+    optimize_kw_placement: 'Optimiser le placement du mot-clé dans le title',
   },
   en: {
     thin_content: 'Expand page content',
