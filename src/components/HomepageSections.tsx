@@ -85,7 +85,7 @@ const i18n = {
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La seule solution européenne SEO + GEO full-stack',
-    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'architecture de contenu et Assistant SAV pour le support technique — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement. 113 fonctions backend, 12 algorithmes propriétaires, un code source consultable sur demande.",
+    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'analyse de graphe sémantique et Assistant Crawlers pour vous aider à tirer parti de toute la profondeur de la data — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement. Le code source est consultable sur demande.",
     trustApiTitle: 'Intégrations natives',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
@@ -125,7 +125,7 @@ const i18n = {
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: 'The only European full-stack SEO + GEO solution',
-    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for content architecture and Support Assistant for technical guidance — accompany you at every step. Google Business Profile management is natively integrated. 113 backend functions, 12 proprietary algorithms, source code available on request.',
+    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for semantic graph analysis and Crawlers Assistant to help you leverage the full depth of your data — accompany you at every step. Google Business Profile management is natively integrated. Source code available on request.',
     trustApiTitle: 'Native integrations',
     trustApiGoogle: 'Google APIs',
     trustApiCms: 'CMS APIs',
@@ -165,7 +165,7 @@ const i18n = {
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
     trustTitle: 'La única solución europea full-stack SEO + GEO',
-    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para arquitectura de contenido y Asistente SAV para soporte técnico — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente. 113 funciones backend, 12 algoritmos propietarios, código fuente consultable bajo solicitud.',
+    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para el análisis de grafos semánticos y Asistente Crawlers para ayudarte a aprovechar toda la profundidad de los datos — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente. Código fuente consultable bajo solicitud.',
     trustApiTitle: 'Integraciones nativas',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
@@ -394,6 +394,28 @@ const TrustBanner = memo(() => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Stats under table */}
+        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-10">
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">12</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? 'Algorithmes propriétaires' : language === 'es' ? 'Algoritmos propietarios' : 'Proprietary algorithms'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">113</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? "Fonctions d'audit" : language === 'es' ? 'Funciones de auditoría' : 'Audit functions'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">30</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? 'Sites monitorés' : language === 'es' ? 'Sitios monitorizados' : 'Monitored sites'}
+            </p>
+          </div>
         </div>
       </div>
     </section>
