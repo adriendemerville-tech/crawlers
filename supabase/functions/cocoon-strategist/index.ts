@@ -253,6 +253,7 @@ const LABELS: Record<string, Record<string, string>> = {
     restructure: 'Reorganizar la arquitectura del sitio',
     create_pillar: 'Crear una página pilar para este cluster',
     backlink_target: 'Apuntar backlinks a esta página',
+    optimize_kw_placement: 'Optimizar la ubicación de la palabra clave en el título',
   },
 };
 
