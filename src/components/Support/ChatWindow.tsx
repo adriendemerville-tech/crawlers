@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ function detectBugIntent(message: string): boolean {
 
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -372,6 +374,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           <CrawlersLogo size={22} />
           <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           <h3 className="font-semibold text-sm">Assistant SAV</h3>
+          {isAdmin && (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <Shield className="h-2.5 w-2.5" /> Admin
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
@@ -397,7 +404,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               <CrawlersLogo size={36} />
             </div>
             <p className="text-sm font-medium">Bonjour ! Je suis votre assistant SAV.</p>
-            <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+            {isAdmin ? (
+              <p className="text-xs">Mode Créateur actif. Posez vos questions sur le backend, les tables, les métriques ou les fonctions.</p>
+            ) : (
+              <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
