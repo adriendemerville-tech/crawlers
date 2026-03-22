@@ -147,7 +147,7 @@ const i18n = {
     momentumText: 'Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
     stat1: '200M', stat1Label: 'usuarios de LLMs en Europa',
     stat2: 'x3', stat2Label: 'tasa de conversión LLM vs Google',
-    stat3: '7', stat3Label: 'LLMs consultados simultáneamente',
+    stat3: '6', stat3Label: 'LLMs consultados simultáneamente',
     stat4: '30s', stat4Label: 'para tu Score GEO',
     feat1Title: 'Score GEO — Visibilidad IA en tiempo real',
     feat1Desc: '¿Tu sitio es citado por ChatGPT, Gemini, Perplexity o Claude? El Score GEO es el primer indicador francés que mide tu presencia en las respuestas generadas por IA. En 30 segundos, obtén una puntuación sobre 100 con recomendaciones accionables: datos estructurados faltantes, robots.txt mal configurado, ausencia de llms.txt, semántica insuficiente.',
