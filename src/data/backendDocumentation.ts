@@ -1185,14 +1185,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '4.1.0',
-  lastUpdated: '2026-03-21',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Content Advisor + Scribe + Cocoon + GMB + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 111,
-  totalSharedModules: 21,
-  totalTables: '57+',
-  totalLinesOfCode: '165 000+',
-  totalMigrations: 190,
+  version: '5.0.0',
+  lastUpdated: '2026-03-22',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège + Diagnostics + Content Architect + Scribe + Cocoon + GMB + Anomalies + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 121,
+  totalSharedModules: 22,
+  totalTables: '60+',
+  totalLinesOfCode: '172 000+',
+  totalMigrations: 195,
   totalPages: 40,
-  totalComponents: 285,
+  totalComponents: 295,
 };
