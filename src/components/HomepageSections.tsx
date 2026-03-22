@@ -124,8 +124,8 @@ const i18n = {
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
-    trustTitle: '#1 French SEO + GEO tool',
-    trustText: 'Thousands of digital marketing professionals use Crawlers.fr to audit and optimize their visibility on Google and AI engines. Join them.',
+    trustTitle: 'The only European full-stack SEO + GEO solution',
+    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop: technical audit, semantic optimization, AI visibility, content cocoon, corrective code and automated maintenance. All in one tool, no third-party dependencies. Source code available on request.',
     trustUrls: 'URLs analyzed', trustAudits: 'Audits generated', trustSites: 'Sites tracked',
   },
   es: {
