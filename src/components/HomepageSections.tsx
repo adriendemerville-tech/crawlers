@@ -462,7 +462,10 @@ const TrustBanner = memo(() => {
         <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
 
         {/* Doubt phrase */}
-        <h2 className="text-xl sm:text-2xl font-bold text-brand-violet text-center mb-8">{t.trustDoubt}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-8">
+          {t.trustDoubt}<br />
+          {(t as any).trustDoubtLine2}
+        </h2>
 
         {/* API Table */}
         <div className="overflow-hidden rounded-xl border border-border max-w-2xl mx-auto">
