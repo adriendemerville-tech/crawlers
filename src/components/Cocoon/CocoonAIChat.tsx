@@ -271,7 +271,7 @@ const labels = {
     strategyBtn: 'Diagnosis & Strategy',
   },
   es: {
-    title: 'Asistente Cocoon',
+    title: 'Estratega Cocoon',
     subtitle: 'Haga preguntas sobre la arquitectura semántica',
     placeholder: 'Ej: ¿Qué páginas deberían estar vinculadas?',
     empty: 'Describa su cocoon o haga una pregunta para obtener interpretación con IA.',
