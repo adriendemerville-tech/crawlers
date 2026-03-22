@@ -144,26 +144,49 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     }
   }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone]);
 
-  const handlePublish = useCallback(() => {
+  const isEdited = useMemo(() => {
+    if (!result || !originalResult) return false;
+    return JSON.stringify(result) !== JSON.stringify(originalResult);
+  }, [result, originalResult]);
+
+  const handlePublish = useCallback(async () => {
     if (!hasCmsConnection) {
-      toast.info(t3(language, 
+      toast.info(t3(language,
         'Connectez votre CMS dans Profil → APIs externes',
         'Connect your CMS in Profile → External APIs',
         'Conecte su CMS en Perfil → APIs externas'));
       return;
     }
-    const wasEdited = editedCode !== null && editedCode !== originalCode;
-    toast.success(t3(language,
-      wasEdited
-        ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
-        : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
-      wasEdited
-        ? 'Draft sent to CMS (edited version). The original version is saved in history.'
-        : 'Draft sent to CMS. You can review and publish it from your editor.',
-      wasEdited
-        ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
-        : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
-  }, [hasCmsConnection, editedCode, originalCode, language]);
+    if (!result || !trackedSiteId) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cms-publish-draft', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          result_data: result,
+          original_result_data: isEdited ? originalResult : null,
+          url,
+          keyword,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(t3(language,
+        isEdited
+          ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
+          : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
+        isEdited
+          ? 'Draft sent to CMS (edited version). The original version is saved in history.'
+          : 'Draft sent to CMS. You can review and publish it from your editor.',
+        isEdited
+          ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
+          : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de publication');
+    } finally {
+      setPublishing(false);
+    }
+  }, [hasCmsConnection, result, originalResult, isEdited, trackedSiteId, url, keyword, language]);
 
   // Generate HTML preview from result
   const htmlPreview = useMemo(() => {
