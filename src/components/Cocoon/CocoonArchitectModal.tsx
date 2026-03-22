@@ -483,15 +483,38 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-xs text-emerald-400 font-medium">{t.codeReady}</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCopy}
-                      className="h-7 px-2 text-white/50 hover:text-white hover:bg-white/5 gap-1.5"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopy}
+                        className="h-7 px-2 text-white/50 hover:text-white hover:bg-white/5 gap-1.5"
+                      >
+                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleInject}
+                        disabled={isInjecting || injected}
+                        className="h-7 px-3 bg-[#a78bfa] hover:bg-[#a78bfa]/80 text-white gap-1.5"
+                      >
+                        {isInjecting ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : injected ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          <Syringe className="w-3 h-3" />
+                        )}
+                        <span className="text-[10px]">
+                          {isInjecting
+                            ? (language === 'en' ? 'Injecting…' : language === 'es' ? 'Inyectando…' : 'Injection…')
+                            : injected
+                              ? (language === 'en' ? 'Injected!' : language === 'es' ? '¡Inyectado!' : 'Injecté !')
+                              : (language === 'en' ? 'Inject code' : language === 'es' ? 'Inyectar código' : 'Injecter le code')}
+                        </span>
+                      </Button>
+                    </div>
                   </div>
                   <pre className="text-[10px] leading-relaxed font-mono text-emerald-300/80 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre border border-white/5 max-h-[50vh]">
                     {generatedCode}
