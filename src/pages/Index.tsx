@@ -593,7 +593,7 @@ const Index = () => {
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
-      <main className="flex-1" role="main" aria-label="Contenu principal">
+      <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
         <HeroSection 
           onSubmit={handleCheck} 
           isLoading={isLoading} 
