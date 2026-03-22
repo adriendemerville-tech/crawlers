@@ -1650,13 +1650,15 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   >
                     <Syringe className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => openContentArchitectWithPlan()}
-                    className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
-                    title="Content Architect"
-                  >
-                    <PenTool className="w-3.5 h-3.5" />
-                  </button>
+                  {isContentArchitectVisible && (
+                    <button
+                      onClick={() => openContentArchitectWithPlan()}
+                      className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
+                      title="Content Architect"
+                    >
+                      <PenTool className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <ChatMicButton
