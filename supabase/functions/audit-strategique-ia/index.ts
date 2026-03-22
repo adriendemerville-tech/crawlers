@@ -1258,7 +1258,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
     const sbUrl = Deno.env.get('SUPABASE_URL');
     const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (sbUrl && sbKey) {
-      const sb = createClient(sbUrl, sbKey);
+      const sb = getServiceClient();
       const { data: locations } = await sb
         .from('gmb_locations')
         .select('id, location_name, address, category, website')
@@ -1972,6 +1972,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     hasExpertCitations: false, detectedSocialUrls: [],
   };
   
+  let ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
   try {
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     console.log('📄 Fetching page metadata...');
@@ -2138,7 +2139,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
     
     // ═══ CTA & SEO PATTERN EXTRACTION (before HTML strip) ═══
-    const ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    ctaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
     {
       // CTA detection
       const ctaPatterns: Array<{ re: RegExp; type: string }> = [
@@ -2257,7 +2258,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals: ctaSeoSignals || { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false } };
+  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals };
 }
 
 // ==================== MAIN HANDLER ====================
@@ -2285,11 +2286,8 @@ function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string)
 
 /** Save result to audit_cache (fire-and-forget) */
 async function saveToCache(domain: string, url: string, result: any): Promise<void> {
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-  const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
-  if (!serviceKey || !supabaseUrlEnv) return;
   try {
-    const adminClient = createClient(supabaseUrlEnv, serviceKey);
+    const adminClient = getServiceClient();
     const cacheKey = `strategic_${domain}_${url}`;
     await adminClient.from('audit_cache').upsert({
       cache_key: cacheKey,
@@ -2425,11 +2423,7 @@ Deno.serve(async (req) => {
 
     // ═══ JOB TRACKING: if _job_id provided, update progress in DB ═══
     const jobId: string | undefined = body._job_id;
-    const supabaseUrlForJob = Deno.env.get('SUPABASE_URL');
-    const serviceKeyForJob = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const jobSb = jobId && supabaseUrlForJob && serviceKeyForJob
-      ? createClient(supabaseUrlForJob, serviceKeyForJob)
-      : null;
+    const jobSb = jobId ? getServiceClient() : null;
 
     if (jobSb && jobId) {
       await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
@@ -3118,11 +3112,9 @@ Réponds en JSON STRICT:
     trackAnalyzedUrl(url).catch(() => {});
 
     // Save raw audit data (fire-and-forget)
-    if (authHeader && supabaseUrl2 && supabaseKey2) {
+    if (authHeader) {
       try {
-        const sb2 = createClient(supabaseUrl2, supabaseKey2, {
-          global: { headers: { Authorization: authHeader } }
-        });
+        const sb2 = getUserClient(authHeader);
         const { data: { user: rawUser } } = await sb2.auth.getUser();
         if (rawUser) {
           saveRawAuditData({
@@ -3138,9 +3130,7 @@ Réponds en JSON STRICT:
     // ═══ PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
     if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
-        const svcUrl = Deno.env.get('SUPABASE_URL')!;
-        const svcKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const svcSb = createClient(svcUrl, svcKey);
+        const svcSb = getServiceClient();
         const updatePayload: Record<string, any> = {};
         if (parsedAnalysis?.client_targets) updatePayload.client_targets = parsedAnalysis.client_targets;
         if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
