@@ -1531,21 +1531,10 @@ export function SmartConfigurator({
           <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
             {/* View Mode Toggle + Generate Button */}
             <div className="p-3 flex items-center justify-between bg-background flex-shrink-0">
-              <ToggleGroup 
-                type="single" 
-                value={viewMode} 
-                onValueChange={(v) => v && setViewMode(v as ViewMode)}
-                className="bg-muted p-0.5 rounded-md"
-              >
-                <ToggleGroupItem value="visual" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
-                  <Globe className="w-3 h-3" />
-                  Preview
-                </ToggleGroupItem>
-                <ToggleGroupItem value="code" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
-                  <Code className="w-3 h-3" />
-                  Code Source
-                </ToggleGroupItem>
-              </ToggleGroup>
+              <div className="flex items-center gap-2">
+                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Preview</span>
+              </div>
 
               {/* Connect site button - centered */}
               {siteConnected ? (
