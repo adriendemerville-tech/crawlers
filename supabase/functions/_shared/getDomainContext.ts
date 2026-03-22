@@ -59,7 +59,7 @@ export async function getDomainContext(
         if (!data?.[0]?.id) return { data: null };
         const { data: pages } = await supabase
           .from('crawl_pages')
-          .select('url, title, seo_score, word_count, internal_links, external_links, h1, has_noindex, is_indexable, crawl_depth, page_type_override, issues')
+          .select('url, title, seo_score, word_count, internal_links, external_links, h1, has_noindex, is_indexable, crawl_depth, page_type_override, issues, body_text_truncated')
           .eq('crawl_id', data[0].id)
           .order('seo_score', { ascending: true })
           .limit(maxPages);
