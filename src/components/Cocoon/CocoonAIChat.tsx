@@ -819,6 +819,36 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
     sendMessage(prompts[language] || prompts.fr);
   }, [nodes, language, isLoading]);
 
+  // ── Strategy 360° handler ──
+  const handleStrategy360 = useCallback(() => {
+    if (isLoading || !trackedSiteId) return;
+
+    const prompts: Record<string, string> = {
+      fr: `STRATÉGIE 360°
+
+Lance un diagnostic complet de mon site et prescris une stratégie d'optimisation priorisée. 
+Analyse tous les axes : contenu, sémantique, structure, autorité.
+Pour chaque problème détecté, prescris une action concrète avec son niveau de priorité et son canal d'exécution (éditorial, technique, opérationnel).
+Termine par un résumé exécutif et les prochaines étapes.`,
+
+      en: `360° STRATEGY
+
+Run a complete diagnosis of my site and prescribe a prioritized optimization strategy.
+Analyze all axes: content, semantic, structure, authority.
+For each detected issue, prescribe a concrete action with its priority level and execution channel (editorial, technical, operational).
+End with an executive summary and next steps.`,
+
+      es: `ESTRATEGIA 360°
+
+Ejecuta un diagnóstico completo de mi sitio y prescribe una estrategia de optimización priorizada.
+Analiza todos los ejes: contenido, semántica, estructura, autoridad.
+Para cada problema detectado, prescribe una acción concreta con su nivel de prioridad y canal de ejecución (editorial, técnico, operacional).
+Termina con un resumen ejecutivo y próximos pasos.`,
+    };
+
+    sendMessage(prompts[language] || prompts.fr, true);
+  }, [language, isLoading, trackedSiteId]);
+
   const clearChat = () => {
     setMessages([]);
     chatHistoryId.current = null;
