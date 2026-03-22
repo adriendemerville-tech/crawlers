@@ -553,46 +553,105 @@ export function MyActionPlans() {
               <p className="text-sm text-muted-foreground">{t.noPlansDesc}</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Active plans */}
-              {activePlans.length === 0 && archivedPlans.length > 0 && (
-                <div className="text-center py-8">
-                  <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+            <div className="flex gap-4">
+              {/* Left sidebar: tracked URLs */}
+              {uniqueUrls.length > 1 && (
+                <div className="w-48 shrink-0 space-y-1 border-r pr-3">
+                  <Button
+                    variant={selectedUrl === null ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setSelectedUrl(null)}
+                  >
+                    <Globe className="h-3.5 w-3.5 mr-2" />
+                    {t.allSites}
+                  </Button>
+                  {uniqueUrls.map(([hostname]) => {
+                    const count = actionPlans.filter(p => {
+                      try { return new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '') === hostname; }
+                      catch { return p.url === hostname; }
+                    }).length;
+                    return (
+                      <Button
+                        key={hostname}
+                        variant={selectedUrl === hostname ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-xs truncate"
+                        onClick={() => setSelectedUrl(hostname)}
+                      >
+                        <span className="truncate">{hostname}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground">{count}</span>
+                      </Button>
+                    );
+                  })}
+
+                  {/* Editorial calendar — admin only */}
+                  {isAdmin && (
+                    <div className="pt-3 mt-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs text-primary"
+                        onClick={() => {
+                          // TODO: open editorial calendar modal
+                          toast.info(t.editorialCalendar);
+                        }}
+                      >
+                        <ClipboardList className="h-3.5 w-3.5 mr-2" />
+                        {t.editorialCalendar}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
-              <AnimatePresence>
-                {activePlans.map((plan) => renderPlanCard(plan, false))}
-              </AnimatePresence>
 
-              {/* Archived plans collapsible */}
-              {archivedPlans.length > 0 && (
-                <Collapsible open={archivesOpen} onOpenChange={setArchivesOpen} className="mt-6">
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between text-muted-foreground hover:text-foreground"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Archive className="h-4 w-4" />
-                        {t.archives}
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                          {archivedPlans.length} {t.archivesCount}
+              {/* Main content */}
+              <div className="flex-1 space-y-4 min-w-0">
+                {/* Active plans */}
+                {filteredActivePlans.length === 0 && filteredArchivedPlans.length > 0 && (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                    <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+                  </div>
+                )}
+                {filteredActivePlans.length === 0 && filteredArchivedPlans.length === 0 && selectedUrl && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+                  </div>
+                )}
+                <AnimatePresence>
+                  {filteredActivePlans.map((plan) => renderPlanCard(plan, false))}
+                </AnimatePresence>
+
+                {/* Archived plans collapsible */}
+                {filteredArchivedPlans.length > 0 && (
+                  <Collapsible open={archivesOpen} onOpenChange={setArchivesOpen} className="mt-6">
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between text-muted-foreground hover:text-foreground"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Archive className="h-4 w-4" />
+                          {t.archives}
+                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                            {filteredArchivedPlans.length} {t.archivesCount}
+                          </span>
                         </span>
-                      </span>
-                      <ChevronDown className={cn(
-                        "h-4 w-4 transition-transform",
-                        archivesOpen && "rotate-180"
-                      )} />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="space-y-4 mt-3">
-                      {archivedPlans.map((plan) => renderPlanCard(plan, true))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform",
+                          archivesOpen && "rotate-180"
+                        )} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-4 mt-3">
+                        {filteredArchivedPlans.map((plan) => renderPlanCard(plan, true))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
