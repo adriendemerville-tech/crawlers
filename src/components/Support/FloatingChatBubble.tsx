@@ -18,7 +18,7 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Fetch unread messages count
+  // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
@@ -26,7 +26,9 @@ export function FloatingChatBubble() {
     }
 
     const fetchUnreadCount = async () => {
-      // Get user's open conversation
+      let total = 0;
+
+      // Check support messages
       const { data: conv } = await supabase
         .from('support_conversations')
         .select('id')
@@ -34,20 +36,26 @@ export function FloatingChatBubble() {
         .eq('status', 'open')
         .maybeSingle();
 
-      if (!conv) {
-        setUnreadCount(0);
-        return;
+      if (conv) {
+        const { count } = await supabase
+          .from('support_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .eq('is_admin', true)
+          .is('read_at', null);
+        total += count || 0;
       }
 
-      // Count unread admin messages
-      const { count } = await supabase
-        .from('support_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('conversation_id', conv.id)
-        .eq('is_admin', true)
-        .is('read_at', null);
+      // Check resolved bug reports not yet notified
+      const { count: bugCount } = await supabase
+        .from('user_bug_reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'resolved')
+        .eq('notified_user', false);
+      total += bugCount || 0;
 
-      setUnreadCount(count || 0);
+      setUnreadCount(total);
     };
 
     fetchUnreadCount();
