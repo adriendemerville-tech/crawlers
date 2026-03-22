@@ -1516,7 +1516,7 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ContentArchitectureAdvisor 
                       defaultUrl={siteUrl}
@@ -1525,7 +1525,7 @@ export function SmartConfigurator({
                   </TabsContent>
                 )}
 
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsContent forceMount value="scribe" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ScribeTab
                       defaultUrl={siteUrl}
