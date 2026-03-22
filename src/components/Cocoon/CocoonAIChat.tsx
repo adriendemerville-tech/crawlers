@@ -231,6 +231,8 @@ const labels = {
     analyze: 'Analizar',
     cancel: 'Cancelar',
     optimize: 'Optimizar enlaces',
+    strategy: 'Estrategia 360°',
+    strategyBtn: 'Diagnóstico y Estrategia',
   },
 };
 
