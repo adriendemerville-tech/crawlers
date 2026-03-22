@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
@@ -16,6 +16,8 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
+import { CocoonOnboardingStepper, shouldShowOnboarding } from "@/components/Cocoon/CocoonOnboardingStepper";
+import { AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart } from "lucide-react";
 import { generateCocoonReport } from "@/components/Cocoon/CocoonReportGenerator";
 import { useSaveReport } from "@/hooks/useSaveReport";
@@ -194,7 +196,7 @@ export default function Cocoon() {
   const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [is3DMode, setIs3DMode] = useState(true);
+  const [is3DMode, setIs3DMode] = useState(false);
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
   const [bgWarmth, setBgWarmth] = useState(0);
@@ -216,6 +218,7 @@ export default function Cocoon() {
   const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
   const waitingAuditNodeUrl = useRef<string | null>(null);
@@ -975,8 +978,8 @@ export default function Cocoon() {
             <span className="hidden xs:inline">{t.console}</span>
           </button>
 
-          {/* AI Chat — shifted right */}
-          {hasAccess && nodes.length > 0 && (
+          {/* AI Chat — always visible for greeting */}
+          {hasAccess && (
             <div className="relative">
               <CocoonAIChat
                 nodes={nodes}
@@ -1193,6 +1196,13 @@ export default function Cocoon() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Onboarding stepper */}
+      <AnimatePresence>
+        {showOnboarding && hasAccess && (
+          <CocoonOnboardingStepper onComplete={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -395,9 +395,30 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     checkResolvedBugs();
   }, [user]);
 
-  // ── Auto-resume last session for this site ──
+  // ── Auto-open with greeting or resume last session ──
   useEffect(() => {
-    if (!user || !trackedSiteId || !domain) return;
+    if (!user) return;
+
+    // No site selected → open with prompt to select
+    if (!trackedSiteId || !domain) {
+      const fetchName = async () => {
+        const { data: profile } = await supabase.from('profiles').select('first_name').eq('user_id', user.id).maybeSingle();
+        const firstName = profile?.first_name || '';
+        const noSiteMsg: Msg = {
+          role: 'assistant',
+          content: language === 'en'
+            ? `Hi${firstName ? ` ${firstName}` : ''}! 👋 Select the site or URL you want us to work on.`
+            : language === 'es'
+              ? `¡Hola${firstName ? ` ${firstName}` : ''}! 👋 Selecciona el sitio o la URL en la que quieres que avancemos.`
+              : `Bonjour${firstName ? ` ${firstName}` : ''} ! 👋 Sélectionne le site ou l'URL sur lequel tu veux que nous avancions.`,
+        };
+        setMessages([noSiteMsg]);
+        setIsOpen(true);
+      };
+      fetchName();
+      return;
+    }
+
     // Don't re-attempt for same site
     if (resumeAttemptedRef.current === trackedSiteId) return;
     resumeAttemptedRef.current = trackedSiteId;
@@ -422,19 +443,30 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
           .limit(1)
           .maybeSingle();
 
-        if (!lastSession || !lastSession.messages) return;
-
-        const msgs = lastSession.messages as Msg[];
-        if (msgs.length === 0) return;
-
         // Get user first name
         const { data: profile } = await supabase
           .from('profiles')
           .select('first_name')
           .eq('user_id', user.id)
           .maybeSingle();
-
         const firstName = profile?.first_name || '';
+
+        if (!lastSession || !lastSession.messages || (lastSession.messages as Msg[]).length === 0) {
+          // No previous session → show default greeting with action buttons
+          const defaultGreeting: Msg = {
+            role: 'assistant',
+            content: language === 'en'
+              ? `Hi${firstName ? ` ${firstName}` : ''}! 👋 What do you want to do today on **${domain}**?`
+              : language === 'es'
+                ? `¡Hola${firstName ? ` ${firstName}` : ''}! 👋 ¿Qué quieres hacer hoy en **${domain}**?`
+                : `Bonjour${firstName ? ` ${firstName}` : ''} ! 👋 Que veux-tu faire aujourd'hui sur **${domain}** ?`,
+          };
+          setMessages([defaultGreeting]);
+          setIsOpen(true);
+          return;
+        }
+
+        const msgs = lastSession.messages as Msg[];
         const lastDate = new Date(lastSession.updated_at);
         const now = new Date();
         const diffMs = now.getTime() - lastDate.getTime();
@@ -447,7 +479,20 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         else if (diffDays <= 7) timeLabel = language === 'en' ? `${diffDays} days ago` : language === 'es' ? `hace ${diffDays} días` : `il y a ${diffDays} jours`;
         else if (diffDays <= 14) timeLabel = language === 'en' ? 'last week' : language === 'es' ? 'la semana pasada' : 'la semaine dernière';
         else if (diffDays <= 60) timeLabel = language === 'en' ? 'last month' : language === 'es' ? 'el mes pasado' : 'le mois dernier';
-        else return; // Too old, don't resume
+        else {
+          // Too old — show default greeting instead
+          const defaultGreeting: Msg = {
+            role: 'assistant',
+            content: language === 'en'
+              ? `Hi${firstName ? ` ${firstName}` : ''}! 👋 What do you want to do today on **${domain}**?`
+              : language === 'es'
+                ? `¡Hola${firstName ? ` ${firstName}` : ''}! 👋 ¿Qué quieres hacer hoy en **${domain}**?`
+                : `Bonjour${firstName ? ` ${firstName}` : ''} ! 👋 Que veux-tu faire aujourd'hui sur **${domain}** ?`,
+          };
+          setMessages([defaultGreeting]);
+          setIsOpen(true);
+          return;
+        }
 
         // Determine workflow state
         const ws = (lastSession.workflow_state as any) || {};
