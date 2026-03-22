@@ -275,17 +275,18 @@ const IdentityFirstSection = memo(() => {
             <Fingerprint className="h-3.5 w-3.5" />
             Identity-First
           </div>
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.idTitle}</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.idSubtitle}</p>
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-1">{t.idTitle}</h2>
+          <h2 className="text-2xl font-bold text-brand-violet sm:text-3xl mb-4">{t.idTitle2}</h2>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">{t.idSubtitle}</p>
         </div>
 
         <div className="space-y-8">
           {points.map((pt, i) => (
             <div key={i} className="flex items-start gap-4">
-              <pt.icon className="h-5 w-5 text-brand-violet shrink-0 mt-0.5" strokeWidth={1.8} />
+              <pt.icon className="h-5 w-5 text-brand-violet shrink-0 mt-1" strokeWidth={1.8} />
               <div>
-                <h4 className="font-semibold text-foreground mb-1">{pt.title}</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{pt.text}</p>
+                <h4 className="font-semibold text-foreground text-lg mb-1">{pt.title}</h4>
+                <p className="text-base text-muted-foreground leading-relaxed">{pt.text}</p>
               </div>
             </div>
           ))}
