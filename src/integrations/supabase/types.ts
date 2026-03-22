@@ -3346,6 +3346,39 @@ export type Database = {
           },
         ]
       }
+      mcp_usage_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          input_params: Json | null
+          status: string
+          tool_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_params?: Json | null
+          status?: string
+          tool_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_params?: Json | null
+          status?: string
+          tool_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       observatory_sectors: {
         Row: {
           avg_brand_authority: number | null
