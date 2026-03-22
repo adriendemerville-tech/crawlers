@@ -85,7 +85,7 @@ const i18n = {
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La seule solution européenne SEO + GEO full-stack',
-    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'architecture de contenu et Assistant SAV pour le support technique — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement. 113 fonctions backend, 12 algorithmes propriétaires, un code source consultable sur demande.",
+    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'analyse de graphe sémantique et Assistant Crawlers pour vous aider à tirer parti de toute la profondeur de la data — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement. Le code source est consultable sur demande.",
     trustApiTitle: 'Intégrations natives',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
