@@ -122,7 +122,8 @@ Réponds UNIQUEMENT en JSON: {"translated": "...", "category": "..."}`
         route: route || null,
         context_data: enrichedContext,
         status: 'open',
-      })
+        source_assistant: source_assistant || 'crawler',
+      } as any)
       .select('id')
       .single();
 
