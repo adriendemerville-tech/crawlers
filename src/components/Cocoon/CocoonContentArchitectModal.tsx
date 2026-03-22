@@ -308,7 +308,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
               {result && (
                 <div className="space-y-4 text-white/80">
-                  <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-4">
+                  <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-5">
+                    {/* Meta title preview */}
+                    {result.metadata_enrichment?.meta_title && (
+                      <div className="text-[11px] text-[#fbbf24]/50 font-mono truncate">
+                        🔍 {result.metadata_enrichment.meta_title}
+                      </div>
+                    )}
+
+                    {/* H1 */}
                     {result.content_structure?.recommended_h1 && (
                       <h1
                         className="text-2xl font-bold text-white outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
@@ -321,6 +329,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                         }}
                       >{result.content_structure.recommended_h1}</h1>
                     )}
+
+                    {/* Meta description */}
                     {result.metadata_enrichment?.meta_description && (
                       <p
                         className="text-sm text-white/50 italic border-l-2 border-[#fbbf24]/30 pl-3 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
@@ -333,39 +343,70 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                         }}
                       >{result.metadata_enrichment.meta_description}</p>
                     )}
-                    {(result.content_structure?.hn_hierarchy || []).filter((h: any) => h.level !== 'h1').map((hn: any, i: number) => (
-                      <div key={i} className={hn.level === 'h2' ? 'mt-6' : 'mt-3 ml-4'}>
-                        {hn.level === 'h2' && (
-                          <h2
-                            className="text-lg font-semibold text-white/90 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={e => {
-                              const updated = { ...result };
-                              updated.content_structure.hn_hierarchy[result.content_structure.hn_hierarchy.indexOf(hn)].text = e.currentTarget.textContent || '';
-                              setResult(updated);
-                            }}
-                          >{hn.text}</h2>
-                        )}
-                        {hn.level === 'h3' && (
-                          <h3
-                            className="text-base font-medium text-white/70 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={e => {
-                              const updated = { ...result };
-                              updated.content_structure.hn_hierarchy[result.content_structure.hn_hierarchy.indexOf(hn)].text = e.currentTarget.textContent || '';
-                              setResult(updated);
-                            }}
-                          >{hn.text}</h3>
+
+                    {/* TL;DR */}
+                    {result.content_structure?.tldr_summary && (
+                      <div className="p-3 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
+                        <p className="text-xs text-[#fbbf24]/60 uppercase tracking-wider mb-1">TL;DR</p>
+                        <p
+                          className="text-sm text-white/70 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={e => {
+                            const updated = { ...result };
+                            updated.content_structure.tldr_summary = e.currentTarget.textContent || '';
+                            setResult(updated);
+                          }}
+                        >{result.content_structure.tldr_summary}</p>
+                      </div>
+                    )}
+
+                    {/* Introduction / Chapô */}
+                    {result.content_structure?.introduction && (
+                      <p
+                        className="text-sm text-white/60 leading-relaxed outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded border-l-2 border-emerald-500/30 pl-3"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={e => {
+                          const updated = { ...result };
+                          updated.content_structure.introduction = e.currentTarget.textContent || '';
+                          setResult(updated);
+                        }}
+                      >{result.content_structure.introduction}</p>
+                    )}
+
+                    {/* Confidence score + Rationale */}
+                    {result.confidence_score != null && (
+                      <div className="flex items-center gap-3">
+                        <div className={`text-xs font-bold px-2 py-0.5 rounded ${
+                          result.confidence_score >= 70 ? 'bg-emerald-500/20 text-emerald-300' :
+                          result.confidence_score >= 40 ? 'bg-amber-500/20 text-amber-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>
+                          Confiance : {result.confidence_score}%
+                        </div>
+                        {result.rationale && (
+                          <span className="text-[10px] text-white/40 italic truncate flex-1">{result.rationale}</span>
                         )}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Coherence warnings */}
+                    {result.coherence_check?.warnings?.length > 0 && (
+                      <div className="space-y-1">
+                        {result.coherence_check.warnings.map((w: string, i: number) => (
+                          <div key={i} className="text-[11px] text-amber-400/80 bg-amber-500/10 rounded px-2 py-1">{w}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Sections with full body text */}
                     {(result.content_structure?.sections || []).map((s: any, i: number) => (
-                      <div key={i} className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
-                        <div className="flex items-center justify-between mb-1">
-                          <span
-                            className="text-sm font-medium text-white/80 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                      <div key={i} className="space-y-2">
+                        {/* Section heading from hn_hierarchy if matching */}
+                        <div className="flex items-center justify-between">
+                          <h2
+                            className="text-lg font-semibold text-white/90 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
                             contentEditable
                             suppressContentEditableWarning
                             onBlur={e => {
@@ -373,31 +414,114 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                               updated.content_structure.sections[i].title = e.currentTarget.textContent || '';
                               setResult(updated);
                             }}
-                          >{s.title}</span>
-                          <span className="text-[10px] text-white/30">{s.word_count} mots</span>
+                          >{s.title}</h2>
+                          <div className="flex items-center gap-2">
+                            {s.priority && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                                s.priority === 'high' ? 'bg-red-500/20 text-red-300' :
+                                s.priority === 'medium' ? 'bg-amber-500/20 text-amber-300' :
+                                'bg-white/10 text-white/40'
+                              }`}>{s.priority}</span>
+                            )}
+                            <span className="text-[10px] text-white/30">{s.word_count} mots</span>
+                          </div>
                         </div>
-                        <p
-                          className="text-xs text-white/40 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={e => {
-                            const updated = { ...result };
-                            updated.content_structure.sections[i].purpose = e.currentTarget.textContent || '';
-                            setResult(updated);
-                          }}
-                        >{s.purpose}</p>
+
+                        {/* Body text (full content) */}
+                        {s.body_text ? (
+                          <div
+                            className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded pl-2 border-l border-white/5"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={e => {
+                              const updated = { ...result };
+                              updated.content_structure.sections[i].body_text = e.currentTarget.textContent || '';
+                              setResult(updated);
+                            }}
+                          >{s.body_text}</div>
+                        ) : s.purpose ? (
+                          <p className="text-xs text-white/40 italic pl-2 border-l border-white/5">{s.purpose}</p>
+                        ) : null}
+
+                        {/* Media recommendation for this section */}
+                        {(result.content_structure?.media_recommendations || [])
+                          .filter((m: any) => m.placement === `after_h2_${i + 1}` || (i === 0 && m.placement === 'hero'))
+                          .map((m: any, mi: number) => (
+                            <div key={mi} className="flex items-center gap-2 text-[10px] text-white/30 bg-white/[0.03] rounded px-2 py-1">
+                              <Image className="w-3 h-3" />
+                              <span>{m.type}: {m.description}</span>
+                              {m.alt_text && <span className="text-white/20">alt="{m.alt_text}"</span>}
+                            </div>
+                          ))}
                       </div>
                     ))}
-                    {result.keyword_strategy?.primary_keyword && (
-                      <div className="p-3 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
-                        <span className="text-xs text-[#fbbf24]/70">Mot-clé principal : </span>
-                        <span className="text-sm font-semibold text-[#fbbf24]">{result.keyword_strategy.primary_keyword.keyword}</span>
-                        <span className="text-xs text-white/40 ml-2">densité cible : {result.keyword_strategy.primary_keyword.target_density_percent}%</span>
+
+                    {/* Sub-headings H3 not covered by sections */}
+                    {(result.content_structure?.hn_hierarchy || [])
+                      .filter((h: any) => h.level === 'h3')
+                      .length > 0 && !(result.content_structure?.sections || []).some((s: any) => s.body_text) && (
+                      <div className="space-y-2 mt-4">
+                        <p className="text-[10px] text-white/30 uppercase tracking-wider">Sous-sections H3</p>
+                        {(result.content_structure.hn_hierarchy || []).filter((h: any) => h.level === 'h3').map((hn: any, i: number) => (
+                          <h3
+                            key={i}
+                            className="text-base font-medium text-white/70 ml-4 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={e => {
+                              const updated = { ...result };
+                              const idx = updated.content_structure.hn_hierarchy.indexOf(hn);
+                              if (idx >= 0) updated.content_structure.hn_hierarchy[idx].text = e.currentTarget.textContent || '';
+                              setResult(updated);
+                            }}
+                          >{hn.text}</h3>
+                        ))}
                       </div>
                     )}
+
+                    {/* Keyword strategy */}
+                    {result.keyword_strategy?.primary_keyword && (
+                      <div className="p-3 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20 space-y-2">
+                        <div>
+                          <span className="text-xs text-[#fbbf24]/70">Mot-clé principal : </span>
+                          <span className="text-sm font-semibold text-[#fbbf24]">{result.keyword_strategy.primary_keyword.keyword}</span>
+                          <span className="text-xs text-white/40 ml-2">densité cible : {result.keyword_strategy.primary_keyword.target_density_percent}%</span>
+                        </div>
+                        {result.keyword_strategy.secondary_keywords?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[10px] text-white/40">Secondaires :</span>
+                            {result.keyword_strategy.secondary_keywords.map((kw: any, i: number) => (
+                              <span key={i} className="text-[10px] bg-white/5 text-white/50 px-1.5 py-0.5 rounded">
+                                {kw.keyword} ({kw.target_density_percent}%)
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {result.keyword_strategy.lsi_terms?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[10px] text-white/40">LSI :</span>
+                            {result.keyword_strategy.lsi_terms.map((lsi: any, i: number) => (
+                              <span key={i} className="text-[10px] bg-purple-500/10 text-purple-300/60 px-1.5 py-0.5 rounded">
+                                {lsi.term}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {result.keyword_strategy.semantic_ratio && (
+                          <div className="text-[10px] text-white/30">
+                            Ratio : {result.keyword_strategy.semantic_ratio.technical_jargon_percent}% technique / {result.keyword_strategy.semantic_ratio.accessible_language_percent}% accessible
+                            {result.keyword_strategy.semantic_ratio.explanation && (
+                              <span className="ml-1 italic">— {result.keyword_strategy.semantic_ratio.explanation}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Internal links */}
                     {result.internal_linking?.anchor_strategy?.length > 0 && (
                       <div className="space-y-1">
-                        <p className="text-xs text-white/40 uppercase tracking-wider">Liens internes suggérés</p>
+                        <p className="text-xs text-white/40 uppercase tracking-wider">Liens internes suggérés ({result.internal_linking.recommended_internal_links || result.internal_linking.anchor_strategy.length})</p>
                         {result.internal_linking.anchor_strategy.map((a: any, i: number) => (
                           <div key={i} className="flex items-center gap-2 text-xs">
                             <Link2 className="w-3 h-3 text-emerald-400/60" />
@@ -405,6 +529,55 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                             <span className="text-white/30">→ {a.target_intent}</span>
                           </div>
                         ))}
+                        {result.internal_linking.cluster_opportunities?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            <span className="text-[10px] text-white/30">Clusters :</span>
+                            {result.internal_linking.cluster_opportunities.map((c: string, i: number) => (
+                              <span key={i} className="text-[10px] bg-emerald-500/10 text-emerald-300/50 px-1.5 py-0.5 rounded">{c}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* GEO criteria */}
+                    {result.geo_criteria_applied?.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/40 uppercase tracking-wider">Critères GEO appliqués</p>
+                        <div className="grid grid-cols-1 gap-1">
+                          {result.geo_criteria_applied.map((gc: any, i: number) => (
+                            <div key={i} className={`flex items-center gap-2 text-[11px] px-2 py-1 rounded ${
+                              gc.activated ? 'bg-emerald-500/10 text-emerald-300/80' : 'bg-white/[0.02] text-white/30'
+                            }`}>
+                              <span>{gc.activated ? '✓' : '○'}</span>
+                              <span className="font-medium">{gc.name}</span>
+                              {gc.weight === 'reinforced' && <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1 rounded">renforcé</span>}
+                              <span className="text-white/20 ml-auto truncate max-w-[50%]">{gc.reason}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* JSON-LD schemas */}
+                    {result.metadata_enrichment?.json_ld_schemas?.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-white/40 uppercase tracking-wider">Schemas JSON-LD recommandés</p>
+                        {result.metadata_enrichment.json_ld_schemas.map((s: any, i: number) => (
+                          <div key={i} className="text-[11px] text-white/40 bg-white/[0.03] rounded px-2 py-1 flex items-center gap-2">
+                            <Code2 className="w-3 h-3" />
+                            <span className="font-mono">{s.type}</span>
+                            {s.priority && <span className={`text-[9px] px-1 rounded ${s.priority === 'high' ? 'bg-red-500/15 text-red-300/60' : 'bg-white/5 text-white/30'}`}>{s.priority}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Word count range */}
+                    {result.content_structure?.word_count_range && (
+                      <div className="text-[10px] text-white/30 flex items-center gap-3 pt-2 border-t border-white/5">
+                        <span>📏 Objectif : {result.content_structure.word_count_range.min}–{result.content_structure.word_count_range.max} mots</span>
+                        <span className="text-white/50 font-medium">(idéal : {result.content_structure.word_count_range.ideal})</span>
                       </div>
                     )}
                   </div>
