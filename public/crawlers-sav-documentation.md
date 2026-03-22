@@ -166,10 +166,20 @@ Visualisation interactive de l'architecture sémantique de votre site en 3D (Thr
 - Clusters thématiques calculés via analyse sémantique avancée
 - Liens internes visualisés et analysés
 - Recommandations de maillage automatiques
-- Chat IA intégré pour affiner la stratégie
+- **Stratège Cocoon** : chat IA intégré pour affiner la stratégie, avec mémoire persistante et reprise de session
 - Export et persistance des sessions
 
 Disponible en Pro Agency.
+
+### Diagnostic de Chute
+Détection automatique et prédictive des baisses de trafic :
+- **Réactif** : détecte les chutes en cours vs baseline 4 semaines
+- **Prédictif** : alerte en amont quand la probabilité de chute ≥ 80%
+- Cross-analyse multi-sources : GSC, audits techniques, E-E-A-T, backlinks
+- Alertes dans le bandeau défilant de la console
+- Surveillance automatique en arrière-tâche de tous vos sites trackés
+
+Gratuit pour les abonnés Pro Agency. 3 crédits par analyse pour les autres.
 
 ### Stratégie 360° (mode avancé du Cocon)
 Le mode Stratégie 360° est accessible via le bouton boussole dans le chat du Cocon Sémantique. Il effectue automatiquement :
