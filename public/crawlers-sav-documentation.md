@@ -133,6 +133,27 @@ Analyse de votre présence locale :
 - Positionnement Pack Local
 - Cohérence NAP (Nom, Adresse, Téléphone)
 - Recommandations de visibilité locale
+- Si GMB est connecté, les données réelles de votre fiche alimentent le diagnostic (au lieu d'estimations tierces)
+
+### Google My Business (GMB)
+Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
+
+**Connexion :**
+1. Depuis Console > GMB ou Console > API, cliquez sur "Connecter Google My Business"
+2. Autorisez l'accès via votre compte Google (le même flux que GSC/GA4)
+3. Vos fiches d'établissement sont importées automatiquement
+
+**Fonctionnalités :**
+- Consultation et réponse aux avis Google (note moyenne, tendance, historique)
+- Publication de Google Posts (actualités, offres, événements)
+- Tableau de bord performances locales (vues, recherches, clics, appels, demandes d'itinéraire)
+- Gestion multi-établissements avec glisser-déposer
+- Informations de la fiche (nom, adresse, catégorie, horaires)
+- Les données GMB alimentent automatiquement l'Audit Local SEO et le diagnostic de la Stratégie 360°
+
+**Prérequis :** abonnement Pro Agency et compte Google propriétaire/gestionnaire de la fiche.
+
+**Interface trilingue :** disponible en français, anglais et espagnol.
 
 ### Audit Matrice de Prompts
 Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultanément :
@@ -261,10 +282,11 @@ Depuis votre tableau de bord > Abonnement > Résilier. La résiliation prend eff
 - Si le problème persiste après 10 minutes, relancez un nouvel audit
 - Les sites avec JavaScript heavy ou protections anti-bot peuvent allonger le temps de traitement
 
-### GSC ou GA4 ne se connectent pas
-- Vérifiez que vous utilisez le bon compte Google (celui qui a accès à la propriété)
+### GSC, GA4 ou GMB ne se connectent pas
+- Vérifiez que vous utilisez le bon compte Google (celui qui a accès à la propriété ou à l'établissement)
 - Acceptez tous les scopes OAuth demandés (ne décochez aucune permission)
 - Vérifiez que votre site est bien vérifié dans Google Search Console
+- Pour GMB : vérifiez que vous êtes propriétaire ou gestionnaire de la fiche dans Google Business Profile
 - Déconnectez et reconnectez le compte Google depuis votre tableau de bord
 - Si l'erreur persiste, essayez avec un autre navigateur ou en navigation privée
 
