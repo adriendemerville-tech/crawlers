@@ -133,5 +133,7 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.cocoon-diag-authority]
     verify_jwt = false
+  [functions.detect-anomalies]
+    verify_jwt = false
   [functions.cocoon-strategist]
     verify_jwt = false

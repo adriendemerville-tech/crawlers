@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, ElementType, useRef } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
+import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1027,6 +1028,8 @@ export function MyTracking() {
 
   return (
     <div className="space-y-6">
+      {/* Anomaly alerts banner */}
+      <AnomalyAlertsBanner trackedSiteId={selectedSite} />
       {/* Active crawl progress banner */}
       <ActiveCrawlBanner />
       <Card>

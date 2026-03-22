@@ -346,6 +346,80 @@ export type Database = {
         }
         Relationships: []
       }
+      anomaly_alerts: {
+        Row: {
+          affected_pages: number | null
+          baseline_mean: number
+          baseline_stddev: number
+          change_pct: number | null
+          created_at: string | null
+          current_value: number
+          description: string
+          detected_at: string | null
+          direction: string
+          domain: string
+          id: string
+          is_dismissed: boolean | null
+          is_read: boolean | null
+          metric_name: string
+          metric_source: string
+          severity: string
+          tracked_site_id: string
+          user_id: string
+          z_score: number
+        }
+        Insert: {
+          affected_pages?: number | null
+          baseline_mean?: number
+          baseline_stddev?: number
+          change_pct?: number | null
+          created_at?: string | null
+          current_value?: number
+          description: string
+          detected_at?: string | null
+          direction?: string
+          domain: string
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          metric_name: string
+          metric_source: string
+          severity?: string
+          tracked_site_id: string
+          user_id: string
+          z_score?: number
+        }
+        Update: {
+          affected_pages?: number | null
+          baseline_mean?: number
+          baseline_stddev?: number
+          change_pct?: number | null
+          created_at?: string | null
+          current_value?: number
+          description?: string
+          detected_at?: string | null
+          direction?: string
+          domain?: string
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          metric_name?: string
+          metric_source?: string
+          severity?: string
+          tracked_site_id?: string
+          user_id?: string
+          z_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anomaly_alerts_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archived_users: {
         Row: {
           affiliate_code_used: string | null
@@ -2324,6 +2398,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "google_ads_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_ads_history_log: {
+        Row: {
+          avg_cpc_micros: number | null
+          campaign_data: Json | null
+          clicks: number | null
+          conversion_rate: number | null
+          conversions: number | null
+          cost_micros: number | null
+          created_at: string | null
+          ctr: number | null
+          domain: string
+          id: string
+          impressions: number | null
+          measured_at: string | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          avg_cpc_micros?: number | null
+          campaign_data?: Json | null
+          clicks?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          cost_micros?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          domain: string
+          id?: string
+          impressions?: number | null
+          measured_at?: string | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          avg_cpc_micros?: number | null
+          campaign_data?: Json | null
+          clicks?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          cost_micros?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          domain?: string
+          id?: string
+          impressions?: number | null
+          measured_at?: string | null
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_ads_history_log_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
