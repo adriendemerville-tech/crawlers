@@ -45,7 +45,7 @@ const i18n = {
   fr: {
     momentumTitle: 'En janvier 2028, il y aura autant de recherches via les agents IA que sur Google',
     momentumText: "Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs, vous êtes déjà invisible pour une part croissante de vos prospects.",
-    stat1: '750M', stat1Label: "d'utilisateurs de LLMs dans le monde",
+    stat1: '200M', stat1Label: "d'utilisateurs de LLMs en Europe",
     stat2: 'x3', stat2Label: "taux de conversion LLM vs Google",
     stat3: '5', stat3Label: 'LLMs interrogés simultanément',
     stat4: '30s', stat4Label: "pour votre Score GEO",
@@ -94,7 +94,7 @@ const i18n = {
   en: {
     momentumTitle: 'By January 2028, AI agents will generate as many searches as Google',
     momentumText: "Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
-    stat1: '750M', stat1Label: 'LLM users worldwide',
+    stat1: '200M', stat1Label: 'LLM users in Europe',
     stat2: 'x3', stat2Label: 'LLM conversion rate vs Google',
     stat3: '5', stat3Label: 'LLMs queried simultaneously',
     stat4: '30s', stat4Label: 'for your GEO Score',
@@ -135,7 +135,7 @@ const i18n = {
   es: {
     momentumTitle: 'En enero 2028, habrá tantas búsquedas vía agentes IA como en Google',
     momentumText: 'Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
-    stat1: '750M', stat1Label: 'usuarios de LLMs en el mundo',
+    stat1: '200M', stat1Label: 'usuarios de LLMs en Europa',
     stat2: 'x3', stat2Label: 'tasa de conversión LLM vs Google',
     stat3: '5', stat3Label: 'LLMs consultados simultáneamente',
     stat4: '30s', stat4Label: 'para tu Score GEO',
