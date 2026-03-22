@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   ArrowRight, Shield, Fingerprint, Brain, 
   Target, FileSearch, Network, Layers,
-  CheckCircle2, XCircle, TrendingUp, BarChart3,
+  CheckCircle2, XCircle, TrendingUp, BarChart3, AlertTriangle,
   Bot, Globe, Zap, Search
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
