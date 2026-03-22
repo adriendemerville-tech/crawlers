@@ -1133,7 +1133,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA (sav-chat)
+## Agent SAV IA (sav-chat) — "Crawler"
 
 ### Architecture
 
@@ -1157,6 +1157,16 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
 - **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
 - **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
+- **Signalement de bugs** : Détection NLP ("bug", "problème", "erreur") → bouton signaler → message capturé, pré-traduit pour le CTO, stocké dans \\\`user_bug_reports\\\`
+- **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
+
+### Mode Créateur (admin uniquement)
+
+Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\` dans \\\`profiles\\\`) :
+- Accès complet aux données backend (tables, edge functions, logs)
+- Interrogation croisée multi-tables avec explication
+- Consultation du code source des edge functions via \\\`view-function-source\\\`
+- **Interdit** : modification de la logique backend (lecture seule)
 
 ### Scoring de précision (\\\`sav_quality_scores\\\`)
 
@@ -1170,7 +1180,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ### Sécurité
 
-- Ne mentionne jamais les technologies internes
+- Ne mentionne jamais les technologies internes (sauf mode créateur)
 - Explique, ne produit pas
 
 ---
