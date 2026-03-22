@@ -255,7 +255,7 @@ const labels = {
     strategyBtn: 'Diagnostic & Stratégie',
   },
   en: {
-    title: 'Cocoon Assistant',
+    title: 'Cocoon Strategist',
     subtitle: 'Ask questions about your semantic architecture',
     placeholder: 'E.g.: Which pages should be linked?',
     empty: 'Describe your cocoon or ask a question for AI-powered interpretation.',
