@@ -906,6 +906,24 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     .eq('crawl_id', job.crawl_id);
 
   const pages = allPages || [];
+
+  // ── BFS Depth Recalculation (real link graph) ──
+  if (pages.length > 1) {
+    const bfsDepths = computeBFSDepths(pages as PageAnalysis[], job.url);
+    const normalize = (u: string) => {
+      try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
+    };
+    for (const page of pages) {
+      const path = normalize(page.url);
+      const newDepth = bfsDepths.get(path) ?? page.crawl_depth ?? 0;
+      if (newDepth !== page.crawl_depth) {
+        await supabase.from('crawl_pages').update({ crawl_depth: newDepth }).eq('id', page.id);
+        page.crawl_depth = newDepth;
+      }
+    }
+    console.log(`[Worker] BFS depth recalculated for ${pages.length} pages`);
+  }
+
   const avgScore = pages.length > 0
     ? Math.round(pages.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pages.length)
     : 0;
