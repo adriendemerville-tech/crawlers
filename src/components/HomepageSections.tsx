@@ -162,8 +162,8 @@ const i18n = {
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
-    trustTitle: '1ª herramienta francesa SEO + GEO',
-    trustText: 'Miles de profesionales del marketing digital usan Crawlers.fr para auditar y optimizar su visibilidad en Google y los motores IA. Únete.',
+    trustTitle: 'La única solución europea full-stack SEO + GEO',
+    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO: auditoría técnica, optimización semántica, visibilidad IA, cocón de contenido, código correctivo y mantenimiento automatizado. Todo en una sola herramienta, sin dependencias externas. Código fuente consultable bajo solicitud.',
     trustUrls: 'URLs analizadas', trustAudits: 'Auditorías generadas', trustSites: 'Sitios monitorizados',
   },
 };
