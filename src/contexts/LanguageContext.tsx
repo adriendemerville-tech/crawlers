@@ -210,7 +210,7 @@ const translations: Record<Language, Translations> = {
       },
       trust: {
         noSignup: '',
-        instant: 'Plus besoin de développeur',
+        instant: '',
         free: 'Audit Flash gratuit',
       },
     },
