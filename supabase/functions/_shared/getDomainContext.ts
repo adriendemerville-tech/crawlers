@@ -15,9 +15,11 @@ export interface DomainContextResult {
     backlinks: any;
     gsc: any[];
     ga4: any[];
+    googleAds: any[];
     indexHistory: any[];
     diagnostics: any[];
     strategistRecos: any[];
+    anomalyAlerts: any[];
   };
 }
 
