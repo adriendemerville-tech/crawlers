@@ -1661,10 +1661,10 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               })?.content;
               return (
                 <div className="mb-2 flex gap-2">
-                  {/* Deploy injection button */}
+                  {/* Add to action plan button */}
                   {trackedSiteId && lastOptContent && (
                     <button
-                      onClick={() => handleDeployLinks(lastOptContent)}
+                      onClick={() => handleAddToActionPlan(lastOptContent)}
                       disabled={isDeploying || deploySuccess}
                       className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
                         deploySuccess
@@ -1674,8 +1674,12 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                             : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
                       }`}
                     >
-                      <Syringe className="w-3 h-3" />
-                      {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
+                      <ClipboardList className="w-3 h-3" />
+                      {deploySuccess 
+                        ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
+                        : isDeploying 
+                          ? '…' 
+                          : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
                     </button>
                   )}
                   {/* Architect button - hidden when Content Architect is invisible */}
