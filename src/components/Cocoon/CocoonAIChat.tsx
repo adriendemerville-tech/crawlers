@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft, Bug } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug, ClipboardList } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -1276,57 +1276,112 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     return prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content);
   }, [messages]);
 
-  // Deploy recommendations to the site
-  const handleDeployLinks = useCallback(async (content: string) => {
+  // Add recommendations to action plan instead of injecting directly
+  const handleAddToActionPlan = useCallback(async (content: string) => {
     if (!trackedSiteId || !user || isDeploying) return;
     setIsDeploying(true);
     setDeploySuccess(false);
 
     try {
       const recs = parseRecommendations(content);
-      if (recs.length === 0) {
-        // Fallback: send the raw content for manual processing
-        const { data, error } = await supabase.functions.invoke('cocoon-deploy-links', {
-          body: {
-            tracked_site_id: trackedSiteId,
-            recommendations: nodes.slice(0, 10).flatMap((n: any) =>
-              (n.similarity_edges || [])
-                .filter((e: any) => e.type === 'suggested' || e.score > 0.6)
-                .slice(0, 2)
-                .map((e: any) => ({
-                  source_url: n.url,
-                  target_url: e.target_url,
-                  anchor_text: e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien',
-                  action: 'add_link',
-                }))
-            ),
-          },
+      
+      // Build tasks from recommendations or from graph edges
+      const tasks: Array<{ id: string; title: string; priority: 'critical' | 'important' | 'optional'; category: string; isCompleted: boolean }> = [];
+      
+      if (recs.length > 0) {
+        recs.forEach((rec, i) => {
+          tasks.push({
+            id: `cocoon-link-${Date.now()}-${i}`,
+            title: `${rec.action === 'add_link' ? 'Ajouter lien' : 'Modifier ancre'} : ${rec.anchor_text} → ${rec.target_url}`,
+            priority: i < 3 ? 'critical' : i < 6 ? 'important' : 'optional',
+            category: 'Maillage interne',
+            isCompleted: false,
+          });
         });
-        if (error) throw error;
       } else {
-        const { error } = await supabase.functions.invoke('cocoon-deploy-links', {
-          body: { tracked_site_id: trackedSiteId, recommendations: recs },
+        // Fallback: create tasks from graph edges
+        nodes.slice(0, 10).forEach((n: any) => {
+          (n.similarity_edges || [])
+            .filter((e: any) => e.type === 'suggested' || e.score > 0.6)
+            .slice(0, 2)
+            .forEach((e: any, i: number) => {
+              tasks.push({
+                id: `cocoon-edge-${Date.now()}-${n.url}-${i}`,
+                title: `Ajouter lien : "${e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien'}" de ${n.url} → ${e.target_url}`,
+                priority: i === 0 ? 'important' : 'optional',
+                category: 'Maillage interne',
+                isCompleted: false,
+              });
+            });
         });
-        if (error) throw error;
+      }
+
+      if (tasks.length === 0) {
+        sonnerToast.error(
+          language === 'en' ? 'No recommendations found to add' :
+          language === 'es' ? 'No se encontraron recomendaciones' :
+          'Aucune recommandation trouvée à ajouter'
+        );
+        setIsDeploying(false);
+        return;
+      }
+
+      // Create or update the action plan for this domain
+      const siteUrl = `https://${domain}`;
+      const planTitle = language === 'en' ? `Cocoon — Internal linking ${domain}` :
+                        language === 'es' ? `Cocoon — Enlazado interno ${domain}` :
+                        `Cocoon — Maillage interne ${domain}`;
+
+      // Check if a Cocoon action plan already exists for this URL
+      const { data: existingPlan } = await supabase
+        .from('action_plans')
+        .select('id, tasks')
+        .eq('user_id', user.id)
+        .eq('url', siteUrl)
+        .eq('audit_type', 'technical')
+        .ilike('title', '%cocoon%')
+        .maybeSingle();
+
+      if (existingPlan) {
+        // Merge new tasks into existing plan (avoid duplicates)
+        const existingTasks = (existingPlan.tasks as unknown as typeof tasks) || [];
+        const mergedTasks = [...existingTasks, ...tasks];
+        
+        await supabase
+          .from('action_plans')
+          .update({ tasks: JSON.parse(JSON.stringify(mergedTasks)) })
+          .eq('id', existingPlan.id);
+      } else {
+        // Create new action plan
+        await supabase
+          .from('action_plans')
+          .insert({
+            user_id: user.id,
+            url: siteUrl,
+            title: planTitle,
+            audit_type: 'technical',
+            tasks: JSON.parse(JSON.stringify(tasks)),
+          });
       }
 
       setDeploySuccess(true);
       sonnerToast.success(
-        language === 'en' ? 'Links injected successfully!' :
-        language === 'es' ? '¡Enlaces inyectados con éxito!' :
-        'Liens injectés avec succès !'
+        language === 'en' ? `${tasks.length} tasks added to action plan` :
+        language === 'es' ? `${tasks.length} tareas añadidas al plan de acción` :
+        `${tasks.length} tâches ajoutées au plan d'action`
       );
       setTimeout(() => setDeploySuccess(false), 5000);
     } catch (e) {
-      console.error('[Cocoon] Deploy failed:', e);
+      console.error('[Cocoon] Add to action plan failed:', e);
       sonnerToast.error(
-        language === 'en' ? 'Injection failed' :
-        language === 'es' ? 'Error de inyección' :
-        'Échec de l\'injection'
+        language === 'en' ? 'Failed to add to action plan' :
+        language === 'es' ? 'Error al añadir al plan' :
+        'Échec de l\'ajout au plan d\'action'
       );
+    } finally {
       setIsDeploying(false);
     }
-  }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes]);
+  }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes, domain, language]);
 
   return (
     <div className="relative">
@@ -1606,10 +1661,10 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               })?.content;
               return (
                 <div className="mb-2 flex gap-2">
-                  {/* Deploy injection button */}
+                  {/* Add to action plan button */}
                   {trackedSiteId && lastOptContent && (
                     <button
-                      onClick={() => handleDeployLinks(lastOptContent)}
+                      onClick={() => handleAddToActionPlan(lastOptContent)}
                       disabled={isDeploying || deploySuccess}
                       className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
                         deploySuccess
@@ -1619,8 +1674,12 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                             : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
                       }`}
                     >
-                      <Syringe className="w-3 h-3" />
-                      {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
+                      <ClipboardList className="w-3 h-3" />
+                      {deploySuccess 
+                        ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
+                        : isDeploying 
+                          ? '…' 
+                          : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
                     </button>
                   )}
                   {/* Architect button - hidden when Content Architect is invisible */}
@@ -1656,9 +1715,9 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   <button
                     onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
                     className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
-                    title={language === 'en' ? 'Inject linking' : language === 'es' ? 'Inyectar enlaces' : 'Injecter maillage'}
+                    title={language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action'}
                   >
-                    <Syringe className="w-3.5 h-3.5" />
+                    <ClipboardList className="w-3.5 h-3.5" />
                   </button>
                   {isContentArchitectVisible && (
                     <button

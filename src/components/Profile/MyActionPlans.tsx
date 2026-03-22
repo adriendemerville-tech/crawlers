@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ActionPlanTask {
   id: string;
@@ -122,6 +139,108 @@ const translations = {
     allSites: 'Todos los sitios',
   },
 };
+
+// Sortable task item component
+function SortableTaskItem({
+  task,
+  planId,
+  isArchived,
+  onToggle,
+  onOpenArchitect,
+  getPriorityColor,
+  getPriorityLabel,
+  architectLabel,
+}: {
+  task: ActionPlanTask;
+  planId: string;
+  isArchived: boolean;
+  onToggle: (planId: string, taskId: string) => void;
+  onOpenArchitect: () => void;
+  getPriorityColor: (p: string) => string;
+  getPriorityLabel: (p: string) => string;
+  architectLabel: string;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
+        getPriorityColor(task.priority),
+        task.isCompleted && "opacity-50",
+        isDragging && "shadow-lg ring-2 ring-primary/20"
+      )}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 touch-none"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Checkbox
+        id={`${planId}-${task.id}`}
+        checked={task.isCompleted}
+        onCheckedChange={() => onToggle(planId, task.id)}
+        className="mt-0.5"
+      />
+      <div className="flex-1 min-w-0">
+        <label
+          htmlFor={`${planId}-${task.id}`}
+          className={cn(
+            "text-sm font-medium cursor-pointer",
+            task.isCompleted && "line-through text-muted-foreground"
+          )}
+        >
+          {task.title}
+        </label>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={cn(
+            "text-xs px-1.5 py-0.5 rounded",
+            task.priority === 'critical' && "bg-destructive/10 text-destructive",
+            task.priority === 'important' && "bg-warning/10 text-warning-foreground",
+            task.priority === 'optional' && "bg-muted text-muted-foreground"
+          )}>
+            {getPriorityLabel(task.priority)}
+          </span>
+          {task.category && (
+            <span className="text-xs text-muted-foreground">
+              {task.category}
+            </span>
+          )}
+        </div>
+      </div>
+      {!task.isCompleted && !isArchived && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenArchitect}
+          className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+        >
+          <Wand2 className="h-3 w-3" />
+          {architectLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export function MyActionPlans() {
   const { user } = useAuth();
@@ -330,13 +449,43 @@ export function MyActionPlans() {
     }
   };
 
-  const getSortedTasks = (tasks: ActionPlanTask[]) => {
-    const priorityOrder = { critical: 0, important: 1, optional: 2 };
-    return [...tasks].sort((a, b) => {
-      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-      return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
-    });
-  };
+  // No longer auto-sort — user controls order via drag & drop
+  const getSortedTasks = (tasks: ActionPlanTask[]) => tasks;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent, planId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const plan = actionPlans.find(p => p.id === planId);
+    if (!plan) return;
+
+    const oldIndex = plan.tasks.findIndex(t => t.id === active.id);
+    const newIndex = plan.tasks.findIndex(t => t.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(plan.tasks, oldIndex, newIndex);
+
+    // Optimistic update
+    setActionPlans(prev =>
+      prev.map(p => (p.id === planId ? { ...p, tasks: reordered } : p))
+    );
+
+    // Persist
+    const { error } = await supabase
+      .from('action_plans')
+      .update({ tasks: JSON.parse(JSON.stringify(reordered)) })
+      .eq('id', planId);
+
+    if (error) {
+      console.error('Error reordering tasks:', error);
+      fetchActionPlans();
+    }
+  }, [actionPlans, fetchActionPlans]);
 
   const handleOpenArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
     setArchitectPlan(plan);
@@ -474,63 +623,29 @@ export function MyActionPlans() {
               transition={{ duration: 0.2 }}
               className="border-t"
             >
-              <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
-                {sortedTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border-l-4 transition-all",
-                      getPriorityColor(task.priority),
-                      task.isCompleted && "opacity-50"
-                    )}
-                  >
-                    <Checkbox
-                      id={`${plan.id}-${task.id}`}
-                      checked={task.isCompleted}
-                      onCheckedChange={() => toggleTask(plan.id, task.id)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label
-                        htmlFor={`${plan.id}-${task.id}`}
-                        className={cn(
-                          "text-sm font-medium cursor-pointer",
-                          task.isCompleted && "line-through text-muted-foreground"
-                        )}
-                      >
-                        {task.title}
-                      </label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={cn(
-                          "text-xs px-1.5 py-0.5 rounded",
-                          task.priority === 'critical' && "bg-destructive/10 text-destructive",
-                          task.priority === 'important' && "bg-warning/10 text-warning-foreground",
-                          task.priority === 'optional' && "bg-muted text-muted-foreground"
-                        )}>
-                          {getPriorityLabel(task.priority)}
-                        </span>
-                        {task.category && (
-                          <span className="text-xs text-muted-foreground">
-                            {task.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {/* Architect button for incomplete tasks */}
-                    {!task.isCompleted && !isArchived && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenArchitect(plan, task)}
-                        className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
-                      >
-                        <Wand2 className="h-3 w-3" />
-                        {t.architect}
-                      </Button>
-                    )}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, plan.id)}
+              >
+                <SortableContext items={sortedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
+                    {sortedTasks.map((task) => (
+                      <SortableTaskItem
+                        key={task.id}
+                        task={task}
+                        planId={plan.id}
+                        isArchived={isArchived}
+                        onToggle={toggleTask}
+                        onOpenArchitect={() => handleOpenArchitect(plan, task)}
+                        getPriorityColor={getPriorityColor}
+                        getPriorityLabel={getPriorityLabel}
+                        architectLabel={t.architect}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </motion.div>
           )}
         </AnimatePresence>
