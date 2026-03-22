@@ -382,6 +382,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
 | \`detect-anomalies\` | ✅ | Détection anomalies statistiques (z-score) + notifications |
+| \`drop-detector\` | ✅ | Détection de chute de trafic (réactive + prédictive) + alertes |
 
 ## Utilisateur & Billing
 
