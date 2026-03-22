@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor et générateur Scribe :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés et détection d'anomalies :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,18 +51,21 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  111+ fonctions serverless + 21 modules partagés        │
+│  121 fonctions serverless + 22 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
-│  - Crawl engine (Firecrawl + processing queue)           │
+│  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
+│  - Cocoon diagnostics (4 axes) + Stratège                │
+│  - Content Architect + CMS publish                       │
 │  - CMS bridges (WordPress, Drupal, Shopify, Wix)         │
-│  - Google integrations (Ads, GSC, GA4, GTM)              │
+│  - Google integrations (Ads, GSC, GA4, GTM, GMB)         │
+│  - Anomaly detection + notification system               │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  55+ tables avec RLS, fonctions PL/pgSQL, triggers    │
+│  60+ tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -74,16 +77,16 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 111+ fonctions serverless + 21 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 121 fonctions serverless + 22 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
 | Payments | Stripe | Abonnements, crédits, webhooks |
-| AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu |
+| AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu, Stratège |
 | Crawling | Spider Cloud API + Firecrawl (fallback) | Map + scrape multi-pages |
 | Anti-détection | StealthFetch (custom) | User-Agent rotation, headers, retries |
 | SEO Data | DataForSEO API | SERP rankings, backlinks, indexed pages |
-| Analytics | Google Analytics 4 + GSC | Trafic, Search Console |
+| Analytics | Google Analytics 4 + GSC + GMB + Ads | Trafic, Search Console, fiches, campagnes |
 
 ## Flux de données principal
 
@@ -95,6 +98,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 
 ## Patterns architecturaux
 
+- **Client singleton** : Toutes les Edge Functions utilisent \`getServiceClient()\` / \`getUserClient()\` du module \`_shared/supabaseClient.ts\` (refactorisé mars 2026)
 - **Cache-first** : Toutes les fonctions d'audit vérifient \`audit_cache\` avant d'exécuter (via \`_shared/auditCache.ts\`)
 - **Fire-and-forget workers** : Le crawl multi-pages lance un job puis déclenche le worker de manière asynchrone
 - **Token tracking** : Chaque appel API externe est tracké dans \`api_call_logs\` (via \`_shared/tokenTracker.ts\`)
@@ -102,6 +106,8 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 - **Circuit breaker** : Protection contre les cascades de pannes API (via \`_shared/circuitBreaker.ts\`)
 - **Fair use** : Rate limiting par utilisateur (via \`_shared/fairUse.ts\` + \`check_fair_use_v2\` RPC)
 - **IP rate limiting** : Protection des endpoints publics (via \`_shared/ipRateLimiter.ts\`)
+- **Shared audit utils** : Logique PageSpeed, Safe Browsing et robots.txt centralisée dans \`_shared/auditUtils.ts\`
+- **Fix templates** : Templates de code correctif SEO centralisés dans \`_shared/fixTemplates.ts\`
 `,
   },
 
