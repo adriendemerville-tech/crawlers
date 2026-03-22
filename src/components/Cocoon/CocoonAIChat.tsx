@@ -56,6 +56,38 @@ const LEXICON_TERMS: Record<string, string> = {
   'crawl depth': 'profondeur-crawl',
 };
 
+/**
+ * Detect quick-reply options from an assistant message.
+ */
+function extractQuickReplies(content: string): string[] {
+  if (/\b(oui\s*[/ou]+\s*non)\b/i.test(content)) {
+    return ['Oui', 'Non'];
+  }
+  const tail = content.slice(-600);
+  const numberedPattern = /(?:^|\n)\s*(\d+)[.)]\s*\*{0,2}([^*\n]{3,80})\*{0,2}/g;
+  const numbered: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = numberedPattern.exec(tail)) !== null) {
+    const label = m[2].trim().replace(/[.:]+$/, '').trim();
+    if (label.length > 2 && label.length < 80) numbered.push(label);
+  }
+  if (numbered.length >= 2 && numbered.length <= 5) return numbered;
+  const boldSlash = tail.match(/\*\*([^*]{2,50})\*\*\s*[/ou]+\s*\*\*([^*]{2,50})\*\*(?:\s*[/ou]+\s*\*\*([^*]{2,50})\*\*)?/i);
+  if (boldSlash) {
+    const opts = [boldSlash[1].trim(), boldSlash[2].trim()];
+    if (boldSlash[3]) opts.push(boldSlash[3].trim());
+    return opts;
+  }
+  const bulletPattern = /(?:^|\n)\s*[-•]\s*\*{0,2}([^*\n]{3,80})\*{0,2}/g;
+  const bullets: string[] = [];
+  while ((m = bulletPattern.exec(tail)) !== null) {
+    const label = m[1].trim().replace(/[.:]+$/, '').trim();
+    if (label.length > 2 && label.length < 80) bullets.push(label);
+  }
+  if (bullets.length >= 2 && bullets.length <= 5) return bullets;
+  return [];
+}
+
 // Build regex from terms (longest first to avoid partial matches)
 const lexiconRegex = new RegExp(
   `\\b(${Object.keys(LEXICON_TERMS).sort((a, b) => b.length - a.length).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
