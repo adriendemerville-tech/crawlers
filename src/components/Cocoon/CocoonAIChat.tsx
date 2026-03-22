@@ -96,6 +96,7 @@ function injectLexiconLinks(text: string): React.ReactNode[] {
 // ─── Analysis prompt helpers ───
 const ANALYSIS_PREFIXES = ['Analyse les pages suivantes:', 'Analyze the following pages:', 'Analiza las siguientes páginas:'];
 const OPTIMIZE_PREFIXES = ['OPTIMISATION DU MAILLAGE INTERNE', 'INTERNAL LINKING OPTIMIZATION', 'OPTIMIZACIÓN DEL ENLAZADO INTERNO'];
+const STRATEGY_PREFIXES = ['STRATÉGIE 360°', '360° STRATEGY', 'ESTRATEGIA 360°'];
 
 function isAnalysisPrompt(content: string): boolean {
   return ANALYSIS_PREFIXES.some(p => content.startsWith(p));
@@ -103,6 +104,10 @@ function isAnalysisPrompt(content: string): boolean {
 
 function isOptimizePrompt(content: string): boolean {
   return OPTIMIZE_PREFIXES.some(p => content.startsWith(p));
+}
+
+function isStrategyPrompt(content: string): boolean {
+  return STRATEGY_PREFIXES.some(p => content.startsWith(p));
 }
 
 function getAnalysisLabel(content: string, lang: string): string {
