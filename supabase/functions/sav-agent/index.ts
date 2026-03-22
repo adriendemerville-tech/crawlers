@@ -179,7 +179,7 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
 - [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200 points. 1/jour gratuit inscrit, illimité Pro Agency.
 - Audit Stratégique IA : scoring IAS + E-E-A-T + plan d'action. 1 crédit.
 - [Audit Comparé](https://crawlers.fr/audit-compare) : benchmark vs 3 concurrents. 4 crédits.
-- [Matrice de Prompts](https://crawlers.fr/matrice) : test visibilité multi-LLM.
+- [Matrice d'audit](https://crawlers.fr/matrice) : moteur d'audit sur-mesure multi-critères (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
 - [Cocon Sémantique 3D](https://crawlers.fr/cocoon) : Three.js, TF-IDF, clusters. Pro Agency.
 - [Architecte Génératif](https://crawlers.fr/architecte-generatif) : code correctif JSON-LD. 1 crédit.
 - [Crawl Multi-Pages](https://crawlers.fr/site-crawl) : jusqu'à 5000 pages. Pro Agency.

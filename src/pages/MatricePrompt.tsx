@@ -429,7 +429,7 @@ export default function MatricePrompt() {
             <Button variant="ghost" size="sm" onClick={() => navigate('/console')}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Console
             </Button>
-            <h1 className="text-xl font-bold">Matrice</h1>
+            <h1 className="text-xl font-bold">Matrice d'audit</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
             <Link to="/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">

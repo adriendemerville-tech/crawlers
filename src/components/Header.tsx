@@ -314,7 +314,7 @@ export function Header() {
                   <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
                     <Grid3X3 className="h-3.5 w-3.5" />
-                    <span className="text-sm font-semibold">Matrice</span>
+                    <span className="text-sm font-semibold">Matrice d'audit</span>
                   </Button>
                 </Link>
               )}

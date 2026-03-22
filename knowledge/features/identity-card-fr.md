@@ -18,6 +18,8 @@
 - Front-end affiche uniquement les pages en ligne : index et non-index.
 - Fonction index/noindex intégrée.
 
-## Matrice (ex "Matrice CSV")
-- Renommée "Matrice" dans le header Console et la page /matrice.
-- Accepte .csv et .doc en import.
+## Matrice d'audit (ex "Matrice CSV", ex "Matrice de Prompts")
+- Renommée "Matrice d'audit" dans le header, la Console et la page /matrice.
+- Moteur d'audit sur-mesure : 6 types de KPIs (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
+- Accepte .csv et .doc/.docx en import (extraction IA via Gemini).
+- Pondération, seuils personnalisables, gestion de lots, score pondéré global /100.

@@ -41,7 +41,7 @@ export function useStructuredData() {
             "Audit Stratégique IA scoring multi-axes",
             "Audit Comparé benchmark vs 3 concurrents",
             "Audit Local SEO Google My Business Pack Local",
-            "Audit Matrice de Prompts test multi-LLM",
+            "Matrice d'audit sur-mesure multi-critères",
             "Tracking SERP hebdomadaire positions Google",
             "Historique Google Search Console",
             "Historique Google Analytics 4",
