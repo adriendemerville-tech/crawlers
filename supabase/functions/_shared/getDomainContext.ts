@@ -20,6 +20,8 @@ export interface DomainContextResult {
     diagnostics: any[];
     strategistRecos: any[];
     anomalyAlerts: any[];
+    auditTechnique: any;
+    auditStrategique: any;
   };
 }
 
