@@ -238,7 +238,7 @@ function PRDistributionChart({
               transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
             />
             <span className="absolute right-2 top-0.5 text-[10px] font-medium text-foreground/70">
-              {bucket.percentage.toFixed(1)}%
+              {(bucket.percentage ?? 0).toFixed(1)}%
             </span>
           </div>
           <span className="text-[10px] text-muted-foreground w-16 shrink-0">
@@ -299,7 +299,7 @@ export function MaillageIPRCard({ data, onExploreCocoon }: Props) {
               <KPIMetric
                 icon={<Link2 className="w-4 h-4" />}
                 label={t.density}
-                value={`${data.linkDensity.toFixed(1)}%`}
+                value={`${(data.linkDensity ?? 0).toFixed(1)}%`}
                 tooltip={t.densityTooltip}
                 alert={data.linkDensity < 3 || data.linkDensity > 20}
               />
