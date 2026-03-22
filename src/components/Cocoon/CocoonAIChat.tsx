@@ -366,6 +366,32 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
   }, [user, trackedSiteId]);
 
+  // Check resolved bug reports and notify user
+  useEffect(() => {
+    if (!user) return;
+    const checkResolvedBugs = async () => {
+      const { data } = await supabase
+        .from('user_bug_reports')
+        .select('id, cto_response')
+        .eq('user_id', user.id)
+        .eq('status', 'resolved')
+        .eq('notified_user', false);
+      if (data && data.length > 0) {
+        setResolvedBugCount(data.length);
+        const notifMsgs: Msg[] = data.map((bug: any) => ({
+          role: 'assistant' as const,
+          content: `✅ **Bonne nouvelle !** Un problème que vous aviez signalé a été résolu.\n\n${bug.cto_response || 'Le problème a été corrigé.'}`,
+        }));
+        setMessages(prev => [...notifMsgs, ...prev]);
+        await supabase
+          .from('user_bug_reports')
+          .update({ notified_user: true } as any)
+          .in('id', data.map((b: any) => b.id));
+      }
+    };
+    checkResolvedBugs();
+  }, [user]);
+
   // ── Auto-resume last session for this site ──
   useEffect(() => {
     if (!user || !trackedSiteId || !domain) return;
