@@ -2258,7 +2258,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals: ctaSeoSignals || { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false } };
+  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals };
 }
 
 // ==================== MAIN HANDLER ====================
