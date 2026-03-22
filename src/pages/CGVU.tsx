@@ -12,6 +12,7 @@ const sections = [
   { id: 'garantie', title: '4. Absence de Garantie de Résultat' },
   { id: 'code', title: '5. Responsabilité sur l\'Implémentation du Code' },
   { id: 'injection', title: '5 bis. Injection de Code via Widget / GTM' },
+  { id: 'usage-malveillant', title: '5 ter. Interdiction des Usages Malveillants' },
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
@@ -181,6 +182,55 @@ const CGVU = () => {
               </ul>
               <p>
                 Il est recommandé à l'utilisateur de <strong>tester les correctifs dans un environnement de staging</strong> avant de les déployer en production, et de vérifier la compatibilité avec son environnement technique.
+              </p>
+            </section>
+
+            {/* Article 5 ter */}
+            <section id="usage-malveillant">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">5 ter. Interdiction des Usages Malveillants — Clause Anti-Abus</h2>
+              <p className="font-semibold text-destructive">
+                Il n'est pas permis d'utiliser les services de Crawlers.fr à des fins malveillantes, frauduleuses, ou portant atteinte aux droits de tiers.
+              </p>
+              <p className="mt-4 font-semibold">
+                À titre non exhaustif, il est expressément interdit de :
+              </p>
+              <ul>
+                <li>Utiliser les fonctionnalités d'injection de code (Architecte Génératif, widget, GTM, plugin WordPress) pour <strong>modifier, altérer ou nuire au fonctionnement d'un site web dont l'utilisateur n'est pas le propriétaire légitime</strong> ;</li>
+                <li>Tenter d'injecter du code malveillant, des scripts de redirection, du contenu spam ou toute forme de <strong>backdoor</strong> via les outils de la Plateforme ;</li>
+                <li>Usurper l'identité d'un autre utilisateur ou d'un autre propriétaire de site pour accéder aux fonctionnalités d'injection ;</li>
+                <li>Utiliser les outils d'audit et de crawl de la Plateforme dans le but de <strong>dégrader, surcharger ou faire tomber le site d'un concurrent</strong> (attaque par déni de service, crawl abusif, etc.) ;</li>
+                <li>Contourner les mécanismes de vérification de propriété mis en place par la Plateforme (vérification GTM, clé API, correspondance domaine/compte) ;</li>
+                <li>Revendre, partager ou mettre à disposition de tiers les accès à la Plateforme dans le but de faciliter les usages interdits ci-dessus.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Vérification de propriété</h3>
+              <p>
+                La Plateforme met en œuvre des <strong>mécanismes automatiques de vérification de propriété</strong> avant toute opération d'injection de code. Ces mécanismes incluent, sans s'y limiter :
+              </p>
+              <ul>
+                <li>Le croisement de la clé API du compte utilisateur avec le conteneur GTM installé sur le site cible ;</li>
+                <li>La vérification que le domaine cible est bien enregistré et rattaché au compte de l'utilisateur demandeur ;</li>
+                <li>La traçabilité complète de toute tentative d'injection non autorisée (horodatage, identifiant utilisateur, domaine cible, type de script, profil propriétaire).</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Sanctions</h3>
+              <p>
+                Tout manquement aux interdictions ci-dessus pourra entraîner, sans préavis et sans indemnité :
+              </p>
+              <ul>
+                <li>La <strong>suspension immédiate du compte</strong> de l'utilisateur contrevenant ;</li>
+                <li>La <strong>suppression définitive du compte</strong> et de toutes les données associées ;</li>
+                <li>La <strong>conservation des logs d'abus</strong> à des fins probatoires pendant une durée de 36 mois ;</li>
+                <li>Le <strong>signalement aux autorités compétentes</strong> en cas d'infraction pénale avérée (accès frauduleux à un système de traitement automatisé de données — articles 323-1 et suivants du Code pénal) ;</li>
+                <li>La <strong>facturation des frais</strong> engagés par l'Éditeur pour remédier aux conséquences de l'abus.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Disclaimer — Limitation de responsabilité</h3>
+              <p>
+                L'Éditeur met en œuvre des mesures raisonnables pour prévenir les usages abusifs de la Plateforme. Toutefois, <strong>Crawlers.fr ne saurait être tenu responsable</strong> des actes malveillants commis par un utilisateur en violation des présentes CGVU. La responsabilité de tout dommage causé à un tiers par un utilisateur malveillant incombe exclusivement à ce dernier.
+              </p>
+              <p>
+                L'utilisateur s'engage à <strong>indemniser et garantir l'Éditeur</strong> contre toute réclamation, action ou poursuite de tiers résultant directement ou indirectement de l'utilisation malveillante des services de la Plateforme.
               </p>
             </section>
 
@@ -396,7 +446,7 @@ const CGVU = () => {
             {/* Dernière mise à jour */}
             <div className="mt-12 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground italic">
-                Dernière mise à jour : 16 mars 2026
+                Dernière mise à jour : 22 mars 2026
               </p>
             </div>
           </article>

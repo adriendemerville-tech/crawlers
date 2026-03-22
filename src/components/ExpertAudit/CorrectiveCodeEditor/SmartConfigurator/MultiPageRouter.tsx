@@ -310,6 +310,19 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
     if (!siteId || !user) return;
     setSaving(true);
     try {
+      // ── Ownership verification before injection ──
+      const { data: siteOwnership } = await supabase
+        .from('tracked_sites')
+        .select('id, user_id')
+        .eq('id', siteId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!siteOwnership) {
+        toast({ title: 'Accès refusé', description: 'Vous n\'êtes pas propriétaire de ce site', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
       // Resolve intents for all assignments in parallel
       const intents = await Promise.all(
         assignments.map(a => resolveIntentForPattern(a.urlPattern))
