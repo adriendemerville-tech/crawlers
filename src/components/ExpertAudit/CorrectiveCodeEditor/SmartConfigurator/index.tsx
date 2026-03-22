@@ -176,7 +176,9 @@ export function SmartConfigurator({
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
   const { openMode } = useFreemiumMode();
+  const { isContentArchitectVisible } = useContentArchitectVisibility();
   const canGenerateCode = isAgencyPro || isAdmin;
+  const showContentTabs = isContentArchitectVisible && isAdmin && !openMode;
 
   // Extract domain from siteUrl for payment check
   const siteDomain = useMemo(() => {
