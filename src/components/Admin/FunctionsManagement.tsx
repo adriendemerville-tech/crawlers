@@ -16,11 +16,18 @@ import { TRANSPARENCY_DATA, hasTransparencyData, type TransparencyBlock } from '
 const FUNCTION_CATEGORIES: Record<string, string[]> = {
   'Audit & SEO': [
     'audit-expert-seo', 'audit-local-seo', 'audit-strategique-ia', 'audit-compare',
-    'expert-audit', 'save-audit', 'diagnose-hallucination', 'snapshot-audit-impact',
-    'measure-audit-impact', 'generate-corrective-code',
+    'audit-matrice', 'expert-audit', 'save-audit', 'diagnose-hallucination',
+    'snapshot-audit-impact', 'measure-audit-impact', 'generate-corrective-code',
   ],
   'Cocoon & Maillage': [
-    'calculate-cocoon-logic', 'cocoon-chat', 'calculate-internal-pagerank', 'persist-cocoon-session',
+    'calculate-cocoon-logic', 'cocoon-chat', 'calculate-internal-pagerank',
+    'persist-cocoon-session', 'cocoon-deploy-links',
+  ],
+  'Diagnostics Cocoon': [
+    'cocoon-diag-authority', 'cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure',
+  ],
+  'Stratège & Content Architect': [
+    'cocoon-strategist', 'content-architecture-advisor', 'extract-architect-fields', 'cms-publish-draft',
   ],
   'Crawl & Analyse': [
     'crawl-site', 'process-crawl-queue', 'fetch-sitemap-tree', 'check-pagespeed',
@@ -32,40 +39,51 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   ],
   'SERP & Data': [
     'fetch-serp-kpis', 'generate-more-keywords', 'generate-target-queries',
-    'update-market-trends', 'check-crawlers', 'fetch-news',
+    'update-market-trends', 'check-crawlers', 'fetch-news', 'serpapi-actions',
   ],
-  'GSC & GA4': [
-    'gsc-auth', 'fetch-ga4-data',
+  'Intégrations Google': [
+    'gsc-auth', 'fetch-ga4-data', 'google-ads-connector', 'gtm-actions', 'gmb-actions',
   ],
-  'Google My Business': [
-    'gmb-actions',
+  'Anomalies & Monitoring': [
+    'detect-anomalies', 'health-check', 'check-widget-health',
   ],
   'Paiement & Abonnement': [
     'create-checkout', 'create-credit-checkout', 'create-subscription-session',
-    'create-customer-portal', 'stripe-webhook', 'apply-affiliate', 'apply-referral',
-    'apply-retention-offer',
+    'create-customer-portal', 'stripe-webhook', 'stripe-actions', 'track-payment',
+    'apply-affiliate', 'apply-referral', 'apply-retention-offer',
   ],
   'Utilisateurs & Auth': [
-    'ensure-profile', 'send-password-reset', 'send-verification-code', 'verify-email-code',
+    'ensure-profile', 'auth-actions', 'delete-account', 'restore-archived-user',
+    'send-password-reset', 'send-verification-code', 'verify-email-code',
     'check-email-exists', 'verify-turnstile', 'manage-team', 'admin-update-plan',
   ],
   'Scripts & Déploiement': [
     'serve-client-script', 'get-final-script', 'process-script-queue', 'dry-run-script',
     'download-plugin', 'watchdog-scripts', 'update-config', 'wpsync', 'sdk-status', 'widget-connect',
+    'verify-injection', 'archive-solution',
+  ],
+  'CMS & Bridges': [
+    'drupal-actions', 'iktracker-actions', 'register-cms-webhook',
+    'webhook-shopify-orders', 'webhook-woo-orders',
+  ],
+  'Outils tiers (Bundle)': [
+    'gtmetrix-actions', 'rankmath-actions', 'linkwhisper-actions',
   ],
   'Email & Notifications': [
     'process-email-queue', 'auth-email-hook', 'generate-blog-from-news',
   ],
   'Agent & Automation': [
-    'agent-cto', 'agent-seo', 'refresh-serp-all', 'auto-measure-predictions',
-    'generate-prediction', 'aggregate-observatory', 'archive-solution',
+    'agent-cto', 'agent-seo', 'sav-agent', 'supervisor-actions',
+    'refresh-serp-all', 'auto-measure-predictions',
+    'generate-prediction', 'aggregate-observatory',
+    'voice-identity-enrichment',
   ],
   'Partage & Rapport': [
-    'share-report', 'resolve-share', 'track-share-click', 'summarize-report',
+    'share-report', 'share-actions', 'resolve-share', 'track-share-click', 'summarize-report',
     'rss-feed', 'sitemap', 'track-analytics', 'generate-infotainment',
   ],
   'IAS & Metrics': [
-    'calculate-ias', 'extract-pdf-data',
+    'calculate-ias', 'extract-pdf-data', 'parse-doc-matrix',
   ],
   'Admin & Debug': [
     'kill-all-viewers', 'run-backend-tests', 'view-function-source',

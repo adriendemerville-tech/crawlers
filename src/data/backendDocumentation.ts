@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor et générateur Scribe :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés et détection d'anomalies :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,18 +51,21 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  111+ fonctions serverless + 21 modules partagés        │
+│  121 fonctions serverless + 22 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
-│  - Crawl engine (Firecrawl + processing queue)           │
+│  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
+│  - Cocoon diagnostics (4 axes) + Stratège                │
+│  - Content Architect + CMS publish                       │
 │  - CMS bridges (WordPress, Drupal, Shopify, Wix)         │
-│  - Google integrations (Ads, GSC, GA4, GTM)              │
+│  - Google integrations (Ads, GSC, GA4, GTM, GMB)         │
+│  - Anomaly detection + notification system               │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  55+ tables avec RLS, fonctions PL/pgSQL, triggers    │
+│  60+ tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -74,16 +77,16 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 111+ fonctions serverless + 21 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 121 fonctions serverless + 22 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
 | Payments | Stripe | Abonnements, crédits, webhooks |
-| AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu |
+| AI | Lovable AI (Gemini/GPT) | Audits stratégiques, génération de contenu, Stratège |
 | Crawling | Spider Cloud API + Firecrawl (fallback) | Map + scrape multi-pages |
 | Anti-détection | StealthFetch (custom) | User-Agent rotation, headers, retries |
 | SEO Data | DataForSEO API | SERP rankings, backlinks, indexed pages |
-| Analytics | Google Analytics 4 + GSC | Trafic, Search Console |
+| Analytics | Google Analytics 4 + GSC + GMB + Ads | Trafic, Search Console, fiches, campagnes |
 
 ## Flux de données principal
 
@@ -95,6 +98,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 
 ## Patterns architecturaux
 
+- **Client singleton** : Toutes les Edge Functions utilisent \`getServiceClient()\` / \`getUserClient()\` du module \`_shared/supabaseClient.ts\` (refactorisé mars 2026)
 - **Cache-first** : Toutes les fonctions d'audit vérifient \`audit_cache\` avant d'exécuter (via \`_shared/auditCache.ts\`)
 - **Fire-and-forget workers** : Le crawl multi-pages lance un job puis déclenche le worker de manière asynchrone
 - **Token tracking** : Chaque appel API externe est tracké dans \`api_call_logs\` (via \`_shared/tokenTracker.ts\`)
@@ -102,6 +106,8 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 - **Circuit breaker** : Protection contre les cascades de pannes API (via \`_shared/circuitBreaker.ts\`)
 - **Fair use** : Rate limiting par utilisateur (via \`_shared/fairUse.ts\` + \`check_fair_use_v2\` RPC)
 - **IP rate limiting** : Protection des endpoints publics (via \`_shared/ipRateLimiter.ts\`)
+- **Shared audit utils** : Logique PageSpeed, Safe Browsing et robots.txt centralisée dans \`_shared/auditUtils.ts\`
+- **Fix templates** : Templates de code correctif SEO centralisés dans \`_shared/fixTemplates.ts\`
 `,
   },
 
@@ -284,7 +290,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (111+ fonctions)
+# API — Edge Functions (121 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -314,6 +320,21 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`process-crawl-queue\` | ✅ | 0 | Worker de traitement des jobs |
 | \`scan-wp\` | ✅ | 1 | Scan WordPress (plugins, thème, sécu) |
 
+## Cocoon — Diagnostics & Stratège
+
+| Endpoint | Auth | Crédits | Description |
+|----------|------|---------|-------------|
+| \`calculate-cocoon-logic\` | ✅ | 0 | Calcul du graphe sémantique Cocoon |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
+| \`cocoon-diag-authority\` | ✅ | 0 | Diagnostic autorité (PageRank, backlinks, E-E-A-T) |
+| \`cocoon-diag-content\` | ✅ | 0 | Diagnostic contenu (thin, duplicate, gaps) |
+| \`cocoon-diag-semantic\` | ✅ | 0 | Diagnostic sémantique (clusters, cannibalization) |
+| \`cocoon-diag-structure\` | ✅ | 0 | Diagnostic structure (Hn, profondeur, orphans) |
+| \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev |
+| \`cocoon-deploy-links\` | ✅ | 0 | Déploiement maillage interne vers CMS |
+| \`calculate-internal-pagerank\` | ✅ | 0 | PageRank interne par page |
+| \`persist-cocoon-session\` | ✅ | 0 | Sauvegarde session Cocoon |
+
 ## Génération & IA
 
 | Endpoint | Auth | Crédits | Description |
@@ -323,11 +344,12 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-target-queries\` | ✅ | 1 | Génère des requêtes cibles LLM |
 | \`generate-more-keywords\` | ✅ | 1 | Extension de mots-clés |
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
-| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (recherche Perplexity, maillage interne auto, quality guardrails, traductions EN/ES) |
+| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (Perplexity, maillage auto, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
-| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO conditionnels, garde-fous tonaux, TF-IDF concurrents) |
+| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) |
+| \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
+| \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP, Drupal, Shopify) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
@@ -337,9 +359,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`calculate-cocoon-logic\` | ✅ | Calcul du graphe sémantique Cocoon |
 | \`calculate-ias\` | ✅ | Indice d'Alignement Stratégique |
-| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
 | \`calculate-llm-visibility\` | ✅ | Score de visibilité LLM |
 | \`calculate-llm-volumes\` | ✅ | Volumes LLM estimés |
 | \`calculate-sov\` | ✅ | Part de voix (Share of Voice) |
@@ -347,6 +367,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
 | \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
+| \`detect-anomalies\` | ✅ | Détection anomalies statistiques (z-score) + notifications |
 
 ## Utilisateur & Billing
 
@@ -378,12 +399,13 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`gsc-auth\` | ✅ | OAuth Google Search Console |
+| \`gsc-auth\` | ✅ | OAuth Google unifié (GSC, GA4, GMB, GTM, Ads — 7 scopes) |
 | \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
-| \`google-ads-connector\` | ✅ | OAuth2 Google Ads + récupération données campagnes |
+| \`google-ads-connector\` | ✅ | OAuth2 Google Ads + données campagnes |
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
+| \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
-| \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP de tous les sites |
+| \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
 
 ## CMS & Bridges externes
@@ -391,7 +413,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`wpsync\` | ✅ | Synchronisation WordPress |
-| \`drupal-actions\` | ✅ | Bridge CMS Drupal |
+| \`drupal-actions\` | ✅ | Bridge CMS Drupal (JSON:API) |
 | \`iktracker-actions\` | ✅ | Bridge IKtracker (CRUD pages/articles) |
 | \`register-cms-webhook\` | ✅ | Enregistrement webhooks CMS |
 | \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
@@ -402,8 +424,9 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`gtmetrix-actions\` | ✅ | Audits de performance GTmetrix |
-| \`rankmath-actions\` | ✅ | Gestion métadonnées SEO Rank Math (WordPress) |
-| \`linkwhisper-actions\` | ✅ | Maillage interne Link Whisper (WordPress) |
+| \`rankmath-actions\` | ✅ | Gestion métadonnées SEO Rank Math |
+| \`linkwhisper-actions\` | ✅ | Maillage interne Link Whisper |
+| \`serpapi-actions\` | ✅ | Recherche Google via SerpAPI |
 
 ## Partage & Export
 
@@ -424,14 +447,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
 | \`archive-solution\` | ✅ | Archive une solution/correctif |
 | \`verify-injection\` | ✅ | Vérifie l'injection d'un script |
-| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
 | \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
-
-## GMB (Google My Business)
-
-| Endpoint | Auth | Description |
-|----------|------|-------------|
-| \`gmb-actions\` | ✅ | CRUD fiches GMB, avis, posts, stats |
 
 ## Divers
 
@@ -441,11 +457,10 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
-| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts, monitore content-architecture-advisor) |
-| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, stealthFetch, persistance recommandations) |
-| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, scoring précision, fallback humain) |
-| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents + audit assistant SAV) |
-| \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
+| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation, monitoring diagnostics + stratège) |
+| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, persistance recommandations) |
+| \`sav-agent\` | ✅ | Agent SAV IA (Gemini, doc enrichie, scoring précision) |
+| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
 | \`view-function-source\` | ✅ | Consultation source d'une edge function |
@@ -645,9 +660,9 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 21 modules
+# Modules Partagés (_shared/) — 22 modules
 
-Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions.
+Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
 ## Liste des modules
 
@@ -655,7 +670,7 @@ Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés
 Headers CORS standard pour les réponses Edge Functions.
 
 ### \`supabaseClient.ts\`
-Factory pour créer le client Supabase côté serveur (service role).
+**Singletons Supabase** : \`getServiceClient()\` (bypass RLS), \`getAnonClient()\` (RLS), \`getUserClient(authHeader)\` (scoped user). Réutilise les connexions pour la performance.
 
 ### \`auth.ts\`
 Utilitaires d'authentification : extraction JWT, vérification utilisateur.
@@ -668,6 +683,12 @@ Moteur de rendu SPA : Fly.io → Browserless → fetch direct (cascade de fallba
 
 ### \`auditCache.ts\`
 Cache des résultats d'audit (TTL configurable, invalidation automatique).
+
+### \`auditUtils.ts\` *(nouveau)*
+Logique mutualisée PageSpeed Insights, Google Safe Browsing, robots.txt et normalisation URL. Extraite de \`expert-audit\` et \`audit-expert-seo\`.
+
+### \`fixTemplates.ts\` *(nouveau)*
+~1120 lignes de templates de code correctif SEO (meta, Hn, schema.org, lazy-load, etc.). Extraits de \`generate-corrective-code\`.
 
 ### \`tokenTracker.ts\`
 Tracking des appels API externes payants dans \`api_call_logs\`.
@@ -693,11 +714,14 @@ Enrichissement du contexte d'un site (secteur, cibles, mots-clés) pour les prom
 ### \`getSiteContext.ts\`
 Récupération du contexte d'un site tracké depuis la base de données.
 
+### \`getDomainContext.ts\`
+Contexte de domaine pour les diagnostics et le stratège.
+
 ### \`fetchGA4.ts\`
 Utilitaire de récupération des données Google Analytics 4.
 
 ### \`resolveGoogleToken.ts\`
-Résolution et rafraîchissement des tokens OAuth Google (GSC, GA4, Ads).
+Résolution multi-comptes et rafraîchissement des tokens OAuth Google (GSC, GA4, GMB, GTM, Ads).
 
 ### \`saveRawAuditData.ts\`
 Persistance des données brutes d'audit dans \`audit_raw_data\`.
@@ -1136,6 +1160,32 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
+## Diagnostics Cocoon (4 fonctions spécialisées)
+
+| Fonction | Axe d'analyse | Données croisées |
+|----------|--------------|------------------|
+| \\\`cocoon-diag-authority\\\` | Autorité & E-E-A-T | PageRank interne, backlinks, signaux sociaux |
+| \\\`cocoon-diag-content\\\` | Qualité contenu | Thin content, duplicata, content gaps, word count |
+| \\\`cocoon-diag-semantic\\\` | Sémantique & clusters | Cannibalization, intent distribution, TF-IDF |
+| \\\`cocoon-diag-structure\\\` | Structure technique | Profondeur Hn, pages orphelines, maillage |
+
+- **Table** : \\\`cocoon_diagnostic_results\\\` (type, scores, findings, metadata)
+- **Accès** : Utilisateurs avec site tracké
+- **Monitoré par** : Agent CTO
+
+---
+
+## Stratège Cocoon (\\\`cocoon-strategist\\\`)
+
+- **Rôle** : Recommandations stratégiques par URL, avec mémoire persistante
+- **Table mémoire** : \\\`strategist_recommendations\\\` (user_id, url, tracked_site_id, recommandations, résultats)
+- **Croisement** : GSC (CTR, positions) + GA4 (conversions, pages vues) pour évaluer l'impact
+- **3 axes de développement** : Proposés à l'utilisateur, sélection unique → définit l'objectif
+- **Placement mot-clé** : Arbitrage intelligent dans le title et la première phrase selon les bonnes pratiques SEO
+- **Monitoré par** : Agent CTO
+
+---
+
 ## Content Architecture Advisor
 
 - **Edge Function** : \\\`content-architecture-advisor\\\`
@@ -1143,6 +1193,17 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 - **Monitoré par** : Agent CTO
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
+- **Publication CMS** : Via \\\`cms-publish-draft\\\` (WP, Drupal, Shopify) avec versionnement
+
+---
+
+## Détection d'anomalies (\\\`detect-anomalies\\\`)
+
+- **Méthode** : Z-score sur fenêtre glissante (8 semaines baseline)
+- **Métriques surveillées** : Pages vues, CTR SERP, taux de conversion, ranking, IAS, Google Ads (impressions, clics, coût)
+- **Seuils** : |z| ≥ 2 → alerte, |z| ≥ 3 → critique
+- **Table** : \\\`anomaly_alerts\\\` (metric_name, z_score, severity, direction, change_pct)
+- **Affichage** : Bandeau défilant dans /console avec codes couleur (vert/orange/rouge)
 
 ---
 
@@ -1161,14 +1222,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '4.1.0',
-  lastUpdated: '2026-03-21',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Content Advisor + Scribe + Cocoon + GMB + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 111,
-  totalSharedModules: 21,
-  totalTables: '57+',
-  totalLinesOfCode: '165 000+',
-  totalMigrations: 190,
+  version: '5.0.0',
+  lastUpdated: '2026-03-22',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège + Diagnostics + Content Architect + Scribe + Cocoon + GMB + Anomalies + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 121,
+  totalSharedModules: 22,
+  totalTables: '60+',
+  totalLinesOfCode: '172 000+',
+  totalMigrations: 195,
   totalPages: 40,
-  totalComponents: 285,
+  totalComponents: 295,
 };
