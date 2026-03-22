@@ -1721,8 +1721,8 @@ export function SmartConfigurator({
             </div>
 
 
-            {/* Security Zone - fixed at bottom, only visible in code view */}
-            {viewMode === 'code' && (
+            {/* Security Zone - fixed at bottom */}
+            {(
               <div className="flex-shrink-0">
                 <SecurityZone 
                   siteUrl={siteUrl}
