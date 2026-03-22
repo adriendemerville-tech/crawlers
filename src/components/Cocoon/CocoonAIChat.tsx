@@ -345,6 +345,150 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
   }, [user, trackedSiteId]);
 
+  // ── Auto-resume last session for this site ──
+  useEffect(() => {
+    if (!user || !trackedSiteId || !domain) return;
+    // Don't re-attempt for same site
+    if (resumeAttemptedRef.current === trackedSiteId) return;
+    resumeAttemptedRef.current = trackedSiteId;
+
+    // Reset state when site changes
+    setMessages([]);
+    chatHistoryId.current = null;
+    setStrategistCompleted(false);
+    setIsStrategistMode(false);
+    setStrategyPlan(null);
+    setSessionResumed(false);
+
+    const resumeSession = async () => {
+      try {
+        // Fetch last session for this site
+        const { data: lastSession } = await supabase
+          .from('cocoon_chat_histories')
+          .select('id, messages, workflow_state, updated_at, summary, domain')
+          .eq('tracked_site_id', trackedSiteId)
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!lastSession || !lastSession.messages) return;
+
+        const msgs = lastSession.messages as Msg[];
+        if (msgs.length === 0) return;
+
+        // Get user first name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        const firstName = profile?.first_name || '';
+        const lastDate = new Date(lastSession.updated_at);
+        const now = new Date();
+        const diffMs = now.getTime() - lastDate.getTime();
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        // Build time label
+        let timeLabel = '';
+        if (diffDays === 0) timeLabel = language === 'en' ? 'earlier today' : language === 'es' ? 'hoy más temprano' : 'plus tôt aujourd\'hui';
+        else if (diffDays === 1) timeLabel = language === 'en' ? 'yesterday' : language === 'es' ? 'ayer' : 'hier';
+        else if (diffDays <= 7) timeLabel = language === 'en' ? `${diffDays} days ago` : language === 'es' ? `hace ${diffDays} días` : `il y a ${diffDays} jours`;
+        else if (diffDays <= 14) timeLabel = language === 'en' ? 'last week' : language === 'es' ? 'la semana pasada' : 'la semaine dernière';
+        else if (diffDays <= 60) timeLabel = language === 'en' ? 'last month' : language === 'es' ? 'el mes pasado' : 'le mois dernier';
+        else return; // Too old, don't resume
+
+        // Determine workflow state
+        const ws = (lastSession.workflow_state as any) || {};
+        const completedTasks = ws.completed_tasks || [];
+        const pendingTasks = ws.pending_tasks || [];
+        const lastSummary = lastSession.summary || ws.last_topic || '';
+
+        // Build welcome message
+        const greeting = language === 'en'
+          ? `Hi ${firstName}! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, for **${domain}**, we worked on ${lastSummary || 'your semantic optimization'}.`
+          : language === 'es'
+            ? `¡Hola ${firstName}! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, para **${domain}**, trabajamos en ${lastSummary || 'tu optimización semántica'}.`
+            : `Bonjour ${firstName} ! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, pour **${domain}**, nous avions travaillé sur ${lastSummary || 'votre optimisation sémantique'}.`;
+
+        let progressLine = '';
+        if (completedTasks.length > 0 || pendingTasks.length > 0) {
+          const total = completedTasks.length + pendingTasks.length;
+          progressLine = language === 'en'
+            ? `\n\nYou've completed **${completedTasks.length}/${total}** tasks.${pendingTasks.length > 0 ? ` ${pendingTasks.length} remaining:` : ''}`
+            : language === 'es'
+              ? `\n\nHas completado **${completedTasks.length}/${total}** tareas.${pendingTasks.length > 0 ? ` Quedan ${pendingTasks.length}:` : ''}`
+              : `\n\nVous avez réalisé **${completedTasks.length}/${total}** actions.${pendingTasks.length > 0 ? ` Il en reste ${pendingTasks.length} :` : ''}`;
+
+          if (pendingTasks.length > 0) {
+            progressLine += '\n' + pendingTasks.slice(0, 3).map((t: any) => `- ${t.title || t}`).join('\n');
+          }
+        }
+
+        const resumeQuestion = language === 'en'
+          ? '\n\nWould you like to continue?'
+          : language === 'es'
+            ? '\n\n¿Quieres que continuemos?'
+            : '\n\nVoulez-vous que nous poursuivions ?';
+
+        const welcomeMsg: Msg = {
+          role: 'assistant',
+          content: greeting + progressLine + resumeQuestion,
+        };
+
+        setMessages([welcomeMsg]);
+        chatHistoryId.current = lastSession.id;
+        setSessionResumed(true);
+        setIsOpen(true);
+
+        // Update resumed_at
+        await supabase.from('cocoon_chat_histories').update({ resumed_at: new Date().toISOString() }).eq('id', lastSession.id);
+      } catch (e) {
+        console.warn('[CocoonAIChat] Resume session error:', e);
+      }
+    };
+
+    resumeSession();
+  }, [user, trackedSiteId, domain, language]);
+
+  // ── Load history list ──
+  const loadHistoryList = useCallback(async () => {
+    if (!user || !trackedSiteId) return;
+    const { data } = await supabase
+      .from('cocoon_chat_histories')
+      .select('id, updated_at, summary, message_count, domain')
+      .eq('user_id', user.id)
+      .eq('tracked_site_id', trackedSiteId)
+      .order('updated_at', { ascending: false })
+      .limit(20);
+    if (data) setHistoryList(data);
+  }, [user, trackedSiteId]);
+
+  // Load history when panel opens
+  useEffect(() => {
+    if (showHistory) loadHistoryList();
+  }, [showHistory, loadHistoryList]);
+
+  // Load a specific history session
+  const loadSession = useCallback(async (sessionId: string) => {
+    const { data } = await supabase
+      .from('cocoon_chat_histories')
+      .select('id, messages, workflow_state')
+      .eq('id', sessionId)
+      .maybeSingle();
+    if (data?.messages) {
+      setMessages(data.messages as Msg[]);
+      chatHistoryId.current = data.id;
+      setShowHistory(false);
+      const ws = (data.workflow_state as any) || {};
+      if (ws.strategist_completed) {
+        setStrategistCompleted(true);
+        setIsStrategistMode(true);
+      }
+    }
+  }, []);
+
   // Keep ref in sync with state
   useEffect(() => {
     pickingIndexRef.current = pickingIndex;
