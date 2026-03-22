@@ -992,7 +992,9 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 ? getAnalysisLabel(msg.content, language)
                 : isUser && isOptimizePrompt(msg.content)
                   ? getOptimizeLabel(language)
-                  : msg.content;
+                  : isUser && isStrategyPrompt(msg.content)
+                    ? getStrategyLabel(language)
+                    : msg.content;
 
               return (
               <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
