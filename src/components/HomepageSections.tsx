@@ -43,11 +43,11 @@ function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffi
 /* ─── i18n ─── */
 const i18n = {
   fr: {
-    momentumTitle: 'Le SEO évolue. Et vous ?',
-    momentumText: "En 2024, plus de 18 millions de Français utilisent ChatGPT chaque mois. Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs (Large Language Models), vous êtes déjà invisible pour une part croissante de vos prospects.",
-    stat1: '18M', stat1Label: "d'utilisateurs ChatGPT en France",
-    stat2: '168', stat2Label: "critères d'audit analysés",
-    stat3: '4', stat3Label: 'LLMs interrogés simultanément',
+    momentumTitle: 'En janvier 2028, il y aura autant de recherches via les agents IA que sur Google',
+    momentumText: "Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs, vous êtes déjà invisible pour une part croissante de vos prospects.",
+    stat1: '750M', stat1Label: "d'utilisateurs de LLMs dans le monde",
+    stat2: 'x3', stat2Label: "taux de conversion LLM vs Google",
+    stat3: '5', stat3Label: 'LLMs interrogés simultanément',
     stat4: '30s', stat4Label: "pour votre Score GEO",
     // Features
     feat1Title: 'Score GEO — Visibilité IA en temps réel',
@@ -92,11 +92,11 @@ const i18n = {
     trustApiCms: 'APIs CMS',
   },
   en: {
-    momentumTitle: 'SEO is evolving. Are you?',
-    momentumText: "In 2024, over 18 million French users rely on ChatGPT monthly. Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
-    stat1: '18M', stat1Label: 'ChatGPT users in France',
-    stat2: '168', stat2Label: 'audit criteria analyzed',
-    stat3: '4', stat3Label: 'LLMs queried simultaneously',
+    momentumTitle: 'By January 2028, AI agents will generate as many searches as Google',
+    momentumText: "Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
+    stat1: '750M', stat1Label: 'LLM users worldwide',
+    stat2: 'x3', stat2Label: 'LLM conversion rate vs Google',
+    stat3: '5', stat3Label: 'LLMs queried simultaneously',
     stat4: '30s', stat4Label: 'for your GEO Score',
     feat1Title: 'GEO Score — Real-time AI Visibility',
     feat1Desc: 'Is your site cited by ChatGPT, Gemini, Perplexity or Claude? The GEO Score is the first French indicator measuring your presence in AI-generated answers. In 30 seconds, get a score out of 100 with actionable recommendations: missing structured data, misconfigured robots.txt, absent llms.txt, insufficient semantics. Every point gained improves your probability of being cited as a source by LLMs.',
@@ -133,11 +133,11 @@ const i18n = {
     trustApiCms: 'CMS APIs',
   },
   es: {
-    momentumTitle: 'El SEO evoluciona. ¿Y tú?',
-    momentumText: 'En 2024, más de 18 millones de franceses usan ChatGPT cada mes. Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
-    stat1: '18M', stat1Label: 'usuarios de ChatGPT en Francia',
-    stat2: '168', stat2Label: 'criterios de auditoría',
-    stat3: '4', stat3Label: 'LLMs consultados simultáneamente',
+    momentumTitle: 'En enero 2028, habrá tantas búsquedas vía agentes IA como en Google',
+    momentumText: 'Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
+    stat1: '750M', stat1Label: 'usuarios de LLMs en el mundo',
+    stat2: 'x3', stat2Label: 'tasa de conversión LLM vs Google',
+    stat3: '5', stat3Label: 'LLMs consultados simultáneamente',
     stat4: '30s', stat4Label: 'para tu Score GEO',
     feat1Title: 'Score GEO — Visibilidad IA en tiempo real',
     feat1Desc: '¿Tu sitio es citado por ChatGPT, Gemini, Perplexity o Claude? El Score GEO es el primer indicador francés que mide tu presencia en las respuestas generadas por IA. En 30 segundos, obtén una puntuación sobre 100 con recomendaciones accionables: datos estructurados faltantes, robots.txt mal configurado, ausencia de llms.txt, semántica insuficiente.',
@@ -180,22 +180,40 @@ const MomentumSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const stats = [
-    { value: 18000000, label: t.stat1Label },
-    { value: 168, label: t.stat2Label },
-    { value: 4, label: t.stat3Label },
-    { value: 30, label: t.stat4Label, suffix: 's' },
+    { label: t.stat1Label, display: t.stat1 },
+    { label: t.stat2Label, display: t.stat2 },
+    { label: t.stat3Label, display: t.stat3 },
+    { label: t.stat4Label, display: t.stat4 },
   ];
+
+  const llmLogos = [
+    { name: 'ChatGPT', color: 'text-emerald-500', icon: '⬡' },
+    { name: 'Gemini', color: 'text-blue-500', icon: '✦' },
+    { name: 'Perplexity', color: 'text-brand-violet', icon: '◈' },
+    { name: 'Claude', color: 'text-orange-500', icon: '◉' },
+    { name: 'Grok', color: 'text-foreground', icon: '✕' },
+  ];
+
   return (
     <section className="border-y border-border bg-card/50 py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
-        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
+        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
+
+        {/* LLM logos */}
+        <div className="flex items-center justify-center gap-6 mb-10 flex-wrap">
+          {llmLogos.map((llm) => (
+            <div key={llm.name} className="flex items-center gap-1.5">
+              <span className={cn('text-lg font-bold', llm.color)}>{llm.icon}</span>
+              <span className="text-sm font-semibold text-muted-foreground">{llm.name}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
-              <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">
-                <AnimatedCounter end={s.value} suffix={s.suffix || ''} />
-              </p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">{s.display}</p>
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
             </div>
           ))}
