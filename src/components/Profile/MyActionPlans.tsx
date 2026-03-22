@@ -118,6 +118,8 @@ const translations = {
     archives: 'Archivos',
     archivesCount: 'plan(es) archivado(s)',
     noArchives: 'Sin planes archivados',
+    editorialCalendar: 'Calendario editorial',
+    allSites: 'Todos los sitios',
   },
 };
 
