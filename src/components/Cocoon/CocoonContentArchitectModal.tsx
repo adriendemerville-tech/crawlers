@@ -188,25 +188,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     }
   }, [hasCmsConnection, result, originalResult, isEdited, trackedSiteId, url, keyword, language]);
 
-  // Generate HTML preview from result
-  const htmlPreview = useMemo(() => {
-    if (!result?.content_structure) return '';
-    const parts: string[] = [];
-    const h1 = result.content_structure.recommended_h1;
-    if (h1) parts.push(`<h1>${h1}</h1>`);
-    for (const hn of (result.content_structure.hn_hierarchy || [])) {
-      if (hn.level !== 'h1') parts.push(`<${hn.level}>${hn.text}</${hn.level}>`);
-    }
-    for (const section of (result.content_structure.sections || [])) {
-      parts.push(`<section>\n  <h2>${section.title}</h2>\n  <p>${section.purpose || ''}</p>\n  <!-- ${section.word_count || 0} mots -->\n</section>`);
-    }
-    if (result.metadata_enrichment?.json_ld_schemas?.length) {
-      for (const schema of result.metadata_enrichment.json_ld_schemas) {
-        parts.push(`<script type="application/ld+json">\n${JSON.stringify({ "@context": "https://schema.org", "@type": schema.type, ...schema.properties }, null, 2)}\n</script>`);
-      }
-    }
-    return parts.join('\n\n');
-  }, [result]);
+
 
   const handleResetEdits = useCallback(() => {
     if (originalResult) {
