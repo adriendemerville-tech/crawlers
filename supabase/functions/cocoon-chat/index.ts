@@ -220,10 +220,10 @@ serve(async (req) => {
     }
 
     const langInstruction = language === 'en'
-      ? 'You MUST reply entirely in English.'
+      ? 'You MUST reply entirely in English. All responses, headings, bullet points and suggestions must be in English.'
       : language === 'es'
-        ? 'Debes responder SIEMPRE en español.'
-        : `DÉTECTION DE LANGUE : Détecte la langue du premier message de l'utilisateur. Si l'utilisateur écrit en anglais, réponds ENTIÈREMENT en anglais. Si en espagnol, réponds ENTIÈREMENT en espagnol. Sinon, réponds en français. Conserve cette langue pour TOUTE la conversation.`;
+        ? 'Debes responder SIEMPRE en español. Todas las respuestas, títulos, viñetas y sugerencias deben estar en español.'
+        : 'Tu DOIS répondre ENTIÈREMENT en français. Toutes les réponses, titres, puces et suggestions doivent être en français.';
 
     // ── Build system prompt ──
     const strategistPromptBlock = strategistMode ? `
