@@ -473,6 +473,8 @@ Deno.serve(async (req) => {
       'strategist': 'cocoon-strategist',
       // Content Architect
       'content-architect': 'content-architecture-advisor',
+      // Anomaly detection
+      'anomaly-detection': 'detect-anomalies',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
