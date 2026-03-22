@@ -93,11 +93,12 @@ export function CtoAgentDashboard() {
 
   async function fetchData() {
     try {
-      const [configRes, logsRes] = await Promise.all([
+      const [configRes, logsRes, togglesRes] = await Promise.all([
         supabase.from('system_config' as any).select('value').eq('key', 'cto_agent_enabled').single(),
         supabase.from('cto_agent_logs' as any)
           .select('id, function_analyzed, confidence_score, decision, created_at, change_diff_pct, analysis_summary, self_critique, prompt_version_before, prompt_version_after')
           .order('created_at', { ascending: true }),
+        supabase.from('system_config' as any).select('value').eq('key', 'cto_function_toggles').single(),
       ]);
 
       if (configRes.data) {
@@ -106,6 +107,15 @@ export function CtoAgentDashboard() {
       if (logsRes.data) {
         setLogs((logsRes.data as unknown as AgentLog[]) || []);
         setAlertDismissed(false);
+      }
+      // Load function toggles — default all to true if no config exists
+      if (togglesRes.data) {
+        setFunctionToggles((togglesRes.data as any).value || {});
+      } else {
+        // Initialize all functions as enabled
+        const defaults: Record<string, boolean> = {};
+        CTO_FUNCTION_REGISTRY.forEach(f => { defaults[f.key] = true; });
+        setFunctionToggles(defaults);
       }
     } catch (e) {
       console.error('Error fetching CTO agent data:', e);
