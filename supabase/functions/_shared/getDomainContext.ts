@@ -246,6 +246,101 @@ export async function getDomainContext(
     blocks.push(`ANOMALIES DÉTECTÉES:\n${alertLines}`);
   }
 
+  // ── Audit Technique findings ──
+  const auditTechData = auditTechRes?.data?.[0] || null;
+  if (auditTechData?.raw_payload) {
+    const payload = auditTechData.raw_payload as any;
+    const techLines: string[] = [];
+    
+    // Extract key technical findings
+    if (payload.technicalScore !== undefined) techLines.push(`Score technique: ${payload.technicalScore}/100`);
+    if (payload.performanceScore !== undefined) techLines.push(`Score performance: ${payload.performanceScore}/100`);
+    if (payload.seoScore !== undefined) techLines.push(`Score SEO: ${payload.seoScore}/100`);
+    
+    // Recommendations from expert audit
+    const recos = payload.recommendations || payload.fixes || payload.issues || [];
+    if (Array.isArray(recos) && recos.length > 0) {
+      const topRecos = recos.slice(0, 10).map((r: any) => {
+        const title = r.title || r.name || r.issue || r.description || JSON.stringify(r).slice(0, 100);
+        const priority = r.priority || r.severity || r.impact || '';
+        return `  - [${priority}] ${title}`;
+      }).join('\n');
+      techLines.push(`Recommandations:\n${topRecos}`);
+    }
+    
+    // Image issues
+    if (payload.imageAnalysis) {
+      const img = payload.imageAnalysis;
+      techLines.push(`Images: ${img.total || '?'} total, ${img.withoutAlt || '?'} sans alt, ${img.oversized || '?'} surdimensionnées`);
+    }
+    
+    // Schema.org findings
+    if (payload.schemaOrg || payload.structuredData) {
+      const schema = payload.schemaOrg || payload.structuredData;
+      techLines.push(`Schema.org: ${schema.types?.join(', ') || 'aucun'}, Erreurs: ${schema.errors?.length || 0}`);
+    }
+    
+    if (techLines.length > 0) {
+      blocks.push(`AUDIT TECHNIQUE (${auditTechData.created_at?.slice(0, 10)}):\n${techLines.join('\n')}`);
+    }
+  }
+
+  // ── Audit Stratégique findings ──
+  const auditStratData = auditStratRes?.data?.[0] || null;
+  if (auditStratData?.raw_payload) {
+    const payload = auditStratData.raw_payload as any;
+    const stratLines: string[] = [];
+    
+    // Global scores
+    if (payload.globalScore !== undefined) stratLines.push(`Score global: ${payload.globalScore}/100`);
+    if (payload.aeoScore !== undefined) stratLines.push(`Score AEO (Answer Engine): ${payload.aeoScore}/100`);
+    if (payload.geoScore !== undefined) stratLines.push(`Score GEO: ${payload.geoScore}/100`);
+    
+    // Keywords and semantic gaps
+    const keywords = payload.keywords || payload.mainKeywords || [];
+    if (Array.isArray(keywords) && keywords.length > 0) {
+      const topKw = keywords.slice(0, 8).map((k: any) => {
+        if (typeof k === 'string') return k;
+        return `${k.keyword || k.term || k.query} (vol: ${k.volume || '?'}, pos: ${k.position || '?'})`;
+      }).join(', ');
+      stratLines.push(`Mots-clés principaux: ${topKw}`);
+    }
+    
+    // Missing terms / semantic gaps
+    const missingTerms = payload.missingTerms || payload.semanticGaps || payload.missing_terms || [];
+    if (Array.isArray(missingTerms) && missingTerms.length > 0) {
+      stratLines.push(`Lacunes sémantiques: ${missingTerms.slice(0, 10).join(', ')}`);
+    }
+    
+    // Competitors
+    const competitors = payload.competitors || payload.topCompetitors || [];
+    if (Array.isArray(competitors) && competitors.length > 0) {
+      const compList = competitors.slice(0, 5).map((c: any) => typeof c === 'string' ? c : (c.domain || c.url || '')).join(', ');
+      stratLines.push(`Concurrents identifiés: ${compList}`);
+    }
+    
+    // Strategic recommendations
+    const stratRecos = payload.recommendations || payload.strategicActions || [];
+    if (Array.isArray(stratRecos) && stratRecos.length > 0) {
+      const topStratRecos = stratRecos.slice(0, 8).map((r: any) => {
+        const title = r.title || r.action || r.description || JSON.stringify(r).slice(0, 100);
+        const priority = r.priority || r.impact || '';
+        return `  - [${priority}] ${title}`;
+      }).join('\n');
+      stratLines.push(`Recommandations stratégiques:\n${topStratRecos}`);
+    }
+    
+    // Client targets
+    if (payload.clientTargets || payload.client_targets) {
+      const targets = payload.clientTargets || payload.client_targets;
+      stratLines.push(`Cibles identifiées: ${JSON.stringify(targets).slice(0, 300)}`);
+    }
+    
+    if (stratLines.length > 0) {
+      blocks.push(`AUDIT STRATÉGIQUE (${auditStratData.created_at?.slice(0, 10)}):\n${stratLines.join('\n')}`);
+    }
+  }
+
   return {
     blocks,
     raw: {
@@ -261,6 +356,8 @@ export async function getDomainContext(
       diagnostics: diagRes?.data || [],
       strategistRecos: recoRes?.data || [],
       anomalyAlerts: anomalyRes?.data || [],
+      auditTechnique: auditTechData,
+      auditStrategique: auditStratData,
     },
   };
 }
