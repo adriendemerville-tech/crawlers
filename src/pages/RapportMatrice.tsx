@@ -41,7 +41,7 @@ function generateMatriceHTML(data: MatriceReportData, branding?: { logoUrl?: str
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:40px;color:#1a1a2e;}table{width:100%;border-collapse:collapse;margin:24px 0;}th{background:${primary};color:white;padding:10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}h1{color:${primary};font-size:22px;}h2{font-size:16px;margin-top:32px;color:#555;}</style></head><body>
     ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="height:32px;margin-bottom:16px;" />` : ''}
-    <h1>Rapport Matrice</h1>
+    <h1>Rapport Matrice d'audit</h1>
     <p style="color:#666;font-size:14px;">URL analysée : <strong>${data.url}</strong></p>
     <p style="font-size:18px;margin:16px 0;">Score pondéré global : <strong style="color:${primary}">${data.weightedScore}/100</strong></p>
     <table><thead><tr><th>Prompt / KPI</th><th>Axe</th><th>Poids</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
@@ -101,14 +101,14 @@ export default function RapportMatrice() {
   return (
     <>
       <Helmet>
-        <title>Rapport Matrice — Crawlers.fr</title>
-        <meta name="description" content="Résultats détaillés de votre matrice de prompts : visibilité IA, taux de citation LLM et recommandations d'optimisation GEO." />
+        <title>Rapport Matrice d'audit — Crawlers.fr</title>
+        <meta name="description" content="Résultats détaillés de votre matrice d'audit : balises, données structurées, performance, sécurité, prompts LLM et score pondéré global." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen bg-background flex flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-            <h1 className="text-base sm:text-lg font-semibold truncate">Rapport Matrice — {data.url}</h1>
+            <h1 className="text-base sm:text-lg font-semibold truncate">Rapport Matrice d'audit — {data.url}</h1>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button onClick={handleCsv} variant="outline" size="sm" className="gap-1.5">
                 <FileSpreadsheet className="h-4 w-4" /><span className="hidden sm:inline">CSV</span>

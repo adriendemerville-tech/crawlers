@@ -201,7 +201,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
         { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
-        { id: 'matrix-errors', label: 'Matrice', icon: ClipboardList, group: 'monitoring' },
+        { id: 'matrix-errors', label: 'Matrice d\'audit', icon: ClipboardList, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
       ],
     },

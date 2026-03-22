@@ -191,13 +191,14 @@ const DOC_SECTIONS: DocSection[] = [
 </ul>`,
       },
       {
-        id: 'matrice-prompts',
-        title: 'Audit Matrice de Prompts',
-        content: `Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultanément :
+        id: 'matrice-audit',
+        title: 'Matrice d\'audit',
+        content: `Moteur d'audit sur-mesure multi-critères :
 <ul class="list-disc pl-6 mt-1 space-y-1">
-<li>Définissez vos prompts cibles (ex : "meilleure agence SEO Paris")</li>
-<li>Crawlers interroge ChatGPT, Gemini, Perplexity, Claude</li>
-<li>Résultats : taux de citation, sentiment, position dans la réponse</li>
+<li>Composez votre grille : balises HTML, données structurées, performance, sécurité, prompts LLM, métriques combinées</li>
+<li>Import CSV / DOC / DOCX avec extraction IA automatique</li>
+<li>Pondération par critère, seuils personnalisables (bon/moyen/mauvais), axes de classification</li>
+<li>Score pondéré global /100, rapport exportable CSV/PDF, gestion de lots réutilisables</li>
 </ul>`,
       },
       {

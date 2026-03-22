@@ -11,12 +11,12 @@ const FRONTEND_TAXONOMY = `
 # TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte — positions visuelles)
 
 ## Header principal (barre noire en haut, toutes pages connectées)
-Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice | [avatar profil à droite]
+Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice d'audit | [avatar profil à droite]
 - Console → /console (tableau de bord principal)
 - Audit → /audit-expert (audit technique SEO 200 points)
 - Crawl → /site-crawl (crawl multi-pages)
 - BETA Cocoon → /cocoon (cocon sémantique 3D, texte orange)
-- BETA Matrice → /matrice (matrice de prompts LLM, texte orange)
+- BETA Matrice d'audit → /matrice (moteur d'audit sur-mesure multi-critères, texte orange)
 
 ## Sous-menu de /console (barre d'onglets horizontale sous le header)
 Position gauche→droite : Pro Agency | Mes sites | Plans d'Action | <Scripts> | Crawls | GMB | Rapports | Bundle | Créateur
@@ -49,7 +49,7 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 ## Pages d'audit
 - /audit-expert → audit SEO gratuit 200 points (1/jour freemium, illimité Pro)
 - /audit-compare → benchmark vs 3 concurrents (4 crédits)
-- /matrice → matrice de prompts (test visibilité multi-LLM)
+- /matrice → matrice d'audit (moteur d'audit sur-mesure multi-critères)
 
 ## Pages outils
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
@@ -179,7 +179,7 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
 - [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200 points. 1/jour gratuit inscrit, illimité Pro Agency.
 - Audit Stratégique IA : scoring IAS + E-E-A-T + plan d'action. 1 crédit.
 - [Audit Comparé](https://crawlers.fr/audit-compare) : benchmark vs 3 concurrents. 4 crédits.
-- [Matrice de Prompts](https://crawlers.fr/matrice) : test visibilité multi-LLM.
+- [Matrice d'audit](https://crawlers.fr/matrice) : moteur d'audit sur-mesure multi-critères (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
 - [Cocon Sémantique 3D](https://crawlers.fr/cocoon) : Three.js, TF-IDF, clusters. Pro Agency.
 - [Architecte Génératif](https://crawlers.fr/architecte-generatif) : code correctif JSON-LD. 1 crédit.
 - [Crawl Multi-Pages](https://crawlers.fr/site-crawl) : jusqu'à 5000 pages. Pro Agency.

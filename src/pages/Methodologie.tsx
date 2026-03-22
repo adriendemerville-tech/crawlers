@@ -318,7 +318,7 @@ export default function Methodologie() {
               <li>Audit Stratégique IA (scoring multi-axes)</li>
               <li>Audit Comparé (benchmark vs 3 concurrents, Radar Chart)</li>
               <li>Audit Local SEO (Google My Business, Pack Local)</li>
-              <li>Audit Matrice de Prompts (test multi-LLM)</li>
+              <li>Matrice d'audit (audit sur-mesure multi-critères)</li>
               <li>Score IAS (Indice d'Alignement Stratégique — 23 variables)</li>
             </ul>
 

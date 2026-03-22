@@ -43,7 +43,7 @@ const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] 
   { key: 'audit-strategique-ia', label: 'Audit Stratégique IA', category: 'Audits' },
   { key: 'audit-compare', label: 'Audit Comparatif', category: 'Audits' },
   { key: 'audit-local-seo', label: 'Audit SEO Local', category: 'Audits' },
-  { key: 'audit-matrice', label: 'Matrice', category: 'Audits' },
+  { key: 'audit-matrice', label: 'Matrice d\'audit', category: 'Audits' },
   // Crawl & Cocoon
   { key: 'crawl-site', label: 'Crawl multi-pages', category: 'Crawl & Cocoon' },
   { key: 'calculate-cocoon-logic', label: 'Cocoon Logic', category: 'Crawl & Cocoon' },

@@ -594,7 +594,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Matrice
+            Matrice d'audit
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
           </CardTitle>
         </CardHeader>
@@ -613,7 +613,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileSpreadsheet className="h-4 w-4 text-primary" />
-                Matrice
+                Matrice d'audit
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
               </CardTitle>
               <CardDescription>
@@ -645,7 +645,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center space-y-3">
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto" />
               <div>
-                <p className="text-sm font-medium">Aucune matrice importée</p>
+                <p className="text-sm font-medium">Aucune matrice d'audit importée</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Importez un CSV avec vos prompts, poids et axes d'audit.
                   <br />Les colonnes manquantes seront complétées par les valeurs par défaut de Crawlers.
