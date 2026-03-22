@@ -94,7 +94,7 @@ const i18n = {
   en: {
     momentumTitle: 'By January 2028, AI agents will generate as many searches as Google',
     momentumText: "Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
-    stat1: '750M', stat1Label: 'LLM users worldwide',
+    stat1: '200M', stat1Label: 'LLM users in Europe',
     stat2: 'x3', stat2Label: 'LLM conversion rate vs Google',
     stat3: '5', stat3Label: 'LLMs queried simultaneously',
     stat4: '30s', stat4Label: 'for your GEO Score',
