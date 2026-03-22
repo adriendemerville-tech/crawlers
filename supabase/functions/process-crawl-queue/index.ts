@@ -1015,12 +1015,13 @@ Réponds en JSON STRICT:
 Donne 5-8 recommandations max, classées par impact.`;
 
     try {
+      const lovableKey = Deno.env.get('LOVABLE_API_KEY');
       const aiController = new AbortController();
-      const aiTimeout = setTimeout(() => aiController.abort(), 60000); // #2: 60s timeout
-      const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const aiTimeout = setTimeout(() => aiController.abort(), 60000);
+      const aiRes = await fetch('https://ai.gateway.lovable.dev/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openrouterKey}`,
+          'Authorization': `Bearer ${lovableKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
