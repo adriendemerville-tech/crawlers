@@ -318,7 +318,7 @@ const HybridSection = memo(() => {
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.hybridTitle}</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border">
