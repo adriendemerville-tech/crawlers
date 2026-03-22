@@ -1286,18 +1286,16 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         )}
       </button>
 
-      {/* Content Architect Modal — admin only */}
-      {isAdmin && (
-        <CocoonContentArchitectModal
-          isOpen={showArchitectModal}
-          onClose={() => setShowArchitectModal(false)}
-          nodes={nodes}
-          domain={domain}
-          trackedSiteId={trackedSiteId}
-          hasCmsConnection={hasCmsConnection}
-          draftData={architectDraft}
-        />
-      )}
+      {/* Content Architect Modal */}
+      <CocoonContentArchitectModal
+        isOpen={showArchitectModal}
+        onClose={() => setShowArchitectModal(false)}
+        nodes={nodes}
+        domain={domain}
+        trackedSiteId={trackedSiteId}
+        hasCmsConnection={hasCmsConnection}
+        draftData={architectDraft}
+      />
     </div>
   );
 }
