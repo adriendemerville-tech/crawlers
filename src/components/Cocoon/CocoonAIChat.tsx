@@ -1506,7 +1506,29 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 </div>
               );
             })()}
+
+            {/* Bug report prompt button */}
+            {bugReportMode === 'prompt' && (
+              <div className="flex justify-start">
+                <button
+                  onClick={activateBugReportMode}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] font-medium hover:bg-amber-500/20 transition-colors"
+                >
+                  <Bug className="h-3.5 w-3.5" />
+                  Signaler un problème / bug
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Bug report mode indicator */}
+          {bugReportMode === 'waiting' && (
+            <div className="px-3 py-1.5 border-t border-amber-500/20 bg-amber-500/5">
+              <p className="text-[10px] text-amber-300 flex items-center gap-1">
+                <Bug className="h-3 w-3" /> Mode signalement actif — décrivez votre problème
+              </p>
+            </div>
+          )}
 
           {/* Node slots */}
           {(selectedSlots.length > 0 || pickingIndex !== null) && (
