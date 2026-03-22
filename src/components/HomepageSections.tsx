@@ -9,6 +9,11 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import llmChatgpt from '@/assets/llm-chatgpt.png';
+import llmGemini from '@/assets/llm-gemini.png';
+import llmPerplexity from '@/assets/llm-perplexity.png';
+import llmClaude from '@/assets/llm-claude.png';
+import llmGrok from '@/assets/llm-grok.png';
 
 /* ─── Animated Counter ─── */
 function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffix?: string; prefix?: string }) {
