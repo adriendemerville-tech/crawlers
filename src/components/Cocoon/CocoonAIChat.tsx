@@ -1311,10 +1311,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
       }
 
       setDeploySuccess(true);
+      sonnerToast.success(
+        language === 'en' ? 'Links injected successfully!' :
+        language === 'es' ? '¡Enlaces inyectados con éxito!' :
+        'Liens injectés avec succès !'
+      );
       setTimeout(() => setDeploySuccess(false), 5000);
     } catch (e) {
       console.error('[Cocoon] Deploy failed:', e);
-    } finally {
+      sonnerToast.error(
+        language === 'en' ? 'Injection failed' :
+        language === 'es' ? 'Error de inyección' :
+        'Échec de l\'injection'
+      );
       setIsDeploying(false);
     }
   }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes]);
