@@ -945,9 +945,9 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
   // ── AI Summary ──
   let aiSummary = '';
   let aiRecommendations: any[] = [];
-  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+  const lovableKey = Deno.env.get('LOVABLE_API_KEY');
 
-  if (openrouterKey && pages.length > 0) {
+  if (lovableKey && pages.length > 0) {
     const issuesSummary: Record<string, number> = {};
     pages.forEach((p: any) => ((p.issues as string[]) || []).forEach(issue => {
       issuesSummary[issue] = (issuesSummary[issue] || 0) + 1;
