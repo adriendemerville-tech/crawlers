@@ -205,6 +205,8 @@ const MomentumSection = memo(() => {
     { name: 'Perplexity', src: llmPerplexity },
     { name: 'Claude', src: llmClaude },
     { name: 'Grok', src: llmGrok },
+    { name: 'Mistral', src: llmMistral },
+    { name: 'Copilot', src: llmCopilot },
   ];
 
   return (
