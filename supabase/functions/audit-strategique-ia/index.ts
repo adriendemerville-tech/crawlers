@@ -2423,11 +2423,7 @@ Deno.serve(async (req) => {
 
     // ═══ JOB TRACKING: if _job_id provided, update progress in DB ═══
     const jobId: string | undefined = body._job_id;
-    const supabaseUrlForJob = Deno.env.get('SUPABASE_URL');
-    const serviceKeyForJob = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const jobSb = jobId && supabaseUrlForJob && serviceKeyForJob
-      ? createClient(supabaseUrlForJob, serviceKeyForJob)
-      : null;
+    const jobSb = jobId ? getServiceClient() : null;
 
     if (jobSb && jobId) {
       await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
