@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronDown, Rocket, FileText, Brain, Zap, Wrench, Shield, Target, 
-  AlertTriangle, CheckCircle2, Loader2, Copy, Check, Code2, Sparkles
+  AlertTriangle, CheckCircle2, Loader2, Copy, Check, Code2, Sparkles, Syringe
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
