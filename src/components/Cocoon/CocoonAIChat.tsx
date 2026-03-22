@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,25 @@ const LEXICON_TERMS: Record<string, string> = {
   'profondeur': 'profondeur-crawl',
   'crawl depth': 'profondeur-crawl',
 };
+
+// Bug/problem intent detection
+const BUG_KEYWORDS_COCOON = [
+  'bug', 'problème', 'probleme', 'erreur', 'error', 'ne marche pas', 'marche pas',
+  'ne fonctionne pas', 'fonctionne pas', 'cassé', 'casse', 'broken', 'crash',
+  'planté', 'plante', 'bloqué', 'bloque', 'écran blanc', 'page blanche',
+  'ne charge pas', 'charge pas', 'ne s\'affiche pas', 'n\'affiche pas',
+  'dysfonctionnement', 'anomalie', 'souci', 'incident', 'défaut',
+  'ça bug', 'ca bug', 'ça plante', 'ca plante', 'il manque', 'missing',
+  'pas normal', 'bizarre', 'weird', 'issue', 'not working',
+];
+
+function detectBugIntentCocoon(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return BUG_KEYWORDS_COCOON.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
 
 /**
  * Detect quick-reply options from an assistant message.
@@ -335,6 +354,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [historyList, setHistoryList] = useState<Array<{ id: string; updated_at: string; summary: string | null; message_count: number; domain: string }>>([]);
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
+  const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
@@ -344,6 +365,32 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     supabase.from('cms_connections').select('id').eq('tracked_site_id', trackedSiteId).limit(1)
       .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
   }, [user, trackedSiteId]);
+
+  // Check resolved bug reports and notify user
+  useEffect(() => {
+    if (!user) return;
+    const checkResolvedBugs = async () => {
+      const { data } = await supabase
+        .from('user_bug_reports')
+        .select('id, cto_response')
+        .eq('user_id', user.id)
+        .eq('status', 'resolved')
+        .eq('notified_user', false);
+      if (data && data.length > 0) {
+        setResolvedBugCount(data.length);
+        const notifMsgs: Msg[] = data.map((bug: any) => ({
+          role: 'assistant' as const,
+          content: `✅ **Bonne nouvelle !** Un problème que vous aviez signalé a été résolu.\n\n${bug.cto_response || 'Le problème a été corrigé.'}`,
+        }));
+        setMessages(prev => [...notifMsgs, ...prev]);
+        await supabase
+          .from('user_bug_reports')
+          .update({ notified_user: true } as any)
+          .in('id', data.map((b: any) => b.id));
+      }
+    };
+    checkResolvedBugs();
+  }, [user]);
 
   // ── Auto-resume last session for this site ──
   useEffect(() => {
@@ -699,9 +746,66 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setShowArchitectModal(true);
   }, [loadStrategyPlan, strategyPlan, architectDraft]);
 
+  // ── Bug report submission ──
+  const submitBugReport = useCallback(async (message: string) => {
+    if (!user) return;
+    setIsLoading(true);
+    const userMsg: Msg = { role: 'user', content: message };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+
+    try {
+      const { error } = await supabase.functions.invoke('submit-bug-report', {
+        body: {
+          raw_message: message,
+          route: '/cocoon',
+          source_assistant: 'cocoon',
+          context_data: {
+            user_agent: navigator.userAgent,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            domain,
+            tracked_site_id: trackedSiteId,
+          },
+        },
+      });
+      if (error) throw error;
+      const confirmMsg: Msg = { role: 'assistant', content: "Merci pour votre aide et votre vigilance ! Nous reviendrons rapidement vers vous. 🙏" };
+      setMessages(prev => [...prev, confirmMsg]);
+      setBugReportMode('sent');
+    } catch (err: any) {
+      console.error('Bug report error:', err);
+      const errorContent = err?.message?.includes('429') || err?.message?.includes('Limite')
+        ? 'Vous avez atteint la limite de 3 signalements par jour.'
+        : err?.message?.includes('409') || err?.message?.includes('duplicate')
+        ? 'Un signalement similaire a déjà été envoyé récemment.'
+        : "Désolé, le signalement n'a pas pu être envoyé. Réessayez plus tard.";
+      setMessages(prev => [...prev, { role: 'assistant', content: errorContent }]);
+      setBugReportMode('idle');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, domain, trackedSiteId]);
+
+  const activateBugReportMode = useCallback(() => {
+    setBugReportMode('waiting');
+    const promptMsg: Msg = { role: 'assistant', content: "Pas de problème ! Votre prochain message sera le signalement. Décrivez le problème rencontré. C'est à vous. 📝" };
+    setMessages(prev => [...prev, promptMsg]);
+  }, []);
+
   const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
+
+    // Bug report: waiting for the actual report message
+    if (bugReportMode === 'waiting' && !overrideContext) {
+      await submitBugReport(text);
+      return;
+    }
+
+    // Check for bug intent
+    if (bugReportMode === 'idle' && !overrideContext && detectBugIntentCocoon(text)) {
+      setBugReportMode('prompt');
+    }
 
     // Check for tool commands
     if (!overrideContext) {
@@ -1402,7 +1506,29 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 </div>
               );
             })()}
+
+            {/* Bug report prompt button */}
+            {bugReportMode === 'prompt' && (
+              <div className="flex justify-start">
+                <button
+                  onClick={activateBugReportMode}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] font-medium hover:bg-amber-500/20 transition-colors"
+                >
+                  <Bug className="h-3.5 w-3.5" />
+                  Signaler un problème / bug
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Bug report mode indicator */}
+          {bugReportMode === 'waiting' && (
+            <div className="px-3 py-1.5 border-t border-amber-500/20 bg-amber-500/5">
+              <p className="text-[10px] text-amber-300 flex items-center gap-1">
+                <Bug className="h-3 w-3" /> Mode signalement actif — décrivez votre problème
+              </p>
+            </div>
+          )}
 
           {/* Node slots */}
           {(selectedSlots.length > 0 || pickingIndex !== null) && (
@@ -1550,7 +1676,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
       {/* Toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+        className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
           isOpen
             ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]'
             : 'bg-[#fbbf24]/10 border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20'
@@ -1560,6 +1686,11 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         <span className="text-xs font-medium">{t.title}</span>
         {messages.length > 0 && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
+        )}
+        {resolvedBugCount > 0 && !isOpen && (
+          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold animate-pulse">
+            {resolvedBugCount}
+          </span>
         )}
       </button>
 

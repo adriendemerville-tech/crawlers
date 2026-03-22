@@ -5603,6 +5603,7 @@ export type Database = {
           resolved_at: string | null
           route: string | null
           screenshot_url: string | null
+          source_assistant: string
           status: string
           translated_message: string | null
           updated_at: string
@@ -5619,6 +5620,7 @@ export type Database = {
           resolved_at?: string | null
           route?: string | null
           screenshot_url?: string | null
+          source_assistant?: string
           status?: string
           translated_message?: string | null
           updated_at?: string
@@ -5635,6 +5637,7 @@ export type Database = {
           resolved_at?: string | null
           route?: string | null
           screenshot_url?: string | null
+          source_assistant?: string
           status?: string
           translated_message?: string | null
           updated_at?: string

@@ -13,7 +13,7 @@ serve(async (req) => {
     const auth = await getAuthenticatedUser(req);
     if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const { raw_message, route, context_data } = await req.json();
+    const { raw_message, route, context_data, source_assistant } = await req.json();
     if (!raw_message || raw_message.trim().length < 5) {
       return new Response(JSON.stringify({ error: 'Message trop court' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -122,7 +122,8 @@ Réponds UNIQUEMENT en JSON: {"translated": "...", "category": "..."}`
         route: route || null,
         context_data: enrichedContext,
         status: 'open',
-      })
+        source_assistant: source_assistant || 'crawler',
+      } as any)
       .select('id')
       .single();
 

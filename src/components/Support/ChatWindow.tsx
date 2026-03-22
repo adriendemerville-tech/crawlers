@@ -256,6 +256,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         body: {
           raw_message: message,
           route: location.pathname,
+          source_assistant: 'crawler',
           context_data: {
             user_agent: navigator.userAgent,
             viewport: `${window.innerWidth}x${window.innerHeight}`,

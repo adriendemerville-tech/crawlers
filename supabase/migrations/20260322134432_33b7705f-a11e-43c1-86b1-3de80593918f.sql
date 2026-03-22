@@ -1,0 +1,1 @@
+ALTER TABLE public.user_bug_reports ADD COLUMN IF NOT EXISTS source_assistant text NOT NULL DEFAULT 'crawler';
