@@ -12,6 +12,7 @@ const sections = [
   { id: 'garantie', title: '4. Absence de Garantie de Résultat' },
   { id: 'code', title: '5. Responsabilité sur l\'Implémentation du Code' },
   { id: 'injection', title: '5 bis. Injection de Code via Widget / GTM' },
+  { id: 'usage-malveillant', title: '5 ter. Interdiction des Usages Malveillants' },
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
