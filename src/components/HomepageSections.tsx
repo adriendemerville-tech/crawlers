@@ -84,8 +84,8 @@ const i18n = {
     row6: 'Maintenance SEO & GEO automatisée',
     hybridCta: 'Essayer gratuitement',
     // Trust
-    trustTitle: '1er outil français SEO + GEO',
-    trustText: "Des milliers de professionnels du marketing digital utilisent Crawlers.fr pour auditer et optimiser leur visibilité sur Google et les moteurs d'IA. Rejoignez-les.",
+    trustTitle: 'La seule solution européenne SEO + GEO full-stack',
+    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO : audit technique, optimisation sémantique, visibilité IA, cocon de contenu, code correctif et maintenance automatisée. Tout dans un seul outil, sans dépendance à des services tiers. Le code source est consultable sur demande.",
     trustUrls: 'URLs analysées',
     trustAudits: 'Audits générés',
     trustSites: 'Sites suivis',
@@ -124,8 +124,8 @@ const i18n = {
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
-    trustTitle: '#1 French SEO + GEO tool',
-    trustText: 'Thousands of digital marketing professionals use Crawlers.fr to audit and optimize their visibility on Google and AI engines. Join them.',
+    trustTitle: 'The only European full-stack SEO + GEO solution',
+    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop: technical audit, semantic optimization, AI visibility, content cocoon, corrective code and automated maintenance. All in one tool, no third-party dependencies. Source code available on request.',
     trustUrls: 'URLs analyzed', trustAudits: 'Audits generated', trustSites: 'Sites tracked',
   },
   es: {
@@ -162,8 +162,8 @@ const i18n = {
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
-    trustTitle: '1ª herramienta francesa SEO + GEO',
-    trustText: 'Miles de profesionales del marketing digital usan Crawlers.fr para auditar y optimizar su visibilidad en Google y los motores IA. Únete.',
+    trustTitle: 'La única solución europea full-stack SEO + GEO',
+    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO: auditoría técnica, optimización semántica, visibilidad IA, cocón de contenido, código correctivo y mantenimiento automatizado. Todo en una sola herramienta, sin dependencias externas. Código fuente consultable bajo solicitud.',
     trustUrls: 'URLs analizadas', trustAudits: 'Auditorías generadas', trustSites: 'Sitios monitorizados',
   },
 };
@@ -235,7 +235,7 @@ const FeatureShowcase = memo(() => {
               {/* CTA — transparent with violet border */}
               <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
-                  <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+                   <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
                     {item.cta}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -286,7 +286,7 @@ const IdentityFirstSection = memo(() => {
 
         <div className="text-center mt-10">
           <Link to="/mes-sites">
-            <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+             <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
               {t.idCta}
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -334,7 +334,7 @@ const HybridSection = memo(() => {
 
         <div className="text-center mt-8">
           <Link to="/">
-            <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+            <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
               {t.hybridCta}
               <ArrowRight className="h-4 w-4" />
             </Button>
