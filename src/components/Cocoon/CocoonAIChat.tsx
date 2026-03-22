@@ -957,6 +957,9 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               <button onClick={handleOptimizeLinking} disabled={isLoading || nodes.length < 3} className="p-1 rounded-lg hover:bg-emerald-500/20 transition-colors disabled:opacity-30" title={t.optimize}>
                 <Network className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
               </button>
+              <button onClick={handleStrategy360} disabled={isLoading || !trackedSiteId} className="p-1 rounded-lg hover:bg-amber-500/20 transition-colors disabled:opacity-30" title={t.strategy}>
+                <Compass className="w-3 h-3 text-amber-400/60 hover:text-amber-400" />
+              </button>
               <div className="w-px h-3 bg-white/10 mx-0.5" />
               {messages.length > 0 && (
                 <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
