@@ -63,8 +63,9 @@ const i18n = {
     feat4Desc: "La Matrice d'audit est un outil unique qui vous permet de créer vos propres grilles d'évaluation. Importez vos KPIs depuis un fichier CSV ou DOCX, définissez des seuils et pondérations personnalisés, et testez vos pages contre des prompts LLM. Le moteur supporte 6 types de KPIs : balises, données structurées, performance, sécurité, prompts LLM et métriques combinées. Score pondéré global sur 100.",
     feat4Cta: "Ouvrir la Matrice",
     // Identity First
-    idTitle: "L'approche Identity-First : être reconnu, pas seulement indexé",
-    idSubtitle: "Les LLMs ne crawlent pas votre site comme Googlebot. Ils cherchent à comprendre qui vous êtes, ce que vous faites et ce qui vous différencie. Sans identité sémantique claire, l'IA vous confond avec vos concurrents — ou vous ignore complètement.",
+    idTitle: "L'approche Identity-First",
+    idTitle2: "être reconnu, pas seulement indexé",
+    idSubtitle: "Les LLMs ne crawlent pas votre site comme Googlebot. Ils cherchent à comprendre qui vous êtes, ce que vous faites et ce qui vous différencie. Sans identité sémantique claire, l'IA vous confond avec vos concurrents — ou vous ignore.",
     idPoint1Title: 'Carte d\'identité sémantique',
     idPoint1: 'Définissez votre entreprise en classes structurées que les LLMs comprennent : activité, zone géographique, cibles, concurrents, différenciateurs.',
     idPoint2Title: 'Taxonomie enrichie par IA vocale',
