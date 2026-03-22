@@ -1160,6 +1160,27 @@ Termina con un resumen ejecutivo y próximos pasos.`,
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <ThinkingIndicator language={language} />
             )}
+            {/* Quick-reply buttons */}
+            {!isLoading && messages.length > 0 && messages[messages.length - 1]?.role === 'assistant' && (() => {
+              const replies = extractQuickReplies(messages[messages.length - 1].content);
+              if (replies.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1.5 mt-2 px-1">
+                  {replies.map((label, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setInput(label);
+                        setTimeout(() => sendMessage(label), 50);
+                      }}
+                      className="px-3 py-1.5 rounded-none border border-white/15 text-white/60 text-[11px] font-medium bg-transparent hover:bg-white/5 hover:text-white/90 hover:border-white/30 transition-all"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Node slots */}
