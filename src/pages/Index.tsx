@@ -576,20 +576,20 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Crawlers.fr — Premier outil francophone SEO + GEO</title>
-        <meta name="description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <title>{language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO' : 'Crawlers.fr — Leading French SEO + GEO Tool'}</title>
+        <meta name="description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
+        <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/" />
-        <meta property="og:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
-        <meta property="og:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta property="og:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
+        <meta property="og:description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta name="twitter:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
+        <meta name="twitter:description" content={language === 'fr' ? 'Premier outil francophone SEO + GEO. Auditez votre visibilité sur Google ET ChatGPT.' : language === 'es' ? 'Primera herramienta francófona SEO + GEO. Audite su visibilidad en Google Y ChatGPT.' : 'Leading French SEO + GEO tool. Audit your visibility on Google AND ChatGPT.'} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
