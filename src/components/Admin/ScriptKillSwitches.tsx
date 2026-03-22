@@ -16,6 +16,7 @@ import { DemoModeToggle } from './DemoModeToggle';
 import { GA4OAuthToggle } from './GA4OAuthToggle';
 import { useAdminContext } from '@/contexts/AdminContext';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { DropDetectorAdmin } from './DropDetectorAdmin';
 
 const translations = {
   fr: {
