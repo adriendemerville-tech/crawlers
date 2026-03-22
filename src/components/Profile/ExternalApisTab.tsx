@@ -167,7 +167,7 @@ export function ExternalApisTab() {
   useEffect(() => {
     const checkGoogleAccess = async () => {
       const { data } = await supabase
-        .from('system_config')
+        .from('system_config' as any)
         .select('value')
         .eq('config_key', 'full_google_access_auth')
         .maybeSingle();
