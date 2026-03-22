@@ -165,7 +165,7 @@ const i18n = {
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
     trustTitle: 'La única solución europea full-stack SEO + GEO',
-    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para arquitectura de contenido y Asistente SAV para soporte técnico — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente. 113 funciones backend, 12 algoritmos propietarios, código fuente consultable bajo solicitud.',
+    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para el análisis de grafos semánticos y Asistente Crawlers para ayudarte a aprovechar toda la profundidad de los datos — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente. Código fuente consultable bajo solicitud.',
     trustApiTitle: 'Integraciones nativas',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
