@@ -446,7 +446,7 @@ const CGVU = () => {
             {/* Dernière mise à jour */}
             <div className="mt-12 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground italic">
-                Dernière mise à jour : 16 mars 2026
+                Dernière mise à jour : 22 mars 2026
               </p>
             </div>
           </article>
