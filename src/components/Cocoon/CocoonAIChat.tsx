@@ -1668,7 +1668,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                       disabled={isDeploying || deploySuccess}
                       className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
                         deploySuccess
-                          ? 'border border-emerald-500/40 text-emerald-300 bg-transparent'
+                          ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25),0_0_24px_4px_rgba(16,185,129,0.12)] animate-[glow-pulse_2s_ease-in-out_infinite]'
                           : isDeploying
                             ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
                             : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
