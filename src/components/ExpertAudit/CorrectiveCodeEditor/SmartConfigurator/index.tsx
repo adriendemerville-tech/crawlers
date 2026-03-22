@@ -1463,7 +1463,7 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsTrigger 
                     value="content-advisor" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
@@ -1472,7 +1472,7 @@ export function SmartConfigurator({
                     Contenu
                   </TabsTrigger>
                 )}
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsTrigger 
                     value="scribe" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent py-3 px-3"
