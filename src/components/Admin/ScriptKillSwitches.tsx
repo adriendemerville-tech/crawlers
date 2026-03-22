@@ -375,6 +375,32 @@ export function ScriptKillSwitches() {
         </div>
 
         <Separator />
+
+        {/* Content Architect visibility toggle */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Masquer Content Architect</Label>
+            <p className="text-xs text-muted-foreground">
+              Invisibilise tout le workflow Content Architect pour les non-admins. Les assistants (Stratège Cocoon, Crawler) n'en mentionnent plus l'existence.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={contentArchitectHidden ? 'default' : 'secondary'} className={`text-[10px] ${contentArchitectHidden ? 'bg-amber-500 hover:bg-amber-600' : ''}`}>
+              {contentArchitectHidden ? 'Masqué' : 'Visible'}
+            </Badge>
+            <Switch
+              checked={contentArchitectHidden}
+              onCheckedChange={async (checked) => {
+                setContentArchitectHidden(checked);
+                await saveConfig('content_architect_hidden', checked);
+                toast({ title: checked ? 'Content Architect masqué pour les non-admins' : 'Content Architect visible pour tous' });
+              }}
+              disabled={saving}
+            />
+          </div>
+        </div>
+
+        <Separator />
         <div>
           <Label className="text-sm font-medium">{t.level3}</Label>
           <p className="text-xs text-muted-foreground mb-2">{t.level3Desc}</p>
