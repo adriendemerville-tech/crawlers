@@ -354,6 +354,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [historyList, setHistoryList] = useState<Array<{ id: string; updated_at: string; summary: string | null; message_count: number; domain: string }>>([]);
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
+  const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
