@@ -3112,11 +3112,9 @@ Réponds en JSON STRICT:
     trackAnalyzedUrl(url).catch(() => {});
 
     // Save raw audit data (fire-and-forget)
-    if (authHeader && supabaseUrl2 && supabaseKey2) {
+    if (authHeader) {
       try {
-        const sb2 = createClient(supabaseUrl2, supabaseKey2, {
-          global: { headers: { Authorization: authHeader } }
-        });
+        const sb2 = getUserClient(authHeader);
         const { data: { user: rawUser } } = await sb2.auth.getUser();
         if (rawUser) {
           saveRawAuditData({
