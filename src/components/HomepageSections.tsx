@@ -90,8 +90,8 @@ const i18n = {
     row6: 'Maintenance SEO & GEO automatisée',
     hybridCta: 'Essayer gratuitement',
     // Trust
-    trustTitle: 'La seule solution européenne SEO + GEO full-stack',
-    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'analyse de graphe sémantique et Assistant Crawlers pour vous aider à tirer parti de toute la profondeur de la data — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement.",
+    trustTitle: 'La première plateforme française SEO + GEO full-stack',
+    trustText: "Crawlers.fr est la première plateforme française à couvrir l'intégralité de la boucle SEO et GEO : audit technique, correctif généré automatiquement, déploiement en 30 secondes, et mesure d'impact réelle à T+30, T+60 et T+90 jours.\n\nDeux assistants IA spécialisés vous accompagnent à chaque étape : le Stratège Cocoon pour l'analyse de votre graphe sémantique 3D, et l'Assistant Crawlers pour exploiter toute la profondeur de votre data SEO et GEO. La gestion de votre fiche Google Business Profile est intégrée nativement.",
     trustDoubt: "Des doutes ? Les fonctions back-end de Crawlers.fr",
     trustDoubtLine2: "sont consultables sur demande.",
     trustApiTitle: 'Intégrations natives',
@@ -133,8 +133,8 @@ const i18n = {
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
-    trustTitle: 'The only European full-stack SEO + GEO solution',
-    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for semantic graph analysis and Crawlers Assistant to help you leverage the full depth of your data — accompany you at every step. Google Business Profile management is natively integrated.',
+    trustTitle: 'The first French full-stack SEO + GEO platform',
+    trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business Profile management is natively integrated.',
     trustDoubt: 'Any doubts? Crawlers.fr back-end functions',
     trustDoubtLine2: 'are available for review on request.',
     trustApiTitle: 'Native integrations',
@@ -176,8 +176,8 @@ const i18n = {
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
-    trustTitle: 'La única solución europea full-stack SEO + GEO',
-    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para el análisis de grafos semánticos y Asistente Crawlers para ayudarte a aprovechar toda la profundidad de los datos — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente.',
+    trustTitle: 'La primera plataforma francesa full-stack SEO + GEO',
+    trustText: 'Crawlers.fr es la primera plataforma francesa en cubrir todo el ciclo SEO y GEO: auditoría técnica, corrección generada automáticamente, despliegue en 30 segundos y medición de impacto real a T+30, T+60 y T+90 días.\n\nDos asistentes IA especializados te acompañan en cada etapa: el Estratega Cocoon para el análisis de tu grafo semántico 3D, y el Asistente Crawlers para aprovechar toda la profundidad de tus datos SEO y GEO. La gestión de Google Business Profile está integrada nativamente.',
     trustDoubt: '¿Dudas? Las funciones back-end de Crawlers.fr',
     trustDoubtLine2: 'son consultables bajo solicitud.',
     trustApiTitle: 'Integraciones nativas',
@@ -459,7 +459,11 @@ const TrustBanner = memo(() => {
     <section className="py-14 md:py-20 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
       <div className="container mx-auto px-4 max-w-4xl">
         <p className="text-sm font-bold uppercase tracking-widest text-brand-violet mb-5 text-center">{t.trustTitle}</p>
-        <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
+        <div className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10 space-y-4">
+          {t.trustText.split('\n\n').map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))}
+        </div>
 
         {/* Doubt phrase */}
         <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-8">
