@@ -355,13 +355,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           onIgnoreSuggestion={handleIgnoreSuggestion}
         />
 
-        {/* 3 Green Bullets */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-success" />
-            <span>{t.hero.trust.instant}</span>
-          </div>
-        </div>
 
         {/* "Plus de 150 critères" */}
         <p className="mt-4 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
