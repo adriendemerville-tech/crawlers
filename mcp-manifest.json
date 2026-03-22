@@ -1,0 +1,169 @@
+{
+  "name": "Crawlers.fr",
+  "description": "SEO & GEO audit platform — score, analyze and auto-fix your site visibility in Google and AI engines. Covers classic SEO, Generative Engine Optimization (GEO), and Local SEO in one tool.",
+  "version": "1.0.0",
+  "author": "Adrien de Volontat",
+  "homepage": "https://crawlers.fr",
+  "repository": "https://github.com/crawlers-fr",
+  "license": "Proprietary",
+  "categories": ["seo", "marketing", "analytics", "ai"],
+  "authentication": {
+    "type": "bearer",
+    "description": "Supabase auth token from a Crawlers.fr Pro Agency account"
+  },
+  "endpoint": "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server",
+  "tools": [
+    {
+      "name": "check_geo_score",
+      "description": "Calculate the GEO (Generative Engine Optimization) score for a domain. Returns a 0-100 score measuring how well the site is optimized for AI engines like ChatGPT, Gemini, Perplexity and Claude.",
+      "tier": "free",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to analyze (e.g. example.com)" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "check_llm_visibility",
+      "description": "Check how visible a domain is across major LLMs (ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama). Returns citation rates, mention frequency, and recommendation scores.",
+      "tier": "free",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to check (e.g. example.com)" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "check_ai_crawlers",
+      "description": "Analyze which AI bots are crawling a site (GPTBot, ClaudeBot, Google-Extended, Bytespider, etc.). Returns robots.txt analysis, detected bot activity, and blocking recommendations.",
+      "tier": "free",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to analyze (e.g. example.com)" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "expert_seo_audit",
+      "description": "Run a comprehensive 200-point SEO audit on a URL. Covers technical SEO, on-page optimization, structured data, Core Web Vitals, accessibility, and security. Returns detailed scores and actionable recommendations.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Full URL to audit (e.g. https://example.com/page)" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "strategic_ai_audit",
+      "description": "Run a strategic AI-powered audit combining SEO signals, GEO readiness, competitive positioning, and content gap analysis. Uses LLM reasoning to produce prioritized recommendations.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Full URL to audit" },
+          "sector": { "type": "string", "description": "Business sector for competitive context (optional)" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "generate_corrective_code",
+      "description": "Generate JavaScript corrective code to fix SEO/GEO issues detected by an audit. The code can be deployed via Google Tag Manager or injected directly. Returns deployable JS snippets with dry-run capability.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "URL that was audited" },
+          "audit_id": { "type": "string", "description": "ID of a previous audit to base corrections on (optional)" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "dry_run_script",
+      "description": "Test a corrective script in sandbox mode before deploying. Returns simulated DOM changes, potential conflicts, and safety assessment.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "script_id": { "type": "string", "description": "ID of the script to test" },
+          "target_url": { "type": "string", "description": "URL to simulate the script on" }
+        },
+        "required": ["script_id", "target_url"]
+      }
+    },
+    {
+      "name": "calculate_cocoon_logic",
+      "description": "Generate a semantic cocoon (cocon sémantique) structure using TF-IDF analysis. Maps topical clusters, internal linking opportunities, and content hierarchy for SEO authority building.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to analyze" },
+          "tracked_site_id": { "type": "string", "description": "Tracked site ID from Crawlers" }
+        },
+        "required": ["domain", "tracked_site_id"]
+      }
+    },
+    {
+      "name": "measure_audit_impact",
+      "description": "Measure the real-world impact of deployed SEO/GEO corrections at T+30, T+60, and T+90 days. Correlates audit recommendations with actual traffic and ranking changes from GSC and GA4 data.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to measure" },
+          "audit_id": { "type": "string", "description": "ID of the original audit (optional)" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "wordpress_sync",
+      "description": "Inject corrective code and SEO fixes directly into a WordPress site via the Crawlers Bridge CMS plugin. Supports safe deployment with rollback capability.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tracked_site_id": { "type": "string", "description": "Tracked site ID with active CMS connection" },
+          "script_id": { "type": "string", "description": "Script to deploy" }
+        },
+        "required": ["tracked_site_id", "script_id"]
+      }
+    },
+    {
+      "name": "fetch_serp_kpis",
+      "description": "Fetch weekly SERP KPIs for a tracked domain: keyword rankings, position changes, estimated traffic, visibility score, and competitor comparison.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to get KPIs for" },
+          "tracked_site_id": { "type": "string", "description": "Tracked site ID" }
+        },
+        "required": ["domain"]
+      }
+    },
+    {
+      "name": "calculate_ias",
+      "description": "Calculate the Strategic Alignment Index (IAS) — a proprietary score measuring how well a site's content strategy aligns with search intent, AI engine expectations, and competitive positioning.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string", "description": "Domain to score" },
+          "tracked_site_id": { "type": "string", "description": "Tracked site ID" }
+        },
+        "required": ["domain"]
+      }
+    }
+  ]
+}
