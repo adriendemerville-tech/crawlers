@@ -1212,8 +1212,8 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                       {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
                     </button>
                   )}
-                  {/* Architect button — admin only */}
-                  {isAdmin && (
+                  {/* Architect button */}
+                  {(
                     <button
                       onClick={() => setShowArchitectModal(true)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
