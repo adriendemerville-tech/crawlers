@@ -282,10 +282,11 @@ Depuis votre tableau de bord > Abonnement > Résilier. La résiliation prend eff
 - Si le problème persiste après 10 minutes, relancez un nouvel audit
 - Les sites avec JavaScript heavy ou protections anti-bot peuvent allonger le temps de traitement
 
-### GSC ou GA4 ne se connectent pas
-- Vérifiez que vous utilisez le bon compte Google (celui qui a accès à la propriété)
+### GSC, GA4 ou GMB ne se connectent pas
+- Vérifiez que vous utilisez le bon compte Google (celui qui a accès à la propriété ou à l'établissement)
 - Acceptez tous les scopes OAuth demandés (ne décochez aucune permission)
 - Vérifiez que votre site est bien vérifié dans Google Search Console
+- Pour GMB : vérifiez que vous êtes propriétaire ou gestionnaire de la fiche dans Google Business Profile
 - Déconnectez et reconnectez le compte Google depuis votre tableau de bord
 - Si l'erreur persiste, essayez avec un autre navigateur ou en navigation privée
 
