@@ -44,8 +44,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [showGuide, setShowGuide] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [editedCode, setEditedCode] = useState<string | null>(null);
-  const [originalCode, setOriginalCode] = useState<string>('');
+  const [originalResult, setOriginalResult] = useState<any>(null);
+  const [publishing, setPublishing] = useState(false);
 
   // Form fields
   const [url, setUrl] = useState('');
@@ -134,8 +134,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data?.data || data);
-      toast.success('Structure générée');
+      const resData = data?.data || data;
+      setResult(resData);
+      setOriginalResult(JSON.parse(JSON.stringify(resData)));
     } catch (err: any) {
       toast.error(err.message || 'Erreur');
     } finally {
@@ -143,62 +144,58 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     }
   }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone]);
 
-  const handlePublish = useCallback(() => {
+  const isEdited = useMemo(() => {
+    if (!result || !originalResult) return false;
+    return JSON.stringify(result) !== JSON.stringify(originalResult);
+  }, [result, originalResult]);
+
+  const handlePublish = useCallback(async () => {
     if (!hasCmsConnection) {
-      toast.info(t3(language, 
+      toast.info(t3(language,
         'Connectez votre CMS dans Profil → APIs externes',
         'Connect your CMS in Profile → External APIs',
         'Conecte su CMS en Perfil → APIs externas'));
       return;
     }
-    const wasEdited = editedCode !== null && editedCode !== originalCode;
-    toast.success(t3(language,
-      wasEdited
-        ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
-        : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
-      wasEdited
-        ? 'Draft sent to CMS (edited version). The original version is saved in history.'
-        : 'Draft sent to CMS. You can review and publish it from your editor.',
-      wasEdited
-        ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
-        : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
-  }, [hasCmsConnection, editedCode, originalCode, language]);
-
-  // Generate HTML preview from result
-  const htmlPreview = useMemo(() => {
-    if (!result?.content_structure) return '';
-    const parts: string[] = [];
-    const h1 = result.content_structure.recommended_h1;
-    if (h1) parts.push(`<h1>${h1}</h1>`);
-    for (const hn of (result.content_structure.hn_hierarchy || [])) {
-      if (hn.level !== 'h1') parts.push(`<${hn.level}>${hn.text}</${hn.level}>`);
+    if (!result || !trackedSiteId) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cms-publish-draft', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          result_data: result,
+          original_result_data: isEdited ? originalResult : null,
+          url,
+          keyword,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(t3(language,
+        isEdited
+          ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
+          : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
+        isEdited
+          ? 'Draft sent to CMS (edited version). The original version is saved in history.'
+          : 'Draft sent to CMS. You can review and publish it from your editor.',
+        isEdited
+          ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
+          : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de publication');
+    } finally {
+      setPublishing(false);
     }
-    for (const section of (result.content_structure.sections || [])) {
-      parts.push(`<section>\n  <h2>${section.title}</h2>\n  <p>${section.purpose || ''}</p>\n  <!-- ${section.word_count || 0} mots -->\n</section>`);
-    }
-    if (result.metadata_enrichment?.json_ld_schemas?.length) {
-      for (const schema of result.metadata_enrichment.json_ld_schemas) {
-        parts.push(`<script type="application/ld+json">\n${JSON.stringify({ "@context": "https://schema.org", "@type": schema.type, ...schema.properties }, null, 2)}\n</script>`);
-      }
-    }
-    return parts.join('\n\n');
-  }, [result]);
+  }, [hasCmsConnection, result, originalResult, isEdited, trackedSiteId, url, keyword, language]);
 
-  // Sync original code when AI generates result
-  useEffect(() => {
-    if (htmlPreview) {
-      setOriginalCode(htmlPreview);
-      setEditedCode(null); // reset manual edits
+
+
+  const handleResetEdits = useCallback(() => {
+    if (originalResult) {
+      setResult(JSON.parse(JSON.stringify(originalResult)));
+      toast.info('Contenu restauré à la version originale');
     }
-  }, [htmlPreview]);
-
-  const isManuallyEdited = editedCode !== null && editedCode !== originalCode;
-  const finalCode = editedCode ?? htmlPreview;
-
-  const handleResetCode = useCallback(() => {
-    setEditedCode(null);
-    toast.info('Code restauré à la version originale');
-  }, []);
+  }, [originalResult]);
 
   if (!isOpen) return null;
 
@@ -418,15 +415,25 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {/* Bottom: Publish + Guide */}
             {result && (
               <div className="border-t border-white/10 px-4 py-3 space-y-2">
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between">
+                  {isEdited && (
+                    <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
+                      <RotateCcw className="w-3 h-3" />
+                      {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
+                    </button>
+                  )}
+                  {!isEdited && <div />}
                   <Button
                     onClick={handlePublish}
+                    disabled={publishing}
                     className={hasCmsConnection
                       ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold'
                       : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
                   >
-                    {hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}</>
+                    {publishing ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
+                    ) : hasCmsConnection ? (
+                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}{isEdited ? ' ✎' : ''}</>
                     ) : (
                       <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
                     )}
