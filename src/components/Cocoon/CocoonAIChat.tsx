@@ -330,6 +330,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isContentArchitectVisible } = useContentArchitectVisibility();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
