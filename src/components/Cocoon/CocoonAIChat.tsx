@@ -472,7 +472,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         body: JSON.stringify({
           messages: newMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
-          analysisMode: !!overrideContext,
+          analysisMode: !!overrideContext && !useStrategist,
+          strategistMode: useStrategist || isStrategistMode,
           language,
           domain,
           trackedSiteId,
