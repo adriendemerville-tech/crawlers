@@ -583,7 +583,7 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
         stream: false,
-        max_tokens: 600,
+        max_tokens: isCreator ? 2000 : 600,
       }),
     });
 
