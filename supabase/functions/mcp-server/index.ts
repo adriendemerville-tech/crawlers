@@ -1,20 +1,18 @@
 /**
  * MCP Server for Crawlers.fr
  * 
- * Exposes Crawlers SEO/GEO tools as MCP-compatible endpoints.
+ * Exposes Crawlers SEO/GEO tools via the official MCP SDK.
+ * Stateless Streamable HTTP transport for Edge Functions.
  */
-import { Hono } from "hono";
-import { McpServer, StreamableHttpTransport } from "mcp-lite";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 
-const FREE_TOOLS = new Set([
-  'check_geo_score',
-  'check_llm_visibility',
-  'check_ai_crawlers',
-]);
+const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
 
 const TOOL_TO_FUNCTION: Record<string, string> = {
   check_geo_score: 'check-geo',
@@ -35,239 +33,223 @@ const TOOL_TO_FUNCTION: Record<string, string> = {
 
 async function checkKillSwitch(): Promise<boolean> {
   try {
-    const supabase = getServiceClient();
-    const { data } = await supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'mcp_enabled')
-      .maybeSingle();
+    const sb = getServiceClient();
+    const { data } = await sb.from('system_config').select('value').eq('key', 'mcp_enabled').maybeSingle();
     if (!data) return true;
     return data.value !== false;
-  } catch {
-    return true;
-  }
+  } catch { return true; }
 }
 
-interface AuthResult {
-  userId: string;
-  email: string;
-  planType: 'free' | 'agency_pro';
-  isAdmin: boolean;
-}
+interface AuthResult { userId: string; email: string; planType: 'free' | 'agency_pro'; isAdmin: boolean; }
 
 async function authenticateToken(authHeader: string | null): Promise<AuthResult | null> {
   if (!authHeader?.startsWith('Bearer ')) return null;
-  const userClient = getUserClient(authHeader);
-  const { data: { user }, error } = await userClient.auth.getUser();
+  const uc = getUserClient(authHeader);
+  const { data: { user }, error } = await uc.auth.getUser();
   if (error || !user) return null;
-
-  const supabase = getServiceClient();
-  const [profileResult, adminResult] = await Promise.all([
-    supabase.from('profiles').select('plan_type, subscription_status').eq('user_id', user.id).single(),
-    supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+  const sb = getServiceClient();
+  const [pr, ar] = await Promise.all([
+    sb.from('profiles').select('plan_type, subscription_status').eq('user_id', user.id).single(),
+    sb.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
   ]);
-
-  const profile = profileResult.data;
-  const isAdmin = adminResult.data === true;
-  const isActivePro = profile?.plan_type === 'agency_pro' &&
-    (profile?.subscription_status === 'active' || profile?.subscription_status === 'canceling');
-
-  return { userId: user.id, email: user.email || '', planType: isActivePro ? 'agency_pro' : 'free', isAdmin };
+  const p = pr.data;
+  const isAdmin = ar.data === true;
+  const isPro = p?.plan_type === 'agency_pro' && (p?.subscription_status === 'active' || p?.subscription_status === 'canceling');
+  return { userId: user.id, email: user.email || '', planType: isPro ? 'agency_pro' : 'free', isAdmin };
 }
 
 async function checkRateLimit(userId: string, toolName: string): Promise<boolean> {
   try {
-    const supabase = getServiceClient();
-    const { data } = await supabase.rpc('check_rate_limit', {
-      p_user_id: userId, p_action: `mcp:${toolName}`, p_max_count: 30, p_window_minutes: 60,
-    });
+    const sb = getServiceClient();
+    const { data } = await sb.rpc('check_rate_limit', { p_user_id: userId, p_action: `mcp:${toolName}`, p_max_count: 30, p_window_minutes: 60 });
     return data?.allowed !== false;
-  } catch {
-    return true;
-  }
+  } catch { return true; }
 }
 
 async function logMcpUsage(userId: string | null, toolName: string, inputParams: Record<string, unknown>, status: string, errorMessage: string | null, executionTimeMs: number) {
   try {
-    const supabase = getServiceClient();
-    await supabase.from('mcp_usage_logs').insert({ user_id: userId, tool_name: toolName, input_params: inputParams, status, error_message: errorMessage, execution_time_ms: executionTimeMs });
-  } catch (e) {
-    console.error('[MCP] log failed:', e);
-  }
+    const sb = getServiceClient();
+    await sb.from('mcp_usage_logs').insert({ user_id: userId, tool_name: toolName, input_params: inputParams, status, error_message: errorMessage, execution_time_ms: executionTimeMs });
+  } catch (e) { console.error('[MCP] log failed:', e); }
 }
 
-async function callEdgeFunction(functionName: string, body: Record<string, unknown>, authHeader?: string) {
-  const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': authHeader || `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-  };
+async function callEdgeFunction(fn: string, body: Record<string, unknown>, authHeader?: string) {
+  const url = `${SUPABASE_URL}/functions/v1/${fn}`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Authorization': authHeader || `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` };
   try {
     const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
     const text = await resp.text();
     let data: unknown;
     try { data = JSON.parse(text); } catch { data = { raw: text }; }
-    if (!resp.ok) return { data: null, error: `${resp.status}: ${text.slice(0, 500)}`, status: resp.status };
-    return { data, error: null, status: resp.status };
-  } catch (e) {
-    return { data: null, error: (e as Error).message, status: 500 };
-  }
+    if (!resp.ok) return { data: null, error: `${resp.status}: ${text.slice(0, 500)}` };
+    return { data, error: null };
+  } catch (e) { return { data: null, error: (e as Error).message }; }
 }
 
-// ── Shared handler ──────────────────────────────────────
+// ── Tool handler factory ────────────────────────────────
 
-// We store the raw request per invocation so tool handlers can read auth
-let _currentAuthHeader: string | null = null;
+function makeHandler(toolName: string) {
+  return async (args: Record<string, unknown>, extra: { authInfo?: { token?: string }; _meta?: unknown }) => {
+    const startTime = Date.now();
+    const isFree = FREE_TOOLS.has(toolName);
+    // Extract auth from extra context - MCP SDK passes authInfo
+    const authHeader = extra?.authInfo?.token ? `Bearer ${extra.authInfo.token}` : null;
 
-async function handleTool(toolName: string, args: Record<string, unknown>): Promise<{ content: Array<{ type: string; text: string }> }> {
-  const startTime = Date.now();
-  const isFree = FREE_TOOLS.has(toolName);
-  const authHeader = _currentAuthHeader;
-
-  const enabled = await checkKillSwitch();
-  if (!enabled) {
-    await logMcpUsage(null, toolName, args, 'blocked_killswitch', 'MCP disabled', Date.now() - startTime);
-    return { content: [{ type: 'text', text: '🚫 Le serveur MCP Crawlers est temporairement désactivé.' }] };
-  }
-
-  let auth: AuthResult | null = null;
-  if (!isFree) {
-    auth = await authenticateToken(authHeader);
-    if (!auth) {
-      await logMcpUsage(null, toolName, args, 'unauthorized', 'No valid token', Date.now() - startTime);
-      return { content: [{ type: 'text', text: '🔒 Cet outil nécessite un abonnement Pro Agency.\nAbonnez-vous sur https://crawlers.fr/tarifs' }] };
+    const enabled = await checkKillSwitch();
+    if (!enabled) {
+      await logMcpUsage(null, toolName, args, 'blocked', 'MCP disabled', Date.now() - startTime);
+      return { content: [{ type: 'text' as const, text: '🚫 Serveur MCP Crawlers temporairement désactivé.' }] };
     }
-    if (!auth.isAdmin && auth.planType !== 'agency_pro') {
-      await logMcpUsage(auth.userId, toolName, args, 'forbidden', 'Not Pro', Date.now() - startTime);
-      return { content: [{ type: 'text', text: '⚠️ Réservé aux abonnés Pro Agency.\nhttps://crawlers.fr/tarifs' }] };
+
+    let auth: AuthResult | null = null;
+    if (!isFree) {
+      auth = await authenticateToken(authHeader);
+      if (!auth) {
+        await logMcpUsage(null, toolName, args, 'unauthorized', 'No token', Date.now() - startTime);
+        return { content: [{ type: 'text' as const, text: '🔒 Cet outil nécessite un abonnement Pro Agency.\nAbonnez-vous sur https://crawlers.fr/tarifs' }] };
+      }
+      if (!auth.isAdmin && auth.planType !== 'agency_pro') {
+        await logMcpUsage(auth.userId, toolName, args, 'forbidden', 'Not Pro', Date.now() - startTime);
+        return { content: [{ type: 'text' as const, text: '⚠️ Réservé aux abonnés Pro Agency. https://crawlers.fr/tarifs' }] };
+      }
+      if (!(await checkRateLimit(auth.userId, toolName))) {
+        await logMcpUsage(auth.userId, toolName, args, 'rate_limited', '30/h', Date.now() - startTime);
+        return { content: [{ type: 'text' as const, text: '⏳ Limite atteinte (30/h). Réessayez dans quelques minutes.' }] };
+      }
+    } else {
+      auth = await authenticateToken(authHeader);
     }
-    const allowed = await checkRateLimit(auth.userId, toolName);
-    if (!allowed) {
-      await logMcpUsage(auth.userId, toolName, args, 'rate_limited', 'Too many requests', Date.now() - startTime);
-      return { content: [{ type: 'text', text: '⏳ Limite atteinte (30/h). Réessayez dans quelques minutes.' }] };
+
+    const fn = TOOL_TO_FUNCTION[toolName];
+    const result = await callEdgeFunction(fn, args, authHeader || undefined);
+    const ms = Date.now() - startTime;
+
+    if (result.error) {
+      await logMcpUsage(auth?.userId || null, toolName, args, 'error', result.error, ms);
+      return { content: [{ type: 'text' as const, text: `❌ Erreur : ${result.error}` }] };
     }
-  } else {
-    auth = await authenticateToken(authHeader);
-  }
 
-  const functionName = TOOL_TO_FUNCTION[toolName];
-  if (!functionName) return { content: [{ type: 'text', text: `❌ Outil inconnu : ${toolName}` }] };
-
-  const result = await callEdgeFunction(functionName, args, authHeader || undefined);
-  const executionTime = Date.now() - startTime;
-
-  if (result.error) {
-    await logMcpUsage(auth?.userId || null, toolName, args, 'error', result.error, executionTime);
-    return { content: [{ type: 'text', text: `❌ Erreur : ${result.error}` }] };
-  }
-
-  await logMcpUsage(auth?.userId || null, toolName, args, 'success', null, executionTime);
-  return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    await logMcpUsage(auth?.userId || null, toolName, args, 'success', null, ms);
+    return { content: [{ type: 'text' as const, text: JSON.stringify(result.data, null, 2) }] };
+  };
 }
 
-// ── Build MCP Server ────────────────────────────────────
+// ── Main handler ────────────────────────────────────────
 
-const mcp = new McpServer({ name: "crawlers-fr", version: "1.0.0" });
+Deno.serve(async (req: Request) => {
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { ...corsHeaders, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS' } });
+  }
 
-// Free tools
-mcp.tool("check_geo_score", {
-  description: "Calculate the GEO score (0-100) for a domain — measures optimization for AI engines (ChatGPT, Gemini, Perplexity, Claude).",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain (e.g. example.com)" } }, required: ["domain"] },
-  handler: (args: { domain: string }) => handleTool('check_geo_score', args),
+  // Health / info
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({
+      status: 'ok',
+      server: 'crawlers-mcp',
+      version: '1.0.0',
+      tools: Object.keys(TOOL_TO_FUNCTION).length,
+      endpoint: 'POST /functions/v1/mcp-server',
+      docs: 'https://crawlers.fr/mcp',
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // MCP protocol via Streamable HTTP
+  if (req.method === 'POST' || req.method === 'DELETE') {
+    try {
+      // Create a fresh server + transport per request (stateless)
+      const server = new McpServer({ name: "crawlers-fr", version: "1.0.0" });
+
+      // Register tools
+      server.tool("check_geo_score",
+        "Calculate the GEO score (0-100) for a domain — optimization for AI engines (ChatGPT, Gemini, Perplexity, Claude).",
+        { domain: z.string().describe("Domain (e.g. example.com)") },
+        makeHandler('check_geo_score'),
+      );
+
+      server.tool("check_llm_visibility",
+        "Check domain visibility across LLMs (ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama). Citation rates and scores.",
+        { domain: z.string().describe("Domain (e.g. example.com)") },
+        makeHandler('check_llm_visibility'),
+      );
+
+      server.tool("check_ai_crawlers",
+        "Analyze AI bots crawling a site (GPTBot, ClaudeBot, Google-Extended, Bytespider). Robots.txt analysis and recommendations.",
+        { domain: z.string().describe("Domain (e.g. example.com)") },
+        makeHandler('check_ai_crawlers'),
+      );
+
+      server.tool("expert_seo_audit",
+        "200-point SEO audit: technical SEO, on-page, structured data, Core Web Vitals, accessibility, security. Requires Pro Agency.",
+        { url: z.string().describe("Full URL to audit") },
+        makeHandler('expert_seo_audit'),
+      );
+
+      server.tool("strategic_ai_audit",
+        "Strategic AI audit: SEO + GEO readiness + competitive positioning + content gaps with LLM reasoning. Requires Pro Agency.",
+        { url: z.string().describe("URL to audit"), sector: z.string().optional().describe("Business sector") },
+        makeHandler('strategic_ai_audit'),
+      );
+
+      server.tool("generate_corrective_code",
+        "Generate JavaScript to fix SEO/GEO issues from an audit. Deployable via GTM or direct injection. Requires Pro Agency.",
+        { url: z.string().describe("URL audited"), audit_id: z.string().optional().describe("Audit ID") },
+        makeHandler('generate_corrective_code'),
+      );
+
+      server.tool("dry_run_script",
+        "Test a corrective script in sandbox mode. Simulated DOM changes and safety assessment. Requires Pro Agency.",
+        { script_id: z.string().describe("Script ID"), target_url: z.string().describe("URL to simulate on") },
+        makeHandler('dry_run_script'),
+      );
+
+      server.tool("calculate_cocoon_logic",
+        "Generate semantic cocoon (cocon sémantique) via TF-IDF: topical clusters, internal linking, content hierarchy. Requires Pro Agency.",
+        { domain: z.string().describe("Domain"), tracked_site_id: z.string().describe("Tracked site ID") },
+        makeHandler('calculate_cocoon_logic'),
+      );
+
+      server.tool("measure_audit_impact",
+        "Measure SEO/GEO correction impact at T+30/T+60/T+90 days using GSC and GA4 data. Requires Pro Agency.",
+        { domain: z.string().describe("Domain"), audit_id: z.string().optional().describe("Audit ID") },
+        makeHandler('measure_audit_impact'),
+      );
+
+      server.tool("wordpress_sync",
+        "Inject SEO fixes into WordPress via Crawlers Bridge CMS plugin with rollback. Requires Pro Agency.",
+        { tracked_site_id: z.string().describe("Tracked site ID"), script_id: z.string().describe("Script ID") },
+        makeHandler('wordpress_sync'),
+      );
+
+      server.tool("fetch_serp_kpis",
+        "Weekly SERP KPIs: rankings, position changes, traffic, visibility, competitors. Requires Pro Agency.",
+        { domain: z.string().describe("Domain"), tracked_site_id: z.string().optional().describe("Tracked site ID") },
+        makeHandler('fetch_serp_kpis'),
+      );
+
+      server.tool("calculate_ias",
+        "Strategic Alignment Index (IAS) — proprietary score for content strategy vs search intent and AI engines. Requires Pro Agency.",
+        { domain: z.string().describe("Domain"), tracked_site_id: z.string().optional().describe("Tracked site ID") },
+        makeHandler('calculate_ias'),
+      );
+
+      // Stateless transport
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      await server.connect(transport);
+
+      const response = await transport.handleRequest(req);
+      // Add CORS
+      const headers = new Headers(response.headers);
+      Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
+      return new Response(response.body, { status: response.status, headers });
+    } catch (e) {
+      console.error('[MCP] Error:', e);
+      return new Response(JSON.stringify({ error: (e as Error).message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 });
-
-mcp.tool("check_llm_visibility", {
-  description: "Check domain visibility across major LLMs (ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama). Returns citation rates and recommendation scores.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain (e.g. example.com)" } }, required: ["domain"] },
-  handler: (args: { domain: string }) => handleTool('check_llm_visibility', args),
-});
-
-mcp.tool("check_ai_crawlers", {
-  description: "Analyze which AI bots crawl a site (GPTBot, ClaudeBot, Google-Extended, Bytespider). Returns robots.txt analysis and blocking recommendations.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain (e.g. example.com)" } }, required: ["domain"] },
-  handler: (args: { domain: string }) => handleTool('check_ai_crawlers', args),
-});
-
-// Pro tools
-mcp.tool("expert_seo_audit", {
-  description: "Run a 200-point SEO audit: technical SEO, on-page, structured data, Core Web Vitals, accessibility, security.",
-  inputSchema: { type: "object", properties: { url: { type: "string", description: "Full URL to audit" } }, required: ["url"] },
-  handler: (args: { url: string }) => handleTool('expert_seo_audit', args),
-});
-
-mcp.tool("strategic_ai_audit", {
-  description: "Strategic AI-powered audit: SEO signals, GEO readiness, competitive positioning, content gap analysis with LLM reasoning.",
-  inputSchema: { type: "object", properties: { url: { type: "string", description: "URL to audit" }, sector: { type: "string", description: "Business sector (optional)" } }, required: ["url"] },
-  handler: (args: { url: string; sector?: string }) => handleTool('strategic_ai_audit', args),
-});
-
-mcp.tool("generate_corrective_code", {
-  description: "Generate JavaScript corrective code to fix SEO/GEO issues from an audit. Returns deployable JS snippets.",
-  inputSchema: { type: "object", properties: { url: { type: "string", description: "URL audited" }, audit_id: { type: "string", description: "Audit ID (optional)" } }, required: ["url"] },
-  handler: (args: { url: string; audit_id?: string }) => handleTool('generate_corrective_code', args),
-});
-
-mcp.tool("dry_run_script", {
-  description: "Test a corrective script in sandbox before deploying. Returns simulated DOM changes and safety assessment.",
-  inputSchema: { type: "object", properties: { script_id: { type: "string", description: "Script ID" }, target_url: { type: "string", description: "URL to simulate on" } }, required: ["script_id", "target_url"] },
-  handler: (args: { script_id: string; target_url: string }) => handleTool('dry_run_script', args),
-});
-
-mcp.tool("calculate_cocoon_logic", {
-  description: "Generate a semantic cocoon structure using TF-IDF: topical clusters, internal linking, content hierarchy.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain" }, tracked_site_id: { type: "string", description: "Tracked site ID" } }, required: ["domain", "tracked_site_id"] },
-  handler: (args: { domain: string; tracked_site_id: string }) => handleTool('calculate_cocoon_logic', args),
-});
-
-mcp.tool("measure_audit_impact", {
-  description: "Measure real-world impact of SEO/GEO corrections at T+30/T+60/T+90. Correlates with GSC and GA4 data.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain" }, audit_id: { type: "string", description: "Audit ID (optional)" } }, required: ["domain"] },
-  handler: (args: { domain: string; audit_id?: string }) => handleTool('measure_audit_impact', args),
-});
-
-mcp.tool("wordpress_sync", {
-  description: "Inject SEO fixes into WordPress via Crawlers Bridge CMS plugin with rollback capability.",
-  inputSchema: { type: "object", properties: { tracked_site_id: { type: "string", description: "Tracked site ID" }, script_id: { type: "string", description: "Script to deploy" } }, required: ["tracked_site_id", "script_id"] },
-  handler: (args: { tracked_site_id: string; script_id: string }) => handleTool('wordpress_sync', args),
-});
-
-mcp.tool("fetch_serp_kpis", {
-  description: "Weekly SERP KPIs: keyword rankings, position changes, traffic estimates, visibility score, competitor comparison.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain" }, tracked_site_id: { type: "string", description: "Tracked site ID" } }, required: ["domain"] },
-  handler: (args: { domain: string; tracked_site_id?: string }) => handleTool('fetch_serp_kpis', args),
-});
-
-mcp.tool("calculate_ias", {
-  description: "Calculate the Strategic Alignment Index (IAS) — proprietary score for content strategy alignment with search intent and AI engines.",
-  inputSchema: { type: "object", properties: { domain: { type: "string", description: "Domain" }, tracked_site_id: { type: "string", description: "Tracked site ID" } }, required: ["domain"] },
-  handler: (args: { domain: string; tracked_site_id?: string }) => handleTool('calculate_ias', args),
-});
-
-// ── HTTP Transport ──────────────────────────────────────
-
-const transport = new StreamableHttpTransport();
-const httpHandler = transport.bind(mcp);
-const app = new Hono();
-
-app.options('/*', (c) => c.newResponse(null, 204, { ...corsHeaders, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS' }));
-
-app.get('/', (c) => c.json({ status: 'ok', server: 'crawlers-mcp', version: '1.0.0', tools: Object.keys(TOOL_TO_FUNCTION).length }));
-
-app.all('/mcp', async (c) => {
-  _currentAuthHeader = c.req.header('Authorization') || null;
-  const response = await httpHandler(c.req.raw);
-  const headers = new Headers(response.headers);
-  Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
-  return new Response(response.body, { status: response.status, headers });
-});
-
-// Fallback: route root POST to MCP too (for clients that call /functions/v1/mcp-server directly)
-app.post('/', async (c) => {
-  _currentAuthHeader = c.req.header('Authorization') || null;
-  const response = await httpHandler(c.req.raw);
-  const headers = new Headers(response.headers);
-  Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
-  return new Response(response.body, { status: response.status, headers });
-});
-
-Deno.serve(app.fetch);
