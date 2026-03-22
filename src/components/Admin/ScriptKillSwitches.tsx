@@ -115,6 +115,7 @@ export function ScriptKillSwitches() {
   const [sdkEnabled, setSdkEnabled] = useState(true);
   const [freemiumOpen, setFreemiumOpen] = useState(false);
   const [hideHomeLeadmagnet, setHideHomeLeadmagnet] = useState(false);
+  const [contentArchitectHidden, setContentArchitectHidden] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
@@ -132,13 +133,14 @@ export function ScriptKillSwitches() {
       const { data: configs } = await supabase
         .from('system_config')
         .select('key, value')
-        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode', 'hide_home_leadmagnet']);
+        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode', 'hide_home_leadmagnet', 'content_architect_hidden']);
 
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
         if (cfg.key === 'sdk_enabled') setSdkEnabled(cfg.value !== false);
         if (cfg.key === 'freemium_open_mode') setFreemiumOpen(cfg.value === true);
         if (cfg.key === 'hide_home_leadmagnet') setHideHomeLeadmagnet(cfg.value === true);
+        if (cfg.key === 'content_architect_hidden') setContentArchitectHidden(cfg.value === true);
         if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
@@ -369,6 +371,32 @@ export function ScriptKillSwitches() {
               {hideHomeLeadmagnet ? 'Masqué' : 'Visible'}
             </Badge>
             <Switch checked={hideHomeLeadmagnet} onCheckedChange={handleToggleHideLeadmagnet} disabled={saving} />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Content Architect visibility toggle */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Masquer Content Architect</Label>
+            <p className="text-xs text-muted-foreground">
+              Invisibilise tout le workflow Content Architect pour les non-admins. Les assistants (Stratège Cocoon, Crawler) n'en mentionnent plus l'existence.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={contentArchitectHidden ? 'default' : 'secondary'} className={`text-[10px] ${contentArchitectHidden ? 'bg-amber-500 hover:bg-amber-600' : ''}`}>
+              {contentArchitectHidden ? 'Masqué' : 'Visible'}
+            </Badge>
+            <Switch
+              checked={contentArchitectHidden}
+              onCheckedChange={async (checked) => {
+                setContentArchitectHidden(checked);
+                await saveConfig('content_architect_hidden', checked);
+                toast({ title: checked ? 'Content Architect masqué pour les non-admins' : 'Content Architect visible pour tous' });
+              }}
+              disabled={saving}
+            />
           </div>
         </div>
 

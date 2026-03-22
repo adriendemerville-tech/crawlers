@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
 import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpertAuditResult } from '@/types/expertAudit';
@@ -175,7 +176,9 @@ export function SmartConfigurator({
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
   const { openMode } = useFreemiumMode();
+  const { isContentArchitectVisible } = useContentArchitectVisibility();
   const canGenerateCode = isAgencyPro || isAdmin;
+  const showContentTabs = isContentArchitectVisible && isAdmin && !openMode;
 
   // Extract domain from siteUrl for payment check
   const siteDomain = useMemo(() => {
@@ -1460,7 +1463,7 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsTrigger 
                     value="content-advisor" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-500 data-[state=active]:bg-transparent py-3 px-3"
@@ -1469,7 +1472,7 @@ export function SmartConfigurator({
                     Contenu
                   </TabsTrigger>
                 )}
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsTrigger 
                     value="scribe" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent py-3 px-3"
@@ -1513,7 +1516,7 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsContent forceMount value="content-advisor" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ContentArchitectureAdvisor 
                       defaultUrl={siteUrl}
@@ -1522,7 +1525,7 @@ export function SmartConfigurator({
                   </TabsContent>
                 )}
 
-                {isAdmin && !openMode && (
+                {showContentTabs && (
                   <TabsContent forceMount value="scribe" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <ScribeTab
                       defaultUrl={siteUrl}

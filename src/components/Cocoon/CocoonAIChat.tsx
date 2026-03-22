@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
 import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
+import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
@@ -329,6 +330,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isContentArchitectVisible } = useContentArchitectVisibility();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -993,9 +995,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
                 if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
               });
 
-              // Extract structured fields for Content Architect (background, non-blocking)
+              // Extract structured fields for Content Architect (background, non-blocking) — skip if hidden
               const prevMsg = prev.length >= 2 ? prev[prev.length - 2] : null;
-              if (prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content)) {
+              if (isContentArchitectVisible && prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content)) {
                 supabase.functions.invoke('extract-architect-fields', {
                   body: {
                     message_content: contentToCheck,
@@ -1611,8 +1613,8 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                       {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
                     </button>
                   )}
-                  {/* Architect button */}
-                  {true && (
+                  {/* Architect button - hidden when Content Architect is invisible */}
+                  {isContentArchitectVisible && (
                     <button
                       onClick={() => setShowArchitectModal(true)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
@@ -1648,13 +1650,15 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   >
                     <Syringe className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => openContentArchitectWithPlan()}
-                    className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
-                    title="Content Architect"
-                  >
-                    <PenTool className="w-3.5 h-3.5" />
-                  </button>
+                  {isContentArchitectVisible && (
+                    <button
+                      onClick={() => openContentArchitectWithPlan()}
+                      className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
+                      title="Content Architect"
+                    >
+                      <PenTool className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <ChatMicButton
@@ -1694,16 +1698,18 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         )}
       </button>
 
-      {/* Content Architect Modal */}
-      <CocoonContentArchitectModal
-        isOpen={showArchitectModal}
-        onClose={() => setShowArchitectModal(false)}
-        nodes={nodes}
-        domain={domain}
-        trackedSiteId={trackedSiteId}
-        hasCmsConnection={hasCmsConnection}
-        draftData={architectDraft}
-      />
+      {/* Content Architect Modal — only when visible */}
+      {isContentArchitectVisible && (
+        <CocoonContentArchitectModal
+          isOpen={showArchitectModal}
+          onClose={() => setShowArchitectModal(false)}
+          nodes={nodes}
+          domain={domain}
+          trackedSiteId={trackedSiteId}
+          hasCmsConnection={hasCmsConnection}
+          draftData={architectDraft}
+        />
+      )}
     </div>
   );
 }
