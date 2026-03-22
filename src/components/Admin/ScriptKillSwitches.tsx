@@ -115,6 +115,7 @@ export function ScriptKillSwitches() {
   const [sdkEnabled, setSdkEnabled] = useState(true);
   const [freemiumOpen, setFreemiumOpen] = useState(false);
   const [hideHomeLeadmagnet, setHideHomeLeadmagnet] = useState(false);
+  const [contentArchitectHidden, setContentArchitectHidden] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
