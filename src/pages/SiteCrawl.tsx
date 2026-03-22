@@ -836,6 +836,15 @@ export default function SiteCrawl() {
       <Header />
 
       <main className="min-h-screen bg-background pt-20 pb-16 relative">
+        {/* Back to home arrow */}
+        <Link
+          to="/"
+          className="fixed top-20 left-4 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-border/50 bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+          aria-label="Retour à l'accueil"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!isUnlimitedUser && (
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
