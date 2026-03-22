@@ -103,10 +103,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     const h2Count = hn.filter((h: any) => h.level === 'h2').length;
     const h3Count = hn.filter((h: any) => h.level === 'h3').length;
     const sections = result.content_structure.sections || [];
-    const totalWords = sections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0);
-    const chars = totalWords * 6;
+    // Count actual characters from body_text if available, otherwise estimate
+    const hasBodyText = sections.some((s: any) => s.body_text);
+    const chars = hasBodyText
+      ? sections.reduce((sum: number, s: any) => sum + (s.body_text?.length || 0), 0)
+        + (result.content_structure.introduction?.length || 0)
+        + (result.content_structure.tldr_summary?.length || 0)
+      : sections.reduce((sum: number, s: any) => sum + (s.word_count || 0), 0) * 6;
     const medias = result.content_structure.media_recommendations?.length || 0;
-    const links = result.internal_linking?.recommended_internal_links || 0;
+    const links = result.internal_linking?.recommended_internal_links || result.internal_linking?.anchor_strategy?.length || 0;
     return { h1: h1Count || 1, h2: h2Count, h3: h3Count, chars, medias, links };
   }, [result]);
 
