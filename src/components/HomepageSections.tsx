@@ -85,10 +85,10 @@ const i18n = {
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La seule solution européenne SEO + GEO full-stack',
-    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO : audit technique, optimisation sémantique, visibilité IA, cocon de contenu, code correctif et maintenance automatisée. Tout dans un seul outil, sans dépendance à des services tiers. Le code source est consultable sur demande.",
-    trustUrls: 'URLs analysées',
-    trustAudits: 'Audits générés',
-    trustSites: 'Sites suivis',
+    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'architecture de contenu et Assistant SAV pour le support technique — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement. 113 fonctions backend, 12 algorithmes propriétaires, un code source consultable sur demande.",
+    trustApiTitle: 'Intégrations natives',
+    trustApiGoogle: 'APIs Google',
+    trustApiCms: 'APIs CMS',
   },
   en: {
     momentumTitle: 'SEO is evolving. Are you?',
@@ -125,8 +125,10 @@ const i18n = {
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: 'The only European full-stack SEO + GEO solution',
-    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop: technical audit, semantic optimization, AI visibility, content cocoon, corrective code and automated maintenance. All in one tool, no third-party dependencies. Source code available on request.',
-    trustUrls: 'URLs analyzed', trustAudits: 'Audits generated', trustSites: 'Sites tracked',
+    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for content architecture and Support Assistant for technical guidance — accompany you at every step. Google Business Profile management is natively integrated. 113 backend functions, 12 proprietary algorithms, source code available on request.',
+    trustApiTitle: 'Native integrations',
+    trustApiGoogle: 'Google APIs',
+    trustApiCms: 'CMS APIs',
   },
   es: {
     momentumTitle: 'El SEO evoluciona. ¿Y tú?',
@@ -163,8 +165,10 @@ const i18n = {
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
     trustTitle: 'La única solución europea full-stack SEO + GEO',
-    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO: auditoría técnica, optimización semántica, visibilidad IA, cocón de contenido, código correctivo y mantenimiento automatizado. Todo en una sola herramienta, sin dependencias externas. Código fuente consultable bajo solicitud.',
-    trustUrls: 'URLs analizadas', trustAudits: 'Auditorías generadas', trustSites: 'Sitios monitorizados',
+    trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para arquitectura de contenido y Asistente SAV para soporte técnico — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente. 113 funciones backend, 12 algoritmos propietarios, código fuente consultable bajo solicitud.',
+    trustApiTitle: 'Integraciones nativas',
+    trustApiGoogle: 'APIs Google',
+    trustApiCms: 'APIs CMS',
   },
 };
 
@@ -347,34 +351,49 @@ const HybridSection = memo(() => {
 HybridSection.displayName = 'HybridSection';
 
 /* ─── Section 5: Trust Banner ─── */
+const googleApis = [
+  'Google Search Console',
+  'Google Analytics 4',
+  'Google Business Profile',
+  'Google Ads',
+  'Google PageSpeed Insights',
+];
+const cmsApis = [
+  'WordPress (REST API)',
+  'Shopify',
+  'Webflow',
+  'Wix',
+  'Prestashop',
+];
+
 const TrustBanner = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
-      <div className="container mx-auto px-4 text-center max-w-3xl">
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-violet mb-4">{t.trustTitle}</p>
-        <p className="text-muted-foreground text-sm mb-8 max-w-2xl mx-auto">{t.trustText}</p>
-        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={45000} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustUrls}</p>
+    <section className="py-14 md:py-20 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <p className="text-sm font-bold uppercase tracking-widest text-brand-violet mb-5 text-center">{t.trustTitle}</p>
+        <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
+
+        {/* API Table */}
+        <div className="overflow-hidden rounded-xl border border-border max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 bg-muted/50 text-sm font-semibold text-foreground">
+            <div className="p-3 text-center">{t.trustApiGoogle}</div>
+            <div className="p-3 text-center border-l border-border">{t.trustApiCms}</div>
           </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={12000} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustAudits}</p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">
-              <AnimatedCounter end={850} suffix="+" />
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t.trustSites}</p>
-          </div>
+          {googleApis.map((api, i) => (
+            <div key={i} className={cn('grid grid-cols-2 text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+              <div className="p-3 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="text-foreground">{api}</span>
+              </div>
+              <div className="p-3 flex items-center gap-2 border-l border-border">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                <span className="text-foreground">{cmsApis[i]}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
