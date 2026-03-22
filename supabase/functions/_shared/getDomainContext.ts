@@ -106,6 +106,21 @@ export async function getDomainContext(
       .eq('tracked_site_id', trackedSiteId)
       .order('week_start_date', { ascending: false })
       .limit(4),
+    // 8: google ads
+    supabase
+      .from('google_ads_history_log')
+      .select('impressions, clicks, ctr, conversions, conversion_rate, cost_micros, week_start_date')
+      .eq('tracked_site_id', trackedSiteId)
+      .order('week_start_date', { ascending: false })
+      .limit(4),
+    // 9: anomaly alerts
+    supabase
+      .from('anomaly_alerts')
+      .select('metric_name, metric_source, severity, direction, change_pct, description, detected_at')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('is_dismissed', false)
+      .order('detected_at', { ascending: false })
+      .limit(10),
   ];
 
   // Optional: diagnostics
