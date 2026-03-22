@@ -239,6 +239,15 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
         </h2>
 
+        {/* Promise line */}
+        <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
+          {language === 'es'
+            ? 'La única plataforma europea que cubre SEO clásico, SEO generativo y SEO local en una sola herramienta.'
+            : language === 'en'
+              ? 'The only European platform covering classic SEO, generative SEO and local SEO in a single tool.'
+              : "La seule plateforme européenne qui couvre le SEO classique, le SEO génératif et le SEO local dans un seul outil."}
+        </p>
+
         {/* H3 Subheadline - SEO optimized */}
         <h3 
           className="mx-auto mb-10 max-w-2xl text-base font-normal text-muted-foreground sm:text-xl"
@@ -356,8 +365,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         />
 
 
-        {/* "Plus de 150 critères" */}
-        <p className="mt-4 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
+        {/* "Plus de 168 critères" */}
+        <p className="mt-6 text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
