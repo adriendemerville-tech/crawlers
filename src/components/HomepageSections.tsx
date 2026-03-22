@@ -414,7 +414,7 @@ const HybridSection = memo(() => {
                 <div className="p-3 text-left text-foreground font-medium">{feat[lang] || feat.fr}</div>
                 {competitorMatrix[feat.key].map((has, j) => (
                   <div key={j} className="p-3 flex items-center justify-center border-l border-border">
-                    {has ? <CheckCircle2 className={cn('h-4 w-4', j === 4 ? 'text-brand-violet' : 'text-success')} /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
+                    {has === true ? <CheckCircle2 className={cn('h-4 w-4', j === 4 ? 'text-brand-violet' : 'text-success')} /> : has === 'partial' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
                   </div>
                 ))}
               </div>
