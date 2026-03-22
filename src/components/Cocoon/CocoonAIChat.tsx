@@ -605,6 +605,11 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       }
     } finally {
       setIsLoading(false);
+      // Mark strategist as completed if we were in strategist mode
+      if (isStrategistMode || useStrategist) {
+        setStrategistCompleted(true);
+        loadStrategyPlan();
+      }
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
