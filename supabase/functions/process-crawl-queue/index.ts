@@ -447,6 +447,7 @@ function analyzeHtml(
     custom_extraction,
     crawl_depth: depth,
     html_size_bytes,
+    body_text_truncated: body_text_truncated,
   };
 }
 
