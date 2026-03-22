@@ -1,6 +1,6 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "2.0"
+version: "3.0"
 date: "2026-03-22"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
@@ -373,16 +373,51 @@ Oui. Crawlers.fr propose un scanner WordPress natif (plugins, thèmes, sécurit�
 
 ---
 
-## 8. À propos de Crawlers.fr
+## 8. Intégration MCP (Claude & IA)
+
+### Qu'est-ce que le serveur MCP Crawlers ?
+Crawlers.fr expose ses outils d'audit SEO/GEO comme un serveur MCP (Model Context Protocol) compatible avec Claude et tout client MCP. Cela permet à Claude d'appeler directement les outils Crawlers pour auditer un site, vérifier sa visibilité IA, générer du code correctif et mesurer l'impact — le tout en langage naturel.
+
+Endpoint : `POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server`
+
+### Outils MCP gratuits (sans authentification)
+- **check_geo_score** : Score GEO (0-100) pour l'optimisation moteurs IA
+- **check_llm_visibility** : Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama
+- **check_ai_crawlers** : Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)
+
+### Outils MCP Pro Agency (token requis)
+- **expert_seo_audit** : Audit SEO 200 points
+- **strategic_ai_audit** : Audit stratégique IA multi-axes
+- **generate_corrective_code** : Génération de code correctif JS
+- **dry_run_script** : Test sandbox avant déploiement
+- **calculate_cocoon_logic** : Cocon sémantique TF-IDF
+- **measure_audit_impact** : Mesure d'impact T+30/T+60/T+90
+- **wordpress_sync** : Injection correctifs WordPress
+- **fetch_serp_kpis** : KPIs SERP hebdomadaires
+- **calculate_ias** : Indice d'Alignement Stratégique
+
+Authentification : token Supabase d'un compte Pro Agency. Rate limit : 30 appels/heure.
+
+### Comment utiliser le MCP avec Claude ?
+1. Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers
+2. Claude découvre automatiquement les 12 outils disponibles
+3. Demandez en langage naturel : « Audite le site example.com »
+4. Claude appelle les outils Crawlers et synthétise les résultats
+
+Pour les outils Pro, votre token d'authentification Crawlers est transmis automatiquement.
+
+---
+
+## 9. À propos de Crawlers.fr
 
 ### Qu'est-ce que Crawlers.fr ?
-Crawlers.fr est la première plateforme francophone combinant audit SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
+Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure propriétaire avec plusieurs algorithmes d'analyse avancés, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 124 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
-ChatGPT (OpenAI), Gemini (Google), Perplexity et Claude (Anthropic) — en interrogation parallèle simultanée, pas séquentielle.
+6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).
 
 ### Comment signaler un bug ou un problème ?
 Depuis le chat de l'assistant Crawler ou du Stratège Cocoon, mentionnez simplement votre problème (ex : "j'ai un bug", "ça ne marche pas"). L'assistant vous proposera un bouton "Signaler un problème". Votre signalement sera transmis à l'équipe technique et vous serez notifié dès qu'il est résolu.
