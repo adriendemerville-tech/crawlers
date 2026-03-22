@@ -176,6 +176,8 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Cocoon — Organisme Vivant 3D** : https://crawlers.fr/cocoon (Architecture sémantique Three.js avec Anti-Wiki, ROI prédictif, Citabilité LLM et Assistant IA)
 - **Landing Cocoon** : https://crawlers.fr/features/cocoon (Présentation du module Cocoon)
 - **Intégration GTM** : https://crawlers.fr/integration-gtm (Guide de déploiement automatique des correctifs via Google Tag Manager)
+- **Serveur MCP** : https://crawlers.fr/functions/v1/mcp-server (Endpoint MCP pour Claude et clients compatibles)
+- **Centre d'aide** : https://crawlers.fr/aide (Documentation complète)
 - **Inscription** : https://crawlers.fr/signup (Créer un compte gratuit)
 - **Blog** : https://crawlers.fr/blog (Actualités SEO, GEO & IA)
 - **Comprendre le GEO** : https://crawlers.fr/lexique (Définitions officielles)
