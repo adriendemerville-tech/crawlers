@@ -616,6 +616,23 @@ const Index = () => {
           currentUrl={currentUrl}
         />
 
+        {/* ─── Homepage marketing sections ─── */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <MomentumSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <FeatureShowcase />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <IdentityFirstSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <HybridSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <TrustBanner />
+        </Suspense>
+
         {/* Pro Agency hero — visible only in leadmagnet mode */}
         {hideLeadmagnet && (
           <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
