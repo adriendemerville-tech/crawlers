@@ -303,6 +303,132 @@ serve(async (req) => {
 
     const sb = getServiceClient();
 
+    // ── Check if user is admin (creator) ──
+    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user_id, _role: "admin" });
+    const isCreator = isAdmin === true;
+
+    // ── Detect backend query intent from creator ──
+    if (isCreator) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const backendKeywords = [
+        "combien", "table", "base de données", "database", "requête", "query",
+        "utilisateurs", "users", "profils", "profiles", "edge function",
+        "erreurs", "errors", "logs", "statistiques", "stats", "métriques",
+        "audit", "crawl", "conversations", "abonnés", "revenue", "coût",
+        "lignes", "rows", "colonnes", "columns", "schema", "structure",
+        "taille", "size", "cache", "cocoon", "sessions", "credits",
+        "signalements", "bug_reports", "prédictions", "agent cto",
+        "backlinks", "anomalies", "scripts", "plans d'action",
+        "bundle", "api", "fair use", "rate limit", "événements",
+        "affiliation", "affiliate", "GMB", "google", "CMS",
+        "montre-moi", "show me", "list", "liste", "donne-moi",
+        "quel est", "quels sont", "how many", "count",
+      ];
+      
+      const lowerMsg = lastUserMsg.toLowerCase();
+      const isBackendQuestion = backendKeywords.some(kw => lowerMsg.includes(kw.toLowerCase()));
+      
+      if (isBackendQuestion) {
+        // Delegate to admin-backend-query
+        try {
+          const authHeader = req.headers.get("Authorization") || "";
+          const queryResp = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/admin-backend-query`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: authHeader,
+                "Content-Type": "application/json",
+                apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+              },
+              body: JSON.stringify({ question: lastUserMsg }),
+            }
+          );
+
+          if (queryResp.ok) {
+            const queryData = await queryResp.json();
+            
+            // Format results for the creator
+            let adminReply = "";
+            if (queryData.blocked) {
+              adminReply = `⚠️ ${queryData.description}`;
+            } else if (queryData.error) {
+              adminReply = `❌ Erreur d'exécution : ${queryData.error}\n\nRequête tentée :\n\`\`\`sql\n${queryData.query}\n\`\`\``;
+            } else if (queryData.results === null && !queryData.query) {
+              adminReply = `ℹ️ ${queryData.description}`;
+            } else {
+              adminReply = `📊 **${queryData.description}**\n\n`;
+              if (queryData.query) {
+                adminReply += `\`\`\`sql\n${queryData.query}\n\`\`\`\n\n`;
+              }
+              if (Array.isArray(queryData.results)) {
+                if (queryData.results.length === 0) {
+                  adminReply += "Aucun résultat.";
+                } else if (queryData.results.length === 1 && Object.keys(queryData.results[0]).length <= 3) {
+                  // Simple result (count, sum, etc.)
+                  const entries = Object.entries(queryData.results[0]);
+                  adminReply += entries.map(([k, v]) => `**${k}** : ${v}`).join("\n");
+                } else {
+                  // Table format
+                  const cols = Object.keys(queryData.results[0]);
+                  adminReply += `| ${cols.join(" | ")} |\n`;
+                  adminReply += `| ${cols.map(() => "---").join(" | ")} |\n`;
+                  for (const row of queryData.results.slice(0, 30)) {
+                    const vals = cols.map(c => {
+                      const v = (row as any)[c];
+                      if (v === null) return "-";
+                      if (typeof v === "object") return JSON.stringify(v).slice(0, 60);
+                      return String(v).slice(0, 60);
+                    });
+                    adminReply += `| ${vals.join(" | ")} |\n`;
+                  }
+                  if (queryData.row_count > 30) {
+                    adminReply += `\n_...et ${queryData.row_count - 30} lignes supplémentaires_`;
+                  }
+                }
+                adminReply += `\n\n_${queryData.row_count} résultat(s)_`;
+              }
+            }
+
+            // Enforce reasonable limit for admin replies (3000 chars)
+            if (adminReply.length > 3000) {
+              adminReply = adminReply.substring(0, 2997) + "...";
+            }
+
+            // Save to conversation
+            let savedConvId = conversation_id;
+            try {
+              const allMessages = [...messages, { role: "assistant", content: adminReply }];
+              if (conversation_id) {
+                await sb.from("sav_conversations").update({
+                  messages: allMessages,
+                  message_count: allMessages.length,
+                }).eq("id", conversation_id);
+              } else {
+                const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                const { data: newConv } = await sb.from("sav_conversations").insert({
+                  user_id,
+                  user_email: prof?.email || null,
+                  messages: allMessages,
+                  message_count: allMessages.length,
+                }).select("id").single();
+                savedConvId = newConv?.id;
+              }
+            } catch (e) {
+              console.error("Save admin conv error:", e);
+            }
+
+            return new Response(JSON.stringify({ reply: adminReply, conversation_id: savedConvId || conversation_id }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } catch (e) {
+          console.error("Admin backend query error:", e);
+          // Fall through to normal SAV agent
+        }
+      }
+    }
+
     // ── Enrich context ──
     let contextSnippet = "";
     let userFirstName = "";
@@ -420,7 +546,27 @@ serve(async (req) => {
       greetingHint = `\n\nNote: Le prénom de l'utilisateur est "${userFirstName}". Utilise-le naturellement dans ta première réponse.`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + escalationHint + greetingHint;
+    // Creator admin hint
+    let creatorHint = "";
+    if (isCreator) {
+      creatorHint = `\n\n# MODE CRÉATEUR (ADMIN)
+Cet utilisateur est un créateur/administrateur de la plateforme. Tu peux :
+- Discuter ouvertement du backend, des tables, des edge functions, de l'architecture
+- Mentionner les noms techniques (tables, fonctions, APIs, etc.)
+- Donner des informations sur la structure de la base de données
+- Partager des métriques système et des statistiques
+- Expliquer le fonctionnement interne des algorithmes
+
+Tu ne dois PAS :
+- Modifier la logique backend (pas de suggestions de changements de code)
+- Exécuter des opérations d'écriture (pas d'INSERT, UPDATE, DELETE)
+- Partager des tokens, clés API ou secrets
+
+Pour les questions nécessitant des données précises, suggère au créateur de poser la question en termes de données (ex: "combien d'utilisateurs Pro cette semaine") — le système exécutera automatiquement une requête sécurisée.
+Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + escalationHint + greetingHint + creatorHint;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
