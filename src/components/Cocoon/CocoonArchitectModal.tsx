@@ -299,7 +299,58 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const getPedagogy = (fixId: string): FixPedagogy => FIX_PEDAGOGY[fixId] || DEFAULT_PEDAGOGY;
+  const handleInject = async () => {
+    if (!generatedCode || !user || !trackedSiteId) return;
+    setIsInjecting(true);
+    try {
+      const siteId = trackedSiteDomainId || trackedSiteId;
+      const { data: existingRule } = await supabase
+        .from('site_script_rules')
+        .select('id')
+        .eq('domain_id', siteId)
+        .eq('user_id', user.id)
+        .eq('payload_type', 'GLOBAL_FIXES')
+        .maybeSingle();
+
+      if (existingRule) {
+        await supabase
+          .from('site_script_rules')
+          .update({ payload_data: { script: generatedCode }, is_active: true } as any)
+          .eq('id', existingRule.id);
+      } else {
+        await supabase
+          .from('site_script_rules')
+          .insert({
+            domain_id: siteId,
+            user_id: user.id,
+            url_pattern: '*',
+            payload_type: 'GLOBAL_FIXES',
+            payload_data: { script: generatedCode },
+            is_active: true,
+            source: 'cocoon_architect',
+          } as any);
+      }
+
+      setInjected(true);
+      sonnerToast.success(
+        language === 'en' ? 'Code injected successfully' :
+        language === 'es' ? 'Código inyectado con éxito' :
+        'Code injecté avec succès'
+      );
+      setTimeout(() => setInjected(false), 3000);
+    } catch (err) {
+      console.error('Injection error:', err);
+      sonnerToast.error(
+        language === 'en' ? 'Injection error' :
+        language === 'es' ? 'Error de inyección' :
+        'Erreur lors de l\'injection'
+      );
+    } finally {
+      setIsInjecting(false);
+    }
+  };
+
+
 
   const t = {
     title: language === 'en' ? 'Generative Architect' : language === 'es' ? 'Arquitecto Generativo' : 'Architecte Génératif',
