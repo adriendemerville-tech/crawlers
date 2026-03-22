@@ -978,8 +978,8 @@ export default function Cocoon() {
             <span className="hidden xs:inline">{t.console}</span>
           </button>
 
-          {/* AI Chat — shifted right */}
-          {hasAccess && nodes.length > 0 && (
+          {/* AI Chat — always visible for greeting */}
+          {hasAccess && (
             <div className="relative">
               <CocoonAIChat
                 nodes={nodes}
