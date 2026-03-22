@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "1.0"
-date: "2026-03-21"
+version: "2.0"
+date: "2026-03-22"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -142,13 +142,30 @@ Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultaném
 
 ### Cocon Sémantique 3D
 Visualisation interactive de l'architecture sémantique de votre site en 3D (Three.js) :
-- Clusters thématiques calculés via TF-IDF
+- Clusters thématiques calculés via analyse sémantique avancée
 - Liens internes visualisés et analysés
 - Recommandations de maillage automatiques
 - Chat IA intégré pour affiner la stratégie
 - Export et persistance des sessions
 
 Disponible en Pro Agency.
+
+### Stratégie 360° (mode avancé du Cocon)
+Le mode Stratégie 360° est accessible via le bouton boussole dans le chat du Cocon Sémantique. Il effectue automatiquement :
+
+1. **Diagnostic multi-axes** : analyse de 4 dimensions en parallèle
+   - **Contenu** : pages minces, contenu dupliqué, pages sans mots-clés, ratio texte/HTML
+   - **Sémantique** : gaps de mots-clés SERP, cohérence sémantique parent-enfant, inadéquation titre/ancres, cannibalisations
+   - **Structure** : pages profondes (>3 clics), pages orphelines, chaînes de redirections, erreurs 404/5xx
+   - **Autorité** : profil de backlinks, diversité des ancres, liens perdus, Domain Rank
+
+2. **Plan d'action intelligent** : jusqu'à 8 tâches par cycle, classées par un score combinant impact (40%), urgence (30%), ancienneté (15%) et faisabilité (15%)
+
+3. **3 axes de développement** : l'assistant vous propose 3 orientations stratégiques — vous en choisissez une seule pour concentrer les efforts
+
+4. **Boucle rétro-active** : à chaque nouveau cycle, le système réévalue l'impact réel des recommandations passées en croisant les données GSC et GA4. Les actions inefficaces sont signalées pour correction ou annulation.
+
+Les tâches validées sont transférées dans Console > Plans d'Action et peuvent devenir un calendrier éditorial ou des tâches techniques.
 
 ### Architecte Génératif
 Génération automatique de codes correctifs multi-pages :
@@ -158,6 +175,14 @@ Génération automatique de codes correctifs multi-pages :
 - Intégration directe : WordPress, GTM ou SDK
 
 Coût : 1 crédit.
+
+### Content Architect (onglet avancé de l'Architecte)
+Générateur de contenus pré-configurés selon les recommandations de la stratégie 360° :
+- Type de contenu (article, pillar page, FAQ, glossaire...)
+- Longueur optimale et mots-clés cibles
+- Structure éditoriale complète : résumé, tableau de synthèse pour LLM, FAQ, sources obligatoires, articles connexes, CTA
+- Médias et backlinks internes/externes
+- Calendrier éditorial (pour les comptes Pro Agency)
 
 ### Crawl Multi-Pages
 Analyse récursive de votre site :
@@ -173,7 +198,6 @@ Suivi hebdomadaire de vos positions Google :
 - Mots-clés trackés et leurs évolutions
 - Historique des positions dans le temps
 - Détection des Quick Wins (positions 4-10)
-- Données via DataForSEO avec fallback SerpAPI
 
 ### Agents Autonomes
 - Agent SEO : optimisation automatique du contenu (blog : libre, landing pages : max 10% de modification)
@@ -201,10 +225,11 @@ Coût des actions principales :
 | Bots IA, GEO Score, LLM, PageSpeed | ✅ | ✅ |
 | Audit Expert SEO | 1/jour | Illimité |
 | Audit Stratégique IA | Crédits | Crédits |
-| Cocon Sémantique 3D | ❌ | ✅ |
+| Cocon Sémantique 3D + Stratégie 360° | ❌ | ✅ |
 | Crawl multi-pages | ❌ | ✅ |
 | Tracking SERP/GSC/GA4 | ❌ | ✅ |
 | Agents autonomes | ❌ | ✅ |
+| Content Architect + Calendrier éditorial | ❌ | ✅ |
 | Sites simultanés | 1 | 30 |
 | Prix | Gratuit | 59€/mois* |
 
@@ -253,6 +278,12 @@ Les causes les plus fréquentes :
 
 Utilisez l'Architecte Génératif pour générer les correctifs JSON-LD adaptés à votre situation.
 
+### La Stratégie 360° ne se lance pas
+- Vérifiez qu'un crawl multi-pages a été réalisé sur votre site (requis pour le diagnostic)
+- Le Cocon Sémantique doit avoir été généré au moins une fois
+- Assurez-vous d'être sur la page /cocoon avec le bon site sélectionné
+- Le bouton boussole se trouve dans le chat de l'assistant Cocoon
+
 ### Je ne vois pas mes données GSC dans le tableau de bord
 - Les données GSC sont importées après connexion — patientez 5 à 10 minutes
 - Google Search Console ne fournit des données qu'à partir de 28 jours d'historique minimum
@@ -282,7 +313,7 @@ Oui. Crawlers.fr est RGPD natif :
 - Politique de confidentialité complète : https://crawlers.fr/politique-confidentialite
 
 ### Mes tokens Google sont-ils sécurisés ?
-Oui. Les tokens OAuth Google sont stockés de manière chiffrée avec Row-Level Security — ils ne sont jamais exposés côté client ni accessibles par d'autres utilisateurs.
+Oui. Les tokens OAuth Google sont stockés de manière chiffrée avec isolation par utilisateur — ils ne sont jamais exposés côté client ni accessibles par d'autres utilisateurs.
 
 ### Crawlers.fr vend-il mes données ?
 Non. Vos données (site, scores, historiques) sont strictement personnelles et ne sont jamais revendues ni partagées avec des tiers.
@@ -316,7 +347,7 @@ Oui. Crawlers.fr propose un scanner WordPress natif (plugins, thèmes, sécurit�
 Crawlers.fr est la première plateforme francophone combinant audit SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 150 000 lignes de code, avec 7 algorithmes propriétaires, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure propriétaire avec plusieurs algorithmes d'analyse avancés, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 ChatGPT (OpenAI), Gemini (Google), Perplexity et Claude (Anthropic) — en interrogation parallèle simultanée, pas séquentielle.
