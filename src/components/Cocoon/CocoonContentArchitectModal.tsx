@@ -291,19 +291,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {/* Switch page/code */}
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
-                <span className={`text-xs ${viewMode === 'page' ? 'text-white' : 'text-white/40'}`}>Page</span>
-                <Switch checked={viewMode === 'code'} onCheckedChange={v => setViewMode(v ? 'code' : 'page')} />
-                <span className={`text-xs ${viewMode === 'code' ? 'text-white' : 'text-white/40'}`}>Code HTML</span>
-                {isManuallyEdited && (
-                  <Badge className="ml-2 bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
-                    <PenLine className="w-2.5 h-2.5 mr-1" />Modifié manuellement
-                  </Badge>
-                )}
-                {isManuallyEdited && (
-                  <button onClick={handleResetCode} className="ml-auto flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors">
-                    <RotateCcw className="w-3 h-3" />Restaurer
-                  </button>
-                )}
+                <span className="text-xs text-white/60">Aperçu de la structure</span>
               </div>
             )}
 
