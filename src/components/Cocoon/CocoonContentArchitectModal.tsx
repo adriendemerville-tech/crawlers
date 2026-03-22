@@ -134,8 +134,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data?.data || data);
-      toast.success('Structure générée');
+      const resData = data?.data || data;
+      setResult(resData);
+      setOriginalResult(JSON.parse(JSON.stringify(resData)));
     } catch (err: any) {
       toast.error(err.message || 'Erreur');
     } finally {
