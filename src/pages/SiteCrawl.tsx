@@ -573,9 +573,11 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Pre-scan: detect indexed pages when URL changes (debounced)
+  // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
   useEffect(() => {
     setIndexedPagesCount(null);
+    setSitemapPagesCount(null);
+    setTotalEstimatedPages(null);
     if (!url || url.length < 5) return;
 
     let cancelled = false;
@@ -587,16 +589,29 @@ export default function SiteCrawl() {
         if (!domain || domain.length < 3) return;
 
         setIsDetectingPages(true);
-        const { data } = await supabase.functions.invoke('fetch-serp-kpis', {
-          body: { domain },
-        });
-        if (!cancelled && data?.data?.indexed_pages != null) {
-          const count = data.data.indexed_pages as number;
-          setIndexedPagesCount(count);
-          // Auto-cap slider if current value exceeds indexed pages (admins get 50 max)
+
+        // Query SERP (indexed pages) and sitemap in parallel
+        const [serpRes, sitemapRes] = await Promise.all([
+          supabase.functions.invoke('fetch-serp-kpis', { body: { domain } }),
+          supabase.functions.invoke('fetch-sitemap-tree', { body: { domain } }),
+        ]);
+
+        if (cancelled) return;
+
+        const indexed = serpRes.data?.data?.indexed_pages as number | undefined;
+        const sitemapTotal = sitemapRes.data?.totalUrls as number | undefined;
+
+        if (indexed != null) setIndexedPagesCount(indexed);
+        if (sitemapTotal != null) setSitemapPagesCount(sitemapTotal);
+
+        // Total = max of sitemap and indexed (they overlap, so we take the greater)
+        const total = Math.max(indexed || 0, sitemapTotal || 0);
+        if (total > 0) {
+          setTotalEstimatedPages(total);
+          // Auto-cap slider
           const capMax = isAdmin ? 50 : 20;
-          if (count > 0 && maxPages > Math.min(capMax, count)) {
-            setMaxPages(Math.min(capMax, count));
+          if (maxPages > Math.min(capMax, total)) {
+            setMaxPages(Math.min(capMax, total));
           }
         }
       } catch {
