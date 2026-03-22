@@ -47,6 +47,7 @@ function detectBugIntent(message: string): boolean {
 
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
