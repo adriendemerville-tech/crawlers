@@ -67,7 +67,7 @@ function generateSimulatedDepth(analysis: StrategicAnalysis): {
     };
   });
 
-  const avgDepth = parseFloat((results.reduce((acc, r) => acc + r.depth, 0) / results.length).toFixed(1));
+  const avgDepth = results.length > 0 ? parseFloat((results.reduce((acc, r) => acc + r.depth, 0) / results.length).toFixed(1)) : 0;
 
   // Generate interpretation
   let interpretation: string;

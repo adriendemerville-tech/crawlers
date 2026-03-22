@@ -58,7 +58,7 @@ export function GoogleMyBusinessCard({ data }: Props) {
     kpis.push({
       icon: <Star className="h-4 w-4" />,
       label: t.avgRating,
-      value: data.rating.toFixed(1),
+      value: (data.rating ?? 0).toFixed(1),
       sub: '/ 5',
     });
   }

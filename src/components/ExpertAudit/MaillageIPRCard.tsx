@@ -299,7 +299,7 @@ export function MaillageIPRCard({ data, onExploreCocoon }: Props) {
               <KPIMetric
                 icon={<Link2 className="w-4 h-4" />}
                 label={t.density}
-                value={`${data.linkDensity.toFixed(1)}%`}
+                value={`${(data.linkDensity ?? 0).toFixed(1)}%`}
                 tooltip={t.densityTooltip}
                 alert={data.linkDensity < 3 || data.linkDensity > 20}
               />
