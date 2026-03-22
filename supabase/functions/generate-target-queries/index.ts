@@ -1,8 +1,7 @@
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+import { getServiceClient } from '../_shared/supabaseClient.ts'
 interface StrategicContext {
   coreBusiness?: string;
   marketLeader?: string;

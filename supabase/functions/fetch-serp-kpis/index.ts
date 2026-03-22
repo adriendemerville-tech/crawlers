@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
@@ -318,9 +318,7 @@ Deno.serve(async (req) => {
 
     // If tracked_site_id provided, persist to serp_snapshots
     if (tracked_site_id && caller_user_id) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      const supabase = createClient(supabaseUrl, serviceKey)
+      const supabase = getServiceClient()
 
       const { error: insertErr } = await supabase
         .from('serp_snapshots')

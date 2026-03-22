@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
@@ -21,12 +21,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
-  const supabase = createClient(supabaseUrl, serviceKey)
+  const supabase = getServiceClient()
 
   try {
     const { action, user_id, property_id, start_date, end_date, domain } = await req.json()

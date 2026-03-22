@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 /**
@@ -119,9 +119,6 @@ async function testSsrfProtection(): Promise<void> {
  * CRITIQUE car un bypass du captcha ouvrirait la porte au spam et aux bots.
  */
 async function testTurnstileEndpoint(): Promise<void> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Test 1: Requête sans token → doit retourner 400
   const noTokenResp = await fetch(`${supabaseUrl}/functions/v1/verify-turnstile`, {
     method: 'POST',
@@ -155,9 +152,6 @@ async function testTurnstileEndpoint(): Promise<void> {
  * CRITIQUE car c'est le gardien de la création de profils utilisateur.
  */
 async function testEnsureProfileAuth(): Promise<void> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Test 1: Sans header Authorization → 401
   const noAuthResp = await fetch(`${supabaseUrl}/functions/v1/ensure-profile`, {
     method: 'POST',
@@ -238,9 +232,6 @@ async function testDynamicPricing(): Promise<void> {
  * CRITIQUE car un bypass permettrait des paiements fantômes.
  */
 async function testCreateCheckout(): Promise<void> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Test 1: Sans audit_id → 400
   const noIdResp = await fetch(`${supabaseUrl}/functions/v1/create-checkout`, {
     method: 'POST',
@@ -282,9 +273,6 @@ async function testCreateCheckout(): Promise<void> {
  * CRITIQUE car c'est la première ligne de défense avant tout audit.
  */
 async function testValidateUrl(): Promise<void> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Test 1: URLs vides → 400
   const emptyResp = await fetch(`${supabaseUrl}/functions/v1/validate-url`, {
     method: 'POST',
@@ -320,9 +308,6 @@ async function testValidateUrl(): Promise<void> {
  * CRITIQUE car c'est le cœur de la fonctionnalité principale du produit.
  */
 async function testCheckCrawlersEndpoint(): Promise<void> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Test avec un site connu (google.com, qui a un robots.txt public)
   const resp = await fetch(`${supabaseUrl}/functions/v1/check-crawlers`, {
     method: 'POST',
@@ -454,17 +439,13 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
   // Sécurité : admin only (vérifié via service role ou auth header)
   const authHeader = req.headers.get('Authorization') || ''
   const isServiceRole = authHeader.includes(serviceKey)
 
   if (!isServiceRole) {
     // Vérifier si c'est un admin authentifié
-    const supabase = createClient(supabaseUrl, serviceKey)
+    const supabase = getServiceClient()
     const token = authHeader.replace('Bearer ', '')
     if (token) {
       const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -517,7 +498,7 @@ Deno.serve(async (req) => {
 
   // Enregistrer le résultat dans analytics_events pour l'historique admin
   try {
-    const supabase = createClient(supabaseUrl, serviceKey)
+    const supabase = getServiceClient()
     await supabase.from('analytics_events').insert({
       event_type: 'ci_test_run',
       event_data: {

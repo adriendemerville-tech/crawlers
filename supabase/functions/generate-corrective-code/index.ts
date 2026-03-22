@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
@@ -109,11 +109,9 @@ async function fetchSiteSettings(siteUrl: string): Promise<SiteSettings> {
   const DEFAULT_SETTINGS: SiteSettings = { hasApiConnection: false, cmsType: null };
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceKey) return DEFAULT_SETTINGS;
 
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
 
     // Normaliser le domaine depuis l'URL
     let domain: string;
@@ -217,9 +215,7 @@ async function fetchRecommendationsRegistry(
   domain: string
 ): Promise<RegistryRecommendation[]> {
   try {
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabase = getUserClient(authHeader);
     
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -290,7 +286,7 @@ async function searchSolutionLibrary(
   if (!supabaseUrl || !serviceKey) return new Map();
 
   try {
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
     const enabledFixes = fixes.filter(f => f.enabled);
     const errorTypes = enabledFixes.map(f => f.id);
     
@@ -411,7 +407,7 @@ async function incrementSolutionUsage(solutionId: string): Promise<void> {
   if (!supabaseUrl || !serviceKey) return;
 
   try {
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
     const { data } = await supabase
       .from('solution_library')
       .select('usage_count')
@@ -2681,7 +2677,7 @@ async function computeVersionDiff(
   if (!supabaseUrl || !serviceKey) return noDiff;
 
   try {
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
     
     // Extract domain from URL
     let domain = siteUrl;

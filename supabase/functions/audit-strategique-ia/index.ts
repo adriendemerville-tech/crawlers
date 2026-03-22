@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { corsHeaders } from '../_shared/cors.ts'
@@ -23,9 +23,7 @@ async function saveStrategicRecommendationsToRegistry(
   parsedAnalysis: any
 ): Promise<void> {
   try {
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabase = getUserClient(authHeader);
     
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) return;
@@ -2359,9 +2357,7 @@ Deno.serve(async (req) => {
   const reqUrl = new URL(req.url);
   const pollJobId = reqUrl.searchParams.get('job_id');
   if (pollJobId && req.method === 'GET') {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const sb = createClient(supabaseUrl, serviceKey);
+    const sb = getServiceClient();
     const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single();
     if (!job) return json({ error: 'Job not found' }, 404);
     if (job.status === 'completed') return json({ success: true, data: job.result_data, status: 'completed' });
@@ -2391,15 +2387,11 @@ Deno.serve(async (req) => {
 
     // ═══ ASYNC MODE: Create job, self-invoke, return 202 ═══
     if (asyncMode) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const sb = createClient(supabaseUrl, serviceKey);
+      const sb = getServiceClient();
       const authHeader = req.headers.get('Authorization') || '';
       
       // Extract user_id from auth
-      const userSb = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-        global: { headers: { Authorization: authHeader } }
-      });
+      const userSb = getUserClient(authHeader);
       const { data: { user } } = await userSb.auth.getUser();
       const userId = user?.id;
       if (!userId) return json({ error: 'Authentication required for async mode' }, 401);
@@ -2554,7 +2546,7 @@ Deno.serve(async (req) => {
       // ── Fetch site identity card for enriched competitor search ──
       let siteIdentityCtx: Record<string, unknown> | null = null;
       try {
-        const sbService = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        const sbService = getServiceClient();
         siteIdentityCtx = await getSiteContext(sbService, { domain: domainWithoutWww });
         if (siteIdentityCtx) console.log(`📇 Carte d'identité chargée (confiance: ${siteIdentityCtx.identity_confidence || 0})`);
       } catch (e) {

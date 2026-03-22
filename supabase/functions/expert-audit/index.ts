@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
@@ -43,9 +43,7 @@ async function saveRecommendationsToRegistry(
 ): Promise<void> {
   try {
     // Créer un client avec le token de l'utilisateur
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabase = getUserClient(authHeader);
     
     // Récupérer l'utilisateur
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -2260,7 +2258,7 @@ Deno.serve(async (req) => {
         const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
         if (supabaseUrl && supabaseKey) {
           const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-          const sb = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: authHeader } } });
+          const sb = getUserClient(authHeader);
           const { data: { user } } = await sb.auth.getUser();
           if (user) {
             const rl = await checkRateLimit(user.id, 'expert_audit', 15, 60);
