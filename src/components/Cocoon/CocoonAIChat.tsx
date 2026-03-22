@@ -1715,9 +1715,9 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   <button
                     onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
                     className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
-                    title={language === 'en' ? 'Inject linking' : language === 'es' ? 'Inyectar enlaces' : 'Injecter maillage'}
+                    title={language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action'}
                   >
-                    <Syringe className="w-3.5 h-3.5" />
+                    <ClipboardList className="w-3.5 h-3.5" />
                   </button>
                   {isContentArchitectVisible && (
                     <button
