@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
+import { Compass } from 'lucide-react';
 import { Syringe, Hammer } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,7 @@ function injectLexiconLinks(text: string): React.ReactNode[] {
 // ─── Analysis prompt helpers ───
 const ANALYSIS_PREFIXES = ['Analyse les pages suivantes:', 'Analyze the following pages:', 'Analiza las siguientes páginas:'];
 const OPTIMIZE_PREFIXES = ['OPTIMISATION DU MAILLAGE INTERNE', 'INTERNAL LINKING OPTIMIZATION', 'OPTIMIZACIÓN DEL ENLAZADO INTERNO'];
+const STRATEGY_PREFIXES = ['STRATÉGIE 360°', '360° STRATEGY', 'ESTRATEGIA 360°'];
 
 function isAnalysisPrompt(content: string): boolean {
   return ANALYSIS_PREFIXES.some(p => content.startsWith(p));
@@ -102,6 +104,10 @@ function isAnalysisPrompt(content: string): boolean {
 
 function isOptimizePrompt(content: string): boolean {
   return OPTIMIZE_PREFIXES.some(p => content.startsWith(p));
+}
+
+function isStrategyPrompt(content: string): boolean {
+  return STRATEGY_PREFIXES.some(p => content.startsWith(p));
 }
 
 function getAnalysisLabel(content: string, lang: string): string {
@@ -116,6 +122,12 @@ function getOptimizeLabel(lang: string): string {
   if (lang === 'en') return '🔗 Internal linking optimization';
   if (lang === 'es') return '🔗 Optimización del enlazado interno';
   return '🔗 Optimisation du maillage interne';
+}
+
+function getStrategyLabel(lang: string): string {
+  if (lang === 'en') return '🧭 360° Strategy — Diagnosis & Prescription';
+  if (lang === 'es') return '🧭 Estrategia 360° — Diagnóstico y Prescripción';
+  return '🧭 Stratégie 360° — Diagnostic & Prescription';
 }
 
 // ─── Copy button ───
@@ -187,6 +199,8 @@ const labels = {
     analyze: 'Analyser',
     cancel: 'Annuler',
     optimize: 'Optimiser le maillage',
+    strategy: 'Stratégie 360°',
+    strategyBtn: 'Diagnostic & Stratégie',
   },
   en: {
     title: 'Cocoon Assistant',
@@ -201,6 +215,8 @@ const labels = {
     analyze: 'Analyze',
     cancel: 'Cancel',
     optimize: 'Optimize linking',
+    strategy: '360° Strategy',
+    strategyBtn: 'Diagnosis & Strategy',
   },
   es: {
     title: 'Asistente Cocoon',
@@ -215,6 +231,8 @@ const labels = {
     analyze: 'Analizar',
     cancel: 'Cancelar',
     optimize: 'Optimizar enlaces',
+    strategy: 'Estrategia 360°',
+    strategyBtn: 'Diagnóstico y Estrategia',
   },
 };
 
@@ -276,6 +294,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
+  const [isStrategistMode, setIsStrategistMode] = useState(false);
   const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const [architectDraft, setArchitectDraft] = useState<Record<string, any> | null>(null);
   const FONT_MIN = 10;
@@ -425,13 +444,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setSelectedSlots(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const sendMessage = async (overrideContext?: string) => {
+  const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     if (!overrideContext) setInput('');
+    setIsLoading(true);
+    if (useStrategist) setIsStrategistMode(true);
     setIsLoading(true);
 
     let assistantSoFar = '';
@@ -451,7 +472,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         body: JSON.stringify({
           messages: newMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
-          analysisMode: !!overrideContext,
+          analysisMode: !!overrideContext && !useStrategist,
+          strategistMode: useStrategist || isStrategistMode,
           language,
           domain,
           trackedSiteId,
@@ -797,6 +819,36 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
     sendMessage(prompts[language] || prompts.fr);
   }, [nodes, language, isLoading]);
 
+  // ── Strategy 360° handler ──
+  const handleStrategy360 = useCallback(() => {
+    if (isLoading || !trackedSiteId) return;
+
+    const prompts: Record<string, string> = {
+      fr: `STRATÉGIE 360°
+
+Lance un diagnostic complet de mon site et prescris une stratégie d'optimisation priorisée. 
+Analyse tous les axes : contenu, sémantique, structure, autorité.
+Pour chaque problème détecté, prescris une action concrète avec son niveau de priorité et son canal d'exécution (éditorial, technique, opérationnel).
+Termine par un résumé exécutif et les prochaines étapes.`,
+
+      en: `360° STRATEGY
+
+Run a complete diagnosis of my site and prescribe a prioritized optimization strategy.
+Analyze all axes: content, semantic, structure, authority.
+For each detected issue, prescribe a concrete action with its priority level and execution channel (editorial, technical, operational).
+End with an executive summary and next steps.`,
+
+      es: `ESTRATEGIA 360°
+
+Ejecuta un diagnóstico completo de mi sitio y prescribe una estrategia de optimización priorizada.
+Analiza todos los ejes: contenido, semántica, estructura, autoridad.
+Para cada problema detectado, prescribe una acción concreta con su nivel de prioridad y canal de ejecución (editorial, técnico, operacional).
+Termina con un resumen ejecutivo y próximos pasos.`,
+    };
+
+    sendMessage(prompts[language] || prompts.fr, true);
+  }, [language, isLoading, trackedSiteId]);
+
   const clearChat = () => {
     setMessages([]);
     chatHistoryId.current = null;
@@ -905,6 +957,9 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
               <button onClick={handleOptimizeLinking} disabled={isLoading || nodes.length < 3} className="p-1 rounded-lg hover:bg-emerald-500/20 transition-colors disabled:opacity-30" title={t.optimize}>
                 <Network className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
               </button>
+              <button onClick={handleStrategy360} disabled={isLoading || !trackedSiteId} className="p-1 rounded-lg hover:bg-amber-500/20 transition-colors disabled:opacity-30" title={t.strategy}>
+                <Compass className="w-3 h-3 text-amber-400/60 hover:text-amber-400" />
+              </button>
               <div className="w-px h-3 bg-white/10 mx-0.5" />
               {messages.length > 0 && (
                 <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
@@ -920,16 +975,26 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
             {messages.length === 0 && (
-              <div className="text-center py-6 space-y-4">
+              <div className="text-center py-6 space-y-3">
                 <p className="text-xs text-white/30">{t.empty}</p>
-                <button
-                  onClick={handleOptimizeLinking}
-                  disabled={isLoading || nodes.length < 3}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Network className="w-3.5 h-3.5" />
-                  {t.optimize}
-                </button>
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={handleStrategy360}
+                    disabled={isLoading || !trackedSiteId}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium hover:from-amber-500/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    {t.strategyBtn}
+                  </button>
+                  <button
+                    onClick={handleOptimizeLinking}
+                    disabled={isLoading || nodes.length < 3}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Network className="w-3.5 h-3.5" />
+                    {t.optimize}
+                  </button>
+                </div>
               </div>
             )}
             {messages.map((msg, i) => {
@@ -940,7 +1005,9 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
                 ? getAnalysisLabel(msg.content, language)
                 : isUser && isOptimizePrompt(msg.content)
                   ? getOptimizeLabel(language)
-                  : msg.content;
+                  : isUser && isStrategyPrompt(msg.content)
+                    ? getStrategyLabel(language)
+                    : msg.content;
 
               return (
               <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>

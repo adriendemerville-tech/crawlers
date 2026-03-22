@@ -29,7 +29,7 @@ serve(async (req) => {
       }
     }
 
-    const { messages, context, analysisMode, language, domain, trackedSiteId } = await req.json();
+    const { messages, context, analysisMode, language, domain, trackedSiteId, strategistMode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -75,14 +75,12 @@ serve(async (req) => {
           ga4Res,
           indexHistoryRes,
         ] = await Promise.all([
-          // Latest crawl
           supabase
             .from('site_crawls')
             .select('id, domain, status, total_pages, crawled_pages, avg_score, ai_summary, created_at, completed_at')
             .eq('domain', normalizedDomain)
             .order('created_at', { ascending: false })
             .limit(3),
-          // Crawl pages from latest crawl (summary only)
           supabase
             .from('site_crawls')
             .select('id')
@@ -100,14 +98,12 @@ serve(async (req) => {
                 .limit(50);
               return { data: pages };
             }),
-          // Audit raw data (latest)
           supabase
             .from('audit_raw_data')
             .select('audit_type, created_at')
             .eq('domain', normalizedDomain)
             .order('created_at', { ascending: false })
             .limit(5),
-          // SERP KPIs (latest snapshot)
           supabase
             .from('domain_data_cache')
             .select('data_type, result_data, created_at')
@@ -115,28 +111,24 @@ serve(async (req) => {
             .in('data_type', ['serp_kpis', 'keyword_rankings'])
             .order('created_at', { ascending: false })
             .limit(2),
-          // Backlink snapshot (latest)
           supabase
             .from('backlink_snapshots')
             .select('referring_domains, backlinks_total, domain_rank, referring_domains_new, referring_domains_lost, measured_at')
             .eq('tracked_site_id', trackedSiteId)
             .order('measured_at', { ascending: false })
             .limit(1),
-          // GSC history (latest)
           supabase
             .from('gsc_history_log')
             .select('clicks, impressions, ctr, avg_position, top_queries, week_start_date')
             .eq('tracked_site_id', trackedSiteId)
             .order('week_start_date', { ascending: false })
             .limit(4),
-          // GA4 history (latest)
           supabase
             .from('ga4_history_log')
             .select('total_users, sessions, pageviews, bounce_rate, engagement_rate, week_start_date')
             .eq('tracked_site_id', trackedSiteId)
             .order('week_start_date', { ascending: false })
             .limit(4),
-          // Crawl index history
           supabase
             .from('crawl_index_history')
             .select('total_pages, indexed_count, noindex_count, gsc_indexed_count, week_start_date')
@@ -147,7 +139,6 @@ serve(async (req) => {
 
         const blocks: string[] = [];
 
-        // Crawl summary
         if (crawlRes.data?.length) {
           const latest = crawlRes.data[0];
           blocks.push(`CRAWL MULTI-PAGES (dernier: ${latest.created_at?.slice(0, 10)}):
@@ -155,7 +146,6 @@ serve(async (req) => {
 - Résumé IA: ${latest.ai_summary?.slice(0, 500) || 'Non disponible'}`);
         }
 
-        // Crawl pages (worst pages)
         if (crawlPagesRes.data?.length) {
           const worstPages = crawlPagesRes.data.slice(0, 15).map((p: any) =>
             `  - ${p.url} | Score: ${p.seo_score}/200 | Mots: ${p.word_count || '?'} | Liens int: ${p.internal_links || 0} | Profondeur: ${p.crawl_depth || '?'} | Noindex: ${p.has_noindex ? 'oui' : 'non'} | Issues: ${(p.issues || []).join(', ') || 'aucune'}`
@@ -163,12 +153,10 @@ serve(async (req) => {
           blocks.push(`PAGES LES PLUS FAIBLES (top 15 par score):\n${worstPages}`);
         }
 
-        // Audit history
         if (auditRes.data?.length) {
           blocks.push(`AUDITS RÉALISÉS:\n${auditRes.data.map((a: any) => `  - ${a.audit_type} le ${a.created_at?.slice(0, 10)}`).join('\n')}`);
         }
 
-        // SERP KPIs
         if (serpRes.data?.length) {
           for (const entry of serpRes.data) {
             if (entry.data_type === 'serp_kpis' && entry.result_data) {
@@ -180,7 +168,6 @@ serve(async (req) => {
           }
         }
 
-        // Backlinks
         if (backlinkRes.data?.length) {
           const bl = backlinkRes.data[0];
           blocks.push(`BACKLINKS (${bl.measured_at?.slice(0, 10)}):
@@ -188,7 +175,6 @@ serve(async (req) => {
 - Rang domaine: ${bl.domain_rank || '?'}, Nouveaux: +${bl.referring_domains_new || 0}, Perdus: -${bl.referring_domains_lost || 0}`);
         }
 
-        // GSC
         if (gscRes.data?.length) {
           const latest = gscRes.data[0];
           blocks.push(`GOOGLE SEARCH CONSOLE (semaine ${latest.week_start_date}):
@@ -196,7 +182,6 @@ serve(async (req) => {
 - Top requêtes: ${JSON.stringify(latest.top_queries)?.slice(0, 300) || 'N/A'}`);
         }
 
-        // GA4
         if (ga4Res.data?.length) {
           const latest = ga4Res.data[0];
           blocks.push(`GOOGLE ANALYTICS (semaine ${latest.week_start_date}):
@@ -204,7 +189,6 @@ serve(async (req) => {
 - Taux rebond: ${(latest.bounce_rate * 100).toFixed(1)}%, Engagement: ${(latest.engagement_rate * 100).toFixed(1)}%`);
         }
 
-        // Index history
         if (indexHistoryRes.data?.length) {
           const latest = indexHistoryRes.data[0];
           blocks.push(`INDEXATION (semaine ${latest.week_start_date}):
@@ -221,17 +205,158 @@ serve(async (req) => {
       console.warn('[cocoon-chat] Could not fetch domain data:', e);
     }
 
+    // ══════════════════════════════════════════════════════
+    // ★ STRATEGIST MODE: Fetch strategy data if requested
+    // ══════════════════════════════════════════════════════
+    let strategistBlock = '';
+    if (strategistMode && trackedSiteId) {
+      try {
+        console.log('[cocoon-chat] Strategist mode: fetching strategy plan...');
+        
+        // First try to get a recent plan (< 24h)
+        const { data: recentPlan } = await supabase
+          .from('cocoon_strategy_plans')
+          .select('*')
+          .eq('tracked_site_id', trackedSiteId)
+          .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let strategyData = recentPlan?.strategy;
+
+        // If no recent plan, trigger strategist now
+        if (!strategyData) {
+          console.log('[cocoon-chat] No recent plan, triggering strategist...');
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+          const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+          const stratResp = await fetch(`${supabaseUrl}/functions/v1/cocoon-strategist`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              tracked_site_id: trackedSiteId,
+              domain,
+              lang: language || 'fr',
+            }),
+          });
+
+          if (stratResp.ok) {
+            const result = await stratResp.json();
+            strategyData = result.strategy;
+            console.log('[cocoon-chat] Strategist completed:', result.plan_id);
+          } else {
+            console.error('[cocoon-chat] Strategist failed:', stratResp.status);
+          }
+        }
+
+        // Also fetch latest diagnostic results for richer context
+        const { data: diagResults } = await supabase
+          .from('cocoon_diagnostic_results')
+          .select('diagnostic_type, findings, scores, created_at')
+          .eq('tracked_site_id', trackedSiteId)
+          .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (strategyData || diagResults?.length) {
+          const strat = strategyData as any;
+          const parts: string[] = [];
+
+          // Diagnostic summaries
+          if (diagResults?.length) {
+            parts.push('═══ RÉSULTATS DIAGNOSTICS ═══');
+            for (const diag of diagResults) {
+              const findings = (diag.findings as any[]) || [];
+              const criticals = findings.filter((f: any) => f.severity === 'critical');
+              const warnings = findings.filter((f: any) => f.severity === 'warning');
+              const scores = diag.scores as any;
+              
+              parts.push(`\n📊 Diagnostic ${diag.diagnostic_type.toUpperCase()} (${diag.created_at?.slice(0, 10)}):`);
+              parts.push(`  Scores: ${JSON.stringify(scores).slice(0, 200)}`);
+              parts.push(`  ${criticals.length} critiques, ${warnings.length} avertissements, ${findings.length} total`);
+              
+              for (const f of criticals.slice(0, 3)) {
+                parts.push(`  🔴 ${f.title}: ${f.description} (${(f.affected_urls || []).length} pages)`);
+              }
+              for (const f of warnings.slice(0, 3)) {
+                parts.push(`  🟡 ${f.title}: ${f.description}`);
+              }
+            }
+          }
+
+          // Strategy plan
+          if (strat?.tasks?.length) {
+            parts.push('\n═══ PLAN STRATÉGIQUE (prescriptions du Stratège) ═══');
+            parts.push(`Total: ${strat.summary?.total_findings || '?'} problèmes détectés → ${strat.tasks.length} tâches prescrites`);
+            parts.push(`Conflits résolus: ${strat.summary?.conflicts_resolved || 0}`);
+            parts.push(`Répartition: ${strat.summary?.breakdown?.editorial || 0} éditoriales, ${strat.summary?.breakdown?.code || 0} techniques, ${strat.summary?.breakdown?.operational || 0} opérationnelles`);
+
+            for (const task of strat.tasks) {
+              const emoji = task.estimated_impact === 'high' ? '🔴' : task.estimated_impact === 'medium' ? '🟡' : '🟢';
+              const mode = task.execution_mode === 'content_architect' ? '📝' : task.execution_mode === 'code_architect' ? '💻' : '⚙️';
+              parts.push(`\n${emoji}${mode} [P${task.priority}] ${task.title}`);
+              parts.push(`   → ${task.description}`);
+              if (task.affected_urls?.length) {
+                parts.push(`   Pages: ${task.affected_urls.slice(0, 3).join(', ')}${task.affected_urls.length > 3 ? ` (+${task.affected_urls.length - 3})` : ''}`);
+              }
+              if (task.depends_on?.length) {
+                parts.push(`   ⚠ Dépend de: ${task.depends_on.join(', ')}`);
+              }
+              parts.push(`   Mode: ${task.execution_mode} | Destructif: ${task.is_destructive ? 'OUI' : 'non'}`);
+            }
+          }
+
+          strategistBlock = `\n\n${parts.join('\n')}`;
+          console.log(`[cocoon-chat] Strategy context injected: ${parts.length} lines`);
+        }
+      } catch (e) {
+        console.error('[cocoon-chat] Strategist data fetch error:', e);
+      }
+    }
+
     const langInstruction = language === 'en'
       ? 'You MUST reply entirely in English.'
       : language === 'es'
         ? 'Debes responder SIEMPRE en español.'
         : `DÉTECTION DE LANGUE : Détecte la langue du premier message de l'utilisateur. Si l'utilisateur écrit en anglais, réponds ENTIÈREMENT en anglais. Si en espagnol, réponds ENTIÈREMENT en espagnol. Sinon, réponds en français. Conserve cette langue pour TOUTE la conversation.`;
 
+    // ── Build system prompt ──
+    const strategistPromptBlock = strategistMode ? `
+
+RÔLE STRATÈGE ACTIVÉ :
+Tu présentes maintenant les résultats du diagnostic et de la stratégie 360°. 
+Adopte un ton de consultant senior en SEO : assertif, structuré, priorisé.
+
+WORKFLOW DE PRÉSENTATION :
+1. Commence par un RÉSUMÉ EXÉCUTIF (3-4 phrases) : état de santé global du site, principaux risques, opportunités
+2. Puis détaille les PROBLÈMES CRITIQUES avec les tâches prescrites, classées par priorité
+3. Pour chaque tâche, explique :
+   - Le problème détecté (avec URLs affectées)
+   - L'action recommandée
+   - L'impact attendu (fort/moyen/faible)
+   - Le canal d'exécution (éditorial / technique / opérationnel)
+4. Termine par les PROCHAINES ÉTAPES concrètes
+
+FORMATAGE :
+- Utilise des emojis pour la sévérité : 🔴 critique, 🟡 avertissement, 🟢 info
+- Utilise 📝 pour éditorial, 💻 pour technique, ⚙️ pour opérationnel
+- Structure avec des titres markdown (##, ###)
+- Chaque recommandation doit être actionnable
+
+IMPORTANT : Pour la stratégie, la limite de 1000 caractères est LEVÉE. Tu peux aller jusqu'à 3000 caractères pour couvrir l'ensemble du plan.
+Si le plan est très long, découpe ta réponse et indique "Je continue avec le reste du plan..." à la fin.
+` : '';
+
     const basePrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
 
 ${langInstruction}
 ${siteIdentityBlock}
 ${domainDataBlock}
+${strategistBlock}
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
@@ -259,6 +384,7 @@ STYLE DE RÉPONSE :
 - Ne montre jamais de message d'erreur technique ou de processus de réflexion interne
 - Réponds toujours de manière structurée et professionnelle, même si les données sont incomplètes
 - Si tu ne disposes pas de certaines données, dis simplement que cette information n'est pas encore disponible pour ce domaine
+${strategistPromptBlock}
 
 Ton rôle :
 - Interpréter les métriques du cocon (ROI prédictif, GEO score, citabilité LLM, E-E-A-T, content gap, cannibalisation)
@@ -269,12 +395,12 @@ Ton rôle :
 - Donner des conseils pour améliorer la visibilité LLM (GEO)
 - Utiliser les données de crawl, audit, SERP, backlinks, GSC et GA4 quand elles sont disponibles pour enrichir tes analyses
 
-LIMITE DE LONGUEUR (OBLIGATOIRE) :
+${strategistMode ? '' : `LIMITE DE LONGUEUR (OBLIGATOIRE) :
 Chaque réponse doit faire MAXIMUM 1000 caractères (espaces inclus). Si ta réponse complète dépasse 1000 caractères :
 1. Arrête-toi à un point logique avant la limite
 2. Termine par une phrase indiquant que tu as encore des éléments à partager (ex: "Je peux détailler davantage si vous le souhaitez.")
 3. Quand l'utilisateur relance, commence ta réponse par "D'abord, pour compléter ma réponse précédente, " puis continue là où tu t'étais arrêté
-Ne dépasse JAMAIS 1000 caractères. Privilégie la densité d'information et les bullet points courts.
+Ne dépasse JAMAIS 1000 caractères. Privilégie la densité d'information et les bullet points courts.`}
 
 Réponds de façon concise, structurée et actionnable. Utilise des bullets points et du markdown.`;
 
