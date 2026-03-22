@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
