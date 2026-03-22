@@ -189,7 +189,7 @@ const MomentumSection = memo(() => {
     <section className="border-y border-border bg-card/50 py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
-        <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
+        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
