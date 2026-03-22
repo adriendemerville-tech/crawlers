@@ -619,20 +619,8 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <MomentumSection />
         </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <FeatureShowcase />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <IdentityFirstSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <HybridSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <TrustBanner />
-        </Suspense>
 
-        {/* Pro Agency hero — visible only in leadmagnet mode */}
+        {/* Pro Agency hero — after momentum stats */}
         {hideLeadmagnet && (
           <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
@@ -670,8 +658,21 @@ const Index = () => {
           </section>
         )}
 
-        {/* Active crawl notification banner */}
-        <div className="max-w-3xl mx-auto px-4 mb-4">
+        {/* Identity First — right after Pro Agency */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <IdentityFirstSection />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <FeatureShowcase />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <HybridSection />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <TrustBanner />
+        </Suspense>
+
           <ActiveCrawlBanner />
         </div>
         <section aria-label="Outils d'analyse">
