@@ -1531,21 +1531,10 @@ export function SmartConfigurator({
           <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
             {/* View Mode Toggle + Generate Button */}
             <div className="p-3 flex items-center justify-between bg-background flex-shrink-0">
-              <ToggleGroup 
-                type="single" 
-                value={viewMode} 
-                onValueChange={(v) => v && setViewMode(v as ViewMode)}
-                className="bg-muted p-0.5 rounded-md"
-              >
-                <ToggleGroupItem value="visual" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
-                  <Globe className="w-3 h-3" />
-                  Preview
-                </ToggleGroupItem>
-                <ToggleGroupItem value="code" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
-                  <Code className="w-3 h-3" />
-                  Code Source
-                </ToggleGroupItem>
-              </ToggleGroup>
+              <div className="flex items-center gap-2">
+                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Preview</span>
+              </div>
 
               {/* Connect site button - centered */}
               {siteConnected ? (
@@ -1573,8 +1562,8 @@ export function SmartConfigurator({
               {/* Right side actions */}
               <div className="flex items-center gap-3">
 
-                {/* Copy + Save buttons - visible after unlock */}
-                {generatedCode && viewMode === 'code' && hasPaid && (
+                {/* Save button - visible after unlock (code hidden from user) */}
+                {generatedCode && hasPaid && (
                   <>
                     {user && !isAgencyPro && !isAdmin && (
                       <Button
@@ -1587,19 +1576,6 @@ export function SmartConfigurator({
                         <Save className="w-3 h-3" />
                       </Button>
                     )}
-                    <Button
-                      onClick={handleCopy}
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      title={copied ? 'Copié !' : 'Copier le code'}
-                    >
-                      {copied ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </Button>
                     {/* Inject rejection — Popover with install snippet */}
                     {injectRejected && (
                       <Popover open={injectRejected} onOpenChange={(open) => { if (!open) setInjectRejected(false); }}>
@@ -1739,27 +1715,14 @@ export function SmartConfigurator({
               </div>
             </div>
 
-            {/* Preview/Code Content - fills available space with margins */}
+            {/* Preview Content - always visual mode, code hidden from user */}
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              {viewMode === 'visual' ? (
-                <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
-              ) : (
-                <div className="flex-1 min-h-0 flex flex-col pr-4">
-                  <CodeBlock 
-                    code={generatedCode} 
-                    isTyping={false}
-                    placeholder='Cliquez sur "Générer le script" pour voir le code'
-                    placeholderHighlight="Générer le script"
-                    isLocked={!hasPaid && showLockOverlay}
-                    allowScroll={hasPaid}
-                  />
-                </div>
-              )}
+              <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
             </div>
 
 
-            {/* Security Zone - fixed at bottom, only visible in code view */}
-            {viewMode === 'code' && (
+            {/* Security Zone - fixed at bottom */}
+            {(
               <div className="flex-shrink-0">
                 <SecurityZone 
                   siteUrl={siteUrl}

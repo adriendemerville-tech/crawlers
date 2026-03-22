@@ -291,19 +291,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {/* Switch page/code */}
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
-                <span className={`text-xs ${viewMode === 'page' ? 'text-white' : 'text-white/40'}`}>Page</span>
-                <Switch checked={viewMode === 'code'} onCheckedChange={v => setViewMode(v ? 'code' : 'page')} />
-                <span className={`text-xs ${viewMode === 'code' ? 'text-white' : 'text-white/40'}`}>Code HTML</span>
-                {isManuallyEdited && (
-                  <Badge className="ml-2 bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
-                    <PenLine className="w-2.5 h-2.5 mr-1" />Modifié manuellement
-                  </Badge>
-                )}
-                {isManuallyEdited && (
-                  <button onClick={handleResetCode} className="ml-auto flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors">
-                    <RotateCcw className="w-3 h-3" />Restaurer
-                  </button>
-                )}
+                <span className="text-xs text-white/60">Aperçu de la structure</span>
               </div>
             )}
 
@@ -321,7 +309,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                   </div>
                 </div>
               )}
-              {result && viewMode === 'page' && (
+              {result && (
                 <div className="space-y-4 text-white/80">
                   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-4">
                     {result.content_structure?.recommended_h1 && (
@@ -365,16 +353,6 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-              {result && viewMode === 'code' && (
-                <div className="relative h-full">
-                  <textarea
-                    value={finalCode}
-                    onChange={e => setEditedCode(e.target.value)}
-                    spellCheck={false}
-                    className="w-full h-full min-h-[400px] text-xs text-emerald-300/80 font-mono whitespace-pre bg-black/30 rounded-lg p-4 border border-white/5 resize-none focus:outline-none focus:border-[#fbbf24]/30 transition-colors"
-                  />
                 </div>
               )}
             </ScrollArea>
