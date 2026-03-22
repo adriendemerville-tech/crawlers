@@ -230,6 +230,7 @@ const LABELS: Record<string, Record<string, string>> = {
     restructure: 'Restructure site architecture',
     create_pillar: 'Create a pillar page for this cluster',
     backlink_target: 'Target backlinks to this page',
+    optimize_kw_placement: 'Optimize keyword placement in title',
   },
   es: {
     thin_content: 'Ampliar el contenido de la página',
