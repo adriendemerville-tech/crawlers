@@ -1236,12 +1236,31 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
               />
-              <ChatMicButton
-                onTranscript={(text) => {
-                  setInput(prev => prev ? prev + ' ' + text : text);
-                }}
-                disabled={isLoading}
-              />
+              {strategistCompleted ? (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
+                    className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
+                    title={language === 'en' ? 'Inject linking' : language === 'es' ? 'Inyectar enlaces' : 'Injecter maillage'}
+                  >
+                    <Syringe className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => openContentArchitectWithPlan()}
+                    className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
+                    title="Content Architect"
+                  >
+                    <PenTool className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <ChatMicButton
+                  onTranscript={(text) => {
+                    setInput(prev => prev ? prev + ' ' + text : text);
+                  }}
+                  disabled={isLoading}
+                />
+              )}
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
                 <Send className="w-3.5 h-3.5" />
