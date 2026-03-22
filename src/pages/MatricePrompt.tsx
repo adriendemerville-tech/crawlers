@@ -405,20 +405,20 @@ export default function MatricePrompt() {
   return (
     <>
       <Helmet>
-        <title>Matrice de Prompts SEO & GEO | Crawlers.fr</title>
-        <meta name="description" content="Analysez votre positionnement sur les moteurs IA avec la matrice de prompts Crawlers. Testez votre citabilité LLM en quelques clics." />
+        <title>Matrice d'audit SEO & GEO | Crawlers.fr</title>
+        <meta name="description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/matrice-prompt" />
-        <meta property="og:title" content="Matrice de Prompts SEO & GEO | Crawlers.fr" />
-        <meta property="og:description" content="Analysez votre positionnement sur les moteurs IA avec la matrice de prompts Crawlers. Testez votre citabilité LLM en quelques clics." />
+        <meta property="og:url" content="https://crawlers.fr/matrice" />
+        <meta property="og:title" content="Matrice d'audit SEO & GEO | Crawlers.fr" />
+        <meta property="og:description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
         <meta property="og:locale" content="fr_FR" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Matrice de Prompts SEO & GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Analysez votre positionnement sur les moteurs IA avec la matrice de prompts Crawlers. Testez votre citabilité LLM en quelques clics." />
+        <meta name="twitter:title" content="Matrice d'audit SEO & GEO | Crawlers.fr" />
+        <meta name="twitter:description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
