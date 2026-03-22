@@ -295,6 +295,24 @@ serve(async (req) => {
             parts.push(`Conflits résolus: ${strat.summary?.conflicts_resolved || 0}`);
             parts.push(`Répartition: ${strat.summary?.breakdown?.editorial || 0} éditoriales, ${strat.summary?.breakdown?.code || 0} techniques, ${strat.summary?.breakdown?.operational || 0} opérationnelles`);
 
+            // Feedback from past recommendations
+            if (strat.feedback) {
+              const fb = strat.feedback;
+              if (fb.successful?.length || fb.failed?.length) {
+                parts.push(`\n═══ RÉTROACTION (recommandations passées) ═══`);
+                parts.push(`✅ ${fb.successful?.length || 0} recommandations réussies, ❌ ${fb.failed?.length || 0} échouées, 🔄 ${fb.to_rollback?.length || 0} à annuler`);
+                for (const s of (fb.successful || []).slice(0, 3)) {
+                  parts.push(`  ✅ ${s.action} sur ${s.url} → impact: +${s.impact}`);
+                }
+                for (const f of (fb.failed || []).slice(0, 3)) {
+                  parts.push(`  ❌ ${f.action} sur ${f.url} → impact: ${f.impact}`);
+                }
+                for (const r of (fb.to_rollback || []).slice(0, 3)) {
+                  parts.push(`  🔄 ROLLBACK recommandé: ${r.action} sur ${r.url} (impact: ${r.impact})`);
+                }
+              }
+            }
+
             for (const task of strat.tasks) {
               const emoji = task.estimated_impact === 'high' ? '🔴' : task.estimated_impact === 'medium' ? '🟡' : '🟢';
               const mode = task.execution_mode === 'content_architect' ? '📝' : task.execution_mode === 'code_architect' ? '💻' : '⚙️';
@@ -307,6 +325,17 @@ serve(async (req) => {
                 parts.push(`   ⚠ Dépend de: ${task.depends_on.join(', ')}`);
               }
               parts.push(`   Mode: ${task.execution_mode} | Destructif: ${task.is_destructive ? 'OUI' : 'non'}`);
+            }
+
+            // Development axes
+            if (strat.feedback?.axes?.length) {
+              parts.push('\n═══ AXES DE DÉVELOPPEMENT PROPOSÉS ═══');
+              parts.push('Présente ces 3 axes à l\'utilisateur et demande-lui d\'en choisir UN pour orienter la stratégie :');
+              for (const ax of strat.feedback.axes) {
+                const l = ax.label?.[language || 'fr'] || ax.label?.fr || ax.id;
+                const d = ax.description?.[language || 'fr'] || ax.description?.fr || '';
+                parts.push(`\n🎯 **${l}** : ${d}`);
+              }
             }
           }
 
@@ -333,13 +362,14 @@ Adopte un ton de consultant senior en SEO : assertif, structuré, priorisé.
 
 WORKFLOW DE PRÉSENTATION :
 1. Commence par un RÉSUMÉ EXÉCUTIF (3-4 phrases) : état de santé global du site, principaux risques, opportunités
-2. Puis détaille les PROBLÈMES CRITIQUES avec les tâches prescrites, classées par priorité
-3. Pour chaque tâche, explique :
+2. Si des RÉTROACTIONS existent (recommandations passées), présente-les : ce qui a marché, ce qui a échoué, et les rollbacks recommandés
+3. Puis détaille les PROBLÈMES CRITIQUES avec les tâches prescrites, classées par priorité
+4. Pour chaque tâche, explique :
    - Le problème détecté (avec URLs affectées)
    - L'action recommandée
    - L'impact attendu (fort/moyen/faible)
    - Le canal d'exécution (éditorial / technique / opérationnel)
-4. Termine par les PROCHAINES ÉTAPES concrètes
+5. TERMINE OBLIGATOIREMENT par les 3 AXES DE DÉVELOPPEMENT. Présente chaque axe avec son emoji 🎯, son titre en gras, et sa description. Puis demande à l'utilisateur : "Quel axe souhaitez-vous privilégier ?" L'utilisateur ne peut en choisir qu'un seul.
 
 FORMATAGE :
 - Utilise des emojis pour la sévérité : 🔴 critique, 🟡 avertissement, 🟢 info

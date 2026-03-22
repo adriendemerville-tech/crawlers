@@ -4701,6 +4701,96 @@ export type Database = {
         }
         Relationships: []
       }
+      strategist_recommendations: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string | null
+          domain: string
+          execution_mode: string | null
+          ga4_baseline: Json | null
+          ga4_measured: Json | null
+          gsc_baseline: Json | null
+          gsc_measured: Json | null
+          id: string
+          impact_score: number | null
+          measured_at: string | null
+          metadata: Json | null
+          outcome_assessment: string | null
+          priority: number | null
+          status: string
+          strategy_plan_id: string | null
+          title: string
+          tracked_site_id: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description?: string | null
+          domain: string
+          execution_mode?: string | null
+          ga4_baseline?: Json | null
+          ga4_measured?: Json | null
+          gsc_baseline?: Json | null
+          gsc_measured?: Json | null
+          id?: string
+          impact_score?: number | null
+          measured_at?: string | null
+          metadata?: Json | null
+          outcome_assessment?: string | null
+          priority?: number | null
+          status?: string
+          strategy_plan_id?: string | null
+          title: string
+          tracked_site_id: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string | null
+          domain?: string
+          execution_mode?: string | null
+          ga4_baseline?: Json | null
+          ga4_measured?: Json | null
+          gsc_baseline?: Json | null
+          gsc_measured?: Json | null
+          id?: string
+          impact_score?: number | null
+          measured_at?: string | null
+          metadata?: Json | null
+          outcome_assessment?: string | null
+          priority?: number | null
+          status?: string
+          strategy_plan_id?: string | null
+          title?: string
+          tracked_site_id?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategist_recommendations_strategy_plan_id_fkey"
+            columns: ["strategy_plan_id"]
+            isOneToOne: false
+            referencedRelation: "cocoon_strategy_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategist_recommendations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_payments: {
         Row: {
           amount_cents: number
