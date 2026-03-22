@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   ArrowRight, Shield, Fingerprint, Brain, 
   Target, FileSearch, Network, Layers,
-  CheckCircle2, XCircle, TrendingUp, BarChart3,
+  CheckCircle2, XCircle, TrendingUp, BarChart3, AlertTriangle,
   Bot, Globe, Zap, Search
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -347,19 +347,20 @@ const competitorFeatures = [
   { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
 ];
 
-// [Screaming Frog, Cocolyze, BotRank, Surfer SEO, Crawlers]
-const competitorMatrix: Record<string, boolean[]> = {
-  audit_technique: [true, true, false, false, true],
-  score_geo: [false, false, true, false, true],
+// [Screaming Frog, Surfer SEO, Semrush, Meteoria, Crawlers.fr]
+// true = ✅, false = ❌, 'partial' = ⚠️
+const competitorMatrix: Record<string, (boolean | 'partial')[]> = {
+  audit_technique: [true, false, true, false, true],
+  score_geo: [false, false, false, true, true],
   identite: [false, false, false, false, true],
-  cocon: [false, false, false, true, true],
+  cocon: [false, 'partial', false, false, true],
   code_correctif: [false, false, false, false, true],
   maintenance: [false, false, false, false, true],
-  gmb: [false, false, false, false, true],
+  gmb: [false, false, 'partial', false, true],
   assistants: [false, false, false, false, true],
 };
 
-const competitors = ['Screaming Frog', 'Cocolyze', 'BotRank', 'Surfer SEO', 'Crawlers.fr'];
+const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'Meteoria', 'Crawlers.fr'];
 
 const HybridSection = memo(() => {
   const { language } = useLanguage();
@@ -413,7 +414,7 @@ const HybridSection = memo(() => {
                 <div className="p-3 text-left text-foreground font-medium">{feat[lang] || feat.fr}</div>
                 {competitorMatrix[feat.key].map((has, j) => (
                   <div key={j} className="p-3 flex items-center justify-center border-l border-border">
-                    {has ? <CheckCircle2 className={cn('h-4 w-4', j === 4 ? 'text-brand-violet' : 'text-success')} /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
+                    {has === true ? <CheckCircle2 className={cn('h-4 w-4', j === 4 ? 'text-brand-violet' : 'text-success')} /> : has === 'partial' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
                   </div>
                 ))}
               </div>
