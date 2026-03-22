@@ -465,8 +465,8 @@ const Index = () => {
     if (activeTab === 'pagespeed' && quotaExceeded) {
       dashboards.push(
         <div key="pagespeed-quota" className="border-b border-border/50 pb-8 p-8 text-center">
-          <p className="text-destructive font-semibold">Quota PageSpeed dépassé</p>
-          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">Réessayer</button>
+          <p className="text-destructive font-semibold">{language === 'fr' ? 'Quota PageSpeed dépassé' : language === 'es' ? 'Cuota PageSpeed superada' : 'PageSpeed quota exceeded'}</p>
+          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">{language === 'fr' ? 'Réessayer' : language === 'es' ? 'Reintentar' : 'Retry'}</button>
         </div>
       );
     } else if (activeTab === 'crawlers') {
