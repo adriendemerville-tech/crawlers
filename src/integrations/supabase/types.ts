@@ -2707,6 +2707,54 @@ export type Database = {
           },
         ]
       }
+      injection_abuse_logs: {
+        Row: {
+          abuse_type: string
+          admin_notes: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          is_reviewed: boolean | null
+          owner_user_id: string | null
+          request_metadata: Json | null
+          script_payload_preview: string | null
+          script_type: string | null
+          target_domain: string
+          target_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          abuse_type?: string
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          is_reviewed?: boolean | null
+          owner_user_id?: string | null
+          request_metadata?: Json | null
+          script_payload_preview?: string | null
+          script_type?: string | null
+          target_domain: string
+          target_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          abuse_type?: string
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          is_reviewed?: boolean | null
+          owner_user_id?: string | null
+          request_metadata?: Json | null
+          script_payload_preview?: string | null
+          script_type?: string | null
+          target_domain?: string
+          target_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       injection_error_logs: {
         Row: {
           created_at: string
