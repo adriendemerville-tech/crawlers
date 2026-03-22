@@ -12,10 +12,19 @@ Updated: now
 - Peut envoyer des liens internes (ex: `/cocoon`, `/matrice`, `/console`)
 - Logo robot Crawlers dans la conversation (remplace emoji et "Crawler" texte)
 
+## Couverture GMB complète
+- Connaît le workflow complet : connexion OAuth → import fiches → avis/posts/performances
+- Sait orienter vers Console > GMB ou Console > API pour la connexion
+- Explique les prérequis (Pro Agency + compte Google propriétaire)
+- Décrit les fonctionnalités : avis, posts, performances locales, multi-fiches, drag & drop
+- Intégration avec Audit Local SEO et Stratégie 360°
+- Troubleshooting : fiche non visible → vérifier rôle propriétaire/gestionnaire dans Google Business Profile
+- Ne mentionne JAMAIS les noms de fonctions (`gmb-actions`, `gsc-auth`, etc.)
+
 ## Fonctionnalités avancées
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES), transcription en temps réel
 - **Pièces jointes** : Bouton + — charge un rapport (`pdf_audits`) ou script (`site_script_rules`) du compte de l'utilisateur, avec bouton "Explique-moi"
-- **Suggestions opérationnelles** : rappels de scans, suggestions Cocoon, recommandations d'audit
+- **Suggestions opérationnelles** : rappels de scans, suggestions Cocoon, recommandations d'audit, suggestions GMB si établissement local détecté
 
 ## Scoring de précision (`sav_quality_scores`)
 - `precision_score` (0-100) : qualité globale
