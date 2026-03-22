@@ -1704,6 +1704,7 @@ export type Database = {
       crawl_pages: {
         Row: {
           anchor_texts: Json | null
+          body_text_truncated: string | null
           broken_links: Json | null
           canonical_url: string | null
           content_hash: string | null
@@ -1745,6 +1746,7 @@ export type Database = {
         }
         Insert: {
           anchor_texts?: Json | null
+          body_text_truncated?: string | null
           broken_links?: Json | null
           canonical_url?: string | null
           content_hash?: string | null
@@ -1786,6 +1788,7 @@ export type Database = {
         }
         Update: {
           anchor_texts?: Json | null
+          body_text_truncated?: string | null
           broken_links?: Json | null
           canonical_url?: string | null
           content_hash?: string | null

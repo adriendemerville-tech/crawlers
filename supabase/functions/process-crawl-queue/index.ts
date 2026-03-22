@@ -42,6 +42,7 @@ interface PageAnalysis {
   custom_extraction: Record<string, string>;
   crawl_depth: number;
   html_size_bytes: number;
+  body_text_truncated: string | null;
 }
 
 interface CustomSelector {
@@ -342,7 +343,17 @@ function analyzeHtml(
 
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   let bodyText = '';
+  let bodyTextFull = ''; // Full text including nav/header/footer for semantic analysis
   if (bodyMatch) {
+    // Full body text (for semantic storage)
+    bodyTextFull = bodyMatch[1]
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Main content only (for word count / SEO scoring)
     bodyText = bodyMatch[1]
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -355,6 +366,8 @@ function analyzeHtml(
       .trim();
   }
   const word_count = bodyText.split(/\s+/).filter(w => w.length > 1).length;
+  // Truncated body text for Cocoon semantic analysis (TF-IDF, clustering)
+  const body_text_truncated = bodyTextFull.substring(0, 5000) || null;
 
   // Content hash for near-duplicate detection
   const content_hash = bodyText.length > 50 ? simpleHash(bodyText) : null;
@@ -434,6 +447,7 @@ function analyzeHtml(
     custom_extraction,
     crawl_depth: depth,
     html_size_bytes,
+    body_text_truncated: body_text_truncated,
   };
 }
 
@@ -628,7 +642,61 @@ function detectDuplicates(pages: PageAnalysis[]): Record<string, string[]> {
   return duplicateIssues;
 }
 
-// ── Compute crawl depth from URL structure ─────────────────
+// ── Compute crawl depth via BFS on internal link graph ─────
+function computeBFSDepths(pages: PageAnalysis[], baseUrl: string): Map<string, number> {
+  const depths = new Map<string, number>();
+  
+  // Normalize URL for comparison
+  const normalize = (u: string) => {
+    try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
+  };
+  
+  const basePath = normalize(baseUrl);
+  const allPaths = new Set(pages.map(p => normalize(p.url)));
+  
+  // Build adjacency list from anchor_texts (internal links)
+  const adj = new Map<string, Set<string>>();
+  for (const page of pages) {
+    const srcPath = normalize(page.url);
+    if (!adj.has(srcPath)) adj.set(srcPath, new Set());
+    for (const link of (page.anchor_texts || [])) {
+      if (link.type === 'internal') {
+        const targetPath = normalize(link.href.startsWith('/') ? `https://x${link.href}` : link.href);
+        if (allPaths.has(targetPath)) {
+          adj.get(srcPath)!.add(targetPath);
+        }
+      }
+    }
+  }
+  
+  // BFS from base path
+  depths.set(basePath, 0);
+  const queue = [basePath];
+  let head = 0;
+  while (head < queue.length) {
+    const current = queue[head++];
+    const currentDepth = depths.get(current)!;
+    const neighbors = adj.get(current) || new Set();
+    for (const neighbor of neighbors) {
+      if (!depths.has(neighbor)) {
+        depths.set(neighbor, currentDepth + 1);
+        queue.push(neighbor);
+      }
+    }
+  }
+  
+  // Pages not reachable from root get URL-based fallback depth
+  for (const page of pages) {
+    const path = normalize(page.url);
+    if (!depths.has(path)) {
+      depths.set(path, path.split('/').filter(Boolean).length);
+    }
+  }
+  
+  return depths;
+}
+
+// ── Fallback: compute depth from URL structure ─────────────
 function computeDepth(pageUrl: string, baseUrl: string): number {
   try {
     const basePath = new URL(baseUrl).pathname.replace(/\/$/, '');
@@ -838,6 +906,24 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     .eq('crawl_id', job.crawl_id);
 
   const pages = allPages || [];
+
+  // ── BFS Depth Recalculation (real link graph) ──
+  if (pages.length > 1) {
+    const bfsDepths = computeBFSDepths(pages as PageAnalysis[], job.url);
+    const normalize = (u: string) => {
+      try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
+    };
+    for (const page of pages) {
+      const path = normalize(page.url);
+      const newDepth = bfsDepths.get(path) ?? page.crawl_depth ?? 0;
+      if (newDepth !== page.crawl_depth) {
+        await supabase.from('crawl_pages').update({ crawl_depth: newDepth }).eq('id', page.id);
+        page.crawl_depth = newDepth;
+      }
+    }
+    console.log(`[Worker] BFS depth recalculated for ${pages.length} pages`);
+  }
+
   const avgScore = pages.length > 0
     ? Math.round(pages.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pages.length)
     : 0;
@@ -859,9 +945,9 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
   // ── AI Summary ──
   let aiSummary = '';
   let aiRecommendations: any[] = [];
-  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+  const lovableKey = Deno.env.get('LOVABLE_API_KEY');
 
-  if (openrouterKey && pages.length > 0) {
+  if (lovableKey && pages.length > 0) {
     const issuesSummary: Record<string, number> = {};
     pages.forEach((p: any) => ((p.issues as string[]) || []).forEach(issue => {
       issuesSummary[issue] = (issuesSummary[issue] || 0) + 1;
@@ -929,12 +1015,13 @@ Réponds en JSON STRICT:
 Donne 5-8 recommandations max, classées par impact.`;
 
     try {
+      const lovableKey = Deno.env.get('LOVABLE_API_KEY');
       const aiController = new AbortController();
-      const aiTimeout = setTimeout(() => aiController.abort(), 60000); // #2: 60s timeout
-      const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const aiTimeout = setTimeout(() => aiController.abort(), 60000);
+      const aiRes = await fetch('https://ai.gateway.lovable.dev/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openrouterKey}`,
+          'Authorization': `Bearer ${lovableKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
