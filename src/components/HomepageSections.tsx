@@ -395,6 +395,28 @@ const TrustBanner = memo(() => {
             </div>
           ))}
         </div>
+
+        {/* Stats under table */}
+        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-10">
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">12</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? 'Algorithmes propriétaires' : language === 'es' ? 'Algoritmos propietarios' : 'Proprietary algorithms'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">113</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? "Fonctions d'audit" : language === 'es' ? 'Funciones de auditoría' : 'Audit functions'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">30</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'fr' ? 'Sites monitorés' : language === 'es' ? 'Sitios monitorizados' : 'Monitored sites'}
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );
