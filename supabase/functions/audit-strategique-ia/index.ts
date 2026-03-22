@@ -2286,11 +2286,8 @@ function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string)
 
 /** Save result to audit_cache (fire-and-forget) */
 async function saveToCache(domain: string, url: string, result: any): Promise<void> {
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-  const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
-  if (!serviceKey || !supabaseUrlEnv) return;
   try {
-    const adminClient = createClient(supabaseUrlEnv, serviceKey);
+    const adminClient = getServiceClient();
     const cacheKey = `strategic_${domain}_${url}`;
     await adminClient.from('audit_cache').upsert({
       cache_key: cacheKey,
