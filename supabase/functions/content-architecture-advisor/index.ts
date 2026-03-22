@@ -332,8 +332,10 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "recommended_h1": "Le H1 optimal",
     "hn_hierarchy": [{"level":"h2","text":"...","purpose":"..."},{"level":"h3","text":"...","parent_h2":"..."}],
     "word_count_range": {"min":number,"max":number,"ideal":number},
-    "sections": [{"title":"...","purpose":"...","word_count":number,"priority":"high|medium|low"}],
-    "tldr_summary": "Mini-résumé en 2-3 phrases (si critère 3 actif)"
+    "sections": [{"title":"...","purpose":"...","body_text":"Contenu rédigé complet de la section (paragraphes, listes, etc.)","word_count":number,"priority":"high|medium|low"}],
+    "tldr_summary": "Mini-résumé en 2-3 phrases (si critère 3 actif)",
+    "media_recommendations": [{"type":"image|video|infographic|table","description":"...","alt_text":"...","placement":"after_h2_1|hero|inline"}],
+    "introduction": "Chapô introductif de 2-4 phrases qui accroche le lecteur et contextualise le sujet"
   },
   "keyword_strategy": {
     "primary_keyword": {"keyword":"...","target_density_percent":number},
