@@ -180,6 +180,20 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`llm_depth_conversations\` | Conversations LLM Depth | \`domain\`, \`model\`, \`messages\`, \`expires_at\` |
 | \`sav_quality_scores\` | Scoring précision agent SAV | \`conversation_id\`, \`precision_score\`, \`route_match\`, \`repeated_intent_count\`, \`escalated_to_phone\` |
 
+### Signalement & Recettage
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`user_bug_reports\` | Signalements utilisateurs (bugs, feature requests) | \`user_id\`, \`raw_message\`, \`translated_message\`, \`route\`, \`context_data\`, \`category\`, \`status\`, \`cto_response\`, \`notified_user\` |
+
+### Détection de Chute (Drop Detector)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`drop_diagnostics\` | Diagnostics de chute détectés | \`tracked_site_id\`, \`domain\`, \`drop_score\`, \`drop_probability\`, \`verdict\`, \`verdict_details\`, \`diagnosis_type\` (reactive/predictive) |
+| \`drop_detector_config\` | Configuration globale du détecteur | \`is_enabled\`, \`drop_threshold\`, \`prediction_threshold\`, \`run_frequency\`, \`cost_credits\` |
+| \`drop_detector_logs\` | Registre des exécutions | \`sites_scanned\`, \`alerts_generated\`, \`diagnostics_created\`, \`duration_ms\`, \`errors\` |
+
 ### Cocoon (Architecture Sémantique)
 
 | Table | Description | Colonnes clés |
@@ -368,6 +382,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
 | \`detect-anomalies\` | ✅ | Détection anomalies statistiques (z-score) + notifications |
+| \`drop-detector\` | ✅ | Détection de chute de trafic (réactive + prédictive) + alertes |
 
 ## Utilisateur & Billing
 
@@ -1118,7 +1133,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA (sav-chat)
+## Agent SAV IA (sav-chat) — "Crawler"
 
 ### Architecture
 
@@ -1142,6 +1157,16 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
 - **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
 - **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
+- **Signalement de bugs** : Détection NLP ("bug", "problème", "erreur") → bouton signaler → message capturé, pré-traduit pour le CTO, stocké dans \\\`user_bug_reports\\\`
+- **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
+
+### Mode Créateur (admin uniquement)
+
+Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\` dans \\\`profiles\\\`) :
+- Accès complet aux données backend (tables, edge functions, logs)
+- Interrogation croisée multi-tables avec explication
+- Consultation du code source des edge functions via \\\`view-function-source\\\`
+- **Interdit** : modification de la logique backend (lecture seule)
 
 ### Scoring de précision (\\\`sav_quality_scores\\\`)
 
@@ -1155,7 +1180,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ### Sécurité
 
-- Ne mentionne jamais les technologies internes
+- Ne mentionne jamais les technologies internes (sauf mode créateur)
 - Explique, ne produit pas
 
 ---
@@ -1207,6 +1232,34 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
+## Détection de Chute (\\\`drop-detector\\\`)
+
+- **Edge Function** : \\\`drop-detector\\\`
+- **Exécution** : Automatique (arrière-tâche sur tous les sites trackés) + manuelle via Admin
+- **Détection réactive** : Compare les clics GSC de la semaine en cours vs baseline 4 semaines. Seuil configurable (défaut 15%)
+- **Détection prédictive** : Régression linéaire sur 8 semaines, projection à semaine+2. Alerte si probabilité ≥ 80%
+- **Cross-analyse** : Croise GSC, audits techniques, E-E-A-T, backlinks pour identifier la cause (Trust, Tech, Content, Links, GEO)
+- **Tables** : \\\`drop_diagnostics\\\`, \\\`drop_detector_config\\\`, \\\`drop_detector_logs\\\`
+- **Alertes** : Génère des entrées dans \\\`anomaly_alerts\\\` (bandeau défilant /console)
+- **Admin** : Bouton ON/OFF dans Admin → Scripts, registre des analyses et alertes envoyées
+- **Tarification** : Gratuit Pro Agency/Admin, 3 crédits pour les autres
+
+---
+
+## Circuit de Signalement (Recettage)
+
+- **Déclencheur** : Détection NLP dans Assistant Crawler ou Stratège Cocoon ("bug", "problème", "erreur", etc.)
+- **Workflow** : Bouton "Signaler" → message suivant = signalement → pré-traduction technique via IA → INSERT \\\`user_bug_reports\\\`
+- **Contexte auto-enrichi** : route, user-agent, plan, dernier audit, tracked_site actif
+- **Catégorisation IA** : \\\`bug_ui\\\`, \\\`bug_data\\\`, \\\`feature_request\\\`, \\\`question\\\`
+- **Admin CTO** : Nouvel onglet "Recettage" dans Intelligence → CTO
+- **Statuts** : \\\`open\\\` → \\\`investigating\\\` → \\\`resolved\\\`
+- **Notification** : À la résolution, le premier assistant disponible (Crawler ou Stratège Cocoon) avertit l'utilisateur via badge + message contextuel
+- **Rate-limit** : Max 3 signalements/jour/utilisateur
+- **Anti-doublon** : Hash message + route (<24h)
+
+---
+
 ## Scribe (β)
 
 - **Accès** : Admin only, masqué en démo
@@ -1222,14 +1275,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '5.0.0',
+  version: '6.0.0',
   lastUpdated: '2026-03-22',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège + Diagnostics + Content Architect + Scribe + Cocoon + GMB + Anomalies + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 121,
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 122,
   totalSharedModules: 22,
-  totalTables: '60+',
-  totalLinesOfCode: '172 000+',
-  totalMigrations: 195,
-  totalPages: 40,
-  totalComponents: 295,
+  totalTables: '65+',
+  totalLinesOfCode: '175 000+',
+  totalMigrations: 198,
+  totalPages: 41,
+  totalComponents: 300,
 };

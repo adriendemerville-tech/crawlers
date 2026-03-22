@@ -166,10 +166,20 @@ Visualisation interactive de l'architecture sémantique de votre site en 3D (Thr
 - Clusters thématiques calculés via analyse sémantique avancée
 - Liens internes visualisés et analysés
 - Recommandations de maillage automatiques
-- Chat IA intégré pour affiner la stratégie
+- **Stratège Cocoon** : chat IA intégré pour affiner la stratégie, avec mémoire persistante et reprise de session
 - Export et persistance des sessions
 
 Disponible en Pro Agency.
+
+### Diagnostic de Chute
+Détection automatique et prédictive des baisses de trafic :
+- **Réactif** : détecte les chutes en cours vs baseline 4 semaines
+- **Prédictif** : alerte en amont quand la probabilité de chute ≥ 80%
+- Cross-analyse multi-sources : GSC, audits techniques, E-E-A-T, backlinks
+- Alertes dans le bandeau défilant de la console
+- Surveillance automatique en arrière-tâche de tous vos sites trackés
+
+Gratuit pour les abonnés Pro Agency. 3 crédits par analyse pour les autres.
 
 ### Stratégie 360° (mode avancé du Cocon)
 Le mode Stratégie 360° est accessible via le bouton boussole dans le chat du Cocon Sémantique. Il effectue automatiquement :
@@ -304,7 +314,7 @@ Utilisez l'Architecte Génératif pour générer les correctifs JSON-LD adaptés
 - Vérifiez qu'un crawl multi-pages a été réalisé sur votre site (requis pour le diagnostic)
 - Le Cocon Sémantique doit avoir été généré au moins une fois
 - Assurez-vous d'être sur la page /cocoon avec le bon site sélectionné
-- Le bouton boussole se trouve dans le chat de l'assistant Cocoon
+- Le bouton boussole se trouve dans le chat du Stratège Cocoon
 
 ### Je ne vois pas mes données GSC dans le tableau de bord
 - Les données GSC sont importées après connexion — patientez 5 à 10 minutes
@@ -373,6 +383,9 @@ Non. Crawlers.fr est une infrastructure propriétaire avec plusieurs algorithmes
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 ChatGPT (OpenAI), Gemini (Google), Perplexity et Claude (Anthropic) — en interrogation parallèle simultanée, pas séquentielle.
+
+### Comment signaler un bug ou un problème ?
+Depuis le chat de l'assistant Crawler ou du Stratège Cocoon, mentionnez simplement votre problème (ex : "j'ai un bug", "ça ne marche pas"). L'assistant vous proposera un bouton "Signaler un problème". Votre signalement sera transmis à l'équipe technique et vous serez notifié dès qu'il est résolu.
 
 ### Comment contacter le support ?
 Via le chat in-app disponible sur toutes les pages de l'interface (icône en bas à droite). L'agent IA répond 24h/24. Les questions complexes sont escaladées au fondateur sous 24h ouvrées.
