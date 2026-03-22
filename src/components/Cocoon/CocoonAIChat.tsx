@@ -322,7 +322,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
-  const [fontSize, setFontSize] = useState(12); // px base for messages
+  const [fontSize, setFontSize] = useState(12);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
@@ -331,6 +331,10 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [strategyPlan, setStrategyPlan] = useState<any>(null);
   const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const [architectDraft, setArchitectDraft] = useState<Record<string, any> | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyList, setHistoryList] = useState<Array<{ id: string; updated_at: string; summary: string | null; message_count: number; domain: string }>>([]);
+  const [sessionResumed, setSessionResumed] = useState(false);
+  const resumeAttemptedRef = useRef<string | null>(null);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
