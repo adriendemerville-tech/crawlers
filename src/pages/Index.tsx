@@ -149,51 +149,38 @@ const Index = () => {
   // Inject FAQ JSON-LD only on the homepage
   useEffect(() => {
     // ... keep existing code
+    const faqByLang: Record<string, { q: string; a: string }[]> = {
+      fr: [
+        { q: "Qu'est-ce qu'un audit technique SEO expert ?", a: "Un audit technique SEO expert analyse 200 points de votre site : performance, Core Web Vitals, données structurées, accessibilité et optimisation pour les moteurs de recherche comme Google. Notre outil gratuit fournit un rapport complet avec recommandations personnalisées." },
+        { q: "Qu'est-ce que le score GEO et pourquoi est-il important pour ChatGPT et Gemini ?", a: "Le score GEO (Generative Engine Optimization) mesure l'optimisation de votre site pour les IA comme ChatGPT, Google Gemini et Perplexity. Un score GEO élevé signifie que votre contenu sera mieux compris et référencé par les LLM (Large Language Models) dans leurs réponses." },
+        { q: "Comment améliorer mon référencement pour les moteurs de recherche IA ?", a: "Pour améliorer votre référencement IA : 1) Autorisez les crawlers IA dans robots.txt (GPTBot, ClaudeBot), 2) Utilisez des données structurées JSON-LD, 3) Lancez un audit gratuit sur Crawlers.fr pour vérifier vos fichiers llms.txt et votre sémantique." },
+        { q: "L'audit SEO et GEO est-il vraiment gratuit et rapide ?", a: "Oui, notre audit technique SEO et GEO est 100% gratuit, sans inscription. L'analyse complète de votre site prend environ 30 secondes et inclut : score sur 200 points, Core Web Vitals, analyse des bots IA, et recommandations marketing personnalisées." },
+        { q: "Quels LLM et IA sont analysés par votre outil ?", a: "Notre outil analyse la compatibilité avec : ChatGPT (GPTBot, OAI-SearchBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot), et d'autres crawlers IA. Nous vérifions également votre visibilité marketing dans ces moteurs génératifs." },
+      ],
+      en: [
+        { q: "What is an expert technical SEO audit?", a: "An expert technical SEO audit analyzes 200 points of your website: performance, Core Web Vitals, structured data, accessibility and search engine optimization for Google. Our free tool provides a comprehensive report with personalized recommendations." },
+        { q: "What is the GEO score and why does it matter for ChatGPT and Gemini?", a: "The GEO (Generative Engine Optimization) score measures how well your site is optimized for AI systems like ChatGPT, Google Gemini and Perplexity. A high GEO score means your content will be better understood and cited by LLMs (Large Language Models) in their answers." },
+        { q: "How can I improve my ranking for AI search engines?", a: "To improve your AI ranking: 1) Allow AI crawlers in robots.txt (GPTBot, ClaudeBot), 2) Use JSON-LD structured data, 3) Run a free audit on Crawlers.fr to check your llms.txt files and semantics." },
+        { q: "Is the SEO and GEO audit really free and fast?", a: "Yes, our technical SEO and GEO audit is 100% free, no sign-up required. The full analysis of your site takes about 30 seconds and includes: 200-point score, Core Web Vitals, AI bot analysis, and personalized marketing recommendations." },
+        { q: "Which LLMs and AI systems does your tool analyze?", a: "Our tool analyzes compatibility with: ChatGPT (GPTBot, OAI-SearchBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot), and other AI crawlers. We also verify your marketing visibility in these generative engines." },
+      ],
+      es: [
+        { q: "¿Qué es una auditoría técnica SEO experta?", a: "Una auditoría técnica SEO experta analiza 200 puntos de su sitio web: rendimiento, Core Web Vitals, datos estructurados, accesibilidad y optimización para motores de búsqueda como Google. Nuestra herramienta gratuita proporciona un informe completo con recomendaciones personalizadas." },
+        { q: "¿Qué es el score GEO y por qué es importante para ChatGPT y Gemini?", a: "El score GEO (Generative Engine Optimization) mide la optimización de su sitio para IA como ChatGPT, Google Gemini y Perplexity. Un score GEO alto significa que su contenido será mejor comprendido y citado por los LLM (Large Language Models) en sus respuestas." },
+        { q: "¿Cómo mejorar mi posicionamiento en los motores de búsqueda IA?", a: "Para mejorar su posicionamiento IA: 1) Permita los crawlers IA en robots.txt (GPTBot, ClaudeBot), 2) Use datos estructurados JSON-LD, 3) Lance una auditoría gratuita en Crawlers.fr para verificar sus archivos llms.txt y su semántica." },
+        { q: "¿La auditoría SEO y GEO es realmente gratuita y rápida?", a: "Sí, nuestra auditoría técnica SEO y GEO es 100% gratuita, sin registro. El análisis completo de su sitio toma unos 30 segundos e incluye: puntuación sobre 200 puntos, Core Web Vitals, análisis de bots IA y recomendaciones de marketing personalizadas." },
+        { q: "¿Qué LLM e IA analiza su herramienta?", a: "Nuestra herramienta analiza la compatibilidad con: ChatGPT (GPTBot, OAI-SearchBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot) y otros crawlers IA. También verificamos su visibilidad de marketing en estos motores generativos." },
+      ],
+    };
+    const faqs = faqByLang[language] || faqByLang.fr;
     const faqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Qu'est-ce qu'un audit technique SEO expert ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Un audit technique SEO expert analyse 200 points de votre site : performance, Core Web Vitals, données structurées, accessibilité et optimisation pour les moteurs de recherche comme Google. Notre outil gratuit fournit un rapport complet avec recommandations personnalisées."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Qu'est-ce que le score GEO et pourquoi est-il important pour ChatGPT et Gemini ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Le score GEO (Generative Engine Optimization) mesure l'optimisation de votre site pour les IA comme ChatGPT, Google Gemini et Perplexity. Un score GEO élevé signifie que votre contenu sera mieux compris et référencé par les LLM (Large Language Models) dans leurs réponses."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Comment améliorer mon référencement pour les moteurs de recherche IA ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Pour améliorer votre référencement IA : 1) Autorisez les crawlers IA dans robots.txt (GPTBot, ClaudeBot), 2) Utilisez des données structurées JSON-LD, 3) Lancez un audit gratuit sur Crawlers.fr pour vérifier vos fichiers llms.txt et votre sémantique."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "L'audit SEO et GEO est-il vraiment gratuit et rapide ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Oui, notre audit technique SEO et GEO est 100% gratuit, sans inscription. L'analyse complète de votre site prend environ 30 secondes et inclut : score sur 200 points, Core Web Vitals, analyse des bots IA, et recommandations marketing personnalisées."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Quels LLM et IA sont analysés par votre outil ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Notre outil analyse la compatibilité avec : ChatGPT (GPTBot, OAI-SearchBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot), et d'autres crawlers IA. Nous vérifions également votre visibilité marketing dans ces moteurs génératifs."
-          }
-        }
-      ]
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
     };
     const scriptEl = document.createElement('script');
     scriptEl.type = 'application/ld+json';
@@ -204,7 +191,7 @@ const Index = () => {
     return () => {
       document.querySelectorAll('script[data-schema="homepage-faq"]').forEach(el => el.remove());
     };
-  }, []);
+  }, [language]);
 
   // Trigger onboarding tutorial after first successful analysis (first-time visitors only)
   const triggerTutorialIfNeeded = useCallback(() => {
@@ -478,8 +465,8 @@ const Index = () => {
     if (activeTab === 'pagespeed' && quotaExceeded) {
       dashboards.push(
         <div key="pagespeed-quota" className="border-b border-border/50 pb-8 p-8 text-center">
-          <p className="text-destructive font-semibold">Quota PageSpeed dépassé</p>
-          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">Réessayer</button>
+          <p className="text-destructive font-semibold">{language === 'fr' ? 'Quota PageSpeed dépassé' : language === 'es' ? 'Cuota PageSpeed superada' : 'PageSpeed quota exceeded'}</p>
+          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">{language === 'fr' ? 'Réessayer' : language === 'es' ? 'Reintentar' : 'Retry'}</button>
         </div>
       );
     } else if (activeTab === 'crawlers') {
@@ -580,7 +567,7 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background animate-fade-in">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground text-sm">Chargement de votre console…</p>
+          <p className="text-muted-foreground text-sm">{language === 'fr' ? 'Chargement de votre console…' : language === 'es' ? 'Cargando su consola…' : 'Loading your console…'}</p>
         </div>
       </div>
     );
@@ -589,24 +576,24 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Crawlers.fr — Premier outil francophone SEO + GEO</title>
-        <meta name="description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <title>{language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO' : 'Crawlers.fr — Leading French SEO + GEO Tool'}</title>
+        <meta name="description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
+        <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/" />
-        <meta property="og:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
-        <meta property="og:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta property="og:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
+        <meta property="og:description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Crawlers.fr — Premier outil francophone SEO + GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription." />
+        <meta name="twitter:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
+        <meta name="twitter:description" content={language === 'fr' ? 'Premier outil francophone SEO + GEO. Auditez votre visibilité sur Google ET ChatGPT.' : language === 'es' ? 'Primera herramienta francófona SEO + GEO. Audite su visibilidad en Google Y ChatGPT.' : 'Leading French SEO + GEO tool. Audit your visibility on Google AND ChatGPT.'} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
-      <main className="flex-1" role="main" aria-label="Contenu principal">
+      <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
         <HeroSection 
           onSubmit={handleCheck} 
           isLoading={isLoading} 
@@ -681,7 +668,7 @@ const Index = () => {
         <div className="max-w-3xl mx-auto px-4 mb-4">
           <ActiveCrawlBanner />
         </div>
-        <section aria-label="Outils d'analyse">
+        <section aria-label={language === 'fr' ? "Outils d'analyse" : language === 'es' ? 'Herramientas de análisis' : 'Analysis tools'}>
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
           </Suspense>
