@@ -925,7 +925,6 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     setIsStrategistMode(false);
     setStrategyPlan(null);
   };
-  };
 
   // Parse AI optimization response into deployable link recommendations
   const parseRecommendations = useCallback((content: string) => {
