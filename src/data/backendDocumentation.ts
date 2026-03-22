@@ -660,9 +660,9 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 21 modules
+# Modules Partagés (_shared/) — 22 modules
 
-Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions.
+Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
 ## Liste des modules
 
@@ -670,7 +670,7 @@ Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés
 Headers CORS standard pour les réponses Edge Functions.
 
 ### \`supabaseClient.ts\`
-Factory pour créer le client Supabase côté serveur (service role).
+**Singletons Supabase** : \`getServiceClient()\` (bypass RLS), \`getAnonClient()\` (RLS), \`getUserClient(authHeader)\` (scoped user). Réutilise les connexions pour la performance.
 
 ### \`auth.ts\`
 Utilitaires d'authentification : extraction JWT, vérification utilisateur.
@@ -683,6 +683,12 @@ Moteur de rendu SPA : Fly.io → Browserless → fetch direct (cascade de fallba
 
 ### \`auditCache.ts\`
 Cache des résultats d'audit (TTL configurable, invalidation automatique).
+
+### \`auditUtils.ts\` *(nouveau)*
+Logique mutualisée PageSpeed Insights, Google Safe Browsing, robots.txt et normalisation URL. Extraite de \`expert-audit\` et \`audit-expert-seo\`.
+
+### \`fixTemplates.ts\` *(nouveau)*
+~1120 lignes de templates de code correctif SEO (meta, Hn, schema.org, lazy-load, etc.). Extraits de \`generate-corrective-code\`.
 
 ### \`tokenTracker.ts\`
 Tracking des appels API externes payants dans \`api_call_logs\`.
@@ -708,11 +714,14 @@ Enrichissement du contexte d'un site (secteur, cibles, mots-clés) pour les prom
 ### \`getSiteContext.ts\`
 Récupération du contexte d'un site tracké depuis la base de données.
 
+### \`getDomainContext.ts\`
+Contexte de domaine pour les diagnostics et le stratège.
+
 ### \`fetchGA4.ts\`
 Utilitaire de récupération des données Google Analytics 4.
 
 ### \`resolveGoogleToken.ts\`
-Résolution et rafraîchissement des tokens OAuth Google (GSC, GA4, Ads).
+Résolution multi-comptes et rafraîchissement des tokens OAuth Google (GSC, GA4, GMB, GTM, Ads).
 
 ### \`saveRawAuditData.ts\`
 Persistance des données brutes d'audit dans \`audit_raw_data\`.
