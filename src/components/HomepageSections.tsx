@@ -92,7 +92,8 @@ const i18n = {
     // Trust
     trustTitle: 'La seule solution européenne SEO + GEO full-stack',
     trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO. Deux assistants IA spécialisés — Stratège Cocoon pour l'analyse de graphe sémantique et Assistant Crawlers pour vous aider à tirer parti de toute la profondeur de la data — vous accompagnent à chaque étape. La gestion de votre fiche Google Business Profile est intégrée nativement.",
-    trustDoubt: "Des doutes ? Les fonctions back end de Crawlers.fr sont consultables sur demande.",
+    trustDoubt: "Des doutes ? Les fonctions back-end de Crawlers.fr",
+    trustDoubtLine2: "sont consultables sur demande.",
     trustApiTitle: 'Intégrations natives',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
@@ -134,7 +135,8 @@ const i18n = {
     hybridCta: 'Try for free',
     trustTitle: 'The only European full-stack SEO + GEO solution',
     trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for semantic graph analysis and Crawlers Assistant to help you leverage the full depth of your data — accompany you at every step. Google Business Profile management is natively integrated.',
-    trustDoubt: 'Any doubts? Crawlers.fr backend functions are available for review on request.',
+    trustDoubt: 'Any doubts? Crawlers.fr back-end functions',
+    trustDoubtLine2: 'are available for review on request.',
     trustApiTitle: 'Native integrations',
     trustApiGoogle: 'Google APIs',
     trustApiCms: 'CMS APIs',
@@ -176,7 +178,8 @@ const i18n = {
     hybridCta: 'Probar gratis',
     trustTitle: 'La única solución europea full-stack SEO + GEO',
     trustText: 'Crawlers.fr es la única plataforma europea que cubre todo el ciclo SEO y GEO. Dos asistentes IA especializados — Estratega Cocoon para el análisis de grafos semánticos y Asistente Crawlers para ayudarte a aprovechar toda la profundidad de los datos — te acompañan en cada paso. La gestión de Google Business Profile está integrada nativamente.',
-    trustDoubt: '¿Dudas? Las funciones backend de Crawlers.fr son consultables bajo solicitud.',
+    trustDoubt: '¿Dudas? Las funciones back-end de Crawlers.fr',
+    trustDoubtLine2: 'son consultables bajo solicitud.',
     trustApiTitle: 'Integraciones nativas',
     trustApiGoogle: 'APIs Google',
     trustApiCms: 'APIs CMS',
@@ -459,7 +462,10 @@ const TrustBanner = memo(() => {
         <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
 
         {/* Doubt phrase */}
-        <h2 className="text-xl sm:text-2xl font-bold text-brand-violet text-center mb-8">{t.trustDoubt}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-8">
+          {t.trustDoubt}<br />
+          {(t as any).trustDoubtLine2}
+        </h2>
 
         {/* API Table */}
         <div className="overflow-hidden rounded-xl border border-border max-w-2xl mx-auto">
