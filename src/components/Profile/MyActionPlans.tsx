@@ -126,12 +126,14 @@ const translations = {
 export function MyActionPlans() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { isAdmin } = useAdmin();
   const t = translations[language];
 
   const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
   const [archivesOpen, setArchivesOpen] = useState(false);
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   
   // Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
