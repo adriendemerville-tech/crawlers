@@ -809,6 +809,61 @@ function findingToTasks(finding: any, lang: string, counter: number): StrategicT
       });
       break;
 
+    case 'keyword_mismatch':
+    case 'semantic_drift': {
+      // Use the keyword placement engine to prescribe optimal title & first-sentence
+      const mismatchPages = finding.data?.pages || [];
+      for (const page of mismatchPages.slice(0, 5)) {
+        const targetKw = page.expected_keyword || page.keyword || keyword || '';
+        const currentTitle = page.title || '';
+        const parentKws = page.parent_keywords || [];
+        if (!targetKw || !currentTitle) continue;
+
+        const placement = computeKeywordPlacement(targetKw, currentTitle, parentKws);
+        
+        tasks.push({
+          id: `${baseId}_kwplace_${tasks.length}`,
+          action_type: 'optimize_keyword_placement',
+          priority: 0,
+          title: label('optimize_kw_placement', lang),
+          description: placement.reasoning,
+          affected_urls: [page.url || ''].filter(Boolean),
+          source_diagnostics: [sourceType],
+          execution_mode: 'content_architect',
+          is_destructive: false,
+          depends_on: [],
+          estimated_impact: impact,
+          metadata: {
+            keyword: placement.keyword,
+            current_title: placement.current_title,
+            suggested_title: placement.suggested_title,
+            keyword_position: placement.keyword_position,
+            title_length: placement.title_length,
+            first_sentence_instruction: placement.first_sentence_instruction,
+          },
+        });
+      }
+
+      // Fallback if no structured pages data — still create a generic task
+      if (mismatchPages.length === 0 && urls.length > 0) {
+        tasks.push({
+          id: `${baseId}_kwplace`,
+          action_type: 'optimize_keyword_placement',
+          priority: 0,
+          title: label('optimize_kw_placement', lang),
+          description: finding.description || '',
+          affected_urls: urls.slice(0, 5),
+          source_diagnostics: [sourceType],
+          execution_mode: 'content_architect',
+          is_destructive: false,
+          depends_on: [],
+          estimated_impact: impact,
+          metadata: { manual_review: true },
+        });
+      }
+      break;
+    }
+
     default:
       // Generic fallback
       if (sev === 'critical' || sev === 'warning') {
