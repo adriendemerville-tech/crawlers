@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, ElementType, useRef } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
+import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
