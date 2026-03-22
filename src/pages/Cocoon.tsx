@@ -1196,6 +1196,13 @@ export default function Cocoon() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Onboarding stepper */}
+      <AnimatePresence>
+        {showOnboarding && hasAccess && (
+          <CocoonOnboardingStepper onComplete={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
     </>
   );
 }
