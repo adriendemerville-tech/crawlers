@@ -208,21 +208,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     return parts.join('\n\n');
   }, [result]);
 
-  // Sync original code when AI generates result
-  useEffect(() => {
-    if (htmlPreview) {
-      setOriginalCode(htmlPreview);
-      setEditedCode(null); // reset manual edits
+  const handleResetEdits = useCallback(() => {
+    if (originalResult) {
+      setResult(JSON.parse(JSON.stringify(originalResult)));
+      toast.info('Contenu restauré à la version originale');
     }
-  }, [htmlPreview]);
-
-  const isManuallyEdited = editedCode !== null && editedCode !== originalCode;
-  const finalCode = editedCode ?? htmlPreview;
-
-  const handleResetCode = useCallback(() => {
-    setEditedCode(null);
-    toast.info('Code restauré à la version originale');
-  }, []);
+  }, [originalResult]);
 
   if (!isOpen) return null;
 
