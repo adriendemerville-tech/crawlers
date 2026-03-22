@@ -478,6 +478,25 @@ Deno.serve(async (req) => {
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
+    // ─── Check if this function is enabled for CTO supervision ──────
+    const { data: togglesConfig } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'cto_function_toggles')
+      .maybeSingle();
+    
+    const toggles = togglesConfig?.value as Record<string, boolean> | null;
+    if (toggles && toggles[functionName] === false) {
+      console.log(`[AGENT-CTO] ⏭️ Skipping ${functionName} — disabled by admin toggle`);
+      return new Response(JSON.stringify({
+        success: true,
+        skipped: true,
+        reason: `CTO supervision disabled for ${functionName}`,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ─── Phase 1: Gather real evidence ──────────────────────────────
     const [champion, reliability] = await Promise.all([
       getChampionPrompt(supabase, functionName),
