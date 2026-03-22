@@ -140,7 +140,109 @@ const translations = {
   },
 };
 
-export function MyActionPlans() {
+// Sortable task item component
+function SortableTaskItem({
+  task,
+  planId,
+  isArchived,
+  onToggle,
+  onOpenArchitect,
+  getPriorityColor,
+  getPriorityLabel,
+  architectLabel,
+}: {
+  task: ActionPlanTask;
+  planId: string;
+  isArchived: boolean;
+  onToggle: (planId: string, taskId: string) => void;
+  onOpenArchitect: () => void;
+  getPriorityColor: (p: string) => string;
+  getPriorityLabel: (p: string) => string;
+  architectLabel: string;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
+        getPriorityColor(task.priority),
+        task.isCompleted && "opacity-50",
+        isDragging && "shadow-lg ring-2 ring-primary/20"
+      )}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground shrink-0 touch-none"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Checkbox
+        id={`${planId}-${task.id}`}
+        checked={task.isCompleted}
+        onCheckedChange={() => onToggle(planId, task.id)}
+        className="mt-0.5"
+      />
+      <div className="flex-1 min-w-0">
+        <label
+          htmlFor={`${planId}-${task.id}`}
+          className={cn(
+            "text-sm font-medium cursor-pointer",
+            task.isCompleted && "line-through text-muted-foreground"
+          )}
+        >
+          {task.title}
+        </label>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={cn(
+            "text-xs px-1.5 py-0.5 rounded",
+            task.priority === 'critical' && "bg-destructive/10 text-destructive",
+            task.priority === 'important' && "bg-warning/10 text-warning-foreground",
+            task.priority === 'optional' && "bg-muted text-muted-foreground"
+          )}>
+            {getPriorityLabel(task.priority)}
+          </span>
+          {task.category && (
+            <span className="text-xs text-muted-foreground">
+              {task.category}
+            </span>
+          )}
+        </div>
+      </div>
+      {!task.isCompleted && !isArchived && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenArchitect}
+          className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+        >
+          <Wand2 className="h-3 w-3" />
+          {architectLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
