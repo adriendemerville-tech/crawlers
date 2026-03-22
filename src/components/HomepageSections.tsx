@@ -43,11 +43,11 @@ function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffi
 /* ─── i18n ─── */
 const i18n = {
   fr: {
-    momentumTitle: 'Le SEO évolue. Et vous ?',
-    momentumText: "En 2024, plus de 18 millions de Français utilisent ChatGPT chaque mois. Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs (Large Language Models), vous êtes déjà invisible pour une part croissante de vos prospects.",
-    stat1: '18M', stat1Label: "d'utilisateurs ChatGPT en France",
-    stat2: '168', stat2Label: "critères d'audit analysés",
-    stat3: '4', stat3Label: 'LLMs interrogés simultanément',
+    momentumTitle: 'En janvier 2028, il y aura autant de recherches via les agents IA que sur Google',
+    momentumText: "Google intègre des réponses générées par IA directement dans ses résultats. Les moteurs de recherche traditionnels ne sont plus les seuls arbitres de votre visibilité en ligne. Si votre site n'est pas optimisé pour les LLMs, vous êtes déjà invisible pour une part croissante de vos prospects.",
+    stat1: '750M', stat1Label: "d'utilisateurs de LLMs dans le monde",
+    stat2: 'x3', stat2Label: "taux de conversion LLM vs Google",
+    stat3: '5', stat3Label: 'LLMs interrogés simultanément',
     stat4: '30s', stat4Label: "pour votre Score GEO",
     // Features
     feat1Title: 'Score GEO — Visibilité IA en temps réel',
