@@ -1676,7 +1676,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
       {/* Toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+        className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
           isOpen
             ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]'
             : 'bg-[#fbbf24]/10 border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20'
@@ -1686,6 +1686,11 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         <span className="text-xs font-medium">{t.title}</span>
         {messages.length > 0 && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
+        )}
+        {resolvedBugCount > 0 && !isOpen && (
+          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold animate-pulse">
+            {resolvedBugCount}
+          </span>
         )}
       </button>
 
