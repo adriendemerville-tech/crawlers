@@ -140,6 +140,7 @@ export function ExternalApisTab() {
   const [rankMathLoading, setRankMathLoading] = useState(false);
   const [wpConnection, setWpConnection] = useState<{ id: string; site_url: string } | null>(null);
   const [rankMathConnected, setRankMathConnected] = useState(false);
+  const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
 
   useEffect(() => {
     const checkWpConnection = async () => {
@@ -162,7 +163,27 @@ export function ExternalApisTab() {
     checkWpConnection();
   }, [cmsDialogOpen]);
 
-  const analyticsServices = services.filter(s => s.category === 'analytics');
+  // Check if full Google access is enabled (admin toggle)
+  useEffect(() => {
+    const checkGoogleAccess = async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('config_key', 'full_google_access_auth')
+        .maybeSingle();
+      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+        setFullGoogleAccess(true);
+      }
+    };
+    checkGoogleAccess();
+  }, []);
+
+  // Filter analytics services: GA4, GMB, Google Ads only visible when full access is on
+  const analyticsServices = services.filter(s => {
+    if (s.category !== 'analytics') return false;
+    if (['ga4', 'google-ads', 'gmb'].includes(s.id) && !fullGoogleAccess) return false;
+    return true;
+  });
   const cmsServices = services.filter(s => s.category === 'cms');
 
   const handleServiceClick = async (service: ServiceButton) => {

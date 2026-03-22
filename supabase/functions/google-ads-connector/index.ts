@@ -166,6 +166,19 @@ Deno.serve(async (req) => {
 
     // === LOGIN: Generate OAuth URL ===
     if (action === 'login') {
+      // Check if full Google access is enabled via system_config
+      const { data: accessConfig } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('config_key', 'full_google_access_auth')
+        .maybeSingle();
+      const fullGoogleAccess = accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true;
+      if (!fullGoogleAccess) {
+        return new Response(JSON.stringify({ error: 'Google Ads access requires full Google API access to be enabled by admin', code: 'FULL_ACCESS_DISABLED' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
       const scopes = [
         'https://www.googleapis.com/auth/adwords.readonly',
