@@ -12,12 +12,7 @@ async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) throw new Error("Missing authorization header");
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { authorization: authHeader } } },
-  );
-
+  const supabase = getUserClient(authHeader);
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) throw new Error("Unauthorized");
   return user;
