@@ -367,7 +367,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] h-[80vh] overflow-hidden flex flex-col p-0 gap-0 bg-[#0f0a1e] border-[#a78bfa]/20 text-white">
+      <DialogContent className="max-w-[1035px] h-[80vh] overflow-hidden flex flex-col p-0 gap-0 bg-[#0f0a1e] border-[#a78bfa]/20 text-white">
         {/* Header */}
         <DialogHeader className="px-5 py-3 border-b border-white/5 bg-white/[0.02] flex flex-row items-center justify-between">
           <DialogTitle className="flex items-center gap-2">
