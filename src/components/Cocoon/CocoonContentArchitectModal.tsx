@@ -309,7 +309,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                   </div>
                 </div>
               )}
-              {result && viewMode === 'page' && (
+              {result && (
                 <div className="space-y-4 text-white/80">
                   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-4">
                     {result.content_structure?.recommended_h1 && (
