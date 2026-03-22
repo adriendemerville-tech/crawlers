@@ -664,6 +664,10 @@ const Index = () => {
           <MomentumSection />
         </Suspense>
 
+        <Suspense fallback={<SectionSkeleton />}>
+          <HybridSection />
+        </Suspense>
+
         {/* Identity First */}
         <Suspense fallback={<SectionSkeleton />}>
           <IdentityFirstSection />
@@ -671,9 +675,6 @@ const Index = () => {
 
         <Suspense fallback={<SectionSkeleton />}>
           <FeatureShowcase />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <HybridSection />
         </Suspense>
 
         {/* Active crawl notification banner */}
