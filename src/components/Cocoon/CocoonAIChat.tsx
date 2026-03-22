@@ -513,10 +513,24 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     }
   }, [messages]);
 
-  // Save chat history to shared sav_conversations table
+  // Save chat history to sav_conversations AND cocoon_chat_histories
   const saveHistory = useCallback(async (msgs: Msg[]) => {
     if (!trackedSiteId || !domain || msgs.length === 0 || !user) return;
+
+    // Build summary from last assistant message
+    const lastAssistant = [...msgs].reverse().find(m => m.role === 'assistant');
+    const summaryText = lastAssistant?.content?.replace(/[#*_`]/g, '').split('\n').find(l => l.trim().length > 10)?.trim().slice(0, 150) || '';
+
+    // Build workflow state
+    const workflowState = {
+      strategist_completed: strategistCompleted || isStrategistMode,
+      last_topic: summaryText,
+      pending_tasks: strategyPlan?.tasks?.filter((t: any) => t.status !== 'done').slice(0, 5).map((t: any) => ({ title: t.title, priority: t.priority })) || [],
+      completed_tasks: strategyPlan?.tasks?.filter((t: any) => t.status === 'done').map((t: any) => ({ title: t.title })) || [],
+    };
+
     try {
+      // Save to sav_conversations (existing)
       if (chatHistoryId.current) {
         await supabase.from('sav_conversations').update({
           messages: msgs,
@@ -534,8 +548,21 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         } as any).select('id').single();
         if (data) chatHistoryId.current = data.id;
       }
+
+      // Also persist to cocoon_chat_histories for resume
+      const sessionHash = `${user.id}_${trackedSiteId}`;
+      await supabase.from('cocoon_chat_histories').upsert({
+        session_hash: sessionHash,
+        tracked_site_id: trackedSiteId,
+        domain,
+        user_id: user.id,
+        messages: msgs,
+        message_count: msgs.length,
+        workflow_state: workflowState,
+        summary: summaryText,
+      }, { onConflict: 'session_hash' });
     } catch { /* silent */ }
-  }, [trackedSiteId, domain, user]);
+  }, [trackedSiteId, domain, user, strategistCompleted, isStrategistMode, strategyPlan]);
 
   const buildContext = useCallback(() => {
     if (!nodes.length) return '';
