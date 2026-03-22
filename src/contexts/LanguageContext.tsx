@@ -191,7 +191,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT et Gemini',
       },
       subheadline: {
-        crawlers: "Testez votre visibilité en 30 secondes. Gagnez sur la concurrence.",
+        crawlers: "",
         geo: "Mesurez votre score GEO et votre potentiel de citation par les moteurs génératifs. Optimisation Search Generative Experience incluse.",
         pagespeed: "Core Web Vitals + impact sur le crawling IA. Si votre site est lent, les LLM ne vous indexent pas.",
         llm: "Analysez votre visibilité ChatGPT, Claude et Gemini. Découvrez si votre marque est citée ou ignorée.",
