@@ -606,9 +606,10 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
-    // Enforce 1000 char limit
-    if (reply.length > 1000) {
-      reply = reply.substring(0, 997) + "...";
+    // Enforce char limit (3000 for creator, 1000 for users)
+    const charLimit = isCreator ? 3000 : 1000;
+    if (reply.length > charLimit) {
+      reply = reply.substring(0, charLimit - 3) + "...";
     }
 
     // Save conversation + quality scoring
