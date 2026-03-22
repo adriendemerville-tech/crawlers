@@ -194,7 +194,7 @@ export default function Cocoon() {
   const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [is3DMode, setIs3DMode] = useState(true);
+  const [is3DMode, setIs3DMode] = useState(false);
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
   const [bgWarmth, setBgWarmth] = useState(0);
