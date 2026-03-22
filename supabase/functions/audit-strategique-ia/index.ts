@@ -1972,6 +1972,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     hasExpertCitations: false, detectedSocialUrls: [],
   };
   
+  let ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
   try {
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     console.log('📄 Fetching page metadata...');
