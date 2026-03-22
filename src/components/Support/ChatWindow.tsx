@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { X, Send, Loader2, Phone } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { X, Send, Loader2, Phone, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,6 +28,7 @@ interface ChatWindowProps {
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const location = useLocation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -285,6 +286,33 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                       }}
                     >{msg.content}</ReactMarkdown>
                   </div>
+                  {/* Action buttons for internal links */}
+                  {(() => {
+                    const linkRegex = /\[([^\]]+)\]\(https?:\/\/crawlers\.fr(\/[^\s)]+)\)/g;
+                    const actions: { label: string; path: string }[] = [];
+                    let m;
+                    while ((m = linkRegex.exec(msg.content)) !== null) {
+                      const path = m[2];
+                      if (['/site-crawl', '/cocoon', '/console', '/audit-expert', '/matrice', '/architecte-generatif'].some(p => path.startsWith(p))) {
+                        actions.push({ label: m[1], path });
+                      }
+                    }
+                    if (actions.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {actions.map((a, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => { navigate(a.path); onClose(); }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-muted-foreground/20 text-muted-foreground text-[11px] font-medium hover:bg-muted/50 hover:text-foreground transition-all"
+                          >
+                            {a.label}
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   <span className={cn(
                     'text-[10px] block mt-1',
                     msg.role === 'assistant' ? 'text-violet-500 dark:text-violet-400' : 'text-primary-foreground/70'
