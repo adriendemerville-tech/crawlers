@@ -173,6 +173,41 @@ export function MyActionPlans() {
   const activePlans = useMemo(() => actionPlans.filter(p => !p.is_archived), [actionPlans]);
   const archivedPlans = useMemo(() => actionPlans.filter(p => p.is_archived), [actionPlans]);
 
+  // Unique tracked URLs for sidebar
+  const uniqueUrls = useMemo(() => {
+    const urls = new Map<string, string>();
+    actionPlans.forEach(p => {
+      try {
+        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
+        if (!urls.has(hostname)) urls.set(hostname, p.url);
+      } catch {
+        urls.set(p.url, p.url);
+      }
+    });
+    return Array.from(urls.entries()); // [hostname, originalUrl]
+  }, [actionPlans]);
+
+  // Filter plans by selected URL
+  const filteredActivePlans = useMemo(() => {
+    if (!selectedUrl) return activePlans;
+    return activePlans.filter(p => {
+      try {
+        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
+        return hostname === selectedUrl;
+      } catch { return p.url === selectedUrl; }
+    });
+  }, [activePlans, selectedUrl]);
+
+  const filteredArchivedPlans = useMemo(() => {
+    if (!selectedUrl) return archivedPlans;
+    return archivedPlans.filter(p => {
+      try {
+        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
+        return hostname === selectedUrl;
+      } catch { return p.url === selectedUrl; }
+    });
+  }, [archivedPlans, selectedUrl]);
+
   const toggleTask = async (planId: string, taskId: string) => {
     const plan = actionPlans.find(p => p.id === planId);
     if (!plan) return;
