@@ -464,6 +464,15 @@ Deno.serve(async (req) => {
       'google-ads': 'google-ads-connector',
       'jargon-distance': 'audit-strategique-ia',
       'content-architecture': 'content-architecture-advisor',
+      // Diagnostic functions
+      'diag-content': 'cocoon-diag-content',
+      'diag-semantic': 'cocoon-diag-semantic',
+      'diag-structure': 'cocoon-diag-structure',
+      'diag-authority': 'cocoon-diag-authority',
+      // Strategist
+      'strategist': 'cocoon-strategist',
+      // Content Architect
+      'content-architect': 'content-architecture-advisor',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
