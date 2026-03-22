@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass } from 'lucide-react';
-import { Syringe, Hammer } from 'lucide-react';
+import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -295,6 +295,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
   const [isStrategistMode, setIsStrategistMode] = useState(false);
+  const [strategistCompleted, setStrategistCompleted] = useState(false);
+  const [strategyPlan, setStrategyPlan] = useState<any>(null);
   const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const [architectDraft, setArchitectDraft] = useState<Record<string, any> | null>(null);
   const FONT_MIN = 10;
@@ -444,9 +446,71 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setSelectedSlots(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // ── Text command detection ──
+  const detectCommand = useCallback((text: string): 'architect' | 'content_architect' | null => {
+    const lower = text.toLowerCase().trim();
+    if (/ouvre\s+content\s*architect|open\s+content\s*architect|abre\s+content\s*architect/i.test(lower)) return 'content_architect';
+    if (/ouvre\s+architect|open\s+architect|abre\s+architect/i.test(lower)) return 'architect';
+    return null;
+  }, []);
+
+  // ── Pre-load strategy plan ──
+  const loadStrategyPlan = useCallback(async () => {
+    if (!trackedSiteId || strategyPlan) return;
+    try {
+      const { data } = await supabase
+        .from('cocoon_strategy_plans')
+        .select('strategy')
+        .eq('tracked_site_id', trackedSiteId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.strategy) setStrategyPlan(data.strategy);
+    } catch { /* silent */ }
+  }, [trackedSiteId, strategyPlan]);
+
+  const openArchitectWithPlan = useCallback(() => {
+    loadStrategyPlan();
+    // Will be triggered after handleOptimizeLinking is defined — use a flag
+    setInput('');
+  }, [loadStrategyPlan]);
+
+  const openContentArchitectWithPlan = useCallback(async () => {
+    await loadStrategyPlan();
+    // Pre-load architect draft from strategy plan tasks
+    if (strategyPlan?.tasks?.length && !architectDraft) {
+      const topTask = (strategyPlan.tasks as any[]).find((t: any) => t.execution_mode === 'content_architect');
+      if (topTask) {
+        setArchitectDraft({
+          strategy_task: topTask,
+          title: topTask.title,
+          description: topTask.description,
+          affected_urls: topTask.affected_urls || [],
+        });
+      }
+    }
+    setShowArchitectModal(true);
+  }, [loadStrategyPlan, strategyPlan, architectDraft]);
+
   const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
+
+    // Check for tool commands
+    if (!overrideContext) {
+      const cmd = detectCommand(text);
+      if (cmd === 'content_architect') {
+        setInput('');
+        openContentArchitectWithPlan();
+        return;
+      }
+      if (cmd === 'architect') {
+        setInput('');
+        openArchitectWithPlan();
+        return;
+      }
+    }
+
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -541,6 +605,11 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       }
     } finally {
       setIsLoading(false);
+      // Mark strategist as completed if we were in strategist mode
+      if (isStrategistMode || useStrategist) {
+        setStrategistCompleted(true);
+        loadStrategyPlan();
+      }
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
@@ -852,6 +921,10 @@ Termina con un resumen ejecutivo y próximos pasos.`,
   const clearChat = () => {
     setMessages([]);
     chatHistoryId.current = null;
+    setStrategistCompleted(false);
+    setIsStrategistMode(false);
+    setStrategyPlan(null);
+  };
   };
 
   // Parse AI optimization response into deployable link recommendations
@@ -1139,8 +1212,8 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                       {deploySuccess ? '✓ Injecté' : isDeploying ? '…' : 'Injecter'}
                     </button>
                   )}
-                  {/* Architect button — admin only */}
-                  {isAdmin && (
+                  {/* Architect button */}
+                  {true && (
                     <button
                       onClick={() => setShowArchitectModal(true)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
@@ -1167,12 +1240,31 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
               />
-              <ChatMicButton
-                onTranscript={(text) => {
-                  setInput(prev => prev ? prev + ' ' + text : text);
-                }}
-                disabled={isLoading}
-              />
+              {strategistCompleted ? (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
+                    className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
+                    title={language === 'en' ? 'Inject linking' : language === 'es' ? 'Inyectar enlaces' : 'Injecter maillage'}
+                  >
+                    <Syringe className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => openContentArchitectWithPlan()}
+                    className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
+                    title="Content Architect"
+                  >
+                    <PenTool className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <ChatMicButton
+                  onTranscript={(text) => {
+                    setInput(prev => prev ? prev + ' ' + text : text);
+                  }}
+                  disabled={isLoading}
+                />
+              )}
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
                 <Send className="w-3.5 h-3.5" />
@@ -1198,18 +1290,16 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         )}
       </button>
 
-      {/* Content Architect Modal — admin only */}
-      {isAdmin && (
-        <CocoonContentArchitectModal
-          isOpen={showArchitectModal}
-          onClose={() => setShowArchitectModal(false)}
-          nodes={nodes}
-          domain={domain}
-          trackedSiteId={trackedSiteId}
-          hasCmsConnection={hasCmsConnection}
-          draftData={architectDraft}
-        />
-      )}
+      {/* Content Architect Modal */}
+      <CocoonContentArchitectModal
+        isOpen={showArchitectModal}
+        onClose={() => setShowArchitectModal(false)}
+        nodes={nodes}
+        domain={domain}
+        trackedSiteId={trackedSiteId}
+        hasCmsConnection={hasCmsConnection}
+        draftData={architectDraft}
+      />
     </div>
   );
 }
