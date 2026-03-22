@@ -62,9 +62,15 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Security: user must own the site
-    if (site.user_id !== user.id) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+    // Security: verify ownership (cross-reference user vs site owner)
+    const ownershipCheck = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
+      scriptType: 'cocoon_links',
+      payloadPreview: JSON.stringify(recommendations.slice(0, 3)),
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
+    });
+
+    if (!ownershipCheck.allowed) {
+      return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
