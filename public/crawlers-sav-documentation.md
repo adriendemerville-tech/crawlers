@@ -304,7 +304,7 @@ Utilisez l'Architecte Génératif pour générer les correctifs JSON-LD adaptés
 - Vérifiez qu'un crawl multi-pages a été réalisé sur votre site (requis pour le diagnostic)
 - Le Cocon Sémantique doit avoir été généré au moins une fois
 - Assurez-vous d'être sur la page /cocoon avec le bon site sélectionné
-- Le bouton boussole se trouve dans le chat de l'assistant Cocoon
+- Le bouton boussole se trouve dans le chat du Stratège Cocoon
 
 ### Je ne vois pas mes données GSC dans le tableau de bord
 - Les données GSC sont importées après connexion — patientez 5 à 10 minutes
