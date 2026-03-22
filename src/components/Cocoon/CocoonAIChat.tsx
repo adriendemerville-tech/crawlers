@@ -199,6 +199,8 @@ const labels = {
     analyze: 'Analyser',
     cancel: 'Annuler',
     optimize: 'Optimiser le maillage',
+    strategy: 'Stratégie 360°',
+    strategyBtn: 'Diagnostic & Stratégie',
   },
   en: {
     title: 'Cocoon Assistant',
