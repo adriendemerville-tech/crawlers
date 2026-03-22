@@ -668,7 +668,7 @@ const Index = () => {
         <div className="max-w-3xl mx-auto px-4 mb-4">
           <ActiveCrawlBanner />
         </div>
-        <section aria-label="Outils d'analyse">
+        <section aria-label={language === 'fr' ? "Outils d'analyse" : language === 'es' ? 'Herramientas de análisis' : 'Analysis tools'}>
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
           </Suspense>
