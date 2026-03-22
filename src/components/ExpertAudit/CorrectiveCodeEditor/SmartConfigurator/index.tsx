@@ -1131,6 +1131,19 @@ export function SmartConfigurator({
   const saveConfigToSite = useCallback(async (siteId: string | null, config: Record<string, unknown>) => {
     if (!user || !siteId) return;
     try {
+      // ── Ownership verification: ensure user owns this site ──
+      const { data: siteOwnership } = await supabase
+        .from('tracked_sites')
+        .select('id, user_id')
+        .eq('id', siteId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!siteOwnership) {
+        console.error('[Architecte] SECURITY: ownership mismatch — injection blocked');
+        sonnerToast.error('Vous n\'êtes pas propriétaire de ce site');
+        return;
+      }
       // Fetch current config to save as previous (for rollback)
       const { data: currentSite } = await supabase
         .from('tracked_sites')
