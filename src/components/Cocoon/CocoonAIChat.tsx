@@ -444,13 +444,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setSelectedSlots(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const sendMessage = async (overrideContext?: string) => {
+  const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     if (!overrideContext) setInput('');
+    setIsLoading(true);
+    if (useStrategist) setIsStrategistMode(true);
     setIsLoading(true);
 
     let assistantSoFar = '';
