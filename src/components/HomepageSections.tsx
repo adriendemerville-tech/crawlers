@@ -192,11 +192,11 @@ const MomentumSection = memo(() => {
   ];
 
   const llmLogos = [
-    { name: 'ChatGPT', color: 'text-emerald-500', icon: '⬡' },
-    { name: 'Gemini', color: 'text-blue-500', icon: '✦' },
-    { name: 'Perplexity', color: 'text-brand-violet', icon: '◈' },
-    { name: 'Claude', color: 'text-orange-500', icon: '◉' },
-    { name: 'Grok', color: 'text-foreground', icon: '✕' },
+    { name: 'ChatGPT', src: llmChatgpt },
+    { name: 'Gemini', src: llmGemini },
+    { name: 'Perplexity', src: llmPerplexity },
+    { name: 'Claude', src: llmClaude },
+    { name: 'Grok', src: llmGrok },
   ];
 
   return (
@@ -206,11 +206,11 @@ const MomentumSection = memo(() => {
         <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
 
         {/* LLM logos */}
-        <div className="flex items-center justify-center gap-6 mb-10 flex-wrap">
+        <div className="flex items-center justify-center gap-8 mb-10 flex-wrap">
           {llmLogos.map((llm) => (
-            <div key={llm.name} className="flex items-center gap-1.5">
-              <span className={cn('text-lg font-bold', llm.color)}>{llm.icon}</span>
-              <span className="text-sm font-semibold text-muted-foreground">{llm.name}</span>
+            <div key={llm.name} className="flex flex-col items-center gap-1.5">
+              <img src={llm.src} alt={llm.name} className="h-8 w-8 object-contain" />
+              <span className="text-xs font-semibold text-muted-foreground">{llm.name}</span>
             </div>
           ))}
         </div>
