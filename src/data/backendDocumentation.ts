@@ -290,7 +290,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (111+ fonctions)
+# API — Edge Functions (121 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -320,6 +320,21 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`process-crawl-queue\` | ✅ | 0 | Worker de traitement des jobs |
 | \`scan-wp\` | ✅ | 1 | Scan WordPress (plugins, thème, sécu) |
 
+## Cocoon — Diagnostics & Stratège
+
+| Endpoint | Auth | Crédits | Description |
+|----------|------|---------|-------------|
+| \`calculate-cocoon-logic\` | ✅ | 0 | Calcul du graphe sémantique Cocoon |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
+| \`cocoon-diag-authority\` | ✅ | 0 | Diagnostic autorité (PageRank, backlinks, E-E-A-T) |
+| \`cocoon-diag-content\` | ✅ | 0 | Diagnostic contenu (thin, duplicate, gaps) |
+| \`cocoon-diag-semantic\` | ✅ | 0 | Diagnostic sémantique (clusters, cannibalization) |
+| \`cocoon-diag-structure\` | ✅ | 0 | Diagnostic structure (Hn, profondeur, orphans) |
+| \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev |
+| \`cocoon-deploy-links\` | ✅ | 0 | Déploiement maillage interne vers CMS |
+| \`calculate-internal-pagerank\` | ✅ | 0 | PageRank interne par page |
+| \`persist-cocoon-session\` | ✅ | 0 | Sauvegarde session Cocoon |
+
 ## Génération & IA
 
 | Endpoint | Auth | Crédits | Description |
@@ -329,11 +344,12 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-target-queries\` | ✅ | 1 | Génère des requêtes cibles LLM |
 | \`generate-more-keywords\` | ✅ | 1 | Extension de mots-clés |
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
-| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (recherche Perplexity, maillage interne auto, quality guardrails, traductions EN/ES) |
+| \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (Perplexity, maillage auto, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`cocoon-chat\` | ✅ | 0 | Assistant IA Cocoon (Gemini 3 Flash, streaming SSE) |
-| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO conditionnels, garde-fous tonaux, TF-IDF concurrents) |
+| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) |
+| \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
+| \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP, Drupal, Shopify) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
@@ -343,9 +359,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`calculate-cocoon-logic\` | ✅ | Calcul du graphe sémantique Cocoon |
 | \`calculate-ias\` | ✅ | Indice d'Alignement Stratégique |
-| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
 | \`calculate-llm-visibility\` | ✅ | Score de visibilité LLM |
 | \`calculate-llm-volumes\` | ✅ | Volumes LLM estimés |
 | \`calculate-sov\` | ✅ | Part de voix (Share of Voice) |
@@ -353,6 +367,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
 | \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
+| \`detect-anomalies\` | ✅ | Détection anomalies statistiques (z-score) + notifications |
 
 ## Utilisateur & Billing
 
@@ -384,12 +399,13 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`gsc-auth\` | ✅ | OAuth Google Search Console |
+| \`gsc-auth\` | ✅ | OAuth Google unifié (GSC, GA4, GMB, GTM, Ads — 7 scopes) |
 | \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
-| \`google-ads-connector\` | ✅ | OAuth2 Google Ads + récupération données campagnes |
+| \`google-ads-connector\` | ✅ | OAuth2 Google Ads + données campagnes |
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
+| \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
-| \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP de tous les sites |
+| \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
 
 ## CMS & Bridges externes
@@ -397,7 +413,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`wpsync\` | ✅ | Synchronisation WordPress |
-| \`drupal-actions\` | ✅ | Bridge CMS Drupal |
+| \`drupal-actions\` | ✅ | Bridge CMS Drupal (JSON:API) |
 | \`iktracker-actions\` | ✅ | Bridge IKtracker (CRUD pages/articles) |
 | \`register-cms-webhook\` | ✅ | Enregistrement webhooks CMS |
 | \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
@@ -408,8 +424,9 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | \`gtmetrix-actions\` | ✅ | Audits de performance GTmetrix |
-| \`rankmath-actions\` | ✅ | Gestion métadonnées SEO Rank Math (WordPress) |
-| \`linkwhisper-actions\` | ✅ | Maillage interne Link Whisper (WordPress) |
+| \`rankmath-actions\` | ✅ | Gestion métadonnées SEO Rank Math |
+| \`linkwhisper-actions\` | ✅ | Maillage interne Link Whisper |
+| \`serpapi-actions\` | ✅ | Recherche Google via SerpAPI |
 
 ## Partage & Export
 
@@ -430,14 +447,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
 | \`archive-solution\` | ✅ | Archive une solution/correctif |
 | \`verify-injection\` | ✅ | Vérifie l'injection d'un script |
-| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
 | \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
-
-## GMB (Google My Business)
-
-| Endpoint | Auth | Description |
-|----------|------|-------------|
-| \`gmb-actions\` | ✅ | CRUD fiches GMB, avis, posts, stats |
 
 ## Divers
 
@@ -447,11 +457,10 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
-| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts, monitore content-architecture-advisor) |
-| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, stealthFetch, persistance recommandations) |
-| \`sav-chat\` | ✅ | Agent SAV IA (Gemini, doc enrichie, registre conversations, scoring précision, fallback humain) |
-| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents + audit assistant SAV) |
-| \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
+| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation, monitoring diagnostics + stratège) |
+| \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, persistance recommandations) |
+| \`sav-agent\` | ✅ | Agent SAV IA (Gemini, doc enrichie, scoring précision) |
+| \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
 | \`view-function-source\` | ✅ | Consultation source d'une edge function |
