@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
