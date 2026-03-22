@@ -313,24 +313,82 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <div className="space-y-4 text-white/80">
                   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-4">
                     {result.content_structure?.recommended_h1 && (
-                      <h1 className="text-2xl font-bold text-white">{result.content_structure.recommended_h1}</h1>
+                      <h1
+                        className="text-2xl font-bold text-white outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={e => {
+                          const updated = { ...result };
+                          updated.content_structure.recommended_h1 = e.currentTarget.textContent || '';
+                          setResult(updated);
+                        }}
+                      >{result.content_structure.recommended_h1}</h1>
                     )}
                     {result.metadata_enrichment?.meta_description && (
-                      <p className="text-sm text-white/50 italic border-l-2 border-[#fbbf24]/30 pl-3">{result.metadata_enrichment.meta_description}</p>
+                      <p
+                        className="text-sm text-white/50 italic border-l-2 border-[#fbbf24]/30 pl-3 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={e => {
+                          const updated = { ...result };
+                          updated.metadata_enrichment.meta_description = e.currentTarget.textContent || '';
+                          setResult(updated);
+                        }}
+                      >{result.metadata_enrichment.meta_description}</p>
                     )}
                     {(result.content_structure?.hn_hierarchy || []).filter((h: any) => h.level !== 'h1').map((hn: any, i: number) => (
                       <div key={i} className={hn.level === 'h2' ? 'mt-6' : 'mt-3 ml-4'}>
-                        {hn.level === 'h2' && <h2 className="text-lg font-semibold text-white/90">{hn.text}</h2>}
-                        {hn.level === 'h3' && <h3 className="text-base font-medium text-white/70">{hn.text}</h3>}
+                        {hn.level === 'h2' && (
+                          <h2
+                            className="text-lg font-semibold text-white/90 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={e => {
+                              const updated = { ...result };
+                              updated.content_structure.hn_hierarchy[result.content_structure.hn_hierarchy.indexOf(hn)].text = e.currentTarget.textContent || '';
+                              setResult(updated);
+                            }}
+                          >{hn.text}</h2>
+                        )}
+                        {hn.level === 'h3' && (
+                          <h3
+                            className="text-base font-medium text-white/70 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={e => {
+                              const updated = { ...result };
+                              updated.content_structure.hn_hierarchy[result.content_structure.hn_hierarchy.indexOf(hn)].text = e.currentTarget.textContent || '';
+                              setResult(updated);
+                            }}
+                          >{hn.text}</h3>
+                        )}
                       </div>
                     ))}
                     {(result.content_structure?.sections || []).map((s: any, i: number) => (
                       <div key={i} className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-white/80">{s.title}</span>
+                          <span
+                            className="text-sm font-medium text-white/80 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={e => {
+                              const updated = { ...result };
+                              updated.content_structure.sections[i].title = e.currentTarget.textContent || '';
+                              setResult(updated);
+                            }}
+                          >{s.title}</span>
                           <span className="text-[10px] text-white/30">{s.word_count} mots</span>
                         </div>
-                        <p className="text-xs text-white/40">{s.purpose}</p>
+                        <p
+                          className="text-xs text-white/40 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={e => {
+                            const updated = { ...result };
+                            updated.content_structure.sections[i].purpose = e.currentTarget.textContent || '';
+                            setResult(updated);
+                          }}
+                        >{s.purpose}</p>
                       </div>
                     ))}
                     {result.keyword_strategy?.primary_keyword && (
