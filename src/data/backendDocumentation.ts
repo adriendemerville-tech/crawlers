@@ -180,6 +180,20 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`llm_depth_conversations\` | Conversations LLM Depth | \`domain\`, \`model\`, \`messages\`, \`expires_at\` |
 | \`sav_quality_scores\` | Scoring précision agent SAV | \`conversation_id\`, \`precision_score\`, \`route_match\`, \`repeated_intent_count\`, \`escalated_to_phone\` |
 
+### Signalement & Recettage
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`user_bug_reports\` | Signalements utilisateurs (bugs, feature requests) | \`user_id\`, \`raw_message\`, \`translated_message\`, \`route\`, \`context_data\`, \`category\`, \`status\`, \`cto_response\`, \`notified_user\` |
+
+### Détection de Chute (Drop Detector)
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`drop_diagnostics\` | Diagnostics de chute détectés | \`tracked_site_id\`, \`domain\`, \`drop_score\`, \`drop_probability\`, \`verdict\`, \`verdict_details\`, \`diagnosis_type\` (reactive/predictive) |
+| \`drop_detector_config\` | Configuration globale du détecteur | \`is_enabled\`, \`drop_threshold\`, \`prediction_threshold\`, \`run_frequency\`, \`cost_credits\` |
+| \`drop_detector_logs\` | Registre des exécutions | \`sites_scanned\`, \`alerts_generated\`, \`diagnostics_created\`, \`duration_ms\`, \`errors\` |
+
 ### Cocoon (Architecture Sémantique)
 
 | Table | Description | Colonnes clés |
