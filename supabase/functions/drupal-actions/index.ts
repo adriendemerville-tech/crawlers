@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,13 +7,6 @@ const corsHeaders = {
 };
 
 /** ─── Helpers ────────────────────────────────────────────── */
-
-function getServiceClient() {
-  return createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-}
 
 async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("authorization");
