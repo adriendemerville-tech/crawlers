@@ -271,9 +271,9 @@ export function Header() {
           )}
           {!isAuditExpertPage && isHomePage && (
             <Link to="/cocoon">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Book className="h-4 w-4" />
-                <span className="text-sm">beta Cocoon</span>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                <span className="text-sm font-semibold">Cocoon</span>
               </Button>
             </Link>
           )}
