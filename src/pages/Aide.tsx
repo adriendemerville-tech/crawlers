@@ -453,24 +453,74 @@ const DOC_SECTIONS: DocSection[] = [
     ],
   },
   {
+    id: 'mcp',
+    icon: <Code className="h-4 w-4" />,
+    title: '8. Intégration MCP (Claude & IA)',
+    subsections: [
+      {
+        id: 'mcp-definition',
+        title: "Qu'est-ce que le serveur MCP Crawlers ?",
+        content: `Crawlers.fr expose ses outils d'audit SEO/GEO comme un <strong>serveur MCP</strong> (Model Context Protocol) compatible avec Claude, et tout client MCP.
+<p class="mt-2">Cela signifie que Claude peut directement appeler les outils Crawlers pour auditer un site, vérifier sa visibilité IA, générer du code correctif et mesurer l'impact — le tout en langage naturel.</p>
+<p class="mt-2 text-sm text-muted-foreground">Endpoint : <code>POST /functions/v1/mcp-server</code></p>`,
+      },
+      {
+        id: 'mcp-outils-gratuits',
+        title: 'Outils MCP gratuits (sans authentification)',
+        content: `<ul class="list-disc pl-6 space-y-1">
+<li><strong>check_geo_score</strong> — Score GEO (0-100) pour l'optimisation moteurs IA</li>
+<li><strong>check_llm_visibility</strong> — Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama</li>
+<li><strong>check_ai_crawlers</strong> — Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)</li>
+</ul>`,
+      },
+      {
+        id: 'mcp-outils-pro',
+        title: 'Outils MCP Pro Agency (token requis)',
+        content: `<ul class="list-disc pl-6 space-y-1">
+<li><strong>expert_seo_audit</strong> — Audit SEO 200 points</li>
+<li><strong>strategic_ai_audit</strong> — Audit stratégique IA multi-axes</li>
+<li><strong>generate_corrective_code</strong> — Génération de code correctif JS</li>
+<li><strong>dry_run_script</strong> — Test sandbox avant déploiement</li>
+<li><strong>calculate_cocoon_logic</strong> — Cocon sémantique TF-IDF</li>
+<li><strong>measure_audit_impact</strong> — Mesure d'impact T+30/T+60/T+90</li>
+<li><strong>wordpress_sync</strong> — Injection correctifs WordPress</li>
+<li><strong>fetch_serp_kpis</strong> — KPIs SERP hebdomadaires</li>
+<li><strong>calculate_ias</strong> — Indice d'Alignement Stratégique</li>
+</ul>
+<p class="mt-2 text-sm text-muted-foreground">Authentification via token Supabase d'un compte Pro Agency. Rate limit : 30 appels/heure.</p>`,
+      },
+      {
+        id: 'mcp-usage',
+        title: 'Comment utiliser le MCP avec Claude ?',
+        content: `<ol class="list-decimal pl-6 space-y-1">
+<li>Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers</li>
+<li>Claude découvre automatiquement les 12 outils disponibles</li>
+<li>Demandez en langage naturel : « Audite le site example.com »</li>
+<li>Claude appelle les outils Crawlers et synthétise les résultats</li>
+</ol>
+<p class="mt-2">Pour les outils Pro, votre token d'authentification Crawlers est transmis automatiquement.</p>`,
+      },
+    ],
+  },
+  {
     id: 'a-propos',
     icon: <Info className="h-4 w-4" />,
-    title: '8. À propos de Crawlers.fr',
+    title: '9. À propos de Crawlers.fr',
     subsections: [
       {
         id: 'quest-ce-que-crawlers',
         title: "Qu'est-ce que Crawlers.fr ?",
-        content: `Crawlers.fr est la première plateforme francophone combinant audit SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.`,
+        content: `Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.`,
       },
       {
         id: 'wrapper-gpt',
         title: 'Crawlers.fr est-il un wrapper GPT ?',
-        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 150 000 lignes de code, avec 7 algorithmes propriétaires, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
+        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 124 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
       },
       {
         id: 'llms-interroges',
         title: 'Quels LLMs Crawlers.fr interroge-t-il ?',
-        content: `ChatGPT (OpenAI), Gemini (Google), Perplexity et Claude (Anthropic) — en interrogation parallèle simultanée, pas séquentielle.`,
+        content: `6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).`,
       },
       {
         id: 'support',
