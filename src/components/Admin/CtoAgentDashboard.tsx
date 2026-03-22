@@ -148,6 +148,41 @@ export function CtoAgentDashboard() {
     }
   }
 
+  const handleFunctionToggle = useCallback(async (fnKey: string, checked: boolean) => {
+    const updated = { ...functionToggles, [fnKey]: checked };
+    setFunctionToggles(updated);
+    setSavingToggles(true);
+    try {
+      // Upsert the toggles config
+      const { error } = await supabase
+        .from('system_config' as any)
+        .upsert({ key: 'cto_function_toggles', value: updated, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
+      if (error) throw error;
+      toast({
+        title: checked ? '✅ Connexion activée' : '⚠️ Connexion désactivée',
+        description: `CTO ${checked ? 'supervise' : 'ne supervise plus'} ${fnKey}`,
+      });
+    } catch (e) {
+      console.error('Toggle error:', e);
+      // Revert
+      setFunctionToggles(prev => ({ ...prev, [fnKey]: !checked }));
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder.', variant: 'destructive' });
+    } finally {
+      setSavingToggles(false);
+    }
+  }, [functionToggles, toast]);
+
+  const groupedFunctions = useMemo(() => {
+    const groups: Record<string, typeof CTO_FUNCTION_REGISTRY> = {};
+    CTO_FUNCTION_REGISTRY.forEach(fn => {
+      if (!groups[fn.category]) groups[fn.category] = [];
+      groups[fn.category].push(fn);
+    });
+    return groups;
+  }, []);
+
+  const enabledCount = CTO_FUNCTION_REGISTRY.filter(f => functionToggles[f.key] !== false).length;
+
   async function runCacheHealthCheck() {
     setCheckingCache(true);
     try {
