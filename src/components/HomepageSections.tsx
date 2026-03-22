@@ -180,22 +180,40 @@ const MomentumSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const stats = [
-    { value: 18000000, label: t.stat1Label },
-    { value: 168, label: t.stat2Label },
-    { value: 4, label: t.stat3Label },
-    { value: 30, label: t.stat4Label, suffix: 's' },
+    { label: t.stat1Label, display: t.stat1 },
+    { label: t.stat2Label, display: t.stat2 },
+    { label: t.stat3Label, display: t.stat3 },
+    { label: t.stat4Label, display: t.stat4 },
   ];
+
+  const llmLogos = [
+    { name: 'ChatGPT', color: 'text-emerald-500', icon: '⬡' },
+    { name: 'Gemini', color: 'text-blue-500', icon: '✦' },
+    { name: 'Perplexity', color: 'text-brand-violet', icon: '◈' },
+    { name: 'Claude', color: 'text-orange-500', icon: '◉' },
+    { name: 'Grok', color: 'text-foreground', icon: '✕' },
+  ];
+
   return (
     <section className="border-y border-border bg-card/50 py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
-        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
+        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
+
+        {/* LLM logos */}
+        <div className="flex items-center justify-center gap-6 mb-10 flex-wrap">
+          {llmLogos.map((llm) => (
+            <div key={llm.name} className="flex items-center gap-1.5">
+              <span className={cn('text-lg font-bold', llm.color)}>{llm.icon}</span>
+              <span className="text-sm font-semibold text-muted-foreground">{llm.name}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
-              <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">
-                <AnimatedCounter end={s.value} suffix={s.suffix || ''} />
-              </p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">{s.display}</p>
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
             </div>
           ))}
