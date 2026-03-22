@@ -215,6 +215,8 @@ const labels = {
     analyze: 'Analyze',
     cancel: 'Cancel',
     optimize: 'Optimize linking',
+    strategy: '360° Strategy',
+    strategyBtn: 'Diagnosis & Strategy',
   },
   es: {
     title: 'Asistente Cocoon',
