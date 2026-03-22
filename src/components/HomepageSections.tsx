@@ -459,7 +459,11 @@ const TrustBanner = memo(() => {
     <section className="py-14 md:py-20 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
       <div className="container mx-auto px-4 max-w-4xl">
         <p className="text-sm font-bold uppercase tracking-widest text-brand-violet mb-5 text-center">{t.trustTitle}</p>
-        <p className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10">{t.trustText}</p>
+        <div className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10 space-y-4">
+          {t.trustText.split('\n\n').map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))}
+        </div>
 
         {/* Doubt phrase */}
         <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-8">
