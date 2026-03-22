@@ -122,7 +122,7 @@ const i18n = {
     hybridSubtitle: "Classic SEO tools analyze your site for Google. Crawlers.fr is the first French tool combining optimization for traditional search engines AND generative engines (ChatGPT, Gemini, Perplexity, Claude). This hybrid approach guarantees maximum visibility, regardless of the search channel used by your prospects.",
     colSeo: 'Classic SEO', colCrawlers: 'Crawlers.fr',
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
-    row4: 'AI semantic cocoon', row5: 'Predictive drop detection', row6: 'AI content architect',
+    row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: '#1 French SEO + GEO tool',
     trustText: 'Thousands of digital marketing professionals use Crawlers.fr to audit and optimize their visibility on Google and AI engines. Join them.',
