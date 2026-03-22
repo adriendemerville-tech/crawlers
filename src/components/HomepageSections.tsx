@@ -63,8 +63,9 @@ const i18n = {
     feat4Desc: "La Matrice d'audit est un outil unique qui vous permet de créer vos propres grilles d'évaluation. Importez vos KPIs depuis un fichier CSV ou DOCX, définissez des seuils et pondérations personnalisés, et testez vos pages contre des prompts LLM. Le moteur supporte 6 types de KPIs : balises, données structurées, performance, sécurité, prompts LLM et métriques combinées. Score pondéré global sur 100.",
     feat4Cta: "Ouvrir la Matrice",
     // Identity First
-    idTitle: "L'approche Identity-First : être reconnu, pas seulement indexé",
-    idSubtitle: "Les LLMs ne crawlent pas votre site comme Googlebot. Ils cherchent à comprendre qui vous êtes, ce que vous faites et ce qui vous différencie. Sans identité sémantique claire, l'IA vous confond avec vos concurrents — ou vous ignore complètement.",
+    idTitle: "L'approche Identity-First",
+    idTitle2: "être reconnu, pas seulement indexé",
+    idSubtitle: "Les LLMs ne crawlent pas votre site comme Googlebot. Ils cherchent à comprendre qui vous êtes, ce que vous faites et ce qui vous différencie. Sans identité sémantique claire, l'IA vous confond avec vos concurrents — ou vous ignore.",
     idPoint1Title: 'Carte d\'identité sémantique',
     idPoint1: 'Définissez votre entreprise en classes structurées que les LLMs comprennent : activité, zone géographique, cibles, concurrents, différenciateurs.',
     idPoint2Title: 'Taxonomie enrichie par IA vocale',
@@ -109,7 +110,8 @@ const i18n = {
     feat4Title: 'Audit Matrix — Your Custom Audit Engine',
     feat4Desc: 'The Audit Matrix lets you create your own evaluation grids. Import KPIs from CSV or DOCX files, define custom thresholds and weights, and test your pages against LLM prompts. The engine supports 6 KPI types: tags, structured data, performance, security, LLM prompts and combined metrics. Global weighted score out of 100.',
     feat4Cta: 'Open the Matrix',
-    idTitle: 'The Identity-First Approach: Be Recognized, Not Just Indexed',
+    idTitle: 'The Identity-First Approach',
+    idTitle2: 'be recognized, not just indexed',
     idSubtitle: "LLMs don't crawl your site like Googlebot. They seek to understand who you are, what you do and what differentiates you. Without a clear semantic identity, AI confuses you with competitors — or ignores you entirely.",
     idPoint1Title: 'Semantic Identity Card',
     idPoint1: 'Define your business in structured classes that LLMs understand: activity, geographic zone, targets, competitors, differentiators.',
@@ -149,8 +151,9 @@ const i18n = {
     feat4Title: 'Matriz de auditoría — Tu motor de auditoría personalizado',
     feat4Desc: 'La Matriz de auditoría te permite crear tus propias grillas de evaluación. Importa KPIs desde CSV o DOCX, define umbrales y ponderaciones personalizados, y prueba tus páginas contra prompts LLM. Puntuación ponderada global sobre 100.',
     feat4Cta: 'Abrir la Matriz',
-    idTitle: 'El enfoque Identity-First: ser reconocido, no solo indexado',
-    idSubtitle: 'Los LLMs no rastrean tu sitio como Googlebot. Buscan entender quién eres, qué haces y qué te diferencia. Sin una identidad semántica clara, la IA te confunde con tus competidores — o te ignora completamente.',
+    idTitle: 'El enfoque Identity-First',
+    idTitle2: 'ser reconocido, no solo indexado',
+    idSubtitle: 'Los LLMs no rastrean tu sitio como Googlebot. Buscan entender quién eres, qué haces y qué te diferencia. Sin una identidad semántica clara, la IA te confunde con tus competidores — o te ignora.',
     idPoint1Title: 'Tarjeta de identidad semántica',
     idPoint1: 'Define tu empresa en clases estructuradas que los LLMs entienden: actividad, zona geográfica, targets, competidores, diferenciadores.',
     idPoint2Title: 'Taxonomía enriquecida por IA de voz',
@@ -186,7 +189,7 @@ const MomentumSection = memo(() => {
     <section className="border-y border-border bg-card/50 py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
-        <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
+        <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-10 leading-relaxed">{t.momentumText}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
@@ -235,7 +238,7 @@ const FeatureShowcase = memo(() => {
                 <h3 className="text-xl font-bold text-foreground sm:text-2xl">{item.title}</h3>
               </div>
               {/* Description — rich text for SEO */}
-              <p className="text-muted-foreground leading-relaxed pl-8">{item.desc}</p>
+              <p className="text-muted-foreground text-base sm:text-lg leading-relaxed pl-8">{item.desc}</p>
               {/* CTA — transparent with violet border */}
               <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
@@ -272,17 +275,18 @@ const IdentityFirstSection = memo(() => {
             <Fingerprint className="h-3.5 w-3.5" />
             Identity-First
           </div>
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.idTitle}</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.idSubtitle}</p>
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-1">{t.idTitle}</h2>
+          <h2 className="text-2xl font-bold text-brand-violet sm:text-3xl mb-4">{t.idTitle2}</h2>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">{t.idSubtitle}</p>
         </div>
 
         <div className="space-y-8">
           {points.map((pt, i) => (
             <div key={i} className="flex items-start gap-4">
-              <pt.icon className="h-5 w-5 text-brand-violet shrink-0 mt-0.5" strokeWidth={1.8} />
+              <pt.icon className="h-5 w-5 text-brand-violet shrink-0 mt-1" strokeWidth={1.8} />
               <div>
-                <h4 className="font-semibold text-foreground mb-1">{pt.title}</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{pt.text}</p>
+                <h4 className="font-semibold text-foreground text-lg mb-1">{pt.title}</h4>
+                <p className="text-base text-muted-foreground leading-relaxed">{pt.text}</p>
               </div>
             </div>
           ))}
@@ -314,7 +318,7 @@ const HybridSection = memo(() => {
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.hybridTitle}</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border">
