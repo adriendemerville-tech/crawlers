@@ -133,6 +133,27 @@ Analyse de votre présence locale :
 - Positionnement Pack Local
 - Cohérence NAP (Nom, Adresse, Téléphone)
 - Recommandations de visibilité locale
+- Si GMB est connecté, les données réelles de votre fiche alimentent le diagnostic (au lieu d'estimations tierces)
+
+### Google My Business (GMB)
+Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
+
+**Connexion :**
+1. Depuis Console > GMB ou Console > API, cliquez sur "Connecter Google My Business"
+2. Autorisez l'accès via votre compte Google (le même flux que GSC/GA4)
+3. Vos fiches d'établissement sont importées automatiquement
+
+**Fonctionnalités :**
+- Consultation et réponse aux avis Google (note moyenne, tendance, historique)
+- Publication de Google Posts (actualités, offres, événements)
+- Tableau de bord performances locales (vues, recherches, clics, appels, demandes d'itinéraire)
+- Gestion multi-établissements avec glisser-déposer
+- Informations de la fiche (nom, adresse, catégorie, horaires)
+- Les données GMB alimentent automatiquement l'Audit Local SEO et le diagnostic de la Stratégie 360°
+
+**Prérequis :** abonnement Pro Agency et compte Google propriétaire/gestionnaire de la fiche.
+
+**Interface trilingue :** disponible en français, anglais et espagnol.
 
 ### Audit Matrice de Prompts
 Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultanément :
