@@ -1,6 +1,6 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "2.0"
+version: "3.0"
 date: "2026-03-22"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
