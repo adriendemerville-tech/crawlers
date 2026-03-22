@@ -463,6 +463,9 @@ export function ScriptKillSwitches() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Drop Detector */}
+    <DropDetectorAdmin />
     </div>
   );
 }
