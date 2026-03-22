@@ -103,7 +103,7 @@ const i18n = {
     momentumText: "Google integrates AI-generated answers directly into its results. Traditional search engines are no longer the only arbiters of your online visibility. If your site isn't optimized for LLMs, you're already invisible to a growing share of your prospects.",
     stat1: '200M', stat1Label: 'LLM users in Europe',
     stat2: 'x3', stat2Label: 'LLM conversion rate vs Google',
-    stat3: '5', stat3Label: 'LLMs queried simultaneously',
+    stat3: '7', stat3Label: 'LLMs queried simultaneously',
     stat4: '30s', stat4Label: 'for your GEO Score',
     feat1Title: 'GEO Score — Real-time AI Visibility',
     feat1Desc: 'Is your site cited by ChatGPT, Gemini, Perplexity or Claude? The GEO Score is the first French indicator measuring your presence in AI-generated answers. In 30 seconds, get a score out of 100 with actionable recommendations: missing structured data, misconfigured robots.txt, absent llms.txt, insufficient semantics. Every point gained improves your probability of being cited as a source by LLMs.',
