@@ -247,6 +247,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
   useEffect(() => {
     setGeneratedCode('');
     setCopied(false);
+    setInjected(false);
     const detected = recommendationText ? detectFixFromRecommendation(recommendationText) : null;
     setFixes(COCOON_FIXES.map(f => ({
       ...f,
