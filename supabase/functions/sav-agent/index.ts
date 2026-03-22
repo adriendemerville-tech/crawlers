@@ -11,12 +11,12 @@ const FRONTEND_TAXONOMY = `
 # TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte — positions visuelles)
 
 ## Header principal (barre noire en haut, toutes pages connectées)
-Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice | [avatar profil à droite]
+Position gauche→droite : Logo Crawlers | Console | Audit | Crawl | BETA Cocoon | BETA Matrice d'audit | [avatar profil à droite]
 - Console → /console (tableau de bord principal)
 - Audit → /audit-expert (audit technique SEO 200 points)
 - Crawl → /site-crawl (crawl multi-pages)
 - BETA Cocoon → /cocoon (cocon sémantique 3D, texte orange)
-- BETA Matrice → /matrice (matrice de prompts LLM, texte orange)
+- BETA Matrice d'audit → /matrice (moteur d'audit sur-mesure multi-critères, texte orange)
 
 ## Sous-menu de /console (barre d'onglets horizontale sous le header)
 Position gauche→droite : Pro Agency | Mes sites | Plans d'Action | <Scripts> | Crawls | GMB | Rapports | Bundle | Créateur
