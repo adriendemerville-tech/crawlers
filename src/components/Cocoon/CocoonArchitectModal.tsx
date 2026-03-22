@@ -145,6 +145,7 @@ interface CocoonArchitectModalProps {
   trackedSiteId: string;
   /** Recommendation text used to auto-detect the best fix */
   recommendationText?: string;
+  trackedSiteDomainId?: string;
 }
 
 // Map recommendation text keywords to fix IDs for pre-selection
