@@ -32,8 +32,16 @@ const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
+const HomepageSections = lazy(() => import('@/components/HomepageSections').then(m => ({
+  default: ({ children }: any) => children
+})));
 
-// Lazy load Footer - not needed for initial render
+// Lazy load individual homepage sections
+const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
+const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.FeatureShowcase })));
+const IdentityFirstSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.IdentityFirstSection })));
+const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
+const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
