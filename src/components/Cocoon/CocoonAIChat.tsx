@@ -446,9 +446,71 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setSelectedSlots(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // ── Text command detection ──
+  const detectCommand = useCallback((text: string): 'architect' | 'content_architect' | null => {
+    const lower = text.toLowerCase().trim();
+    if (/ouvre\s+content\s*architect|open\s+content\s*architect|abre\s+content\s*architect/i.test(lower)) return 'content_architect';
+    if (/ouvre\s+architect|open\s+architect|abre\s+architect/i.test(lower)) return 'architect';
+    return null;
+  }, []);
+
+  // ── Pre-load strategy plan ──
+  const loadStrategyPlan = useCallback(async () => {
+    if (!trackedSiteId || strategyPlan) return;
+    try {
+      const { data } = await supabase
+        .from('cocoon_strategy_plans')
+        .select('strategy')
+        .eq('tracked_site_id', trackedSiteId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.strategy) setStrategyPlan(data.strategy);
+    } catch { /* silent */ }
+  }, [trackedSiteId, strategyPlan]);
+
+  const openArchitectWithPlan = useCallback(() => {
+    loadStrategyPlan();
+    // Architect = deploy links (Syringe action) — trigger optimize linking
+    handleOptimizeLinking();
+  }, [loadStrategyPlan, handleOptimizeLinking]);
+
+  const openContentArchitectWithPlan = useCallback(async () => {
+    await loadStrategyPlan();
+    // Pre-load architect draft from strategy plan tasks
+    if (strategyPlan?.tasks?.length && !architectDraft) {
+      const topTask = (strategyPlan.tasks as any[]).find((t: any) => t.execution_mode === 'content_architect');
+      if (topTask) {
+        setArchitectDraft({
+          strategy_task: topTask,
+          title: topTask.title,
+          description: topTask.description,
+          affected_urls: topTask.affected_urls || [],
+        });
+      }
+    }
+    setShowArchitectModal(true);
+  }, [loadStrategyPlan, strategyPlan, architectDraft]);
+
   const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
+
+    // Check for tool commands
+    if (!overrideContext) {
+      const cmd = detectCommand(text);
+      if (cmd === 'content_architect') {
+        setInput('');
+        openContentArchitectWithPlan();
+        return;
+      }
+      if (cmd === 'architect') {
+        setInput('');
+        openArchitectWithPlan();
+        return;
+      }
+    }
+
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
