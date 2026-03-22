@@ -521,63 +521,29 @@ export function MyActionPlans() {
               transition={{ duration: 0.2 }}
               className="border-t"
             >
-              <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
-                {sortedTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border-l-4 transition-all",
-                      getPriorityColor(task.priority),
-                      task.isCompleted && "opacity-50"
-                    )}
-                  >
-                    <Checkbox
-                      id={`${plan.id}-${task.id}`}
-                      checked={task.isCompleted}
-                      onCheckedChange={() => toggleTask(plan.id, task.id)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label
-                        htmlFor={`${plan.id}-${task.id}`}
-                        className={cn(
-                          "text-sm font-medium cursor-pointer",
-                          task.isCompleted && "line-through text-muted-foreground"
-                        )}
-                      >
-                        {task.title}
-                      </label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={cn(
-                          "text-xs px-1.5 py-0.5 rounded",
-                          task.priority === 'critical' && "bg-destructive/10 text-destructive",
-                          task.priority === 'important' && "bg-warning/10 text-warning-foreground",
-                          task.priority === 'optional' && "bg-muted text-muted-foreground"
-                        )}>
-                          {getPriorityLabel(task.priority)}
-                        </span>
-                        {task.category && (
-                          <span className="text-xs text-muted-foreground">
-                            {task.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {/* Architect button for incomplete tasks */}
-                    {!task.isCompleted && !isArchived && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenArchitect(plan, task)}
-                        className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
-                      >
-                        <Wand2 className="h-3 w-3" />
-                        {t.architect}
-                      </Button>
-                    )}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, plan.id)}
+              >
+                <SortableContext items={sortedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
+                    {sortedTasks.map((task) => (
+                      <SortableTaskItem
+                        key={task.id}
+                        task={task}
+                        planId={plan.id}
+                        isArchived={isArchived}
+                        onToggle={toggleTask}
+                        onOpenArchitect={() => handleOpenArchitect(plan, task)}
+                        getPriorityColor={getPriorityColor}
+                        getPriorityLabel={getPriorityLabel}
+                        architectLabel={t.architect}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </motion.div>
           )}
         </AnimatePresence>
