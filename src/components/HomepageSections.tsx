@@ -325,40 +325,92 @@ const IdentityFirstSection = memo(() => {
 IdentityFirstSection.displayName = 'IdentityFirstSection';
 
 /* ─── Section 4: SEO + GEO Hybrid Comparison ─── */
+const competitorFeatures = [
+  { key: 'audit_technique', fr: 'Audit technique complet', en: 'Full technical audit', es: 'Auditoría técnica completa' },
+  { key: 'score_geo', fr: 'Score de visibilité IA', en: 'AI visibility score', es: 'Puntuación de visibilidad IA' },
+  { key: 'identite', fr: 'Carte d\'identité sémantique', en: 'Semantic identity card', es: 'Tarjeta de identidad semántica' },
+  { key: 'cocon', fr: 'Cocon sémantique IA', en: 'AI semantic cocoon', es: 'Cocón semántico IA' },
+  { key: 'code_correctif', fr: 'Code correctif dynamique', en: 'Dynamic corrective code', es: 'Código correctivo dinámico' },
+  { key: 'maintenance', fr: 'Maintenance SEO & GEO automatisée', en: 'Automated SEO & GEO maintenance', es: 'Mantenimiento SEO & GEO automatizado' },
+  { key: 'gmb', fr: 'Gestion Google Business Profile', en: 'Google Business Profile management', es: 'Gestión Google Business Profile' },
+  { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
+];
+
+// [Screaming Frog, Cocolyze, BotRank, Surfer SEO, Crawlers]
+const competitorMatrix: Record<string, boolean[]> = {
+  audit_technique: [true, true, false, false, true],
+  score_geo: [false, false, true, false, true],
+  identite: [false, false, false, false, true],
+  cocon: [false, false, false, true, true],
+  code_correctif: [false, false, false, false, true],
+  maintenance: [false, false, false, false, true],
+  gmb: [false, false, false, false, true],
+  assistants: [false, false, false, false, true],
+};
+
+const competitors = ['Screaming Frog', 'Cocolyze', 'BotRank', 'Surfer SEO', 'Crawlers.fr'];
+
 const HybridSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6];
   const seoHas = [true, false, false, false, false, false];
+  const lang = language as 'fr' | 'en' | 'es';
 
   return (
     <section className="py-16 md:py-24 bg-card/50 border-y border-border">
-      <div className="container mx-auto px-4 max-w-3xl">
+      <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.hybridTitle}</h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">{t.hybridSubtitle}</p>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-border">
-          <div className="grid grid-cols-3 bg-muted/50 text-sm font-semibold text-foreground">
-            <div className="p-3 text-left">&nbsp;</div>
-            <div className="p-3 text-center border-l border-border">{t.colSeo}</div>
-            <div className="p-3 text-center border-l border-border text-brand-violet">{t.colCrawlers}</div>
+        {/* Table 1: SEO classique vs Crawlers */}
+        <div className="overflow-hidden rounded-xl border border-border max-w-3xl mx-auto">
+          <div className="grid grid-cols-3 bg-muted/50 text-sm sm:text-base font-semibold text-foreground">
+            <div className="p-4 text-left">&nbsp;</div>
+            <div className="p-4 text-center border-l border-border">{t.colSeo}</div>
+            <div className="p-4 text-center border-l border-border text-brand-violet font-bold">{t.colCrawlers}</div>
           </div>
           {rows.map((row, i) => (
-            <div key={i} className={cn('grid grid-cols-3 text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
-              <div className="p-3 text-left text-foreground font-medium">{row}</div>
-              <div className="p-3 flex items-center justify-center border-l border-border">
-                {seoHas[i] ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
+            <div key={i} className={cn('grid grid-cols-3 text-sm sm:text-base', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+              <div className="p-4 text-left text-foreground font-medium">{row}</div>
+              <div className="p-4 flex items-center justify-center border-l border-border">
+                {seoHas[i] ? <CheckCircle2 className="h-5 w-5 text-success" /> : <XCircle className="h-5 w-5 text-muted-foreground/40" />}
               </div>
-              <div className="p-3 flex items-center justify-center border-l border-border">
-                <CheckCircle2 className="h-4 w-4 text-success" />
+              <div className="p-4 flex items-center justify-center border-l border-border">
+                <CheckCircle2 className="h-5 w-5 text-success" />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        {/* Table 2: Competitive comparison */}
+        <h3 className="text-xl font-bold text-foreground sm:text-2xl text-center mt-16 mb-6">
+          {lang === 'fr' ? 'Crawlers.fr face à la concurrence' : lang === 'es' ? 'Crawlers.fr frente a la competencia' : 'Crawlers.fr vs the competition'}
+        </h3>
+        <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-xl border border-border min-w-[700px]">
+            <div className="grid grid-cols-6 bg-muted/50 text-xs sm:text-sm font-semibold text-foreground">
+              <div className="p-3">&nbsp;</div>
+              {competitors.map((c, i) => (
+                <div key={c} className={cn('p-3 text-center border-l border-border', i === 4 && 'text-brand-violet font-bold')}>{c}</div>
+              ))}
+            </div>
+            {competitorFeatures.map((feat, i) => (
+              <div key={feat.key} className={cn('grid grid-cols-6 text-xs sm:text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+                <div className="p-3 text-left text-foreground font-medium">{feat[lang] || feat.fr}</div>
+                {competitorMatrix[feat.key].map((has, j) => (
+                  <div key={j} className="p-3 flex items-center justify-center border-l border-border">
+                    {has ? <CheckCircle2 className={cn('h-4 w-4', j === 4 ? 'text-brand-violet' : 'text-success')} /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-10">
           <Link to="/">
             <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-violet-600 hover:from-violet-700 hover:to-amber-600 shadow-md">
               {t.hybridCta}
@@ -370,7 +422,6 @@ const HybridSection = memo(() => {
     </section>
   );
 });
-HybridSection.displayName = 'HybridSection';
 
 /* ─── Section 5: Trust Banner ─── */
 const googleApis = [
