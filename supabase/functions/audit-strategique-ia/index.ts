@@ -2139,7 +2139,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
     
     // ═══ CTA & SEO PATTERN EXTRACTION (before HTML strip) ═══
-    const ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    ctaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
     {
       // CTA detection
       const ctaPatterns: Array<{ re: RegExp; type: string }> = [
