@@ -238,7 +238,7 @@ const FeatureShowcase = memo(() => {
                 <h3 className="text-xl font-bold text-foreground sm:text-2xl">{item.title}</h3>
               </div>
               {/* Description — rich text for SEO */}
-              <p className="text-muted-foreground leading-relaxed pl-8">{item.desc}</p>
+              <p className="text-muted-foreground text-base sm:text-lg leading-relaxed pl-8">{item.desc}</p>
               {/* CTA — transparent with violet border */}
               <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
