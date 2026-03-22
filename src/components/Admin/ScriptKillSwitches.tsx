@@ -140,6 +140,7 @@ export function ScriptKillSwitches() {
         if (cfg.key === 'sdk_enabled') setSdkEnabled(cfg.value !== false);
         if (cfg.key === 'freemium_open_mode') setFreemiumOpen(cfg.value === true);
         if (cfg.key === 'hide_home_leadmagnet') setHideHomeLeadmagnet(cfg.value === true);
+        if (cfg.key === 'content_architect_hidden') setContentArchitectHidden(cfg.value === true);
         if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
