@@ -374,6 +374,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           <CrawlersLogo size={22} />
           <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           <h3 className="font-semibold text-sm">Assistant SAV</h3>
+          {isAdmin && (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <Shield className="h-2.5 w-2.5" /> Admin
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
