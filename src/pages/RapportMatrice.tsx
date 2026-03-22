@@ -101,8 +101,8 @@ export default function RapportMatrice() {
   return (
     <>
       <Helmet>
-        <title>Rapport Matrice — Crawlers.fr</title>
-        <meta name="description" content="Résultats détaillés de votre matrice de prompts : visibilité IA, taux de citation LLM et recommandations d'optimisation GEO." />
+        <title>Rapport Matrice d'audit — Crawlers.fr</title>
+        <meta name="description" content="Résultats détaillés de votre matrice d'audit : balises, données structurées, performance, sécurité, prompts LLM et score pondéré global." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen bg-background flex flex-col">
