@@ -212,11 +212,11 @@ const MomentumSection = memo(() => {
         <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
 
         {/* LLM logos */}
-        <div className="flex items-center justify-center gap-8 mb-10 flex-wrap">
+        <div className="flex items-center justify-center gap-10 mb-10 flex-wrap">
           {llmLogos.map((llm) => (
-            <div key={llm.name} className="flex flex-col items-center gap-1.5">
-              <img src={llm.src} alt={llm.name} className="h-8 w-8 object-contain" />
-              <span className="text-xs font-semibold text-muted-foreground">{llm.name}</span>
+            <div key={llm.name} className="flex flex-col items-center gap-2">
+              <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain" />
+              <span className="text-base font-semibold text-foreground">{llm.name}</span>
             </div>
           ))}
         </div>
