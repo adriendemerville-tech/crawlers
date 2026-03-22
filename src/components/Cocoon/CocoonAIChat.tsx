@@ -219,7 +219,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cocoon-chat`
 
 const labels = {
   fr: {
-    title: 'Assistant Cocoon',
+    title: 'Stratège Cocoon',
     subtitle: 'Posez vos questions sur l\'architecture sémantique',
     placeholder: 'Ex: Quelles pages devraient être reliées ?',
     empty: 'Décrivez votre cocon ou posez une question pour que l\'IA vous aide à interpréter les résultats.',

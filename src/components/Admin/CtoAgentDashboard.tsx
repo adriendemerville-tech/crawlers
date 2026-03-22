@@ -48,7 +48,7 @@ const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] 
   { key: 'crawl-site', label: 'Crawl multi-pages', category: 'Crawl & Cocoon' },
   { key: 'calculate-cocoon-logic', label: 'Cocoon Logic', category: 'Crawl & Cocoon' },
   { key: 'calculate-internal-pagerank', label: 'PageRank interne', category: 'Crawl & Cocoon' },
-  { key: 'cocoon-chat', label: 'Assistant Cocoon', category: 'Crawl & Cocoon' },
+  { key: 'cocoon-chat', label: 'Stratège Cocoon', category: 'Crawl & Cocoon' },
   { key: 'persist-cocoon-session', label: 'Session Cocoon', category: 'Crawl & Cocoon' },
   // Diagnostics
   { key: 'cocoon-diag-content', label: 'Diag. Contenu', category: 'Diagnostics' },
