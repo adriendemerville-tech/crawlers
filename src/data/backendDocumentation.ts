@@ -1232,6 +1232,34 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 
 ---
 
+## Détection de Chute (\\\`drop-detector\\\`)
+
+- **Edge Function** : \\\`drop-detector\\\`
+- **Exécution** : Automatique (arrière-tâche sur tous les sites trackés) + manuelle via Admin
+- **Détection réactive** : Compare les clics GSC de la semaine en cours vs baseline 4 semaines. Seuil configurable (défaut 15%)
+- **Détection prédictive** : Régression linéaire sur 8 semaines, projection à semaine+2. Alerte si probabilité ≥ 80%
+- **Cross-analyse** : Croise GSC, audits techniques, E-E-A-T, backlinks pour identifier la cause (Trust, Tech, Content, Links, GEO)
+- **Tables** : \\\`drop_diagnostics\\\`, \\\`drop_detector_config\\\`, \\\`drop_detector_logs\\\`
+- **Alertes** : Génère des entrées dans \\\`anomaly_alerts\\\` (bandeau défilant /console)
+- **Admin** : Bouton ON/OFF dans Admin → Scripts, registre des analyses et alertes envoyées
+- **Tarification** : Gratuit Pro Agency/Admin, 3 crédits pour les autres
+
+---
+
+## Circuit de Signalement (Recettage)
+
+- **Déclencheur** : Détection NLP dans Assistant Crawler ou Stratège Cocoon ("bug", "problème", "erreur", etc.)
+- **Workflow** : Bouton "Signaler" → message suivant = signalement → pré-traduction technique via IA → INSERT \\\`user_bug_reports\\\`
+- **Contexte auto-enrichi** : route, user-agent, plan, dernier audit, tracked_site actif
+- **Catégorisation IA** : \\\`bug_ui\\\`, \\\`bug_data\\\`, \\\`feature_request\\\`, \\\`question\\\`
+- **Admin CTO** : Nouvel onglet "Recettage" dans Intelligence → CTO
+- **Statuts** : \\\`open\\\` → \\\`investigating\\\` → \\\`resolved\\\`
+- **Notification** : À la résolution, le premier assistant disponible (Crawler ou Stratège Cocoon) avertit l'utilisateur via badge + message contextuel
+- **Rate-limit** : Max 3 signalements/jour/utilisateur
+- **Anti-doublon** : Hash message + route (<24h)
+
+---
+
 ## Scribe (β)
 
 - **Accès** : Admin only, masqué en démo
