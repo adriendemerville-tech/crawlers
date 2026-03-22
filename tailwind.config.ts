@@ -71,6 +71,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "brand-violet": {
+          DEFAULT: "hsl(var(--brand-violet))",
+          muted: "hsl(var(--brand-violet-muted))",
+        },
         linkedin: {
           DEFAULT: "hsl(201 100% 40%)",
         },
