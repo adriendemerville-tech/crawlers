@@ -1,6 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+import { getUserClient } from '../_shared/supabaseClient.ts'
 const INFORMATIONAL_KEYWORDS = ['comment', 'pourquoi', 'idées', 'quel', 'quelle', 'différence', 'how', 'why', 'what', 'which', 'ideas'];
 const COMMERCIAL_KEYWORDS = ['prix', 'coût', 'devis', 'tarif', 'combien', 'price', 'cost', 'quote', 'pricing'];
 const LOCAL_KEYWORDS = ['près de', 'autour de', 'entreprise', 'spécialiste', 'artisan', 'ville', 'near', 'around', 'local', 'nearby'];

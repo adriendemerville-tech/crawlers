@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { withCircuitBreaker } from '../_shared/circuitBreaker.ts'
@@ -209,10 +209,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const supabase = createClient(supabaseUrl, serviceKey)
+  const supabase = getServiceClient()
 
   const dfLogin = Deno.env.get('DATAFORSEO_LOGIN')
   const dfPassword = Deno.env.get('DATAFORSEO_PASSWORD')

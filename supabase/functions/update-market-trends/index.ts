@@ -1,6 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+import { getServiceClient } from '../_shared/supabaseClient.ts'
 /**
  * Fetches monthly market data.
  * TODO: Replace with real API calls (SimilarWeb, StatCounter, etc.)

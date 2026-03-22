@@ -1,6 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 
 /**
@@ -660,9 +660,7 @@ Deno.serve(async (req) => {
     let ctx: SiteContext = site_context || {}
     if (!ctx.market_sector && !ctx.products_services && tracked_site_id) {
       // Fetch site from DB and enrich via LLM if needed
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      const sbEnrich = createClient(supabaseUrl, serviceKey)
+      const sbEnrich = getServiceClient()
       const { data: siteData } = await sbEnrich
         .from('tracked_sites')
         .select('*')
@@ -683,9 +681,7 @@ Deno.serve(async (req) => {
     console.log(`[check-llm-depth] Starting for "${brand}" (${domain}) — ${MODELS.length} models × ${prompts.length} phases`)
 
     // ── Check shared domain cache first (24h TTL) ──
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const sb = createClient(supabaseUrl, serviceKey)
+    const sb = getServiceClient()
 
     const { data: cachedDepth } = await sb
       .from('domain_data_cache')

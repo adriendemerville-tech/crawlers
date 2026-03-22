@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
@@ -210,11 +210,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const openRouterKey = Deno.env.get("OPENROUTER_API_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getServiceClient();
 
     console.log("[blog-gen v2] Starting blog article generation...");
 
