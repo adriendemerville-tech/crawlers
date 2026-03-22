@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
@@ -1310,10 +1311,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
       }
 
       setDeploySuccess(true);
+      sonnerToast.success(
+        language === 'en' ? 'Links injected successfully!' :
+        language === 'es' ? '¡Enlaces inyectados con éxito!' :
+        'Liens injectés avec succès !'
+      );
       setTimeout(() => setDeploySuccess(false), 5000);
     } catch (e) {
       console.error('[Cocoon] Deploy failed:', e);
-    } finally {
+      sonnerToast.error(
+        language === 'en' ? 'Injection failed' :
+        language === 'es' ? 'Error de inyección' :
+        'Échec de l\'injection'
+      );
       setIsDeploying(false);
     }
   }, [trackedSiteId, user, isDeploying, parseRecommendations, nodes]);
