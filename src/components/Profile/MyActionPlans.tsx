@@ -89,6 +89,8 @@ const translations = {
     archives: 'Archives',
     archivesCount: 'archived plan(s)',
     noArchives: 'No archived plans',
+    editorialCalendar: 'Editorial Calendar',
+    allSites: 'All sites',
   },
   es: {
     title: 'Planes de Acción',
