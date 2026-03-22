@@ -594,7 +594,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Matrice
+            Matrice d'audit
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
           </CardTitle>
         </CardHeader>
