@@ -440,6 +440,50 @@ export function CtoAgentDashboard() {
         )}
       </Card>
 
+      {/* Function Connections Registry */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PlugZap className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Connexions CTO → Fonctions</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {enabledCount}/{CTO_FUNCTION_REGISTRY.length} actives
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            Activez ou désactivez la supervision CTO sur chaque fonction. Un toggle désactivé empêche l'Agent CTO d'analyser et modifier les prompts de cette fonction.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+            {Object.entries(groupedFunctions).map(([category, fns]) => (
+              <div key={category} className="space-y-1.5 mb-3">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{category}</p>
+                {fns.map(fn => {
+                  const isOn = functionToggles[fn.key] !== false;
+                  return (
+                    <div key={fn.key} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-muted/40 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Plug className={cn('h-3 w-3', isOn ? 'text-emerald-500' : 'text-muted-foreground/40')} />
+                        <span className={cn('text-xs', isOn ? 'text-foreground' : 'text-muted-foreground')}>{fn.label}</span>
+                      </div>
+                      <Switch
+                        checked={isOn}
+                        onCheckedChange={(checked) => handleFunctionToggle(fn.key, checked)}
+                        disabled={savingToggles}
+                        className="scale-75"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Chart */}
       <Card>
         <CardHeader>
