@@ -56,6 +56,25 @@ const LEXICON_TERMS: Record<string, string> = {
   'crawl depth': 'profondeur-crawl',
 };
 
+// Bug/problem intent detection
+const BUG_KEYWORDS_COCOON = [
+  'bug', 'problème', 'probleme', 'erreur', 'error', 'ne marche pas', 'marche pas',
+  'ne fonctionne pas', 'fonctionne pas', 'cassé', 'casse', 'broken', 'crash',
+  'planté', 'plante', 'bloqué', 'bloque', 'écran blanc', 'page blanche',
+  'ne charge pas', 'charge pas', 'ne s\'affiche pas', 'n\'affiche pas',
+  'dysfonctionnement', 'anomalie', 'souci', 'incident', 'défaut',
+  'ça bug', 'ca bug', 'ça plante', 'ca plante', 'il manque', 'missing',
+  'pas normal', 'bizarre', 'weird', 'issue', 'not working',
+];
+
+function detectBugIntentCocoon(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return BUG_KEYWORDS_COCOON.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
 /**
  * Detect quick-reply options from an assistant message.
  */
