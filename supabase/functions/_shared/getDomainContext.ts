@@ -123,6 +123,22 @@ export async function getDomainContext(
       .eq('is_dismissed', false)
       .order('detected_at', { ascending: false })
       .limit(10),
+    // 10: audit technique raw data (latest)
+    supabase
+      .from('audit_raw_data')
+      .select('raw_payload, audit_type, created_at')
+      .eq('domain', normalizedDomain)
+      .in('audit_type', ['expert', 'technical'])
+      .order('created_at', { ascending: false })
+      .limit(1),
+    // 11: audit stratégique raw data (latest)
+    supabase
+      .from('audit_raw_data')
+      .select('raw_payload, audit_type, created_at')
+      .eq('domain', normalizedDomain)
+      .in('audit_type', ['strategic', 'strategique'])
+      .order('created_at', { ascending: false })
+      .limit(1),
   ];
 
   // Optional: diagnostics
