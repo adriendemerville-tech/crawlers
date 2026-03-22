@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,6 +25,25 @@ interface ChatWindowProps {
   onClose: () => void;
 }
 
+// NLP detection for bug/problem intent
+const BUG_KEYWORDS = [
+  'bug', 'problème', 'probleme', 'erreur', 'error', 'ne marche pas', 'marche pas',
+  'ne fonctionne pas', 'fonctionne pas', 'cassé', 'casse', 'broken', 'crash',
+  'planté', 'plante', 'bloqué', 'bloque', 'écran blanc', 'page blanche',
+  'ne charge pas', 'charge pas', 'ne s\'affiche pas', 'n\'affiche pas',
+  'dysfonctionnement', 'anomalie', 'souci', 'incident', 'défaut',
+  'ça bug', 'ca bug', 'ça plante', 'ca plante', 'il manque', 'missing',
+  'pas normal', 'bizarre', 'weird', 'issue', 'not working',
+];
+
+function detectBugIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return BUG_KEYWORDS.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,10 +61,47 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
 
+  // Bug report state
+  const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+
+  // Resolved bug notifications
+  const [resolvedBugs, setResolvedBugs] = useState<{ id: string; cto_response: string }[]>([]);
+
   // Keep ref in sync
   useEffect(() => {
     conversationIdRef.current = conversationId;
   }, [conversationId]);
+
+  // Check for resolved bug reports on mount
+  useEffect(() => {
+    if (!user) return;
+    const checkResolvedBugs = async () => {
+      const { data } = await supabase
+        .from('user_bug_reports')
+        .select('id, cto_response')
+        .eq('user_id', user.id)
+        .eq('status', 'resolved')
+        .eq('notified_user', false);
+
+      if (data && data.length > 0) {
+        setResolvedBugs(data as any[]);
+        // Show notification messages
+        const notifMsgs: ChatMessage[] = data.map((bug: any) => ({
+          role: 'assistant' as const,
+          content: `✅ **Bonne nouvelle !** Un problème que vous aviez signalé a été résolu.\n\n${bug.cto_response || 'Le problème a été corrigé.'}`,
+          timestamp: new Date().toISOString(),
+        }));
+        setMessages(prev => [...notifMsgs, ...prev]);
+
+        // Mark as notified
+        await supabase
+          .from('user_bug_reports')
+          .update({ notified_user: true })
+          .in('id', data.map((b: any) => b.id));
+      }
+    };
+    checkResolvedBugs();
+  }, [user]);
 
   // Track post-chat navigation for quality scoring
   const trackPostChatRoute = useCallback(async (route: string) => {
@@ -91,11 +147,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       if (data) {
         setConversationId(data.id);
         const msgs = (data.messages as any[]) || [];
-        setMessages(msgs.map((m: any) => ({
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp || new Date().toISOString(),
-        })));
+        setMessages(prev => [
+          ...prev, // keep resolved bug notifications at top
+          ...msgs.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp || new Date().toISOString(),
+          })),
+        ]);
       }
       setLoading(false);
     };
@@ -112,9 +171,23 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || sending) return;
 
+    const messageText = newMessage.trim();
+
+    // Bug report: waiting for the actual report message
+    if (bugReportMode === 'waiting') {
+      await submitBugReport(messageText);
+      return;
+    }
+
+    // Check if user is expressing a bug intent
+    if (bugReportMode === 'idle' && detectBugIntent(messageText)) {
+      setBugReportMode('prompt');
+      // Still send the message normally to the SAV agent
+    }
+
     const userMsg: ChatMessage = {
       role: 'user',
-      content: newMessage.trim(),
+      content: messageText,
       timestamp: new Date().toISOString(),
     };
 
@@ -164,6 +237,71 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     }
   };
 
+  const submitBugReport = async (message: string) => {
+    if (!user) return;
+    setSending(true);
+
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setNewMessage('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('submit-bug-report', {
+        body: {
+          raw_message: message,
+          route: location.pathname,
+          context_data: {
+            user_agent: navigator.userAgent,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            conversation_id: conversationId,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      const confirmMsg: ChatMessage = {
+        role: 'assistant',
+        content: "Merci pour votre aide et votre vigilance ! Nous reviendrons rapidement vers vous. 🙏",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, confirmMsg]);
+      setBugReportMode('sent');
+      toast({ title: 'Signalement envoyé', description: 'Merci pour votre retour !' });
+    } catch (err: any) {
+      console.error('Bug report error:', err);
+      const errorMsg = err?.message?.includes('429') || err?.message?.includes('Limite')
+        ? 'Vous avez atteint la limite de 3 signalements par jour.'
+        : err?.message?.includes('409') || err?.message?.includes('duplicate')
+        ? 'Un signalement similaire a déjà été envoyé récemment.'
+        : "Désolé, le signalement n'a pas pu être envoyé. Réessayez plus tard.";
+
+      const errorChatMsg: ChatMessage = {
+        role: 'assistant',
+        content: errorMsg,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, errorChatMsg]);
+      setBugReportMode('idle');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const activateBugReportMode = () => {
+    setBugReportMode('waiting');
+    const promptMsg: ChatMessage = {
+      role: 'assistant',
+      content: "Pas de problème ! Votre prochain message sera le signalement. Décrivez le problème rencontré, la page concernée et ce que vous attendiez. C'est à vous. 📝",
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, promptMsg]);
+  };
+
   const handlePhoneSubmit = async () => {
     if (!phoneNumber.match(/^0[67]\d{8}$/) || !conversationId) {
       toast({ title: 'Format invalide', description: 'Entrez un numéro au format 06 ou 07.', variant: 'destructive' });
@@ -199,6 +337,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     setConversationId(null);
     setShowPhonePrompt(false);
     setPhoneSent(false);
+    setBugReportMode('idle');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -322,6 +461,20 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 </div>
               </div>
             ))}
+
+            {/* Bug report prompt button */}
+            {bugReportMode === 'prompt' && (
+              <div className="flex justify-start">
+                <button
+                  onClick={activateBugReportMode}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                >
+                  <Bug className="h-3.5 w-3.5" />
+                  Signaler un problème / bug
+                </button>
+              </div>
+            )}
+
             {sending && (
               <div className="flex justify-start">
                 <div className="bg-violet-100 dark:bg-violet-900/40 rounded-lg px-3 py-2">
@@ -361,6 +514,15 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         </div>
       )}
 
+      {/* Bug report mode indicator */}
+      {bugReportMode === 'waiting' && (
+        <div className="border-t px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 shrink-0">
+          <p className="text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-1">
+            <Bug className="h-3 w-3" /> Mode signalement actif — décrivez votre problème
+          </p>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t px-3 py-1.5 shrink-0 relative">
         <ChatAttachmentPicker
@@ -380,7 +542,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Votre question..."
+            placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
             disabled={sending}
             className="flex-1"
             maxLength={500}

@@ -5591,6 +5591,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bug_reports: {
+        Row: {
+          category: string | null
+          context_data: Json | null
+          created_at: string
+          cto_response: string | null
+          id: string
+          notified_user: boolean
+          raw_message: string
+          resolved_at: string | null
+          route: string | null
+          screenshot_url: string | null
+          status: string
+          translated_message: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          context_data?: Json | null
+          created_at?: string
+          cto_response?: string | null
+          id?: string
+          notified_user?: boolean
+          raw_message: string
+          resolved_at?: string | null
+          route?: string | null
+          screenshot_url?: string | null
+          status?: string
+          translated_message?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          context_data?: Json | null
+          created_at?: string
+          cto_response?: string | null
+          id?: string
+          notified_user?: boolean
+          raw_message?: string
+          resolved_at?: string | null
+          route?: string | null
+          screenshot_url?: string | null
+          status?: string
+          translated_message?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
