@@ -137,3 +137,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.cocoon-strategist]
     verify_jwt = false
+  [functions.mcp-server]
+    verify_jwt = false
