@@ -232,6 +232,7 @@ const CGVU = () => {
               <p>
                 L'utilisateur s'engage à <strong>indemniser et garantir l'Éditeur</strong> contre toute réclamation, action ou poursuite de tiers résultant directement ou indirectement de l'utilisation malveillante des services de la Plateforme.
               </p>
+            </section>
 
             {/* Article 6 */}
             <section id="credits">
