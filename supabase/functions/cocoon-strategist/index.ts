@@ -40,7 +40,124 @@ type ActionType =
   | 'enrich_metadata'
   | 'fix_technical'
   | 'fix_cannibalization'
-  | 'improve_eeat';
+  | 'improve_eeat'
+  | 'optimize_keyword_placement';
+
+// ═══════════════════════════════════════════════════════════
+// KEYWORD PLACEMENT ENGINE
+// Determines optimal keyword position in title & first sentence
+// ═══════════════════════════════════════════════════════════
+
+interface KeywordPlacement {
+  keyword: string;
+  current_title: string;
+  suggested_title: string;
+  keyword_position: 'front' | 'mid' | 'end';
+  title_length: number;
+  reasoning: string;
+  first_sentence_instruction: string;
+}
+
+/**
+ * SEO best practices for keyword placement in titles:
+ * 1. Front-loading (first 3 words) = strongest signal, preferred for short-tail competitive KW
+ * 2. Mid-placement = natural reading, good for long-tail or branded queries
+ * 3. End-placement = weakest signal, only acceptable if front/mid breaks readability
+ * 
+ * Title length arbitration:
+ * - Ideal: 50-60 chars (Google truncates at ~60)
+ * - If keyword at front pushes title > 60 chars → consider mid-placement
+ * - If keyword is long (>25 chars) → mid or split across title
+ * 
+ * First sentence rule:
+ * - Keyword MUST appear in first 160 chars (meta description zone)
+ * - Ideally in first sentence, naturally integrated
+ * - Must echo the title's keyword without exact duplication
+ */
+function computeKeywordPlacement(
+  keyword: string,
+  currentTitle: string,
+  parentKeywords: string[],
+): KeywordPlacement {
+  const kwLower = keyword.toLowerCase();
+  const titleLower = currentTitle.toLowerCase();
+  const kwLen = keyword.length;
+  const titleLen = currentTitle.length;
+
+  const kwIndex = titleLower.indexOf(kwLower);
+  const kwAlreadyPresent = kwIndex >= 0;
+  const kwInFront = kwAlreadyPresent && kwIndex < 20;
+
+  let bestPosition: 'front' | 'mid' | 'end' = 'front';
+  let reasoning = '';
+
+  // Short keyword → front-load for max signal
+  if (kwLen <= 20) {
+    const frontTitle = `${keyword} : ${currentTitle.replace(new RegExp(keyword, 'i'), '').trim()}`;
+    if (frontTitle.length <= 60) {
+      bestPosition = 'front';
+      reasoning = `Mot-clé court (${kwLen}c) → front-loading, signal SEO max. Title: ${frontTitle.length}c (≤60).`;
+    } else {
+      bestPosition = 'mid';
+      reasoning = `Mot-clé court mais front-loading → ${frontTitle.length}c (>60). Placement central.`;
+    }
+  } else {
+    bestPosition = 'mid';
+    reasoning = `Mot-clé long (${kwLen}c) → placement central pour lisibilité.`;
+    if (titleLen < 30) {
+      bestPosition = 'front';
+      reasoning = `Mot-clé long mais title court (${titleLen}c). Front-loading possible.`;
+    }
+  }
+
+  // Parent overlap → mid for hierarchical differentiation
+  const parentOverlap = parentKeywords.some(pk => 
+    kwLower.includes(pk.toLowerCase()) || pk.toLowerCase().includes(kwLower)
+  );
+  if (parentOverlap && bestPosition === 'front') {
+    bestPosition = 'mid';
+    reasoning += ` Chevauchement parent → mid-placement pour différenciation.`;
+  }
+
+  // Build suggested title
+  let suggestedTitle = currentTitle;
+  if (!kwAlreadyPresent) {
+    switch (bestPosition) {
+      case 'front':
+        suggestedTitle = `${keyword} : ${currentTitle}`;
+        break;
+      case 'mid': {
+        const words = currentTitle.split(' ');
+        const midIdx = Math.floor(words.length / 2);
+        words.splice(midIdx, 0, `– ${keyword} –`);
+        suggestedTitle = words.join(' ');
+        break;
+      }
+      case 'end':
+        suggestedTitle = `${currentTitle} | ${keyword}`;
+        break;
+    }
+    if (suggestedTitle.length > 60) suggestedTitle = suggestedTitle.slice(0, 57) + '...';
+  } else if (!kwInFront && bestPosition === 'front') {
+    const stripped = currentTitle.replace(new RegExp(keyword, 'i'), '').replace(/\s{2,}/g, ' ').trim();
+    suggestedTitle = `${keyword} : ${stripped}`;
+    if (suggestedTitle.length > 60) suggestedTitle = suggestedTitle.slice(0, 57) + '...';
+  }
+
+  const firstSentenceInstruction = bestPosition === 'front'
+    ? `Commencer la 1ère phrase par une reformulation naturelle de "${keyword}". Ex: "Le/La ${keyword} est..." ou "Découvrez comment ${keyword}..."`
+    : `Intégrer "${keyword}" dans les 2 premières phrases naturellement, sans répéter le title exact. Varier: synonyme, question, contexte.`;
+
+  return {
+    keyword,
+    current_title: currentTitle,
+    suggested_title: suggestedTitle,
+    keyword_position: bestPosition,
+    title_length: suggestedTitle.length,
+    reasoning,
+    first_sentence_instruction: firstSentenceInstruction,
+  };
+}
 
 interface StrategicTask {
   id: string;
