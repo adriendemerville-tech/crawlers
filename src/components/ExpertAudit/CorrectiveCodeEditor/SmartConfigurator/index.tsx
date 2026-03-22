@@ -1715,22 +1715,9 @@ export function SmartConfigurator({
               </div>
             </div>
 
-            {/* Preview/Code Content - fills available space with margins */}
+            {/* Preview Content - always visual mode, code hidden from user */}
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              {viewMode === 'visual' ? (
-                <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
-              ) : (
-                <div className="flex-1 min-h-0 flex flex-col pr-4">
-                  <CodeBlock 
-                    code={generatedCode} 
-                    isTyping={false}
-                    placeholder='Cliquez sur "Générer le script" pour voir le code'
-                    placeholderHighlight="Générer le script"
-                    isLocked={!hasPaid && showLockOverlay}
-                    allowScroll={hasPaid}
-                  />
-                </div>
-              )}
+              <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
             </div>
 
 
