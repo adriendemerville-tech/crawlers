@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronDown, Rocket, FileText, Brain, Zap, Wrench, Shield, Target, 
-  AlertTriangle, CheckCircle2, Loader2, Copy, Check, Code2, Sparkles
+  AlertTriangle, CheckCircle2, Loader2, Copy, Check, Code2, Sparkles, Syringe
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -145,6 +145,7 @@ interface CocoonArchitectModalProps {
   trackedSiteId: string;
   /** Recommendation text used to auto-detect the best fix */
   recommendationText?: string;
+  trackedSiteDomainId?: string;
 }
 
 // Map recommendation text keywords to fix IDs for pre-selection
@@ -218,13 +219,15 @@ const PRIORITY_COLORS: Record<string, string> = {
   optional: 'bg-white/5 text-white/40 border-white/10',
 };
 
-export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText }: CocoonArchitectModalProps) {
+export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText, trackedSiteDomainId }: CocoonArchitectModalProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [expandedFix, setExpandedFix] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [injected, setInjected] = useState(false);
 
   // Pre-select fix from recommendation
   const preSelectedFixId = useMemo(() => {
@@ -244,6 +247,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
   useEffect(() => {
     setGeneratedCode('');
     setCopied(false);
+    setInjected(false);
     const detected = recommendationText ? detectFixFromRecommendation(recommendationText) : null;
     setFixes(COCOON_FIXES.map(f => ({
       ...f,
@@ -295,6 +299,56 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleInject = async () => {
+    if (!generatedCode || !user || !trackedSiteId) return;
+    setIsInjecting(true);
+    try {
+      const siteId = trackedSiteDomainId || trackedSiteId;
+      const { data: existingRule } = await supabase
+        .from('site_script_rules')
+        .select('id')
+        .eq('domain_id', siteId)
+        .eq('user_id', user.id)
+        .eq('payload_type', 'GLOBAL_FIXES')
+        .maybeSingle();
+
+      if (existingRule) {
+        await supabase
+          .from('site_script_rules')
+          .update({ payload_data: { script: generatedCode }, is_active: true } as any)
+          .eq('id', existingRule.id);
+      } else {
+        await supabase
+          .from('site_script_rules')
+          .insert({
+            domain_id: siteId,
+            user_id: user.id,
+            url_pattern: '*',
+            payload_type: 'GLOBAL_FIXES',
+            payload_data: { script: generatedCode },
+            is_active: true,
+            source: 'cocoon_architect',
+          } as any);
+      }
+
+      setInjected(true);
+      sonnerToast.success(
+        language === 'en' ? 'Code injected successfully' :
+        language === 'es' ? 'Código inyectado con éxito' :
+        'Code injecté avec succès'
+      );
+      setTimeout(() => setInjected(false), 3000);
+    } catch (err) {
+      console.error('Injection error:', err);
+      sonnerToast.error(
+        language === 'en' ? 'Injection error' :
+        language === 'es' ? 'Error de inyección' :
+        'Erreur lors de l\'injection'
+      );
+    } finally {
+      setIsInjecting(false);
+    }
+  };
   const getPedagogy = (fixId: string): FixPedagogy => FIX_PEDAGOGY[fixId] || DEFAULT_PEDAGOGY;
 
   const t = {
@@ -313,7 +367,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] h-[80vh] overflow-hidden flex flex-col p-0 gap-0 bg-[#0f0a1e] border-[#a78bfa]/20 text-white">
+      <DialogContent className="max-w-[1035px] h-[80vh] overflow-hidden flex flex-col p-0 gap-0 bg-[#0f0a1e] border-[#a78bfa]/20 text-white">
         {/* Header */}
         <DialogHeader className="px-5 py-3 border-b border-white/5 bg-white/[0.02] flex flex-row items-center justify-between">
           <DialogTitle className="flex items-center gap-2">
@@ -429,15 +483,38 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-xs text-emerald-400 font-medium">{t.codeReady}</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCopy}
-                      className="h-7 px-2 text-white/50 hover:text-white hover:bg-white/5 gap-1.5"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopy}
+                        className="h-7 px-2 text-white/50 hover:text-white hover:bg-white/5 gap-1.5"
+                      >
+                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleInject}
+                        disabled={isInjecting || injected}
+                        className="h-7 px-3 bg-[#a78bfa] hover:bg-[#a78bfa]/80 text-white gap-1.5"
+                      >
+                        {isInjecting ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : injected ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          <Syringe className="w-3 h-3" />
+                        )}
+                        <span className="text-[10px]">
+                          {isInjecting
+                            ? (language === 'en' ? 'Injecting…' : language === 'es' ? 'Inyectando…' : 'Injection…')
+                            : injected
+                              ? (language === 'en' ? 'Injected!' : language === 'es' ? '¡Inyectado!' : 'Injecté !')
+                              : (language === 'en' ? 'Inject code' : language === 'es' ? 'Inyectar código' : 'Injecter le code')}
+                        </span>
+                      </Button>
+                    </div>
                   </div>
                   <pre className="text-[10px] leading-relaxed font-mono text-emerald-300/80 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre border border-white/5 max-h-[50vh]">
                     {generatedCode}
