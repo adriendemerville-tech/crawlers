@@ -746,9 +746,66 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setShowArchitectModal(true);
   }, [loadStrategyPlan, strategyPlan, architectDraft]);
 
+  // ── Bug report submission ──
+  const submitBugReport = useCallback(async (message: string) => {
+    if (!user) return;
+    setIsLoading(true);
+    const userMsg: Msg = { role: 'user', content: message };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+
+    try {
+      const { error } = await supabase.functions.invoke('submit-bug-report', {
+        body: {
+          raw_message: message,
+          route: '/cocoon',
+          source_assistant: 'cocoon',
+          context_data: {
+            user_agent: navigator.userAgent,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            domain,
+            tracked_site_id: trackedSiteId,
+          },
+        },
+      });
+      if (error) throw error;
+      const confirmMsg: Msg = { role: 'assistant', content: "Merci pour votre aide et votre vigilance ! Nous reviendrons rapidement vers vous. 🙏" };
+      setMessages(prev => [...prev, confirmMsg]);
+      setBugReportMode('sent');
+    } catch (err: any) {
+      console.error('Bug report error:', err);
+      const errorContent = err?.message?.includes('429') || err?.message?.includes('Limite')
+        ? 'Vous avez atteint la limite de 3 signalements par jour.'
+        : err?.message?.includes('409') || err?.message?.includes('duplicate')
+        ? 'Un signalement similaire a déjà été envoyé récemment.'
+        : "Désolé, le signalement n'a pas pu être envoyé. Réessayez plus tard.";
+      setMessages(prev => [...prev, { role: 'assistant', content: errorContent }]);
+      setBugReportMode('idle');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, domain, trackedSiteId]);
+
+  const activateBugReportMode = useCallback(() => {
+    setBugReportMode('waiting');
+    const promptMsg: Msg = { role: 'assistant', content: "Pas de problème ! Votre prochain message sera le signalement. Décrivez le problème rencontré. C'est à vous. 📝" };
+    setMessages(prev => [...prev, promptMsg]);
+  }, []);
+
   const sendMessage = async (overrideContext?: string, useStrategist = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
+
+    // Bug report: waiting for the actual report message
+    if (bugReportMode === 'waiting' && !overrideContext) {
+      await submitBugReport(text);
+      return;
+    }
+
+    // Check for bug intent
+    if (bugReportMode === 'idle' && !overrideContext && detectBugIntentCocoon(text)) {
+      setBugReportMode('prompt');
+    }
 
     // Check for tool commands
     if (!overrideContext) {
