@@ -84,8 +84,8 @@ const i18n = {
     row6: 'Maintenance SEO & GEO automatisée',
     hybridCta: 'Essayer gratuitement',
     // Trust
-    trustTitle: '1er outil français SEO + GEO',
-    trustText: "Des milliers de professionnels du marketing digital utilisent Crawlers.fr pour auditer et optimiser leur visibilité sur Google et les moteurs d'IA. Rejoignez-les.",
+    trustTitle: 'La seule solution européenne SEO + GEO full-stack',
+    trustText: "Crawlers.fr est la seule plateforme européenne qui couvre l'intégralité de la boucle SEO et GEO : audit technique, optimisation sémantique, visibilité IA, cocon de contenu, code correctif et maintenance automatisée. Tout dans un seul outil, sans dépendance à des services tiers. Le code source est consultable sur demande.",
     trustUrls: 'URLs analysées',
     trustAudits: 'Audits générés',
     trustSites: 'Sites suivis',
