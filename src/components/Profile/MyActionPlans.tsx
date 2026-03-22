@@ -347,13 +347,43 @@ export function MyActionPlans() {
     }
   };
 
-  const getSortedTasks = (tasks: ActionPlanTask[]) => {
-    const priorityOrder = { critical: 0, important: 1, optional: 2 };
-    return [...tasks].sort((a, b) => {
-      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-      return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
-    });
-  };
+  // No longer auto-sort — user controls order via drag & drop
+  const getSortedTasks = (tasks: ActionPlanTask[]) => tasks;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent, planId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const plan = actionPlans.find(p => p.id === planId);
+    if (!plan) return;
+
+    const oldIndex = plan.tasks.findIndex(t => t.id === active.id);
+    const newIndex = plan.tasks.findIndex(t => t.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(plan.tasks, oldIndex, newIndex);
+
+    // Optimistic update
+    setActionPlans(prev =>
+      prev.map(p => (p.id === planId ? { ...p, tasks: reordered } : p))
+    );
+
+    // Persist
+    const { error } = await supabase
+      .from('action_plans')
+      .update({ tasks: JSON.parse(JSON.stringify(reordered)) })
+      .eq('id', planId);
+
+    if (error) {
+      console.error('Error reordering tasks:', error);
+      fetchActionPlans();
+    }
+  }, [actionPlans, fetchActionPlans]);
 
   const handleOpenArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
     setArchitectPlan(plan);
