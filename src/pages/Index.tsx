@@ -616,11 +616,8 @@ const Index = () => {
         />
 
         {/* ─── Homepage marketing sections ─── */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <MomentumSection />
-        </Suspense>
 
-        {/* Pro Agency hero — after momentum stats */}
+        {/* Pro Agency hero */}
         {hideLeadmagnet && (
           <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
@@ -661,6 +658,10 @@ const Index = () => {
         {/* Trust Banner — right after Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
           <TrustBanner />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <MomentumSection />
         </Suspense>
 
         {/* Identity First */}
