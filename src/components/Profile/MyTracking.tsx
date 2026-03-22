@@ -1027,6 +1027,8 @@ export function MyTracking() {
 
   return (
     <div className="space-y-6">
+      {/* Anomaly alerts banner */}
+      <AnomalyAlertsBanner trackedSiteId={selectedSite} />
       {/* Active crawl progress banner */}
       <ActiveCrawlBanner />
       <Card>
