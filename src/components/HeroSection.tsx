@@ -239,6 +239,15 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
         </h2>
 
+        {/* Promise line */}
+        <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
+          {language === 'es'
+            ? 'La única plataforma europea que cubre SEO clásico, SEO generativo y SEO local en una sola herramienta.'
+            : language === 'en'
+              ? 'The only European platform covering classic SEO, generative SEO and local SEO in a single tool.'
+              : "La seule plateforme européenne qui couvre le SEO classique, le SEO génératif et le SEO local dans un seul outil."}
+        </p>
+
         {/* H3 Subheadline - SEO optimized */}
         <h3 
           className="mx-auto mb-10 max-w-2xl text-base font-normal text-muted-foreground sm:text-xl"
