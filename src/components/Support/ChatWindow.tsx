@@ -28,6 +28,7 @@ interface ChatWindowProps {
 export function ChatWindow({ onClose }: ChatWindowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const location = useLocation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
