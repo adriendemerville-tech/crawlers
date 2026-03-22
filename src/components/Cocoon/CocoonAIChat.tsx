@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
 import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
+import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
