@@ -3130,9 +3130,7 @@ Réponds en JSON STRICT:
     // ═══ PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
     if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
-        const svcUrl = Deno.env.get('SUPABASE_URL')!;
-        const svcKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const svcSb = createClient(svcUrl, svcKey);
+        const svcSb = getServiceClient();
         const updatePayload: Record<string, any> = {};
         if (parsedAnalysis?.client_targets) updatePayload.client_targets = parsedAnalysis.client_targets;
         if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
