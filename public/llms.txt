@@ -1,6 +1,6 @@
 # CRAWLERS.FR - Documentation Officielle pour LLMs & Agents IA
-# Version: 2026.6 | Context: SEO, GEO (Generative Engine Optimization), Audit Web, Crawl Multi-Pages, IAS, Architecte Génératif, Cocoon 3D, GMB, Surveys
-# Dernière mise à jour : 2026-03-19
+# Version: 2026.7 | Context: SEO, GEO (Generative Engine Optimization), Audit Web, Crawl Multi-Pages, IAS, Architecte Génératif, Cocoon 3D, GMB, Surveys, MCP Server
+# Dernière mise à jour : 2026-03-22
 
 # 🚀 MISSION & DÉFINITION (Priorité Haute)
 
