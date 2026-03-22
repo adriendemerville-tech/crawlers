@@ -642,7 +642,61 @@ function detectDuplicates(pages: PageAnalysis[]): Record<string, string[]> {
   return duplicateIssues;
 }
 
-// ── Compute crawl depth from URL structure ─────────────────
+// ── Compute crawl depth via BFS on internal link graph ─────
+function computeBFSDepths(pages: PageAnalysis[], baseUrl: string): Map<string, number> {
+  const depths = new Map<string, number>();
+  
+  // Normalize URL for comparison
+  const normalize = (u: string) => {
+    try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
+  };
+  
+  const basePath = normalize(baseUrl);
+  const allPaths = new Set(pages.map(p => normalize(p.url)));
+  
+  // Build adjacency list from anchor_texts (internal links)
+  const adj = new Map<string, Set<string>>();
+  for (const page of pages) {
+    const srcPath = normalize(page.url);
+    if (!adj.has(srcPath)) adj.set(srcPath, new Set());
+    for (const link of (page.anchor_texts || [])) {
+      if (link.type === 'internal') {
+        const targetPath = normalize(link.href.startsWith('/') ? `https://x${link.href}` : link.href);
+        if (allPaths.has(targetPath)) {
+          adj.get(srcPath)!.add(targetPath);
+        }
+      }
+    }
+  }
+  
+  // BFS from base path
+  depths.set(basePath, 0);
+  const queue = [basePath];
+  let head = 0;
+  while (head < queue.length) {
+    const current = queue[head++];
+    const currentDepth = depths.get(current)!;
+    const neighbors = adj.get(current) || new Set();
+    for (const neighbor of neighbors) {
+      if (!depths.has(neighbor)) {
+        depths.set(neighbor, currentDepth + 1);
+        queue.push(neighbor);
+      }
+    }
+  }
+  
+  // Pages not reachable from root get URL-based fallback depth
+  for (const page of pages) {
+    const path = normalize(page.url);
+    if (!depths.has(path)) {
+      depths.set(path, path.split('/').filter(Boolean).length);
+    }
+  }
+  
+  return depths;
+}
+
+// ── Fallback: compute depth from URL structure ─────────────
 function computeDepth(pageUrl: string, baseUrl: string): number {
   try {
     const basePath = new URL(baseUrl).pathname.replace(/\/$/, '');
