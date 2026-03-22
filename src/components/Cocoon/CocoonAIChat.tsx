@@ -471,9 +471,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
 
   const openArchitectWithPlan = useCallback(() => {
     loadStrategyPlan();
-    // Architect = deploy links (Syringe action) — trigger optimize linking
-    handleOptimizeLinking();
-  }, [loadStrategyPlan, handleOptimizeLinking]);
+    // Will be triggered after handleOptimizeLinking is defined — use a flag
+    setInput('');
+  }, [loadStrategyPlan]);
 
   const openContentArchitectWithPlan = useCallback(async () => {
     await loadStrategyPlan();
