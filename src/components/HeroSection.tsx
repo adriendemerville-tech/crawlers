@@ -242,10 +242,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         {/* Promise line */}
         <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
           {language === 'es'
-            ? 'La única plataforma europea que cubre SEO clásico, SEO generativo y SEO local en una sola herramienta.'
+            ? 'La única plataforma europea que cubre SEO clásico, GEO (Generative Engine Optimization) y SEO local en una sola herramienta.'
             : language === 'en'
-              ? 'The only European platform covering classic SEO, generative SEO and local SEO in a single tool.'
-              : "La seule plateforme européenne qui couvre le SEO classique, le SEO génératif et le SEO local dans un seul outil."}
+              ? 'The only European platform covering classic SEO, GEO (Generative Engine Optimization) and local SEO in a single tool.'
+              : "La seule plateforme européenne qui couvre le SEO classique, le GEO (Generative Engine Optimization) et le SEO local dans un seul outil."}
         </p>
 
         {/* H3 Subheadline - SEO optimized */}
