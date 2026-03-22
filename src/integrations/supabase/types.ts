@@ -1162,31 +1162,46 @@ export type Database = {
           created_at: string
           domain: string
           id: string
+          last_strategy_id: string | null
           message_count: number
           messages: Json
+          resumed_at: string | null
           session_hash: string
+          summary: string | null
           tracked_site_id: string
           updated_at: string
+          user_id: string | null
+          workflow_state: Json | null
         }
         Insert: {
           created_at?: string
           domain: string
           id?: string
+          last_strategy_id?: string | null
           message_count?: number
           messages?: Json
+          resumed_at?: string | null
           session_hash: string
+          summary?: string | null
           tracked_site_id: string
           updated_at?: string
+          user_id?: string | null
+          workflow_state?: Json | null
         }
         Update: {
           created_at?: string
           domain?: string
           id?: string
+          last_strategy_id?: string | null
           message_count?: number
           messages?: Json
+          resumed_at?: string | null
           session_hash?: string
+          summary?: string | null
           tracked_site_id?: string
           updated_at?: string
+          user_id?: string | null
+          workflow_state?: Json | null
         }
         Relationships: []
       }

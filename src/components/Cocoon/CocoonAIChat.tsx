@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass } from 'lucide-react';
+import { Compass, Clock, ChevronLeft } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -322,7 +322,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
-  const [fontSize, setFontSize] = useState(12); // px base for messages
+  const [fontSize, setFontSize] = useState(12);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
@@ -331,6 +331,10 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [strategyPlan, setStrategyPlan] = useState<any>(null);
   const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const [architectDraft, setArchitectDraft] = useState<Record<string, any> | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyList, setHistoryList] = useState<Array<{ id: string; updated_at: string; summary: string | null; message_count: number; domain: string }>>([]);
+  const [sessionResumed, setSessionResumed] = useState(false);
+  const resumeAttemptedRef = useRef<string | null>(null);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
@@ -340,6 +344,150 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     supabase.from('cms_connections').select('id').eq('tracked_site_id', trackedSiteId).limit(1)
       .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
   }, [user, trackedSiteId]);
+
+  // ── Auto-resume last session for this site ──
+  useEffect(() => {
+    if (!user || !trackedSiteId || !domain) return;
+    // Don't re-attempt for same site
+    if (resumeAttemptedRef.current === trackedSiteId) return;
+    resumeAttemptedRef.current = trackedSiteId;
+
+    // Reset state when site changes
+    setMessages([]);
+    chatHistoryId.current = null;
+    setStrategistCompleted(false);
+    setIsStrategistMode(false);
+    setStrategyPlan(null);
+    setSessionResumed(false);
+
+    const resumeSession = async () => {
+      try {
+        // Fetch last session for this site
+        const { data: lastSession } = await supabase
+          .from('cocoon_chat_histories')
+          .select('id, messages, workflow_state, updated_at, summary, domain')
+          .eq('tracked_site_id', trackedSiteId)
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!lastSession || !lastSession.messages) return;
+
+        const msgs = lastSession.messages as Msg[];
+        if (msgs.length === 0) return;
+
+        // Get user first name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        const firstName = profile?.first_name || '';
+        const lastDate = new Date(lastSession.updated_at);
+        const now = new Date();
+        const diffMs = now.getTime() - lastDate.getTime();
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        // Build time label
+        let timeLabel = '';
+        if (diffDays === 0) timeLabel = language === 'en' ? 'earlier today' : language === 'es' ? 'hoy más temprano' : 'plus tôt aujourd\'hui';
+        else if (diffDays === 1) timeLabel = language === 'en' ? 'yesterday' : language === 'es' ? 'ayer' : 'hier';
+        else if (diffDays <= 7) timeLabel = language === 'en' ? `${diffDays} days ago` : language === 'es' ? `hace ${diffDays} días` : `il y a ${diffDays} jours`;
+        else if (diffDays <= 14) timeLabel = language === 'en' ? 'last week' : language === 'es' ? 'la semana pasada' : 'la semaine dernière';
+        else if (diffDays <= 60) timeLabel = language === 'en' ? 'last month' : language === 'es' ? 'el mes pasado' : 'le mois dernier';
+        else return; // Too old, don't resume
+
+        // Determine workflow state
+        const ws = (lastSession.workflow_state as any) || {};
+        const completedTasks = ws.completed_tasks || [];
+        const pendingTasks = ws.pending_tasks || [];
+        const lastSummary = lastSession.summary || ws.last_topic || '';
+
+        // Build welcome message
+        const greeting = language === 'en'
+          ? `Hi ${firstName}! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, for **${domain}**, we worked on ${lastSummary || 'your semantic optimization'}.`
+          : language === 'es'
+            ? `¡Hola ${firstName}! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, para **${domain}**, trabajamos en ${lastSummary || 'tu optimización semántica'}.`
+            : `Bonjour ${firstName} ! ${timeLabel.charAt(0).toUpperCase() + timeLabel.slice(1)}, pour **${domain}**, nous avions travaillé sur ${lastSummary || 'votre optimisation sémantique'}.`;
+
+        let progressLine = '';
+        if (completedTasks.length > 0 || pendingTasks.length > 0) {
+          const total = completedTasks.length + pendingTasks.length;
+          progressLine = language === 'en'
+            ? `\n\nYou've completed **${completedTasks.length}/${total}** tasks.${pendingTasks.length > 0 ? ` ${pendingTasks.length} remaining:` : ''}`
+            : language === 'es'
+              ? `\n\nHas completado **${completedTasks.length}/${total}** tareas.${pendingTasks.length > 0 ? ` Quedan ${pendingTasks.length}:` : ''}`
+              : `\n\nVous avez réalisé **${completedTasks.length}/${total}** actions.${pendingTasks.length > 0 ? ` Il en reste ${pendingTasks.length} :` : ''}`;
+
+          if (pendingTasks.length > 0) {
+            progressLine += '\n' + pendingTasks.slice(0, 3).map((t: any) => `- ${t.title || t}`).join('\n');
+          }
+        }
+
+        const resumeQuestion = language === 'en'
+          ? '\n\nWould you like to continue?'
+          : language === 'es'
+            ? '\n\n¿Quieres que continuemos?'
+            : '\n\nVoulez-vous que nous poursuivions ?';
+
+        const welcomeMsg: Msg = {
+          role: 'assistant',
+          content: greeting + progressLine + resumeQuestion,
+        };
+
+        setMessages([welcomeMsg]);
+        chatHistoryId.current = lastSession.id;
+        setSessionResumed(true);
+        setIsOpen(true);
+
+        // Update resumed_at
+        await supabase.from('cocoon_chat_histories').update({ resumed_at: new Date().toISOString() }).eq('id', lastSession.id);
+      } catch (e) {
+        console.warn('[CocoonAIChat] Resume session error:', e);
+      }
+    };
+
+    resumeSession();
+  }, [user, trackedSiteId, domain, language]);
+
+  // ── Load history list ──
+  const loadHistoryList = useCallback(async () => {
+    if (!user || !trackedSiteId) return;
+    const { data } = await supabase
+      .from('cocoon_chat_histories')
+      .select('id, updated_at, summary, message_count, domain')
+      .eq('user_id', user.id)
+      .eq('tracked_site_id', trackedSiteId)
+      .order('updated_at', { ascending: false })
+      .limit(20);
+    if (data) setHistoryList(data);
+  }, [user, trackedSiteId]);
+
+  // Load history when panel opens
+  useEffect(() => {
+    if (showHistory) loadHistoryList();
+  }, [showHistory, loadHistoryList]);
+
+  // Load a specific history session
+  const loadSession = useCallback(async (sessionId: string) => {
+    const { data } = await supabase
+      .from('cocoon_chat_histories')
+      .select('id, messages, workflow_state')
+      .eq('id', sessionId)
+      .maybeSingle();
+    if (data?.messages) {
+      setMessages(data.messages as Msg[]);
+      chatHistoryId.current = data.id;
+      setShowHistory(false);
+      const ws = (data.workflow_state as any) || {};
+      if (ws.strategist_completed) {
+        setStrategistCompleted(true);
+        setIsStrategistMode(true);
+      }
+    }
+  }, []);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -365,10 +513,24 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     }
   }, [messages]);
 
-  // Save chat history to shared sav_conversations table
+  // Save chat history to sav_conversations AND cocoon_chat_histories
   const saveHistory = useCallback(async (msgs: Msg[]) => {
     if (!trackedSiteId || !domain || msgs.length === 0 || !user) return;
+
+    // Build summary from last assistant message
+    const lastAssistant = [...msgs].reverse().find(m => m.role === 'assistant');
+    const summaryText = lastAssistant?.content?.replace(/[#*_`]/g, '').split('\n').find(l => l.trim().length > 10)?.trim().slice(0, 150) || '';
+
+    // Build workflow state
+    const workflowState = {
+      strategist_completed: strategistCompleted || isStrategistMode,
+      last_topic: summaryText,
+      pending_tasks: strategyPlan?.tasks?.filter((t: any) => t.status !== 'done').slice(0, 5).map((t: any) => ({ title: t.title, priority: t.priority })) || [],
+      completed_tasks: strategyPlan?.tasks?.filter((t: any) => t.status === 'done').map((t: any) => ({ title: t.title })) || [],
+    };
+
     try {
+      // Save to sav_conversations (existing)
       if (chatHistoryId.current) {
         await supabase.from('sav_conversations').update({
           messages: msgs,
@@ -386,8 +548,21 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         } as any).select('id').single();
         if (data) chatHistoryId.current = data.id;
       }
+
+      // Also persist to cocoon_chat_histories for resume
+      const sessionHash = `${user.id}_${trackedSiteId}`;
+      await supabase.from('cocoon_chat_histories').upsert({
+        session_hash: sessionHash,
+        tracked_site_id: trackedSiteId,
+        domain,
+        user_id: user.id,
+        messages: msgs,
+        message_count: msgs.length,
+        workflow_state: workflowState,
+        summary: summaryText,
+      }, { onConflict: 'session_hash' });
     } catch { /* silent */ }
-  }, [trackedSiteId, domain, user]);
+  }, [trackedSiteId, domain, user, strategistCompleted, isStrategistMode, strategyPlan]);
 
   const buildContext = useCallback(() => {
     if (!nodes.length) return '';
@@ -1051,6 +1226,10 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               <p className="text-[10px] text-white/40">{t.subtitle}</p>
             </div>
             <div className="flex items-center gap-1">
+              <button onClick={() => setShowHistory(!showHistory)} className={`p-1 rounded-lg hover:bg-white/10 transition-colors ${showHistory ? 'bg-white/10' : ''}`} title={language === 'en' ? 'History' : language === 'es' ? 'Historial' : 'Historique'}>
+                <Clock className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <div className="w-px h-3 bg-white/10 mx-0.5" />
               <button onClick={() => setFontSize(s => Math.max(FONT_MIN, s - 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Réduire le texte">
                 <ZoomOut className="w-3 h-3 text-white/30 hover:text-white/60" />
               </button>
@@ -1075,6 +1254,48 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               </button>
             </div>
           </div>
+
+          {/* History panel */}
+          {showHistory && (
+            <div className="border-b border-white/10 bg-[#0f0a1e] max-h-[200px] overflow-y-auto">
+              <div className="px-3 py-2 flex items-center gap-2">
+                <button onClick={() => setShowHistory(false)} className="p-0.5 rounded hover:bg-white/10">
+                  <ChevronLeft className="w-3 h-3 text-white/40" />
+                </button>
+                <span className="text-[10px] text-white/50 font-medium">
+                  {language === 'en' ? 'Conversation history' : language === 'es' ? 'Historial de conversaciones' : 'Historique des conversations'}
+                </span>
+              </div>
+              {historyList.length === 0 ? (
+                <p className="text-[10px] text-white/25 text-center pb-3">
+                  {language === 'en' ? 'No history yet' : language === 'es' ? 'Sin historial' : 'Aucun historique'}
+                </p>
+              ) : (
+                <div className="space-y-0.5 px-2 pb-2">
+                  {historyList.map((h) => {
+                    const d = new Date(h.updated_at);
+                    const dateStr = d.toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    const isActive = chatHistoryId.current === h.id;
+                    return (
+                      <button
+                        key={h.id}
+                        onClick={() => loadSession(h.id)}
+                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] transition-all ${
+                          isActive ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-white/80' : 'hover:bg-white/5 text-white/50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="truncate max-w-[260px]">{h.summary || h.domain}</span>
+                          <span className="text-white/25 ml-2 shrink-0">{dateStr}</span>
+                        </div>
+                        <div className="text-white/20 text-[9px]">{h.message_count} msg</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
