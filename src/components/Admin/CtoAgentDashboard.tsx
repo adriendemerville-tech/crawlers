@@ -36,6 +36,43 @@ interface AgentLog {
   prompt_version_after: number | null;
 }
 
+// All functions CTO can supervise, grouped by category
+const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] = [
+  // Audits
+  { key: 'audit-expert-seo', label: 'Audit Expert SEO', category: 'Audits' },
+  { key: 'audit-strategique-ia', label: 'Audit Stratégique IA', category: 'Audits' },
+  { key: 'audit-compare', label: 'Audit Comparatif', category: 'Audits' },
+  { key: 'audit-local-seo', label: 'Audit SEO Local', category: 'Audits' },
+  { key: 'audit-matrice', label: 'Matrice', category: 'Audits' },
+  // Crawl & Cocoon
+  { key: 'crawl-site', label: 'Crawl multi-pages', category: 'Crawl & Cocoon' },
+  { key: 'calculate-cocoon-logic', label: 'Cocoon Logic', category: 'Crawl & Cocoon' },
+  { key: 'calculate-internal-pagerank', label: 'PageRank interne', category: 'Crawl & Cocoon' },
+  { key: 'cocoon-chat', label: 'Assistant Cocoon', category: 'Crawl & Cocoon' },
+  { key: 'persist-cocoon-session', label: 'Session Cocoon', category: 'Crawl & Cocoon' },
+  // Diagnostics
+  { key: 'cocoon-diag-content', label: 'Diag. Contenu', category: 'Diagnostics' },
+  { key: 'cocoon-diag-semantic', label: 'Diag. Sémantique', category: 'Diagnostics' },
+  { key: 'cocoon-diag-structure', label: 'Diag. Structure', category: 'Diagnostics' },
+  { key: 'cocoon-diag-authority', label: 'Diag. Autorité', category: 'Diagnostics' },
+  // Strategy
+  { key: 'cocoon-strategist', label: 'Stratège', category: 'Stratégie' },
+  { key: 'content-architecture-advisor', label: 'Content Architect', category: 'Stratégie' },
+  { key: 'detect-anomalies', label: 'Détection anomalies', category: 'Stratégie' },
+  // Visibility
+  { key: 'check-llm', label: 'Visibilité LLM', category: 'Visibilité' },
+  { key: 'check-llm-depth', label: 'Profondeur LLM', category: 'Visibilité' },
+  { key: 'diagnose-hallucination', label: 'Hallucination', category: 'Visibilité' },
+  { key: 'calculate-llm-volumes', label: 'Volumes LLM', category: 'Visibilité' },
+  // Connectors
+  { key: 'rankmath-connector', label: 'RankMath', category: 'Connecteurs' },
+  { key: 'gtmetrix-connector', label: 'GTmetrix', category: 'Connecteurs' },
+  { key: 'linkwhisper-connector', label: 'LinkWhisper', category: 'Connecteurs' },
+  { key: 'google-ads-connector', label: 'Google Ads', category: 'Connecteurs' },
+  // Code
+  { key: 'generate-corrective-code', label: 'Code correctif', category: 'Code' },
+];
+
 export function CtoAgentDashboard() {
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,6 +83,8 @@ export function CtoAgentDashboard() {
   const [checkingCache, setCheckingCache] = useState(false);
   const [refreshingJournal, setRefreshingJournal] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [functionToggles, setFunctionToggles] = useState<Record<string, boolean>>({});
+  const [savingToggles, setSavingToggles] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
