@@ -125,8 +125,10 @@ const i18n = {
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: 'The only European full-stack SEO + GEO solution',
-    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop: technical audit, semantic optimization, AI visibility, content cocoon, corrective code and automated maintenance. All in one tool, no third-party dependencies. Source code available on request.',
-    trustUrls: 'URLs analyzed', trustAudits: 'Audits generated', trustSites: 'Sites tracked',
+    trustText: 'Crawlers.fr is the only European platform covering the entire SEO and GEO loop. Two specialized AI assistants — Cocoon Strategist for content architecture and Support Assistant for technical guidance — accompany you at every step. Google Business Profile management is natively integrated. 113 backend functions, 12 proprietary algorithms, source code available on request.',
+    trustApiTitle: 'Native integrations',
+    trustApiGoogle: 'Google APIs',
+    trustApiCms: 'CMS APIs',
   },
   es: {
     momentumTitle: 'El SEO evoluciona. ¿Y tú?',
