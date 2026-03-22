@@ -239,7 +239,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
         {/* Body: left options + right preview */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left column — options */}
-          <div className="w-[340px] shrink-0 border-r border-white/10 overflow-y-auto p-4 space-y-3">
+          <div className="w-[340px] shrink-0 border-r border-white/10 overflow-y-auto p-4 pb-12 space-y-3">
             <div className="space-y-1.5">
               <label className="text-[11px] text-white/50 uppercase tracking-wider">URL cible</label>
               <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
