@@ -334,7 +334,7 @@ const HybridSection = memo(() => {
 
         <div className="text-center mt-8">
           <Link to="/">
-            <Button variant="outline" className="gap-2 border-brand-violet/50 text-brand-violet hover:bg-brand-violet/5 hover:border-brand-violet">
+            <Button variant="outline" className="gap-2 bg-brand-violet text-white border-brand-violet hover:bg-brand-violet/90">
               {t.hybridCta}
               <ArrowRight className="h-4 w-4" />
             </Button>

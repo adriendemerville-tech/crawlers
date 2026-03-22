@@ -658,7 +658,12 @@ const Index = () => {
           </section>
         )}
 
-        {/* Identity First — right after Pro Agency */}
+        {/* Trust Banner — right after Pro Agency */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <TrustBanner />
+        </Suspense>
+
+        {/* Identity First */}
         <Suspense fallback={<SectionSkeleton />}>
           <IdentityFirstSection />
         </Suspense>
@@ -668,9 +673,6 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <HybridSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <TrustBanner />
         </Suspense>
 
         {/* Active crawl notification banner */}
