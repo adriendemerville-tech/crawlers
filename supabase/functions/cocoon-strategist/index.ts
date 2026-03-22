@@ -465,21 +465,146 @@ Deno.serve(async (req) => {
     const ops_tasks = selectedTasks.filter(t => t.execution_mode === 'operational_queue');
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 3b: Feedback Loop — Analyse des recommandations passées
+    // ═══════════════════════════════════════════════════════════
+    const { data: pastRecos } = await supabase
+      .from('strategist_recommendations')
+      .select('*')
+      .eq('tracked_site_id', tracked_site_id)
+      .eq('user_id', auth.userId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const feedbackAnalysis: {
+      successful: any[];
+      failed: any[];
+      to_rollback: any[];
+      axes: Array<{ id: string; label: Record<string, string>; description: Record<string, string>; priority: number }>;
+    } = {
+      successful: [],
+      failed: [],
+      to_rollback: [],
+      axes: [],
+    };
+
+    if (pastRecos && pastRecos.length > 0) {
+      for (const reco of pastRecos) {
+        if (reco.status === 'applied' && reco.impact_score !== null) {
+          if (reco.impact_score > 0) {
+            feedbackAnalysis.successful.push({ url: reco.url, action: reco.action_type, impact: reco.impact_score });
+          } else {
+            feedbackAnalysis.failed.push({ url: reco.url, action: reco.action_type, impact: reco.impact_score });
+            // If negative impact, flag for potential rollback
+            if (reco.impact_score < -10) {
+              feedbackAnalysis.to_rollback.push({ id: reco.id, url: reco.url, action: reco.action_type, impact: reco.impact_score });
+            }
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 3c: Propose 3 strategic development axes
+    // ═══════════════════════════════════════════════════════════
+    const axesCandidates = [
+      {
+        id: 'content_authority',
+        condition: () => editorial_tasks.length >= 2 || allFindings.some(f => f.category === 'thin_content' || f.category === 'eeat_signals'),
+        priority: editorial_tasks.length * 10 + (allFindings.filter(f => f.category === 'thin_content').length * 5),
+        label: { fr: 'Autorité éditoriale', en: 'Editorial Authority', es: 'Autoridad Editorial' },
+        description: {
+          fr: 'Renforcer la profondeur et l\'expertise du contenu existant, combler les gaps sémantiques, améliorer les signaux E-E-A-T.',
+          en: 'Strengthen depth and expertise of existing content, fill semantic gaps, improve E-E-A-T signals.',
+          es: 'Reforzar la profundidad y experiencia del contenido existente, llenar gaps semánticos, mejorar señales E-E-A-T.',
+        },
+      },
+      {
+        id: 'technical_performance',
+        condition: () => code_tasks.length >= 2 || allFindings.some(f => ['redirect_chains', 'broken_links', 'deep_pages'].includes(f.category)),
+        priority: code_tasks.length * 10 + (allFindings.filter(f => f.category === 'broken_links').length * 8),
+        label: { fr: 'Performance technique', en: 'Technical Performance', es: 'Rendimiento Técnico' },
+        description: {
+          fr: 'Corriger les erreurs techniques (404, redirections, crawl profond), optimiser la vitesse et l\'indexabilité.',
+          en: 'Fix technical errors (404, redirects, deep crawl), optimize speed and indexability.',
+          es: 'Corregir errores técnicos (404, redirecciones, crawl profundo), optimizar velocidad e indexabilidad.',
+        },
+      },
+      {
+        id: 'semantic_architecture',
+        condition: () => ops_tasks.length >= 1 || allFindings.some(f => ['orphan_pages', 'cannibalization', 'keyword_gaps'].includes(f.category)),
+        priority: (allFindings.filter(f => f.category === 'orphan_pages').length * 7) + (allFindings.filter(f => f.category === 'cannibalization').length * 9),
+        label: { fr: 'Architecture sémantique', en: 'Semantic Architecture', es: 'Arquitectura Semántica' },
+        description: {
+          fr: 'Restructurer le maillage interne, résoudre les cannibalisations, intégrer les pages orphelines et créer des pages piliers.',
+          en: 'Restructure internal linking, resolve cannibalizations, integrate orphan pages and create pillar pages.',
+          es: 'Reestructurar el enlazado interno, resolver canibalizaciones, integrar páginas huérfanas y crear páginas pilar.',
+        },
+      },
+      {
+        id: 'backlink_growth',
+        condition: () => allFindings.some(f => ['backlink_health', 'domain_authority', 'anchor_diversity'].includes(f.category)),
+        priority: allFindings.filter(f => f.category === 'domain_authority').length * 8,
+        label: { fr: 'Croissance off-site', en: 'Off-site Growth', es: 'Crecimiento Off-site' },
+        description: {
+          fr: 'Renforcer l\'autorité du domaine via des campagnes de backlinks ciblées, diversifier les ancres et surveiller les liens perdus.',
+          en: 'Strengthen domain authority via targeted backlink campaigns, diversify anchors and monitor lost links.',
+          es: 'Reforzar la autoridad del dominio con campañas de backlinks específicas, diversificar anclas y monitorear enlaces perdidos.',
+        },
+      },
+      {
+        id: 'conversion_optimization',
+        condition: () => feedbackAnalysis.successful.length > 0 || allFindings.some(f => f.category === 'keyword_mismatch'),
+        priority: feedbackAnalysis.successful.length * 6,
+        label: { fr: 'Optimisation des conversions', en: 'Conversion Optimization', es: 'Optimización de Conversiones' },
+        description: {
+          fr: 'Capitaliser sur les pages performantes, optimiser les CTAs et le parcours utilisateur depuis les pages SEO vers la conversion.',
+          en: 'Capitalize on performing pages, optimize CTAs and user journey from SEO pages to conversion.',
+          es: 'Capitalizar las páginas con buen rendimiento, optimizar CTAs y el recorrido del usuario desde SEO hacia conversión.',
+        },
+      },
+    ];
+
+    // Pick top 3 matching axes
+    const matchingAxes = axesCandidates
+      .filter(a => a.condition())
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, 3)
+      .map(a => ({ id: a.id, label: a.label, description: a.description, priority: a.priority }));
+
+    // Fallback: always provide 3 axes
+    if (matchingAxes.length < 3) {
+      const remaining = axesCandidates
+        .filter(a => !matchingAxes.some(m => m.id === a.id))
+        .sort((a, b) => b.priority - a.priority);
+      while (matchingAxes.length < 3 && remaining.length > 0) {
+        const ax = remaining.shift()!;
+        matchingAxes.push({ id: ax.id, label: ax.label, description: ax.description, priority: ax.priority });
+      }
+    }
+
+    feedbackAnalysis.axes = matchingAxes;
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 4: Persistance
     // ═══════════════════════════════════════════════════════════
     const strategyPayload = {
       tasks: selectedTasks,
       editorial_calendar: editorial_tasks.map(t => ({
         ...t,
-        suggested_week: null, // Will be set by content architect
+        suggested_week: null,
       })),
       code_fixes: code_tasks,
       operational_queue: ops_tasks,
+      feedback: feedbackAnalysis,
       summary: {
         total_findings: allFindings.length,
         conflicts_resolved: conflicts.length,
         tasks_prescribed: selectedTasks.length,
         tasks_dropped: rawTasks.length - selectedTasks.length,
+        past_recos_analyzed: pastRecos?.length || 0,
+        successful_past: feedbackAnalysis.successful.length,
+        failed_past: feedbackAnalysis.failed.length,
+        rollback_candidates: feedbackAnalysis.to_rollback.length,
         breakdown: {
           editorial: editorial_tasks.length,
           code: code_tasks.length,
@@ -509,6 +634,35 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 5: Persist individual recommendations for memory
+    // ═══════════════════════════════════════════════════════════
+    if (plan?.id) {
+      const recoInserts = selectedTasks.flatMap(task =>
+        (task.affected_urls.length > 0 ? task.affected_urls : [domain]).map(url => ({
+          user_id: auth.userId,
+          tracked_site_id,
+          domain,
+          url,
+          strategy_plan_id: plan.id,
+          action_type: task.action_type,
+          title: task.title,
+          description: task.description || '',
+          priority: task.priority,
+          status: 'prescribed',
+          execution_mode: task.execution_mode,
+          metadata: task.metadata || {},
+        }))
+      );
+
+      if (recoInserts.length > 0) {
+        const { error: recoError } = await supabase
+          .from('strategist_recommendations')
+          .insert(recoInserts);
+        if (recoError) console.error('Reco insert error:', recoError);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // RESPONSE
     // ═══════════════════════════════════════════════════════════
     return new Response(JSON.stringify({
@@ -516,6 +670,8 @@ Deno.serve(async (req) => {
       strategy: strategyPayload,
       diagnostics_summary: diagnosticsSummary,
       conflicts_resolved: conflicts,
+      feedback: feedbackAnalysis,
+      development_axes: matchingAxes,
       lang,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
