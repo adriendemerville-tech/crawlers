@@ -1562,8 +1562,8 @@ export function SmartConfigurator({
               {/* Right side actions */}
               <div className="flex items-center gap-3">
 
-                {/* Copy + Save buttons - visible after unlock */}
-                {generatedCode && viewMode === 'code' && hasPaid && (
+                {/* Save button - visible after unlock (code hidden from user) */}
+                {generatedCode && hasPaid && (
                   <>
                     {user && !isAgencyPro && !isAdmin && (
                       <Button
@@ -1576,19 +1576,6 @@ export function SmartConfigurator({
                         <Save className="w-3 h-3" />
                       </Button>
                     )}
-                    <Button
-                      onClick={handleCopy}
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      title={copied ? 'Copié !' : 'Copier le code'}
-                    >
-                      {copied ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </Button>
                     {/* Inject rejection — Popover with install snippet */}
                     {injectRejected && (
                       <Popover open={injectRejected} onOpenChange={(open) => { if (!open) setInjectRejected(false); }}>
