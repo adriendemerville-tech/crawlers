@@ -136,9 +136,7 @@ Réponds UNIQUEMENT en JSON valide.`
     }
 
     if (Object.keys(updatePayload).length > 0) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      const sb = createClient(supabaseUrl, serviceKey)
+      const sb = getServiceClient()
 
       const { error } = await sb
         .from('tracked_sites')
