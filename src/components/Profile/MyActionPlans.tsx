@@ -60,6 +60,8 @@ const translations = {
     archives: 'Archives',
     archivesCount: 'plan(s) archivé(s)',
     noArchives: 'Aucun plan archivé',
+    editorialCalendar: 'Calendrier éditorial',
+    allSites: 'Tous les sites',
   },
   en: {
     title: 'Action Plans',
