@@ -218,13 +218,15 @@ const PRIORITY_COLORS: Record<string, string> = {
   optional: 'bg-white/5 text-white/40 border-white/10',
 };
 
-export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText }: CocoonArchitectModalProps) {
+export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText, trackedSiteDomainId }: CocoonArchitectModalProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [expandedFix, setExpandedFix] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [injected, setInjected] = useState(false);
 
   // Pre-select fix from recommendation
   const preSelectedFixId = useMemo(() => {
