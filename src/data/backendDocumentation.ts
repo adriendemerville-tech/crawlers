@@ -1275,14 +1275,14 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '5.0.0',
+  version: '6.0.0',
   lastUpdated: '2026-03-22',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège + Diagnostics + Content Architect + Scribe + Cocoon + GMB + Anomalies + Bundle + Agents + SAV IA',
-  totalEdgeFunctions: 121,
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA',
+  totalEdgeFunctions: 122,
   totalSharedModules: 22,
-  totalTables: '60+',
-  totalLinesOfCode: '172 000+',
-  totalMigrations: 195,
-  totalPages: 40,
-  totalComponents: 295,
+  totalTables: '65+',
+  totalLinesOfCode: '175 000+',
+  totalMigrations: 198,
+  totalPages: 41,
+  totalComponents: 300,
 };

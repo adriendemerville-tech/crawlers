@@ -384,5 +384,8 @@ Non. Crawlers.fr est une infrastructure propriétaire avec plusieurs algorithmes
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 ChatGPT (OpenAI), Gemini (Google), Perplexity et Claude (Anthropic) — en interrogation parallèle simultanée, pas séquentielle.
 
+### Comment signaler un bug ou un problème ?
+Depuis le chat de l'assistant Crawler ou du Stratège Cocoon, mentionnez simplement votre problème (ex : "j'ai un bug", "ça ne marche pas"). L'assistant vous proposera un bouton "Signaler un problème". Votre signalement sera transmis à l'équipe technique et vous serez notifié dès qu'il est résolu.
+
 ### Comment contacter le support ?
 Via le chat in-app disponible sur toutes les pages de l'interface (icône en bas à droite). L'agent IA répond 24h/24. Les questions complexes sont escaladées au fondateur sous 24h ouvrées.
