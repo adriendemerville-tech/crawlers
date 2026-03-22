@@ -530,19 +530,6 @@ export function MyCorrectiveCodes() {
                           >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-primary"
-                            onClick={() => copyCode(code)}
-                            aria-label="Copier le code"
-                          >
-                            {copiedId === code.id ? (
-                              <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
-                            ) : (
-                              <Copy className="h-4 w-4" aria-hidden="true" />
-                            )}
-                          </Button>
                         </div>
                       </div>
                     );
