@@ -1946,6 +1946,164 @@ export type Database = {
         }
         Relationships: []
       }
+      drop_detector_config: {
+        Row: {
+          cost_credits: number
+          drop_threshold: number
+          id: number
+          is_enabled: boolean
+          last_run_alerts_count: number | null
+          last_run_at: string | null
+          last_run_sites_count: number | null
+          min_data_weeks: number
+          prediction_threshold: number
+          run_frequency: string
+          updated_at: string
+        }
+        Insert: {
+          cost_credits?: number
+          drop_threshold?: number
+          id?: number
+          is_enabled?: boolean
+          last_run_alerts_count?: number | null
+          last_run_at?: string | null
+          last_run_sites_count?: number | null
+          min_data_weeks?: number
+          prediction_threshold?: number
+          run_frequency?: string
+          updated_at?: string
+        }
+        Update: {
+          cost_credits?: number
+          drop_threshold?: number
+          id?: number
+          is_enabled?: boolean
+          last_run_alerts_count?: number | null
+          last_run_at?: string | null
+          last_run_sites_count?: number | null
+          min_data_weeks?: number
+          prediction_threshold?: number
+          run_frequency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      drop_detector_logs: {
+        Row: {
+          alerts_generated: number
+          created_at: string
+          diagnostics_created: number
+          duration_ms: number | null
+          errors: Json | null
+          id: string
+          run_type: string
+          sites_scanned: number
+        }
+        Insert: {
+          alerts_generated?: number
+          created_at?: string
+          diagnostics_created?: number
+          duration_ms?: number | null
+          errors?: Json | null
+          id?: string
+          run_type?: string
+          sites_scanned?: number
+        }
+        Update: {
+          alerts_generated?: number
+          created_at?: string
+          diagnostics_created?: number
+          duration_ms?: number | null
+          errors?: Json | null
+          id?: string
+          run_type?: string
+          sites_scanned?: number
+        }
+        Relationships: []
+      }
+      drop_diagnostics: {
+        Row: {
+          affected_pages: Json | null
+          backlink_data: Json | null
+          crawl_data: Json | null
+          created_at: string
+          diagnosis_type: string
+          domain: string
+          drop_probability: number | null
+          drop_score: number
+          eeat_geo_data: Json | null
+          ga4_data: Json | null
+          gsc_data: Json | null
+          id: string
+          notified_user: boolean
+          period_end: string
+          period_start: string
+          recommendations: Json | null
+          technical_data: Json | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+          verdict: string
+          verdict_details: Json
+        }
+        Insert: {
+          affected_pages?: Json | null
+          backlink_data?: Json | null
+          crawl_data?: Json | null
+          created_at?: string
+          diagnosis_type?: string
+          domain: string
+          drop_probability?: number | null
+          drop_score?: number
+          eeat_geo_data?: Json | null
+          ga4_data?: Json | null
+          gsc_data?: Json | null
+          id?: string
+          notified_user?: boolean
+          period_end: string
+          period_start: string
+          recommendations?: Json | null
+          technical_data?: Json | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+          verdict?: string
+          verdict_details?: Json
+        }
+        Update: {
+          affected_pages?: Json | null
+          backlink_data?: Json | null
+          crawl_data?: Json | null
+          created_at?: string
+          diagnosis_type?: string
+          domain?: string
+          drop_probability?: number | null
+          drop_score?: number
+          eeat_geo_data?: Json | null
+          ga4_data?: Json | null
+          gsc_data?: Json | null
+          id?: string
+          notified_user?: boolean
+          period_end?: string
+          period_start?: string
+          recommendations?: Json | null
+          technical_data?: Json | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+          verdict?: string
+          verdict_details?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drop_diagnostics_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
