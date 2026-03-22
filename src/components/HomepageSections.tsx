@@ -496,9 +496,9 @@ const TrustBanner = memo(() => {
             </p>
           </div>
           <div className="text-center">
-            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">30</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">9</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {language === 'fr' ? 'Sites monitorés' : language === 'es' ? 'Sitios monitorizados' : 'Monitored sites'}
+              {language === 'fr' ? 'Outils' : language === 'es' ? 'Herramientas' : 'Tools'}
             </p>
           </div>
         </div>
