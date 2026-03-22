@@ -246,16 +246,25 @@ mcp.tool("calculate_ias", {
 // ── HTTP Transport ──────────────────────────────────────
 
 const transport = new StreamableHttpTransport();
+const httpHandler = transport.bind(mcp);
 const app = new Hono();
 
 app.options('/*', (c) => c.newResponse(null, 204, { ...corsHeaders, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS' }));
 
-app.get('/health', (c) => c.json({ status: 'ok', server: 'crawlers-mcp', version: '1.0.0', tools: Object.keys(TOOL_TO_FUNCTION).length }));
+app.get('/', (c) => c.json({ status: 'ok', server: 'crawlers-mcp', version: '1.0.0', tools: Object.keys(TOOL_TO_FUNCTION).length }));
 
-app.all('/*', async (c) => {
-  // Capture auth header for tool handlers
+app.all('/mcp', async (c) => {
   _currentAuthHeader = c.req.header('Authorization') || null;
-  const response = await transport.handleRequest(c.req.raw, mcp);
+  const response = await httpHandler(c.req.raw);
+  const headers = new Headers(response.headers);
+  Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
+  return new Response(response.body, { status: response.status, headers });
+});
+
+// Fallback: route root POST to MCP too (for clients that call /functions/v1/mcp-server directly)
+app.post('/', async (c) => {
+  _currentAuthHeader = c.req.header('Authorization') || null;
+  const response = await httpHandler(c.req.raw);
   const headers = new Headers(response.headers);
   Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
   return new Response(response.body, { status: response.status, headers });
