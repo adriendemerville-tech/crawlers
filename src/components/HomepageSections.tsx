@@ -80,8 +80,8 @@ const i18n = {
     row2: 'Score de visibilité IA',
     row3: 'Carte d\'identité sémantique',
     row4: 'Cocon sémantique IA',
-    row5: 'Détection de drop prédictive',
-    row6: 'Architecte de contenu IA',
+    row5: 'Code correctif dynamique',
+    row6: 'Maintenance SEO & GEO automatisée',
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: '1er outil français SEO + GEO',
