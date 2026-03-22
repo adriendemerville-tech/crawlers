@@ -270,10 +270,10 @@ export function Header() {
             </Link>
           )}
           {!isAuditExpertPage && isHomePage && (
-            <Link to="/lexique">
+            <Link to="/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Book className="h-4 w-4" />
-                <span className="text-sm">{lexiqueLabels[language]}</span>
+                <span className="text-sm">beta Cocoon</span>
               </Button>
             </Link>
           )}
