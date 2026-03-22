@@ -178,10 +178,11 @@ export function ExternalApisTab() {
     checkGoogleAccess();
   }, []);
 
-  // Filter analytics services: GA4, GMB, Google Ads only visible when full access is on
+  // Filter analytics services: Google Ads only visible when full access is on
+  // GA4 and GMB use gsc-auth which handles scopes server-side, so always show them
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
-    if (['ga4', 'google-ads', 'gmb'].includes(s.id) && !fullGoogleAccess) return false;
+    if (s.id === 'google-ads' && !fullGoogleAccess) return false;
     return true;
   });
   const cmsServices = services.filter(s => s.category === 'cms');
