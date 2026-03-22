@@ -135,7 +135,7 @@ const i18n = {
   es: {
     momentumTitle: 'En enero 2028, habrá tantas búsquedas vía agentes IA como en Google',
     momentumText: 'Google integra respuestas generadas por IA directamente en sus resultados. Los motores de búsqueda tradicionales ya no son los únicos árbitros de su visibilidad en línea. Si su sitio no está optimizado para los LLMs, ya es invisible para una parte creciente de sus prospectos.',
-    stat1: '750M', stat1Label: 'usuarios de LLMs en el mundo',
+    stat1: '200M', stat1Label: 'usuarios de LLMs en Europa',
     stat2: 'x3', stat2Label: 'tasa de conversión LLM vs Google',
     stat3: '5', stat3Label: 'LLMs consultados simultáneamente',
     stat4: '30s', stat4Label: 'para tu Score GEO',
