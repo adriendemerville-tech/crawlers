@@ -995,9 +995,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
                 if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
               });
 
-              // Extract structured fields for Content Architect (background, non-blocking)
+              // Extract structured fields for Content Architect (background, non-blocking) — skip if hidden
               const prevMsg = prev.length >= 2 ? prev[prev.length - 2] : null;
-              if (prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content)) {
+              if (isContentArchitectVisible && prevMsg?.role === 'user' && isOptimizePrompt(prevMsg.content)) {
                 supabase.functions.invoke('extract-architect-fields', {
                   body: {
                     message_content: contentToCheck,
