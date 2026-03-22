@@ -342,7 +342,17 @@ function analyzeHtml(
 
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   let bodyText = '';
+  let bodyTextFull = ''; // Full text including nav/header/footer for semantic analysis
   if (bodyMatch) {
+    // Full body text (for semantic storage)
+    bodyTextFull = bodyMatch[1]
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Main content only (for word count / SEO scoring)
     bodyText = bodyMatch[1]
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -355,6 +365,8 @@ function analyzeHtml(
       .trim();
   }
   const word_count = bodyText.split(/\s+/).filter(w => w.length > 1).length;
+  // Truncated body text for Cocoon semantic analysis (TF-IDF, clustering)
+  const body_text_truncated = bodyTextFull.substring(0, 5000) || null;
 
   // Content hash for near-duplicate detection
   const content_hash = bodyText.length > 50 ? simpleHash(bodyText) : null;
