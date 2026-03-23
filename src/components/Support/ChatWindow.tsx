@@ -507,9 +507,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 </div>
               </div>
             )}
+            <div className="h-6 shrink-0" />
           </div>
         )}
       </ScrollArea>
+      {/* Top blur gradient overlay */}
+      <div className="pointer-events-none absolute left-0 right-0 h-8 z-10" style={{ top: '0' }}>
+        <div className="w-full h-full bg-gradient-to-b from-background via-background/60 to-transparent" />
+      </div>
 
       {/* Phone callback prompt */}
       {showPhonePrompt && !phoneSent && (
