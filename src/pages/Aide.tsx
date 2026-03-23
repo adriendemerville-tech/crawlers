@@ -421,19 +421,8 @@ const DOC_SECTIONS: DocSection[] = [
   {
     id: 'integration',
     icon: <Code className="h-4 w-4" />,
-    title: '7. Intégration technique',
+    title: '7. Brancher votre site',
     subsections: [
-      {
-        id: 'sdk',
-        title: 'Comment intégrer le SDK Crawlers ?',
-        content: `Le SDK Crawlers permet d'injecter des correctifs directement sur votre site sans modifier le code source :
-<ol class="list-decimal pl-6 mt-1 space-y-1">
-<li>Depuis tableau de bord > Intégration SDK</li>
-<li>Copiez le snippet JavaScript fourni</li>
-<li>Collez-le avant &lt;/head&gt; sur toutes vos pages</li>
-<li>Les correctifs sont déployés et mis à jour automatiquement</li>
-</ol>`,
-      },
       {
         id: 'connection-methods',
         title: 'Comment brancher mon site à Crawlers.AI ?',
