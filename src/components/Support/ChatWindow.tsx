@@ -412,7 +412,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[90%] rounded-2xl px-3 py-2',
+                  'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
                   msg.role === 'assistant'
                     ? 'bg-muted/60 text-foreground rounded-bl-md'
                     : 'bg-primary/90 text-primary-foreground rounded-br-md'
