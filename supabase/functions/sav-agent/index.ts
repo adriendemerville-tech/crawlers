@@ -354,79 +354,79 @@ serve(async (req) => {
           if (queryResp.ok) {
             const queryData = await queryResp.json();
             
-            // If the query was blocked or returned no useful results, fall through to normal SAV
+            // If the query was blocked, fall through to normal SAV chat
             if (queryData.blocked) {
-              // Don't block — fall through to normal chat so Félix can answer conversationally
               console.log("Admin query blocked, falling through to normal SAV");
+              // Don't return — let it fall through to the normal AI chat below
             } else {
-              adminReply = `❌ Erreur d'exécution : ${queryData.error}\n\nRequête tentée :\n\`\`\`sql\n${queryData.query}\n\`\`\``;
-            } else if (queryData.results === null && !queryData.query) {
-              adminReply = `ℹ️ ${queryData.description}`;
-            } else {
-              adminReply = `📊 **${queryData.description}**\n\n`;
-              if (queryData.query) {
-                adminReply += `\`\`\`sql\n${queryData.query}\n\`\`\`\n\n`;
-              }
-              if (Array.isArray(queryData.results)) {
-                if (queryData.results.length === 0) {
-                  adminReply += "Aucun résultat.";
-                } else if (queryData.results.length === 1 && Object.keys(queryData.results[0]).length <= 3) {
-                  // Simple result (count, sum, etc.)
-                  const entries = Object.entries(queryData.results[0]);
-                  adminReply += entries.map(([k, v]) => `**${k}** : ${v}`).join("\n");
-                } else {
-                  // Table format
-                  const cols = Object.keys(queryData.results[0]);
-                  adminReply += `| ${cols.join(" | ")} |\n`;
-                  adminReply += `| ${cols.map(() => "---").join(" | ")} |\n`;
-                  for (const row of queryData.results.slice(0, 30)) {
-                    const vals = cols.map(c => {
-                      const v = (row as any)[c];
-                      if (v === null) return "-";
-                      if (typeof v === "object") return JSON.stringify(v).slice(0, 60);
-                      return String(v).slice(0, 60);
-                    });
-                    adminReply += `| ${vals.join(" | ")} |\n`;
-                  }
-                  if (queryData.row_count > 30) {
-                    adminReply += `\n_...et ${queryData.row_count - 30} lignes supplémentaires_`;
-                  }
-                }
-                adminReply += `\n\n_${queryData.row_count} résultat(s)_`;
-              }
-            }
-
-            // Enforce reasonable limit for admin replies (3000 chars)
-            if (adminReply.length > 3000) {
-              adminReply = adminReply.substring(0, 2997) + "...";
-            }
-
-            // Save to conversation
-            let savedConvId = conversation_id;
-            try {
-              const allMessages = [...messages, { role: "assistant", content: adminReply }];
-              if (conversation_id) {
-                await sb.from("sav_conversations").update({
-                  messages: allMessages,
-                  message_count: allMessages.length,
-                }).eq("id", conversation_id);
+              // Format results for the creator
+              let adminReply = "";
+              if (queryData.error) {
+                adminReply = `❌ Erreur d'exécution : ${queryData.error}\n\nRequête tentée :\n\`\`\`sql\n${queryData.query}\n\`\`\``;
+              } else if (queryData.results === null && !queryData.query) {
+                adminReply = `ℹ️ ${queryData.description}`;
               } else {
-                const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
-                const { data: newConv } = await sb.from("sav_conversations").insert({
-                  user_id,
-                  user_email: prof?.email || null,
-                  messages: allMessages,
-                  message_count: allMessages.length,
-                }).select("id").single();
-                savedConvId = newConv?.id;
+                adminReply = `📊 **${queryData.description}**\n\n`;
+                if (queryData.query) {
+                  adminReply += `\`\`\`sql\n${queryData.query}\n\`\`\`\n\n`;
+                }
+                if (Array.isArray(queryData.results)) {
+                  if (queryData.results.length === 0) {
+                    adminReply += "Aucun résultat.";
+                  } else if (queryData.results.length === 1 && Object.keys(queryData.results[0]).length <= 3) {
+                    const entries = Object.entries(queryData.results[0]);
+                    adminReply += entries.map(([k, v]) => `**${k}** : ${v}`).join("\n");
+                  } else {
+                    const cols = Object.keys(queryData.results[0]);
+                    adminReply += `| ${cols.join(" | ")} |\n`;
+                    adminReply += `| ${cols.map(() => "---").join(" | ")} |\n`;
+                    for (const row of queryData.results.slice(0, 30)) {
+                      const vals = cols.map(c => {
+                        const v = (row as any)[c];
+                        if (v === null) return "-";
+                        if (typeof v === "object") return JSON.stringify(v).slice(0, 60);
+                        return String(v).slice(0, 60);
+                      });
+                      adminReply += `| ${vals.join(" | ")} |\n`;
+                    }
+                    if (queryData.row_count > 30) {
+                      adminReply += `\n_...et ${queryData.row_count - 30} lignes supplémentaires_`;
+                    }
+                  }
+                  adminReply += `\n\n_${queryData.row_count} résultat(s)_`;
+                }
               }
-            } catch (e) {
-              console.error("Save admin conv error:", e);
-            }
 
-            return new Response(JSON.stringify({ reply: adminReply, conversation_id: savedConvId || conversation_id }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+              if (adminReply.length > 3000) {
+                adminReply = adminReply.substring(0, 2997) + "...";
+              }
+
+              let savedConvId = conversation_id;
+              try {
+                const allMessages = [...messages, { role: "assistant", content: adminReply }];
+                if (conversation_id) {
+                  await sb.from("sav_conversations").update({
+                    messages: allMessages,
+                    message_count: allMessages.length,
+                  }).eq("id", conversation_id);
+                } else {
+                  const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                  const { data: newConv } = await sb.from("sav_conversations").insert({
+                    user_id,
+                    user_email: prof?.email || null,
+                    messages: allMessages,
+                    message_count: allMessages.length,
+                  }).select("id").single();
+                  savedConvId = newConv?.id;
+                }
+              } catch (e) {
+                console.error("Save admin conv error:", e);
+              }
+
+              return new Response(JSON.stringify({ reply: adminReply, conversation_id: savedConvId || conversation_id }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
           }
         } catch (e) {
           console.error("Admin backend query error:", e);
