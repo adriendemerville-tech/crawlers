@@ -309,7 +309,8 @@ async function generateCrawlersPDF(result: CrawlResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`crawlers-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'crawl', 'pdf'));
 }
 
 async function generateGeoPDF(result: GeoResult, language: string) {
