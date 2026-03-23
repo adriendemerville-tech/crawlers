@@ -52,7 +52,6 @@ Deno.serve(async (req) => {
 
     // Enqueue the verification email via the email queue
     const emailPayload = {
-      run_id: crypto.randomUUID(),
       message_id: crypto.randomUUID(),
       to: email,
       subject: 'Votre code de vérification Crawlers',
@@ -82,6 +81,7 @@ Deno.serve(async (req) => {
       sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
       label: 'verification-code',
+      idempotency_key: `verification-code-${email}-${Date.now()}`,
       text: `Votre code de vérification Crawlers : ${code}. Ou confirmez directement : ${confirmLink}`,
       queued_at: new Date().toISOString(),
     };
