@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, Bug, Bell } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2, Bug, Bell } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,12 +63,14 @@ export function ActiveCrawlBanner() {
   const navigate = useNavigate();
   const t = translations[language];
   const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
+  const hadActiveJobsRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const fetchActiveJobs = useCallback(async () => {
     if (!user) return;
 
-    const fetchActiveJobs = async () => {
+    try {
       const { data } = await supabase
         .from('site_crawls')
         .select('id, domain, status, crawled_pages, total_pages')
@@ -78,6 +79,7 @@ export function ActiveCrawlBanner() {
         .limit(5);
 
       if (data && data.length > 0) {
+        hadActiveJobsRef.current = true;
         setActiveJobs(data.map(d => ({
           crawl_id: d.id,
           domain: d.domain,
@@ -86,46 +88,89 @@ export function ActiveCrawlBanner() {
           total_pages: d.total_pages,
         })));
       } else {
-        // Check if any recently completed (last 30s) to show notification
-        const { data: recent } = await supabase
-          .from('site_crawls')
-          .select('id, domain, status, crawled_pages, total_pages, completed_at')
-          .eq('status', 'completed')
-          .order('completed_at', { ascending: false })
-          .limit(1);
+        // Jobs just finished — notify once per crawl, then stop polling
+        if (hadActiveJobsRef.current) {
+          hadActiveJobsRef.current = false;
 
-        if (recent && recent.length > 0 && recent[0].completed_at) {
-          const completedAt = new Date(recent[0].completed_at);
-          const now = new Date();
-          const diffMs = now.getTime() - completedAt.getTime();
-          
-          if (diffMs < 30000 && !completedIds.has(recent[0].id)) {
-            // Just completed — show notification + play sound
-            setCompletedIds(prev => new Set(prev).add(recent[0].id));
-            
-            try {
-              const audio = new Audio(microwaveDing);
-              audio.volume = 0.6;
-              audio.play().catch(() => {});
-            } catch {}
-            
-            toast.success(`✅ Audit de ${recent[0].domain} terminé : ${recent[0].crawled_pages} pages !`, {
-              duration: 15000,
-              action: {
-                label: t.viewReport,
-                onClick: () => navigate('/site-crawl'),
-              },
-            });
+          const { data: recent } = await supabase
+            .from('site_crawls')
+            .select('id, domain, crawled_pages, completed_at')
+            .eq('status', 'completed')
+            .order('completed_at', { ascending: false })
+            .limit(1);
+
+          if (recent?.[0] && !notifiedIdsRef.current.has(recent[0].id)) {
+            const completedAt = new Date(recent[0].completed_at!);
+            const diffMs = Date.now() - completedAt.getTime();
+
+            if (diffMs < 60000) {
+              notifiedIdsRef.current.add(recent[0].id);
+              try {
+                const audio = new Audio(microwaveDing);
+                audio.volume = 0.6;
+                audio.play().catch(() => {});
+              } catch {}
+              toast.success(`✅ Audit de ${recent[0].domain} terminé : ${recent[0].crawled_pages} pages !`, {
+                duration: 15000,
+                action: {
+                  label: t.viewReport,
+                  onClick: () => navigate('/site-crawl'),
+                },
+              });
+            }
           }
         }
+
         setActiveJobs([]);
+
+        // Stop polling — no active jobs
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      }
+    } catch {
+      // silent
+    }
+  }, [user, t.viewReport, navigate]);
+
+  // Initial check + start polling only if active jobs found
+  useEffect(() => {
+    if (!user) return;
+
+    // Initial fetch
+    const init = async () => {
+      await fetchActiveJobs();
+      // Only start polling if we found active jobs
+      if (hadActiveJobsRef.current && !intervalRef.current) {
+        intervalRef.current = setInterval(fetchActiveJobs, 5000);
       }
     };
+    init();
 
-    fetchActiveJobs();
-    const interval = setInterval(fetchActiveJobs, 5000);
-    return () => clearInterval(interval);
-  }, [user]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [user, fetchActiveJobs]);
+
+  // Listen for new crawl starts via realtime or re-check periodically (every 30s instead of 5s when idle)
+  useEffect(() => {
+    if (!user) return;
+    // Light check every 30s when idle to detect new crawls started from other tabs
+    const idleCheck = setInterval(() => {
+      if (!intervalRef.current) {
+        fetchActiveJobs().then(() => {
+          if (hadActiveJobsRef.current && !intervalRef.current) {
+            intervalRef.current = setInterval(fetchActiveJobs, 5000);
+          }
+        });
+      }
+    }, 30000);
+    return () => clearInterval(idleCheck);
+  }, [user, fetchActiveJobs]);
 
   if (activeJobs.length === 0) return null;
 
