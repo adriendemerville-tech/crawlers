@@ -139,3 +139,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.mcp-server]
     verify_jwt = false
+  [functions.firehose-actions]
+    verify_jwt = false

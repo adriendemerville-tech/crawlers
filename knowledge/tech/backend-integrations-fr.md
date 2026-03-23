@@ -25,6 +25,16 @@
 - Authentification : Application Password WordPress
 - Données : internal links, suggestions auto-link, orphan pages
 
+### Ahrefs Firehose (NEW)
+- Edge function : `firehose-actions`
+- API : `https://api.firehose.com` (SSE streaming)
+- Authentification : Management Key (`fhm_` prefix) + Tap Tokens (`fh_` prefix)
+- Tables : `firehose_taps`, `firehose_rules`, `firehose_events`
+- Actions : list/create/update/revoke taps, list/create/update/delete rules, poll_stream (batch fetch & persist)
+- Données : mentions web en temps réel, diff de contenu, catégorisation ML, markdown complet
+- Requiert secret : `FIREHOSE_MANAGEMENT_KEY`
+- Accès : Pro Agency ou Admin uniquement
+
 ## Bundle Options
 - Table : `bundle_api_catalog` (api_name, api_url, seo_segment, crawlers_feature)
 - Table : `bundle_subscriptions` (user_id, selected_apis, api_count, monthly_price_cents)
