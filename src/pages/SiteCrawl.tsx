@@ -1689,8 +1689,6 @@ export default function SiteCrawl() {
                 </div>
               )}
 
-            </div>
-          )}
 
           {/* Past crawls */}
           {!crawlResult && pastCrawls.length > 0 && (
