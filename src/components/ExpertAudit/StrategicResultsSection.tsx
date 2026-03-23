@@ -129,8 +129,27 @@ export function StrategicResultsSection({
           </div>
         </div>
 
-        {/* Radial Quality Score Chart */}
-        <AuditRadialChart result={result} mode="strategic" language={language} />
+        {/* Radar chart integrated inline (no separate card) */}
+        <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
+          <CardContent className="p-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="w-full lg:w-1/2 max-w-md">
+                <AuditRadialChart result={result} mode="strategic" language={language} inline />
+              </div>
+              <div className="flex flex-col items-center lg:items-end gap-4">
+                <div className="text-center lg:text-right">
+                  <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
+                  <p className="text-base font-semibold text-foreground">Score Stratégique</p>
+                  <p className="text-lg">
+                    <span className="text-primary font-medium">
+                      {result.strategicAnalysis?.overallScore || result.totalScore} / 200
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Introduction + Report button */}
         {result.strategicAnalysis?.introduction && (
