@@ -249,6 +249,7 @@ export function ExpertAuditDashboard() {
     hasVerifiedPayment, setHasVerifiedPayment,
     loadingRef,
     stopMusicRef,
+    pauseMusicRef,
     auditStartTimeRef,
     handleNewAudit,
     handleNavigateToTechnical,
@@ -812,11 +813,14 @@ export function ExpertAuditDashboard() {
     try {
       await attemptAudit(1);
     } finally {
-      // Wait 2s, stop Spotify, play microwave ding, then show results
+      // Pause music 3s before ding, then play microwave ding, then show results
       await new Promise<void>((resolve) => {
+        // Pause music (fade effect)
+        pauseMusicRef.current?.();
+        
         setTimeout(async () => {
           try {
-            // Stop Spotify music
+            // Now fully stop/destroy
             stopMusicRef.current?.();
             
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
@@ -828,7 +832,7 @@ export function ExpertAuditDashboard() {
           } catch {
             resolve();
           }
-        }, 2000);
+        }, 3000);
       });
       setIsLoading(false);
     }
@@ -1091,11 +1095,16 @@ export function ExpertAuditDashboard() {
       const remaining = Math.max(0, 150_000 - elapsed);
       if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
 
-      // Stop music, wait 3s silence, play microwave ding, then show results
+      // Pause music 3s before ding, then play microwave ding, then show results
       await new Promise<void>((resolve) => {
-        stopMusicRef.current?.();
+        // Pause music (fade effect)
+        pauseMusicRef.current?.();
+        
         setTimeout(async () => {
           try {
+            // Now fully stop/destroy
+            stopMusicRef.current?.();
+            
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
             const audio = new Audio(dingUrl);
             audio.volume = 1.0;
@@ -1378,10 +1387,10 @@ export function ExpertAuditDashboard() {
       {/* Loading States Container - scroll target */}
       <div ref={loadingRef}>
         {/* Loading State - Technical */}
-        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} />}
+        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} onPauseMusicRef={pauseMusicRef} />}
         
         {/* Loading State - Strategic */}
-        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" onStopMusicRef={stopMusicRef} />}
+        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" onStopMusicRef={stopMusicRef} onPauseMusicRef={pauseMusicRef} />}
       </div>
 
       {/* Patience Cards during strategic loading */}
