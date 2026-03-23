@@ -309,6 +309,7 @@ export function Header() {
                 </Button>
               </Link>
             )
+          )}
           {isProfilePage && (
             <>
               <Link to="/cocoon">
