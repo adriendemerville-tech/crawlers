@@ -210,8 +210,9 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       document.body.removeChild(iframe);
 
       const domain = (() => { try { return new URL(effectiveResult.url.startsWith('http') ? effectiveResult.url : `https://${effectiveResult.url}`).hostname; } catch { return 'report'; } })();
-      const auditLabel = auditMode === 'technical' ? 'technique' : 'strategique';
-      doc.save(`rapport-audit-${auditLabel}-${domain}.pdf`);
+      const { getReportFilename } = await import('@/utils/reportFilename');
+      const auditType = auditMode === 'technical' ? 'audittechnique' as const : 'auditstrategique' as const;
+      doc.save(getReportFilename(domain, auditType, 'pdf'));
       
     } catch (error) {
       console.error('PDF generation error:', error);

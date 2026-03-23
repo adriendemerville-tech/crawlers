@@ -309,7 +309,8 @@ async function generateCrawlersPDF(result: CrawlResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`crawlers-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'crawl', 'pdf'));
 }
 
 async function generateGeoPDF(result: GeoResult, language: string) {
@@ -346,7 +347,8 @@ async function generateGeoPDF(result: GeoResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`geo-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'geo', 'pdf'));
 }
 
 async function generateLLMPDF(result: LLMAnalysisResult, language: string) {
@@ -390,7 +392,8 @@ async function generateLLMPDF(result: LLMAnalysisResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`llm-report-${result.domain.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.domain, 'llm', 'pdf'));
 }
 
 async function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
@@ -447,7 +450,8 @@ async function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`pagespeed-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'pagespeed', 'pdf'));
 }
 
 /**

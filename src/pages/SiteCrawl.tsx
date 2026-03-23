@@ -824,7 +824,7 @@ export default function SiteCrawl() {
   }
 
   // ── Sitemap export ────────────────────────────────────────
-  function handleSitemapExport() {
+  async function handleSitemapExport() {
     if (pages.length === 0) return;
     const domain = crawlResult?.domain || '';
     const xml = generateSitemapXml(pages, domain);
@@ -832,7 +832,8 @@ export default function SiteCrawl() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sitemap-${domain}.xml`;
+    const { getReportFilename } = await import('@/utils/reportFilename');
+    a.download = getReportFilename(domain, 'crawl', 'xml');
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Sitemap XML téléchargé');

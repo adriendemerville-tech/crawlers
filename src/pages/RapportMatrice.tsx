@@ -70,7 +70,7 @@ export default function RapportMatrice() {
     return generateMatriceHTML(data, branding);
   }, [data, branding]);
 
-  const handleCsv = () => {
+  const handleCsv = async () => {
     if (!data) return;
     const header = 'Prompt,Axe,Poids,Score,Seuil Bon,Seuil Moyen,Seuil Mauvais,Verdict\n';
     const lines = data.results.map(r =>
@@ -79,7 +79,8 @@ export default function RapportMatrice() {
     const blob = new Blob(['\uFEFF' + header + lines], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'rapport-matrice.csv';
+    const { getReportFilename } = await import('@/utils/reportFilename');
+    a.download = getReportFilename('matrice', 'matrice', 'csv');
     a.click();
   };
 
