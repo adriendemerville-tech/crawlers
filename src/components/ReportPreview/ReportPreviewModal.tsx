@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Check, Copy, Share2, Printer, X } from 'lucide-react';
+import { Download, Loader2, Check, Copy, Share2, Printer, X, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,7 +31,9 @@ interface ReportPreviewModalProps {
 const reportTranslations = {
   fr: {
     title: 'Aperçu du Rapport',
+    crawlTitle: 'Rapport Crawl',
     download: 'Télécharger',
+    downloadCSV: 'CSV',
     generating: 'Génération...',
     copyLink: 'Copier le lien',
     copied: 'Copié !',
@@ -46,7 +48,9 @@ const reportTranslations = {
   },
   en: {
     title: 'Report Preview',
+    crawlTitle: 'Crawl Report',
     download: 'Download',
+    downloadCSV: 'CSV',
     generating: 'Generating...',
     copyLink: 'Copy link',
     copied: 'Copied!',
@@ -61,7 +65,9 @@ const reportTranslations = {
   },
   es: {
     title: 'Vista previa del informe',
+    crawlTitle: 'Informe Crawl',
     download: 'Descargar',
+    downloadCSV: 'CSV',
     generating: 'Generando...',
     copyLink: 'Copiar enlace',
     copied: '¡Copiado!',
@@ -239,6 +245,32 @@ export function ReportPreviewModal({
     }
   };
 
+  const handleDownloadCSV = async () => {
+    if (type !== 'site_crawl' || !siteCrawlData) return;
+    const d = siteCrawlData;
+    const headers = ['URL', 'Path', 'Score SEO', 'HTTP Status', 'Title', 'Word Count', 'Noindex', 'Issues'];
+    const rows = d.pages.map(p => [
+      p.url,
+      p.path,
+      p.seo_score ?? '',
+      p.http_status ?? '',
+      (p.title || '').replace(/"/g, '""'),
+      p.word_count ?? '',
+      p.has_noindex ? 'Yes' : 'No',
+      (p.issues || []).join('; ').replace(/"/g, '""'),
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    const { getReportFilename } = await import('@/utils/reportFilename');
+    link.href = URL.createObjectURL(blob);
+    link.download = getReportFilename(d.domain, 'crawl', 'csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   const generateShareLink = async (): Promise<string | null> => {
     try {
       const { data: responseData, error } = await supabase.functions.invoke('share-report', {
@@ -336,8 +368,23 @@ export function ReportPreviewModal({
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Header with actions */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-card w-full shrink-0">
-          {!isMobile && <h2 className="text-lg font-semibold shrink-0">{t.title}</h2>}
+          {!isMobile && (
+            <h2 className="text-lg font-semibold shrink-0">
+              {type === 'site_crawl' ? `${t.crawlTitle} — ${siteCrawlData?.domain || url}` : t.title}
+            </h2>
+          )}
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
+            {type === 'site_crawl' && (
+              <Button
+                onClick={handleDownloadCSV}
+                variant="outline"
+                size={isMobile ? 'icon' : 'default'}
+                className={isMobile ? '' : 'gap-2'}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                {!isMobile && t.downloadCSV}
+              </Button>
+            )}
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
