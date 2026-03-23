@@ -180,10 +180,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   // Auto-scroll
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const viewport = getScrollViewport();
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, getScrollViewport]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
