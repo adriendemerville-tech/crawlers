@@ -554,8 +554,13 @@ export default function SiteCrawl() {
         .single();
       if (data) {
         const r = data as any;
-        setCrawlResult(r);
-        if (r.total_pages > 0) setProgress(Math.round((r.crawled_pages / r.total_pages) * 100));
+        // Sanitize ai_recommendations to always be an array
+        const sanitizedResult = {
+          ...r,
+          ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
+        };
+        setCrawlResult(sanitizedResult);
+        if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
         if (r.status === 'queued') setPhase(t.queued);
         else if (r.status === 'mapping') setPhase(t.mapping);
         else if (r.status === 'crawling') setPhase(`${t.crawlingProgress} ${r.crawled_pages}/${r.total_pages} ${t.pages}…`);
