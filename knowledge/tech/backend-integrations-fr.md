@@ -25,7 +25,16 @@
 - Authentification : Application Password WordPress
 - Données : internal links, suggestions auto-link, orphan pages
 
-### Ahrefs Firehose (NEW)
+### Matomo (alternative GA4)
+- Edge function : `matomo-connector`
+- API : Matomo Reporting API (`/index.php?module=API`)
+- Authentification : `token_auth` (token API Matomo)
+- Tables : `matomo_connections` (matomo_url, site_id, auth_token, tracked_site_id), `matomo_history_log` (sessions, pageviews, bounce_rate, etc.)
+- Actions : test_connection, fetch_metrics, sync_weekly (9 semaines pour compatibilité anomaly detection)
+- Données : visiteurs uniques, sessions, pages vues, taux de rebond, durée moyenne, actions/visite
+- Pas de secret global requis (chaque connexion a son propre token_auth)
+
+### Ahrefs Firehose
 - Edge function : `firehose-actions`
 - API : `https://api.firehose.com` (SSE streaming)
 - Authentification : Management Key (`fhm_` prefix) + Tap Tokens (`fh_` prefix)
