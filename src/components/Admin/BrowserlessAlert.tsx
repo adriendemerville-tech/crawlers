@@ -127,14 +127,7 @@ export function BrowserlessAlert() {
                 )}
               </>
             ) : (
-              <>
-                <XCircle className="h-3.5 w-3.5" />
-                {t3(language,
-                  '❌ Fly.io Playwright — aucun rendu de secours détecté',
-                  '❌ Fly.io Playwright — no fallback renders detected',
-                  '❌ Fly.io Playwright — sin renderizados de respaldo detectados'
-                )}
-              </>
+              <FlyForceButton language={language} onSuccess={fetchErrors} />
             )}
           </div>
 
