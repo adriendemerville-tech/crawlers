@@ -573,7 +573,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           </label>
           <textarea
             value={newMessage}
-            onChange={e => setNewMessage(e.target.value)}
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
             disabled={sending}
