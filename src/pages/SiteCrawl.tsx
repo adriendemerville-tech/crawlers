@@ -1174,8 +1174,15 @@ export default function SiteCrawl() {
             </CardContent>
           </Card>
 
+          {/* Loading past crawl */}
+          {crawlResult && isLoadingPastCrawl && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
           {/* Résultats */}
-          {crawlResult && crawlResult.status === 'completed' && (
+          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || pages.length > 0) && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
