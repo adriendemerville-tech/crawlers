@@ -1203,7 +1203,15 @@ export default function SiteCrawl() {
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
             <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-              {/* Métriques globales */}
+              {viewingCrawlId && (
+                <div className="flex justify-start">
+                  <Button type="button" variant="ghost" size="sm" onClick={resetViewedCrawl} className="gap-2 text-muted-foreground hover:text-foreground">
+                    <ArrowLeft className="h-4 w-4" />
+                    {language === 'fr' ? 'Retour aux crawls précédents' : language === 'es' ? 'Volver a los crawls anteriores' : 'Back to previous crawls'}
+                  </Button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 <Card className="border">
                   <CardContent className="p-4 text-center">
