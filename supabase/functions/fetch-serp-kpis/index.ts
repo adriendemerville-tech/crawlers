@@ -74,8 +74,74 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errorText = await resp.text()
       console.error('[fetch-serp-kpis] DataForSEO error:', resp.status, errorText)
-      // 402 = Payment Required — return empty data instead of crashing
+      
       if (resp.status === 402 || resp.status === 429) {
+        // Log billing alert for admin + Felix
+        await logApiBillingAlert({
+          apiName: 'DataForSEO',
+          statusCode: resp.status,
+          functionName: 'fetch-serp-kpis',
+          domain,
+          trackedSiteId: tracked_site_id,
+          userId: caller_user_id,
+        });
+
+        // === SerpAPI Fallback ===
+        const SERPAPI_KEY = Deno.env.get('SERPAPI_KEY');
+        if (SERPAPI_KEY) {
+          console.log('[fetch-serp-kpis] Attempting SerpAPI fallback for', domain);
+          try {
+            const serpUrl = new URL('https://serpapi.com/search.json');
+            serpUrl.searchParams.set('api_key', SERPAPI_KEY);
+            serpUrl.searchParams.set('engine', 'google');
+            serpUrl.searchParams.set('q', `site:${domain}`);
+            serpUrl.searchParams.set('gl', effectiveLanguageCode === 'fr' ? 'fr' : 'us');
+            serpUrl.searchParams.set('hl', effectiveLanguageCode);
+            serpUrl.searchParams.set('num', '100');
+
+            const serpResp = await fetch(serpUrl.toString());
+            if (serpResp.ok) {
+              const serpData = await serpResp.json();
+              const organicResults = serpData.organic_results || [];
+              const indexedPages = serpData.search_information?.total_results ?? organicResults.length;
+              
+              // Build partial SERP data from SerpAPI
+              const fallbackData = {
+                total_keywords: organicResults.length,
+                avg_position: organicResults.length > 0
+                  ? parseFloat((organicResults.reduce((s: number, r: any) => s + (r.position || 50), 0) / organicResults.length).toFixed(1))
+                  : null,
+                homepage_position: organicResults.find((r: any) => {
+                  const u = (r.link || '').toLowerCase().replace(/\/+$/, '');
+                  return u === `https://${domain.replace(/^www\./, '')}` || u === `https://www.${domain.replace(/^www\./, '')}`;
+                })?.position || null,
+                top_3: organicResults.filter((r: any) => r.position <= 3).length,
+                top_10: organicResults.filter((r: any) => r.position <= 10).length,
+                top_50: organicResults.filter((r: any) => r.position <= 50).length,
+                etv: 0,
+                indexed_pages: indexedPages,
+                sample_keywords: organicResults.slice(0, 20).map((r: any) => ({
+                  keyword: r.title,
+                  position: r.position,
+                  url: r.link,
+                })),
+                _fallback: true,
+                _fallback_source: 'serpapi',
+                _reason: `DataForSEO ${resp.status} — SerpAPI fallback`,
+              };
+
+              trackPaidApiCall('fetch-serp-kpis', 'serpapi', 'google_search (fallback)');
+              
+              return new Response(JSON.stringify({ data: fallbackData }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+          } catch (serpErr) {
+            console.error('[fetch-serp-kpis] SerpAPI fallback error:', serpErr);
+          }
+        }
+
+        // No SerpAPI or SerpAPI also failed — return empty
         return new Response(JSON.stringify({
           data: {
             total_keywords: 0, avg_position: null, homepage_position: null,
