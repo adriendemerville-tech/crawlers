@@ -287,6 +287,7 @@ export function CocoonRadialGraph({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const isPanning = useRef(false);
+  const dragDistance = useRef(0);
   const lastMouse = useRef({ x: 0, y: 0 });
   const animFrame = useRef<number>(0);
 
