@@ -115,6 +115,10 @@ export function generateReportHTML(
         title = t.pagespeed;
         content = generatePageSpeedHTML(data as PageSpeedResult, t);
         break;
+      case 'site_crawl':
+        title = language === 'fr' ? 'Audit Multi-Pages' : language === 'es' ? 'Auditoría Multi-Páginas' : 'Multi-Page Audit';
+        content = generateSiteCrawlHTML(data as SiteCrawlReportData, t, language);
+        break;
     }
   }
 
