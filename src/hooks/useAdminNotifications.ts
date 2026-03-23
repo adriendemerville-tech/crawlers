@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminNotifications {
-  intelligence: number;  // Supervisor correlations
+  intelligence: number;
   silentErrors: number;
   injectionErrors: number;
-  support: number;       // Unread support tickets
+  support: number;
+  apiBilling: number;  // DataForSEO / API billing alerts
 }
 
-const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0 };
+const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0 };
 
 export function useAdminNotifications() {
   const [notifications, setNotifications] = useState<AdminNotifications>(EMPTY);
@@ -22,31 +23,33 @@ export function useAdminNotifications() {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [supervisorRes, silentRes, injectionRes, supportRes] = await Promise.all([
-          // Supervisor: CTO changes that had subsequent errors (simplified count)
+        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes] = await Promise.all([
           supabase
             .from('cto_agent_logs')
             .select('id, created_at')
             .neq('decision', 'no_change')
             .gte('created_at', sevenDaysAgo),
-          // Silent errors last 7 days
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'silent_error')
             .gte('created_at', sevenDaysAgo),
-          // Injection errors last 7 days
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'injection_error')
             .gte('created_at', sevenDaysAgo),
-          // Unresolved support tickets
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'support_ticket')
             .gte('created_at', thirtyDaysAgo),
+          // API billing alerts (last 7 days)
+          supabase
+            .from('analytics_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_type', 'api_billing_alert')
+            .gte('created_at', sevenDaysAgo),
         ]);
 
         if (cancelled) return;
@@ -80,6 +83,7 @@ export function useAdminNotifications() {
           silentErrors: silentRes.count || 0,
           injectionErrors: injectionRes.count || 0,
           support: supportRes.count || 0,
+          apiBilling: billingRes.count || 0,
         });
       } catch (err) {
         console.error('Admin notifications fetch error:', err);
