@@ -14,6 +14,7 @@ import { fr } from 'date-fns/locale';
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
+import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -42,6 +43,8 @@ interface ChatMessage {
 
 interface ChatWindowProps {
   onClose: () => void;
+  triggerOnboarding?: boolean;
+  onOnboardingConsumed?: () => void;
 }
 
 // NLP detection for bug/problem intent
@@ -63,7 +66,7 @@ function detectBugIntent(message: string): boolean {
   });
 }
 
-export function ChatWindow({ onClose }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
@@ -83,6 +86,28 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+
+  // Felix onboarding: inject guided tour messages on first login
+  useEffect(() => {
+    if (!triggerOnboarding || !user || isOnboardingDone()) return;
+
+    const loadPersonaAndOnboard = async () => {
+      // Fetch persona_type from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('persona_type')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const persona = profile?.persona_type || null;
+      const onboardingMsgs = getOnboardingMessages(persona);
+      setMessages(prev => [...onboardingMsgs, ...prev]);
+      markOnboardingDone();
+      onOnboardingConsumed?.();
+    };
+
+    loadPersonaAndOnboard();
+  }, [triggerOnboarding, user]);
 
   // Resolved bug notifications
   const [resolvedBugs, setResolvedBugs] = useState<{ id: string; cto_response: string }[]>([]);

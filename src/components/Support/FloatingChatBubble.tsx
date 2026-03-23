@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { CrawlersLogo } from './CrawlersLogo';
+import { isOnboardingDone } from '@/utils/felixOnboarding';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 // Lazy load the chat window (heavy component with forms and messages)
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
@@ -15,8 +17,28 @@ export function FloatingChatBubble() {
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
+  const [triggerOnboarding, setTriggerOnboarding] = useState(false);
+  const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+
+  // Detect first-time logged-in user → red pulse + sound
+  useEffect(() => {
+    if (!user || isOnboardingDone()) {
+      setShowOnboardingPulse(false);
+      return;
+    }
+    // Small delay so it feels like Felix noticed you
+    const timer = setTimeout(() => {
+      setShowOnboardingPulse(true);
+      if (!onboardingSoundPlayed.current) {
+        playNotificationSound();
+        onboardingSoundPlayed.current = true;
+      }
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
@@ -86,7 +108,12 @@ export function FloatingChatBubble() {
 
   // Reset unread count when opening chat
   const handleOpen = () => {
+    const shouldOnboard = showOnboardingPulse;
     setIsOpen(true);
+    setShowOnboardingPulse(false);
+    if (shouldOnboard) {
+      setTriggerOnboarding(true);
+    }
     // Mark messages as read when opening
     if (user && unreadCount > 0) {
       markMessagesAsRead();
@@ -127,21 +154,36 @@ export function FloatingChatBubble() {
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
-          <ChatWindow onClose={() => setIsOpen(false)} />
+          <ChatWindow
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); }}
+            triggerOnboarding={triggerOnboarding}
+            onOnboardingConsumed={() => setTriggerOnboarding(false)}
+          />
         </Suspense>
+      )}
+
+      {/* Onboarding tooltip */}
+      {showOnboardingPulse && !isOpen && (
+        <div
+          className="fixed bottom-[72px] right-5 z-50 max-w-[220px] rounded-xl bg-destructive text-destructive-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer"
+          onClick={handleOpen}
+        >
+          👋 Bonjour, bienvenue ! Tu veux que je t'explique ?
+          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-destructive rotate-45" />
+        </div>
       )}
 
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className="fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 group overflow-hidden"
+        className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 group overflow-hidden ${showOnboardingPulse ? 'ring-2 ring-destructive ring-offset-2 ring-offset-background' : ''}`}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
         <CrawlersLogo size={22} className="opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
         {/* Notification Badge */}
-        {unreadCount > 0 && !isOpen && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold">
-            {unreadCount > 9 ? '9+' : unreadCount}
+        {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse">
+            {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
