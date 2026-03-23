@@ -293,13 +293,15 @@ serve(async (req) => {
       });
     }
 
-    const { messages, conversation_id, user_id } = body;
-    if (!messages || !Array.isArray(messages) || !user_id) {
+    const { messages, conversation_id, user_id, guest_mode } = body;
+    if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const isGuest = guest_mode === true || !user_id;
 
     const sb = getServiceClient();
 

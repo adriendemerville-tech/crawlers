@@ -531,14 +531,16 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Input */}
       <div className="border-t border-border/30 px-3 py-2 shrink-0 relative">
-        <ChatAttachmentPicker
-          userId={user.id}
-          onAttach={(item) => {
-            const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
-            const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
-            setNewMessage(attachText);
-          }}
-        />
+        {user && (
+          <ChatAttachmentPicker
+            userId={user.id}
+            onAttach={(item) => {
+              const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
+              const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
+              setNewMessage(attachText);
+            }}
+          />
+        )}
         <div className="flex items-end gap-1.5">
           <ChatMicButton
             onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
