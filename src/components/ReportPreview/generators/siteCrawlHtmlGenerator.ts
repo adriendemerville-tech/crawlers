@@ -24,6 +24,12 @@ export interface SiteCrawlReportData {
     word_count: number | null;
   }>;
   createdAt: string;
+  // New insights
+  duplicateTitles?: Array<{ title: string; count: number; urls: string[] }>;
+  thinContentPages?: Array<{ url: string; path: string; word_count: number }>;
+  deepPages?: Array<{ url: string; path: string; depth: number }>;
+  brokenLinks?: Array<{ source_url: string; broken_url: string; status?: number }>;
+  indexabilityRatio?: { indexable: number; noindex: number; total: number };
 }
 
 const siteCrawlI18n = {
