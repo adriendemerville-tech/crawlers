@@ -198,7 +198,6 @@ export default function Cocoon() {
   const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [is3DMode, setIs3DMode] = useState(false);
   const [viewMode, setViewMode] = useState<'force' | 'radial' | '3d'>('force');
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
