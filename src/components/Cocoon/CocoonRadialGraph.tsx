@@ -433,6 +433,25 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
+    // Draw & advance particles
+    const nodeById = new Map(allRadialNodes.map(n => [n.id, n]));
+    for (const p of particlesRef.current) {
+      p.t += p.speed;
+      if (p.t > 1) p.t -= 1;
+
+      const from = nodeById.get(p.fromId);
+      const to = nodeById.get(p.toId);
+      if (!from || !to) continue;
+
+      const px = from.x + (to.x - from.x) * p.t;
+      const py = from.y + (to.y - from.y) * p.t;
+
+      const [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+      ctx.beginPath();
+      ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`;
+      ctx.fill();
+    }
     // Draw silo fan arcs at level 1 (only if showClusters)
     if (showClusters) {
       for (const level1 of tree.children) {
