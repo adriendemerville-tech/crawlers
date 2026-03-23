@@ -521,6 +521,72 @@ async function handleConfirmSdkToggle(body: any, req: Request) {
   return json({ success: true, sdk_enabled: confirmation.requested_value });
 }
 
+// ─── list-pending-users (admin only) ───
+
+async function handleListPendingUsers(req: Request) {
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  const { data: authData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  if (listError) return json({ error: listError.message }, 500);
+
+  const pendingUsers = (authData?.users || [])
+    .filter((u: any) => !u.email_confirmed_at)
+    .map((u: any) => ({ id: u.id, email: u.email, created_at: u.created_at }));
+
+  const enriched = [];
+  for (const pu of pendingUsers) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, persona_type, plan_type')
+      .eq('user_id', pu.id)
+      .maybeSingle();
+    enriched.push({
+      ...pu,
+      first_name: profile?.first_name || '',
+      last_name: profile?.last_name || '',
+      persona_type: profile?.persona_type || null,
+      plan_type: profile?.plan_type || 'free',
+    });
+  }
+
+  return json({ users: enriched });
+}
+
+// ─── confirm-user (admin only) ───
+
+async function handleConfirmUser(body: any, req: Request) {
+  const { user_id } = body;
+  if (!user_id) return json({ error: 'user_id required' }, 400);
+
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(user_id, {
+    email_confirm: true,
+  });
+
+  if (updateError) return json({ error: updateError.message }, 500);
+
+  return json({ success: true, user: { id: updatedUser.user.id, email: updatedUser.user.email } });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
@@ -538,6 +604,8 @@ Deno.serve(async (req) => {
       case 'delete-user':           return await handleDeleteUser(body, req);
       case 'request-sdk-toggle':    return await handleRequestSdkToggle(body, req);
       case 'confirm-sdk-toggle':    return await handleConfirmSdkToggle(body, req);
+      case 'list-pending-users':    return await handleListPendingUsers(req);
+      case 'confirm-user':          return await handleConfirmUser(body, req);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
