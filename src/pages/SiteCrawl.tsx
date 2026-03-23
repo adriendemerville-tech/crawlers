@@ -1535,17 +1535,17 @@ export default function SiteCrawl() {
                               {!page.has_og && <Badge variant="destructive" className="text-[10px]">OG ✗</Badge>}
                             </div>
                             {/* Schema.org types & errors */}
-                            {page.schema_org_types && page.schema_org_types.length > 0 && (
+                            {Array.isArray(page.schema_org_types) && page.schema_org_types.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {page.schema_org_types.map((type, i) => (
-                                  <Badge key={i} variant="outline" className="text-[10px] text-violet-400 border-violet-400/30">{type}</Badge>
+                                  <Badge key={i} variant="outline" className="text-[10px] text-violet-400 border-violet-400/30">{String(type)}</Badge>
                                 ))}
                               </div>
                             )}
-                            {page.schema_org_errors && page.schema_org_errors.length > 0 && (
+                            {Array.isArray(page.schema_org_errors) && page.schema_org_errors.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {page.schema_org_errors.map((err, i) => (
-                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono">{err}</span>
+                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono">{String(err)}</span>
                                 ))}
                               </div>
                             )}
