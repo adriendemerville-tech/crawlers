@@ -142,72 +142,82 @@ export function FinancesDashboard() {
     processData(sharedAllEvents, sharedFilteredEvents);
   }, [sharedAllEvents, sharedLoading]);
 
+  const computeTokenStats = useCallback((tokenEvents: typeof sharedAllEvents, paidApiEvents: typeof sharedAllEvents): TokenUsageStats => {
+    const byFunction: Record<string, { tokens: number; calls: number; model?: string }> = {};
+    const byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }> = {};
+    let totalTokens = 0, promptTokens = 0, completionTokens = 0, totalEstimatedCost = 0;
+
+    tokenEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const t = Number(data.total_tokens) || 0;
+      const p = Number(data.prompt_tokens) || 0;
+      const c = Number(data.completion_tokens) || 0;
+      const model = (data.model as string) || 'unknown';
+      totalTokens += t; promptTokens += p; completionTokens += c;
+      const fn = (data.function_name as string) || 'unknown';
+      if (!byFunction[fn]) byFunction[fn] = { tokens: 0, calls: 0, model };
+      byFunction[fn].tokens += t; byFunction[fn].calls += 1;
+      if (!byModel[model]) byModel[model] = { promptTokens: 0, completionTokens: 0, totalTokens: 0, calls: 0, estimatedCost: 0 };
+      byModel[model].promptTokens += p; byModel[model].completionTokens += c;
+      byModel[model].totalTokens += t; byModel[model].calls += 1;
+      const cost = estimateCost(model, p, c);
+      byModel[model].estimatedCost += cost;
+      totalEstimatedCost += cost;
+    });
+
+    const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
+    let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
+
+    paidApiEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const service = (data.api_service as string) || 'unknown';
+      const endpoint = (data.endpoint as string) || 'unknown';
+      if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
+      byApiService[service].calls += 1;
+      byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
+      if (service === 'dataforseo') dataforseoCalls++;
+      if (service === 'openrouter') openrouterCalls++;
+      if (service === 'browserless') browserlessCalls++;
+      if (service === 'firecrawl') firecrawlCalls++;
+      if (service === 'spider') spiderCalls++;
+      if (service === 'fly-playwright') flyPlaywrightCalls++;
+    });
+
+    const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
+    const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
+    const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
+
+    return {
+      totalTokens, promptTokens, completionTokens,
+      callCount: tokenEvents.length, byFunction, byModel,
+      paidApiCalls: paidApiEvents.length, totalEstimatedCost,
+      dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
+      spiderCalls, spiderEstimatedCost,
+      flyPlaywrightCalls, flyEstimatedCost, byApiService,
+    };
+  }, []);
+
   const processData = useCallback(async (allEvents: typeof sharedAllEvents, events: typeof sharedFilteredEvents) => {
     setIsLoading(true);
 
     try {
+      const { tokenEvents, paidApiEvents, tokenEventsAll, paidApiEventsAll } = await fetchFinancialEvents();
 
-      // Fetch ALL financial events directly (not from shared cache)
-      const { tokenEvents, paidApiEvents } = await fetchFinancialEvents();
+      // 30-day stats
+      const stats30d = computeTokenStats(tokenEvents, paidApiEvents);
+      const totalPaidApiCost30d = paidApiEvents.length * 0.005; // rough average
+      const grandTotalCost30d = stats30d.totalEstimatedCost + stats30d.flyEstimatedCost + stats30d.spiderEstimatedCost + totalPaidApiCost30d;
+      setTotalPlatformCost(grandTotalCost30d);
+      setTokenUsage(stats30d);
 
-      const byFunction: Record<string, { tokens: number; calls: number; model?: string }> = {};
-      const byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }> = {};
-      let totalTokens = 0, promptTokens = 0, completionTokens = 0, totalEstimatedCost = 0;
-
-      tokenEvents.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        if (!data) return;
-        const t = Number(data.total_tokens) || 0;
-        const p = Number(data.prompt_tokens) || 0;
-        const c = Number(data.completion_tokens) || 0;
-        const model = (data.model as string) || 'unknown';
-        totalTokens += t; promptTokens += p; completionTokens += c;
-        const fn = (data.function_name as string) || 'unknown';
-        if (!byFunction[fn]) byFunction[fn] = { tokens: 0, calls: 0, model };
-        byFunction[fn].tokens += t; byFunction[fn].calls += 1;
-        if (!byModel[model]) byModel[model] = { promptTokens: 0, completionTokens: 0, totalTokens: 0, calls: 0, estimatedCost: 0 };
-        byModel[model].promptTokens += p; byModel[model].completionTokens += c;
-        byModel[model].totalTokens += t; byModel[model].calls += 1;
-        const cost = estimateCost(model, p, c);
-        byModel[model].estimatedCost += cost;
-        totalEstimatedCost += cost;
-      });
-
-      const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
-      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
-      let totalPaidApiCost = 0;
-
-      paidApiEvents.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        if (!data) return;
-        const service = (data.api_service as string) || 'unknown';
-        const endpoint = (data.endpoint as string) || 'unknown';
-        if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
-        byApiService[service].calls += 1;
-        byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
-        if (service === 'dataforseo') dataforseoCalls++;
-        if (service === 'openrouter') openrouterCalls++;
-        if (service === 'browserless') browserlessCalls++;
-        if (service === 'firecrawl') firecrawlCalls++;
-        if (service === 'spider') spiderCalls++;
-        if (service === 'fly-playwright') flyPlaywrightCalls++;
-        totalPaidApiCost += API_COST_ESTIMATES[service] || 0.005;
-      });
-
-      const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
-      const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
-      const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
-      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + spiderEstimatedCost + totalPaidApiCost;
-      setTotalPlatformCost(grandTotalCost);
-
-      setTokenUsage({
-        totalTokens, promptTokens, completionTokens,
-        callCount: tokenEvents.length, byFunction, byModel,
-        paidApiCalls: paidApiEvents.length, totalEstimatedCost,
-        dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
-        spiderCalls, spiderEstimatedCost,
-        flyPlaywrightCalls, flyEstimatedCost, byApiService,
-      });
+      // All-time stats
+      const statsAll = computeTokenStats(tokenEventsAll, paidApiEventsAll);
+      const totalPaidApiCostAll = paidApiEventsAll.length * 0.005;
+      const grandTotalCostAll = statsAll.totalEstimatedCost + statsAll.flyEstimatedCost + statsAll.spiderEstimatedCost + totalPaidApiCostAll;
+      setAllTimePlatformCost(grandTotalCostAll);
+      setAllTimeTokenUsage(statsAll);
 
       // Active users
       const activeUserIds = new Set<string>();
