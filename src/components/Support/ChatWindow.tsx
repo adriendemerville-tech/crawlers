@@ -223,7 +223,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       // Check if escalation should show phone prompt (after 3+ user messages) — skip for admins
       const userCount = updatedMessages.filter(m => m.role === 'user').length;
-      if (userCount >= 3 && !phoneSent && !isAdmin) {
+      if (userCount >= 8 && !phoneSent && !isAdmin) {
         setShowPhonePrompt(true);
       }
     } catch (err) {
