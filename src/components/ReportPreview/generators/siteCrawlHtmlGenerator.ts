@@ -111,6 +111,13 @@ const siteCrawlI18n = {
     indexability: 'Indexability ratio',
     indexable: 'Indexable',
     notIndexable: 'Not indexable',
+    externalAuthority: 'External authority sources',
+    externalAuthorityDesc: 'Pages receiving the most external backlinks (top 10)',
+    referringDomains: 'referring domains',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Top anchors',
+    topSources: 'Top sources',
+    avgDomainRank: 'Avg source domain rank',
   },
   es: {
     title: 'Auditoría Multi-Páginas',
