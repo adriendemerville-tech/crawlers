@@ -175,12 +175,12 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
     <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
         {/* Animated word container */}
         <span
-          className="hero-word-container relative inline-flex items-center justify-center overflow-hidden align-baseline"
-          style={{ width: 'auto' }}
+          className="hero-word-container relative inline-flex items-center justify-end overflow-hidden align-baseline"
+          style={{ minWidth: '4.5em' }}
         >
           {isHydrated ? (
             <Suspense fallback={
-              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent">
+              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
                 {animatedWords[wordIndex]}
               </span>
             }>
@@ -189,13 +189,13 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="relative whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent"
+                className="relative whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right w-full"
               >
                 {animatedWords[wordIndex]}
               </MotionSpan>
             </Suspense>
           ) : (
-            <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent">
+            <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
               {animatedWords[0]}
             </span>
           )}
