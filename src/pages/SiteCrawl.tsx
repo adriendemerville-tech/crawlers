@@ -1199,28 +1199,18 @@ export default function SiteCrawl() {
                         )}
                       </span>
                     </label>
-                    {/* Segmented page count selector */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {(isAdmin ? [10, 20, 30, 50] : [10, 15, 20]).map(val => {
-                        const cappedMax = isAdmin ? 50 : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20);
-                        if (val > cappedMax) return null;
-                        const isActive = maxPages === val;
-                        return (
-                          <button
-                            key={val}
-                            type="button"
-                            disabled={isLoading}
-                            onClick={() => setMaxPages(val)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all border ${
-                              isActive
-                                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                                : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
-                            }`}
-                          >
-                            {val}
-                          </button>
-                        );
-                      })}
+                    {/* Slider page count selector */}
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        value={[maxPages]}
+                        onValueChange={([val]) => setMaxPages(val)}
+                        min={10}
+                        max={isAdmin ? 50 : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20)}
+                        step={isAdmin ? 10 : 5}
+                        disabled={isLoading}
+                        className="flex-1"
+                      />
+                      <span className="text-sm font-bold text-primary tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
