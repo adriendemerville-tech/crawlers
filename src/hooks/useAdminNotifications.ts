@@ -23,31 +23,33 @@ export function useAdminNotifications() {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [supervisorRes, silentRes, injectionRes, supportRes] = await Promise.all([
-          // Supervisor: CTO changes that had subsequent errors (simplified count)
+        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes] = await Promise.all([
           supabase
             .from('cto_agent_logs')
             .select('id, created_at')
             .neq('decision', 'no_change')
             .gte('created_at', sevenDaysAgo),
-          // Silent errors last 7 days
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'silent_error')
             .gte('created_at', sevenDaysAgo),
-          // Injection errors last 7 days
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'injection_error')
             .gte('created_at', sevenDaysAgo),
-          // Unresolved support tickets
           supabase
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'support_ticket')
             .gte('created_at', thirtyDaysAgo),
+          // API billing alerts (last 7 days)
+          supabase
+            .from('analytics_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_type', 'api_billing_alert')
+            .gte('created_at', sevenDaysAgo),
         ]);
 
         if (cancelled) return;
