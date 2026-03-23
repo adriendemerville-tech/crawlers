@@ -3405,6 +3405,109 @@ export type Database = {
         }
         Relationships: []
       }
+      matomo_connections: {
+        Row: {
+          auth_token: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          matomo_url: string
+          site_id: number
+          sync_error: string | null
+          tracked_site_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_token?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          matomo_url: string
+          site_id: number
+          sync_error?: string | null
+          tracked_site_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_token?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          matomo_url?: string
+          site_id?: number
+          sync_error?: string | null
+          tracked_site_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matomo_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: true
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matomo_history_log: {
+        Row: {
+          actions_per_visit: number | null
+          avg_session_duration: number | null
+          bounce_rate: number | null
+          created_at: string | null
+          id: string
+          measured_at: string | null
+          pageviews: number | null
+          sessions: number | null
+          total_users: number | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          actions_per_visit?: number | null
+          avg_session_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string | null
+          id?: string
+          measured_at?: string | null
+          pageviews?: number | null
+          sessions?: number | null
+          total_users?: number | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          actions_per_visit?: number | null
+          avg_session_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string | null
+          id?: string
+          measured_at?: string | null
+          pageviews?: number | null
+          sessions?: number | null
+          total_users?: number | null
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matomo_history_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matrix_audit_results: {
         Row: {
           axe: string
