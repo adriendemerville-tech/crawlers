@@ -176,7 +176,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         {/* Animated word container */}
         <span
           className="hero-word-container relative inline-flex items-center justify-end overflow-hidden align-baseline"
-          style={{ minWidth: '4.5em' }}
+          style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
         >
           {isHydrated ? (
             <Suspense fallback={
