@@ -97,3 +97,35 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `process-script-queue` : File d'attente FIFO pour génération de scripts
 - `supervisor-actions` : Audit des agents + assistant SAV
 - `drop-detector` : Détection de chute réactive + prédictive
+
+## Homepage — Section LLM & Lead Magnets
+
+### Logos LLM
+- **ChatGPT** : logo noir en mode clair, logo blanc en mode sombre (switch automatique via `dark:hidden`/`hidden dark:block`)
+- **Gemini** : logo officiel uploadé (PNG)
+- **Claude** : logo officiel uploadé (PNG)
+- **Mistral** : logo SVG officiel 2025 uploadé
+- **Perplexity** : conservé tel quel
+
+### Lead Magnet Bots IA (`AIBotsLeadMagnet`)
+- Composant autonome dans la section LLM de la homepage
+- Champ URL avec bordure violette, design minimaliste SaaS premium
+- Correction automatique de l'URL via `normalizeUrl()`
+- Appel edge function `check-ai-crawlers` pour vérifier l'accès robots.txt
+- Résultat affiché en dessous : liste des bots avec statut (✓ autorisé / ✗ bloqué)
+- Logique : seul le statut `blocked` explicite affiche une croix rouge ; tout autre statut (`allowed`, `unknown`) affiche un check vert
+- Résumé contextuel : "Tous les bots IA peuvent accéder à votre site" ou "N bots IA bloqués"
+- Bouton CTA "Audit complet gratuit" redirige vers les outils
+- Trilingue FR/EN/ES
+
+### Crawl Multi-Pages (/crawl)
+- Bouton flèche retour centré au-dessus de la modal Pro Agency (aligné sur le design /cocoon)
+- Notification bandeau noir "pages détectées" supprimée
+- Crawls précédents : rapport se déroule inline sans rechargement de page
+- En bas du rapport déroulé : boutons "Rapport" et "Cocoon" pour navigation directe
+- Le bouton Cocoon transmet l'identifiant du crawl pour pré-charger le bon site dans le sélecteur /cocoon
+
+### Cocoon (/cocoon) — Sélecteur de sites
+- Affiche les 5 crawls les plus audités dans Cocoon en priorité
+- Barre de recherche en haut du filtre pour retrouver tous les crawls réalisés par l'utilisateur
+- Détection automatique du crawl source quand l'utilisateur arrive depuis /crawl

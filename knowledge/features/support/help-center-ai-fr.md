@@ -50,3 +50,8 @@ Updated: now
 ## Supervision
 - **Supervisor** : audite l'assistant SAV (avg precision, escalation rate, repeated intents, route match rate)
 - **Agent CTO** : ne monitore PAS l'assistant SAV (hors scope)
+
+## Couverture Homepage (Lead Magnets)
+- L'agent connaît les lead magnets de la homepage (GEO Score, LLM Visibility, AI Bots) pour orienter les utilisateurs
+- Sait expliquer le fonctionnement du vérificateur de bots IA (robots.txt) et ses résultats
+- Peut rediriger vers la page /aide pour la documentation complète des outils gratuits
