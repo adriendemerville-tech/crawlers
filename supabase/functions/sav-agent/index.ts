@@ -538,11 +538,26 @@ serve(async (req) => {
     } catch (e) {
       console.error("Context enrichment error:", e);
     }
+    } // end if (!isGuest)
+
+    // Guest sales mode prompt
+    let guestHint = "";
+    if (isGuest) {
+      guestHint = `\n\n# MODE VISITEUR (NON CONNECTÉ)
+Cet utilisateur n'est PAS connecté. Tu es en mode commercial / vente.
+- Réponds à ses questions sur Crawlers.fr avec enthousiasme mais sans survente
+- Mets en avant les fonctionnalités gratuites : [Audit SEO gratuit](https://crawlers.fr/audit-expert), [Score GEO](https://crawlers.fr), [Vérification bots IA](https://crawlers.fr), [PageSpeed](https://crawlers.fr)
+- Si pertinent, mentionne l'offre Pro Agency à 59€/mois qui remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois)
+- Propose-lui de s'inscrire gratuitement pour accéder à toutes les fonctionnalités de base : [S'inscrire](https://crawlers.fr/auth)
+- Tutoie le visiteur, sois chaleureux et accessible
+- Ne propose JAMAIS d'être rappelé par téléphone en mode visiteur
+- Ne mentionne JAMAIS les problèmes techniques ou le support en mode visiteur`;
+    }
 
     // Count user messages to detect escalation threshold
     const userMessageCount = messages.filter((m: any) => m.role === "user").length;
     let escalationHint = "";
-    if (userMessageCount >= 3) {
+    if (!isGuest && userMessageCount >= 3) {
       escalationHint = `\n\n# INSTRUCTION SPÉCIALE\nL'utilisateur a posé ${userMessageCount} questions. S'il semble insatisfait ou a encore des questions non résolues, propose-lui d'être rappelé rapidement : "Souhaitez-vous être rappelé par un membre de l'équipe ? Si oui, communiquez-moi votre numéro de téléphone (cette donnée sera effacée sous 48h)."`;
     }
 
@@ -572,7 +587,7 @@ Pour les questions nécessitant des données précises, suggère au créateur de
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + escalationHint + greetingHint + creatorHint;
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + guestHint + escalationHint + greetingHint + creatorHint;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
