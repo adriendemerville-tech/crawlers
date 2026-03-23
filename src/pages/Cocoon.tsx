@@ -226,6 +226,9 @@ export default function Cocoon() {
   const waitingAuditNodeUrl = useRef<string | null>(null);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
 
+  // Increment cocoon visit counter on mount
+  useEffect(() => { incrementCocoonVisit(); }, []);
+
   // Sync selectedNode with latest nodes data after recompute
   useEffect(() => {
     if (selectedNode && nodes.length > 0) {
