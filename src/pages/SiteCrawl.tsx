@@ -1069,7 +1069,7 @@ export default function SiteCrawl() {
           </div>
         )}
 
-        <div className={`max-w-6xl mx-auto px-4 sm:px-6 ${!isUnlimitedUser ? 'pointer-events-none select-none opacity-40' : ''}`}>
+        <div className={`max-w-6xl mx-auto px-4 sm:px-6 ${!isUnlimited ? 'pointer-events-none select-none opacity-40' : ''}`}>
           
           {/* Hero */}
           <div className="text-center mb-10">
