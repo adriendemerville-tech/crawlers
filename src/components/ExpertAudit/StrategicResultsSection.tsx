@@ -130,7 +130,7 @@ export function StrategicResultsSection({
         </div>
 
         {/* Radial Quality Score Chart */}
-        <AuditRadialChart result={result} mode="strategic" language={'fr'} />
+        <AuditRadialChart result={result} mode="strategic" language={language} />
 
         {/* Introduction + Report button */}
         {result.strategicAnalysis?.introduction && (
