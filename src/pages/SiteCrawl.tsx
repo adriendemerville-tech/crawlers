@@ -1183,7 +1183,7 @@ export default function SiteCrawl() {
           )}
 
           {/* Résultats */}
-          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || pages.length > 0) && (
+          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
