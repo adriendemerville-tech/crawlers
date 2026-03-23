@@ -55,7 +55,8 @@ export function CocoonOnboardingStepper({ onComplete }: { onComplete: () => void
   const [step, setStep] = useState(0);
 
   const finish = () => {
-    localStorage.setItem(STORAGE_KEY, '1');
+    // Mark as "seen" by setting visits to 3+ so it won't show again
+    localStorage.setItem(STORAGE_KEY, '3');
     onComplete();
   };
 
