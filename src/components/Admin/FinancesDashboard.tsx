@@ -710,7 +710,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.openrouterCalls.toLocaleString('fr-FR')} appels (30j)</span>
+                <span>{(allTimeTokenUsage?.openrouterCalls ?? tokenUsage.openrouterCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>Dépensé: ${(apiBalances?.openrouter?.usage ?? 0).toFixed(4)}</span>
               </div>
             </div>
 
