@@ -1473,7 +1473,7 @@ export default function SiteCrawl() {
                               <div className="flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">{t.words}</span>
-                                <span className="text-foreground">{page.word_count}</span>
+                                <span className="text-foreground">{page.word_count ?? 0}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Image className="w-3.5 h-3.5 text-muted-foreground" />
