@@ -813,14 +813,28 @@ export default function Cocoon() {
           <div className="h-full rounded-xl overflow-hidden border relative border-[hsl(263,70%,20%)]" style={{ backgroundColor: computedBgColor, filter: `contrast(${graphContrast}%) brightness(${50 + graphContrast / 2}%)` }}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
-              <button
-                onClick={() => setIs3DMode(v => !v)}
-                className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-mono transition-colors bg-black/50 border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
-              >
-                <span className={is3DMode ? 'text-white/25' : 'text-white/70 font-semibold'}>2D</span>
+              <div className="absolute top-3 left-3 z-20 flex items-center gap-0.5 px-1.5 py-1 rounded-md backdrop-blur-md border bg-black/50 border-white/10">
+                <button
+                  onClick={() => setViewMode('force')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'force' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  Force
+                </button>
                 <span className="text-white/15">·</span>
-                <span className={is3DMode ? 'text-white/70 font-semibold' : 'text-white/25'}>3D</span>
-              </button>
+                <button
+                  onClick={() => setViewMode('radial')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'radial' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  Radial
+                </button>
+                <span className="text-white/15">·</span>
+                <button
+                  onClick={() => setViewMode('3d')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === '3d' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  3D
+                </button>
+              </div>
             )}
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
