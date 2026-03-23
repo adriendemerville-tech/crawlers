@@ -22,7 +22,10 @@ interface ReportData {
   geoResult?: GeoResult | null;
   llmResult?: LLMAnalysisResult | null;
   pageSpeedResult?: PageSpeedResult | null;
+  siteCrawlData?: SiteCrawlReportData | null;
 }
+
+export type { SiteCrawlReportData };
 
 function generateHeader(t: TranslationKeys, title: string, date: string): string {
   return `
