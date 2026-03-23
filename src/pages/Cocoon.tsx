@@ -853,7 +853,7 @@ export default function Cocoon() {
                   <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
                 </div>
               </div>
-            ) : is3DMode ? (
+            ) : viewMode === '3d' ? (
               <CocoonForceGraph3D
                 nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
@@ -878,6 +878,19 @@ export default function Cocoon() {
                 bgWarmth={bgWarmth}
                 linkThickness={linkThickness}
                 bgColorSlider={bgColor}
+              />
+            ) : viewMode === 'radial' ? (
+              <CocoonRadialGraph
+                nodes={filteredNodes}
+                selectedNodeId={selectedNode?.id || null}
+                onNodeSelect={(node) => {
+                  if (nodePickerCallback && node) {
+                    nodePickerCallback(node);
+                    setNodePickerCallback(null);
+                  } else {
+                    setSelectedNode(node);
+                  }
+                }}
               />
             ) : (
               <CocoonForceGraph
