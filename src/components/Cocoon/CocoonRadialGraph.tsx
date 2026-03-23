@@ -139,6 +139,8 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
       pageType: sn.page_type || 'page',
       linksIn: sn.internal_links_in ?? 0,
       linksOut: sn.internal_links_out ?? 0,
+      hasBacklinks: !!(sn.external_backlinks?.referring_domains && sn.external_backlinks.referring_domains > 0),
+      backlinkDomains: sn.external_backlinks?.referring_domains ?? 0,
       x: 0, y: 0, radius: 0, angle: 0,
       children: [],
       parent,
