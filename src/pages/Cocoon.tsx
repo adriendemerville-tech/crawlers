@@ -782,6 +782,7 @@ export default function Cocoon() {
                   const params = new URLSearchParams();
                   if (selectedSiteId) params.set('site', selectedSiteId);
                   params.set('fullscreen', '1');
+                  params.set('viewMode', viewMode);
                   params.set('bgColor', String(bgColor));
                   params.set('bgWarmth', String(bgWarmth));
                   params.set('contrast', String(graphContrast));
