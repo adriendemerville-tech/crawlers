@@ -1023,17 +1023,7 @@ export default function SiteCrawl() {
             <p className="text-muted-foreground max-w-2xl mx-auto">{t.subtitle}</p>
           </div>
 
-          {/* SEO content */}
-          <div className="mb-10 max-w-3xl mx-auto space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
-            </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
-            </div>
-          </div>
+          {/* SEO content moved to bottom */}
 
           {/* Formulaire */}
           <Card className="mb-8 border-violet-500/30">
