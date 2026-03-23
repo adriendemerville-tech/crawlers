@@ -1,0 +1,1 @@
+CREATE POLICY "Admins can view all crawl pages" ON public.crawl_pages FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'::app_role));
