@@ -78,6 +78,7 @@ export function StrategicResultsSection({
 }: Props) {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const previousData = usePreviousAuditData(result, 'strategic', language);
   const [maillageData, setMaillageData] = useState<MaillageData | null>(null);
 
   // Fetch semantic_nodes for maillage analysis
