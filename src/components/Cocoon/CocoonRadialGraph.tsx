@@ -54,45 +54,53 @@ interface CocoonRadialGraphProps {
   onNodeSelect: (node: SemanticNode | null) => void;
 }
 
-// ─── Depth color palette ───
-// Dark green → light green → dark orange → light orange → dark blue → light blue → purple
-const DEPTH_COLORS = [
-  [0, 100, 40],     // depth 0 - dark green (home)
-  [90, 200, 90],    // depth 1 - light green
-  [200, 120, 30],   // depth 2 - dark orange
-  [240, 170, 60],   // depth 3 - light orange
-  [40, 80, 160],    // depth 4 - dark blue
-  [80, 140, 220],   // depth 5 - light blue
-  [140, 80, 200],   // depth 6 - purple
-  [180, 130, 220],  // depth 7 - light purple
-];
+// ─── Page-type colors (SAME as Force & 3D views) ───
+const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
+  homepage:    [255, 204, 0],    // #ffcc00
+  blog:        [140, 120, 255],  // #8c78ff
+  produit:     [0, 240, 160],    // #00f0a0
+  "catégorie": [61, 184, 255],   // #3db8ff
+  faq:         [255, 128, 48],   // #ff8030
+  contact:     [255, 92, 170],   // #ff5caa
+  tarifs:      [245, 158, 11],   // #f59e0b
+  guide:       [192, 122, 255],  // #c07aff
+  "légal":     [160, 170, 180],  // #a0aab4
+  "à propos":  [0, 229, 240],    // #00e5f0
+  page:        [122, 122, 158],  // #7a7a9e
+  unknown:     [122, 122, 158],  // #7a7a9e
+};
 
-function getDepthColor(depth: number): string {
-  const idx = Math.min(depth, DEPTH_COLORS.length - 1);
-  const [r, g, b] = DEPTH_COLORS[idx];
+function getNodeColor(pageType: string): string {
+  const [r, g, b] = PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
   return `rgb(${r},${g},${b})`;
 }
 
-function getDepthColorAlpha(depth: number, alpha: number): string {
-  const idx = Math.min(depth, DEPTH_COLORS.length - 1);
-  const [r, g, b] = DEPTH_COLORS[idx];
+function getNodeColorAlpha(pageType: string, alpha: number): string {
+  const [r, g, b] = PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Depth ring colors (subtle, just for the concentric rings)
+const DEPTH_RING_COLORS = [
+  "rgba(255,204,0,0.08)",   // depth 0
+  "rgba(140,120,255,0.05)", // depth 1
+  "rgba(122,122,158,0.04)", // depth 2+
+];
+
+function getDepthRingColor(depth: number): string {
+  return DEPTH_RING_COLORS[Math.min(depth, DEPTH_RING_COLORS.length - 1)];
 }
 
 // ─── Build spanning tree from semantic nodes ───
 function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
   if (!nodes.length) return null;
 
-  // Find home node (depth 0 or lowest depth)
   const sorted = [...nodes].sort((a, b) => a.depth - b.depth);
   const homeNode = sorted[0];
 
-  // Build url→node map
   const urlMap = new Map<string, SemanticNode>();
   nodes.forEach(n => urlMap.set(n.url, n));
 
-  // Build adjacency from edges (discovery tree = first link that discovered each page)
-  // We simulate this by building BFS from home following edges
   const visited = new Set<string>();
   const radialMap = new Map<string, RadialNode>();
 
@@ -117,7 +125,6 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     };
   }
 
-  // BFS to build tree
   const root = createRadialNode(homeNode, null);
   radialMap.set(homeNode.url, root);
   visited.add(homeNode.url);
@@ -131,7 +138,6 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     const sn = urlMap.get(current.url);
     if (!sn) continue;
 
-    // Follow outgoing edges to discover children
     for (const edge of (sn.similarity_edges || [])) {
       if (visited.has(edge.target_url)) continue;
       const targetSN = urlMap.get(edge.target_url);
@@ -145,7 +151,6 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     }
   }
 
-  // Add orphan nodes not reached by BFS as children of root
   for (const sn of nodes) {
     if (!visited.has(sn.url)) {
       visited.add(sn.url);
@@ -155,9 +160,8 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     }
   }
 
-  // Compute silo metrics for level-2 nodes (children of root's children)
+  // Compute silo metrics for level-2 nodes
   for (const level1 of root.children) {
-    // level1 is a cluster parent at depth 1
     const clusterUrls = new Set<string>();
     function collectUrls(node: RadialNode) {
       clusterUrls.add(node.url);
@@ -165,20 +169,17 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     }
     collectUrls(level1);
 
-    // For each level1 child, compute intra-silo vs inter-silo links
     const sn = urlMap.get(level1.url);
     if (!sn) continue;
     
     let intraCount = 0;
     let leakCount = 0;
 
-    // Check all nodes in this silo
     for (const url of clusterUrls) {
       const nodeSN = urlMap.get(url);
       if (!nodeSN) continue;
       for (const edge of (nodeSN.similarity_edges || [])) {
         const targetUrl = edge.target_url;
-        // Skip links to parent/home or children (vertical links)
         if (targetUrl === root.url) continue;
         if (targetUrl === level1.url) continue;
         
@@ -200,7 +201,6 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
 
 // ─── Radial layout ───
 function layoutRadialTree(root: RadialNode, cx: number, cy: number, maxRadius: number) {
-  // Compute authority range for radius sizing
   const allNodes: RadialNode[] = [];
   function collect(n: RadialNode) {
     allNodes.push(n);
@@ -212,31 +212,24 @@ function layoutRadialTree(root: RadialNode, cx: number, cy: number, maxRadius: n
   const minNodeRadius = 4;
   const maxNodeRadius = 28;
 
-  // Assign radii based on pageAuthority
   allNodes.forEach(n => {
     const ratio = n.pageAuthority / maxAuth;
     n.radius = minNodeRadius + ratio * (maxNodeRadius - minNodeRadius);
   });
 
-  // Home at center
   root.x = cx;
   root.y = cy;
   root.radius = Math.max(root.radius, 20);
 
-  // Find max depth
   const maxDepth = Math.max(...allNodes.map(n => n.depth), 1);
-
-  // Ring spacing
   const ringGap = maxRadius / (maxDepth + 1);
 
-  // Layout each depth ring
   function layoutChildren(parent: RadialNode, startAngle: number, endAngle: number, depthLevel: number) {
     if (parent.children.length === 0) return;
 
     const ringR = ringGap * depthLevel;
     const angleRange = endAngle - startAngle;
     const totalWeight = parent.children.reduce((s, c) => {
-      // Weight by subtree size
       let count = 1;
       function countNodes(n: RadialNode) { count++; n.children.forEach(countNodes); }
       c.children.forEach(countNodes);
@@ -300,13 +293,6 @@ export function CocoonRadialGraph({
     return result;
   }, [tree]);
 
-  // Map for lookup
-  const nodeById = useMemo(() => {
-    const m = new Map<string, RadialNode>();
-    allRadialNodes.forEach(n => m.set(n.id, n));
-    return m;
-  }, [allRadialNodes]);
-
   // Resize observer
   useEffect(() => {
     const container = containerRef.current;
@@ -351,18 +337,18 @@ export function CocoonRadialGraph({
     for (let d = 1; d <= maxDepth; d++) {
       ctx.beginPath();
       ctx.arc(cx, cy, ringGap * d, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.strokeStyle = getDepthRingColor(d);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
-    // Draw discovery tree links
+    // Draw discovery tree links — colored by child's page type
     function drawLinks(node: RadialNode) {
       for (const child of node.children) {
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
         ctx.lineTo(child.x, child.y);
-        ctx.strokeStyle = getDepthColorAlpha(child.depth, 0.25);
+        ctx.strokeStyle = getNodeColorAlpha(child.pageType, 0.2);
         ctx.lineWidth = 1;
         ctx.stroke();
         drawLinks(child);
@@ -370,13 +356,12 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
-    // Draw silo fan arcs at level 1 (children of root)
+    // Draw silo fan arcs at level 1
     for (const level1 of tree.children) {
       if (level1.siloIntraRatio === undefined) continue;
       const fanRadius = level1.radius + 14;
-      const fanSpan = Math.PI * 0.3; // arc span
+      const fanSpan = Math.PI * 0.3;
 
-      // Green arc (intra-silo)
       const intraAngle = fanSpan * level1.siloIntraRatio;
       if (intraAngle > 0.01) {
         ctx.beginPath();
@@ -387,7 +372,6 @@ export function CocoonRadialGraph({
         ctx.stroke();
       }
 
-      // Blue arc (leaks)
       const leakAngle = fanSpan * level1.siloLeakRatio;
       if (leakAngle > 0.01) {
         ctx.beginPath();
@@ -399,7 +383,7 @@ export function CocoonRadialGraph({
       }
     }
 
-    // Draw nodes
+    // Draw nodes — colored by page type (same as Force & 3D)
     for (const node of allRadialNodes) {
       const isHovered = node.id === hoveredNodeId;
       const isSelected = node.id === selectedNodeId;
@@ -408,14 +392,14 @@ export function CocoonRadialGraph({
       if (isSelected || isHovered) {
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius + 6, 0, Math.PI * 2);
-        ctx.fillStyle = getDepthColorAlpha(node.depth, 0.2);
+        ctx.fillStyle = getNodeColorAlpha(node.pageType, 0.2);
         ctx.fill();
       }
 
       // Node circle
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = getDepthColor(node.depth);
+      ctx.fillStyle = getNodeColor(node.pageType);
       ctx.fill();
 
       // Border
@@ -423,45 +407,72 @@ export function CocoonRadialGraph({
       ctx.lineWidth = isSelected ? 2 : 1;
       ctx.stroke();
 
-      // Label for home or large nodes
-      if (node.isHome || node.radius > 14 || isHovered) {
-        const label = node.title.length > 20 ? node.title.slice(0, 18) + '…' : node.title;
+      // Labels: ONLY for selected or hovered nodes (not by default)
+      if (isSelected || isHovered) {
+        const label = node.title.length > 25 ? node.title.slice(0, 23) + '…' : node.title;
         ctx.font = node.isHome ? "bold 11px sans-serif" : "10px sans-serif";
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.textAlign = "center";
-        ctx.fillText(label, node.x, node.y + node.radius + 13);
+
+        // Background pill for readability
+        const metrics = ctx.measureText(label);
+        const padH = 4;
+        const padV = 2;
+        const bx = node.x - metrics.width / 2 - padH;
+        const by = node.y + node.radius + 6 - padV;
+        const bw = metrics.width + padH * 2;
+        const bh = 14 + padV * 2;
+        ctx.fillStyle = "rgba(10,10,18,0.8)";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, bw, bh, 4);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillText(label, node.x, node.y + node.radius + 17);
       }
     }
 
     ctx.restore();
 
-    // Legend
+    // Legend — drawn on the RIGHT side
     drawLegend(ctx, dimensions.w, dimensions.h);
   }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId]);
 
-  function drawLegend(ctx: CanvasRenderingContext2D, w: number, h: number) {
-    const x = 16;
-    let y = h - 130;
+  function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
+    // Page type legend (matches Force & 3D)
+    const rightMargin = 14;
+    const x = w - 140;
+    let y = 20;
+
     ctx.font = "bold 10px sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.textAlign = "left";
-    ctx.fillText("Profondeur", x, y);
-    y += 14;
+    ctx.fillText("Pages", x, y);
+    y += 16;
 
-    const labels = ["Home", "1 clic", "2 clics", "3 clics", "4 clics", "5 clics"];
-    for (let i = 0; i < Math.min(labels.length, DEPTH_COLORS.length); i++) {
+    const pageTypeEntries: [string, string][] = [
+      ["homepage", "Accueil"],
+      ["blog", "Blog"],
+      ["page", "Page"],
+      ["produit", "Produit"],
+      ["catégorie", "Catégorie"],
+      ["faq", "FAQ"],
+      ["guide", "Guide"],
+    ];
+
+    for (const [key, label] of pageTypeEntries) {
       ctx.beginPath();
-      ctx.arc(x + 6, y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = getDepthColor(i);
+      ctx.arc(x + 6, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = getNodeColor(key);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.5)";
       ctx.font = "9px sans-serif";
-      ctx.fillText(labels[i], x + 16, y + 3);
+      ctx.fillText(label, x + 16, y + 3);
       y += 15;
     }
 
     // Fan legend
-    y += 6;
+    y += 10;
     ctx.font = "bold 10px sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.fillText("Éventails (silos)", x, y);
@@ -594,8 +605,8 @@ export function CocoonRadialGraph({
         onWheel={handleWheel}
       />
 
-      {/* Zoom controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-1 z-10">
+      {/* Zoom controls — LEFT side */}
+      <div className="absolute bottom-4 left-4 flex flex-col gap-1 z-10">
         <Button
           variant="ghost"
           size="icon"
