@@ -792,11 +792,18 @@ export default function SiteCrawl() {
 
    async function loadPages(crawlId: string) {
     try {
-      const { data, error } = await supabase
-        .from('crawl_pages')
-        .select('*')
-        .eq('crawl_id', crawlId)
-        .order('seo_score', { ascending: true });
+      const [{ data, error }, { data: blData }] = await Promise.all([
+        supabase
+          .from('crawl_pages')
+          .select('*')
+          .eq('crawl_id', crawlId)
+          .order('seo_score', { ascending: true }),
+        supabase
+          .from('crawl_page_backlinks' as any)
+          .select('*')
+          .eq('crawl_id', crawlId)
+          .order('referring_domains', { ascending: false }),
+      ]);
       if (error) {
         console.error('[loadPages] Error:', error);
       }
@@ -817,6 +824,7 @@ export default function SiteCrawl() {
         }));
         setPages(sanitized as any);
       }
+      setCrawlBacklinks(blData || []);
     } catch {
       // Silent — handled by error boundary
     }
