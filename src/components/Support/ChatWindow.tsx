@@ -471,8 +471,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                     );
                   })()}
                   <span className={cn(
-                    'text-[10px] block mt-1',
-                    msg.role === 'assistant' ? 'text-violet-500 dark:text-violet-400' : 'text-primary-foreground/70'
+                    'text-[9px] block mt-0.5 opacity-50',
+                    msg.role === 'assistant' ? 'text-foreground' : 'text-primary-foreground'
                   )}>
                     {format(new Date(msg.timestamp), 'HH:mm', { locale: fr })}
                   </span>
