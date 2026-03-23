@@ -2268,6 +2268,169 @@ export type Database = {
         }
         Relationships: []
       }
+      firehose_events: {
+        Row: {
+          created_at: string
+          diff_chunks: Json | null
+          document_language: string | null
+          document_title: string | null
+          document_url: string
+          id: string
+          kafka_offset: number | null
+          markdown_excerpt: string | null
+          matched_at: string
+          page_categories: string[] | null
+          page_types: string[] | null
+          rule_id: string | null
+          tap_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diff_chunks?: Json | null
+          document_language?: string | null
+          document_title?: string | null
+          document_url: string
+          id?: string
+          kafka_offset?: number | null
+          markdown_excerpt?: string | null
+          matched_at: string
+          page_categories?: string[] | null
+          page_types?: string[] | null
+          rule_id?: string | null
+          tap_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diff_chunks?: Json | null
+          document_language?: string | null
+          document_title?: string | null
+          document_url?: string
+          id?: string
+          kafka_offset?: number | null
+          markdown_excerpt?: string | null
+          matched_at?: string
+          page_categories?: string[] | null
+          page_types?: string[] | null
+          rule_id?: string | null
+          tap_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firehose_events_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "firehose_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firehose_events_tap_id_fkey"
+            columns: ["tap_id"]
+            isOneToOne: false
+            referencedRelation: "firehose_taps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firehose_rules: {
+        Row: {
+          created_at: string
+          id: string
+          nsfw: boolean | null
+          quality: boolean | null
+          rule_id: string
+          rule_value: string
+          tag: string | null
+          tap_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nsfw?: boolean | null
+          quality?: boolean | null
+          rule_id: string
+          rule_value: string
+          tag?: string | null
+          tap_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nsfw?: boolean | null
+          quality?: boolean | null
+          rule_id?: string
+          rule_value?: string
+          tag?: string | null
+          tap_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firehose_rules_tap_id_fkey"
+            columns: ["tap_id"]
+            isOneToOne: false
+            referencedRelation: "firehose_taps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firehose_taps: {
+        Row: {
+          created_at: string
+          id: string
+          last_used_at: string | null
+          rules_count: number | null
+          tap_id: string
+          tap_name: string
+          tap_token_encrypted: string | null
+          token_prefix: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          rules_count?: number | null
+          tap_id: string
+          tap_name: string
+          tap_token_encrypted?: string | null
+          token_prefix?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          rules_count?: number | null
+          tap_id?: string
+          tap_name?: string
+          tap_token_encrypted?: string | null
+          token_prefix?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firehose_taps_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       function_access_requests: {
         Row: {
           created_at: string

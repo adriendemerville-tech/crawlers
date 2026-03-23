@@ -1,0 +1,1 @@
+ALTER TABLE public.firehose_taps ADD CONSTRAINT firehose_taps_tap_id_unique UNIQUE (tap_id);
