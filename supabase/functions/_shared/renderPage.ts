@@ -213,6 +213,49 @@ export async function fetchAndRenderPage(
   }
 ): Promise<RenderResult> {
   const timeout = options?.timeout || 10000;
+  const pathname = (() => {
+    try {
+      return new URL(url).pathname.replace(/\/$/, '') || '/';
+    } catch {
+      return '/';
+    }
+  })();
+
+  const extractTagText = (markup: string, tag: 'title' | 'h1'): string | null => {
+    const match = markup.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return match?.[1]?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || null;
+  };
+
+  const extractCanonical = (markup: string): string | null => {
+    const match = markup.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)
+      || markup.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
+    return match?.[1]?.trim() || null;
+  };
+
+  const countJsonLdBlocks = (markup: string): number => (markup.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>/gi) || []).length;
+
+  const hasMainContainer = (markup: string): boolean => /<(main|article)[\s>]/i.test(markup);
+
+  const hasMeaningfulSeoUpgrade = (sourceHtml: string, renderedHtml: string): boolean => {
+    const sourceTitle = extractTagText(sourceHtml, 'title');
+    const renderedTitle = extractTagText(renderedHtml, 'title');
+    const sourceH1 = extractTagText(sourceHtml, 'h1');
+    const renderedH1 = extractTagText(renderedHtml, 'h1');
+    const sourceCanonical = extractCanonical(sourceHtml);
+    const renderedCanonical = extractCanonical(renderedHtml);
+    const sourceJsonLd = countJsonLdBlocks(sourceHtml);
+    const renderedJsonLd = countJsonLdBlocks(renderedHtml);
+
+    return (
+      (!sourceH1 && !!renderedH1) ||
+      (!sourceTitle && !!renderedTitle) ||
+      (!!renderedH1 && renderedH1 !== sourceH1) ||
+      (!!renderedTitle && renderedTitle !== sourceTitle) ||
+      (!sourceCanonical && !!renderedCanonical) ||
+      (renderedJsonLd > sourceJsonLd) ||
+      (!hasMainContainer(sourceHtml) && hasMainContainer(renderedHtml))
+    );
+  };
 
   // Step 1: Fetch raw HTML with stealth headers
   const { response } = await stealthFetch(url, {
@@ -231,7 +274,13 @@ export async function fetchAndRenderPage(
   // Step 2: Analyze content for SPA/CSR detection
   const visibleText = extractVisibleText(html);
   const spaInfo = detectSPAMarkers(html);
-  const shouldRender = options?.forceRender || needsJSRendering(html, visibleText);
+  const shellLikeInternalSpaRoute = spaInfo.isSPA && pathname !== '/' && (
+    visibleText.length < 1200 ||
+    !/<h1[\s>]/i.test(html) ||
+    !hasMainContainer(html) ||
+    isMissingSEOTags(html)
+  );
+  const shouldRender = options?.forceRender || needsJSRendering(html, visibleText) || shellLikeInternalSpaRoute;
 
   if (shouldRender) {
     console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
@@ -240,16 +289,17 @@ export async function fetchAndRenderPage(
     if (renderingKey) {
       const rendered = await renderWithBrowserless(url, renderingKey);
       if (rendered) {
-        // Compare visible text content, not raw HTML length (rendered HTML strips JS bundles)
         const renderedText = extractVisibleText(rendered);
         const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
         const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
-        if (renderedWords > staticWords || rendered.length > html.length) {
-          console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, ${rendered.length} chars vs ${html.length})`);
+        const seoUpgraded = hasMeaningfulSeoUpgrade(html, rendered);
+
+        if (renderedWords > staticWords || rendered.length > html.length || seoUpgraded) {
+          console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, SEO upgrade: ${seoUpgraded ? 'yes' : 'no'})`);
           html = rendered;
           usedRendering = true;
         } else {
-          console.log(`[renderPage] ⚠️ Rendered HTML not richer (${renderedWords} words vs ${staticWords} static). Keeping original.`);
+          console.log(`[renderPage] ⚠️ Rendered HTML not materially better (${renderedWords} words vs ${staticWords} static). Keeping original.`);
         }
       }
     } else {
@@ -263,7 +313,7 @@ export async function fetchAndRenderPage(
   return {
     html,
     usedRendering,
-    isSPA: spaInfo.isSPA && !usedRendering, // If rendered successfully, treat as normal
+    isSPA: spaInfo.isSPA && !usedRendering,
     textLength: finalText.length,
     framework: spaInfo.framework,
   };
