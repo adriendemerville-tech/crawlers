@@ -151,12 +151,12 @@ export function AIBotsLeadMagnet() {
                 key={bot.name}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs",
-                  bot.status === 'allowed'
+                  isAllowed(bot)
                     ? "border-emerald-500/20 bg-emerald-500/5"
                     : "border-destructive/20 bg-destructive/5"
                 )}
               >
-                {bot.status === 'allowed' ? (
+                {isAllowed(bot) ? (
                   <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                 ) : (
                   <XCircle className="h-3 w-3 text-destructive shrink-0" />
