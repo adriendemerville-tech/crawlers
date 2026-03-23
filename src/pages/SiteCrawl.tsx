@@ -548,41 +548,45 @@ export default function SiteCrawl() {
   useEffect(() => {
     if (!crawlResult || viewingCrawlId || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('site_crawls')
-        .select('*')
-        .eq('id', crawlResult.id)
-        .single();
-      if (data) {
-        const r = data as any;
-        // Sanitize ai_recommendations to always be an array
-        const sanitizedResult = {
-          ...r,
-          ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
-        };
-        setCrawlResult(sanitizedResult);
-        if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
-        if (sanitizedResult.status === 'queued') setPhase(t.queued);
-        else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
-        else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
-        else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
-        if (sanitizedResult.status === 'completed') {
-          clearInterval(interval);
-          setIsLoading(false);
-          setPhase('');
-          loadPages(sanitizedResult.id);
-          try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
-          toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
-          supabase.functions.invoke('agent-cto', {
-            body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
-          }).catch(() => {});
+      try {
+        const { data } = await supabase
+          .from('site_crawls')
+          .select('*')
+          .eq('id', crawlResult.id)
+          .single();
+        if (data) {
+          const r = data as any;
+          // Sanitize ai_recommendations to always be an array
+          const sanitizedResult = {
+            ...r,
+            ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
+          };
+          setCrawlResult(sanitizedResult);
+          if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
+          if (sanitizedResult.status === 'queued') setPhase(t.queued);
+          else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
+          else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
+          else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
+          if (sanitizedResult.status === 'completed') {
+            clearInterval(interval);
+            setIsLoading(false);
+            setPhase('');
+            loadPages(sanitizedResult.id);
+            try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
+            toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
+            supabase.functions.invoke('agent-cto', {
+              body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
+            }).catch(() => {});
+          }
+          if (sanitizedResult.status === 'error') {
+            clearInterval(interval);
+            setIsLoading(false);
+            setPhase('');
+            toast.error(sanitizedResult.error_message || t.errorCrawl);
+          }
         }
-        if (sanitizedResult.status === 'error') {
-          clearInterval(interval);
-          setIsLoading(false);
-          setPhase('');
-          toast.error(sanitizedResult.error_message || t.errorCrawl);
-        }
+      } catch (pollErr) {
+        console.error('[CrawlPoll] Error during polling:', pollErr);
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -1232,7 +1236,7 @@ export default function SiteCrawl() {
           )}
 
           {/* Résultats */}
-          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
+          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || (pages.length > 0 && !isLoading)) && (
             <StrategicErrorBoundary onReset={() => { setCrawlResult(null); setPages([]); setViewingCrawlId(null); }}>
             <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -1535,17 +1539,17 @@ export default function SiteCrawl() {
                               {!page.has_og && <Badge variant="destructive" className="text-[10px]">OG ✗</Badge>}
                             </div>
                             {/* Schema.org types & errors */}
-                            {page.schema_org_types && page.schema_org_types.length > 0 && (
+                            {Array.isArray(page.schema_org_types) && page.schema_org_types.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {page.schema_org_types.map((type, i) => (
-                                  <Badge key={i} variant="outline" className="text-[10px] text-violet-400 border-violet-400/30">{type}</Badge>
+                                  <Badge key={i} variant="outline" className="text-[10px] text-violet-400 border-violet-400/30">{String(type)}</Badge>
                                 ))}
                               </div>
                             )}
-                            {page.schema_org_errors && page.schema_org_errors.length > 0 && (
+                            {Array.isArray(page.schema_org_errors) && page.schema_org_errors.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {page.schema_org_errors.map((err, i) => (
-                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono">{err}</span>
+                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono">{String(err)}</span>
                                 ))}
                               </div>
                             )}
