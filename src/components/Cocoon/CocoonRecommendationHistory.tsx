@@ -208,16 +208,16 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
       {/* Toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+        title={t.title}
+        className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all ${
           isOpen
-            ? 'bg-[#a78bfa]/15 border-[#a78bfa]/30 text-[#a78bfa]'
-            : 'bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#a78bfa] hover:bg-[#a78bfa]/20'
-        } backdrop-blur-md`}
+            ? 'bg-muted/80 border-border text-muted-foreground'
+            : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted/80 hover:border-border'
+        }`}
       >
         <History className="w-4 h-4" />
-        <span className="text-xs font-medium hidden sm:inline">{t.title}</span>
         {pendingCount > 0 && !isOpen && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-mono">{pendingCount}</span>
+          <span className="absolute -top-1 -right-1 text-[9px] min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full bg-amber-500/20 text-amber-400 font-mono">{pendingCount}</span>
         )}
       </button>
 
