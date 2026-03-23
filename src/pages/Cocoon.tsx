@@ -461,9 +461,9 @@ export default function Cocoon() {
   useEffect(() => {
     if (isFullscreen || typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('cocoon-settings');
-    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness });
+    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness, viewMode });
     channel.close();
-  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness]);
+  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness, viewMode]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
