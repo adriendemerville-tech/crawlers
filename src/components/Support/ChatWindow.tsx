@@ -401,6 +401,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
            <p className="text-xs font-medium">Salut moi c'est Félix !</p>
             {isAdmin ? (
               <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
+            ) : !user ? (
+              <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour répondre à tes questions sur Crawlers.fr et t'aider à booster ta visibilité SEO et IA. Tu veux en savoir plus ?</p>
             ) : (
               <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour te filer un coup de main et t'aider à analyser les metrics de tes sites. Tu as une première question ?</p>
             )}
