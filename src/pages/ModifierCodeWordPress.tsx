@@ -514,7 +514,7 @@ const ModifierCodeWordPress = () => {
                   <Button size="lg" className="gap-2" asChild>
                     <Link to="/integration-gtm">
                       <Code className="h-4 w-4" />
-                      {language === 'es' ? 'Descubrir la integración GTM' : language === 'en' ? 'Discover GTM Integration' : 'Découvrir l\'intégration GTM'}
+                      {language === 'es' ? 'Métodos de conexión' : language === 'en' ? 'Connection methods' : 'Méthodes de branchement'}
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
