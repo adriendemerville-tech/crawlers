@@ -25,6 +25,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
+import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
 
 const crawlI18n = {
   fr: {
@@ -554,28 +555,33 @@ export default function SiteCrawl() {
         .single();
       if (data) {
         const r = data as any;
-        setCrawlResult(r);
-        if (r.total_pages > 0) setProgress(Math.round((r.crawled_pages / r.total_pages) * 100));
-        if (r.status === 'queued') setPhase(t.queued);
-        else if (r.status === 'mapping') setPhase(t.mapping);
-        else if (r.status === 'crawling') setPhase(`${t.crawlingProgress} ${r.crawled_pages}/${r.total_pages} ${t.pages}…`);
-        else if (r.status === 'analyzing') setPhase(t.analyzing);
-        if (r.status === 'completed') {
+        // Sanitize ai_recommendations to always be an array
+        const sanitizedResult = {
+          ...r,
+          ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
+        };
+        setCrawlResult(sanitizedResult);
+        if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
+        if (sanitizedResult.status === 'queued') setPhase(t.queued);
+        else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
+        else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
+        else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
+        if (sanitizedResult.status === 'completed') {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
-          loadPages(r.id);
+          loadPages(sanitizedResult.id);
           try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
-          toast.success(`✅ ${t.auditDone} ${r.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
+          toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
           supabase.functions.invoke('agent-cto', {
-            body: { auditResult: { ai_summary: r.ai_summary, ai_recommendations: r.ai_recommendations, avg_score: r.avg_score, crawled_pages: r.crawled_pages }, auditType: 'crawl', url: r.url, domain: r.domain }
+            body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
           }).catch(() => {});
         }
-        if (r.status === 'error') {
+        if (sanitizedResult.status === 'error') {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
-          toast.error(r.error_message || t.errorCrawl);
+          toast.error(sanitizedResult.error_message || t.errorCrawl);
         }
       }
     }, 5000);
@@ -693,32 +699,37 @@ export default function SiteCrawl() {
     );
   }
 
-  async function loadPages(crawlId: string) {
+   async function loadPages(crawlId: string) {
     console.log('[loadPages] Loading pages for crawlId:', crawlId);
-    const { data, error } = await supabase
-      .from('crawl_pages')
-      .select('*')
-      .eq('crawl_id', crawlId)
-      .order('seo_score', { ascending: true });
-    console.log('[loadPages] Result:', { count: data?.length, error });
-    if (error) {
-      console.error('[loadPages] Error:', error);
-    }
-    if (data) {
-      // Sanitize fields that must be arrays to prevent React crashes
-      const sanitized = data.map((p: any) => ({
-        ...p,
-        path: p.path || p.url || '',
-        word_count: p.word_count ?? 0,
-        images_without_alt: p.images_without_alt ?? 0,
-        seo_score: p.seo_score ?? 0,
-        issues: Array.isArray(p.issues) ? p.issues : [],
-        schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
-        schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
-        broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
-        anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
-      }));
-      setPages(sanitized as any);
+    try {
+      const { data, error } = await supabase
+        .from('crawl_pages')
+        .select('*')
+        .eq('crawl_id', crawlId)
+        .order('seo_score', { ascending: true });
+      console.log('[loadPages] Result:', { count: data?.length, error });
+      if (error) {
+        console.error('[loadPages] Error:', error);
+      }
+      if (data) {
+        // Sanitize fields that must be arrays to prevent React crashes
+        const sanitized = data.map((p: any) => ({
+          ...p,
+          path: p.path || p.url || '',
+          word_count: p.word_count ?? 0,
+          images_without_alt: p.images_without_alt ?? 0,
+          seo_score: p.seo_score ?? 0,
+          issues: Array.isArray(p.issues) ? p.issues : [],
+          schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
+          schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
+          broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
+          anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
+          custom_extraction: (p.custom_extraction && typeof p.custom_extraction === 'object' && !Array.isArray(p.custom_extraction)) ? p.custom_extraction : {},
+        }));
+        setPages(sanitized as any);
+      }
+    } catch (err) {
+      console.error('[loadPages] Uncaught error:', err);
     }
   }
 
@@ -816,7 +827,11 @@ export default function SiteCrawl() {
         .single();
 
       if (crawl) {
-        setCrawlResult(crawl as any);
+        const sanitized = {
+          ...crawl as any,
+          ai_recommendations: Array.isArray((crawl as any).ai_recommendations) ? (crawl as any).ai_recommendations : [],
+        };
+        setCrawlResult(sanitized);
         setPhase(`${data.totalPages} ${t.auditQueued}`);
       }
       // Silent — no toast for pages discovered
@@ -1218,6 +1233,7 @@ export default function SiteCrawl() {
 
           {/* Résultats */}
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
+            <StrategicErrorBoundary onReset={() => { setCrawlResult(null); setPages([]); setViewingCrawlId(null); }}>
             <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {viewingCrawlId && (
@@ -1573,7 +1589,7 @@ export default function SiteCrawl() {
                                 {Object.entries(page.custom_extraction).map(([name, value]) => (
                                   <div key={name} className="flex gap-2 text-xs">
                                     <span className="font-medium text-foreground shrink-0">{name}:</span>
-                                    <span className="text-muted-foreground truncate">{value || '—'}</span>
+                                    <span className="text-muted-foreground truncate">{typeof value === 'object' ? JSON.stringify(value) : (value || '—')}</span>
                                   </div>
                                 ))}
                               </div>
@@ -1595,6 +1611,7 @@ export default function SiteCrawl() {
                 </CardContent>
               </Card>
             </div>
+            </StrategicErrorBoundary>
           )}
 
           {/* Crawl Comparison */}
