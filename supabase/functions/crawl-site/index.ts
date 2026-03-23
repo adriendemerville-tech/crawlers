@@ -430,7 +430,7 @@ Deno.serve(async (req) => {
         .eq('domain', domain)
         .eq('status', 'completed')
         .neq('id', crawlId)
-        .gte('completed_at', twentyFourHoursAgo)
+        .gte('completed_at', twelveHoursAgo)
         .order('completed_at', { ascending: false })
         .limit(1);
 
