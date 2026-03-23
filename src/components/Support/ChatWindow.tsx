@@ -416,7 +416,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                  'max-w-[90%] rounded-lg px-3 py-2',
                   msg.role === 'assistant'
                     ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
                     : 'bg-primary text-primary-foreground'
@@ -426,7 +426,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                       <CrawlersLogo size={14} />
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap break-words prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
+                  <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
                     <ReactMarkdown
                       components={{
                         a: ({ href, children }) => (
