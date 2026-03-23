@@ -285,7 +285,7 @@ const FeatureShowcase = memo(() => {
               {/* CTA — transparent with violet border */}
               <div className="pl-8 pt-2">
                 <Link to={feat.ctaLink}>
-                   <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-violet-600 hover:from-violet-700 hover:to-amber-600 shadow-md">
+                   <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-white/30 hover:from-violet-700 hover:to-amber-600 shadow-md">
                     {item.cta}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
