@@ -1095,11 +1095,16 @@ export function ExpertAuditDashboard() {
       const remaining = Math.max(0, 150_000 - elapsed);
       if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
 
-      // Stop music, wait 3s silence, play microwave ding, then show results
+      // Pause music 3s before ding, then play microwave ding, then show results
       await new Promise<void>((resolve) => {
-        stopMusicRef.current?.();
+        // Pause music (fade effect)
+        pauseMusicRef.current?.();
+        
         setTimeout(async () => {
           try {
+            // Now fully stop/destroy
+            stopMusicRef.current?.();
+            
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
             const audio = new Audio(dingUrl);
             audio.volume = 1.0;
