@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,25 @@ import { fr } from 'date-fns/locale';
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted/80"
+      title="Copier"
+    >
+      {copied
+        ? <Check className="w-3 h-3 text-emerald-400" />
+        : <Copy className="w-3 h-3 text-muted-foreground" />}
+    </button>
+  );
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -418,7 +437,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 {messages.map((msg, i) => (
                   <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                     <div className={cn(
-                      'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
+                      'relative group max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
                       msg.role === 'assistant'
                         ? 'bg-muted/60 text-foreground rounded-bl-md'
                         : 'bg-violet-600 text-white rounded-br-md'
@@ -465,6 +484,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                           </div>
                         );
                       })()}
+                      {msg.role === 'assistant' && <CopyButton text={msg.content} />}
                     </div>
                   </div>
                 ))}
