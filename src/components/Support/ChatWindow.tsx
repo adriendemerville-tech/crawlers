@@ -404,7 +404,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden min-h-0">
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
       <ScrollArea className="h-full px-4 py-3 overscroll-contain [&>[data-radix-scroll-area-viewport]]:!h-full [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]]:!overflow-x-hidden [&>[data-radix-scroll-area-viewport]]:overscroll-contain [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!opacity-100 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!w-2 [&_[data-radix-scroll-area-thumb]]:!bg-muted-foreground/40 [&_[data-radix-scroll-area-thumb]]:!rounded-full" ref={scrollAreaRef}>
         {loading ? (
