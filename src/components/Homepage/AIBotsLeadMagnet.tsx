@@ -135,9 +135,6 @@ export function AIBotsLeadMagnet() {
 
     setLoading(true);
     setError(null);
-    setBots(null);
-    setGeoScore(null);
-    setGeoFactors(null);
 
     try {
       if (tab === 'bots') {
@@ -178,9 +175,6 @@ export function AIBotsLeadMagnet() {
 
   const handleTabSwitch = (newTab: TabMode) => {
     setTab(newTab);
-    setBots(null);
-    setGeoScore(null);
-    setGeoFactors(null);
     setError(null);
   };
 
@@ -258,7 +252,7 @@ export function AIBotsLeadMagnet() {
       )}
 
       {/* Results: Bots */}
-      {tab === 'bots' && bots && (
+      {bots && (
         <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className={cn(
             "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
@@ -297,7 +291,7 @@ export function AIBotsLeadMagnet() {
       )}
 
       {/* Results: GEO Score */}
-      {tab === 'geo' && geoScore !== null && geoFactors && (
+      {geoScore !== null && geoFactors && (
         <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <ScoreRing score={geoScore} />
           <p className="text-center text-xs text-muted-foreground mt-1">
