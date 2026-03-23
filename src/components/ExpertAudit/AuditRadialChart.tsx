@@ -81,8 +81,10 @@ export function AuditRadialChart({ result, mode, language }: AuditRadialChartPro
     const scores = result.scores;
     const strategic = result.strategicAnalysis;
 
+    type ChartItem = { name: string; value: number; raw: number; max: number };
+
     if (mode === 'technical') {
-      const items = [
+      const items: ChartItem[] = [
         { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
         { name: t.technical, value: Math.round((scores.technical.score / scores.technical.maxScore) * 100), raw: scores.technical.score, max: scores.technical.maxScore },
         { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
