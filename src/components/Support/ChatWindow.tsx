@@ -561,13 +561,32 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               }
             }}
           />
-          <button
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full border border-border/40 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-          </button>
+          <div className="flex items-center gap-0.5 shrink-0">
+            {user && (
+              <ChatAttachmentPicker
+                userId={user.id}
+                onAttach={(item) => {
+                  const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
+                  const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
+                  setNewMessage(attachText);
+                }}
+                onImageAttach={(fileName) => {
+                  setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
+                }}
+              />
+            )}
+            <ChatMicButton
+              onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
+              disabled={sending}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!newMessage.trim() || sending}
+              className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+            </button>
+          </div>
         </div>
       </div>
     </div>
