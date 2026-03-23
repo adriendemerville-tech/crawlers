@@ -63,6 +63,16 @@ const LABELS: Record<string, Record<string, string>> = {
     en: 'No backlink data available',
     es: 'Sin datos de backlinks disponibles',
   },
+  pages_with_external_authority: {
+    fr: 'Pages recevant de l\'autorité externe',
+    en: 'Pages receiving external authority',
+    es: 'Páginas recibiendo autoridad externa',
+  },
+  pages_without_backlinks: {
+    fr: 'Pages piliers sans backlinks externes',
+    en: 'Pillar pages without external backlinks',
+    es: 'Páginas pilares sin backlinks externos',
+  },
 };
 
 function t(key: string, lang: string): string {
@@ -245,6 +255,51 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Per-page backlinks from semantic_nodes.external_backlinks ---
+    const { data: nodesWithBl } = await supabase
+      .from('semantic_nodes')
+      .select('url, page_authority, external_backlinks')
+      .eq('tracked_site_id', tracked_site_id)
+      .order('page_authority', { ascending: false })
+      .limit(50);
+
+    if (nodesWithBl && nodesWithBl.length > 0) {
+      const withBl = nodesWithBl.filter((n: any) => n.external_backlinks?.referring_domains > 0);
+      const topWithout = nodesWithBl
+        .slice(0, 20) // top 20 by authority
+        .filter((n: any) => !n.external_backlinks?.referring_domains);
+
+      if (withBl.length > 0) {
+        findings.push({
+          id: 'pages_with_external_authority',
+          severity: 'info',
+          category: 'backlink_health',
+          title: t('pages_with_external_authority', lang),
+          description: `${withBl.length} pages reçoivent des backlinks externes (total: ${withBl.reduce((s: number, n: any) => s + (n.external_backlinks?.referring_domains || 0), 0)} domaines référents)`,
+          affected_urls: withBl.map((n: any) => n.url),
+          data: {
+            pages_with_backlinks: withBl.length,
+            total_referring_domains: withBl.reduce((s: number, n: any) => s + (n.external_backlinks?.referring_domains || 0), 0),
+            top_pages: withBl.slice(0, 5).map((n: any) => ({
+              url: n.url,
+              referring_domains: n.external_backlinks?.referring_domains,
+              top_sources: n.external_backlinks?.top_sources?.slice(0, 3),
+            })),
+          },
+        });
+      }
+
+      if (topWithout.length > 3) {
+        findings.push({
+          id: 'pillar_pages_no_backlinks',
+          severity: 'warning',
+          category: 'backlink_health',
+          title: t('pages_without_backlinks', lang),
+          description: `${topWithout.length} pages à forte autorité interne n'ont aucun backlink externe`,
+          affected_urls: topWithout.map((n: any) => n.url),
+        });
+      }
+    }
     // Score
     const criticals = findings.filter(f => f.severity === 'critical').length;
     const warnings = findings.filter(f => f.severity === 'warning').length;

@@ -320,6 +320,7 @@ ${strategistMode ? `Ton rôle en mode stratège :
 - Expliquer les relations sémantiques entre les nœuds
 - Donner des conseils pour améliorer la visibilité LLM (GEO)
 - Utiliser les données de crawl, audit, SERP, backlinks, GSC et GA4 quand elles sont disponibles pour enrichir tes analyses
+- Expliquer les backlinks : quand un nœud a un badge doré, cela signifie qu'il reçoit des backlinks externes. Tu peux détailler le nombre de domaines référents, les sources principales et les ancres utilisées. Explique comment les backlinks renforcent l'autorité et la visibilité d'une page.
 - Orienter l'utilisateur vers les boutons d'action (Seringue pour le maillage, Architecte Contenu pour la création de pages) quand ses questions le justifient`}
 
 ${strategistMode ? '' : `LIMITE DE LONGUEUR (OBLIGATOIRE) :
