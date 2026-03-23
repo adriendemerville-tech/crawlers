@@ -18,6 +18,7 @@ export function FloatingChatBubble() {
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
+  const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
