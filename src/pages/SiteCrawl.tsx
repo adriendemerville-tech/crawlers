@@ -740,14 +740,12 @@ export default function SiteCrawl() {
   }
 
    async function loadPages(crawlId: string) {
-    console.log('[loadPages] Loading pages for crawlId:', crawlId);
     try {
       const { data, error } = await supabase
         .from('crawl_pages')
         .select('*')
         .eq('crawl_id', crawlId)
         .order('seo_score', { ascending: true });
-      console.log('[loadPages] Result:', { count: data?.length, error });
       if (error) {
         console.error('[loadPages] Error:', error);
       }
