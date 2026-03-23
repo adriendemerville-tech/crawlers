@@ -708,7 +708,10 @@ export default function SiteCrawl() {
     setIsLoadingPastCrawl(true);
     setExpandedPage(null);
     setViewingCrawlId(crawl.id);
-    setCrawlResult(crawl);
+    setCrawlResult({
+      ...crawl,
+      ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
+    });
     try {
       await loadPages(crawl.id);
       requestAnimationFrame(() => {
