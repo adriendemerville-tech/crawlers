@@ -712,6 +712,8 @@ export function UserManagement() {
             </Table>
           </div>
         )}
+        </>
+        )}
       </CardContent>
 
       <UserKpiModal
