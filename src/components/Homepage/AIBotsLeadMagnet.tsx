@@ -320,7 +320,7 @@ export function AIBotsLeadMagnet() {
       {(bots || geoScore !== null) && (
         <div className="text-center mt-4">
           <a
-            href={tab === 'geo' ? '/?tab=geo' : '/?tab=crawlers'}
+            href="/audit"
             className="text-xs text-brand-violet hover:underline inline-flex items-center gap-1"
           >
             {t.deepAudit}
