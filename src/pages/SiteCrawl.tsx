@@ -708,6 +708,10 @@ export default function SiteCrawl() {
       // Sanitize fields that must be arrays to prevent React crashes
       const sanitized = data.map((p: any) => ({
         ...p,
+        path: p.path || p.url || '',
+        word_count: p.word_count ?? 0,
+        images_without_alt: p.images_without_alt ?? 0,
+        seo_score: p.seo_score ?? 0,
         issues: Array.isArray(p.issues) ? p.issues : [],
         schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
         schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
