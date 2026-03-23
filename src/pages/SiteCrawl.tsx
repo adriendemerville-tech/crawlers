@@ -484,6 +484,7 @@ export default function SiteCrawl() {
   const [isButtonShaking, setIsButtonShaking] = useState(false);
   const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
   const FAIR_USE_LIMIT = 5000;
+  const historySectionRef = useRef<HTMLDivElement | null>(null);
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
