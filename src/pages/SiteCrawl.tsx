@@ -1478,7 +1478,7 @@ export default function SiteCrawl() {
                               <div className="flex items-center gap-1.5">
                                 <Image className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">{t.imgsNoAlt}</span>
-                                <span className={page.images_without_alt > 0 ? 'text-destructive' : 'text-emerald-500'}>{page.images_without_alt}</span>
+                                <span className={(page.images_without_alt ?? 0) > 0 ? 'text-destructive' : 'text-emerald-500'}>{page.images_without_alt ?? 0}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
