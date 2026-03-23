@@ -12,9 +12,9 @@ import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
-import { generateReportHTML, WhiteLabelBranding } from './reportHtmlGenerator';
+import { generateReportHTML, WhiteLabelBranding, SiteCrawlReportData } from './reportHtmlGenerator';
 
-type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
+type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' | 'full';
 
 interface ReportPreviewModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface ReportPreviewModalProps {
   geoResult?: GeoResult | null;
   llmResult?: LLMAnalysisResult | null;
   pageSpeedResult?: PageSpeedResult | null;
+  siteCrawlData?: SiteCrawlReportData | null;
   currentUrl?: string;
 }
 
