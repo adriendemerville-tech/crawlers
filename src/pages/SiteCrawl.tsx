@@ -1671,6 +1671,7 @@ export default function SiteCrawl() {
                 <div className="space-y-2">
                   {pastCrawls.map(c => (
                     <button
+                      type="button"
                       key={c.id}
                       onClick={() => viewCrawl(c)}
                       className="w-full flex items-center justify-between px-4 py-3 rounded-lg border hover:bg-muted/50 transition-colors text-left"
