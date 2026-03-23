@@ -257,13 +257,17 @@ export function FinancesDashboard() {
 
       // DB size + DataForSEO balance
       try {
-        const [sizeRes, balanceRes] = await Promise.all([
+        const [sizeRes, balanceRes, apiBalancesRes] = await Promise.all([
           supabase.rpc('get_database_size' as any),
           supabase.functions.invoke('dataforseo-balance'),
+          supabase.functions.invoke('api-balances'),
         ]);
         if (sizeRes.data) setDbSize(sizeRes.data as any);
         if (balanceRes.data && !balanceRes.error) {
           setDataforseoBalance(balanceRes.data as any);
+        }
+        if (apiBalancesRes.data && !apiBalancesRes.error) {
+          setApiBalances(apiBalancesRes.data as any);
         }
       } catch {}
 
