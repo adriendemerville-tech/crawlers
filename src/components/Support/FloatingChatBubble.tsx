@@ -175,7 +175,7 @@ export function FloatingChatBubble() {
           >
             ✕
           </button>
-          👋 Bonjour, bienvenue ! Tu veux que je t'explique ?
+          👋 Bonjour, moi c'est Félix ! Veux-tu que je t'explique comment fonctionne Crawlers ?
           <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
         </div>
       )}
