@@ -813,6 +813,7 @@ function SceneContent({
           customNodeColors={customNodeColors}
            spreadScale={spreadScale}
            colorIntensity={colorIntensity}
+           sizeScale={linkThickness}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
