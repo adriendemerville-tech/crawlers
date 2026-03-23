@@ -581,8 +581,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.dataforseoCalls.toLocaleString('fr-FR')} appels (30j)</span>
-                <span>~{(tokenUsage.dataforseoCalls * 0.01).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+                <span>{(allTimeTokenUsage?.dataforseoCalls ?? tokenUsage.dataforseoCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>Dépensé: ${(dataforseoBalance?.total_spent ?? 0).toFixed(2)}</span>
               </div>
             </div>
 
