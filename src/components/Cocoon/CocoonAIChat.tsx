@@ -1516,26 +1516,89 @@ Termina con un resumen ejecutivo y próximos pasos.`,
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
             {messages.length === 0 && (
-              <div className="text-center py-6 space-y-3">
-                <p className="text-xs text-white/30">{t.empty}</p>
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={handleStrategy360}
-                    disabled={isLoading || !trackedSiteId}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium hover:from-amber-500/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <Compass className="w-3.5 h-3.5" />
-                    {t.strategyBtn}
-                  </button>
-                  <button
-                    onClick={handleOptimizeLinking}
-                    disabled={isLoading || nodes.length < 3}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <Network className="w-3.5 h-3.5" />
-                    {t.optimize}
-                  </button>
-                </div>
+              <div className="text-center py-4 space-y-3">
+                {nodes.length > 0 ? (() => {
+                  // Analyze graph to determine priority
+                  const orphans = nodes.filter((n: any) => (n.internal_links_in ?? 0) === 0 && !n.is_home);
+                  const deepPages = nodes.filter((n: any) => (n.crawl_depth ?? n.depth ?? 0) >= 4);
+                  const hasOrphans = orphans.length > 0;
+                  const hasDeepPages = deepPages.length > 2;
+                  const orphanPct = Math.round((orphans.length / nodes.length) * 100);
+                  
+                  const priorityMsg = language === 'en'
+                    ? `📊 **${nodes.length} pages** loaded.${hasOrphans ? ` ⚠️ ${orphans.length} orphan pages (${orphanPct}%).` : ''} What do you want to do?`
+                    : language === 'es'
+                    ? `📊 **${nodes.length} páginas** cargadas.${hasOrphans ? ` ⚠️ ${orphans.length} páginas huérfanas (${orphanPct}%).` : ''} ¿Qué quieres hacer?`
+                    : `📊 **${nodes.length} pages** chargées.${hasOrphans ? ` ⚠️ ${orphans.length} pages orphelines (${orphanPct}%).` : ''} Que veux-tu faire ?`;
+
+                  // Determine which button is primary (shown first, highlighted)
+                  const linkingFirst = hasOrphans || hasDeepPages;
+
+                  const strategyBtn = (
+                    <button
+                      key="strategy"
+                      onClick={handleStrategy360}
+                      disabled={isLoading || !trackedSiteId}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                        !linkingFirst
+                          ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-300 hover:from-amber-500/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-amber-500/10'
+                          : 'border-white/15 text-white/50 bg-transparent hover:bg-white/5 hover:text-white/70'
+                      }`}
+                    >
+                      <Compass className="w-3.5 h-3.5" />
+                      {t.strategyBtn}
+                    </button>
+                  );
+
+                  const linkingBtn = (
+                    <button
+                      key="linking"
+                      onClick={handleOptimizeLinking}
+                      disabled={isLoading || nodes.length < 3}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                        linkingFirst
+                          ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
+                          : 'border-white/15 text-white/50 bg-transparent hover:bg-white/5 hover:text-white/70'
+                      }`}
+                    >
+                      <Network className="w-3.5 h-3.5" />
+                      {t.optimize}
+                    </button>
+                  );
+
+                  return (
+                    <>
+                      <div className="text-[11px] text-white/50 leading-relaxed prose prose-invert max-w-none [&_strong]:text-white/80">
+                        <ReactMarkdown>{priorityMsg}</ReactMarkdown>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        {linkingFirst ? [linkingBtn, strategyBtn] : [strategyBtn, linkingBtn]}
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <>
+                    <p className="text-xs text-white/30">{t.empty}</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={handleStrategy360}
+                        disabled={isLoading || !trackedSiteId}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium hover:from-amber-500/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-amber-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <Compass className="w-3.5 h-3.5" />
+                        {t.strategyBtn}
+                      </button>
+                      <button
+                        onClick={handleOptimizeLinking}
+                        disabled={isLoading || nodes.length < 3}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <Network className="w-3.5 h-3.5" />
+                        {t.optimize}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             {messages.map((msg, i) => {
