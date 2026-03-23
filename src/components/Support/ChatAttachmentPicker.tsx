@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, FileText, Code2, X, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, FileText, Code2, X, Loader2, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,13 +16,15 @@ interface AttachmentItem {
 interface ChatAttachmentPickerProps {
   userId: string;
   onAttach: (item: AttachmentItem) => void;
+  onImageAttach?: (fileName: string) => void;
 }
 
-export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerProps) {
+export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAttachmentPickerProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<AttachmentItem[]>([]);
   const [tab, setTab] = useState<'report' | 'script'>('report');
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +59,6 @@ export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerP
           .order('created_at', { ascending: false })
           .limit(20);
 
-        // Fetch domains for the rules
         const domainIds = [...new Set((data || []).map((s: any) => s.domain_id).filter(Boolean))];
         let domainMap: Record<string, string> = {};
         if (domainIds.length > 0) {
@@ -88,15 +89,26 @@ export function ChatAttachmentPicker({ userId, onAttach }: ChatAttachmentPickerP
 
   if (!open) {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-10 w-10 shrink-0"
-        onClick={() => setOpen(true)}
-        title="Joindre un rapport ou script"
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
+      <>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onImageAttach) onImageAttach(file.name);
+            e.target.value = '';
+          }}
+        />
+        <button
+          className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors"
+          onClick={() => setOpen(true)}
+          title="Joindre"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </>
     );
   }
 
