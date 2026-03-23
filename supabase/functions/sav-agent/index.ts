@@ -633,8 +633,9 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
       reply = reply.substring(0, charLimit - 3) + "...";
     }
 
-    // Save conversation + quality scoring
+    // Save conversation + quality scoring (skip for guests)
     let savedConvId = conversation_id;
+    if (!isGuest && user_id) {
     try {
       const allMessages = [...messages, { role: "assistant", content: reply }];
       const userMsgCount = allMessages.filter((m: any) => m.role === "user").length;
