@@ -101,8 +101,9 @@ export function ReportPreviewModal({
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
 
   // For 'full' type, determine which result to use as primary for single-type operations
-  const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' => {
-    if (type !== 'full') return type;
+  const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' => {
+    if (type === 'site_crawl') return 'site_crawl';
+    if (type !== 'full') return type as 'crawlers' | 'geo' | 'llm' | 'pagespeed';
     if (crawlResult) return 'crawlers';
     if (geoResult) return 'geo';
     if (llmResult) return 'llm';
@@ -117,6 +118,8 @@ export function ReportPreviewModal({
   const useFullType = type === 'full' && hasMultipleResults;
 
   const getData = (): any => {
+    if (type === 'site_crawl') return siteCrawlData || null;
+    
     // For full type with multiple results, return all data
     if (useFullType) {
       return {
@@ -144,6 +147,7 @@ export function ReportPreviewModal({
 
   const getUrl = (): string => {
     if (currentUrl) return currentUrl;
+    if (type === 'site_crawl') return siteCrawlData?.domain || '';
     switch (effectiveType) {
       case 'crawlers':
         return crawlResult?.url || '';
@@ -162,7 +166,7 @@ export function ReportPreviewModal({
   const url = getUrl();
 
   // Check if we have any data at all
-  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult;
+  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult || siteCrawlData;
   if (!hasAnyData) return null;
 
   // Auto-save report for authenticated users when modal opens
