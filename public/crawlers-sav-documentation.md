@@ -197,7 +197,7 @@ Le mode Stratégie 360° est accessible via le bouton boussole dans le chat du C
    - **Contenu** : pages minces, contenu dupliqué, pages sans mots-clés, ratio texte/HTML
    - **Sémantique** : gaps de mots-clés SERP, cohérence sémantique parent-enfant, inadéquation titre/ancres, cannibalisations
    - **Structure** : pages profondes (>3 clics), pages orphelines, chaînes de redirections, erreurs 404/5xx
-   - **Autorité** : profil de backlinks, diversité des ancres, liens perdus, Domain Rank
+   - **Autorité** : profil de backlinks (domaine + par page), diversité des ancres, liens perdus, Domain Rank, pages piliers sans backlinks externes
 
 2. **Plan d'action intelligent** : jusqu'à 8 tâches par cycle, classées par un score combinant impact (40%), urgence (30%), ancienneté (15%) et faisabilité (15%)
 
