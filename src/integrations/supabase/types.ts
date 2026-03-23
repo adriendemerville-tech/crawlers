@@ -1157,6 +1157,83 @@ export type Database = {
           },
         ]
       }
+      cocoon_batch_operations: {
+        Row: {
+          cluster_id: string | null
+          completed_at: string | null
+          created_at: string
+          deploy_results: Json | null
+          domain: string
+          error_message: string | null
+          failed_pages: number
+          id: string
+          mode: string
+          operation_type: string
+          pages_backup: Json | null
+          processed_pages: number
+          recommendations: Json
+          rolled_back_at: string | null
+          started_at: string | null
+          status: string
+          total_pages: number
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cluster_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deploy_results?: Json | null
+          domain: string
+          error_message?: string | null
+          failed_pages?: number
+          id?: string
+          mode?: string
+          operation_type?: string
+          pages_backup?: Json | null
+          processed_pages?: number
+          recommendations?: Json
+          rolled_back_at?: string | null
+          started_at?: string | null
+          status?: string
+          total_pages?: number
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cluster_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deploy_results?: Json | null
+          domain?: string
+          error_message?: string | null
+          failed_pages?: number
+          id?: string
+          mode?: string
+          operation_type?: string
+          pages_backup?: Json | null
+          processed_pages?: number
+          recommendations?: Json
+          rolled_back_at?: string | null
+          started_at?: string | null
+          status?: string
+          total_pages?: number
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_batch_operations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_chat_histories: {
         Row: {
           created_at: string
