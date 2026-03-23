@@ -73,6 +73,13 @@ const siteCrawlI18n = {
     indexability: 'Ratio d\'indexabilité',
     indexable: 'Indexables',
     notIndexable: 'Non indexables',
+    externalAuthority: 'Sources d\'autorité externe',
+    externalAuthorityDesc: 'Pages recevant le plus de backlinks externes (top 10)',
+    referringDomains: 'domaines référents',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Ancres principales',
+    topSources: 'Sources principales',
+    avgDomainRank: 'Rang moyen des sources',
   },
   en: {
     title: 'Multi-Page Audit',
