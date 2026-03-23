@@ -112,12 +112,16 @@ Les résultats incluent un **graphique radar de qualité** montrant les scores p
 
 Disponible : 1 fois par jour en freemium inscrit. Illimité en Pro Agency.
 
-### Audit Stratégique IA
+### Audit Stratégique IA (GEO)
 Analyse approfondie multi-axes avec scoring IA :
 - Score IAS (23 variables)
 - Analyse E-E-A-T
+- GEO Readiness : citabilité, accessibilité IA
+- Autorité de marque et signaux sociaux
 - Recommandations prioritaires classées par impact
 - Génération de plan d'action
+
+Les résultats incluent un **graphique radar adaptatif** avec des axes dynamiques (Performance, Contenu, IA & GEO, Citabilité, GEO Ready, Marque, Social, Marché) selon les données disponibles. Ce radar apparaît aussi en haut du rapport PDF exporté.
 
 Coût : 1 crédit.
 
