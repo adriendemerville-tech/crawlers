@@ -481,15 +481,42 @@ Deno.serve(async (req) => {
       status: urls.length > 0 ? 'queued' : 'completed',
     }).eq('id', crawlId);
 
-    // Update monthly page counter with ACTUAL urls discovered (not the max limit)
-    if (!isUnlimited) {
+    // Update monthly page counter with ACTUAL new urls only (reused pages are free)
+    if (!isUnlimited && urls.length > 0) {
       await supabase
         .from('profiles')
         .update({ crawl_pages_this_month: usedThisMonth + urls.length } as any)
         .eq('user_id', userId);
     }
 
-    // Create the crawl job with advanced options
+    // If all pages were reused, finalize immediately without creating a job
+    if (urls.length === 0) {
+      console.log(`[${crawlId}] ♻️ 100% incrémental — toutes les ${reusedCount} pages réutilisées, pas de worker nécessaire`);
+
+      // Generate summary for the crawl
+      await supabase.from('site_crawls').update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        crawled_pages: reusedCount,
+        total_pages: reusedCount,
+      }).eq('id', crawlId);
+
+      return new Response(JSON.stringify({
+        success: true,
+        crawlId,
+        totalPages: reusedCount,
+        reusedPages: reusedCount,
+        newPages: 0,
+        status: 'completed',
+        incremental: true,
+        sitemapPageCount,
+        gscIndexedCount,
+        dataforseoIndexedCount,
+        message: `♻️ ${reusedCount} pages réutilisées du crawl précédent — aucun re-crawl nécessaire`,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Create the crawl job with only NEW urls to process
     const { data: job, error: jobError } = await supabase
       .from('crawl_jobs')
       .insert({
@@ -515,7 +542,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
+    console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} nouvelles URLs (${reusedCount} réutilisées) — en attente du worker`);
 
     // Trigger the worker immediately (fire-and-forget with logging)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -535,12 +562,17 @@ Deno.serve(async (req) => {
       success: true,
       crawlId,
       jobId: job.id,
-      totalPages: urls.length,
+      totalPages,
+      reusedPages: reusedCount,
+      newPages: urls.length,
       status: 'queued',
+      incremental: reusedCount > 0,
       sitemapPageCount,
       gscIndexedCount,
       dataforseoIndexedCount,
-      message: `${urls.length} pages découvertes — audit en file d'attente`,
+      message: reusedCount > 0
+        ? `♻️ ${reusedCount} pages réutilisées + ${urls.length} nouvelles à crawler`
+        : `${urls.length} pages découvertes — audit en file d'attente`,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
