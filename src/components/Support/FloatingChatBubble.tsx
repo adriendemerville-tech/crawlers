@@ -165,11 +165,18 @@ export function FloatingChatBubble() {
       {/* Onboarding tooltip */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] right-5 z-50 max-w-[220px] rounded-xl bg-destructive text-destructive-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer"
+          className="fixed bottom-[72px] right-5 z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
           onClick={handleOpen}
         >
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); }}
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
           👋 Bonjour, bienvenue ! Tu veux que je t'explique ?
-          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-destructive rotate-45" />
+          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
         </div>
       )}
 
