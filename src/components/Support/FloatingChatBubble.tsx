@@ -178,7 +178,7 @@ export function FloatingChatBubble() {
           onClick={handleOpen}
         >
           <button
-            onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); }}
+            onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); setNotifDismissedThisSession(true); }}
             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
             aria-label="Fermer"
           >
