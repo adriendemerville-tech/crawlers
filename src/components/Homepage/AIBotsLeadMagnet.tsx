@@ -175,9 +175,6 @@ export function AIBotsLeadMagnet() {
 
   const handleTabSwitch = (newTab: TabMode) => {
     setTab(newTab);
-    setBots(null);
-    setGeoScore(null);
-    setGeoFactors(null);
     setError(null);
   };
 
