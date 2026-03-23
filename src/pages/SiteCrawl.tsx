@@ -455,6 +455,7 @@ export default function SiteCrawl() {
   const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'noindex'>('all');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
+  const [isLoadingPastCrawl, setIsLoadingPastCrawl] = useState(false);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
