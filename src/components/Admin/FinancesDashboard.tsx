@@ -80,6 +80,11 @@ export function FinancesDashboard() {
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
   const [dataforseoBalance, setDataforseoBalance] = useState<{ balance: number | null; total_deposited: number | null; total_spent: number | null; fetched_at: string | null } | null>(null);
+  const [apiBalances, setApiBalances] = useState<{
+    serpapi?: { plan?: string; searches_this_month?: number; total_searches_left?: number; plan_searches_left?: number; error?: string };
+    openrouter?: { usage?: number; limit?: number; balance?: number; is_free_tier?: boolean; error?: string };
+    firecrawl?: { remaining_credits?: number; total_credits?: number; plan?: string; error?: string };
+  } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0, promptTokens: 0, completionTokens: 0, callCount: 0,
     byFunction: {}, byModel: {},
