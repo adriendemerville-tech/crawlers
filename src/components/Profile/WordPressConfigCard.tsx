@@ -391,9 +391,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </AccordionItem>
           </Accordion>
         </div>
-
-        {/* ═══ RIGHT: GTM / Script universel ═══ */}
-        <div className="space-y-4">
+      ) : (
+        <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 mb-1">
             <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
               <Code className="h-4 w-4 text-amber-500" />
