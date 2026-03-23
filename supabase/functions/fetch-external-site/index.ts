@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
             const renderedHtml = await renderResponse.text();
             if (renderedHtml.length > html.length) {
               console.log(`[fetch-external-site] ✅ Browserless success (${renderedHtml.length} chars vs ${html.length} static)`);
+              await trackPaidApiCall('fetch-external-site', 'browserless', '/content', finalUrl).catch(() => {});
               html = renderedHtml;
               rendered = true;
             }

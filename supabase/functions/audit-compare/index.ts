@@ -239,6 +239,7 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
             if (rh.length > html.length) {
               html = rh;
               console.log(`[audit-compare] Browserless rendered ${rh.length} chars for ${domain}`);
+              await trackPaidApiCall('audit-compare', 'browserless', '/content', normalizedUrl).catch(() => {});
             }
           } else {
             const errText = await renderResponse.text();

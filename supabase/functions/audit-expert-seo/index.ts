@@ -376,6 +376,7 @@ async function tryBrowserless(url: string): Promise<string | null> {
       const html = await response.text();
       if (html.length > 500) {
         console.log(`[SmartFetch] ✅ Browserless OK (${html.length} chars)`);
+        await trackPaidApiCall('audit-expert-seo', 'browserless', '/content', url).catch(() => {});
         return html;
       }
     } else {
