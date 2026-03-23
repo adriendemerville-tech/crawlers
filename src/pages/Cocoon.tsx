@@ -894,6 +894,7 @@ export default function Cocoon() {
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
                 colorIntensity={colorIntensity}
                 nodeColors={cocoonTheme.nodeColors}
+                bgColorSlider={bgColor}
               />
             ) : (
               <CocoonForceGraph

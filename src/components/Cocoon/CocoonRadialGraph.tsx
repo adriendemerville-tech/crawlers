@@ -54,6 +54,7 @@ interface CocoonRadialGraphProps {
   visibleJuiceTypes?: Set<string>;
   colorIntensity?: number;
   nodeColors?: Record<string, string>;
+  bgColorSlider?: number;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
@@ -279,6 +280,7 @@ export function CocoonRadialGraph({
   visibleJuiceTypes,
   colorIntensity = 5,
   nodeColors,
+  bgColorSlider = 0,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -290,6 +292,23 @@ export function CocoonRadialGraph({
   const dragDistance = useRef(0);
   const lastMouse = useRef({ x: 0, y: 0 });
   const animFrame = useRef<number>(0);
+  const particlesRef = useRef<{ fromId: string; toId: string; t: number; speed: number }[]>([]);
+
+  // Compute background color from slider (-10=black, 0=night blue, 10=white)
+  const bgColor = useMemo(() => {
+    const nightBlue = { r: 10, g: 10, b: 18 };
+    if (bgColorSlider <= 0) {
+      const t = (bgColorSlider + 10) / 10;
+      return { r: Math.round(nightBlue.r * t), g: Math.round(nightBlue.g * t), b: Math.round(nightBlue.b * t) };
+    } else {
+      const t = bgColorSlider / 10;
+      return {
+        r: Math.round(nightBlue.r + (255 - nightBlue.r) * t),
+        g: Math.round(nightBlue.g + (255 - nightBlue.g) * t),
+        b: Math.round(nightBlue.b + (255 - nightBlue.b) * t),
+      };
+    }
+  }, [bgColorSlider]);
 
   // Build tree
   const tree = useMemo(() => {
@@ -308,6 +327,29 @@ export function CocoonRadialGraph({
     function collect(n: RadialNode) { result.push(n); n.children.forEach(collect); }
     collect(tree);
     return result;
+  }, [tree]);
+
+  // Initialize particles along tree edges
+  useEffect(() => {
+    if (!tree) { particlesRef.current = []; return; }
+    const particles: typeof particlesRef.current = [];
+    function walk(node: RadialNode) {
+      for (const child of node.children) {
+        // 1-2 particles per edge
+        const count = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            fromId: node.id,
+            toId: child.id,
+            t: Math.random(),
+            speed: 0.002 + Math.random() * 0.004,
+          });
+        }
+        walk(child);
+      }
+    }
+    walk(tree);
+    particlesRef.current = particles;
   }, [tree]);
 
   // Filter edges by visibleJuiceTypes
@@ -345,8 +387,9 @@ export function CocoonRadialGraph({
     canvas.height = dimensions.h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Clear
-    ctx.fillStyle = "#0a0a12";
+    // Clear with dynamic background
+    const bgStr = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
+    ctx.fillStyle = bgStr;
     ctx.fillRect(0, 0, dimensions.w, dimensions.h);
 
     ctx.save();
@@ -390,6 +433,25 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
+    // Draw & advance particles
+    const nodeById = new Map(allRadialNodes.map(n => [n.id, n]));
+    for (const p of particlesRef.current) {
+      p.t += p.speed;
+      if (p.t > 1) p.t -= 1;
+
+      const from = nodeById.get(p.fromId);
+      const to = nodeById.get(p.toId);
+      if (!from || !to) continue;
+
+      const px = from.x + (to.x - from.x) * p.t;
+      const py = from.y + (to.y - from.y) * p.t;
+
+      const [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+      ctx.beginPath();
+      ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`;
+      ctx.fill();
+    }
     // Draw silo fan arcs at level 1 (only if showClusters)
     if (showClusters) {
       for (const level1 of tree.children) {
@@ -478,7 +540,7 @@ export function CocoonRadialGraph({
 
     // Legend
     drawLegend(ctx, dimensions.w, dimensions.h);
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes]);
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
     const x = w - 140;
@@ -661,7 +723,7 @@ export function CocoonRadialGraph({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#0a0a12]">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ backgroundColor: `rgb(${bgColor.r},${bgColor.g},${bgColor.b})` }}>
       <canvas
         ref={canvasRef}
         style={{ width: dimensions.w, height: dimensions.h, cursor: "grab" }}
