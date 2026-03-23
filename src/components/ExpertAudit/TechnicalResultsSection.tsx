@@ -67,7 +67,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             {/* Left: Radar chart */}
             <div className="w-full lg:w-1/2 max-w-md">
-              <AuditRadialChart result={result} mode="technical" language={language} inline />
+              <AuditRadialChart result={result} mode="technical" language={language} inline previousData={previousData} />
             </div>
             {/* Right: Domain info + Score */}
             <div className="flex flex-col items-center lg:items-end gap-4">

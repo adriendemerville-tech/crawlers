@@ -137,7 +137,7 @@ export function StrategicResultsSection({
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
               <div className="w-full lg:w-1/2 max-w-md">
-                <AuditRadialChart result={result} mode="strategic" language={language} inline />
+                <AuditRadialChart result={result} mode="strategic" language={language} inline previousData={previousData} />
               </div>
               <div className="flex flex-col items-center lg:items-end gap-4">
                 <div className="text-center lg:text-right">
