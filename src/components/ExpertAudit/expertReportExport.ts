@@ -699,7 +699,11 @@ export function generateExpertReportHTML(
     const strategicSections: string[] = [];
 
     // Radial Quality Score Chart
-    strategicSections.push(generateRadialChartSVG(result, 'strategic', language));
+    // Load previous audit data from localStorage for progression overlay
+    const prevStratKey = `crawlers_prev_audit_${result.domain}_strategic`;
+    let prevStratData = null;
+    try { const raw = localStorage.getItem(prevStratKey); if (raw) prevStratData = JSON.parse(raw); } catch {}
+    strategicSections.push(generateRadialChartSVG(result, 'strategic', language, prevStratData));
 
     if (strategic?.introduction) {
       strategicSections.push(sectionCard(t.introduction, '#7c3aed', '#faf5ff',
