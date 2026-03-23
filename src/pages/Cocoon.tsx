@@ -316,6 +316,8 @@ export default function Cocoon() {
     if (params.get('contrast')) setGraphContrast(Number(params.get('contrast')));
     if (params.get('halo')) setColorIntensity(Number(params.get('halo')));
     if (params.get('thickness')) setLinkThickness(Number(params.get('thickness')));
+    const vmParam = params.get('viewMode');
+    if (vmParam === 'force' || vmParam === 'radial' || vmParam === '3d') setViewMode(vmParam);
     // daymode param removed
     const siteParam = params.get('site');
     if (siteParam) {
@@ -449,6 +451,7 @@ export default function Cocoon() {
         if (s.graphContrast !== undefined) setGraphContrast(s.graphContrast);
         if (s.colorIntensity !== undefined) setColorIntensity(s.colorIntensity);
         if (s.linkThickness !== undefined) setLinkThickness(s.linkThickness);
+        if (s.viewMode) setViewMode(s.viewMode);
       };
     }
     return () => channel.close();
@@ -458,9 +461,9 @@ export default function Cocoon() {
   useEffect(() => {
     if (isFullscreen || typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel('cocoon-settings');
-    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness });
+    channel.postMessage({ bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness, viewMode });
     channel.close();
-  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness]);
+  }, [isFullscreen, bgColor, bgWarmth, graphContrast, colorIntensity, linkThickness, viewMode]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
@@ -782,6 +785,7 @@ export default function Cocoon() {
                   const params = new URLSearchParams();
                   if (selectedSiteId) params.set('site', selectedSiteId);
                   params.set('fullscreen', '1');
+                  params.set('viewMode', viewMode);
                   params.set('bgColor', String(bgColor));
                   params.set('bgWarmth', String(bgWarmth));
                   params.set('contrast', String(graphContrast));
