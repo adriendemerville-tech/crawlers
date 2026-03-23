@@ -280,6 +280,7 @@ export function CocoonRadialGraph({
   visibleJuiceTypes,
   colorIntensity = 5,
   nodeColors,
+  bgColorSlider = 0,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
