@@ -349,13 +349,13 @@ export function generateExpertReportHTML(
         ${rows}
       </div>`;
 
-    // Performance details from rawData
-    const psiPerf = scores.performance.psiPerformance;
-    const lcp = scores.performance.lcp;
-    const cls = scores.performance.cls;
-    const tbt = scores.performance.tbt;
-    const fcp = (result.rawData as any)?.fcp;
-    const si = (result.rawData as any)?.speedIndex;
+    // Performance details from rawData (null-safe defaults)
+    const psiPerf = scores.performance.psiPerformance ?? 0;
+    const lcp = scores.performance.lcp ?? 0;
+    const cls = scores.performance.cls ?? 0;
+    const tbt = scores.performance.tbt ?? 0;
+    const fcp = (result.rawData as any)?.fcp ?? 0;
+    const si = (result.rawData as any)?.speedIndex ?? 0;
 
     // Broken links
     const brokenCount = scores.technical.brokenLinksCount ?? 0;
