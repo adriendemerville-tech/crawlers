@@ -24,6 +24,7 @@ import { useSaveReport } from "@/hooks/useSaveReport";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CocoonSiteSelector } from "@/components/Cocoon/CocoonSiteSelector";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
