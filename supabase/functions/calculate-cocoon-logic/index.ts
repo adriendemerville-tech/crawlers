@@ -563,6 +563,31 @@ Deno.serve(async (req) => {
       delete node.conversion_potential;
     }
 
+    // ─── 6b. Compute internal_links_in from real crawl anchor_texts ───
+    const urlToNodeIdx = new Map<string, number>();
+    for (let i = 0; i < nodeData.length; i++) {
+      urlToNodeIdx.set(nodeData[i].url, i);
+      urlToNodeIdx.set(nodeData[i].url.replace(/\/+$/, ""), i);
+    }
+    // Count inbound links from anchor_texts (real crawl links)
+    for (const page of validPages) {
+      const anchors = page.anchor_texts || [];
+      const seen = new Set<number>();
+      for (const anchor of anchors) {
+        if ((anchor as any).type !== "internal") continue;
+        const href = (anchor as any).href || "";
+        const targetIdx = urlToNodeIdx.get(href) ?? urlToNodeIdx.get(href.replace(/\/+$/, ""));
+        if (targetIdx !== undefined && !seen.has(targetIdx)) {
+          const srcIdx = urlToNodeIdx.get(page.url) ?? urlToNodeIdx.get(page.url.replace(/\/+$/, ""));
+          if (srcIdx !== targetIdx) {
+            nodeData[targetIdx].internal_links_in = (nodeData[targetIdx].internal_links_in || 0) + 1;
+            seen.add(targetIdx);
+          }
+        }
+      }
+    }
+    console.log(`[Cocoon] internal_links_in computed from crawl anchors`);
+
     // ─── 7. Upsert into semantic_nodes ───
     await supabase
       .from("semantic_nodes" as any)
