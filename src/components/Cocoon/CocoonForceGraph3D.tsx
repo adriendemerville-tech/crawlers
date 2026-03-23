@@ -520,9 +520,14 @@ function Links({
           const activeJuice = { ...JUICE_COLORS, ...customParticleColors };
           const isSelectedLink =
             selectedNodeId && (link.sourceId === selectedNodeId || link.targetId === selectedNodeId);
+          const DIRECTION_COLORS_3D: Record<string, string> = {
+            descending: '#fbbf24',
+            ascending: '#60a5fa',
+            lateral: activeJuice[link.juiceType] || '#7864dc',
+          };
           const color = isSelectedLink
             ? "#ffc83c"
-            : activeJuice[link.juiceType] || "#7864dc";
+            : DIRECTION_COLORS_3D[link.direction] || activeJuice[link.juiceType] || "#7864dc";
           const opacity = isSelectedLink ? 0.7 : Math.min(link.strength * 0.5 + 0.1, 0.4);
           return (
             <Line
