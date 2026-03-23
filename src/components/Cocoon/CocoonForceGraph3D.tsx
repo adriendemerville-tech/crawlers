@@ -522,7 +522,7 @@ function Links({
           const color = isSelectedLink
             ? "#ffc83c"
             : activeJuice[link.juiceType] || "#7864dc";
-          const opacity = isSelectedLink ? 0.6 : Math.min(link.strength * 0.35, 0.2);
+          const opacity = isSelectedLink ? 0.7 : Math.min(link.strength * 0.5 + 0.1, 0.4);
           return (
             <Line
               key={i}
