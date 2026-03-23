@@ -599,7 +599,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           <button
             onClick={handleSend}
             disabled={!newMessage.trim() || sending}
-            className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full border border-border/40 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
           </button>
