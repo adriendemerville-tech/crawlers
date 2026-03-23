@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSaveReport } from '@/hooks/useSaveReport';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
