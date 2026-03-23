@@ -1157,6 +1157,62 @@ export type Database = {
           },
         ]
       }
+      cocoon_auto_links: {
+        Row: {
+          anchor_text: string
+          confidence: number | null
+          context_sentence: string | null
+          created_at: string | null
+          deployment_method: string | null
+          id: string
+          is_active: boolean | null
+          is_deployed: boolean | null
+          source_url: string
+          target_url: string
+          tracked_site_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          anchor_text: string
+          confidence?: number | null
+          context_sentence?: string | null
+          created_at?: string | null
+          deployment_method?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_deployed?: boolean | null
+          source_url: string
+          target_url: string
+          tracked_site_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          anchor_text?: string
+          confidence?: number | null
+          context_sentence?: string | null
+          created_at?: string | null
+          deployment_method?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_deployed?: boolean | null
+          source_url?: string
+          target_url?: string
+          tracked_site_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_auto_links_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_batch_operations: {
         Row: {
           cluster_id: string | null
@@ -1375,6 +1431,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cocoon_errors_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cocoon_linking_exclusions: {
+        Row: {
+          created_at: string | null
+          exclude_all: boolean | null
+          exclude_as_source: boolean | null
+          exclude_as_target: boolean | null
+          id: string
+          page_url: string
+          tracked_site_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          exclude_all?: boolean | null
+          exclude_as_source?: boolean | null
+          exclude_as_target?: boolean | null
+          id?: string
+          page_url: string
+          tracked_site_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          exclude_all?: boolean | null
+          exclude_as_source?: boolean | null
+          exclude_as_target?: boolean | null
+          id?: string
+          page_url?: string
+          tracked_site_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_linking_exclusions_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"

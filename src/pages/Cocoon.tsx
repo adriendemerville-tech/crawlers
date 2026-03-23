@@ -934,6 +934,7 @@ export default function Cocoon() {
                   setWaitingAuditUrl(selectedNode.url);
                 }}
                 isWaitingAudit={waitingAuditUrl === selectedNode.url}
+                trackedSiteId={selectedSiteId}
               />
             )}
 
