@@ -468,6 +468,7 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     ${thinContentSection}
     ${deepPagesSection}
     ${brokenLinksSection}
+    ${externalBacklinksSection}
     ${pagesTable}
   `;
 }
