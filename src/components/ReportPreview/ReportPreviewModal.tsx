@@ -169,7 +169,6 @@ export function ReportPreviewModal({
   const hasAnyData = Boolean(crawlResult || geoResult || llmResult || pageSpeedResult || siteCrawlData);
 
   // Auto-save report for authenticated users when modal opens
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     if (!isOpen || !user || !hasAnyData) return;
     const saveKey = `${url}-${effectiveType}`;

@@ -436,7 +436,7 @@ export default function SiteCrawl() {
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
 
-  const isUnlimitedUser = isAgencyPro || isAdmin;
+  const isUnlimited = isAgencyPro || isAdmin;
 
   const [url, setUrl] = useState(() => {
     try {
@@ -488,15 +488,14 @@ export default function SiteCrawl() {
   const FAIR_USE_LIMIT = 5000;
   const historySectionRef = useRef<HTMLDivElement | null>(null);
 
-  const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
   // Delayed upsell reveal
   useEffect(() => {
-    if (isUnlimitedUser) return;
+    if (isUnlimited) return;
     const timer = setTimeout(() => setShowUpsell(true), 2500);
     return () => clearTimeout(timer);
-  }, [isUnlimitedUser]);
+  }, [isUnlimited]);
 
   // Load past crawls & crawl_pages_this_month
   useEffect(() => {
@@ -741,14 +740,12 @@ export default function SiteCrawl() {
   }
 
    async function loadPages(crawlId: string) {
-    console.log('[loadPages] Loading pages for crawlId:', crawlId);
     try {
       const { data, error } = await supabase
         .from('crawl_pages')
         .select('*')
         .eq('crawl_id', crawlId)
         .order('seo_score', { ascending: true });
-      console.log('[loadPages] Result:', { count: data?.length, error });
       if (error) {
         console.error('[loadPages] Error:', error);
       }
@@ -769,13 +766,12 @@ export default function SiteCrawl() {
         }));
         setPages(sanitized as any);
       }
-    } catch (err) {
-      console.error('[loadPages] Uncaught error:', err);
+    } catch {
+      // Silent — handled by error boundary
     }
   }
 
   async function viewCrawl(crawl: CrawlResult) {
-    console.log('[viewCrawl] Viewing crawl:', crawl.id, 'status:', crawl.status, 'domain:', crawl.domain);
     setIsLoadingPastCrawl(true);
     setExpandedPage(null);
     setViewingCrawlId(crawl.id);
@@ -788,12 +784,10 @@ export default function SiteCrawl() {
       requestAnimationFrame(() => {
         historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-    } catch (err) {
-      console.error('[viewCrawl] Error loading pages:', err);
+    } catch {
       toast.error(t.errorCrawl);
     } finally {
       setIsLoadingPastCrawl(false);
-      console.log('[viewCrawl] Done loading');
     }
   }
 
@@ -976,7 +970,7 @@ export default function SiteCrawl() {
       <main className="min-h-screen bg-background pt-20 pb-16 relative">
 
         {/* Pro Agency upsell overlay for non-subscribers */}
-        {!isUnlimitedUser && (
+        {!isUnlimited && (
           <div className={`fixed inset-x-0 top-16 bottom-0 z-30 flex items-start justify-center pt-8 transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
             <div className="relative z-10 w-full max-w-lg mx-4">
@@ -1075,7 +1069,7 @@ export default function SiteCrawl() {
           </div>
         )}
 
-        <div className={`max-w-6xl mx-auto px-4 sm:px-6 ${!isUnlimitedUser ? 'pointer-events-none select-none opacity-40' : ''}`}>
+        <div className={`max-w-6xl mx-auto px-4 sm:px-6 ${!isUnlimited ? 'pointer-events-none select-none opacity-40' : ''}`}>
           
           {/* Hero */}
           <div className="text-center mb-10">
