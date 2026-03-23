@@ -545,18 +545,44 @@ export default function SiteCrawl() {
   }, [searchParams]);
 
 
+  // Use a ref to track the crawl ID for polling, avoiding re-creating intervals on every crawlResult change
+  const pollingCrawlIdRef = useRef<string | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start polling when crawlResult changes to an active state
   useEffect(() => {
-    if (!crawlResult || viewingCrawlId || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
-    const interval = setInterval(async () => {
+    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error';
+    
+    if (!shouldPoll) {
+      // Stop any existing polling
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        pollingCrawlIdRef.current = null;
+      }
+      return;
+    }
+
+    // Don't restart polling if already polling this crawl
+    if (pollingCrawlIdRef.current === crawlResult.id) return;
+
+    // Clear previous interval if any
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    pollingCrawlIdRef.current = crawlResult.id;
+    const crawlId = crawlResult.id;
+
+    pollingIntervalRef.current = setInterval(async () => {
       try {
         const { data } = await supabase
           .from('site_crawls')
           .select('*')
-          .eq('id', crawlResult.id)
+          .eq('id', crawlId)
           .single();
         if (data) {
           const r = data as any;
-          // Sanitize ai_recommendations to always be an array
           const sanitizedResult = {
             ...r,
             ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
@@ -568,7 +594,9 @@ export default function SiteCrawl() {
           else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
           else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
           if (sanitizedResult.status === 'completed') {
-            clearInterval(interval);
+            clearInterval(pollingIntervalRef.current!);
+            pollingIntervalRef.current = null;
+            pollingCrawlIdRef.current = null;
             setIsLoading(false);
             setPhase('');
             loadPages(sanitizedResult.id);
@@ -579,7 +607,9 @@ export default function SiteCrawl() {
             }).catch(() => {});
           }
           if (sanitizedResult.status === 'error') {
-            clearInterval(interval);
+            clearInterval(pollingIntervalRef.current!);
+            pollingIntervalRef.current = null;
+            pollingCrawlIdRef.current = null;
             setIsLoading(false);
             setPhase('');
             toast.error(sanitizedResult.error_message || t.errorCrawl);
@@ -589,8 +619,15 @@ export default function SiteCrawl() {
         console.error('[CrawlPoll] Error during polling:', pollErr);
       }
     }, 5000);
-    return () => clearInterval(interval);
-  }, [crawlResult, viewingCrawlId, t]);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        pollingCrawlIdRef.current = null;
+      }
+    };
+  }, [crawlResult?.id, crawlResult?.status, viewingCrawlId]);
 
   // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
   useEffect(() => {
