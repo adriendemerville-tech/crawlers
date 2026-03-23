@@ -26,6 +26,7 @@ export function CocoonSiteSelector({
   trackedSites,
   selectedSiteId,
   onSelect,
+  onSiteCreated,
   placeholder = "Sélectionner un site",
 }: CocoonSiteSelectorProps) {
   const [open, setOpen] = useState(false);
