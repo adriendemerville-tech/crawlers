@@ -204,6 +204,8 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`cocoon_tasks\` | Tâches liées au cocon | \`tracked_site_id\`, \`title\`, \`priority\`, \`status\` |
 | \`cocoon_chat_histories\` | Historique chat IA Cocoon | \`tracked_site_id\`, \`messages\`, \`session_hash\` |
 | \`cocoon_errors\` | Erreurs détectées par Cocoon | \`domain\`, \`problem_description\`, \`ai_response\`, \`status\` |
+| \`cocoon_auto_links\` | Liens auto-générés par l'IA | \`tracked_site_id\`, \`source_url\`, \`target_url\`, \`anchor_text\`, \`confidence\`, \`is_deployed\`, \`is_active\` |
+| \`cocoon_linking_exclusions\` | Exclusions granulaires de maillage | \`tracked_site_id\`, \`page_url\`, \`exclude_as_source\`, \`exclude_as_target\`, \`exclude_all\` |
 
 ### Google My Business (GMB)
 
