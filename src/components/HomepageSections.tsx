@@ -106,7 +106,7 @@ const i18n = {
     stat1: '200M', stat1Label: 'LLM users in Europe',
     stat2: 'x3', stat2Label: 'LLM conversion rate vs Google',
     stat3: '6', stat3Label: 'LLMs queried simultaneously',
-    stat4: '30s', stat4Label: 'for your GEO Score',
+    stat4: '5', stat4Label: 'automated GEO tools',
     feat1Title: 'GEO Score — Real-time AI Visibility',
     feat1Desc: 'Is your site cited by ChatGPT, Gemini, Perplexity or Claude? The GEO Score is the first French indicator measuring your presence in AI-generated answers. In 30 seconds, get a score out of 100 with actionable recommendations: missing structured data, misconfigured robots.txt, absent llms.txt, insufficient semantics. Every point gained improves your probability of being cited as a source by LLMs.',
     feat1Cta: 'Test my GEO Score',
