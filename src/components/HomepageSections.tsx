@@ -361,20 +361,19 @@ const competitorFeatures = [
   { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
 ];
 
-// [Screaming Frog, Surfer SEO, Semrush, Meteoria, Crawlers.fr]
-// true = ✅, false = ❌, 'partial' = ⚠️
+// [Screaming Frog, Surfer SEO, Semrush, Ahrefs, Moz, SE Ranking, Meteoria, Crawlers.fr]
 const competitorMatrix: Record<string, (boolean | 'partial')[]> = {
-  audit_technique: [true, false, true, false, true],
-  score_geo: [false, false, false, true, true],
-  identite: [false, false, false, false, true],
-  cocon: [false, 'partial', false, false, true],
-  code_correctif: [false, false, false, false, true],
-  maintenance: [false, false, false, false, true],
-  gmb: [false, false, 'partial', false, true],
-  assistants: [false, false, false, false, true],
+  audit_technique: [true, false, true, true, 'partial', 'partial', false, true],
+  score_geo: [false, false, false, false, false, false, true, true],
+  identite: [false, false, false, false, false, false, false, true],
+  cocon: [false, 'partial', false, false, false, false, false, true],
+  code_correctif: [false, false, false, false, false, false, false, true],
+  maintenance: [false, false, false, false, false, false, false, true],
+  gmb: [false, false, 'partial', false, false, false, false, true],
+  assistants: [false, false, false, false, false, false, false, true],
 };
 
-const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'Meteoria', 'Crawlers.fr'];
+const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'Ahrefs', 'Moz', 'SE Ranking', 'Meteoria', 'Crawlers.fr'];
 
 const HybridSection = memo(() => {
   const { language } = useLanguage();
