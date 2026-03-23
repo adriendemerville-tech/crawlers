@@ -283,18 +283,58 @@ export function CocoonForceGraph({
           // Intensity = normalized authority flow
           const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
 
+          // Direction based on actual crawl depth
+          let direction: 'descending' | 'ascending' | 'lateral' = 'lateral';
+          if (srcDepth < tgtDepth) {
+            direction = 'descending'; // from shallow to deep
+          } else if (srcDepth > tgtDepth) {
+            direction = 'ascending'; // from deep to shallow
+          }
+
           gLinks.push({
             source: node.id,
             target: targetId,
             strength: edge.score,
             type: edge.type,
-            sourceDepth: isHomeSrc ? 0 : 1,
-            targetDepth: isHomeTgt ? 0 : 1,
+            sourceDepth: srcDepth,
+            targetDepth: tgtDepth,
             juiceType,
             juiceIntensity,
+            direction,
           });
         }
       }
+    }
+
+    // Also check reverse edges: if node B → node A exists but A → B was already added,
+    // we may have missed the correct direction. Re-scan for reverse edges.
+    const pairDirections = new Map<string, 'descending' | 'ascending' | 'lateral'>();
+    for (const node of nodes) {
+      for (const edge of node.similarity_edges || []) {
+        const targetId = urlToId.get(edge.target_url);
+        if (!targetId || !idSet.has(targetId) || targetId === node.id) continue;
+        const srcDepth = node.crawl_depth ?? node.depth ?? 0;
+        const targetNode = nodeById.get(targetId);
+        const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
+        const pairKey = [node.id, targetId].sort().join('|');
+        // If source links to a deeper target → descending from source's perspective
+        if (srcDepth < tgtDepth) {
+          pairDirections.set(pairKey, 'descending');
+        } else if (srcDepth > tgtDepth) {
+          // The node linking is deeper → this is an ascending link
+          if (!pairDirections.has(pairKey)) {
+            pairDirections.set(pairKey, 'ascending');
+          }
+        }
+      }
+    }
+    // Apply refined directions
+    for (const link of gLinks) {
+      const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+      const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+      const pairKey = [srcId, tgtId].sort().join('|');
+      const dir = pairDirections.get(pairKey);
+      if (dir) link.direction = dir;
     }
 
     return { graphNodes: gNodes, graphLinks: gLinks };
