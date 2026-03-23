@@ -548,41 +548,45 @@ export default function SiteCrawl() {
   useEffect(() => {
     if (!crawlResult || viewingCrawlId || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('site_crawls')
-        .select('*')
-        .eq('id', crawlResult.id)
-        .single();
-      if (data) {
-        const r = data as any;
-        // Sanitize ai_recommendations to always be an array
-        const sanitizedResult = {
-          ...r,
-          ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
-        };
-        setCrawlResult(sanitizedResult);
-        if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
-        if (sanitizedResult.status === 'queued') setPhase(t.queued);
-        else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
-        else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
-        else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
-        if (sanitizedResult.status === 'completed') {
-          clearInterval(interval);
-          setIsLoading(false);
-          setPhase('');
-          loadPages(sanitizedResult.id);
-          try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
-          toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
-          supabase.functions.invoke('agent-cto', {
-            body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
-          }).catch(() => {});
+      try {
+        const { data } = await supabase
+          .from('site_crawls')
+          .select('*')
+          .eq('id', crawlResult.id)
+          .single();
+        if (data) {
+          const r = data as any;
+          // Sanitize ai_recommendations to always be an array
+          const sanitizedResult = {
+            ...r,
+            ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
+          };
+          setCrawlResult(sanitizedResult);
+          if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
+          if (sanitizedResult.status === 'queued') setPhase(t.queued);
+          else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
+          else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
+          else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
+          if (sanitizedResult.status === 'completed') {
+            clearInterval(interval);
+            setIsLoading(false);
+            setPhase('');
+            loadPages(sanitizedResult.id);
+            try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
+            toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
+            supabase.functions.invoke('agent-cto', {
+              body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
+            }).catch(() => {});
+          }
+          if (sanitizedResult.status === 'error') {
+            clearInterval(interval);
+            setIsLoading(false);
+            setPhase('');
+            toast.error(sanitizedResult.error_message || t.errorCrawl);
+          }
         }
-        if (sanitizedResult.status === 'error') {
-          clearInterval(interval);
-          setIsLoading(false);
-          setPhase('');
-          toast.error(sanitizedResult.error_message || t.errorCrawl);
-        }
+      } catch (pollErr) {
+        console.error('[CrawlPoll] Error during polling:', pollErr);
       }
     }, 5000);
     return () => clearInterval(interval);
