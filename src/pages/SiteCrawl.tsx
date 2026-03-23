@@ -706,16 +706,28 @@ export default function SiteCrawl() {
   async function viewCrawl(crawl: CrawlResult) {
     console.log('[viewCrawl] Viewing crawl:', crawl.id, 'status:', crawl.status, 'domain:', crawl.domain);
     setIsLoadingPastCrawl(true);
-    setPages([]);
-    setCrawlResult(crawl);
+    setExpandedPage(null);
     setViewingCrawlId(crawl.id);
+    setCrawlResult(crawl);
     try {
       await loadPages(crawl.id);
+      requestAnimationFrame(() => {
+        historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     } catch (err) {
       console.error('[viewCrawl] Error loading pages:', err);
+      toast.error(t.errorCrawl);
+    } finally {
+      setIsLoadingPastCrawl(false);
+      console.log('[viewCrawl] Done loading');
     }
-    setIsLoadingPastCrawl(false);
-    console.log('[viewCrawl] Done loading');
+  }
+
+  function resetViewedCrawl() {
+    setViewingCrawlId(null);
+    setCrawlResult(null);
+    setPages([]);
+    setExpandedPage(null);
   }
 
   function addSelector() {
