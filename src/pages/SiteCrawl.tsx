@@ -766,8 +766,8 @@ export default function SiteCrawl() {
         }));
         setPages(sanitized as any);
       }
-    } catch (err) {
-      console.error('[loadPages] Uncaught error:', err);
+    } catch {
+      // Silent — handled by error boundary
     }
   }
 
