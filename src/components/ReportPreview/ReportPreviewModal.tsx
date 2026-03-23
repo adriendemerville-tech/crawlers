@@ -182,6 +182,7 @@ export function ReportPreviewModal({
       geo: { fr: 'Analyse GEO', en: 'GEO Analysis', es: 'Análisis GEO' },
       llm: { fr: 'Visibilité LLM', en: 'LLM Visibility', es: 'Visibilidad LLM' },
       pagespeed: { fr: 'PageSpeed', en: 'PageSpeed', es: 'PageSpeed' },
+      site_crawl: { fr: 'Audit Multi-Pages', en: 'Multi-Page Audit', es: 'Auditoría Multi-Páginas' },
     };
     const domain = (() => { try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { return url; } })();
     const label = titleMap[effectiveType]?.[language] || effectiveType;
