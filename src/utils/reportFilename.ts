@@ -8,7 +8,7 @@ type AuditType = 'auditstrategique' | 'audittechnique' | 'crawl' | 'compare' | '
 export function getReportFilename(urlOrDomain: string, auditType: AuditType, extension: 'pdf' | 'csv' | 'html' | 'xml' = 'pdf'): string {
   const domain = extractDomain(urlOrDomain);
   const dateStr = format(new Date(), 'yyyy-MM-dd');
-  return `${domain}_${auditType}_${dateStr}.${extension}`;
+  return `${auditType}_${domain}_${dateStr}.${extension}`;
 }
 
 function extractDomain(urlOrDomain: string): string {
