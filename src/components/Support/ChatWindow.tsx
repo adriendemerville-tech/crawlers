@@ -15,6 +15,25 @@ import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted/80"
+      title="Copier"
+    >
+      {copied
+        ? <Check className="w-3 h-3 text-emerald-400" />
+        : <Copy className="w-3 h-3 text-muted-foreground" />}
+    </button>
+  );
+}
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
