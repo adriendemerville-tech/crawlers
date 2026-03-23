@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { AIBotsLeadMagnet } from '@/components/Homepage/AIBotsLeadMagnet';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -231,6 +232,9 @@ const MomentumSection = memo(() => {
             </div>
           ))}
         </div>
+
+        {/* AI Bots Lead Magnet */}
+        <AIBotsLeadMagnet />
       </div>
     </section>
   );
