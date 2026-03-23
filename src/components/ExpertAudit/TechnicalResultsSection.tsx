@@ -56,6 +56,9 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
       {/* SPA Detection Alert */}
       {result.isSPA && <SPADetectionAlert />}
 
+      {/* Radial Quality Score Chart */}
+      <AuditRadialChart result={result} mode="technical" language={t.lang || 'fr'} />
+
       {/* Hero Score */}
       <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
         <CardContent className="p-8">
