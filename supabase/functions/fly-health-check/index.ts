@@ -6,6 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function tryFlyRender(flyUrl: string, flySecret: string | undefined): Promise<{ ok: boolean; status?: number; chars?: number; error?: string }> {
+  try {
+    const response = await fetch(`${flyUrl}/render`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(flySecret ? { 'x-secret': flySecret } : {}),
+      },
+      body: JSON.stringify({ url: 'https://example.com', timeout: 20000, waitFor: 1000 }),
+      signal: AbortSignal.timeout(60000),
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      return { ok: true, status: response.status, chars: html.length };
+    }
+    return { ok: false, status: response.status, error: `HTTP ${response.status}` };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -41,38 +63,29 @@ serve(async (req) => {
     });
   }
 
-  try {
-    // Send a lightweight test render to wake up and verify Fly.io
-    const testUrl = 'https://example.com';
-    const response = await fetch(`${flyUrl}/render`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(flySecret ? { 'x-secret': flySecret } : {}),
-      },
-      body: JSON.stringify({ url: testUrl, timeout: 15000, waitFor: 1000 }),
-      signal: AbortSignal.timeout(30000),
-    });
+  // Attempt 1
+  let result = await tryFlyRender(flyUrl, flySecret);
 
-    if (response.ok) {
-      const html = await response.text();
-      return new Response(JSON.stringify({
-        status: 'ok',
-        message: `Fly.io Playwright opérationnel (${html.length} chars rendus)`,
-        rendered_chars: html.length,
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    } else {
-      return new Response(JSON.stringify({
-        status: 'error',
-        message: `Fly.io a répondu avec HTTP ${response.status}`,
-        http_status: response.status,
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+  // Retry once if failed (cold start)
+  if (!result.ok) {
+    console.log(`[fly-health-check] Attempt 1 failed: ${result.error}. Retrying in 5s...`);
+    await new Promise(r => setTimeout(r, 5000));
+    result = await tryFlyRender(flyUrl, flySecret);
+  }
+
+  if (result.ok) {
+    return new Response(JSON.stringify({
+      status: 'ok',
+      message: `Fly.io Playwright opérationnel (${result.chars} chars rendus)`,
+      rendered_chars: result.chars,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } else {
     return new Response(JSON.stringify({
       status: 'error',
-      message: `Fly.io inaccessible: ${msg}`,
+      message: result.status
+        ? `Fly.io a répondu avec HTTP ${result.status}`
+        : `Fly.io inaccessible: ${result.error}`,
+      http_status: result.status || null,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
