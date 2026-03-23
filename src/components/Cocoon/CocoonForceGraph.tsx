@@ -350,15 +350,11 @@ export function CocoonForceGraph({
       const fwd = directedEdges.get(`${srcId}→${tgtId}`);
       const rev = directedEdges.get(`${tgtId}→${srcId}`);
       
-      // If we have both directions, keep descending (majority in typical sites)
-      // If only reverse exists (deep→shallow), mark ascending
-      if (rev === 'ascending' && !fwd) {
+      // If any directed edge in this pair is ascending, mark the link ascending
+      if (rev === 'ascending' || fwd === 'ascending') {
         link.direction = 'ascending';
-      } else if (fwd === 'ascending') {
-        link.direction = 'ascending';
-      } else if (rev === 'descending' && fwd === 'ascending') {
-        // Bidirectional: the reverse goes down, forward goes up → ascending
-        link.direction = 'ascending';
+      } else if (rev === 'descending' && !fwd) {
+        link.direction = 'descending';
       }
     }
 
