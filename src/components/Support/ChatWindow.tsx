@@ -418,7 +418,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 {messages.map((msg, i) => (
                   <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                     <div className={cn(
-                      'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
+                      'relative group max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
                       msg.role === 'assistant'
                         ? 'bg-muted/60 text-foreground rounded-bl-md'
                         : 'bg-violet-600 text-white rounded-br-md'
@@ -465,6 +465,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                           </div>
                         );
                       })()}
+                      {msg.role === 'assistant' && <CopyButton text={msg.content} />}
                     </div>
                   </div>
                 ))}
