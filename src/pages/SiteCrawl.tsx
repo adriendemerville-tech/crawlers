@@ -827,7 +827,11 @@ export default function SiteCrawl() {
         .single();
 
       if (crawl) {
-        setCrawlResult(crawl as any);
+        const sanitized = {
+          ...crawl as any,
+          ai_recommendations: Array.isArray((crawl as any).ai_recommendations) ? (crawl as any).ai_recommendations : [],
+        };
+        setCrawlResult(sanitized);
         setPhase(`${data.totalPages} ${t.auditQueued}`);
       }
       // Silent — no toast for pages discovered
