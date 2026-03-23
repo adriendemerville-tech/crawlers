@@ -1208,7 +1208,7 @@ export default function SiteCrawl() {
                         max={isAdmin ? 50 : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20)}
                         step={isAdmin ? 10 : 5}
                         disabled={isLoading}
-                        className="flex-1 [&_[data-slot=range]]:bg-brand-violet [&_span[data-slot=range]]:bg-brand-violet [&>span>span]:bg-brand-violet [&_[role=slider]]:border-brand-violet"
+                        className="flex-1"
                       />
                       <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
