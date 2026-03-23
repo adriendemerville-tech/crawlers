@@ -1578,7 +1578,7 @@ export default function SiteCrawl() {
                                 {Object.entries(page.custom_extraction).map(([name, value]) => (
                                   <div key={name} className="flex gap-2 text-xs">
                                     <span className="font-medium text-foreground shrink-0">{name}:</span>
-                                    <span className="text-muted-foreground truncate">{value || '—'}</span>
+                                    <span className="text-muted-foreground truncate">{typeof value === 'object' ? JSON.stringify(value) : (value || '—')}</span>
                                   </div>
                                 ))}
                               </div>
