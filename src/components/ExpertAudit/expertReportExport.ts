@@ -693,7 +693,9 @@ export function generateExpertReportHTML(
 
     const strategicSections: string[] = [];
 
-    // 0. Introduction
+    // Radial Quality Score Chart
+    strategicSections.push(generateRadialChartSVG(result, 'strategic', language));
+
     if (strategic?.introduction) {
       strategicSections.push(sectionCard(t.introduction, '#7c3aed', '#faf5ff',
         `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`));
