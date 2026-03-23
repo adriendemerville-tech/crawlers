@@ -493,7 +493,7 @@ function Links({
       );
       const fadeEdge = Math.sin(t * Math.PI);
       const mat = children[i].material as THREE.MeshBasicMaterial;
-      mat.opacity = fadeEdge * 0.7;
+      mat.opacity = fadeEdge * 0.85;
     }
   });
 
