@@ -521,6 +521,29 @@ export function CocoonRadialGraph({
       ctx.lineWidth = isSelected ? 2 : 1;
       ctx.stroke();
 
+      // ─── Backlink badge (golden ring + count) ───
+      if (node.hasBacklinks && node.backlinkDomains > 0) {
+        const pulseAlpha = 0.4 + 0.3 * Math.sin(Date.now() * 0.003);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(245, 158, 11, ${pulseAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        const bx = node.x + node.radius * 0.7;
+        const by = node.y - node.radius * 0.7;
+        const badgeSize = Math.max(5, node.radius * 0.4);
+        ctx.beginPath();
+        ctx.arc(bx, by, badgeSize, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.font = `bold ${Math.max(6, badgeSize)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.backlinkDomains > 99 ? '99+' : String(node.backlinkDomains), bx, by);
+      }
+
       // Labels: ONLY for selected or hovered nodes
       if (isSelected || isHovered) {
         const label = node.title.length > 25 ? node.title.slice(0, 23) + '…' : node.title;
