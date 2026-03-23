@@ -895,14 +895,13 @@ export default function SiteCrawl() {
         {!isUnlimitedUser && (
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
-            <div className="relative z-10 flex flex-col items-start w-full max-w-lg mx-4 pt-12">
+            <div className="relative z-10 flex flex-col items-start w-full max-w-lg mx-4 ">
               <button
                 onClick={() => navigate('/')}
-                aria-label={language === 'fr' ? 'Retour à l’accueil' : language === 'es' ? 'Volver al inicio' : 'Back to home'}
-                className="absolute left-0 top-0 z-20 inline-flex items-center gap-2 rounded-full border border-border bg-card/95 px-3 py-2 text-sm text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-accent"
+                aria-label="Back"
+                className="mb-2 p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ArrowLeft className="h-4 w-4" />
-                <span>{language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}</span>
+                <ArrowLeft className="h-5 w-5" />
               </button>
             <Card className="w-full border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
               <div className="absolute top-0 left-0">
