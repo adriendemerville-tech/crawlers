@@ -576,17 +576,25 @@ export function CocoonRadialGraph({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isPanning.current = true;
+    dragDistance.current = 0;
     lastMouse.current = getMousePos(e);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const pos = getMousePos(e);
     if (isPanning.current) {
+      const dx = pos.x - lastMouse.current.x;
+      const dy = pos.y - lastMouse.current.y;
+      dragDistance.current += Math.abs(dx) + Math.abs(dy);
       setPan(p => ({
-        x: p.x + (pos.x - lastMouse.current.x),
-        y: p.y + (pos.y - lastMouse.current.y),
+        x: p.x + dx,
+        y: p.y + dy,
       }));
       lastMouse.current = pos;
+
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = "grabbing";
+      }
       return;
     }
 
@@ -595,13 +603,16 @@ export function CocoonRadialGraph({
     setHoveredNodeId(node?.id || null);
 
     if (canvasRef.current) {
-      canvasRef.current.style.cursor = node ? "pointer" : isPanning.current ? "grabbing" : "grab";
+      canvasRef.current.style.cursor = node ? "pointer" : "grab";
     }
   };
 
   const handleMouseUp = () => { isPanning.current = false; };
 
   const handleClick = (e: React.MouseEvent) => {
+    // Ignore click if it was a drag
+    if (dragDistance.current > 5) return;
+
     const pos = getMousePos(e);
     const { x, y } = screenToWorld(pos.x, pos.y);
     const node = findNodeAt(x, y);
