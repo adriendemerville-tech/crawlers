@@ -49,6 +49,8 @@ interface RadialNode {
   parent: RadialNode | null;
   siloIntraRatio?: number;
   siloLeakRatio?: number;
+  hasBacklinks: boolean;
+  backlinkDomains: number;
 }
 
 interface CocoonRadialGraphProps {
