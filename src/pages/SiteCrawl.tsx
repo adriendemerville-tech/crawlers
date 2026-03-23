@@ -1201,7 +1201,7 @@ export default function SiteCrawl() {
 
           {/* Résultats */}
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
