@@ -76,6 +76,7 @@ export function FinancesDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0, bundleMrr: 0 });
   const [totalPlatformCost, setTotalPlatformCost] = useState(0);
+  const [allTimePlatformCost, setAllTimePlatformCost] = useState(0);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
@@ -93,39 +94,44 @@ export function FinancesDashboard() {
     spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
+  const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
 
-  // Dedicated fetch for financial events (bypass shared cache limit)
+  // Fetch events with optional date filter
+  const fetchEventsByType = useCallback(async (eventType: string, sinceDate?: string) => {
+    const PAGE_SIZE = 1000;
+    const MAX_PAGES = 20;
+    let all: typeof sharedAllEvents = [];
+    let page = 0;
+    while (page < MAX_PAGES) {
+      let query = supabase
+        .from('analytics_events')
+        .select('event_type, url, created_at, user_id, event_data')
+        .eq('event_type', eventType)
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      if (sinceDate) query = query.gte('created_at', sinceDate);
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) break;
+      all = all.concat(data as typeof sharedAllEvents);
+      if (data.length < PAGE_SIZE) break;
+      page++;
+    }
+    return all;
+  }, []);
+
   const fetchFinancialEvents = useCallback(async () => {
     const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-    const PAGE_SIZE = 1000;
-    const MAX_PAGES = 10; // Cap at 10k events to avoid browser freeze
 
-    const fetchAllByType = async (eventType: string) => {
-      let all: typeof sharedAllEvents = [];
-      let page = 0;
-      while (page < MAX_PAGES) {
-        const { data, error } = await supabase
-          .from('analytics_events')
-          .select('event_type, url, created_at, user_id, event_data')
-          .eq('event_type', eventType)
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-        if (error || !data || data.length === 0) break;
-        all = all.concat(data as typeof sharedAllEvents);
-        if (data.length < PAGE_SIZE) break;
-        page++;
-      }
-      return all;
-    };
-
-    const [tokenEvents, paidApiEvents] = await Promise.all([
-      fetchAllByType('ai_token_usage'),
-      fetchAllByType('paid_api_call'),
+    // Fetch both 30-day and all-time in parallel
+    const [tokenEvents30d, paidApiEvents30d, tokenEventsAll, paidApiEventsAll] = await Promise.all([
+      fetchEventsByType('ai_token_usage', thirtyDaysAgo),
+      fetchEventsByType('paid_api_call', thirtyDaysAgo),
+      fetchEventsByType('ai_token_usage'),
+      fetchEventsByType('paid_api_call'),
     ]);
 
-    return { tokenEvents, paidApiEvents };
-  }, []);
+    return { tokenEvents: tokenEvents30d, paidApiEvents: paidApiEvents30d, tokenEventsAll, paidApiEventsAll };
+  }, [fetchEventsByType]);
 
   // Trigger shared fetch on mount
   useEffect(() => { fetchEvents(); }, []);
@@ -136,72 +142,82 @@ export function FinancesDashboard() {
     processData(sharedAllEvents, sharedFilteredEvents);
   }, [sharedAllEvents, sharedLoading]);
 
+  const computeTokenStats = useCallback((tokenEvents: typeof sharedAllEvents, paidApiEvents: typeof sharedAllEvents): TokenUsageStats => {
+    const byFunction: Record<string, { tokens: number; calls: number; model?: string }> = {};
+    const byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }> = {};
+    let totalTokens = 0, promptTokens = 0, completionTokens = 0, totalEstimatedCost = 0;
+
+    tokenEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const t = Number(data.total_tokens) || 0;
+      const p = Number(data.prompt_tokens) || 0;
+      const c = Number(data.completion_tokens) || 0;
+      const model = (data.model as string) || 'unknown';
+      totalTokens += t; promptTokens += p; completionTokens += c;
+      const fn = (data.function_name as string) || 'unknown';
+      if (!byFunction[fn]) byFunction[fn] = { tokens: 0, calls: 0, model };
+      byFunction[fn].tokens += t; byFunction[fn].calls += 1;
+      if (!byModel[model]) byModel[model] = { promptTokens: 0, completionTokens: 0, totalTokens: 0, calls: 0, estimatedCost: 0 };
+      byModel[model].promptTokens += p; byModel[model].completionTokens += c;
+      byModel[model].totalTokens += t; byModel[model].calls += 1;
+      const cost = estimateCost(model, p, c);
+      byModel[model].estimatedCost += cost;
+      totalEstimatedCost += cost;
+    });
+
+    const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
+    let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
+
+    paidApiEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const service = (data.api_service as string) || 'unknown';
+      const endpoint = (data.endpoint as string) || 'unknown';
+      if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
+      byApiService[service].calls += 1;
+      byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
+      if (service === 'dataforseo') dataforseoCalls++;
+      if (service === 'openrouter') openrouterCalls++;
+      if (service === 'browserless') browserlessCalls++;
+      if (service === 'firecrawl') firecrawlCalls++;
+      if (service === 'spider') spiderCalls++;
+      if (service === 'fly-playwright') flyPlaywrightCalls++;
+    });
+
+    const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
+    const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
+    const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
+
+    return {
+      totalTokens, promptTokens, completionTokens,
+      callCount: tokenEvents.length, byFunction, byModel,
+      paidApiCalls: paidApiEvents.length, totalEstimatedCost,
+      dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
+      spiderCalls, spiderEstimatedCost,
+      flyPlaywrightCalls, flyEstimatedCost, byApiService,
+    };
+  }, []);
+
   const processData = useCallback(async (allEvents: typeof sharedAllEvents, events: typeof sharedFilteredEvents) => {
     setIsLoading(true);
 
     try {
+      const { tokenEvents, paidApiEvents, tokenEventsAll, paidApiEventsAll } = await fetchFinancialEvents();
 
-      // Fetch ALL financial events directly (not from shared cache)
-      const { tokenEvents, paidApiEvents } = await fetchFinancialEvents();
+      // 30-day stats
+      const stats30d = computeTokenStats(tokenEvents, paidApiEvents);
+      const totalPaidApiCost30d = paidApiEvents.length * 0.005; // rough average
+      const grandTotalCost30d = stats30d.totalEstimatedCost + stats30d.flyEstimatedCost + stats30d.spiderEstimatedCost + totalPaidApiCost30d;
+      setTotalPlatformCost(grandTotalCost30d);
+      setTokenUsage(stats30d);
 
-      const byFunction: Record<string, { tokens: number; calls: number; model?: string }> = {};
-      const byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }> = {};
-      let totalTokens = 0, promptTokens = 0, completionTokens = 0, totalEstimatedCost = 0;
-
-      tokenEvents.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        if (!data) return;
-        const t = Number(data.total_tokens) || 0;
-        const p = Number(data.prompt_tokens) || 0;
-        const c = Number(data.completion_tokens) || 0;
-        const model = (data.model as string) || 'unknown';
-        totalTokens += t; promptTokens += p; completionTokens += c;
-        const fn = (data.function_name as string) || 'unknown';
-        if (!byFunction[fn]) byFunction[fn] = { tokens: 0, calls: 0, model };
-        byFunction[fn].tokens += t; byFunction[fn].calls += 1;
-        if (!byModel[model]) byModel[model] = { promptTokens: 0, completionTokens: 0, totalTokens: 0, calls: 0, estimatedCost: 0 };
-        byModel[model].promptTokens += p; byModel[model].completionTokens += c;
-        byModel[model].totalTokens += t; byModel[model].calls += 1;
-        const cost = estimateCost(model, p, c);
-        byModel[model].estimatedCost += cost;
-        totalEstimatedCost += cost;
-      });
-
-      const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
-      let dataforseoCalls = 0, openrouterCalls = 0, browserlessCalls = 0, firecrawlCalls = 0, spiderCalls = 0, flyPlaywrightCalls = 0;
-      let totalPaidApiCost = 0;
-
-      paidApiEvents.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        if (!data) return;
-        const service = (data.api_service as string) || 'unknown';
-        const endpoint = (data.endpoint as string) || 'unknown';
-        if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
-        byApiService[service].calls += 1;
-        byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
-        if (service === 'dataforseo') dataforseoCalls++;
-        if (service === 'openrouter') openrouterCalls++;
-        if (service === 'browserless') browserlessCalls++;
-        if (service === 'firecrawl') firecrawlCalls++;
-        if (service === 'spider') spiderCalls++;
-        if (service === 'fly-playwright') flyPlaywrightCalls++;
-        totalPaidApiCost += API_COST_ESTIMATES[service] || 0.005;
-      });
-
-      const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92;
-      const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
-      const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
-      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + spiderEstimatedCost + totalPaidApiCost;
-      setTotalPlatformCost(grandTotalCost);
-
-      setTokenUsage({
-        totalTokens, promptTokens, completionTokens,
-        callCount: tokenEvents.length, byFunction, byModel,
-        paidApiCalls: paidApiEvents.length, totalEstimatedCost,
-        dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
-        spiderCalls, spiderEstimatedCost,
-        flyPlaywrightCalls, flyEstimatedCost, byApiService,
-      });
+      // All-time stats
+      const statsAll = computeTokenStats(tokenEventsAll, paidApiEventsAll);
+      const totalPaidApiCostAll = paidApiEventsAll.length * 0.005;
+      const grandTotalCostAll = statsAll.totalEstimatedCost + statsAll.flyEstimatedCost + statsAll.spiderEstimatedCost + totalPaidApiCostAll;
+      setAllTimePlatformCost(grandTotalCostAll);
+      setAllTimeTokenUsage(statsAll);
 
       // Active users
       const activeUserIds = new Set<string>();
@@ -304,19 +320,64 @@ export function FinancesDashboard() {
     emerald: { border: 'border-emerald-500/30', text: 'text-emerald-600 dark:text-emerald-400' },
   };
 
+  // Grand total since launch = estimated platform cost + real API data
+  const realDataforseoSpent = dataforseoBalance?.total_spent ?? 0;
+  const realOpenrouterSpent = apiBalances?.openrouter?.usage ?? 0;
+  const realFirecrawlUsed = apiBalances?.firecrawl?.total_credits && apiBalances?.firecrawl?.remaining_credits
+    ? apiBalances.firecrawl.total_credits - apiBalances.firecrawl.remaining_credits
+    : 0;
+  const grandTotalSinceLaunchUSD = realDataforseoSpent + realOpenrouterSpent;
+  const grandTotalSinceLaunchEUR = grandTotalSinceLaunchUSD * 0.92 + allTimePlatformCost;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Finances & Coûts</h2>
-          <p className="text-xs text-muted-foreground">Indicateurs financiers et consommation API (30 derniers jours)</p>
+          <p className="text-xs text-muted-foreground">Indicateurs financiers depuis le lancement</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => fetchEvents(true)} disabled={isRefreshing} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>
       </div>
+
+      {/* Hero: Total Spending Since Launch */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-r from-card via-card to-primary/5">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Dépenses totales depuis le lancement</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {grandTotalSinceLaunchEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  dont ${grandTotalSinceLaunchUSD.toFixed(2)} API réel + {allTimePlatformCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ estimé (LLM + infra)
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-6 text-center">
+              <div>
+                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.callCount ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels IA total</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.paidApiCalls ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels API total</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{((allTimeTokenUsage?.totalTokens ?? 0) / 1_000_000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M</p>
+                <p className="text-[10px] text-muted-foreground">Tokens total</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Business Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -434,9 +495,9 @@ export function FinancesDashboard() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Gauge className="h-4 w-4 text-primary" />
-            Quotas & Statuts API (30j)
+            Quotas & Statuts API (depuis le lancement)
           </CardTitle>
-          <CardDescription>Consommation par service avec estimation des limites de plan</CardDescription>
+          <CardDescription>Consommation par service — données réelles + estimations</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -520,8 +581,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.dataforseoCalls.toLocaleString('fr-FR')} appels (30j)</span>
-                <span>~{(tokenUsage.dataforseoCalls * 0.01).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+                <span>{(allTimeTokenUsage?.dataforseoCalls ?? tokenUsage.dataforseoCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>Dépensé: ${(dataforseoBalance?.total_spent ?? 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -592,8 +653,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.firecrawlCalls.toLocaleString('fr-FR')} appels (30j)</span>
-                <span>~{(tokenUsage.firecrawlCalls * 0.005).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+                <span>{(allTimeTokenUsage?.firecrawlCalls ?? tokenUsage.firecrawlCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>{realFirecrawlUsed.toLocaleString('fr-FR')} crédits utilisés</span>
               </div>
             </div>
 
@@ -649,7 +710,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.openrouterCalls.toLocaleString('fr-FR')} appels (30j)</span>
+                <span>{(allTimeTokenUsage?.openrouterCalls ?? tokenUsage.openrouterCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>Dépensé: ${(apiBalances?.openrouter?.usage ?? 0).toFixed(4)}</span>
               </div>
             </div>
 
