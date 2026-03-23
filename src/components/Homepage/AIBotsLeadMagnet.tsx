@@ -86,6 +86,7 @@ export function AIBotsLeadMagnet() {
   };
 
   const blockedCount = bots?.filter((b) => b.status === 'blocked').length || 0;
+  const isAllowed = (bot: BotResult) => bot.status !== 'blocked';
 
   return (
     <div className="mt-10 max-w-xl mx-auto">
