@@ -64,6 +64,7 @@ export function UserManagement() {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
+  const [showPendingTab, setShowPendingTab] = useState(false);
 
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
@@ -383,10 +384,26 @@ export function UserManagement() {
               {filteredUsers.length}/{users.length} utilisateurs{actionFilter ? ` • filtre : ${actionFilter}` : ''}
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualiser
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showPendingTab ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setShowPendingTab(!showPendingTab); if (!showPendingTab) fetchPendingUsers(); }}
+              className="gap-1.5 relative"
+            >
+              <MailWarning className="h-4 w-4" />
+              En attente
+              {pendingUsers.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold px-1">
+                  {pendingUsers.length}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+          </div>
         </div>
         {/* Signup funnel counters */}
         <div className="flex gap-3 mt-3 flex-wrap">
@@ -404,59 +421,83 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Pending users section */}
-        {pendingLoading ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Chargement des inscriptions en attente…
-          </div>
-        ) : pendingUsers.length > 0 ? (
-          <div className="mb-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-            <div className="flex items-center gap-2 mb-2">
-              <MailWarning className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                {pendingUsers.length} inscription{pendingUsers.length > 1 ? 's' : ''} en attente de validation
-              </span>
-              <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto" onClick={fetchPendingUsers}>
-                <RefreshCw className="h-3 w-3" />
+        {showPendingTab ? (
+          /* ====== Pending Users Tab ====== */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <MailWarning className="h-4 w-4 text-amber-500" />
+                Inscriptions en attente de validation email
+              </h3>
+              <Button variant="ghost" size="sm" onClick={fetchPendingUsers} disabled={pendingLoading}>
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${pendingLoading ? 'animate-spin' : ''}`} />
+                Actualiser
               </Button>
             </div>
-            <div className="space-y-1.5">
-              {pendingUsers.map((pu) => (
-                <div key={pu.id} className="flex items-center justify-between gap-2 bg-background/60 rounded-md px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3 w-3 text-amber-500 shrink-0" />
-                      <span className="text-xs font-medium truncate">
-                        {pu.first_name} {pu.last_name}
-                      </span>
-                      {pu.plan_type === 'agency_pro' && (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 border-violet-500 text-violet-500 shrink-0">Pro</Badge>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{pu.email}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Inscrit le {new Date(pu.created_at).toLocaleDateString('fr-FR')} à {new Date(pu.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="shrink-0 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                    onClick={() => handleConfirmUser(pu.id)}
-                    disabled={confirmingUserId === pu.id}
-                  >
-                    {confirmingUserId === pu.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle className="h-3.5 w-3.5" />
-                    )}
-                    Valider
-                  </Button>
-                </div>
-              ))}
-            </div>
+            {pendingLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : pendingUsers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                Aucune inscription en attente
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Nom</TableHead>
+                    <TableHead className="text-xs">Email</TableHead>
+                    <TableHead className="text-xs">Plan</TableHead>
+                    <TableHead className="text-xs">Inscrit le</TableHead>
+                    <TableHead className="text-xs text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingUsers.map((pu) => (
+                    <TableRow key={pu.id}>
+                      <TableCell className="text-xs font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3 text-amber-500 shrink-0" />
+                          {pu.first_name} {pu.last_name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{pu.email}</TableCell>
+                      <TableCell>
+                        {pu.plan_type === 'agency_pro' ? (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 border-violet-500 text-violet-500">Pro Agency</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Free</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(pu.created_at).toLocaleDateString('fr-FR')} {new Date(pu.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => handleConfirmUser(pu.id)}
+                          disabled={confirmingUserId === pu.id}
+                        >
+                          {confirmingUserId === pu.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          )}
+                          Valider
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
-        ) : null}
+        ) : (
+          /* ====== Main Users Tab ====== */
+          <>
 
         <div className="mb-4 flex gap-2 items-center">
           <div className="relative flex-1">
@@ -670,6 +711,8 @@ export function UserManagement() {
               </TableBody>
             </Table>
           </div>
+        )}
+        </>
         )}
       </CardContent>
 
