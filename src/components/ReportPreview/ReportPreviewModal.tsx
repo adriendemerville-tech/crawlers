@@ -166,8 +166,7 @@ export function ReportPreviewModal({
   const url = getUrl();
 
   // Check if we have any data at all
-  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult || siteCrawlData;
-  if (!hasAnyData) return null;
+  const hasAnyData = Boolean(crawlResult || geoResult || llmResult || pageSpeedResult || siteCrawlData);
 
   // Auto-save report for authenticated users when modal opens
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -200,6 +199,8 @@ export function ReportPreviewModal({
     profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
       ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
       : undefined;
+
+  if (!hasAnyData) return null;
 
   // Generate HTML with appropriate type
   const reportType = useFullType ? 'full' : effectiveType;
