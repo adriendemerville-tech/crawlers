@@ -203,7 +203,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         body: {
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           conversation_id: conversationId,
-          user_id: user.id,
+          user_id: user?.id || null,
+          guest_mode: !user,
         },
       });
 
