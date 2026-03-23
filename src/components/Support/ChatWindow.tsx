@@ -418,18 +418,18 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[90%] rounded-lg px-3 py-2',
+                  'max-w-[90%] rounded-2xl px-3 py-2',
                   msg.role === 'assistant'
-                    ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
-                    : 'bg-primary text-primary-foreground'
+                    ? 'bg-muted/60 text-foreground rounded-bl-md'
+                    : 'bg-primary/90 text-primary-foreground rounded-br-md'
                 )}>
                   {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <CrawlersLogo size={14} />
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <CrawlersLogo size={12} />
                     </div>
                   )}
                   <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
