@@ -415,7 +415,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                   'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
                   msg.role === 'assistant'
                     ? 'bg-muted/60 text-foreground rounded-bl-md'
-                    : 'bg-primary/90 text-primary-foreground rounded-br-md'
+                    : 'bg-violet-600 text-white rounded-br-md'
                 )}>
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-1.5 mb-0.5">
