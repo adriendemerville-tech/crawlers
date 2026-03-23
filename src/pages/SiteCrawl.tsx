@@ -689,21 +689,32 @@ export default function SiteCrawl() {
   }
 
   async function loadPages(crawlId: string) {
-    const { data } = await supabase
+    console.log('[loadPages] Loading pages for crawlId:', crawlId);
+    const { data, error } = await supabase
       .from('crawl_pages')
       .select('*')
       .eq('crawl_id', crawlId)
       .order('seo_score', { ascending: true });
+    console.log('[loadPages] Result:', { count: data?.length, error });
+    if (error) {
+      console.error('[loadPages] Error:', error);
+    }
     if (data) setPages(data as any);
   }
 
   async function viewCrawl(crawl: CrawlResult) {
+    console.log('[viewCrawl] Viewing crawl:', crawl.id, 'status:', crawl.status, 'domain:', crawl.domain);
     setIsLoadingPastCrawl(true);
     setPages([]);
     setCrawlResult(crawl);
     setViewingCrawlId(crawl.id);
-    await loadPages(crawl.id);
+    try {
+      await loadPages(crawl.id);
+    } catch (err) {
+      console.error('[viewCrawl] Error loading pages:', err);
+    }
     setIsLoadingPastCrawl(false);
+    console.log('[viewCrawl] Done loading');
   }
 
   function addSelector() {
