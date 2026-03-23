@@ -3,11 +3,14 @@ import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { Card, CardContent } from '@/components/ui/card';
 import { ExpertAuditResult } from '@/types/expertAudit';
 
+type ChartItem = { name: string; value: number; raw: number; max: number };
+
 interface AuditRadialChartProps {
   result: ExpertAuditResult;
   mode: 'technical' | 'strategic';
   language: string;
   inline?: boolean;
+  previousData?: ChartItem[] | null;
 }
 
 const COLORS = {
@@ -21,6 +24,12 @@ const COLORS = {
     stroke: 'hsl(263, 70%, 38%)',
     fillOpacity: 0.25,
   },
+};
+
+const PREVIOUS_COLORS = {
+  fill: 'hsl(0, 0%, 60%)',
+  stroke: 'hsl(0, 0%, 45%)',
+  fillOpacity: 0.1,
 };
 
 function getScoreColor(ratio: number): string {
@@ -43,6 +52,7 @@ const labels = {
     geoReady: 'GEO Ready',
     keywords: 'Mots-clés',
     title: 'Score de qualité',
+    previous: 'Précédent',
   },
   en: {
     performance: 'Performance',
@@ -57,6 +67,7 @@ const labels = {
     geoReady: 'GEO Ready',
     keywords: 'Keywords',
     title: 'Quality Score',
+    previous: 'Previous',
   },
   es: {
     performance: 'Rendimiento',
@@ -71,71 +82,76 @@ const labels = {
     geoReady: 'GEO Ready',
     keywords: 'Palabras clave',
     title: 'Puntuación de calidad',
+    previous: 'Anterior',
   },
 };
 
-export function AuditRadialChart({ result, mode, language, inline = false }: AuditRadialChartProps) {
+export function buildChartData(result: ExpertAuditResult, mode: 'technical' | 'strategic', t: Record<string, string>) {
+  const scores = result.scores;
+  const strategic = result.strategicAnalysis;
+
+  if (mode === 'technical') {
+    const items: ChartItem[] = [
+      { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
+      { name: t.technical, value: Math.round((scores.technical.score / scores.technical.maxScore) * 100), raw: scores.technical.score, max: scores.technical.maxScore },
+      { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
+      { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
+      { name: t.security, value: Math.round((scores.security.score / scores.security.maxScore) * 100), raw: scores.security.score, max: scores.security.maxScore },
+    ];
+    const total = scores.performance.score + scores.technical.score + scores.semantic.score + scores.aiReady.score + scores.security.score;
+    return { data: items, totalScore: total, maxScore: 200 };
+  }
+
+  const items: ChartItem[] = [
+    { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
+    { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
+    { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
+  ];
+
+  if (strategic?.geo_readiness) {
+    const geo = strategic.geo_readiness;
+    items.push({ name: t.citability, value: Math.min(100, geo.citability_score || 0), raw: geo.citability_score || 0, max: 100 });
+    items.push({ name: t.geoReady, value: Math.min(100, geo.ai_accessibility_score || 0), raw: geo.ai_accessibility_score || 0, max: 100 });
+  }
+
+  if (strategic?.brand_authority) {
+    items.push({ name: t.brand, value: Math.min(100, strategic.brand_authority.thought_leadership_score || 0), raw: strategic.brand_authority.thought_leadership_score || 0, max: 100 });
+  }
+
+  if (strategic?.social_signals?.thought_leadership) {
+    const eeat = strategic.social_signals.thought_leadership.eeat_score || 0;
+    items.push({ name: t.social, value: Math.min(100, eeat * 10), raw: eeat, max: 10 });
+  }
+
+  if (strategic?.market_intelligence?.semantic_gap) {
+    items.push({ name: t.market, value: Math.min(100, strategic.market_intelligence.semantic_gap.current_position || 0), raw: strategic.market_intelligence.semantic_gap.current_position || 0, max: 100 });
+  }
+
+  const overallScore = strategic?.overallScore || result.totalScore;
+  return { data: items, totalScore: overallScore, maxScore: 200 };
+}
+
+export function AuditRadialChart({ result, mode, language, inline = false, previousData }: AuditRadialChartProps) {
   const t = labels[language as keyof typeof labels] || labels.fr;
   const colors = COLORS[mode];
 
-  const { data, totalScore, maxScore } = useMemo(() => {
-    const scores = result.scores;
-    const strategic = result.strategicAnalysis;
+  const { data, totalScore, maxScore } = useMemo(() => buildChartData(result, mode, t), [result, mode, t]);
 
-    type ChartItem = { name: string; value: number; raw: number; max: number };
-
-    if (mode === 'technical') {
-      const items: ChartItem[] = [
-        { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
-        { name: t.technical, value: Math.round((scores.technical.score / scores.technical.maxScore) * 100), raw: scores.technical.score, max: scores.technical.maxScore },
-        { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
-        { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
-        { name: t.security, value: Math.round((scores.security.score / scores.security.maxScore) * 100), raw: scores.security.score, max: scores.security.maxScore },
-      ];
-      const total = scores.performance.score + scores.technical.score + scores.semantic.score + scores.aiReady.score + scores.security.score;
-      return { data: items, totalScore: total, maxScore: 200 };
-    }
-
-    // Strategic mode: combine technical + strategic metrics
-    const items: ChartItem[] = [
-      { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
-      { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
-      { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
-    ];
-
-    // Add GEO readiness if available
-    if (strategic?.geo_readiness) {
-      const geo = strategic.geo_readiness;
-      items.push({ name: t.citability, value: Math.min(100, geo.citability_score || 0), raw: geo.citability_score || 0, max: 100 });
-      items.push({ name: t.geoReady, value: Math.min(100, geo.ai_accessibility_score || 0), raw: geo.ai_accessibility_score || 0, max: 100 });
-    }
-
-    // Brand authority
-    if (strategic?.brand_authority) {
-      items.push({ name: t.brand, value: Math.min(100, strategic.brand_authority.thought_leadership_score || 0), raw: strategic.brand_authority.thought_leadership_score || 0, max: 100 });
-    }
-
-    // Social signals
-    if (strategic?.social_signals?.thought_leadership) {
-      const eeat = strategic.social_signals.thought_leadership.eeat_score || 0;
-      items.push({ name: t.social, value: Math.min(100, eeat * 10), raw: eeat, max: 10 });
-    }
-
-    // Market intelligence
-    if (strategic?.market_intelligence?.semantic_gap) {
-      items.push({ name: t.market, value: Math.min(100, strategic.market_intelligence.semantic_gap.current_position || 0), raw: strategic.market_intelligence.semantic_gap.current_position || 0, max: 100 });
-    }
-
-    const overallScore = strategic?.overallScore || result.totalScore;
-    return { data: items, totalScore: overallScore, maxScore: 200 };
-  }, [result, mode, t]);
+  // Merge previous data into current data items for dual radar
+  const mergedData = useMemo(() => {
+    if (!previousData || previousData.length === 0) return data;
+    return data.map(item => {
+      const prev = previousData.find(p => p.name === item.name);
+      return { ...item, previousValue: prev?.value ?? 0 };
+    });
+  }, [data, previousData]);
 
   const scoreRatio = totalScore / maxScore;
 
   const radarContent = (
     <div style={{ height: inline ? 240 : 280 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={mergedData}>
           <PolarGrid stroke="hsl(var(--border))" />
           <PolarAngleAxis
             dataKey="name"
@@ -147,6 +163,19 @@ export function AuditRadialChart({ result, mode, language, inline = false }: Aud
             tick={false}
             axisLine={false}
           />
+          {/* Previous audit — grey background */}
+          {previousData && previousData.length > 0 && (
+            <Radar
+              dataKey="previousValue"
+              stroke={PREVIOUS_COLORS.stroke}
+              fill={PREVIOUS_COLORS.fill}
+              fillOpacity={PREVIOUS_COLORS.fillOpacity}
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              dot={{ r: 3, fill: PREVIOUS_COLORS.stroke, strokeWidth: 0, opacity: 0.5 }}
+            />
+          )}
+          {/* Current audit */}
           <Radar
             dataKey="value"
             stroke={colors.stroke}
@@ -163,8 +192,12 @@ export function AuditRadialChart({ result, mode, language, inline = false }: Aud
               border: '1px solid hsl(var(--border))',
               color: 'hsl(var(--popover-foreground))',
             }}
-            formatter={(value: number, _name: string, entry: any) => {
+            formatter={(value: number, name: string, entry: any) => {
               const item = entry.payload;
+              if (name === 'previousValue') {
+                const prev = previousData?.find(p => p.name === item.name);
+                return prev ? [`${prev.raw}/${prev.max}`, `${t.previous}`] : [value, t.previous];
+              }
               return [`${item.raw}/${item.max}`, item.name];
             }}
           />
@@ -181,12 +214,9 @@ export function AuditRadialChart({ result, mode, language, inline = false }: Aud
     <Card className="bg-gradient-to-br from-card via-card to-muted/20 border overflow-hidden">
       <CardContent className="p-6">
         <div className="flex items-center gap-8">
-          {/* Radial Chart */}
           <div className="flex-1 min-w-0">
             {radarContent}
           </div>
-
-          {/* Central Score */}
           <div className="flex flex-col items-center gap-3 shrink-0 pr-4">
             <div className="relative">
               <svg width="120" height="120" viewBox="0 0 120 120">
@@ -227,44 +257,11 @@ export function AuditRadialChart({ result, mode, language, inline = false }: Aud
 export function generateRadialChartSVG(
   result: ExpertAuditResult,
   mode: 'technical' | 'strategic',
-  language: string
+  language: string,
+  previousData?: ChartItem[] | null
 ): string {
   const t = labels[language as keyof typeof labels] || labels.fr;
-  const scores = result.scores;
-  const strategic = result.strategicAnalysis;
-
-  type ChartItem = { name: string; value: number; raw: number; max: number };
-  let items: ChartItem[];
-  let totalScore: number;
-
-  if (mode === 'technical') {
-    items = [
-      { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
-      { name: t.technical, value: Math.round((scores.technical.score / scores.technical.maxScore) * 100), raw: scores.technical.score, max: scores.technical.maxScore },
-      { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
-      { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
-      { name: t.security, value: Math.round((scores.security.score / scores.security.maxScore) * 100), raw: scores.security.score, max: scores.security.maxScore },
-    ];
-    totalScore = scores.performance.score + scores.technical.score + scores.semantic.score + scores.aiReady.score + scores.security.score;
-  } else {
-    items = [
-      { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
-      { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
-      { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
-    ];
-    if (strategic?.geo_readiness) {
-      items.push({ name: t.citability, value: Math.min(100, strategic.geo_readiness.citability_score || 0), raw: strategic.geo_readiness.citability_score || 0, max: 100 });
-      items.push({ name: t.geoReady, value: Math.min(100, strategic.geo_readiness.ai_accessibility_score || 0), raw: strategic.geo_readiness.ai_accessibility_score || 0, max: 100 });
-    }
-    if (strategic?.brand_authority) {
-      items.push({ name: t.brand, value: Math.min(100, strategic.brand_authority.thought_leadership_score || 0), raw: strategic.brand_authority.thought_leadership_score || 0, max: 100 });
-    }
-    if (strategic?.social_signals?.thought_leadership) {
-      const eeat = strategic.social_signals.thought_leadership.eeat_score || 0;
-      items.push({ name: t.social, value: Math.min(100, eeat * 10), raw: eeat, max: 10 });
-    }
-    totalScore = strategic?.overallScore || result.totalScore;
-  }
+  const { data: items, totalScore } = buildChartData(result, mode, t);
 
   // Build SVG radar chart
   const cx = 180, cy = 180, maxR = 140;
@@ -284,6 +281,31 @@ export function generateRadialChartSVG(
     const y = cy + maxR * Math.sin(angle);
     return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5" />`;
   }).join('');
+
+  // Previous data polygon (grey, dashed)
+  let previousPolygon = '';
+  let previousDots = '';
+  if (previousData && previousData.length > 0) {
+    const prevPoints = items.map((item, i) => {
+      const prev = previousData.find(p => p.name === item.name);
+      const val = prev?.value ?? 0;
+      const angle = -Math.PI / 2 + i * angleStep;
+      const r = (val / 100) * maxR;
+      return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+    }).join(' ');
+
+    previousPolygon = `<polygon points="${prevPoints}" fill="rgba(160, 160, 160, 0.08)" stroke="#999" stroke-width="1.5" stroke-dasharray="4 3" />`;
+
+    previousDots = items.map((item, i) => {
+      const prev = previousData.find(p => p.name === item.name);
+      const val = prev?.value ?? 0;
+      const angle = -Math.PI / 2 + i * angleStep;
+      const r = (val / 100) * maxR;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      return `<circle cx="${x}" cy="${y}" r="3" fill="#999" stroke="white" stroke-width="1" opacity="0.5" />`;
+    }).join('');
+  }
 
   // Data polygon
   const points = items.map((item, i) => {
@@ -325,10 +347,13 @@ export function generateRadialChartSVG(
         <svg viewBox="0 0 400 400" width="350" height="350">
           ${gridCircles}
           ${gridLines}
+          ${previousPolygon}
+          ${previousDots}
           <polygon points="${points}" fill="rgba(124, 58, 237, 0.15)" stroke="#7c3aed" stroke-width="2" />
           ${dots}
           ${labelEls}
         </svg>
+        ${previousData && previousData.length > 0 ? `<div style="font-size: 10px; color: #999; margin-top: 4px; display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; border-top: 2px dashed #999;"></span> ${t.previous}</div>` : ''}
       </div>
       <div style="text-align: center; min-width: 120px;">
         <svg width="100" height="100" viewBox="0 0 100 100">
