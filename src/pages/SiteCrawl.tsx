@@ -532,7 +532,10 @@ export default function SiteCrawl() {
       if (data) {
         const crawl = data as any;
         setUrl(crawl.url || crawl.domain || '');
-        setCrawlResult(crawl);
+        setCrawlResult({
+          ...crawl,
+          ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
+        });
         setViewingCrawlId(crawl.id);
         await loadPages(crawl.id);
       }
@@ -700,7 +703,18 @@ export default function SiteCrawl() {
     if (error) {
       console.error('[loadPages] Error:', error);
     }
-    if (data) setPages(data as any);
+    if (data) {
+      // Sanitize fields that must be arrays to prevent React crashes
+      const sanitized = data.map((p: any) => ({
+        ...p,
+        issues: Array.isArray(p.issues) ? p.issues : [],
+        schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
+        schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
+        broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
+        anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
+      }));
+      setPages(sanitized as any);
+    }
   }
 
   async function viewCrawl(crawl: CrawlResult) {
@@ -708,7 +722,10 @@ export default function SiteCrawl() {
     setIsLoadingPastCrawl(true);
     setExpandedPage(null);
     setViewingCrawlId(crawl.id);
-    setCrawlResult(crawl);
+    setCrawlResult({
+      ...crawl,
+      ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
+    });
     try {
       await loadPages(crawl.id);
       requestAnimationFrame(() => {
