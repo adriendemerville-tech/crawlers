@@ -48,11 +48,11 @@ export function DownloadReportButton({
     <>
       <Button
         onClick={() => setIsPreviewOpen(true)}
-        size="lg"
-        className="gap-3 bg-primary text-primary-foreground font-bold text-lg px-8 py-6 hover:bg-primary/90"
+        size="default"
+        className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
       >
+        <FileText className="h-4 w-4" />
         {getButtonLabel()}
-        <FileText className="h-6 w-6" />
       </Button>
 
       <ReportPreviewModal
