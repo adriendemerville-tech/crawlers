@@ -451,6 +451,7 @@ export default function Cocoon() {
         if (s.graphContrast !== undefined) setGraphContrast(s.graphContrast);
         if (s.colorIntensity !== undefined) setColorIntensity(s.colorIntensity);
         if (s.linkThickness !== undefined) setLinkThickness(s.linkThickness);
+        if (s.viewMode) setViewMode(s.viewMode);
       };
     }
     return () => channel.close();
