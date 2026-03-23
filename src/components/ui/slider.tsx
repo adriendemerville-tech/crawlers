@@ -27,12 +27,13 @@ const Slider = React.forwardRef<
       orientation === "vertical" ? "w-1.5 h-full" : "h-2 w-full"
     )}>
       <SliderPrimitive.Range className={cn(
-        "absolute bg-primary",
+        "absolute",
+        "bg-brand-violet",
         orientation === "vertical" ? "w-full" : "h-full"
       )} />
     </SliderPrimitive.Track>
      <SliderPrimitive.Thumb 
-       className="block h-4 w-4 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+       className="block h-4 w-4 rounded-full border-2 border-brand-violet bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
        aria-label={thumbLabel}
      />
   </SliderPrimitive.Root>

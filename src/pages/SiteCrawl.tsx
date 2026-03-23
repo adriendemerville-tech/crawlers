@@ -1210,7 +1210,7 @@ export default function SiteCrawl() {
                         disabled={isLoading}
                         className="flex-1"
                       />
-                      <span className="text-sm font-bold text-primary tabular-nums min-w-[3ch] text-right">{maxPages}</span>
+                      <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
