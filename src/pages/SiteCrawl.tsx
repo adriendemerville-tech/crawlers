@@ -772,7 +772,6 @@ export default function SiteCrawl() {
   }
 
   async function viewCrawl(crawl: CrawlResult) {
-    console.log('[viewCrawl] Viewing crawl:', crawl.id, 'status:', crawl.status, 'domain:', crawl.domain);
     setIsLoadingPastCrawl(true);
     setExpandedPage(null);
     setViewingCrawlId(crawl.id);
