@@ -406,15 +406,15 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 space-y-3">
+          <div className="text-center text-muted-foreground py-8 space-y-2">
             <div className="flex justify-center">
-              <CrawlersLogo size={36} />
+              <CrawlersLogo size={28} />
             </div>
-            <p className="text-sm font-medium">Bonjour ! Je suis votre assistant SAV.</p>
+            <p className="text-xs font-medium">Bonjour ! Comment puis-je vous aider ?</p>
             {isAdmin ? (
-              <p className="text-xs">Mode Créateur actif. Posez vos questions sur le backend, les tables, les métriques ou les fonctions.</p>
+              <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
             ) : (
-              <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+              <p className="text-[11px] text-muted-foreground/70">Audits SEO, GEO Score, crédits ou problème technique.</p>
             )}
           </div>
         ) : (
