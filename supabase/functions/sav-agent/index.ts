@@ -434,9 +434,10 @@ serve(async (req) => {
       }
     }
 
-    // ── Enrich context ──
+    // ── Enrich context (skip for guests) ──
     let contextSnippet = "";
     let userFirstName = "";
+    if (!isGuest && user_id) {
     try {
       // Fetch profile (plan, credits, first name)
       const { data: profile } = await sb
