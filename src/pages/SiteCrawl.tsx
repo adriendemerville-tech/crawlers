@@ -532,7 +532,10 @@ export default function SiteCrawl() {
       if (data) {
         const crawl = data as any;
         setUrl(crawl.url || crawl.domain || '');
-        setCrawlResult(crawl);
+        setCrawlResult({
+          ...crawl,
+          ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
+        });
         setViewingCrawlId(crawl.id);
         await loadPages(crawl.id);
       }
