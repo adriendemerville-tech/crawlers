@@ -8,8 +8,9 @@ import { generateCrawlersHTML } from './generators/crawlersHtmlGenerator';
 import { generateGeoHTML } from './generators/geoHtmlGenerator';
 import { generateLLMHTML } from './generators/llmHtmlGenerator';
 import { generatePageSpeedHTML } from './generators/pagespeedHtmlGenerator';
+import { generateSiteCrawlHTML, SiteCrawlReportData } from './generators/siteCrawlHtmlGenerator';
 
-export type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
+export type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' | 'full';
 
 export interface WhiteLabelBranding {
   logoUrl?: string | null;
