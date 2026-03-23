@@ -2025,6 +2025,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
             if (renderedHtml.length > html.length) {
               html = renderedHtml;
               console.log(`📄 ✅ JS rendering success`);
+              await trackPaidApiCall('audit-strategique-ia', 'browserless', '/content', normalizedUrl).catch(() => {});
             }
           } else {
             console.log(`📄 ⚠️ Rendering error: ${renderResponse.status}`);

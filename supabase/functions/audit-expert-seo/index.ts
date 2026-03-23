@@ -5,6 +5,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -375,6 +376,7 @@ async function tryBrowserless(url: string): Promise<string | null> {
       const html = await response.text();
       if (html.length > 500) {
         console.log(`[SmartFetch] ✅ Browserless OK (${html.length} chars)`);
+        await trackPaidApiCall('audit-expert-seo', 'browserless', '/content', url).catch(() => {});
         return html;
       }
     } else {

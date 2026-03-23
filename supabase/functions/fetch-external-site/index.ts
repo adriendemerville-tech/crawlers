@@ -1,6 +1,7 @@
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const TIMEOUT_MS = 15_000;
 
@@ -107,6 +108,7 @@ Deno.serve(async (req) => {
             const renderedHtml = await renderResponse.text();
             if (renderedHtml.length > html.length) {
               console.log(`[fetch-external-site] ✅ Browserless success (${renderedHtml.length} chars vs ${html.length} static)`);
+              await trackPaidApiCall('fetch-external-site', 'browserless', '/content', finalUrl).catch(() => {});
               html = renderedHtml;
               rendered = true;
             }
