@@ -7,6 +7,7 @@ interface AuditRadialChartProps {
   result: ExpertAuditResult;
   mode: 'technical' | 'strategic';
   language: string;
+  inline?: boolean;
 }
 
 const COLORS = {
