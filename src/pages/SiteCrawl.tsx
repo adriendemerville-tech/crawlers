@@ -655,6 +655,30 @@ export default function SiteCrawl() {
 
   const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
 
+  const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
+    if (!crawlResult || crawlResult.status !== 'completed') return null;
+    return {
+      domain: crawlResult.domain,
+      crawledPages: crawlResult.crawled_pages,
+      totalPages: crawlResult.total_pages,
+      avgScore: crawlResult.avg_score,
+      aiSummary: crawlResult.ai_summary,
+      aiRecommendations: crawlResult.ai_recommendations || [],
+      issueStats,
+      pages: pages.map(p => ({
+        url: p.url,
+        path: p.path,
+        seo_score: p.seo_score,
+        http_status: p.http_status,
+        title: p.title,
+        issues: p.issues || [],
+        has_noindex: p.is_indexable === false || (p.issues || []).includes('noindex'),
+        word_count: p.word_count,
+      })),
+      createdAt: crawlResult.created_at,
+    };
+  }, [crawlResult, pages, issueStats]);
+
   if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
