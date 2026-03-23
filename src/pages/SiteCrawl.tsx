@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -484,6 +484,7 @@ export default function SiteCrawl() {
   const [isButtonShaking, setIsButtonShaking] = useState(false);
   const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
   const FAIR_USE_LIMIT = 5000;
+  const historySectionRef = useRef<HTMLDivElement | null>(null);
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
@@ -540,7 +541,7 @@ export default function SiteCrawl() {
 
 
   useEffect(() => {
-    if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
+    if (!crawlResult || viewingCrawlId || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('site_crawls')
@@ -575,7 +576,7 @@ export default function SiteCrawl() {
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [crawlResult]);
+  }, [crawlResult, viewingCrawlId, t]);
 
   // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
   useEffect(() => {
@@ -705,16 +706,28 @@ export default function SiteCrawl() {
   async function viewCrawl(crawl: CrawlResult) {
     console.log('[viewCrawl] Viewing crawl:', crawl.id, 'status:', crawl.status, 'domain:', crawl.domain);
     setIsLoadingPastCrawl(true);
-    setPages([]);
-    setCrawlResult(crawl);
+    setExpandedPage(null);
     setViewingCrawlId(crawl.id);
+    setCrawlResult(crawl);
     try {
       await loadPages(crawl.id);
+      requestAnimationFrame(() => {
+        historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     } catch (err) {
       console.error('[viewCrawl] Error loading pages:', err);
+      toast.error(t.errorCrawl);
+    } finally {
+      setIsLoadingPastCrawl(false);
+      console.log('[viewCrawl] Done loading');
     }
-    setIsLoadingPastCrawl(false);
-    console.log('[viewCrawl] Done loading');
+  }
+
+  function resetViewedCrawl() {
+    setViewingCrawlId(null);
+    setCrawlResult(null);
+    setPages([]);
+    setExpandedPage(null);
   }
 
   function addSelector() {
@@ -1188,9 +1201,17 @@ export default function SiteCrawl() {
 
           {/* Résultats */}
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-              {/* Métriques globales */}
+              {viewingCrawlId && (
+                <div className="flex justify-start">
+                  <Button type="button" variant="ghost" size="sm" onClick={resetViewedCrawl} className="gap-2 text-muted-foreground hover:text-foreground">
+                    <ArrowLeft className="h-4 w-4" />
+                    {language === 'fr' ? 'Retour aux crawls précédents' : language === 'es' ? 'Volver a los crawls anteriores' : 'Back to previous crawls'}
+                  </Button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 <Card className="border">
                   <CardContent className="p-4 text-center">
@@ -1695,37 +1716,40 @@ export default function SiteCrawl() {
 
 
           {/* Past crawls */}
-          {!crawlResult && pastCrawls.length > 0 && (
+          {pastCrawls.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {pastCrawls.map(c => (
-                    <button
-                      type="button"
-                      key={c.id}
-                      onClick={() => viewCrawl(c)}
-                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg border hover:bg-muted/50 transition-colors text-left"
-                    >
-                      <div>
-                        <div className="text-sm font-medium text-foreground">{c.domain}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
+                  {pastCrawls.map(c => {
+                    const isActive = viewingCrawlId === c.id;
+                    return (
+                      <button
+                        type="button"
+                        key={c.id}
+                        onClick={() => viewCrawl(c)}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors text-left ${isActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                      >
+                        <div>
+                          <div className="text-sm font-medium text-foreground">{c.domain}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {c.avg_score && (
-                          <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
-                        )}
-                        <Badge variant={c.status === 'completed' ? 'default' : c.status === 'error' ? 'destructive' : 'secondary'}>
-                          {c.status}
-                        </Badge>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    </button>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          {c.avg_score && (
+                            <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
+                          )}
+                          <Badge variant={c.status === 'completed' ? 'default' : c.status === 'error' ? 'destructive' : 'secondary'}>
+                            {c.status}
+                          </Badge>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
