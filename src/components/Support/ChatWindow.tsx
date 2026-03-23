@@ -171,7 +171,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || sending) return;
+    if (!newMessage.trim() || sending) return;
 
     const messageText = newMessage.trim();
 
@@ -203,7 +203,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         body: {
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           conversation_id: conversationId,
-          user_id: user.id,
+          user_id: user?.id || null,
+          guest_mode: !user,
         },
       });
 
@@ -221,9 +222,9 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         setConversationId(data.conversation_id);
       }
 
-      // Check if escalation should show phone prompt (after 3+ user messages) — skip for admins
+      // Check if escalation should show phone prompt (after 8+ user messages) — skip for admins and guests
       const userCount = updatedMessages.filter(m => m.role === 'user').length;
-      if (userCount >= 8 && !phoneSent && !isAdmin) {
+      if (user && userCount >= 8 && !phoneSent && !isAdmin) {
         setShowPhonePrompt(true);
       }
     } catch (err) {
@@ -357,20 +358,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   };
 
   if (!user) {
-    return (
-      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-2xl border border-border/50 bg-background/95 backdrop-blur-lg shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
-          <div className="flex items-center gap-2">
-            <CrawlersLogo size={16} />
-            <span className="text-xs font-medium text-muted-foreground">Félix</span>
-          </div>
-          <button onClick={onClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" /></button>
-        </div>
-        <div className="p-6 text-center text-muted-foreground text-sm">
-          <p>Connectez-vous pour contacter le support.</p>
-        </div>
-      </div>
-    );
+    // Guest mode — no login required, simple chat interface
   }
 
   return (
@@ -413,6 +401,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
            <p className="text-xs font-medium">Salut moi c'est Félix !</p>
             {isAdmin ? (
               <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
+            ) : !user ? (
+              <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour répondre à tes questions sur Crawlers.fr et t'aider à booster ta visibilité SEO et IA. Tu veux en savoir plus ?</p>
             ) : (
               <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour te filer un coup de main et t'aider à analyser les metrics de tes sites. Tu as une première question ?</p>
             )}
@@ -543,14 +533,16 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Input */}
       <div className="border-t border-border/30 px-3 py-2 shrink-0 relative">
-        <ChatAttachmentPicker
-          userId={user.id}
-          onAttach={(item) => {
-            const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
-            const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
-            setNewMessage(attachText);
-          }}
-        />
+        {user && (
+          <ChatAttachmentPicker
+            userId={user.id}
+            onAttach={(item) => {
+              const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
+              const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
+              setNewMessage(attachText);
+            }}
+          />
+        )}
         <div className="flex items-end gap-1.5">
           <ChatMicButton
             onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}

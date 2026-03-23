@@ -105,7 +105,7 @@ Affiche l'historique hebdomadaire de : Score SEO, Score GEO, Taux de citation LL
 - Bouton "Nouveau" → réinitialise la conversation
 `;
 
-const SYSTEM_PROMPT = `Tu es "Crawler", l'assistant SAV officiel de Crawlers.fr, la première plateforme francophone d'audit SEO, GEO et visibilité IA.
+const SYSTEM_PROMPT = `Tu es "Félix", l'assistant officiel de Crawlers.fr, la première plateforme francophone d'audit SEO, GEO et visibilité IA.
 
 # DÉTECTION DE LANGUE (OBLIGATOIRE)
 Détecte la langue du PREMIER message de l'utilisateur. Si l'utilisateur écrit en anglais, réponds ENTIÈREMENT en anglais. Si en espagnol, réponds ENTIÈREMENT en espagnol. Sinon, réponds en français. Conserve cette langue pour TOUTE la conversation.
@@ -293,19 +293,24 @@ serve(async (req) => {
       });
     }
 
-    const { messages, conversation_id, user_id } = body;
-    if (!messages || !Array.isArray(messages) || !user_id) {
+    const { messages, conversation_id, user_id, guest_mode } = body;
+    if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const isGuest = guest_mode === true || !user_id;
+
     const sb = getServiceClient();
 
     // ── Check if user is admin (creator) ──
-    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user_id, _role: "admin" });
-    const isCreator = isAdmin === true;
+    let isCreator = false;
+    if (!isGuest && user_id) {
+      const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user_id, _role: "admin" });
+      isCreator = isAdmin === true;
+    }
 
     // ── Detect backend query intent from creator ──
     if (isCreator) {
@@ -429,9 +434,10 @@ serve(async (req) => {
       }
     }
 
-    // ── Enrich context ──
+    // ── Enrich context (skip for guests) ──
     let contextSnippet = "";
     let userFirstName = "";
+    if (!isGuest && user_id) {
     try {
       // Fetch profile (plan, credits, first name)
       const { data: profile } = await sb
@@ -532,11 +538,26 @@ serve(async (req) => {
     } catch (e) {
       console.error("Context enrichment error:", e);
     }
+    } // end if (!isGuest)
+
+    // Guest sales mode prompt
+    let guestHint = "";
+    if (isGuest) {
+      guestHint = `\n\n# MODE VISITEUR (NON CONNECTÉ)
+Cet utilisateur n'est PAS connecté. Tu es en mode commercial / vente.
+- Réponds à ses questions sur Crawlers.fr avec enthousiasme mais sans survente
+- Mets en avant les fonctionnalités gratuites : [Audit SEO gratuit](https://crawlers.fr/audit-expert), [Score GEO](https://crawlers.fr), [Vérification bots IA](https://crawlers.fr), [PageSpeed](https://crawlers.fr)
+- Si pertinent, mentionne l'offre Pro Agency à 59€/mois qui remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois)
+- Propose-lui de s'inscrire gratuitement pour accéder à toutes les fonctionnalités de base : [S'inscrire](https://crawlers.fr/auth)
+- Tutoie le visiteur, sois chaleureux et accessible
+- Ne propose JAMAIS d'être rappelé par téléphone en mode visiteur
+- Ne mentionne JAMAIS les problèmes techniques ou le support en mode visiteur`;
+    }
 
     // Count user messages to detect escalation threshold
     const userMessageCount = messages.filter((m: any) => m.role === "user").length;
     let escalationHint = "";
-    if (userMessageCount >= 3) {
+    if (!isGuest && userMessageCount >= 3) {
       escalationHint = `\n\n# INSTRUCTION SPÉCIALE\nL'utilisateur a posé ${userMessageCount} questions. S'il semble insatisfait ou a encore des questions non résolues, propose-lui d'être rappelé rapidement : "Souhaitez-vous être rappelé par un membre de l'équipe ? Si oui, communiquez-moi votre numéro de téléphone (cette donnée sera effacée sous 48h)."`;
     }
 
@@ -566,7 +587,7 @@ Pour les questions nécessitant des données précises, suggère au créateur de
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + escalationHint + greetingHint + creatorHint;
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + guestHint + escalationHint + greetingHint + creatorHint;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
@@ -612,8 +633,9 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
       reply = reply.substring(0, charLimit - 3) + "...";
     }
 
-    // Save conversation + quality scoring
+    // Save conversation + quality scoring (skip for guests)
     let savedConvId = conversation_id;
+    if (!isGuest && user_id) {
     try {
       const allMessages = [...messages, { role: "assistant", content: reply }];
       const userMsgCount = allMessages.filter((m: any) => m.role === "user").length;
@@ -729,6 +751,7 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
     } catch (e) {
       console.error("Save conversation error:", e);
     }
+    } // end if (!isGuest)
 
     return new Response(JSON.stringify({ reply, conversation_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
