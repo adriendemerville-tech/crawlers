@@ -47,6 +47,7 @@ export const PLAYLIST_TRACK_IDS = [
 type SpotifyEmbedController = {
   loadUri: (spotifyUri: string) => void;
   play: () => void;
+  pause?: () => void;
   destroy?: () => void;
   addListener: (event: string, callback: (data: unknown) => void) => void;
 };

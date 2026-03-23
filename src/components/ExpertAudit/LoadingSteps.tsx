@@ -74,12 +74,13 @@ interface LoadingStepsProps {
   siteName?: string;
   variant?: 'technical' | 'strategic';
   onStopMusicRef?: React.MutableRefObject<(() => void) | null>;
+  onPauseMusicRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }: LoadingStepsProps) {
+export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef, onPauseMusicRef }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
-  const { embedContainerRef, stopPlayback, isCustomPlaylist, goNext, goPrev } = useSpotifyTrackRotation();
+  const { embedContainerRef, stopPlayback, pausePlayback, isCustomPlaylist, goNext, goPrev } = useSpotifyTrackRotation();
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [showPlaylistInput, setShowPlaylistInput] = useState(false);
   const [playlistInputValue, setPlaylistInputValue] = useState('');
@@ -88,7 +89,10 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
     if (onStopMusicRef) {
       onStopMusicRef.current = stopPlayback;
     }
-  }, [onStopMusicRef, stopPlayback]);
+    if (onPauseMusicRef) {
+      onPauseMusicRef.current = pausePlayback;
+    }
+  }, [onStopMusicRef, onPauseMusicRef, stopPlayback, pausePlayback]);
 
   useEffect(() => {
     const interval = setInterval(() => {
