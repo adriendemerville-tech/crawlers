@@ -968,31 +968,26 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     const schemaPages = pages.filter((p: any) => p.schema_org_types?.length > 0);
     const schemaErrorPages = pages.filter((p: any) => p.schema_org_errors?.length > 0);
 
-    const prompt = `Tu es un expert SEO senior. Analyse ce crawl de ${job.domain} (${pages.length} pages, score moyen: ${avgScore}/200).
-
-PROBLÈMES DÉTECTÉS:
-${topIssues.join('\n')}
-
-MEILLEURES PAGES:
-${bestPages.map((p: any) => `- ${p.path} (${p.seo_score}/200)`).join('\n')}
-
-PIRES PAGES:
-${worstPages.map((p: any) => `- ${p.path} (${p.seo_score}/200) — Problèmes: ${(p.issues || []).join(', ')}`).join('\n')}
-
-STATS DÉTAILLÉES:
-- Pages avec Schema.org: ${pages.filter((p: any) => p.has_schema_org).length}/${pages.length}
-- Pages avec Schema.org valide (sans erreurs): ${schemaPages.length - schemaErrorPages.length}/${pages.length}
-- Pages avec erreurs Schema.org: ${schemaErrorPages.length}
-- Pages avec canonical: ${pages.filter((p: any) => p.has_canonical).length}/${pages.length}
-- Pages avec OG: ${pages.filter((p: any) => p.has_og).length}/${pages.length}
-- Pages noindex: ${pages.filter((p: any) => p.has_noindex).length}
-- Pages nofollow: ${pages.filter((p: any) => p.has_nofollow).length}
-- Titres dupliqués: ${duplicateTitleCount} pages
-- Meta descriptions dupliquées: ${duplicateMetaCount} pages
-- Contenu quasi-dupliqué (hash): ${nearDuplicateCount} pages
-- Contenu fin (<100 mots): ${pages.filter((p: any) => (p.word_count || 0) < 100).length}
-- Images sans alt: ${pages.reduce((s: number, p: any) => s + (p.images_without_alt || 0), 0)}
-- Pages orphelines (0 liens internes): ${pages.filter((p: any) => (p.internal_links || 0) === 0).length}
+    // Compute TRUE orphan pages (0 incoming internal links from other crawled pages)
+    const normalizeUrl = (u: string) => {
+      try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
+    };
+    const inboundCount = new Map<string, number>();
+    pages.forEach((p: any) => inboundCount.set(normalizeUrl(p.url), 0));
+    for (const page of pages) {
+      for (const link of (page.anchor_texts || [])) {
+        if (link.type === 'internal') {
+          const targetPath = normalizeUrl(link.href.startsWith('/') ? `https://x${link.href}` : link.href);
+          if (inboundCount.has(targetPath)) {
+            inboundCount.set(targetPath, (inboundCount.get(targetPath) || 0) + 1);
+          }
+        }
+      }
+    }
+    const trueOrphanCount = [...inboundCount.values()].filter(c => c === 0).length;
+    // Exclude the homepage from orphan count (it's the root, often has no internal links pointing to it from itself)
+    const homePath = normalizeUrl(`https://${job.domain}/`);
+    const orphanCount = inboundCount.get(homePath) === 0 ? Math.max(0, trueOrphanCount - 1) : trueOrphanCount;
 - H1 multiples: ${pages.filter((p: any) => ((p.issues as string[]) || []).includes('multiple_h1')).length}
 - H2 manquants: ${pages.filter((p: any) => (p.h2_count || 0) === 0).length}/${pages.length}
 ${avgResponseTime ? `- Temps de réponse moyen: ${avgResponseTime}ms` : ''}
