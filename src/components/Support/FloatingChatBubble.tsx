@@ -108,7 +108,12 @@ export function FloatingChatBubble() {
 
   // Reset unread count when opening chat
   const handleOpen = () => {
+    const shouldOnboard = showOnboardingPulse;
     setIsOpen(true);
+    setShowOnboardingPulse(false);
+    if (shouldOnboard) {
+      setTriggerOnboarding(true);
+    }
     // Mark messages as read when opening
     if (user && unreadCount > 0) {
       markMessagesAsRead();
