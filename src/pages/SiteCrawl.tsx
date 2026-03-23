@@ -519,7 +519,7 @@ export default function SiteCrawl() {
       .then(({ data }) => {
         if (data) setCrawlPagesThisMonth(data.crawl_pages_this_month || 0);
       });
-  }, [user, crawlResult]);
+  }, [user, crawlResult?.id]);
 
   // Auto-load crawl from ?view= query param
   useEffect(() => {
@@ -873,6 +873,10 @@ export default function SiteCrawl() {
           ai_recommendations: Array.isArray((crawl as any).ai_recommendations) ? (crawl as any).ai_recommendations : [],
         };
         setCrawlResult(sanitized);
+        setPastCrawls(prev => {
+          const next = [sanitized as CrawlResult, ...prev.filter(c => c.id !== (sanitized as CrawlResult).id)];
+          return next.slice(0, 20);
+        });
         setPhase(`${data.totalPages} ${t.auditQueued}`);
       }
       // Silent — no toast for pages discovered
