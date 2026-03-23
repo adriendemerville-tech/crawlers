@@ -545,11 +545,11 @@ function Links({
             const color = link ? activeJuice2[link.juiceType] : "#508cff";
             return (
               <mesh key={i} position={[0, 0, 0]}>
-                <sphereGeometry args={[0.25 * linkThickness, 6, 6]} />
+                <sphereGeometry args={[0.3 * linkThickness, 8, 8]} />
                 <meshBasicMaterial
                   color={color}
                   transparent
-                  opacity={0.5}
+                  opacity={0.7}
                   depthWrite={false}
                 />
               </mesh>
