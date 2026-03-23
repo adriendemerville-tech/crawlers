@@ -54,6 +54,7 @@ interface CocoonRadialGraphProps {
   visibleJuiceTypes?: Set<string>;
   colorIntensity?: number;
   nodeColors?: Record<string, string>;
+  bgColorSlider?: number;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
