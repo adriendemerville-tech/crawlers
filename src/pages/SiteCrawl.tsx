@@ -657,7 +657,7 @@ export default function SiteCrawl() {
   const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
 
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
-    if (!crawlResult || crawlResult.status !== 'completed') return null;
+    if (!crawlResult) return null;
     return {
       domain: crawlResult.domain,
       crawledPages: crawlResult.crawled_pages,
@@ -1660,6 +1660,35 @@ export default function SiteCrawl() {
               )}
             </Card>
           )}
+
+              {/* Action buttons: Rapport + Cocoon for past crawl */}
+              {viewingCrawlId && crawlResult && (
+                <div className="flex items-center justify-center gap-3 pt-4 pb-2">
+                  {siteCrawlReportData && (
+                    <Button
+                      type="button"
+                      onClick={() => setIsReportOpen(true)}
+                      className="gap-2 px-4 py-2 text-sm font-semibold bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,30%)] text-white border border-[hsl(263,70%,25%)]"
+                    >
+                      <FileText className="h-4 w-4" />
+                      {t.viewReport}
+                    </Button>
+                  )}
+                  <Link
+                    to={`/cocoon?autolaunch=${encodeURIComponent(crawlResult.domain)}`}
+                  >
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2 px-4 py-2 text-sm font-semibold border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Cocoon
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
 
           {/* Past crawls */}
           {!crawlResult && pastCrawls.length > 0 && (
