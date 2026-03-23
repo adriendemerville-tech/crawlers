@@ -63,6 +63,16 @@ const LABELS: Record<string, Record<string, string>> = {
     en: 'No backlink data available',
     es: 'Sin datos de backlinks disponibles',
   },
+  pages_with_external_authority: {
+    fr: 'Pages recevant de l\'autorité externe',
+    en: 'Pages receiving external authority',
+    es: 'Páginas recibiendo autoridad externa',
+  },
+  pages_without_backlinks: {
+    fr: 'Pages piliers sans backlinks externes',
+    en: 'Pillar pages without external backlinks',
+    es: 'Páginas pilares sin backlinks externos',
+  },
 };
 
 function t(key: string, lang: string): string {
