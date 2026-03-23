@@ -384,10 +384,26 @@ export function UserManagement() {
               {filteredUsers.length}/{users.length} utilisateurs{actionFilter ? ` • filtre : ${actionFilter}` : ''}
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualiser
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showPendingTab ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setShowPendingTab(!showPendingTab); if (!showPendingTab) fetchPendingUsers(); }}
+              className="gap-1.5 relative"
+            >
+              <MailWarning className="h-4 w-4" />
+              En attente
+              {pendingUsers.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold px-1">
+                  {pendingUsers.length}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+          </div>
         </div>
         {/* Signup funnel counters */}
         <div className="flex gap-3 mt-3 flex-wrap">
