@@ -1,4 +1,5 @@
 import { AuditRadialChart } from './AuditRadialChart';
+import { usePreviousAuditData } from './hooks/usePreviousAuditData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +39,7 @@ interface Props {
 
 export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
   const { language } = useLanguage();
+  const previousData = usePreviousAuditData(result, 'technical', language);
   // Defensive: guard against missing scores sub-objects
   const scores = result?.scores;
   if (!scores?.performance || !scores?.technical || !scores?.semantic || !scores?.aiReady || !scores?.security) {
@@ -65,7 +67,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             {/* Left: Radar chart */}
             <div className="w-full lg:w-1/2 max-w-md">
-              <AuditRadialChart result={result} mode="technical" language={language} inline />
+              <AuditRadialChart result={result} mode="technical" language={language} inline previousData={previousData} />
             </div>
             {/* Right: Domain info + Score */}
             <div className="flex flex-col items-center lg:items-end gap-4">

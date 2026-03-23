@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AuditRadialChart } from './AuditRadialChart';
+import { usePreviousAuditData } from './hooks/usePreviousAuditData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -77,6 +78,7 @@ export function StrategicResultsSection({
 }: Props) {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const previousData = usePreviousAuditData(result, 'strategic', language);
   const [maillageData, setMaillageData] = useState<MaillageData | null>(null);
 
   // Fetch semantic_nodes for maillage analysis
@@ -135,7 +137,7 @@ export function StrategicResultsSection({
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
               <div className="w-full lg:w-1/2 max-w-md">
-                <AuditRadialChart result={result} mode="strategic" language={language} inline />
+                <AuditRadialChart result={result} mode="strategic" language={language} inline previousData={previousData} />
               </div>
               <div className="flex flex-col items-center lg:items-end gap-4">
                 <div className="text-center lg:text-right">
