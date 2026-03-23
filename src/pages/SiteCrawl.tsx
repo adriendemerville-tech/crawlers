@@ -2007,6 +2007,7 @@ export default function SiteCrawl() {
         onClose={() => setIsReportOpen(false)}
         type="site_crawl"
         siteCrawlData={siteCrawlReportData}
+        currentUrl={siteCrawlReportData?.domain || url}
       />
 
       <Footer />
