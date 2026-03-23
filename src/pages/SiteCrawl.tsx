@@ -657,7 +657,7 @@ export default function SiteCrawl() {
   const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
 
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
-    if (!crawlResult || crawlResult.status !== 'completed') return null;
+    if (!crawlResult) return null;
     return {
       domain: crawlResult.domain,
       crawledPages: crawlResult.crawled_pages,
