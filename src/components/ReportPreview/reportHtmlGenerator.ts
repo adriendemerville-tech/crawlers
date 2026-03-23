@@ -58,7 +58,7 @@ function generateSeparator(): string {
 
 export function generateReportHTML(
   type: ReportType, 
-  data: ReportData | CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult, 
+  data: ReportData | CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult | SiteCrawlReportData, 
   url: string, 
   language: string,
   branding?: WhiteLabelBranding
