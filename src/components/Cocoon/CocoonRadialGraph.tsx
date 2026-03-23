@@ -230,33 +230,66 @@ function layoutRadialTree(root: RadialNode, cx: number, cy: number, maxRadius: n
   }
   collect(root);
 
+  // Logarithmic scale for node sizes — compressed range for readability
   const maxAuth = Math.max(...allNodes.map(n => n.pageAuthority), 1);
-  const minNodeRadius = 4;
-  const maxNodeRadius = 28;
+  const minNodeRadius = 6;
+  const maxNodeRadius = 16;
 
   allNodes.forEach(n => {
     const ratio = n.pageAuthority / maxAuth;
-    n.radius = minNodeRadius + ratio * (maxNodeRadius - minNodeRadius);
+    // Log scale: compress big values, expand small ones
+    const logRatio = Math.log(1 + ratio * 9) / Math.log(10); // 0→0, 1→1
+    n.radius = minNodeRadius + logRatio * (maxNodeRadius - minNodeRadius);
   });
 
   root.x = cx;
   root.y = cy;
-  root.radius = Math.max(root.radius, 20);
+  root.radius = Math.max(root.radius, 18);
 
   const maxDepth = Math.max(...allNodes.map(n => n.depth), 1);
-  const ringGap = maxRadius / (maxDepth + 1);
+
+  // Count nodes per depth to compute dynamic ring radii
+  const nodesPerDepth = new Map<number, number>();
+  allNodes.forEach(n => {
+    nodesPerDepth.set(n.depth, (nodesPerDepth.get(n.depth) || 0) + 1);
+  });
+
+  // Dynamic ring radii: denser rings get more space
+  const depthWeights: number[] = [];
+  for (let d = 1; d <= maxDepth; d++) {
+    const count = nodesPerDepth.get(d) || 1;
+    // Weight = sqrt(count) so dense rings expand but not linearly
+    depthWeights.push(Math.sqrt(count));
+  }
+  const totalWeight = depthWeights.reduce((a, b) => a + b, 0) || 1;
+  const ringRadii: number[] = [];
+  let cumulative = 0;
+  for (let d = 0; d < maxDepth; d++) {
+    cumulative += depthWeights[d] / totalWeight;
+    // Reserve 15% center for root, use remaining 85% for rings
+    ringRadii.push(maxRadius * 0.15 + maxRadius * 0.85 * cumulative);
+  }
 
   function layoutChildren(parent: RadialNode, startAngle: number, endAngle: number, depthLevel: number) {
     if (parent.children.length === 0) return;
 
-    const ringR = ringGap * depthLevel;
+    const ringR = ringRadii[depthLevel - 1] || maxRadius;
     const angleRange = endAngle - startAngle;
-    const totalWeight = parent.children.reduce((s, c) => {
+
+    // Minimum angular spacing to prevent overlap: based on max node radius at this ring
+    const maxChildRadius = Math.max(...parent.children.map(c => c.radius), minNodeRadius);
+    const minAngularSpacing = ringR > 0 ? (maxChildRadius * 2.5) / ringR : 0.1;
+
+    const totalSubtreeWeight = parent.children.reduce((s, c) => {
       let count = 1;
       function countNodes(n: RadialNode) { count++; n.children.forEach(countNodes); }
       c.children.forEach(countNodes);
       return s + count;
     }, 0);
+
+    // Check if natural spacing is too tight — if so, expand proportionally
+    const naturalMinTotal = parent.children.length * minAngularSpacing;
+    const effectiveRange = Math.max(angleRange, naturalMinTotal);
 
     let currentAngle = startAngle;
 
@@ -265,7 +298,12 @@ function layoutRadialTree(root: RadialNode, cx: number, cy: number, maxRadius: n
       function countNodes(n: RadialNode) { weight++; n.children.forEach(countNodes); }
       child.children.forEach(countNodes);
 
-      const share = totalWeight > 0 ? (weight / totalWeight) * angleRange : angleRange / parent.children.length;
+      let share = totalSubtreeWeight > 0
+        ? (weight / totalSubtreeWeight) * effectiveRange
+        : effectiveRange / parent.children.length;
+      // Enforce minimum spacing
+      share = Math.max(share, minAngularSpacing);
+
       const midAngle = currentAngle + share / 2;
 
       child.x = cx + Math.cos(midAngle) * ringR;
@@ -405,17 +443,33 @@ export function CocoonRadialGraph({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // Draw depth rings
+    // Draw depth rings — use same dynamic radii as layout
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
     const maxR = Math.min(dimensions.w, dimensions.h) * 0.42;
-    const ringGap = maxR / (maxDepth + 1);
 
+    // Recompute dynamic ring radii for drawing (same logic as layout)
+    const nodesPerDepthDraw = new Map<number, number>();
+    allRadialNodes.forEach(n => {
+      nodesPerDepthDraw.set(n.depth, (nodesPerDepthDraw.get(n.depth) || 0) + 1);
+    });
+    const depthWeightsDraw: number[] = [];
     for (let d = 1; d <= maxDepth; d++) {
+      depthWeightsDraw.push(Math.sqrt(nodesPerDepthDraw.get(d) || 1));
+    }
+    const totalWeightDraw = depthWeightsDraw.reduce((a, b) => a + b, 0) || 1;
+    const ringRadiiDraw: number[] = [];
+    let cumulativeDraw = 0;
+    for (let d = 0; d < maxDepth; d++) {
+      cumulativeDraw += depthWeightsDraw[d] / totalWeightDraw;
+      ringRadiiDraw.push(maxR * 0.15 + maxR * 0.85 * cumulativeDraw);
+    }
+
+    for (let d = 0; d < maxDepth; d++) {
       ctx.beginPath();
-      ctx.arc(cx, cy, ringGap * d, 0, Math.PI * 2);
-      ctx.strokeStyle = getDepthRingColor(d);
+      ctx.arc(cx, cy, ringRadiiDraw[d], 0, Math.PI * 2);
+      ctx.strokeStyle = getDepthRingColor(d + 1);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
