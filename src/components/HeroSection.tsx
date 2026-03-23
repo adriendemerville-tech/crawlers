@@ -172,11 +172,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
 
   // Animated headline for crawlers tab - with SSR-safe fallback
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl font-display">
-      <span className="block text-center pb-1">
+    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
         {/* Animated word container */}
         <span
-          className="hero-word-container relative inline-flex items-center justify-center overflow-hidden align-bottom"
+          className="hero-word-container relative inline-flex items-center justify-center overflow-hidden align-baseline"
           style={{ width: 'auto' }}
         >
           {isHydrated ? (
@@ -206,7 +205,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         </span>
         {' '}
         <span className="text-foreground">?</span>
-      </span>
     </h1>
   );
 
