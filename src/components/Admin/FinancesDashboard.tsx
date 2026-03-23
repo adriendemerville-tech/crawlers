@@ -76,6 +76,7 @@ export function FinancesDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0, bundleMrr: 0 });
   const [totalPlatformCost, setTotalPlatformCost] = useState(0);
+  const [allTimePlatformCost, setAllTimePlatformCost] = useState(0);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
@@ -93,39 +94,44 @@ export function FinancesDashboard() {
     spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
+  const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
 
-  // Dedicated fetch for financial events (bypass shared cache limit)
+  // Fetch events with optional date filter
+  const fetchEventsByType = useCallback(async (eventType: string, sinceDate?: string) => {
+    const PAGE_SIZE = 1000;
+    const MAX_PAGES = 20;
+    let all: typeof sharedAllEvents = [];
+    let page = 0;
+    while (page < MAX_PAGES) {
+      let query = supabase
+        .from('analytics_events')
+        .select('event_type, url, created_at, user_id, event_data')
+        .eq('event_type', eventType)
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      if (sinceDate) query = query.gte('created_at', sinceDate);
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) break;
+      all = all.concat(data as typeof sharedAllEvents);
+      if (data.length < PAGE_SIZE) break;
+      page++;
+    }
+    return all;
+  }, []);
+
   const fetchFinancialEvents = useCallback(async () => {
     const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-    const PAGE_SIZE = 1000;
-    const MAX_PAGES = 10; // Cap at 10k events to avoid browser freeze
 
-    const fetchAllByType = async (eventType: string) => {
-      let all: typeof sharedAllEvents = [];
-      let page = 0;
-      while (page < MAX_PAGES) {
-        const { data, error } = await supabase
-          .from('analytics_events')
-          .select('event_type, url, created_at, user_id, event_data')
-          .eq('event_type', eventType)
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-        if (error || !data || data.length === 0) break;
-        all = all.concat(data as typeof sharedAllEvents);
-        if (data.length < PAGE_SIZE) break;
-        page++;
-      }
-      return all;
-    };
-
-    const [tokenEvents, paidApiEvents] = await Promise.all([
-      fetchAllByType('ai_token_usage'),
-      fetchAllByType('paid_api_call'),
+    // Fetch both 30-day and all-time in parallel
+    const [tokenEvents30d, paidApiEvents30d, tokenEventsAll, paidApiEventsAll] = await Promise.all([
+      fetchEventsByType('ai_token_usage', thirtyDaysAgo),
+      fetchEventsByType('paid_api_call', thirtyDaysAgo),
+      fetchEventsByType('ai_token_usage'),
+      fetchEventsByType('paid_api_call'),
     ]);
 
-    return { tokenEvents, paidApiEvents };
-  }, []);
+    return { tokenEvents: tokenEvents30d, paidApiEvents: paidApiEvents30d, tokenEventsAll, paidApiEventsAll };
+  }, [fetchEventsByType]);
 
   // Trigger shared fetch on mount
   useEffect(() => { fetchEvents(); }, []);
