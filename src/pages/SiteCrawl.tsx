@@ -492,7 +492,7 @@ export default function SiteCrawl() {
 
   // Delayed upsell reveal
   useEffect(() => {
-    if (isUnlimitedUser) return;
+    if (isUnlimited) return;
     const timer = setTimeout(() => setShowUpsell(true), 2500);
     return () => clearTimeout(timer);
   }, [isUnlimitedUser]);
