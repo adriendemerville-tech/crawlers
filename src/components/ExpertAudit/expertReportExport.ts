@@ -361,9 +361,14 @@ export function generateExpertReportHTML(
     const brokenCount = scores.technical.brokenLinksCount ?? 0;
     const brokenChecked = scores.technical.brokenLinksChecked ?? 0;
 
+    // Load previous audit data from localStorage for progression overlay
+    const prevTechKey = `crawlers_prev_audit_${result.domain}_technical`;
+    let prevTechData = null;
+    try { const raw = localStorage.getItem(prevTechKey); if (raw) prevTechData = JSON.parse(raw); } catch {}
+
     content = `
       <!-- Radial Quality Score Chart -->
-      ${generateRadialChartSVG(result, 'technical', language)}
+      ${generateRadialChartSVG(result, 'technical', language, prevTechData)}
 
       <div style="text-align: center; margin-bottom: 28px; break-inside: avoid; page-break-inside: avoid;">
         <div style="display: inline-block; padding: 22px 44px; background: #4f46e5; border-radius: 18px; margin-bottom: 14px; min-width: 200px; min-height: 90px;">
