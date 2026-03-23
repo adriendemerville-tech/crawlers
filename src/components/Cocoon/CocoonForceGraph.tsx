@@ -538,8 +538,8 @@ export function CocoonForceGraph({
           ctx.lineWidth = lineW * 1.5;
           ctx.stroke();
         } else {
-          // Default: color by juice type
-          const [lr, lg, lb] = resolveJuiceColor(link.juiceType);
+          // Default: color by direction (descending=gold, ascending=blue, lateral=juice)
+          const [lr, lg, lb] = resolveLinkColor(link);
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
