@@ -59,9 +59,24 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSent, setPhoneSent] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
+  const getScrollViewport = useCallback(() => {
+    return scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLDivElement | null;
+  }, []);
+
+  const handleFelixWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('textarea, input')) return;
+
+    const viewport = getScrollViewport();
+    if (!viewport || viewport.scrollHeight <= viewport.clientHeight) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    viewport.scrollTop += event.deltaY;
+  }, [getScrollViewport]);
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
