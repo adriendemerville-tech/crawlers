@@ -248,10 +248,11 @@ function NodeSphere({
     : activeColors[node.pageType] || activeColors.unknown;
 
   const intensityMul = colorIntensity / 5; // 5 = default, range 0-10
-  const baseEmissive = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.4 : 0.3;
+  const baseEmissive = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.6 : 0.5;
   const emissiveIntensity = baseEmissive * intensityMul;
-  const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
+  const scale = (isSelected ? 1.3 : isHovered ? 1.15 : 1) * sizeScale;
   const isGhost = isXRayMode && node.traffic < 10;
+  const r = node.radius * sizeScale; // scaled radius for geometry
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
