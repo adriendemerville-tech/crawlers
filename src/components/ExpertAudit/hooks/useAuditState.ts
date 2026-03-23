@@ -115,6 +115,7 @@ export function useAuditState() {
     // Refs
     loadingRef,
     stopMusicRef,
+    pauseMusicRef,
     auditStartTimeRef,
 
     // Actions

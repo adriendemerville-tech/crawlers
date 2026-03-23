@@ -249,6 +249,7 @@ export function ExpertAuditDashboard() {
     hasVerifiedPayment, setHasVerifiedPayment,
     loadingRef,
     stopMusicRef,
+    pauseMusicRef,
     auditStartTimeRef,
     handleNewAudit,
     handleNavigateToTechnical,
