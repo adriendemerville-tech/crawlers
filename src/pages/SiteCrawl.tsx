@@ -267,21 +267,21 @@ interface CrawlPage {
   title: string | null;
   h1: string | null;
   seo_score: number | null;
-  word_count: number;
-  images_without_alt: number;
-  has_schema_org: boolean;
-  has_canonical: boolean;
-  has_og: boolean;
-  has_noindex: boolean;
-  has_nofollow: boolean;
-  is_indexable: boolean;
-  index_source: string;
+  word_count: number | null;
+  images_without_alt: number | null;
+  has_schema_org: boolean | null;
+  has_canonical: boolean | null;
+  has_og: boolean | null;
+  has_noindex: boolean | null;
+  has_nofollow: boolean | null;
+  is_indexable: boolean | null;
+  index_source: string | null;
   issues: string[];
   content_hash?: string | null;
   schema_org_types?: string[];
   schema_org_errors?: string[];
   custom_extraction?: Record<string, string>;
-  crawl_depth?: number;
+  crawl_depth?: number | null;
 }
 
 interface CrawlResult {
@@ -708,6 +708,10 @@ export default function SiteCrawl() {
       // Sanitize fields that must be arrays to prevent React crashes
       const sanitized = data.map((p: any) => ({
         ...p,
+        path: p.path || p.url || '',
+        word_count: p.word_count ?? 0,
+        images_without_alt: p.images_without_alt ?? 0,
+        seo_score: p.seo_score ?? 0,
         issues: Array.isArray(p.issues) ? p.issues : [],
         schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
         schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
@@ -1473,12 +1477,12 @@ export default function SiteCrawl() {
                               <div className="flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">{t.words}</span>
-                                <span className="text-foreground">{page.word_count}</span>
+                                <span className="text-foreground">{page.word_count ?? 0}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Image className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">{t.imgsNoAlt}</span>
-                                <span className={page.images_without_alt > 0 ? 'text-destructive' : 'text-emerald-500'}>{page.images_without_alt}</span>
+                                <span className={(page.images_without_alt ?? 0) > 0 ? 'text-destructive' : 'text-emerald-500'}>{page.images_without_alt ?? 0}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
