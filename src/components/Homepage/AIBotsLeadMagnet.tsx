@@ -135,9 +135,6 @@ export function AIBotsLeadMagnet() {
 
     setLoading(true);
     setError(null);
-    setBots(null);
-    setGeoScore(null);
-    setGeoFactors(null);
 
     try {
       if (tab === 'bots') {
