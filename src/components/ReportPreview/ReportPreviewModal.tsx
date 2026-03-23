@@ -31,7 +31,9 @@ interface ReportPreviewModalProps {
 const reportTranslations = {
   fr: {
     title: 'Aperçu du Rapport',
+    crawlTitle: 'Rapport Crawl',
     download: 'Télécharger',
+    downloadCSV: 'CSV',
     generating: 'Génération...',
     copyLink: 'Copier le lien',
     copied: 'Copié !',
