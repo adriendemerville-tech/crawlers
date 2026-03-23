@@ -141,17 +141,49 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Orphan pages (internal_links received = 0, approximated by low crawl_depth or being found in sitemap only)
-    // We use internal_links = 0 as proxy for pages that don't link to others (isolated)
-    const isolatedPages = okPages.filter(p => (p.internal_links || 0) === 0);
-    if (isolatedPages.length > 0) {
+    // 2. Orphan pages — computed from incoming links (count how many other pages link to each page)
+    const urlSet = new Set(pages.map(p => p.url));
+    const incomingCounts = new Map<string, number>();
+    for (const p of pages) {
+      // Count internal anchor_texts pointing to other crawled pages
+      const anchors = (p.broken_links as any[] || []); // broken_links is not right, use anchor data approach
+      // Since crawl_pages doesn't store incoming links directly, 
+      // count from anchor_texts of all pages
+    }
+    // Better approach: count from anchor_texts across all pages
+    const inboundMap = new Map<string, number>();
+    for (const p of okPages) {
+      // Each page's internal_links count represents outgoing links
+      // We need to check which pages are linked TO by checking all pages' outgoing links
+      // Since we don't have anchor_texts in the select, use the semantic_nodes data
+    }
+    // Use semantic_nodes internal_links_in if available
+    const { data: semanticNodes } = await supabase
+      .from('semantic_nodes' as any)
+      .select('url, internal_links_in')
+      .eq('tracked_site_id', tracked_site_id)
+      .limit(500);
+
+    let orphanPages: typeof okPages = [];
+    if (semanticNodes && semanticNodes.length > 0) {
+      const inMap = new Map(semanticNodes.map((n: any) => [n.url, n.internal_links_in || 0]));
+      orphanPages = okPages.filter(p => {
+        const inLinks = inMap.get(p.url) ?? inMap.get(p.url.replace(/\/+$/, ''));
+        return (inLinks === undefined || inLinks === 0) && p.crawl_depth !== 0;
+      });
+    } else {
+      // Fallback: approximate from crawl_depth (pages found only via sitemap, not linked)
+      orphanPages = okPages.filter(p => (p.crawl_depth || 0) === 0 && p.url !== pages[0]?.url);
+    }
+
+    if (orphanPages.length > 0) {
       findings.push({
         id: 'orphan_pages',
-        severity: isolatedPages.length > 5 ? 'critical' : 'warning',
+        severity: orphanPages.length > 5 ? 'critical' : 'warning',
         category: 'structure',
         title: t('orphan_pages', lang),
-        description: `${isolatedPages.length} pages sans lien interne sortant`,
-        affected_urls: isolatedPages.map(p => p.url),
+        description: `${orphanPages.length} pages sans lien interne entrant`,
+        affected_urls: orphanPages.map(p => p.url),
       });
     }
 
