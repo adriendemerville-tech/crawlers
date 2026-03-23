@@ -548,14 +548,18 @@ export default function Cocoon() {
 
     try {
       // Check prerequisite: crawl is required, audit is optional (used for enrichment only)
+      const normDomain = selectedSite.domain?.replace(/^www\./, '').toLowerCase();
       const crawlRes = await supabase
         .from("site_crawls" as any)
-        .select("id")
-        .eq("domain", selectedSite.domain)
+        .select("id, domain")
         .eq("user_id", user.id)
-        .limit(1);
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-      const hasCrawl = (crawlRes.data?.length || 0) > 0;
+      const hasCrawl = (crawlRes.data || []).some((c: any) => 
+        c.domain?.replace(/^www\./, '').toLowerCase() === normDomain
+      );
 
       if (!hasCrawl) {
         setPrereqStatus({ hasCrawl, hasAudit: true });
@@ -659,6 +663,7 @@ export default function Cocoon() {
                 trackedSites={trackedSites}
                 selectedSiteId={selectedSiteId}
                 onSelect={setSelectedSiteId}
+                onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
                 placeholder={t.selectSite}
               />
             </div>

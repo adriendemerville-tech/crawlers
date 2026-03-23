@@ -17,6 +17,7 @@ interface CocoonSiteSelectorProps {
   trackedSites: TrackedSite[];
   selectedSiteId: string;
   onSelect: (siteId: string) => void;
+  onSiteCreated?: (site: TrackedSite) => void;
   placeholder?: string;
 }
 
@@ -25,6 +26,7 @@ export function CocoonSiteSelector({
   trackedSites,
   selectedSiteId,
   onSelect,
+  onSiteCreated,
   placeholder = "Sélectionner un site",
 }: CocoonSiteSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -154,8 +156,8 @@ export function CocoonSiteSelector({
       .select("id")
       .single();
     if (newSite) {
+      onSiteCreated?.({ id: newSite.id, domain, site_name: null });
       handleSelectTracked(newSite.id);
-      // Parent will reload tracked sites via its own effect
     }
   };
 
