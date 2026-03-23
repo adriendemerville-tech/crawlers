@@ -380,7 +380,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex items-center gap-2">
           <CrawlersLogo size={16} />
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-medium text-foreground/80">Assistant Crawlers</span>
+          <span className="text-xs font-medium text-foreground/80">Félix</span>
           {isAdmin && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <Shield className="h-2 w-2" /> Créateur
