@@ -292,6 +292,23 @@ export function CocoonRadialGraph({
   const dragDistance = useRef(0);
   const lastMouse = useRef({ x: 0, y: 0 });
   const animFrame = useRef<number>(0);
+  const particlesRef = useRef<{ fromId: string; toId: string; t: number; speed: number }[]>([]);
+
+  // Compute background color from slider (-10=black, 0=night blue, 10=white)
+  const bgColor = useMemo(() => {
+    const nightBlue = { r: 10, g: 10, b: 18 };
+    if (bgColorSlider <= 0) {
+      const t = (bgColorSlider + 10) / 10;
+      return { r: Math.round(nightBlue.r * t), g: Math.round(nightBlue.g * t), b: Math.round(nightBlue.b * t) };
+    } else {
+      const t = bgColorSlider / 10;
+      return {
+        r: Math.round(nightBlue.r + (255 - nightBlue.r) * t),
+        g: Math.round(nightBlue.g + (255 - nightBlue.g) * t),
+        b: Math.round(nightBlue.b + (255 - nightBlue.b) * t),
+      };
+    }
+  }, [bgColorSlider]);
 
   // Build tree
   const tree = useMemo(() => {
