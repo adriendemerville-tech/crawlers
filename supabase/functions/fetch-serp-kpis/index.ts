@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
+import { logApiBillingAlert } from '../_shared/apiBillingAlert.ts'
 
 /**
  * fetch-serp-kpis
