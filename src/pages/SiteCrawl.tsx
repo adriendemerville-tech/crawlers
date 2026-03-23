@@ -870,10 +870,11 @@ export default function SiteCrawl() {
         {/* Back to home arrow */}
         <Link
           to="/"
-          className="fixed top-20 left-4 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-border/50 bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+          className="fixed top-20 left-4 z-40 flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
           aria-label="Retour à l'accueil"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
+          {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
         </Link>
 
         {/* Pro Agency upsell overlay for non-subscribers */}
