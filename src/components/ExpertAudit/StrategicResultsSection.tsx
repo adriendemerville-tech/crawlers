@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AuditRadialChart } from './AuditRadialChart';
+import { usePreviousAuditData } from './hooks/usePreviousAuditData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
