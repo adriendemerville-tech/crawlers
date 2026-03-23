@@ -106,6 +106,9 @@ Analyse technique complète de votre site en 200 points couvrant :
 - Sémantique : balises title, meta, H1-H6, densité de mots-clés
 - Performance : Core Web Vitals, PageSpeed, temps de chargement
 - Sécurité : HTTPS, mixed content, vulnérabilités
+- IA & GEO : accessibilité LLM, citabilité, données structurées
+
+Les résultats incluent un **graphique radar de qualité** montrant les scores par catégorie (Performance, Technique, Contenu, IA & GEO, Sécurité) avec un score global /200. Ce radar apparaît aussi en haut du rapport PDF exporté.
 
 Disponible : 1 fois par jour en freemium inscrit. Illimité en Pro Agency.
 
