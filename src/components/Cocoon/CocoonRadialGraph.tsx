@@ -723,7 +723,7 @@ export function CocoonRadialGraph({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#0a0a12]">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ backgroundColor: `rgb(${bgColor.r},${bgColor.g},${bgColor.b})` }}>
       <canvas
         ref={canvasRef}
         style={{ width: dimensions.w, height: dimensions.h, cursor: "grab" }}
