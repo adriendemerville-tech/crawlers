@@ -709,6 +709,51 @@ export default function SiteCrawl() {
 
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
     if (!crawlResult) return null;
+
+    // Compute duplicate titles
+    const titleMap = new Map<string, string[]>();
+    pages.forEach(p => {
+      const t = (p.title || '').trim();
+      if (!t) return;
+      if (!titleMap.has(t)) titleMap.set(t, []);
+      titleMap.get(t)!.push(p.url);
+    });
+    const duplicateTitles = Array.from(titleMap.entries())
+      .filter(([, urls]) => urls.length > 1)
+      .map(([title, urls]) => ({ title, count: urls.length, urls }))
+      .sort((a, b) => b.count - a.count);
+
+    // Compute thin content (< 300 words)
+    const thinContentPages = pages
+      .filter(p => (p.word_count ?? 0) > 0 && (p.word_count ?? 0) < 300 && p.http_status === 200)
+      .map(p => ({ url: p.url, path: p.path, word_count: p.word_count ?? 0 }))
+      .sort((a, b) => a.word_count - b.word_count);
+
+    // Compute deep pages (depth > 3)
+    const deepPages = pages
+      .filter(p => (p as any).crawl_depth != null && (p as any).crawl_depth > 3)
+      .map(p => ({ url: p.url, path: p.path, depth: (p as any).crawl_depth as number }))
+      .sort((a, b) => b.depth - a.depth);
+
+    // Compute broken links
+    const brokenLinksArr: Array<{ source_url: string; broken_url: string; status?: number }> = [];
+    pages.forEach(p => {
+      const bl = (p as any).broken_links;
+      if (Array.isArray(bl)) {
+        bl.forEach((link: any) => {
+          if (typeof link === 'string') {
+            brokenLinksArr.push({ source_url: p.url, broken_url: link });
+          } else if (link?.url) {
+            brokenLinksArr.push({ source_url: p.url, broken_url: link.url, status: link.status });
+          }
+        });
+      }
+    });
+
+    // Compute indexability ratio
+    const indexable = pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex')).length;
+    const noindex = pages.length - indexable;
+
     return {
       domain: crawlResult.domain,
       crawledPages: crawlResult.crawled_pages,
@@ -728,6 +773,11 @@ export default function SiteCrawl() {
         word_count: p.word_count,
       })),
       createdAt: crawlResult.created_at,
+      duplicateTitles,
+      thinContentPages,
+      deepPages,
+      brokenLinks: brokenLinksArr,
+      indexabilityRatio: { indexable, noindex, total: pages.length },
     };
   }, [crawlResult, pages, issueStats]);
 

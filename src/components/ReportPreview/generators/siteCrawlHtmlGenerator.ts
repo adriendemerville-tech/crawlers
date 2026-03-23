@@ -24,6 +24,12 @@ export interface SiteCrawlReportData {
     word_count: number | null;
   }>;
   createdAt: string;
+  // New insights
+  duplicateTitles?: Array<{ title: string; count: number; urls: string[] }>;
+  thinContentPages?: Array<{ url: string; path: string; word_count: number }>;
+  deepPages?: Array<{ url: string; path: string; depth: number }>;
+  brokenLinks?: Array<{ source_url: string; broken_url: string; status?: number }>;
+  indexabilityRatio?: { indexable: number; noindex: number; total: number };
 }
 
 const siteCrawlI18n = {
@@ -44,6 +50,19 @@ const siteCrawlI18n = {
     indexed: 'Indexée',
     noindex: 'Noindex',
     words: 'mots',
+    duplicateTitles: 'Titres dupliqués',
+    duplicateOn: 'pages partagent ce titre',
+    thinContent: 'Contenu mince',
+    thinContentDesc: 'Pages avec moins de 300 mots',
+    deepPages: 'Pages profondes',
+    deepPagesDesc: 'Pages à plus de 3 clics de la homepage',
+    depth: 'profondeur',
+    brokenLinks: 'Liens cassés',
+    brokenLinksDesc: 'Liens internes pointant vers des erreurs',
+    from: 'depuis',
+    indexability: 'Ratio d\'indexabilité',
+    indexable: 'Indexables',
+    notIndexable: 'Non indexables',
   },
   en: {
     title: 'Multi-Page Audit',
@@ -62,6 +81,19 @@ const siteCrawlI18n = {
     indexed: 'Indexed',
     noindex: 'Noindex',
     words: 'words',
+    duplicateTitles: 'Duplicate titles',
+    duplicateOn: 'pages share this title',
+    thinContent: 'Thin content',
+    thinContentDesc: 'Pages with fewer than 300 words',
+    deepPages: 'Deep pages',
+    deepPagesDesc: 'Pages more than 3 clicks from homepage',
+    depth: 'depth',
+    brokenLinks: 'Broken links',
+    brokenLinksDesc: 'Internal links pointing to errors',
+    from: 'from',
+    indexability: 'Indexability ratio',
+    indexable: 'Indexable',
+    notIndexable: 'Not indexable',
   },
   es: {
     title: 'Auditoría Multi-Páginas',
@@ -80,6 +112,19 @@ const siteCrawlI18n = {
     indexed: 'Indexada',
     noindex: 'Noindex',
     words: 'palabras',
+    duplicateTitles: 'Títulos duplicados',
+    duplicateOn: 'páginas comparten este título',
+    thinContent: 'Contenido delgado',
+    thinContentDesc: 'Páginas con menos de 300 palabras',
+    deepPages: 'Páginas profundas',
+    deepPagesDesc: 'Páginas a más de 3 clics del inicio',
+    depth: 'profundidad',
+    brokenLinks: 'Enlaces rotos',
+    brokenLinksDesc: 'Enlaces internos apuntando a errores',
+    from: 'desde',
+    indexability: 'Ratio de indexabilidad',
+    indexable: 'Indexables',
+    notIndexable: 'No indexables',
   },
 };
 
@@ -226,6 +271,99 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     </div>
   ` : '';
 
+  // ── NEW: 5 Insights sections ──
+
+  // 1. Indexability ratio
+  const idx = data.indexabilityRatio;
+  const indexabilitySection = idx ? (() => {
+    const pctIndexable = idx.total > 0 ? ((idx.indexable / idx.total) * 100).toFixed(1) : '0';
+    const pctNoindex = idx.total > 0 ? ((idx.noindex / idx.total) * 100).toFixed(1) : '0';
+    const barColor = Number(pctIndexable) >= 80 ? '#10b981' : Number(pctIndexable) >= 60 ? '#f59e0b' : '#ef4444';
+    return `
+      <div class="card" style="padding: 20px; margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">📊 ${t.indexability}</h3>
+        <div style="display: flex; gap: 24px; align-items: center;">
+          <div style="flex: 1;">
+            <div style="height: 24px; background: rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; position: relative;">
+              <div style="height: 100%; width: ${pctIndexable}%; background: ${barColor}; border-radius: 12px; transition: width 0.4s;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #9ca3af;">
+              <span>✅ ${t.indexable}: ${idx.indexable} (${pctIndexable}%)</span>
+              <span>🚫 ${t.notIndexable}: ${idx.noindex} (${pctNoindex}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  })() : '';
+
+  // 2. Duplicate titles
+  const dupes = data.duplicateTitles || [];
+  const duplicateTitlesSection = dupes.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">🔁 ${t.duplicateTitles} <span style="font-size: 13px; font-weight: 400; color: #9ca3af;">(${dupes.length})</span></h3>
+      ${dupes.slice(0, 10).map(d => `
+        <div style="padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 6px;">
+          <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">"${(d.title || '').substring(0, 80)}"</div>
+          <div style="font-size: 11px; color: #f59e0b;">⚠ ${d.count} ${t.duplicateOn}</div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${d.urls.slice(0, 3).join(' · ')}${d.urls.length > 3 ? ` … +${d.urls.length - 3}` : ''}</div>
+        </div>
+      `).join('')}
+      ${dupes.length > 10 ? `<div style="text-align: center; font-size: 12px; color: #6b7280; padding-top: 8px;">… +${dupes.length - 10}</div>` : ''}
+    </div>
+  ` : '';
+
+  // 3. Thin content
+  const thin = data.thinContentPages || [];
+  const thinContentSection = thin.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">📝 ${t.thinContent} <span style="font-size: 13px; font-weight: 400; color: #9ca3af;">(${thin.length})</span></h3>
+      <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">${t.thinContentDesc}</p>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+        ${thin.slice(0, 20).map(p => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px;">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;" title="${p.url}">${p.path}</span>
+            <span style="color: #ef4444; font-weight: 600; white-space: nowrap;">${p.word_count} ${t.words}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${thin.length > 20 ? `<div style="text-align: center; font-size: 12px; color: #6b7280; padding-top: 8px;">… +${thin.length - 20}</div>` : ''}
+    </div>
+  ` : '';
+
+  // 4. Deep pages
+  const deep = data.deepPages || [];
+  const deepPagesSection = deep.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">🕳️ ${t.deepPages} <span style="font-size: 13px; font-weight: 400; color: #9ca3af;">(${deep.length})</span></h3>
+      <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">${t.deepPagesDesc}</p>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+        ${deep.slice(0, 20).map(p => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px;">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;" title="${p.url}">${p.path}</span>
+            <span style="color: #f59e0b; font-weight: 600; white-space: nowrap;">${t.depth} ${p.depth}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${deep.length > 20 ? `<div style="text-align: center; font-size: 12px; color: #6b7280; padding-top: 8px;">… +${deep.length - 20}</div>` : ''}
+    </div>
+  ` : '';
+
+  // 5. Broken links
+  const broken = data.brokenLinks || [];
+  const brokenLinksSection = broken.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">🔗 ${t.brokenLinks} <span style="font-size: 13px; font-weight: 400; color: #ef4444;">(${broken.length})</span></h3>
+      <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">${t.brokenLinksDesc}</p>
+      ${broken.slice(0, 15).map(b => `
+        <div style="padding: 8px 12px; background: rgba(239,68,68,0.05); border-left: 3px solid #ef4444; border-radius: 4px; margin-bottom: 6px;">
+          <div style="font-size: 12px; font-family: monospace; color: #ef4444; word-break: break-all;">${b.broken_url}${b.status ? ` (${b.status})` : ''}</div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${t.from}: ${b.source_url}</div>
+        </div>
+      `).join('')}
+      ${broken.length > 15 ? `<div style="text-align: center; font-size: 12px; color: #6b7280; padding-top: 8px;">… +${broken.length - 15}</div>` : ''}
+    </div>
+  ` : '';
+
   // Pages table (top 50)
   const sortedPages = [...data.pages].sort((a, b) => (a.seo_score || 0) - (b.seo_score || 0));
   const displayPages = sortedPages.slice(0, 50);
@@ -261,8 +399,13 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     ${metrics}
     ${aiSummary}
     ${recos}
+    ${indexabilitySection}
     ${topErrors}
     ${httpStatusChart}
+    ${duplicateTitlesSection}
+    ${thinContentSection}
+    ${deepPagesSection}
+    ${brokenLinksSection}
     ${pagesTable}
   `;
 }
