@@ -495,14 +495,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
             {sending && (
               <div className="flex justify-start">
-                <div className="bg-violet-100 dark:bg-violet-900/40 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <CrawlersLogo size={14} />
+                <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <CrawlersLogo size={12} />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
