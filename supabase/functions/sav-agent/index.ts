@@ -329,6 +329,8 @@ serve(async (req) => {
         "affiliation", "affiliate", "GMB", "google", "CMS",
         "montre-moi", "show me", "list", "liste", "donne-moi",
         "quel est", "quels sont", "how many", "count",
+        "dataforseo", "serpapi", "billing", "crédit api", "402", "facturation",
+        "alerte", "notification", "alertes api",
       ];
       
       const lowerMsg = lastUserMsg.toLowerCase();
