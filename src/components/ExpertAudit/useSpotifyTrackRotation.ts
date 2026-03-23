@@ -243,6 +243,10 @@ export function useSpotifyTrackRotation(active = true) {
     };
   }, []);
 
+  const pausePlayback = () => {
+    controllerRef.current?.pause?.();
+  };
+
   const stopPlayback = () => {
     controllerRef.current?.destroy?.();
     controllerRef.current = null;
@@ -264,6 +268,7 @@ export function useSpotifyTrackRotation(active = true) {
   return {
     embedContainerRef,
     stopPlayback,
+    pausePlayback,
     isCustomPlaylist: !!customPlaylistUri,
     goNext,
     goPrev,
