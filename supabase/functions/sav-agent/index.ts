@@ -354,11 +354,11 @@ serve(async (req) => {
           if (queryResp.ok) {
             const queryData = await queryResp.json();
             
-            // Format results for the creator
-            let adminReply = "";
+            // If the query was blocked or returned no useful results, fall through to normal SAV
             if (queryData.blocked) {
-              adminReply = `⚠️ ${queryData.description}`;
-            } else if (queryData.error) {
+              // Don't block — fall through to normal chat so Félix can answer conversationally
+              console.log("Admin query blocked, falling through to normal SAV");
+            } else {
               adminReply = `❌ Erreur d'exécution : ${queryData.error}\n\nRequête tentée :\n\`\`\`sql\n${queryData.query}\n\`\`\``;
             } else if (queryData.results === null && !queryData.query) {
               adminReply = `ℹ️ ${queryData.description}`;
