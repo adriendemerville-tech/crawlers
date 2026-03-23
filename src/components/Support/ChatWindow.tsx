@@ -171,7 +171,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || sending) return;
+    if (!newMessage.trim() || sending) return;
 
     const messageText = newMessage.trim();
 
