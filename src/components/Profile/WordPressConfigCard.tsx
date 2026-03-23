@@ -117,7 +117,8 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  
+  const [connectMethod, setConnectMethod] = useState<'cms' | 'gtm'>('cms');
+
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
