@@ -219,7 +219,14 @@ const MomentumSection = memo(() => {
         <div className="flex items-center justify-center gap-10 mb-10 flex-wrap">
           {llmLogos.map((llm) => (
             <div key={llm.name} className="flex flex-col items-center gap-2">
-              <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain" />
+              {llm.srcDark ? (
+                <>
+                  <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain dark:hidden" />
+                  <img src={llm.srcDark} alt={llm.name} className="h-14 w-14 object-contain hidden dark:block" />
+                </>
+              ) : (
+                <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain" />
+              )}
               <span className="text-base font-semibold text-foreground">{llm.name}</span>
             </div>
           ))}
