@@ -1344,35 +1344,35 @@ export default function SiteCrawl() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 <Card className="border">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{t.pagesAnalyzedLabel}</div>
+                  <CardContent className="p-2.5 text-center">
+                    <div className="text-lg font-bold text-foreground">{crawlResult.crawled_pages}</div>
+                    <div className="text-[10px] text-muted-foreground">{t.pagesAnalyzedLabel}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border ${getScoreBg(crawlResult.avg_score || 0)}`}>
-                  <CardContent className="p-4 text-center">
-                    <div className={`text-2xl font-bold ${getScoreColor(crawlResult.avg_score || 0)}`}>
+                  <CardContent className="p-2.5 text-center">
+                    <div className={`text-lg font-bold ${getScoreColor(crawlResult.avg_score || 0)}`}>
                       {crawlResult.avg_score}/200
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">{t.avgScore}</div>
+                    <div className="text-[10px] text-muted-foreground">{t.avgScore}</div>
                   </CardContent>
                 </Card>
                 <Card className="border">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-foreground">
+                  <CardContent className="p-2.5 text-center">
+                    <div className="text-lg font-bold text-foreground">
                       {pages.filter(p => (p.issues || []).length === 0).length}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">{t.perfectPages}</div>
+                    <div className="text-[10px] text-muted-foreground">{t.perfectPages}</div>
                   </CardContent>
                 </Card>
                 <Card className="border border-destructive/20 bg-destructive/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-destructive">
+                  <CardContent className="p-2.5 text-center">
+                    <div className="text-lg font-bold text-destructive">
                       {Object.values(issueStats).reduce((s, v) => s + v, 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">{t.totalErrors}</div>
+                    <div className="text-[10px] text-muted-foreground">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
                 {/* Weight benchmark */}
@@ -1383,28 +1383,25 @@ export default function SiteCrawl() {
                   const weightColor = avgWeightKB < 100 ? 'text-emerald-500' : avgWeightKB < 500 ? 'text-amber-500' : 'text-destructive';
                   return (
                     <Card className="border">
-                      <CardContent className="p-4 text-center">
-                        <div className={`text-2xl font-bold ${weightColor}`}>{avgWeightKB} Ko</div>
-                        <div className="text-xs text-muted-foreground mt-1">{language === 'fr' ? 'Poids moyen' : language === 'es' ? 'Peso medio' : 'Avg weight'}</div>
+                      <CardContent className="p-2.5 text-center">
+                        <div className={`text-lg font-bold ${weightColor}`}>{avgWeightKB} Ko</div>
+                        <div className="text-[10px] text-muted-foreground">{language === 'fr' ? 'Poids moyen' : language === 'es' ? 'Peso medio' : 'Avg weight'}</div>
                       </CardContent>
                     </Card>
                   );
                 })()}
-              </div>
-
-              {/* Indexed pages card — half width, right-aligned */}
-              {indexedPagesCount != null && (
-                <div className="flex justify-end">
-                  <Card className="border w-full sm:w-1/2">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-primary">{indexedPagesCount.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {language === 'fr' ? 'Pages indexées (Google)' : language === 'es' ? 'Páginas indexadas (Google)' : 'Indexed pages (Google)'}
+                {/* Indexed pages inline */}
+                {indexedPagesCount != null && (
+                  <Card className="border">
+                    <CardContent className="p-2.5 text-center">
+                      <div className="text-lg font-bold text-primary">{indexedPagesCount.toLocaleString()}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {language === 'fr' ? 'Indexées Google' : language === 'es' ? 'Indexadas Google' : 'Indexed (Google)'}
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Near-duplicate & Schema.org alerts */}
               {(nearDuplicates.length > 0 || schemaErrorPages.length > 0) && (
