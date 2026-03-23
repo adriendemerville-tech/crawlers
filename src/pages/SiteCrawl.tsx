@@ -784,12 +784,10 @@ export default function SiteCrawl() {
       requestAnimationFrame(() => {
         historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-    } catch (err) {
-      console.error('[viewCrawl] Error loading pages:', err);
+    } catch {
       toast.error(t.errorCrawl);
     } finally {
       setIsLoadingPastCrawl(false);
-      console.log('[viewCrawl] Done loading');
     }
   }
 
