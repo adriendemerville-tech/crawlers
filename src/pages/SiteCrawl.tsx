@@ -896,7 +896,7 @@ export default function SiteCrawl() {
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
             <div className="relative z-10 w-full max-w-lg mx-4">
-              <div className="mb-3">
+              <div className="relative z-20 mb-5 -mt-4">
                 <button
                   onClick={() => navigate('/')}
                   className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-lg"
