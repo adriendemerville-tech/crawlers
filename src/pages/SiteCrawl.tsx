@@ -878,29 +878,31 @@ export default function SiteCrawl() {
       <Header />
 
       <main className="min-h-screen bg-background pt-20 pb-16 relative">
-        {/* Back to home arrow - always visible */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-2">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group text-sm"
-          >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-            {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
-          </Link>
-        </div>
+        {/* Back to home arrow */}
+        {(isUnlimitedUser || !showUpsell) && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group text-sm"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
+            </Link>
+          </div>
+        )}
 
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!isUnlimitedUser && (
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
-            <div className="relative z-10 flex flex-col items-start w-full max-w-lg mx-4">
-              {/* Back to home arrow */}
+            <div className="relative z-10 flex flex-col items-start w-full max-w-lg mx-4 pt-12">
               <button
                 onClick={() => navigate('/')}
-                className="mb-2 flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group"
+                aria-label={language === 'fr' ? 'Retour à l’accueil' : language === 'es' ? 'Volver al inicio' : 'Back to home'}
+                className="absolute left-0 top-0 z-20 inline-flex items-center gap-2 rounded-full border border-border bg-card/95 px-3 py-2 text-sm text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-accent"
               >
-                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                <span className="text-sm">{language === 'fr' ? 'Retour' : language === 'es' ? 'Volver' : 'Back'}</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span>{language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}</span>
               </button>
             <Card className="w-full border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
               <div className="absolute top-0 left-0">
