@@ -1602,6 +1602,7 @@ export default function SiteCrawl() {
                 </CardContent>
               </Card>
             </div>
+            </StrategicErrorBoundary>
           )}
 
           {/* Crawl Comparison */}
