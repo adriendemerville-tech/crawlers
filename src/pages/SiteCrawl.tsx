@@ -461,6 +461,7 @@ export default function SiteCrawl() {
   const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
