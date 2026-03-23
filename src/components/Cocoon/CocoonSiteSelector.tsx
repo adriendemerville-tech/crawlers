@@ -17,6 +17,7 @@ interface CocoonSiteSelectorProps {
   trackedSites: TrackedSite[];
   selectedSiteId: string;
   onSelect: (siteId: string) => void;
+  onSiteCreated?: (site: TrackedSite) => void;
   placeholder?: string;
 }
 
