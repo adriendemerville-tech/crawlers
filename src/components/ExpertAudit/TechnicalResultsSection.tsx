@@ -39,6 +39,7 @@ interface Props {
 
 export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
   const { language } = useLanguage();
+  const previousData = usePreviousAuditData(result, 'technical', language);
   // Defensive: guard against missing scores sub-objects
   const scores = result?.scores;
   if (!scores?.performance || !scores?.technical || !scores?.semantic || !scores?.aiReady || !scores?.security) {
