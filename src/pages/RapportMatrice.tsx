@@ -70,7 +70,7 @@ export default function RapportMatrice() {
     return generateMatriceHTML(data, branding);
   }, [data, branding]);
 
-  const handleCsv = () => {
+  const handleCsv = async () => {
     if (!data) return;
     const header = 'Prompt,Axe,Poids,Score,Seuil Bon,Seuil Moyen,Seuil Mauvais,Verdict\n';
     const lines = data.results.map(r =>
