@@ -813,11 +813,14 @@ export function ExpertAuditDashboard() {
     try {
       await attemptAudit(1);
     } finally {
-      // Wait 2s, stop Spotify, play microwave ding, then show results
+      // Pause music 3s before ding, then play microwave ding, then show results
       await new Promise<void>((resolve) => {
+        // Pause music (fade effect)
+        pauseMusicRef.current?.();
+        
         setTimeout(async () => {
           try {
-            // Stop Spotify music
+            // Now fully stop/destroy
             stopMusicRef.current?.();
             
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
@@ -829,7 +832,7 @@ export function ExpertAuditDashboard() {
           } catch {
             resolve();
           }
-        }, 2000);
+        }, 3000);
       });
       setIsLoading(false);
     }
