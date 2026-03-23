@@ -165,9 +165,9 @@ function FooterComponent() {
       description: t3(language, 'Guide complet de l\'audit SEO en 2026', 'Complete SEO audit guide for 2026', 'Guía completa de auditoría SEO en 2026')
     },
     {
-      label: t3(language, 'Intégration GTM', 'GTM Integration', 'Integración GTM'),
+      label: t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio'),
       href: '/integration-gtm',
-      description: t3(language, 'Déployez vos correctifs via Google Tag Manager', 'Deploy your fixes via Google Tag Manager', 'Despliegue sus correcciones vía Google Tag Manager')
+      description: t3(language, 'API, WordPress, GTM — toutes les méthodes', 'API, WordPress, GTM — all methods', 'API, WordPress, GTM — todos los métodos')
     },
     {
       label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),

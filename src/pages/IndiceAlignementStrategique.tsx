@@ -375,7 +375,7 @@ export default function IndiceAlignementStrategique() {
                 { to: '/methodologie', label: t3(language, 'Notre méthodologie', 'Our methodology', 'Nuestra metodología') },
                 { to: '/blog', label: t3(language, 'Articles & Guides', 'Articles & Guides', 'Artículos y Guías') },
                 { to: '/tarifs', label: t3(language, 'Tarifs', 'Pricing', 'Precios') },
-                { to: '/integration-gtm', label: t3(language, 'Intégration GTM', 'GTM Integration', 'Integración GTM') },
+                { to: '/integration-gtm', label: t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio') },
               ].map(link => (
                 <Link key={link.to} to={link.to} className="flex items-center gap-2 text-sm text-primary hover:underline p-2 rounded-lg hover:bg-muted/50 transition-colors">
                   <ArrowRight className="h-4 w-4" />
