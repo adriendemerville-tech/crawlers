@@ -117,7 +117,7 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const [connectMethod, setConnectMethod] = useState<'cms' | 'gtm'>('cms');
+  const [connectMethod, setConnectMethod] = useState<'wordpress' | 'shopify' | 'wix' | 'prestashop' | 'gtm'>('wordpress');
 
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
@@ -263,40 +263,52 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         <p className="text-xs font-semibold text-foreground">
           {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant={connectMethod === 'cms' ? 'default' : 'outline'}
-            size="sm"
-            className="gap-2 h-9"
-            onClick={() => setConnectMethod('cms')}
-          >
-            <Plug className="h-3.5 w-3.5" />
-            {t3(language, 'API CMS (WordPress)', 'CMS API (WordPress)', 'API CMS (WordPress)')}
-          </Button>
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            { key: 'wordpress' as const, label: 'WordPress', icon: '🔵' },
+            { key: 'shopify' as const, label: 'Shopify', icon: '🟢' },
+            { key: 'wix' as const, label: 'Wix', icon: '🟡' },
+            { key: 'prestashop' as const, label: 'PrestaShop', icon: '🟣' },
+          ]).map(cms => (
+            <Button
+              key={cms.key}
+              variant={connectMethod === cms.key ? 'default' : 'outline'}
+              size="sm"
+              className="gap-1.5 h-8 text-xs px-3"
+              onClick={() => setConnectMethod(cms.key)}
+            >
+              <span className="text-sm">{cms.icon}</span>
+              {cms.label}
+            </Button>
+          ))}
+          <Separator orientation="vertical" className="h-8 mx-1" />
           <Button
             variant={connectMethod === 'gtm' ? 'default' : 'outline'}
             size="sm"
-            className="gap-2 h-9"
+            className="gap-1.5 h-8 text-xs px-3"
             onClick={() => setConnectMethod('gtm')}
           >
             <Code className="h-3.5 w-3.5" />
-            {t3(language, 'API Google Tag Manager', 'Google Tag Manager API', 'API Google Tag Manager')}
+            GTM
           </Button>
         </div>
       </div>
 
       <Separator />
 
-      {connectMethod === 'cms' ? (
+      {connectMethod !== 'gtm' ? (
         <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 mb-1">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold">WordPress</h3>
+              <h3 className="text-sm font-semibold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : 'PrestaShop'}</h3>
               <p className="text-[11px] text-muted-foreground">
-                {t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')}
+                {connectMethod === 'wordpress'
+                  ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
+                  : t3(language, 'Connexion via API REST', 'REST API connection', 'Conexión vía API REST')
+                }
               </p>
             </div>
           </div>
