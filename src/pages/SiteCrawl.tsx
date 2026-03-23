@@ -938,12 +938,13 @@ export default function SiteCrawl() {
                     language === 'fr' ? 'Code correctif illimité' : language === 'es' ? 'Código correctivo ilimitado' : 'Unlimited corrective code',
                     language === 'fr' ? 'Crawl multi-pages illimité' : language === 'es' ? 'Crawl multi-páginas ilimitado' : 'Unlimited multi-page crawl',
                     language === 'fr' ? 'Marque Blanche (White Label)' : language === 'es' ? 'Marca Blanca (White Label)' : 'White Label branding',
+                    language === 'fr' ? 'Assistant IA : Stratège Cocoon' : language === 'es' ? 'Asistente IA: Estratega Cocoon' : 'AI Assistant: Cocoon Strategist',
                   ].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-violet-500/10">
-                      <div className={`p-1 rounded-md ${i === 0 ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
-                        <CheckCircle2 className={`h-3.5 w-3.5 ${i === 0 ? 'text-amber-500' : 'text-violet-500'}`} />
+                    <li key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-card/50 border border-violet-500/10">
+                      <div className={`p-1 rounded-md ${i === 0 ? 'bg-amber-500/10' : i === 4 ? 'bg-emerald-500/10' : 'bg-violet-500/10'}`}>
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${i === 0 ? 'text-amber-500' : i === 4 ? 'text-emerald-500' : 'text-violet-500'}`} />
                       </div>
-                      <span className={`text-sm font-medium ${i === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
+                      <span className={`text-sm font-medium ${i === 0 ? 'text-amber-500' : i === 4 ? 'text-emerald-500' : ''}`}>{feature}</span>
                     </li>
                   ))}
                 </ul>
