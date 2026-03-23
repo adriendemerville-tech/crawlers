@@ -363,11 +363,23 @@ export default function Cocoon() {
 
       // Auto-select site matching autolaunch domain
       if (autoLaunchDomain && data?.length) {
-        const match = data.find((s: any) => s.domain === autoLaunchDomain);
+        const normalize = (d: string) => d.replace(/^www\./, '').toLowerCase();
+        const match = data.find((s: any) => normalize(s.domain) === normalize(autoLaunchDomain));
         if (match) {
           setSelectedSiteId(match.id);
-        } else if (data[0]) {
-          setSelectedSiteId(data[0].id);
+        } else {
+          // Domain not tracked yet — auto-create tracked site for seamless flow
+          const { data: newSite } = await supabase
+            .from('tracked_sites')
+            .insert({ user_id: user.id, domain: autoLaunchDomain })
+            .select('id')
+            .single();
+          if (newSite) {
+            setTrackedSites(prev => [{ id: newSite.id, domain: autoLaunchDomain, site_name: null }, ...prev]);
+            setSelectedSiteId(newSite.id);
+          } else if (data[0]) {
+            setSelectedSiteId(data[0].id);
+          }
         }
       } else if (data?.length && !autoReadyTriggered.current) {
         // Check which sites have both a crawl AND an expert audit → auto-select & auto-launch
