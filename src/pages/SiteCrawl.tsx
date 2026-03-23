@@ -561,26 +561,26 @@ export default function SiteCrawl() {
         };
         setCrawlResult(sanitizedResult);
         if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
-        if (r.status === 'queued') setPhase(t.queued);
-        else if (r.status === 'mapping') setPhase(t.mapping);
-        else if (r.status === 'crawling') setPhase(`${t.crawlingProgress} ${r.crawled_pages}/${r.total_pages} ${t.pages}…`);
-        else if (r.status === 'analyzing') setPhase(t.analyzing);
-        if (r.status === 'completed') {
+        if (sanitizedResult.status === 'queued') setPhase(t.queued);
+        else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
+        else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
+        else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
+        if (sanitizedResult.status === 'completed') {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
-          loadPages(r.id);
+          loadPages(sanitizedResult.id);
           try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
-          toast.success(`✅ ${t.auditDone} ${r.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
+          toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
           supabase.functions.invoke('agent-cto', {
-            body: { auditResult: { ai_summary: r.ai_summary, ai_recommendations: r.ai_recommendations, avg_score: r.avg_score, crawled_pages: r.crawled_pages }, auditType: 'crawl', url: r.url, domain: r.domain }
+            body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
           }).catch(() => {});
         }
-        if (r.status === 'error') {
+        if (sanitizedResult.status === 'error') {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
-          toast.error(r.error_message || t.errorCrawl);
+          toast.error(sanitizedResult.error_message || t.errorCrawl);
         }
       }
     }, 5000);
