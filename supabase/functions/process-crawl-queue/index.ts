@@ -562,22 +562,60 @@ async function probeSPAStatus(
   if (!result) return { isSPA: false, firstPageResult: null };
 
   const isThinContent = result.word_count < 50;
-  if (!isThinContent) return { isSPA: false, firstPageResult: result };
+
+  // ── Enhanced SPA detection: also check for shell-like title/H1 ──
+  // If the first page has an identical title across all SPA pages (shell title),
+  // it's a SPA even if word count > 50 (skeleton HTML can contain text)
+  const isShellLikeTitle = !isThinContent && result.title && (
+    // Common SPA patterns: title doesn't mention the page path
+    (() => {
+      try {
+        const path = new URL(firstUrl).pathname;
+        // If we're NOT on the homepage and the title doesn't relate to the path at all,
+        // it's likely the shell fallback title
+        if (path !== '/' && path !== '') {
+          const pathWords = path.replace(/[^a-zA-ZÀ-ÿ]/g, ' ').trim().toLowerCase().split(/\s+/).filter(w => w.length > 3);
+          const titleLower = (result.title || '').toLowerCase();
+          // If none of the significant path words appear in the title, it's likely a shell
+          if (pathWords.length > 0 && !pathWords.some(w => titleLower.includes(w))) {
+            return true;
+          }
+        }
+      } catch {}
+      return false;
+    })()
+  );
+
+  const needsJSRender = isThinContent || isShellLikeTitle;
+  if (!needsJSRender) return { isSPA: false, firstPageResult: result };
 
   if (!renderingKey) {
-    console.log(`[Worker] Thin content on ${firstUrl} (${result.word_count} words) but no RENDERING_API_KEY`);
+    const reason = isThinContent ? `thin content (${result.word_count} words)` : `shell-like title detected`;
+    console.log(`[Worker] ${reason} on ${firstUrl} but no RENDERING_API_KEY`);
+    // Fallback: try Firecrawl with JS rendering (waitFor)
+    const firecrawlResult = await scrapePage(firstUrl, domain, firecrawlKey, false, null);
+    if (firecrawlResult && firecrawlResult.title !== result.title) {
+      console.log(`[Worker] ✅ SPA confirmed via Firecrawl: title changed from "${result.title}" to "${firecrawlResult.title}"`);
+      return { isSPA: true, firstPageResult: firecrawlResult };
+    }
     return { isSPA: false, firstPageResult: result };
   }
 
-  console.log(`[Worker] 🔍 Thin content detected on ${firstUrl} (${result.word_count} words) — probing with Browserless...`);
+  const reason = isThinContent ? `thin content (${result.word_count} words)` : `shell-like title "${result.title?.slice(0, 50)}"`;
+  console.log(`[Worker] 🔍 ${reason} on ${firstUrl} — probing with Browserless...`);
   const renderedResult = await scrapePage(firstUrl, domain, firecrawlKey, true, renderingKey);
 
-  if (renderedResult && renderedResult.word_count > result.word_count * 2 && renderedResult.word_count > 50) {
-    console.log(`[Worker] ✅ SPA confirmed: ${result.word_count} → ${renderedResult.word_count} words after JS rendering`);
-    return { isSPA: true, firstPageResult: renderedResult };
+  if (renderedResult) {
+    const titleChanged = renderedResult.title && renderedResult.title !== result.title;
+    const contentGrew = renderedResult.word_count > result.word_count * 2 && renderedResult.word_count > 50;
+    
+    if (titleChanged || contentGrew) {
+      console.log(`[Worker] ✅ SPA confirmed: title "${result.title?.slice(0, 40)}" → "${renderedResult.title?.slice(0, 40)}", words ${result.word_count} → ${renderedResult.word_count}`);
+      return { isSPA: true, firstPageResult: renderedResult };
+    }
   }
 
-  console.log(`[Worker] ❌ Not a SPA (Browserless: ${renderedResult?.word_count || 0} words)`);
+  console.log(`[Worker] ❌ Not a SPA (Browserless: ${renderedResult?.word_count || 0} words, title: ${renderedResult?.title?.slice(0, 40) || 'null'})`);
   return { isSPA: false, firstPageResult: result };
 }
 
