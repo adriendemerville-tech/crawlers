@@ -343,16 +343,22 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
     setBugReportMode('idle');
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 96) + 'px';
+  };
+
   if (!user) {
     return (
-      <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl">
+      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-lg border bg-background shadow-xl">
         <div className="flex items-center justify-between border-b p-3">
           <div className="flex items-center gap-2">
             <CrawlersLogo size={20} />
@@ -368,7 +374,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 rounded-lg border bg-background shadow-xl flex flex-col max-h-[60vh]">
+    <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-lg border bg-background shadow-xl flex flex-col max-h-[75vh]">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3 shrink-0">
         <div className="flex items-center gap-2">
@@ -416,7 +422,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                  'max-w-[90%] rounded-lg px-3 py-2',
                   msg.role === 'assistant'
                     ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
                     : 'bg-primary text-primary-foreground'
@@ -426,7 +432,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                       <CrawlersLogo size={14} />
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap break-words prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
+                  <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
                     <ReactMarkdown
                       components={{
                         a: ({ href, children }) => (
@@ -545,21 +551,44 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             setNewMessage(attachText);
           }}
         />
-        <div className="flex gap-1.5">
+        <div className="flex items-end gap-1.5">
           <ChatMicButton
             onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
             disabled={sending}
           />
-          <Input
+          <label htmlFor="chat-image-upload" className="flex items-center justify-center h-8 w-8 shrink-0 cursor-pointer rounded-none border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors">
+            <input
+              id="chat-image-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${file.name}]` : `[📷 Image: ${file.name}]`);
+                e.target.value = '';
+              }}
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </label>
+          <textarea
             value={newMessage}
-            onChange={e => setNewMessage(e.target.value)}
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
             disabled={sending}
-            className="flex-1"
+            className="flex-1 min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-md border border-input bg-background px-3 py-1.5 text-[13px] ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring caret-primary"
             maxLength={500}
+            rows={1}
+            style={{ height: 'auto' }}
+            ref={(el) => {
+              if (el) {
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+              }
+            }}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon" className="h-8 w-8 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10 disabled:opacity-30">
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon" className="h-8 w-8 shrink-0 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10 disabled:opacity-30">
             {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>
