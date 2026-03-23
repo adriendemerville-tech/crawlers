@@ -177,7 +177,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         {/* Animated word container */}
         <span
           className="hero-word-container relative inline-flex items-center justify-center overflow-hidden align-bottom"
-          style={{ minWidth: '140px', width: 'auto' }}
+          style={{ width: 'auto' }}
         >
           {isHydrated ? (
             <Suspense fallback={
@@ -200,8 +200,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               {animatedWords[0]}
             </span>
           )}
-        </span>
-        {' '}
+        </span>{' '}
         <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
           {getIgnoreText()} {getSiteText()}
         </span>
