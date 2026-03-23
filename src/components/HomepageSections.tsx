@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import llmChatgpt from '@/assets/llm-chatgpt.png';
+import llmChatgptWhite from '@/assets/llm-chatgpt-white.png';
 import llmGemini from '@/assets/llm-gemini.png';
 import llmPerplexity from '@/assets/llm-perplexity.png';
 import llmClaude from '@/assets/llm-claude.png';
