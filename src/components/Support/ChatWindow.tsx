@@ -358,13 +358,13 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   if (!user) {
     return (
-      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-lg border bg-background shadow-xl">
-        <div className="flex items-center justify-between border-b p-3">
+      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-2xl border border-border/50 bg-background/95 backdrop-blur-lg shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
           <div className="flex items-center gap-2">
-            <CrawlersLogo size={20} />
-            <h3 className="font-semibold text-sm">Assistant SAV</h3>
+            <CrawlersLogo size={16} />
+            <span className="text-xs font-medium text-muted-foreground">Assistant Crawlers</span>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
+          <button onClick={onClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" /></button>
         </div>
         <div className="p-6 text-center text-muted-foreground text-sm">
           <p>Connectez-vous pour contacter le support.</p>
