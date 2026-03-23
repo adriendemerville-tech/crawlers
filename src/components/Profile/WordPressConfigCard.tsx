@@ -303,9 +303,12 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold">WordPress</h3>
+              <h3 className="text-sm font-semibold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : 'PrestaShop'}</h3>
               <p className="text-[11px] text-muted-foreground">
-                {t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')}
+                {connectMethod === 'wordpress'
+                  ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
+                  : t3(language, 'Connexion via API REST', 'REST API connection', 'Conexión vía API REST')
+                }
               </p>
             </div>
           </div>
