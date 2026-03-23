@@ -219,7 +219,10 @@ export default function RapportViewer() {
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `rapport-${kind}.csv`;
+    const { getReportFilename } = await import('@/utils/reportFilename');
+    const domain = payload?.kind === 'audit' ? payload.result?.domain || '' : payload?.domain || '';
+    const auditType = kind === 'cocoon' ? 'maillage' as const : (payload?.kind === 'audit' && payload.auditMode === 'strategic' ? 'auditstrategique' as const : 'audittechnique' as const);
+    a.download = getReportFilename(domain, auditType, 'csv');
     a.click();
     URL.revokeObjectURL(a.href);
   };

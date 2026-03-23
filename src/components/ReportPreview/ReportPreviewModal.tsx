@@ -223,8 +223,9 @@ export function ReportPreviewModal({
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const link = document.createElement('a');
       const domain = (() => { try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { return 'report'; } })();
+      const { getReportFilename } = await import('@/utils/reportFilename');
       link.href = URL.createObjectURL(blob);
-      link.download = `rapport-${effectiveType}-${domain}.html`;
+      link.download = getReportFilename(domain, effectiveType as any, 'html');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

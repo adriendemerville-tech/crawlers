@@ -137,7 +137,8 @@ export default function SharedReportRedirect() {
         }
       }
 
-      doc.save(`rapport-partage-${shareId?.slice(0, 8) || 'report'}.pdf`);
+      const { getReportFilename } = await import('@/utils/reportFilename');
+      doc.save(getReportFilename(shareId?.slice(0, 8) || 'report', 'audittechnique', 'pdf'));
       
     } catch (error) {
       console.error('PDF generation error:', error);

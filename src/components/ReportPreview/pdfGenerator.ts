@@ -450,7 +450,8 @@ async function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`pagespeed-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'pagespeed', 'pdf'));
 }
 
 /**
