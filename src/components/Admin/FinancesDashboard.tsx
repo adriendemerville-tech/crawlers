@@ -495,9 +495,9 @@ export function FinancesDashboard() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Gauge className="h-4 w-4 text-primary" />
-            Quotas & Statuts API (30j)
+            Quotas & Statuts API (depuis le lancement)
           </CardTitle>
-          <CardDescription>Consommation par service avec estimation des limites de plan</CardDescription>
+          <CardDescription>Consommation par service — données réelles + estimations</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
