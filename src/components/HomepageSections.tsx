@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import llmChatgpt from '@/assets/llm-chatgpt.png';
+import llmChatgptWhite from '@/assets/llm-chatgpt-white.png';
 import llmGemini from '@/assets/llm-gemini.png';
 import llmPerplexity from '@/assets/llm-perplexity.png';
 import llmClaude from '@/assets/llm-claude.png';
@@ -200,7 +201,7 @@ const MomentumSection = memo(() => {
   ];
 
   const llmLogos = [
-    { name: 'ChatGPT', src: llmChatgpt },
+    { name: 'ChatGPT', src: llmChatgpt, srcDark: llmChatgptWhite },
     { name: 'Gemini', src: llmGemini },
     { name: 'Perplexity', src: llmPerplexity },
     { name: 'Claude', src: llmClaude },
@@ -218,7 +219,14 @@ const MomentumSection = memo(() => {
         <div className="flex items-center justify-center gap-10 mb-10 flex-wrap">
           {llmLogos.map((llm) => (
             <div key={llm.name} className="flex flex-col items-center gap-2">
-              <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain" />
+              {llm.srcDark ? (
+                <>
+                  <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain dark:hidden" />
+                  <img src={llm.srcDark} alt={llm.name} className="h-14 w-14 object-contain hidden dark:block" />
+                </>
+              ) : (
+                <img src={llm.src} alt={llm.name} className="h-14 w-14 object-contain" />
+              )}
               <span className="text-base font-semibold text-foreground">{llm.name}</span>
             </div>
           ))}
