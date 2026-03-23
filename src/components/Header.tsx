@@ -113,6 +113,7 @@ export function Header() {
   const isAuditExpertPage = location.pathname === '/audit-expert';
   const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
   const isHomePage = location.pathname === '/';
+  const isCrawlPage = location.pathname === '/site-crawl' || location.pathname === '/crawl';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
