@@ -24,13 +24,21 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Detect first-time logged-in user → red pulse + sound
+  // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
-    if (!user || isOnboardingDone()) {
+    if (!user || isOnboardingDone() || notifDismissedThisSession) {
       setShowOnboardingPulse(false);
       return;
     }
-    // Small delay so it feels like Felix noticed you
+    // Track visit count
+    const key = 'felix_notif_visit_count';
+    const count = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, String(count));
+    // Show only every 3 visits (1st, 4th, 7th…)
+    if (count % 3 !== 1) {
+      setShowOnboardingPulse(false);
+      return;
+    }
     const timer = setTimeout(() => {
       setShowOnboardingPulse(true);
       if (!onboardingSoundPlayed.current) {
@@ -39,7 +47,7 @@ export function FloatingChatBubble() {
       }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [user, notifDismissedThisSession]);
 
   // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
