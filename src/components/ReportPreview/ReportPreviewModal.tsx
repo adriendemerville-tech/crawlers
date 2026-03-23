@@ -368,8 +368,23 @@ export function ReportPreviewModal({
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Header with actions */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-card w-full shrink-0">
-          {!isMobile && <h2 className="text-lg font-semibold shrink-0">{t.title}</h2>}
+          {!isMobile && (
+            <h2 className="text-lg font-semibold shrink-0">
+              {type === 'site_crawl' ? `${t.crawlTitle} — ${siteCrawlData?.domain || url}` : t.title}
+            </h2>
+          )}
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
+            {type === 'site_crawl' && (
+              <Button
+                onClick={handleDownloadCSV}
+                variant="outline"
+                size={isMobile ? 'icon' : 'default'}
+                className={isMobile ? '' : 'gap-2'}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                {!isMobile && t.downloadCSV}
+              </Button>
+            )}
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
