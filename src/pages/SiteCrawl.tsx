@@ -1711,6 +1711,13 @@ export default function SiteCrawl() {
         />
       )}
 
+      <ReportPreviewModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        type="site_crawl"
+        siteCrawlData={siteCrawlReportData}
+      />
+
       <Footer />
     </>
   );
