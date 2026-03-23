@@ -1208,9 +1208,9 @@ export default function SiteCrawl() {
                         max={isAdmin ? 50 : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20)}
                         step={isAdmin ? 10 : 5}
                         disabled={isLoading}
-                        className="flex-1"
+                        className="flex-1 [&_[data-slot=range]]:bg-brand-violet [&_span[data-slot=range]]:bg-brand-violet [&>span>span]:bg-brand-violet [&_[role=slider]]:border-brand-violet"
                       />
-                      <span className="text-sm font-bold text-primary tabular-nums min-w-[3ch] text-right">{maxPages}</span>
+                      <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
