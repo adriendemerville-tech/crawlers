@@ -824,7 +824,7 @@ export default function SiteCrawl() {
   }
 
   // ── Sitemap export ────────────────────────────────────────
-  function handleSitemapExport() {
+  async function handleSitemapExport() {
     if (pages.length === 0) return;
     const domain = crawlResult?.domain || '';
     const xml = generateSitemapXml(pages, domain);

@@ -213,7 +213,7 @@ export default function RapportViewer() {
 
   /* --- Actions --- */
 
-  const handleCsv = () => {
+  const handleCsv = async () => {
     if (!htmlContent) return;
     const csv = htmlTablesToCsv(htmlContent);
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });

@@ -80,7 +80,7 @@ export default function RapportMatrice() {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const { getReportFilename } = await import('@/utils/reportFilename');
-    a.download = getReportFilename(data?.domain || 'matrice', 'matrice', 'csv');
+    a.download = getReportFilename('matrice', 'matrice', 'csv');
     a.click();
   };
 
