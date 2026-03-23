@@ -79,6 +79,7 @@ export function FinancesDashboard() {
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
+  const [dataforseoBalance, setDataforseoBalance] = useState<{ balance: number | null; total_deposited: number | null; total_spent: number | null; fetched_at: string | null } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0, promptTokens: 0, completionTokens: 0, callCount: 0,
     byFunction: {}, byModel: {},
