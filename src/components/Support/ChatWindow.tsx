@@ -547,20 +547,18 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Input */}
       <div className="border-t border-border/30 px-2 py-1 shrink-0 relative">
-        <div className="flex items-end gap-1">
-          {user && (
-            <ChatAttachmentPicker
-              userId={user.id}
-              onAttach={(item) => {
-                const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
-                const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
-                setNewMessage(attachText);
-              }}
-              onImageAttach={(fileName) => {
-                setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
-              }}
-            />
-          )}
+        <div className="flex items-center gap-1">
+          <ChatAttachmentPicker
+            userId={user?.id}
+            onAttach={(item) => {
+              const prefix = item.type === 'report' ? '📄 Rapport' : '💻 Script';
+              const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
+              setNewMessage(attachText);
+            }}
+            onImageAttach={(fileName) => {
+              setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
+            }}
+          />
           <div className="flex-1 relative">
             <textarea
               value={newMessage}
@@ -568,7 +566,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               onKeyDown={handleKeyDown}
               placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
-              className="w-full min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-8 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+              className="w-full min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-10 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
               maxLength={isAdmin ? 2000 : 500}
               rows={1}
               style={{ height: 'auto' }}
@@ -580,7 +578,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               }}
             />
             {!newMessage.trim() && (
-              <div className="absolute right-1 bottom-0.5">
+              <div className="absolute inset-y-0 right-1 flex items-center justify-center">
                 <ChatMicButton
                   onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
                   disabled={sending}
@@ -591,7 +589,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
           <button
             onClick={handleSend}
             disabled={!newMessage.trim() || sending}
-            className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="h-7 w-7 shrink-0 self-center flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
           </button>

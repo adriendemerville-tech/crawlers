@@ -14,7 +14,7 @@ interface AttachmentItem {
 }
 
 interface ChatAttachmentPickerProps {
-  userId: string;
+  userId?: string;
   onAttach: (item: AttachmentItem) => void;
   onImageAttach?: (fileName: string) => void;
 }
@@ -25,9 +25,10 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
   const [items, setItems] = useState<AttachmentItem[]>([]);
   const [tab, setTab] = useState<'report' | 'script'>('report');
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const hasLibrary = Boolean(userId);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !userId) return;
     setLoading(true);
 
     const fetchItems = async () => {
@@ -102,8 +103,14 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
           }}
         />
         <button
-          className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors"
-          onClick={() => setOpen(true)}
+          className="h-7 w-7 shrink-0 self-center flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          onClick={() => {
+            if (!hasLibrary && onImageAttach) {
+              imageInputRef.current?.click();
+              return;
+            }
+            setOpen(true);
+          }}
           title="Joindre"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -116,22 +123,26 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
     <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border bg-background shadow-xl z-10">
       <div className="flex items-center justify-between border-b px-3 py-1.5">
         <div className="flex gap-1">
-          <Button
-            variant={tab === 'report' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-6 text-[11px] gap-1 px-2"
-            onClick={() => setTab('report')}
-          >
-            <FileText className="h-3 w-3" /> Rapports
-          </Button>
-          <Button
-            variant={tab === 'script' ? 'default' : 'ghost'}
-            size="sm"
-            className="h-6 text-[11px] gap-1 px-2"
-            onClick={() => setTab('script')}
-          >
-            <Code2 className="h-3 w-3" /> Scripts
-          </Button>
+          {hasLibrary && (
+            <>
+              <Button
+                variant={tab === 'report' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-6 text-[11px] gap-1 px-2"
+                onClick={() => setTab('report')}
+              >
+                <FileText className="h-3 w-3" /> Rapports
+              </Button>
+              <Button
+                variant={tab === 'script' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-6 text-[11px] gap-1 px-2"
+                onClick={() => setTab('script')}
+              >
+                <Code2 className="h-3 w-3" /> Scripts
+              </Button>
+            </>
+          )}
           {onImageAttach && (
             <Button
               variant="ghost"
@@ -149,7 +160,11 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
       </div>
 
       <ScrollArea className="max-h-48 p-2">
-        {loading ? (
+        {!hasLibrary ? (
+          <p className="text-xs text-muted-foreground text-center py-4">
+            Ajoutez une image à votre message.
+          </p>
+        ) : loading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
