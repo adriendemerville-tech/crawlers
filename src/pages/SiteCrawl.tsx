@@ -267,21 +267,21 @@ interface CrawlPage {
   title: string | null;
   h1: string | null;
   seo_score: number | null;
-  word_count: number;
-  images_without_alt: number;
-  has_schema_org: boolean;
-  has_canonical: boolean;
-  has_og: boolean;
-  has_noindex: boolean;
-  has_nofollow: boolean;
-  is_indexable: boolean;
-  index_source: string;
+  word_count: number | null;
+  images_without_alt: number | null;
+  has_schema_org: boolean | null;
+  has_canonical: boolean | null;
+  has_og: boolean | null;
+  has_noindex: boolean | null;
+  has_nofollow: boolean | null;
+  is_indexable: boolean | null;
+  index_source: string | null;
   issues: string[];
   content_hash?: string | null;
   schema_org_types?: string[];
   schema_org_errors?: string[];
   custom_extraction?: Record<string, string>;
-  crawl_depth?: number;
+  crawl_depth?: number | null;
 }
 
 interface CrawlResult {
