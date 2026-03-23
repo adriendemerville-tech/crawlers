@@ -83,7 +83,7 @@ export function HttpStatusChart({ pages, language }: HttpStatusChartProps) {
       groups[group] = (groups[group] || 0) + 1;
     });
 
-    return ['2xx', '3xx', '4xx', '5xx', 'unknown']
+    return ['200', '2xx', '3xx', '4xx', '5xx', 'unknown']
       .filter(k => groups[k] > 0)
       .map(k => ({
         name: labels[k],
