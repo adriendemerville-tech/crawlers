@@ -223,7 +223,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       // Check if escalation should show phone prompt (after 3+ user messages) — skip for admins
       const userCount = updatedMessages.filter(m => m.role === 'user').length;
-      if (userCount >= 3 && !phoneSent && !isAdmin) {
+      if (userCount >= 8 && !phoneSent && !isAdmin) {
         setShowPhonePrompt(true);
       }
     } catch (err) {
@@ -362,7 +362,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
           <div className="flex items-center gap-2">
             <CrawlersLogo size={16} />
-            <span className="text-xs font-medium text-muted-foreground">Assistant Crawlers</span>
+            <span className="text-xs font-medium text-muted-foreground">Félix</span>
           </div>
           <button onClick={onClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" /></button>
         </div>
@@ -380,7 +380,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex items-center gap-2">
           <CrawlersLogo size={16} />
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-medium text-foreground/80">Assistant Crawlers</span>
+          <span className="text-xs font-medium text-foreground/80">Félix</span>
           {isAdmin && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <Shield className="h-2 w-2" /> Créateur
@@ -410,11 +410,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <div className="flex justify-center">
               <CrawlersLogo size={28} />
             </div>
-            <p className="text-xs font-medium">Bonjour ! Comment puis-je vous aider ?</p>
+           <p className="text-xs font-medium">Salut moi c'est Félix !</p>
             {isAdmin ? (
               <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
             ) : (
-              <p className="text-[11px] text-muted-foreground/70">Audits SEO, GEO Score, crédits ou problème technique.</p>
+              <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour te filer un coup de main et t'aider à analyser les metrics de tes sites. Tu as une première question ?</p>
             )}
           </div>
         ) : (
