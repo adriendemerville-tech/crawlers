@@ -488,7 +488,6 @@ export default function SiteCrawl() {
   const FAIR_USE_LIMIT = 5000;
   const historySectionRef = useRef<HTMLDivElement | null>(null);
 
-  const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
   // Delayed upsell reveal
