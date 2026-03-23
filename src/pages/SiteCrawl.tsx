@@ -1668,18 +1668,18 @@ export default function SiteCrawl() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="auto" className="text-xs">🤖 Auto</SelectItem>
-                                  <SelectItem value="homepage" className="text-xs">🏠 {language === 'en' ? 'Home' : language === 'es' ? 'Inicio' : 'Accueil'}</SelectItem>
-                                  <SelectItem value="blog" className="text-xs">📝 Blog</SelectItem>
-                                  <SelectItem value="produit" className="text-xs">📦 {language === 'en' ? 'Product' : language === 'es' ? 'Producto' : 'Produit'}</SelectItem>
-                                  <SelectItem value="catégorie" className="text-xs">📂 {language === 'en' ? 'Category' : language === 'es' ? 'Categoría' : 'Catégorie'}</SelectItem>
-                                  <SelectItem value="faq" className="text-xs">❓ FAQ</SelectItem>
-                                  <SelectItem value="contact" className="text-xs">✉️ Contact</SelectItem>
-                                  <SelectItem value="tarifs" className="text-xs">💰 {language === 'en' ? 'Pricing' : language === 'es' ? 'Precios' : 'Tarifs'}</SelectItem>
-                                  <SelectItem value="guide" className="text-xs">📖 Guide</SelectItem>
-                                  <SelectItem value="légal" className="text-xs">⚖️ {language === 'en' ? 'Legal' : language === 'es' ? 'Legal' : 'Légal'}</SelectItem>
-                                  <SelectItem value="à propos" className="text-xs">ℹ️ {language === 'en' ? 'About' : language === 'es' ? 'Acerca de' : 'À propos'}</SelectItem>
-                                  <SelectItem value="page" className="text-xs">📄 Page</SelectItem>
+                                  <SelectItem value="auto" className="text-xs">Auto</SelectItem>
+                                  <SelectItem value="homepage" className="text-xs">{language === 'en' ? 'Home' : language === 'es' ? 'Inicio' : 'Accueil'}</SelectItem>
+                                  <SelectItem value="blog" className="text-xs">Blog</SelectItem>
+                                  <SelectItem value="produit" className="text-xs">{language === 'en' ? 'Product' : language === 'es' ? 'Producto' : 'Produit'}</SelectItem>
+                                  <SelectItem value="catégorie" className="text-xs">{language === 'en' ? 'Category' : language === 'es' ? 'Categoría' : 'Catégorie'}</SelectItem>
+                                  <SelectItem value="faq" className="text-xs">FAQ</SelectItem>
+                                  <SelectItem value="contact" className="text-xs">Contact</SelectItem>
+                                  <SelectItem value="tarifs" className="text-xs">{language === 'en' ? 'Pricing' : language === 'es' ? 'Precios' : 'Tarifs'}</SelectItem>
+                                  <SelectItem value="guide" className="text-xs">Guide</SelectItem>
+                                  <SelectItem value="légal" className="text-xs">{language === 'en' ? 'Legal' : language === 'es' ? 'Legal' : 'Légal'}</SelectItem>
+                                  <SelectItem value="à propos" className="text-xs">{language === 'en' ? 'About' : language === 'es' ? 'Acerca de' : 'À propos'}</SelectItem>
+                                  <SelectItem value="page" className="text-xs">Page</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
