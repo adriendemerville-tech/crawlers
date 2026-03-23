@@ -421,34 +421,23 @@ const DOC_SECTIONS: DocSection[] = [
   {
     id: 'integration',
     icon: <Code className="h-4 w-4" />,
-    title: '7. Intégration technique',
+    title: '7. Brancher votre site',
     subsections: [
       {
-        id: 'sdk',
-        title: 'Comment intégrer le SDK Crawlers ?',
-        content: `Le SDK Crawlers permet d'injecter des correctifs directement sur votre site sans modifier le code source :
-<ol class="list-decimal pl-6 mt-1 space-y-1">
-<li>Depuis tableau de bord > Intégration SDK</li>
-<li>Copiez le snippet JavaScript fourni</li>
-<li>Collez-le avant &lt;/head&gt; sur toutes vos pages</li>
-<li>Les correctifs sont déployés et mis à jour automatiquement</li>
-</ol>`,
-      },
-      {
-        id: 'gtm',
-        title: 'Comment intégrer via Google Tag Manager ?',
-        content: `<ol class="list-decimal pl-6 space-y-1">
-<li>Depuis tableau de bord > <a href="https://crawlers.fr/integration-gtm" class="text-primary underline">Intégration GTM</a></li>
-<li>Copiez l'ID de tag fourni</li>
-<li>Dans GTM, créez une balise HTML personnalisée</li>
-<li>Collez le code et configurez le déclencheur "Toutes les pages"</li>
-<li>Publiez le conteneur GTM</li>
-</ol>`,
+        id: 'connection-methods',
+        title: 'Comment brancher mon site à Crawlers.AI ?',
+        content: `<p>Trois méthodes sont disponibles depuis Console → Mes Sites → icône 🔌 :</p>
+<ol class="list-decimal pl-6 mt-2 space-y-2">
+<li><strong>API CMS (recommandé)</strong> — Connexion directe via l'API REST de votre CMS. Cliquez sur « API CMS (WordPress) », entrez l'URL de votre site, puis utilisez le Lien Magique pour une connexion automatique en un clic. Compatible WordPress, Shopify, Webflow.</li>
+<li><strong>Plugin WordPress</strong> — Téléchargez le fichier .zip depuis la modale, installez-le dans WordPress → Extensions → Ajouter → Téléverser. Le plugin se synchronise automatiquement toutes les 6h via WP Cron.</li>
+<li><strong>GTM / Script universel</strong> — Copiez le snippet de 3 lignes pré-rempli avec votre clé API. Collez-le dans Google Tag Manager (balise HTML personnalisée, déclencheur All Pages) ou directement avant &lt;/head&gt;. Compatible tous CMS. Widget léger (~2 Ko), exécution asynchrone.</li>
+</ol>
+<p class="mt-2">Guide complet : <a href="/integration-gtm" class="text-primary underline">Brancher votre site — 3 méthodes</a></p>`,
       },
       {
         id: 'wordpress',
         title: 'Compatible avec WordPress ?',
-        content: `Oui. Crawlers.fr propose un scanner WordPress natif (plugins, thèmes, sécurité) et une intégration directe. Les codes correctifs générés par l'Architecte Génératif sont compatibles avec les principaux thèmes WordPress (Elementor, Divi, Astra, GeneratePress).`,
+        content: `Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : (1) l'API CMS via Lien Magique pour une connexion directe automatique, (2) le plugin .zip classique avec synchronisation toutes les 6h, et (3) le snippet GTM/Script universel. Les codes correctifs générés par l'Architecte Génératif sont compatibles avec les principaux thèmes WordPress (Elementor, Divi, Astra, GeneratePress).`,
       },
     ],
   },
