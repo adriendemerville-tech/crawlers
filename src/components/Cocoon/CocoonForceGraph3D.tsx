@@ -886,12 +886,24 @@ export function CocoonForceGraph3D({
     }
 
     // Build 3D nodes with initial positions on a sphere
+    // Compute max authority for radius normalization (proportional to internal PR)
+    const maxAuthForRadius = Math.max(1, ...nodes.map((n) => n.page_authority ?? 0));
+    const minNodeRadius3D = 0.4;
+    const maxNodeRadius3D = 2.0;
+
     const gNodes: GraphNode3D[] = nodes.map((n, i) => {
       const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const isHome = n.id === homeId;
       const phi = Math.acos(1 - (2 * (i + 0.5)) / nodes.length);
       const theta = Math.PI * (1 + Math.sqrt(5)) * i;
       const sphereR = 50 + crawlDepth * 20;
+
+      // Radius proportional to page_authority (internal PageRank)
+      const authRatio = (n.page_authority ?? 0) / maxAuthForRadius;
+      const computedRadius = isHome
+        ? maxNodeRadius3D
+        : minNodeRadius3D + authRatio * (maxNodeRadius3D - minNodeRadius3D);
+
       return {
         id: n.id,
         label: isHome ? "Home" : n.title || getSlug(n.url),
@@ -901,7 +913,7 @@ export function CocoonForceGraph3D({
         geo: n.geo_score,
         roi: n.roi_predictive,
         traffic: n.traffic_estimate,
-        radius: depthToRadius(isHome ? 0 : Math.max(crawlDepth, 1)),
+        radius: computedRadius,
         depth: crawlDepth,
         pageType: n.page_type || "unknown",
         isHome,
