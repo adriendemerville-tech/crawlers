@@ -320,19 +320,64 @@ export function FinancesDashboard() {
     emerald: { border: 'border-emerald-500/30', text: 'text-emerald-600 dark:text-emerald-400' },
   };
 
+  // Grand total since launch = estimated platform cost + real API data
+  const realDataforseoSpent = dataforseoBalance?.total_spent ?? 0;
+  const realOpenrouterSpent = apiBalances?.openrouter?.usage ?? 0;
+  const realFirecrawlUsed = apiBalances?.firecrawl?.total_credits && apiBalances?.firecrawl?.remaining_credits
+    ? apiBalances.firecrawl.total_credits - apiBalances.firecrawl.remaining_credits
+    : 0;
+  const grandTotalSinceLaunchUSD = realDataforseoSpent + realOpenrouterSpent;
+  const grandTotalSinceLaunchEUR = grandTotalSinceLaunchUSD * 0.92 + allTimePlatformCost;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Finances & Coûts</h2>
-          <p className="text-xs text-muted-foreground">Indicateurs financiers et consommation API (30 derniers jours)</p>
+          <p className="text-xs text-muted-foreground">Indicateurs financiers depuis le lancement</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => fetchEvents(true)} disabled={isRefreshing} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>
       </div>
+
+      {/* Hero: Total Spending Since Launch */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-r from-card via-card to-primary/5">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Dépenses totales depuis le lancement</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {grandTotalSinceLaunchEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  dont ${grandTotalSinceLaunchUSD.toFixed(2)} API réel + {allTimePlatformCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ estimé (LLM + infra)
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-6 text-center">
+              <div>
+                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.callCount ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels IA total</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.paidApiCalls ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels API total</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{((allTimeTokenUsage?.totalTokens ?? 0) / 1_000_000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M</p>
+                <p className="text-[10px] text-muted-foreground">Tokens total</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Business Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
