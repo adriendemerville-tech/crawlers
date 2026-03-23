@@ -443,17 +443,33 @@ export function CocoonRadialGraph({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // Draw depth rings
+    // Draw depth rings — use same dynamic radii as layout
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
     const maxR = Math.min(dimensions.w, dimensions.h) * 0.42;
-    const ringGap = maxR / (maxDepth + 1);
 
+    // Recompute dynamic ring radii for drawing (same logic as layout)
+    const nodesPerDepthDraw = new Map<number, number>();
+    allRadialNodes.forEach(n => {
+      nodesPerDepthDraw.set(n.depth, (nodesPerDepthDraw.get(n.depth) || 0) + 1);
+    });
+    const depthWeightsDraw: number[] = [];
     for (let d = 1; d <= maxDepth; d++) {
+      depthWeightsDraw.push(Math.sqrt(nodesPerDepthDraw.get(d) || 1));
+    }
+    const totalWeightDraw = depthWeightsDraw.reduce((a, b) => a + b, 0) || 1;
+    const ringRadiiDraw: number[] = [];
+    let cumulativeDraw = 0;
+    for (let d = 0; d < maxDepth; d++) {
+      cumulativeDraw += depthWeightsDraw[d] / totalWeightDraw;
+      ringRadiiDraw.push(maxR * 0.15 + maxR * 0.85 * cumulativeDraw);
+    }
+
+    for (let d = 0; d < maxDepth; d++) {
       ctx.beginPath();
-      ctx.arc(cx, cy, ringGap * d, 0, Math.PI * 2);
-      ctx.strokeStyle = getDepthRingColor(d);
+      ctx.arc(cx, cy, ringRadiiDraw[d], 0, Math.PI * 2);
+      ctx.strokeStyle = getDepthRingColor(d + 1);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
