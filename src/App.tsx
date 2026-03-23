@@ -157,9 +157,6 @@ const App = () => (
                       <Suspense fallback={null}>
                         <SurveyModal />
                       </Suspense>
-                      <Suspense fallback={null}>
-                        <SignupPromptModal />
-                      </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
                 </CreditsProvider>
