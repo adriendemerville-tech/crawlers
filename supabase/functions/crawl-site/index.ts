@@ -36,11 +36,21 @@ Deno.serve(async (req) => {
     const { 
       url, 
       maxPages = 50, 
-      userId, 
+      userId: bodyUserId, 
       maxDepth = 0, 
       urlFilter = '', 
       customSelectors = [] 
     } = await req.json();
+
+    // ── Extract real userId from JWT (ignore body userId for security) ──
+    let userId = bodyUserId;
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      const { data: { user: jwtUser } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+      if (jwtUser?.id) {
+        userId = jwtUser.id;
+      }
+    }
     
     if (!url || !userId) {
       return new Response(JSON.stringify({ success: false, error: 'URL et userId requis' }), {
