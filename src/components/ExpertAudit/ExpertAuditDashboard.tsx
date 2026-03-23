@@ -1000,8 +1000,9 @@ export function ExpertAuditDashboard() {
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
       
       // Step 1: Try to recover result from server-side cache (audit may have completed but connection was cut)
-      const recoveryDomain = new URL(normalizedUrl).hostname;
-      const cacheKey = `strategic_${recoveryDomain}_${normalizedUrl}`;
+      const recoveryDomain = new URL(normalizedUrl).hostname.replace(/^www\./, '');
+      const recoveryUrl = normalizedUrl.replace(/\/+$/, '');
+      const cacheKey = `strategic_${recoveryDomain}_${recoveryUrl}`;
       let recovered = false;
       
       try {

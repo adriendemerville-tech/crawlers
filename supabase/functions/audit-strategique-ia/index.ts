@@ -2289,7 +2289,9 @@ function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string)
 async function saveToCache(domain: string, url: string, result: any): Promise<void> {
   try {
     const adminClient = getServiceClient();
-    const cacheKey = `strategic_${domain}_${url}`;
+    const normalizedCacheUrl = url.replace(/\/+$/, '');
+    const cacheDomain = domain.replace(/^www\./, '');
+    const cacheKey = `strategic_${cacheDomain}_${normalizedCacheUrl}`;
     await adminClient.from('audit_cache').upsert({
       cache_key: cacheKey,
       function_name: 'audit-strategique-ia',
