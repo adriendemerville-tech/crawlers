@@ -43,6 +43,7 @@ export function useAuditState() {
   // Refs
   const loadingRef = useRef<HTMLDivElement>(null);
   const stopMusicRef = useRef<(() => void) | null>(null);
+  const pauseMusicRef = useRef<(() => void) | null>(null);
   const auditStartTimeRef = useRef<number>(0);
 
   const handleNewAudit = useCallback(() => {
