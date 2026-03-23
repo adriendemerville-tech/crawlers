@@ -196,7 +196,7 @@ const CGVU = () => {
                 À titre non exhaustif, il est expressément interdit de :
               </p>
               <ul>
-                <li>Utiliser les fonctionnalités d'injection de code (Architecte Génératif, widget, GTM, plugin WordPress) pour <strong>modifier, altérer ou nuire au fonctionnement d'un site web dont l'utilisateur n'est pas le propriétaire légitime</strong> ;</li>
+                <li>Utiliser les fonctionnalités d'injection de code (Architecte Génératif, API CMS, plugin WordPress, GTM, snippet direct) pour <strong>modifier, altérer ou nuire au fonctionnement d'un site web dont l'utilisateur n'est pas le propriétaire légitime</strong> ;</li>
                 <li>Tenter d'injecter du code malveillant, des scripts de redirection, du contenu spam ou toute forme de <strong>backdoor</strong> via les outils de la Plateforme ;</li>
                 <li>Usurper l'identité d'un autre utilisateur ou d'un autre propriétaire de site pour accéder aux fonctionnalités d'injection ;</li>
                 <li>Utiliser les outils d'audit et de crawl de la Plateforme dans le but de <strong>dégrader, surcharger ou faire tomber le site d'un concurrent</strong> (attaque par déni de service, crawl abusif, etc.) ;</li>

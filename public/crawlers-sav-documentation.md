@@ -367,21 +367,32 @@ Non. Vos données (site, scores, historiques) sont strictement personnelles et n
 ## 7. Intégration technique
 
 ### Comment intégrer le SDK Crawlers ?
-Le SDK Crawlers permet d'injecter des correctifs directement sur votre site sans modifier le code source :
-1. Depuis tableau de bord > Intégration SDK
-2. Copiez le snippet JavaScript fourni
-3. Collez-le avant </head> sur toutes vos pages
-4. Les correctifs sont déployés et mis à jour automatiquement
+Trois méthodes sont disponibles pour brancher votre site à Crawlers.AI, accessibles depuis Console → Mes Sites → icône 🔌 :
 
-### Comment intégrer via Google Tag Manager ?
-1. Depuis tableau de bord > Intégration GTM
-2. Copiez l'ID de tag fourni
-3. Dans GTM, créez une balise HTML personnalisée
-4. Collez le code et configurez le déclencheur "Toutes les pages"
-5. Publiez le conteneur GTM
+### Méthode 1 : API CMS (recommandé)
+Connexion directe via l'API REST de votre CMS (WordPress, Shopify, Webflow).
+1. Ouvrez la modale « Brancher mon site »
+2. Sélectionnez « API CMS (WordPress) »
+3. Entrez l'URL de votre site
+4. Cliquez sur « Lien Magique » — un onglet s'ouvre sur votre admin pour valider automatiquement la connexion
+
+### Méthode 2 : Plugin WordPress (.zip)
+Installation classique avec synchronisation automatique toutes les 6h via WP Cron.
+1. Depuis la modale, cliquez sur « Télécharger le Plugin .zip »
+2. Dans WordPress → Extensions → Ajouter → Téléverser → Activez
+3. Le plugin interroge l'API toutes les 6h et injecte les correctifs via wp_head/wp_footer
+
+### Méthode 3 : Google Tag Manager / Script universel
+Snippet léger (~2 Ko) compatible tous CMS et sites custom.
+1. Copiez le snippet pré-rempli avec votre clé API
+2. Option A : Déploiement 1-clic via l'API GTM (connectez votre compte Google)
+3. Option B : Nouvelle balise GTM → HTML personnalisée → Collez → Déclencheur All Pages → Publiez
+4. Option C : Collez directement avant </head> dans votre code source
+
+Guide complet : https://crawlers.fr/integration-gtm
 
 ### Compatible avec WordPress ?
-Oui. Crawlers.fr propose un scanner WordPress natif (plugins, thèmes, sécurité) et une intégration directe. Les codes correctifs générés par l'Architecte Génératif sont compatibles avec les principaux thèmes WordPress (Elementor, Divi, Astra, GeneratePress).
+Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Lien Magique, plugin .zip classique, et snippet GTM/Script universel. Les codes correctifs sont compatibles avec Elementor, Divi, Astra, GeneratePress et tous les thèmes majeurs.
 
 ---
 
