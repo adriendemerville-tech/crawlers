@@ -12,7 +12,8 @@ interface HttpStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  '2xx': '#10b981',
+  '200': '#10b981',
+  '2xx': '#34d399',
   '3xx': '#f59e0b',
   '4xx': '#ef4444',
   '5xx': '#dc2626',
@@ -21,7 +22,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, Record<string, string>> = {
   fr: {
-    '2xx': 'Succès (2xx)',
+    '200': '200 OK',
+    '2xx': 'Autres succès (2xx)',
     '3xx': 'Redirection (3xx)',
     '4xx': 'Erreur client (4xx)',
     '5xx': 'Erreur serveur (5xx)',
@@ -29,7 +31,8 @@ const STATUS_LABELS: Record<string, Record<string, string>> = {
     title: 'Codes de réponse HTTP',
   },
   en: {
-    '2xx': 'Success (2xx)',
+    '200': '200 OK',
+    '2xx': 'Other Success (2xx)',
     '3xx': 'Redirect (3xx)',
     '4xx': 'Client Error (4xx)',
     '5xx': 'Server Error (5xx)',
@@ -37,7 +40,8 @@ const STATUS_LABELS: Record<string, Record<string, string>> = {
     title: 'HTTP Response Codes',
   },
   es: {
-    '2xx': 'Éxito (2xx)',
+    '200': '200 OK',
+    '2xx': 'Otros éxitos (2xx)',
     '3xx': 'Redirección (3xx)',
     '4xx': 'Error cliente (4xx)',
     '5xx': 'Error servidor (5xx)',
@@ -48,6 +52,7 @@ const STATUS_LABELS: Record<string, Record<string, string>> = {
 
 function getStatusGroup(status: number | null): string {
   if (!status) return 'unknown';
+  if (status === 200) return '200';
   if (status >= 200 && status < 300) return '2xx';
   if (status >= 300 && status < 400) return '3xx';
   if (status >= 400 && status < 500) return '4xx';
