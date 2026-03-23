@@ -105,7 +105,8 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   }, [isOpen, user, auditMode, result]);
 
   const effectiveResult = auditMode === 'strategic' && summarizedResult ? summarizedResult : result;
-  const htmlContent = generateExpertReportHTML(effectiveResult, auditMode, t, language, branding);
+  // Only generate HTML when modal is open to avoid crashes on null data during background renders
+  const htmlContent = isOpen ? generateExpertReportHTML(effectiveResult, auditMode, t, language, branding) : '';
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);

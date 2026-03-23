@@ -349,13 +349,13 @@ export function generateExpertReportHTML(
         ${rows}
       </div>`;
 
-    // Performance details from rawData
-    const psiPerf = scores.performance.psiPerformance;
-    const lcp = scores.performance.lcp;
-    const cls = scores.performance.cls;
-    const tbt = scores.performance.tbt;
-    const fcp = (result.rawData as any)?.fcp;
-    const si = (result.rawData as any)?.speedIndex;
+    // Performance details from rawData (null-safe defaults)
+    const psiPerf = scores.performance.psiPerformance ?? 0;
+    const lcp = scores.performance.lcp ?? 0;
+    const cls = scores.performance.cls ?? 0;
+    const tbt = scores.performance.tbt ?? 0;
+    const fcp = (result.rawData as any)?.fcp ?? 0;
+    const si = (result.rawData as any)?.speedIndex ?? 0;
 
     // Broken links
     const brokenCount = scores.technical.brokenLinksCount ?? 0;
@@ -504,7 +504,7 @@ export function generateExpertReportHTML(
                 <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${frictionBgs[cf.frictionLevel] || '#f3f4f6'}; color: ${frictionColors[cf.frictionLevel] || '#374151'};">${cf.frictionLevel}</span>
               </div>
               ${statusRow(rl.forms, cf.formsCount > 0, String(cf.formsCount))}
-              ${statusRow(rl.fieldsPerForm, cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
+              ${statusRow(rl.fieldsPerForm, (cf.avgFieldsPerForm ?? 0) <= 3, (cf.avgFieldsPerForm ?? 0).toFixed(1))}
               ${statusRow('CTAs', cf.ctaCount > 0, String(cf.ctaCount))}
               ${statusRow('CTA above fold', cf.ctaAboveFold)}
             </div>`);
