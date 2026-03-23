@@ -60,6 +60,7 @@ interface GraphLink3D {
   type: string;
   juiceType: JuiceType;
   juiceIntensity: number;
+  direction: 'descending' | 'ascending' | 'lateral';
 }
 
 type JuiceType = "authority" | "semantic" | "traffic" | "hierarchy";
