@@ -291,7 +291,7 @@ export function AIBotsLeadMagnet() {
       )}
 
       {/* Results: GEO Score */}
-      {tab === 'geo' && geoScore !== null && geoFactors && (
+      {geoScore !== null && geoFactors && (
         <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <ScoreRing score={geoScore} />
           <p className="text-center text-xs text-muted-foreground mt-1">
