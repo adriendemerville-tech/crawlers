@@ -495,7 +495,7 @@ export default function SiteCrawl() {
     if (isUnlimited) return;
     const timer = setTimeout(() => setShowUpsell(true), 2500);
     return () => clearTimeout(timer);
-  }, [isUnlimitedUser]);
+  }, [isUnlimited]);
 
   // Load past crawls & crawl_pages_this_month
   useEffect(() => {
