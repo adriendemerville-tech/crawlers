@@ -80,6 +80,11 @@ export function FinancesDashboard() {
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
   const [dataforseoBalance, setDataforseoBalance] = useState<{ balance: number | null; total_deposited: number | null; total_spent: number | null; fetched_at: string | null } | null>(null);
+  const [apiBalances, setApiBalances] = useState<{
+    serpapi?: { plan?: string; searches_this_month?: number; total_searches_left?: number; plan_searches_left?: number; error?: string };
+    openrouter?: { usage?: number; limit?: number; balance?: number; is_free_tier?: boolean; error?: string };
+    firecrawl?: { remaining_credits?: number; total_credits?: number; plan?: string; error?: string };
+  } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0, promptTokens: 0, completionTokens: 0, callCount: 0,
     byFunction: {}, byModel: {},
@@ -252,13 +257,17 @@ export function FinancesDashboard() {
 
       // DB size + DataForSEO balance
       try {
-        const [sizeRes, balanceRes] = await Promise.all([
+        const [sizeRes, balanceRes, apiBalancesRes] = await Promise.all([
           supabase.rpc('get_database_size' as any),
           supabase.functions.invoke('dataforseo-balance'),
+          supabase.functions.invoke('api-balances'),
         ]);
         if (sizeRes.data) setDbSize(sizeRes.data as any);
         if (balanceRes.data && !balanceRes.error) {
           setDataforseoBalance(balanceRes.data as any);
+        }
+        if (apiBalancesRes.data && !apiBalancesRes.error) {
+          setApiBalances(apiBalancesRes.data as any);
         }
       } catch {}
 
@@ -529,29 +538,167 @@ export function FinancesDashboard() {
               estimatedCost={tokenUsage.spiderEstimatedCost}
             />
 
-            {/* Firecrawl (Fallback) */}
-            <ApiQuotaGauge
-              name="Firecrawl (fallback)"
-              icon={<Flame className="h-4 w-4" />}
-              calls={tokenUsage.firecrawlCalls}
-              quota={500}
-              costPerCall={0.005}
-              color="orange"
-              status={tokenUsage.firecrawlCalls >= 500 ? 'exhausted' : tokenUsage.firecrawlCalls >= 400 ? 'warning' : 'ok'}
-              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ Fallback'}
-            />
+            {/* Firecrawl — with real credits */}
+            <div className="rounded-xl border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Firecrawl (fallback)</span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  apiBalances?.firecrawl?.remaining_credits != null && apiBalances.firecrawl.remaining_credits < 50
+                    ? 'bg-destructive/10 text-destructive'
+                    : apiBalances?.firecrawl?.remaining_credits != null && apiBalances.firecrawl.remaining_credits < 200
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {apiBalances?.firecrawl?.remaining_credits != null
+                    ? apiBalances.firecrawl.remaining_credits < 50
+                      ? `⛔ ${apiBalances.firecrawl.remaining_credits} crédits restants`
+                      : apiBalances.firecrawl.remaining_credits < 200
+                      ? `⚠️ ${apiBalances.firecrawl.remaining_credits} crédits`
+                      : `✅ ${apiBalances.firecrawl.remaining_credits} crédits`
+                    : apiBalances?.firecrawl?.error ? '❌ Erreur' : '✅ Fallback'}
+                </span>
+              </div>
+              {apiBalances?.firecrawl?.remaining_credits != null && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Crédits restants</span>
+                    <span className="font-mono font-semibold text-foreground">{apiBalances.firecrawl.remaining_credits.toLocaleString('fr-FR')}</span>
+                  </div>
+                  {apiBalances.firecrawl.total_credits != null && (
+                    <>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Total crédits</span>
+                        <span className="font-mono">{apiBalances.firecrawl.total_credits.toLocaleString('fr-FR')}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            apiBalances.firecrawl.remaining_credits < 50 ? 'bg-destructive' : apiBalances.firecrawl.remaining_credits < 200 ? 'bg-amber-500' : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${Math.max(2, (apiBalances.firecrawl.remaining_credits / apiBalances.firecrawl.total_credits) * 100)}%` }}
+                        />
+                      </div>
+                    </>
+                  )}
+                  {apiBalances.firecrawl.plan && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Plan</span>
+                      <span className="font-mono">{apiBalances.firecrawl.plan}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                <span>{tokenUsage.firecrawlCalls.toLocaleString('fr-FR')} appels (30j)</span>
+                <span>~{(tokenUsage.firecrawlCalls * 0.005).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+              </div>
+            </div>
 
-            {/* OpenRouter */}
-            <ApiQuotaGauge
-              name="OpenRouter"
-              icon={<Brain className="h-4 w-4" />}
-              calls={tokenUsage.openrouterCalls}
-              quota={null}
-              costPerCall={0}
-              color="violet"
-              status="ok"
-              statusLabel="✅ Pay-as-you-go"
-            />
+            {/* OpenRouter — with real usage */}
+            <div className="rounded-xl border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  <span className="text-sm font-semibold">OpenRouter</span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  apiBalances?.openrouter?.balance != null && apiBalances.openrouter.balance < 1
+                    ? 'bg-destructive/10 text-destructive'
+                    : apiBalances?.openrouter?.balance != null && apiBalances.openrouter.balance < 5
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {apiBalances?.openrouter?.balance != null
+                    ? apiBalances.openrouter.balance < 1
+                      ? `⛔ Solde critique: $${apiBalances.openrouter.balance.toFixed(2)}`
+                      : apiBalances.openrouter.balance < 5
+                      ? `⚠️ Solde bas: $${apiBalances.openrouter.balance.toFixed(2)}`
+                      : `✅ $${apiBalances.openrouter.balance.toFixed(2)}`
+                    : apiBalances?.openrouter?.usage != null
+                    ? `✅ $${apiBalances.openrouter.usage.toFixed(2)} utilisé`
+                    : '✅ Pay-as-you-go'}
+                </span>
+              </div>
+              {apiBalances?.openrouter && !apiBalances.openrouter.error && (
+                <div className="space-y-2">
+                  {apiBalances.openrouter.usage != null && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Usage total</span>
+                      <span className="font-mono font-semibold text-foreground">${apiBalances.openrouter.usage.toFixed(4)}</span>
+                    </div>
+                  )}
+                  {apiBalances.openrouter.limit != null && (
+                    <>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Limite</span>
+                        <span className="font-mono">${apiBalances.openrouter.limit.toFixed(2)}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            (apiBalances.openrouter.balance ?? 0) < 1 ? 'bg-destructive' : (apiBalances.openrouter.balance ?? 0) < 5 ? 'bg-amber-500' : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${Math.max(2, ((apiBalances.openrouter.balance ?? 0) / apiBalances.openrouter.limit) * 100)}%` }}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                <span>{tokenUsage.openrouterCalls.toLocaleString('fr-FR')} appels (30j)</span>
+              </div>
+            </div>
+
+            {/* SerpAPI — with real searches left */}
+            <div className="rounded-xl border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  <span className="text-sm font-semibold">SerpAPI</span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  apiBalances?.serpapi?.total_searches_left != null && apiBalances.serpapi.total_searches_left < 10
+                    ? 'bg-destructive/10 text-destructive'
+                    : apiBalances?.serpapi?.total_searches_left != null && apiBalances.serpapi.total_searches_left < 50
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {apiBalances?.serpapi?.total_searches_left != null
+                    ? apiBalances.serpapi.total_searches_left < 10
+                      ? `⛔ ${apiBalances.serpapi.total_searches_left} recherches restantes`
+                      : apiBalances.serpapi.total_searches_left < 50
+                      ? `⚠️ ${apiBalances.serpapi.total_searches_left} recherches`
+                      : `✅ ${apiBalances.serpapi.total_searches_left} recherches restantes`
+                    : apiBalances?.serpapi?.error ? '❌ Erreur' : '✅ Fallback SERP'}
+                </span>
+              </div>
+              {apiBalances?.serpapi && !apiBalances.serpapi.error && (
+                <div className="space-y-2">
+                  {apiBalances.serpapi.searches_this_month != null && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Recherches ce mois</span>
+                      <span className="font-mono font-semibold text-foreground">{apiBalances.serpapi.searches_this_month.toLocaleString('fr-FR')}</span>
+                    </div>
+                  )}
+                  {apiBalances.serpapi.plan_searches_left != null && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Plan restant</span>
+                      <span className="font-mono">{apiBalances.serpapi.plan_searches_left.toLocaleString('fr-FR')}</span>
+                    </div>
+                  )}
+                  {apiBalances.serpapi.plan && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Plan</span>
+                      <span className="font-mono">{apiBalances.serpapi.plan}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Google PageSpeed */}
             {(() => {
