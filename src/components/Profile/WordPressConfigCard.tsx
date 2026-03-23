@@ -258,11 +258,38 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
+      {/* ─── Method selector ─── */}
+      <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+        <p className="text-xs font-semibold text-foreground">
+          {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant={connectMethod === 'cms' ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2 h-9"
+            onClick={() => setConnectMethod('cms')}
+          >
+            <Plug className="h-3.5 w-3.5" />
+            {t3(language, 'API CMS (WordPress)', 'CMS API (WordPress)', 'API CMS (WordPress)')}
+          </Button>
+          <Button
+            variant={connectMethod === 'gtm' ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2 h-9"
+            onClick={() => setConnectMethod('gtm')}
+          >
+            <Code className="h-3.5 w-3.5" />
+            {t3(language, 'API Google Tag Manager', 'Google Tag Manager API', 'API Google Tag Manager')}
+          </Button>
+        </div>
+      </div>
+
       <Separator />
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-2 gap-6 pt-2">
-        {/* ═══ LEFT: WordPress Plugin ═══ */}
+      {/* Detail panel based on selected method */}
+      {connectMethod === 'cms' ? (
+        {/* ═══ WordPress Plugin ═══ */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
