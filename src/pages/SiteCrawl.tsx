@@ -25,6 +25,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
+import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
 
 const crawlI18n = {
   fr: {
