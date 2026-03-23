@@ -663,6 +663,7 @@ export default function Cocoon() {
                 trackedSites={trackedSites}
                 selectedSiteId={selectedSiteId}
                 onSelect={setSelectedSiteId}
+                onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
                 placeholder={t.selectSite}
               />
             </div>
