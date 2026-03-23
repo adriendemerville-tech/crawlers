@@ -878,18 +878,6 @@ export default function SiteCrawl() {
       <Header />
 
       <main className="min-h-screen bg-background pt-20 pb-16 relative">
-        {/* Back to home arrow */}
-        {(isUnlimitedUser || !showUpsell) && (
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-2">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group text-sm"
-            >
-              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-              {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
-            </Link>
-          </div>
-        )}
 
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!isUnlimitedUser && (
