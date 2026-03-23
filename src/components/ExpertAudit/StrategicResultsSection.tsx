@@ -18,6 +18,7 @@ import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   result: ExpertAuditResult;
