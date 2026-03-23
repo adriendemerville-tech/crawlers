@@ -541,7 +541,7 @@ export default function SiteCrawl() {
 
 
   useEffect(() => {
-    if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
+    if (!crawlResult || viewingCrawlId || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('site_crawls')
@@ -576,7 +576,7 @@ export default function SiteCrawl() {
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [crawlResult]);
+  }, [crawlResult, viewingCrawlId, t]);
 
   // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
   useEffect(() => {
