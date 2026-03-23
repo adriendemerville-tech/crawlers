@@ -19,12 +19,22 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = getServiceClient()
-    const { crawl_id, tracked_site_id, top_n = 10 } = await req.json()
+    const { crawl_id, tracked_site_id: providedSiteId, top_n = 10 } = await req.json()
 
-    if (!crawl_id || !tracked_site_id) {
-      return new Response(JSON.stringify({ error: 'crawl_id and tracked_site_id required' }), {
+    if (!crawl_id) {
+      return new Response(JSON.stringify({ error: 'crawl_id required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    // Look up tracked_site_id from crawl if not provided
+    let tracked_site_id = providedSiteId
+    if (!tracked_site_id) {
+      const { data: crawl } = await supabase.from('site_crawls').select('domain, user_id').eq('id', crawl_id).single()
+      if (crawl) {
+        const { data: site } = await supabase.from('tracked_sites').select('id').eq('domain', crawl.domain).eq('user_id', crawl.user_id).maybeSingle()
+        tracked_site_id = site?.id
+      }
     }
 
     // Auth check
