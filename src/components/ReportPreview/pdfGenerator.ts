@@ -347,7 +347,8 @@ async function generateGeoPDF(result: GeoResult, language: string) {
   });
   
   addFooter(doc, t);
-  doc.save(`geo-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  const { getReportFilename } = await import('@/utils/reportFilename');
+  doc.save(getReportFilename(result.url, 'geo', 'pdf'));
 }
 
 async function generateLLMPDF(result: LLMAnalysisResult, language: string) {
