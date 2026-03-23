@@ -252,7 +252,7 @@ export function AIBotsLeadMagnet() {
       )}
 
       {/* Results: Bots */}
-      {tab === 'bots' && bots && (
+      {bots && (
         <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className={cn(
             "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
