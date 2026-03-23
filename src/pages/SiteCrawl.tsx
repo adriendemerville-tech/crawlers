@@ -1307,6 +1307,11 @@ export default function SiteCrawl() {
                 </div>
               )}
 
+              {/* HTTP Status Distribution Chart */}
+              {pages.length > 0 && (
+                <HttpStatusChart pages={pages} language={language} />
+              )}
+
               {/* Action bar: Sitemap Export */}
               <div className="flex flex-wrap gap-3">
                 <Button variant="outline" size="sm" className="gap-2" onClick={handleSitemapExport}>

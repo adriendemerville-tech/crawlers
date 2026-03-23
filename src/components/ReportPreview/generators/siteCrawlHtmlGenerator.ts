@@ -262,6 +262,7 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     ${aiSummary}
     ${recos}
     ${topErrors}
+    ${httpStatusChart}
     ${pagesTable}
   `;
 }
