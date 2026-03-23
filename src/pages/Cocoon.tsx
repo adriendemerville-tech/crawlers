@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
+import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
