@@ -294,13 +294,21 @@ export function Header() {
               </a>
             </>
           ) : (
-            <Link to="/site-crawl">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
-                <Bug className="h-3.5 w-3.5" />
-                <span className="text-sm font-semibold">Crawl</span>
-              </Button>
-            </Link>
-          )}
+            isCrawlPage ? (
+              <Link to="/cocoon">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                  <span className="text-sm font-semibold">Cocoon</span>
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/site-crawl">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                  <Bug className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Crawl</span>
+                </Button>
+              </Link>
+            )
           {isProfilePage && (
             <>
               <Link to="/cocoon">
