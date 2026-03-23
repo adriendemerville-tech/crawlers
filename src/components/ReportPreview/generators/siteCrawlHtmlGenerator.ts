@@ -30,6 +30,16 @@ export interface SiteCrawlReportData {
   deepPages?: Array<{ url: string; path: string; depth: number }>;
   brokenLinks?: Array<{ source_url: string; broken_url: string; status?: number }>;
   indexabilityRatio?: { indexable: number; noindex: number; total: number };
+  // External authority
+  externalBacklinks?: Array<{
+    url: string;
+    path: string;
+    referring_domains: number;
+    backlinks_total: number;
+    domain_rank_avg: number;
+    top_anchors: string[];
+    top_sources: Array<{ domain: string; rank: number }>;
+  }>;
 }
 
 const siteCrawlI18n = {
@@ -63,6 +73,13 @@ const siteCrawlI18n = {
     indexability: 'Ratio d\'indexabilité',
     indexable: 'Indexables',
     notIndexable: 'Non indexables',
+    externalAuthority: 'Sources d\'autorité externe',
+    externalAuthorityDesc: 'Pages recevant le plus de backlinks externes (top 10)',
+    referringDomains: 'domaines référents',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Ancres principales',
+    topSources: 'Sources principales',
+    avgDomainRank: 'Rang moyen des sources',
   },
   en: {
     title: 'Multi-Page Audit',
@@ -94,6 +111,13 @@ const siteCrawlI18n = {
     indexability: 'Indexability ratio',
     indexable: 'Indexable',
     notIndexable: 'Not indexable',
+    externalAuthority: 'External authority sources',
+    externalAuthorityDesc: 'Pages receiving the most external backlinks (top 10)',
+    referringDomains: 'referring domains',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Top anchors',
+    topSources: 'Top sources',
+    avgDomainRank: 'Avg source domain rank',
   },
   es: {
     title: 'Auditoría Multi-Páginas',
@@ -125,6 +149,13 @@ const siteCrawlI18n = {
     indexability: 'Ratio de indexabilidad',
     indexable: 'Indexables',
     notIndexable: 'No indexables',
+    externalAuthority: 'Fuentes de autoridad externa',
+    externalAuthorityDesc: 'Páginas que reciben más backlinks externos (top 10)',
+    referringDomains: 'dominios referentes',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Anclas principales',
+    topSources: 'Fuentes principales',
+    avgDomainRank: 'Rango promedio de fuentes',
   },
 };
 
@@ -364,6 +395,37 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     </div>
   ` : '';
 
+  // 6. External authority (backlinks)
+  const extBl = data.externalBacklinks || [];
+  const externalBacklinksSection = extBl.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px; border-left: 3px solid #f59e0b;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">🔗 ${t.externalAuthority} <span style="font-size: 13px; font-weight: 400; color: #f59e0b;">(${extBl.length})</span></h3>
+      <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">${t.externalAuthorityDesc}</p>
+      ${extBl.sort((a, b) => b.referring_domains - a.referring_domains).map(bl => `
+        <div style="padding: 12px; background: rgba(245,158,11,0.04); border-radius: 8px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;" title="${bl.url}">${bl.path}</span>
+            <div style="display: flex; gap: 12px; font-size: 12px;">
+              <span style="color: #f59e0b; font-weight: 600;">🌐 ${bl.referring_domains} ${t.referringDomains}</span>
+              <span style="color: #9ca3af;">🔗 ${bl.backlinks_total} ${t.backlinksTotal}</span>
+            </div>
+          </div>
+          ${bl.domain_rank_avg > 0 ? `<div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">📊 ${t.avgDomainRank}: ${bl.domain_rank_avg.toFixed(1)}</div>` : ''}
+          ${bl.top_sources.length > 0 ? `
+            <div style="font-size: 11px; color: #9ca3af; margin-bottom: 2px;">
+              ${t.topSources}: ${bl.top_sources.slice(0, 3).map(s => `<span style="background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; margin-right: 4px;">${s.domain}</span>`).join('')}
+            </div>
+          ` : ''}
+          ${bl.top_anchors.length > 0 ? `
+            <div style="font-size: 11px; color: #6b7280;">
+              ${t.topAnchors}: ${bl.top_anchors.slice(0, 3).map(a => `"${a}"`).join(', ')}
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
   // Pages table (top 50)
   const sortedPages = [...data.pages].sort((a, b) => (a.seo_score || 0) - (b.seo_score || 0));
   const displayPages = sortedPages.slice(0, 50);
@@ -406,6 +468,7 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     ${thinContentSection}
     ${deepPagesSection}
     ${brokenLinksSection}
+    ${externalBacklinksSection}
     ${pagesTable}
   `;
 }

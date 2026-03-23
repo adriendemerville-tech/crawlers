@@ -460,6 +460,8 @@ export default function SiteCrawl() {
   const [isLoadingPastCrawl, setIsLoadingPastCrawl] = useState(false);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [crawlBacklinks, setCrawlBacklinks] = useState<any[]>([]);
+  const [isScanningBacklinks, setIsScanningBacklinks] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
   const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
@@ -778,8 +780,17 @@ export default function SiteCrawl() {
       deepPages,
       brokenLinks: brokenLinksArr,
       indexabilityRatio: { indexable, noindex, total: pages.length },
+      externalBacklinks: crawlBacklinks.map((bl: any) => ({
+        url: bl.url,
+        path: bl.path,
+        referring_domains: bl.referring_domains || 0,
+        backlinks_total: bl.backlinks_total || 0,
+        domain_rank_avg: Number(bl.domain_rank_avg) || 0,
+        top_anchors: Array.isArray(bl.top_anchors) ? bl.top_anchors : [],
+        top_sources: Array.isArray(bl.top_sources) ? bl.top_sources : [],
+      })),
     };
-  }, [crawlResult, pages, issueStats]);
+  }, [crawlResult, pages, issueStats, crawlBacklinks]);
 
   if (loading || adminLoading) {
     return (
@@ -791,11 +802,18 @@ export default function SiteCrawl() {
 
    async function loadPages(crawlId: string) {
     try {
-      const { data, error } = await supabase
-        .from('crawl_pages')
-        .select('*')
-        .eq('crawl_id', crawlId)
-        .order('seo_score', { ascending: true });
+      const [{ data, error }, { data: blData }] = await Promise.all([
+        supabase
+          .from('crawl_pages')
+          .select('*')
+          .eq('crawl_id', crawlId)
+          .order('seo_score', { ascending: true }),
+        supabase
+          .from('crawl_page_backlinks' as any)
+          .select('*')
+          .eq('crawl_id', crawlId)
+          .order('referring_domains', { ascending: false }),
+      ]);
       if (error) {
         console.error('[loadPages] Error:', error);
       }
@@ -816,6 +834,7 @@ export default function SiteCrawl() {
         }));
         setPages(sanitized as any);
       }
+      setCrawlBacklinks(blData || []);
     } catch {
       // Silent — handled by error boundary
     }
@@ -846,6 +865,7 @@ export default function SiteCrawl() {
     setCrawlResult(null);
     setPages([]);
     setExpandedPage(null);
+    setCrawlBacklinks([]);
   }
 
   function addSelector() {
@@ -1839,6 +1859,44 @@ export default function SiteCrawl() {
                       Cocoon
                     </Button>
                   </Link>
+                  {/* Scan backlinks button */}
+                  {crawlBacklinks.length === 0 && crawlResult.status === 'completed' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isScanningBacklinks}
+                      onClick={async () => {
+                        if (!user || !crawlResult) return;
+                        setIsScanningBacklinks(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke('backlink-scanner', {
+                            body: { crawl_id: crawlResult.id },
+                          });
+                          if (error) throw error;
+                          if (data?.results?.length) {
+                            setCrawlBacklinks(data.results);
+                            toast.success(`${data.scanned} pages scannées — backlinks trouvés`);
+                          } else {
+                            toast.info('Aucun backlink trouvé pour les pages principales');
+                          }
+                        } catch (err: any) {
+                          toast.error(err?.message || 'Erreur lors du scan');
+                        } finally {
+                          setIsScanningBacklinks(false);
+                        }
+                      }}
+                      className="gap-2 px-4 py-2 text-sm font-semibold border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                    >
+                      {isScanningBacklinks ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                      Scan Backlinks
+                    </Button>
+                  )}
+                  {crawlBacklinks.length > 0 && (
+                    <span className="text-xs text-amber-500/70 flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      {crawlBacklinks.length} pages avec backlinks
+                    </span>
+                  )}
                 </div>
               )}
 

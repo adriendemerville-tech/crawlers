@@ -23,6 +23,11 @@ interface SemanticNode {
   page_authority?: number;
   internal_links_in?: number;
   internal_links_out?: number;
+  external_backlinks?: {
+    referring_domains?: number;
+    backlinks_total?: number;
+    top_sources?: Array<{ domain: string; rank: number }>;
+  } | null;
 }
 
 interface RadialNode {
@@ -44,6 +49,8 @@ interface RadialNode {
   parent: RadialNode | null;
   siloIntraRatio?: number;
   siloLeakRatio?: number;
+  hasBacklinks: boolean;
+  backlinkDomains: number;
 }
 
 interface CocoonRadialGraphProps {
@@ -132,6 +139,8 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
       pageType: sn.page_type || 'page',
       linksIn: sn.internal_links_in ?? 0,
       linksOut: sn.internal_links_out ?? 0,
+      hasBacklinks: !!(sn.external_backlinks?.referring_domains && sn.external_backlinks.referring_domains > 0),
+      backlinkDomains: sn.external_backlinks?.referring_domains ?? 0,
       x: 0, y: 0, radius: 0, angle: 0,
       children: [],
       parent,
@@ -511,6 +520,29 @@ export function CocoonRadialGraph({
       ctx.strokeStyle = isSelected ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.3)";
       ctx.lineWidth = isSelected ? 2 : 1;
       ctx.stroke();
+
+      // ─── Backlink badge (golden ring + count) ───
+      if (node.hasBacklinks && node.backlinkDomains > 0) {
+        const pulseAlpha = 0.4 + 0.3 * Math.sin(Date.now() * 0.003);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(245, 158, 11, ${pulseAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        const bx = node.x + node.radius * 0.7;
+        const by = node.y - node.radius * 0.7;
+        const badgeSize = Math.max(5, node.radius * 0.4);
+        ctx.beginPath();
+        ctx.arc(bx, by, badgeSize, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.font = `bold ${Math.max(6, badgeSize)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.backlinkDomains > 99 ? '99+' : String(node.backlinkDomains), bx, by);
+      }
 
       // Labels: ONLY for selected or hovered nodes
       if (isSelected || isHovered) {
