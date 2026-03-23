@@ -698,9 +698,12 @@ export default function SiteCrawl() {
   }
 
   async function viewCrawl(crawl: CrawlResult) {
+    setIsLoadingPastCrawl(true);
+    setPages([]);
     setCrawlResult(crawl);
     setViewingCrawlId(crawl.id);
     await loadPages(crawl.id);
+    setIsLoadingPastCrawl(false);
   }
 
   function addSelector() {
