@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
+import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
@@ -60,6 +61,43 @@ export function UserManagement() {
   const [userIdsByAction, setUserIdsByAction] = useState<Set<string>>(new Set());
   const [actionFilterLoading, setActionFilterLoading] = useState(false);
   const [personaFilter, setPersonaFilter] = useState<string | null>(null);
+  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
+
+  const fetchPendingUsers = async () => {
+    setPendingLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'list-pending-users' },
+      });
+      if (error) throw error;
+      setPendingUsers(data?.users || []);
+    } catch (err) {
+      console.error('Error fetching pending users:', err);
+      toast.error('Erreur lors du chargement des utilisateurs en attente');
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const handleConfirmUser = async (userId: string) => {
+    setConfirmingUserId(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'confirm-user', user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Utilisateur confirmé avec succès');
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err: any) {
+      console.error('Error confirming user:', err);
+      toast.error(err.message || 'Erreur lors de la confirmation');
+    } finally {
+      setConfirmingUserId(null);
+    }
+  };
 
   const fetchAllRoles = async () => {
     const { data } = await supabase
@@ -175,6 +213,7 @@ export function UserManagement() {
   useEffect(() => {
     fetchUsers();
     fetchAllRoles();
+    fetchPendingUsers();
   }, []);
 
   const filteredUsers = users.filter(user => {
@@ -365,6 +404,60 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Pending users section */}
+        {pendingLoading ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Chargement des inscriptions en attente…
+          </div>
+        ) : pendingUsers.length > 0 ? (
+          <div className="mb-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+            <div className="flex items-center gap-2 mb-2">
+              <MailWarning className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                {pendingUsers.length} inscription{pendingUsers.length > 1 ? 's' : ''} en attente de validation
+              </span>
+              <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto" onClick={fetchPendingUsers}>
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="space-y-1.5">
+              {pendingUsers.map((pu) => (
+                <div key={pu.id} className="flex items-center justify-between gap-2 bg-background/60 rounded-md px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3 w-3 text-amber-500 shrink-0" />
+                      <span className="text-xs font-medium truncate">
+                        {pu.first_name} {pu.last_name}
+                      </span>
+                      {pu.plan_type === 'agency_pro' && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 border-violet-500 text-violet-500 shrink-0">Pro</Badge>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{pu.email}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Inscrit le {new Date(pu.created_at).toLocaleDateString('fr-FR')} à {new Date(pu.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="shrink-0 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => handleConfirmUser(pu.id)}
+                    disabled={confirmingUserId === pu.id}
+                  >
+                    {confirmingUserId === pu.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    )}
+                    Valider
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="mb-4 flex gap-2 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
