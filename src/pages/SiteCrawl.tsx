@@ -896,13 +896,14 @@ export default function SiteCrawl() {
           <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
             <div className="relative z-10 w-full max-w-lg mx-4">
-              <div className="relative z-20 mb-5 -mt-4">
-                <button
-                  onClick={() => navigate('/')}
-                  className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-lg"
+              <div className="mb-4">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
                 >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
+                  <ArrowLeft className="h-4 w-4" />
+                  {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
+                </Link>
               </div>
               <Card className="w-full border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
               <div className="absolute top-0 left-0">
