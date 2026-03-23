@@ -540,7 +540,7 @@ export function CocoonRadialGraph({
 
     // Legend
     drawLegend(ctx, dimensions.w, dimensions.h);
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes]);
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
     const x = w - 140;
