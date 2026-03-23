@@ -9,9 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Code, Globe, Zap, ShieldCheck,
-  Plug, Unplug, Settings, Eye, RefreshCw, Timer, Layers, FileCode,
-  MonitorSmartphone, ToggleRight, Wrench, AlertTriangle, Sparkles
+  ArrowLeft, CheckCircle2, Code, Globe, Zap, ShieldCheck,
+  Plug, Unplug, Settings, Eye, RefreshCw, Layers, FileCode,
+  MonitorSmartphone, ToggleRight, Cable, Sparkles, Download, Link2, ArrowRight
 } from 'lucide-react';
 import { t3 } from '@/utils/i18n';
 
@@ -27,84 +27,34 @@ export default function IntegrationGTM() {
       {
         '@type': 'TechArticle',
         'headline': t3(language,
-          'Intégration Google Tag Manager — Déployer vos correctifs SEO/GEO en 30 secondes',
-          'Google Tag Manager Integration — Deploy your SEO/GEO fixes in 30 seconds',
-          'Integración Google Tag Manager — Despliegue sus correcciones SEO/GEO en 30 segundos'
+          'Brancher votre site — 3 méthodes pour connecter Crawlers.AI',
+          'Connect your site — 3 methods to integrate Crawlers.AI',
+          'Conectar su sitio — 3 métodos para integrar Crawlers.AI'
         ),
         'description': t3(language,
-          'Guide complet pour connecter Crawlers.fr à votre site via GTM. Injection asynchrone de code correctif, sandboxing sémantique et débranchage instantané.',
-          'Complete guide to connect Crawlers.fr to your site via GTM. Asynchronous corrective code injection, semantic sandboxing and instant disconnect.',
-          'Guía completa para conectar Crawlers.fr a su sitio via GTM. Inyección asíncrona de código correctivo, sandboxing semántico y desconexión instantánea.'
+          'Guide complet pour connecter votre site à Crawlers.AI : API CMS, plugin WordPress, Google Tag Manager. Injection automatique, sandboxing, débranchage instantané.',
+          'Complete guide to connect your site to Crawlers.AI: CMS API, WordPress plugin, Google Tag Manager. Auto injection, sandboxing, instant disconnect.',
+          'Guía completa para conectar su sitio a Crawlers.AI: API CMS, plugin WordPress, Google Tag Manager. Inyección automática, sandboxing, desconexión instantánea.'
         ),
         'author': { '@type': 'Organization', 'name': 'Crawlers.fr', 'url': SITE_URL },
         'publisher': { '@type': 'Organization', 'name': 'Crawlers.fr', 'url': SITE_URL },
         'datePublished': '2026-03-12',
-        'dateModified': '2026-03-12',
+        'dateModified': '2026-03-23',
         'mainEntityOfPage': `${SITE_URL}/integration-gtm`,
         'inLanguage': language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
-      },
-      {
-        '@type': 'HowTo',
-        'name': t3(language,
-          'Comment connecter votre site à Crawlers.fr via Google Tag Manager',
-          'How to connect your site to Crawlers.fr via Google Tag Manager',
-          'Cómo conectar su sitio a Crawlers.fr via Google Tag Manager'
-        ),
-        'step': [
-          {
-            '@type': 'HowToStep',
-            'position': 1,
-            'name': t3(language, 'Suivre votre site', 'Track your site', 'Seguir su sitio'),
-            'text': t3(language,
-              'Lancez un audit expert puis cliquez sur « Suivre » pour ajouter votre domaine à Mes sites.',
-              'Run an expert audit then click "Track" to add your domain to My Sites.',
-              'Ejecute una auditoría experta y haga clic en "Seguir" para agregar su dominio a Mis sitios.'
-            ),
-          },
-          {
-            '@type': 'HowToStep',
-            'position': 2,
-            'name': t3(language, 'Copier le snippet GTM', 'Copy the GTM snippet', 'Copiar el snippet GTM'),
-            'text': t3(language,
-              'Dans Mes sites, cliquez sur l\'icône prise (Brancher mon site) pour afficher le snippet de 3 lignes.',
-              'In My Sites, click the plug icon (Connect my site) to display the 3-line snippet.',
-              'En Mis sitios, haga clic en el ícono de enchufe (Conectar mi sitio) para ver el snippet de 3 líneas.'
-            ),
-          },
-          {
-            '@type': 'HowToStep',
-            'position': 3,
-            'name': t3(language, 'Coller dans GTM', 'Paste into GTM', 'Pegar en GTM'),
-            'text': t3(language,
-              'Créez une balise HTML personnalisée dans GTM, collez le snippet, déclencheur : All Pages, puis publiez.',
-              'Create a Custom HTML tag in GTM, paste the snippet, trigger: All Pages, then publish.',
-              'Cree una etiqueta HTML personalizada en GTM, pegue el snippet, activador: All Pages, y publique.'
-            ),
-          },
-          {
-            '@type': 'HowToStep',
-            'position': 4,
-            'name': t3(language, 'Générer et injecter les correctifs', 'Generate and inject fixes', 'Generar e inyectar correcciones'),
-            'text': t3(language,
-              'Depuis l\'Architecte Génératif, cliquez sur Injecter. Le code s\'exécute de manière asynchrone sur votre site sans bloquer le rendu.',
-              'From the Generative Architect, click Inject. The code runs asynchronously on your site without blocking rendering.',
-              'Desde el Arquitecto Generativo, haga clic en Inyectar. El código se ejecuta de forma asíncrona sin bloquear el renderizado.'
-            ),
-          },
-        ],
       },
       {
         '@type': 'FAQPage',
         'mainEntity': [
           {
             '@type': 'Question',
-            'name': t3(language, 'Le code GTM ralentit-il mon site ?', 'Does the GTM code slow down my site?', '¿El código GTM ralentiza mi sitio?'),
+            'name': t3(language, 'Le code injecté ralentit-il mon site ?', 'Does the injected code slow down my site?', '¿El código inyectado ralentiza mi sitio?'),
             'acceptedAnswer': {
               '@type': 'Answer',
               'text': t3(language,
-                'Non. Le snippet s\'exécute de manière asynchrone (async) et n\'intervient qu\'après le chargement complet de la page (DOMContentLoaded). Il n\'impacte ni le LCP, ni le FID, ni le CLS.',
-                'No. The snippet runs asynchronously and only executes after full page load (DOMContentLoaded). It does not impact LCP, FID, or CLS.',
-                'No. El snippet se ejecuta de forma asíncrona y solo interviene después de la carga completa de la página (DOMContentLoaded). No afecta al LCP, FID ni CLS.'
+                'Non. Le code s\'exécute de manière asynchrone après le DOMContentLoaded. Zéro impact sur les Core Web Vitals.',
+                'No. The code runs asynchronously after DOMContentLoaded. Zero impact on Core Web Vitals.',
+                'No. El código se ejecuta de forma asíncrona después del DOMContentLoaded. Cero impacto en Core Web Vitals.'
               ),
             },
           },
@@ -114,21 +64,9 @@ export default function IntegrationGTM() {
             'acceptedAnswer': {
               '@type': 'Answer',
               'text': t3(language,
-                'Oui. Depuis Mes sites, cliquez sur l\'icône Débrancher (Unplug). Le code correctif cesse immédiatement d\'être injecté. Aucun résidu ne reste sur votre site.',
-                'Yes. From My Sites, click the Disconnect (Unplug) icon. The corrective code immediately stops being injected. No residue remains on your site.',
-                'Sí. Desde Mis sitios, haga clic en el ícono Desconectar (Unplug). El código correctivo deja de inyectarse inmediatamente. No queda ningún residuo en su sitio.'
-              ),
-            },
-          },
-          {
-            '@type': 'Question',
-            'name': t3(language, 'Quels CMS sont compatibles ?', 'Which CMS are compatible?', '¿Qué CMS son compatibles?'),
-            'acceptedAnswer': {
-              '@type': 'Answer',
-              'text': t3(language,
-                'Tous les CMS supportant Google Tag Manager : WordPress, Shopify, Webflow, Wix, Squarespace, PrestaShop, Magento, et tout site acceptant un tag <script>.',
-                'All CMS supporting Google Tag Manager: WordPress, Shopify, Webflow, Wix, Squarespace, PrestaShop, Magento, and any site accepting a <script> tag.',
-                'Todos los CMS que soportan Google Tag Manager: WordPress, Shopify, Webflow, Wix, Squarespace, PrestaShop, Magento, y cualquier sitio que acepte un tag <script>.'
+                'Oui. Un clic suffit depuis Mes sites. Le code correctif cesse immédiatement d\'être injecté.',
+                'Yes. One click from My Sites. Corrective code stops being injected immediately.',
+                'Sí. Un clic desde Mis sitios. El código correctivo deja de inyectarse inmediatamente.'
               ),
             },
           },
@@ -137,27 +75,22 @@ export default function IntegrationGTM() {
     ],
   };
 
-  // Inject structured data via Helmet script tag
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <html lang={language} />
         <title>{t3(language,
-          'Intégration GTM — Déployer ses correctifs SEO/GEO automatiquement | Crawlers.fr',
-          'GTM Integration — Auto-deploy SEO/GEO fixes | Crawlers.fr',
-          'Integración GTM — Desplegar correcciones SEO/GEO automáticamente | Crawlers.fr'
+          'Brancher votre site — API, WordPress, GTM | Crawlers.fr',
+          'Connect your site — API, WordPress, GTM | Crawlers.fr',
+          'Conectar su sitio — API, WordPress, GTM | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
-          'Connectez Crawlers.fr à votre site via Google Tag Manager en 30 secondes. Injection asynchrone, sandboxing sémantique, débranchage instantané. Compatible WordPress, Shopify, Webflow.',
-          'Connect Crawlers.fr to your site via Google Tag Manager in 30 seconds. Async injection, semantic sandboxing, instant disconnect. Compatible with WordPress, Shopify, Webflow.',
-          'Conecte Crawlers.fr a su sitio via Google Tag Manager en 30 segundos. Inyección asíncrona, sandboxing semántico, desconexión instantánea. Compatible con WordPress, Shopify, Webflow.'
+          'Connectez votre site à Crawlers.AI en 30 secondes. 3 méthodes : API CMS, plugin WordPress, Google Tag Manager. Injection automatique, sandboxing, débranchage instantané.',
+          'Connect your site to Crawlers.AI in 30 seconds. 3 methods: CMS API, WordPress plugin, Google Tag Manager. Auto injection, sandboxing, instant disconnect.',
+          'Conecte su sitio a Crawlers.AI en 30 segundos. 3 métodos: API CMS, plugin WordPress, Google Tag Manager. Inyección automática, sandboxing, desconexión instantánea.'
         )} />
         <meta property="og:type" content="article" />
         <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
-        <meta property="og:locale:alternate" content="fr_FR" />
-        <meta property="og:locale:alternate" content="en_US" />
-        <meta property="og:locale:alternate" content="es_ES" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
@@ -178,136 +111,256 @@ export default function IntegrationGTM() {
             </Badge>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight mb-4">
               {t3(language,
-                'Intégration Google Tag Manager — Déployez vos correctifs SEO et GEO en 30 secondes',
-                'Google Tag Manager Integration — Deploy your SEO & GEO fixes in 30 seconds',
-                'Integración Google Tag Manager — Despliegue sus correcciones SEO y GEO en 30 segundos'
+                'Brancher votre site — 3 méthodes pour connecter Crawlers.AI',
+                'Connect your site — 3 methods to integrate Crawlers.AI',
+                'Conectar su sitio — 3 métodos para integrar Crawlers.AI'
               )}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
               {t3(language,
-                'Crawlers.fr génère des scripts correctifs (JSON-LD, métadonnées, Open Graph, balises Hreflang) que vous pouvez injecter automatiquement sur votre site via Google Tag Manager — sans toucher au code source, sans développeur, et sans risque pour les performances.',
-                'Crawlers.fr generates corrective scripts (JSON-LD, metadata, Open Graph, Hreflang tags) that you can automatically inject on your site via Google Tag Manager — without touching source code, without a developer, and without performance risk.',
-                'Crawlers.fr genera scripts correctivos (JSON-LD, metadatos, Open Graph, etiquetas Hreflang) que puede inyectar automáticamente en su sitio vía Google Tag Manager — sin tocar el código fuente, sin desarrollador, y sin riesgo para el rendimiento.'
+                'Crawlers.AI génère des scripts correctifs (JSON-LD, métadonnées, Open Graph, Hreflang) injectables automatiquement sur votre site. Choisissez la méthode qui correspond à votre environnement technique.',
+                'Crawlers.AI generates corrective scripts (JSON-LD, metadata, Open Graph, Hreflang) that can be automatically injected on your site. Choose the method that matches your technical environment.',
+                'Crawlers.AI genera scripts correctivos (JSON-LD, metadatos, Open Graph, Hreflang) inyectables automáticamente en su sitio. Elija el método que corresponda a su entorno técnico.'
               )}
             </p>
           </div>
 
-          {/* ─── Résumé ─── */}
+          {/* ─── Résumé 3 méthodes ─── */}
           <Card className="mb-10 border-primary/20 bg-primary/5">
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                {t3(language, 'En résumé', 'Summary', 'En resumen')}
+                {t3(language, 'Quelle méthode choisir ?', 'Which method to choose?', '¿Qué método elegir?')}
               </h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {[
-                  { icon: Timer, text: t3(language, '30 secondes pour brancher', '30 seconds to connect', '30 segundos para conectar') },
-                  { icon: Zap, text: t3(language, 'Exécution 100% asynchrone', '100% asynchronous execution', 'Ejecución 100% asíncrona') },
-                  { icon: ShieldCheck, text: t3(language, 'Sandboxing sémantique (isolation DOM)', 'Semantic sandboxing (DOM isolation)', 'Sandboxing semántico (aislamiento DOM)') },
-                  { icon: Unplug, text: t3(language, 'Débranchage instantané, zéro résidu', 'Instant disconnect, zero residue', 'Desconexión instantánea, cero residuo') },
-                  { icon: Globe, text: t3(language, 'Compatible tous CMS (WordPress, Shopify, Webflow…)', 'All CMS compatible (WordPress, Shopify, Webflow…)', 'Compatible con todos los CMS (WordPress, Shopify, Webflow…)') },
-                  { icon: Eye, text: t3(language, 'Ping de connectivité temps réel', 'Real-time connectivity ping', 'Ping de conectividad en tiempo real') },
-                ].map(({ icon: Icon, text }, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <span className="text-sm text-foreground">{text}</span>
-                  </div>
-                ))}
+              <div className="grid sm:grid-cols-3 gap-4">
+                <MethodSummaryCard
+                  icon={Cable}
+                  title={t3(language, 'API CMS', 'CMS API', 'API CMS')}
+                  badge={t3(language, 'Recommandé', 'Recommended', 'Recomendado')}
+                  desc={t3(language,
+                    'Connexion directe via l\'API REST de votre CMS. Automatique, sans intervention manuelle.',
+                    'Direct connection via your CMS REST API. Automatic, no manual intervention.',
+                    'Conexión directa vía la API REST de su CMS. Automática, sin intervención manual.'
+                  )}
+                  cms={t3(language, 'WordPress, Shopify, Webflow', 'WordPress, Shopify, Webflow', 'WordPress, Shopify, Webflow')}
+                />
+                <MethodSummaryCard
+                  icon={Plug}
+                  title={t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress')}
+                  desc={t3(language,
+                    'Plugin .zip à installer. Synchronisation automatique toutes les 6h via WP Cron.',
+                    'Install .zip plugin. Auto-sync every 6h via WP Cron.',
+                    'Plugin .zip a instalar. Sincronización automática cada 6h vía WP Cron.'
+                  )}
+                  cms="WordPress"
+                />
+                <MethodSummaryCard
+                  icon={Code}
+                  title={t3(language, 'Google Tag Manager / Script', 'Google Tag Manager / Script', 'Google Tag Manager / Script')}
+                  desc={t3(language,
+                    'Snippet universel (~2 Ko). Compatible tous CMS et sites custom.',
+                    'Universal snippet (~2 KB). Compatible with all CMS and custom sites.',
+                    'Snippet universal (~2 KB). Compatible con todos los CMS y sitios personalizados.'
+                  )}
+                  cms={t3(language, 'Tous CMS', 'All CMS', 'Todos los CMS')}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* ─── Le Workflow complet ─── */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* ─── MÉTHODE 1 : API CMS ─── */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              {t3(language, 'Le workflow complet : de l\'audit à l\'injection', 'The complete workflow: from audit to injection', 'El workflow completo: de la auditoría a la inyección')}
-            </h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">1</div>
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Cable className="h-6 w-6 text-primary" />
+                {t3(language, 'API CMS — Connexion directe', 'CMS API — Direct connection', 'API CMS — Conexión directa')}
+              </h2>
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                {t3(language, 'Recommandé', 'Recommended', 'Recomendado')}
+              </Badge>
+            </div>
 
-            <div className="space-y-6">
-              {/* Étape 1 */}
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              {t3(language,
+                'La méthode API connecte Crawlers.AI directement à l\'API REST de votre CMS. Une fois configurée, la synchronisation est entièrement automatique : les correctifs sont poussés vers votre site sans intervention manuelle.',
+                'The API method connects Crawlers.AI directly to your CMS REST API. Once configured, synchronization is fully automatic: fixes are pushed to your site without manual intervention.',
+                'El método API conecta Crawlers.AI directamente a la API REST de su CMS. Una vez configurada, la sincronización es totalmente automática: las correcciones se envían a su sitio sin intervención manual.'
+              )}
+            </p>
+
+            <div className="space-y-4">
               <StepCard
                 step={1}
                 icon={Eye}
-                title={t3(language, 'Lancer un Audit Expert', 'Run an Expert Audit', 'Ejecutar una Auditoría Experta')}
+                title={t3(language, 'Ajoutez votre site à « Mes sites »', 'Add your site to "My Sites"', 'Agregue su sitio a "Mis sitios"')}
                 description={t3(language,
-                  'Depuis la page d\'accueil ou /audit-expert, analysez votre site. Crawlers.fr évalue plus de 200 critères SEO et GEO (Core Web Vitals, JSON-LD, robots.txt, sémantique, visibilité LLM).',
-                  'From the homepage or /audit-expert, analyze your site. Crawlers.fr evaluates over 200 SEO and GEO criteria (Core Web Vitals, JSON-LD, robots.txt, semantics, LLM visibility).',
-                  'Desde la página principal o /audit-expert, analice su sitio. Crawlers.fr evalúa más de 200 criterios SEO y GEO (Core Web Vitals, JSON-LD, robots.txt, semántica, visibilidad LLM).'
+                  'Lancez un audit, puis cliquez sur « Suivre ». Votre domaine apparaît dans la console avec une clé API unique.',
+                  'Run an audit, then click "Track". Your domain appears in the console with a unique API key.',
+                  'Ejecute una auditoría, luego haga clic en "Seguir". Su dominio aparece en la consola con una clave API única.'
                 )}
               />
-
-              {/* Étape 2 */}
               <StepCard
                 step={2}
-                icon={Plug}
-                title={t3(language, 'Suivre votre site dans « Mes sites »', 'Track your site in "My Sites"', 'Seguir su sitio en "Mis sitios"')}
+                icon={Cable}
+                title={t3(language, 'Ouvrez la modale « Brancher mon site »', 'Open the "Connect my site" modal', 'Abra el modal "Conectar mi sitio"')}
                 description={t3(language,
-                  'Cliquez sur le bouton « Suivre » en haut à droite des résultats. Votre domaine est ajouté à votre console avec une clé API unique (UUID). C\'est cette clé qui authentifie la connexion entre votre site et Crawlers.fr.',
-                  'Click the "Track" button at the top right of the results. Your domain is added to your console with a unique API key (UUID). This key authenticates the connection between your site and Crawlers.fr.',
-                  'Haga clic en el botón "Seguir" en la parte superior derecha de los resultados. Su dominio se agrega a su consola con una clave API única (UUID). Esta clave autentica la conexión entre su sitio y Crawlers.fr.'
+                  'Cliquez sur l\'icône prise (🔌). Sélectionnez « API CMS » dans le sélecteur en haut de la modale.',
+                  'Click the plug icon (🔌). Select "CMS API" in the selector at the top of the modal.',
+                  'Haga clic en el ícono de enchufe (🔌). Seleccione "API CMS" en el selector en la parte superior del modal.'
                 )}
               />
-
-              {/* Étape 3 */}
               <StepCard
                 step={3}
-                icon={Code}
-                title={t3(language, 'Copier le snippet de connexion', 'Copy the connection snippet', 'Copiar el snippet de conexión')}
+                icon={Link2}
+                title={t3(language, 'Connectez via le Lien Magique', 'Connect via Magic Link', 'Conéctese vía Enlace Mágico')}
                 description={t3(language,
-                  'Dans Mes sites, cliquez sur l\'icône prise (🔌 Brancher mon site). Une modale affiche un snippet universel de 3 lignes prêt à coller :',
-                  'In My Sites, click the plug icon (🔌 Connect my site). A modal displays a universal 3-line snippet ready to paste:',
-                  'En Mis sitios, haga clic en el ícono de enchufe (🔌 Conectar mi sitio). Un modal muestra un snippet universal de 3 líneas listo para pegar:'
+                  'Entrez l\'URL de votre site et cliquez sur « Lien Magique ». Un nouvel onglet s\'ouvre sur votre admin WordPress pour valider automatiquement la connexion. Pour les autres CMS, suivez les instructions spécifiques affichées.',
+                  'Enter your site URL and click "Magic Link". A new tab opens to your WordPress admin to auto-validate the connection. For other CMS, follow the specific instructions displayed.',
+                  'Ingrese la URL de su sitio y haga clic en "Enlace Mágico". Se abre una nueva pestaña en su admin de WordPress para validar automáticamente la conexión. Para otros CMS, siga las instrucciones específicas mostradas.'
+                )}
+              />
+            </div>
+
+            <Card className="mt-6 bg-muted/30">
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-2">
+                  {t3(language, 'CMS supportés pour l\'API directe', 'Supported CMS for direct API', 'CMS soportados para API directa')}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {['WordPress', 'Shopify', 'Webflow', 'PrestaShop', 'Wix'].map(cms => (
+                    <Badge key={cms} variant="secondary" className="text-xs">
+                      <MonitorSmartphone className="h-3 w-3 mr-1" />{cms}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* ─── MÉTHODE 2 : Plugin WordPress ─── */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          <section className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">2</div>
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Plug className="h-6 w-6 text-primary" />
+                {t3(language, 'Plugin WordPress — Installation classique', 'WordPress Plugin — Classic installation', 'Plugin WordPress — Instalación clásica')}
+              </h2>
+            </div>
+
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              {t3(language,
+                'Si vous préférez une approche plugin traditionnelle, téléchargez le fichier .zip et installez-le comme n\'importe quel plugin WordPress. Il se synchronise automatiquement toutes les 6 heures via WP Cron.',
+                'If you prefer a traditional plugin approach, download the .zip file and install it like any WordPress plugin. It auto-syncs every 6 hours via WP Cron.',
+                'Si prefiere un enfoque de plugin tradicional, descargue el archivo .zip e instálelo como cualquier plugin de WordPress. Se sincroniza automáticamente cada 6 horas vía WP Cron.'
+              )}
+            </p>
+
+            <div className="space-y-4">
+              <StepCard
+                step={1}
+                icon={Download}
+                title={t3(language, 'Téléchargez le plugin .zip', 'Download the .zip plugin', 'Descargue el plugin .zip')}
+                description={t3(language,
+                  'Depuis la modale « Brancher mon site », cliquez sur « Télécharger le Plugin .zip ». Le fichier contient votre clé API pré-configurée.',
+                  'From the "Connect my site" modal, click "Download Plugin .zip". The file contains your pre-configured API key.',
+                  'Desde el modal "Conectar mi sitio", haga clic en "Descargar Plugin .zip". El archivo contiene su clave API preconfigurada.'
+                )}
+              />
+              <StepCard
+                step={2}
+                icon={Settings}
+                title={t3(language, 'Installez dans WordPress', 'Install in WordPress', 'Instale en WordPress')}
+                description={t3(language,
+                  'Allez dans WordPress → Extensions → Ajouter → Téléverser une extension → Sélectionnez le .zip → Activez le plugin.',
+                  'Go to WordPress → Plugins → Add New → Upload Plugin → Select the .zip → Activate the plugin.',
+                  'Vaya a WordPress → Plugins → Añadir nuevo → Subir plugin → Seleccione el .zip → Active el plugin.'
+                )}
+              />
+              <StepCard
+                step={3}
+                icon={RefreshCw}
+                title={t3(language, 'Synchronisation automatique', 'Automatic sync', 'Sincronización automática')}
+                description={t3(language,
+                  'Le plugin interroge l\'API Crawlers.AI toutes les 6h pour récupérer les derniers correctifs. Les balises JSON-LD, meta tags et scripts sont injectés proprement via wp_head et wp_footer.',
+                  'The plugin queries the Crawlers.AI API every 6h to retrieve the latest fixes. JSON-LD tags, meta tags, and scripts are cleanly injected via wp_head and wp_footer.',
+                  'El plugin consulta la API de Crawlers.AI cada 6h para obtener las últimas correcciones. Las etiquetas JSON-LD, meta tags y scripts se inyectan limpiamente vía wp_head y wp_footer.'
+                )}
+              />
+            </div>
+          </section>
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* ─── MÉTHODE 3 : GTM / Script ─── */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          <section className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">3</div>
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Code className="h-6 w-6 text-primary" />
+                {t3(language, 'Google Tag Manager / Script universel', 'Google Tag Manager / Universal script', 'Google Tag Manager / Script universal')}
+              </h2>
+            </div>
+
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              {t3(language,
+                'La méthode la plus universelle : un snippet de 3 lignes compatible avec tous les CMS et sites custom. Collez-le dans GTM ou directement dans votre HTML.',
+                'The most universal method: a 3-line snippet compatible with all CMS and custom sites. Paste it in GTM or directly in your HTML.',
+                'El método más universal: un snippet de 3 líneas compatible con todos los CMS y sitios personalizados. Péguelo en GTM o directamente en su HTML.'
+              )}
+            </p>
+
+            <div className="space-y-4">
+              <StepCard
+                step={1}
+                icon={Code}
+                title={t3(language, 'Copiez le snippet depuis la modale', 'Copy the snippet from the modal', 'Copie el snippet desde el modal')}
+                description={t3(language,
+                  'Dans « Brancher mon site » → onglet « API Google Tag Manager », copiez le snippet pré-rempli avec votre clé API.',
+                  'In "Connect my site" → "Google Tag Manager API" tab, copy the snippet pre-filled with your API key.',
+                  'En "Conectar mi sitio" → pestaña "API Google Tag Manager", copie el snippet pre-rellenado con su clave API.'
                 )}
               >
-                <div className="mt-4 rounded-lg bg-muted/80 border border-border p-4 font-mono text-xs overflow-x-auto">
-                  <code className="text-foreground">
+                <div className="mt-4 rounded-lg bg-zinc-950 border border-zinc-800 p-4 font-mono text-xs overflow-x-auto">
+                  <code className="text-emerald-400">
                     {'<script>'}<br />
-                    {'  fetch("https://[votre-backend]/functions/v1/widget-connect", {'}<br />
-                    {'    method: "POST",'}<br />
-                    {'    headers: { "Content-Type": "application/json" },'}<br />
-                    {'    body: JSON.stringify({ apiKey: "VOTRE-CLE-API", urlDuClient: window.location.href })'}<br />
-                    {'  });'}<br />
-                    {'</script>'}
+                    {'  window.CRAWLERS_API_KEY = "VOTRE-CLE-API";'}<br />
+                    {'</script>'}<br />
+                    {'<script src="https://crawlers.fr/widget.js" defer></script>'}
                   </code>
                 </div>
               </StepCard>
 
-              {/* Étape 4 */}
               <StepCard
-                step={4}
+                step={2}
                 icon={Settings}
-                title={t3(language, 'Coller dans Google Tag Manager', 'Paste into Google Tag Manager', 'Pegar en Google Tag Manager')}
+                title={t3(language, 'Déployez via GTM ou directement', 'Deploy via GTM or directly', 'Despliegue vía GTM o directamente')}
                 description={t3(language,
-                  'Dans GTM, créez une nouvelle balise → Type : HTML personnalisé → Collez le snippet → Déclencheur : All Pages → Publiez. Le widget envoie un ping de connectivité à chaque visite, confirmant que votre site est bien branché.',
-                  'In GTM, create a new tag → Type: Custom HTML → Paste the snippet → Trigger: All Pages → Publish. The widget sends a connectivity ping on every visit, confirming your site is connected.',
-                  'En GTM, cree una nueva etiqueta → Tipo: HTML personalizado → Pegue el snippet → Activador: All Pages → Publique. El widget envía un ping de conectividad en cada visita, confirmando que su sitio está conectado.'
-                )}
-              />
-
-              {/* Étape 5 */}
-              <StepCard
-                step={5}
-                icon={Wrench}
-                title={t3(language, 'Générer un code correctif avec l\'Architecte Génératif', 'Generate corrective code with the Generative Architect', 'Generar código correctivo con el Arquitecto Generativo')}
-                description={t3(language,
-                  'Depuis les résultats d\'audit, ouvrez l\'Architecte Génératif (<code correctif>). Configurez vos fixes (JSON-LD, meta tags, Open Graph, Twitter Cards, Hreflang, contenu Markdown optimisé IA). Le moteur vérifie la connectivité du widget avant d\'autoriser l\'injection.',
-                  'From the audit results, open the Generative Architect (<corrective code>). Configure your fixes (JSON-LD, meta tags, Open Graph, Twitter Cards, Hreflang, AI-optimized Markdown content). The engine checks widget connectivity before authorizing injection.',
-                  'Desde los resultados de auditoría, abra el Arquitecto Generativo (<código correctivo>). Configure sus correcciones (JSON-LD, meta tags, Open Graph, Twitter Cards, Hreflang, contenido Markdown optimizado IA). El motor verifica la conectividad del widget antes de autorizar la inyección.'
-                )}
-              />
-
-              {/* Étape 6 */}
-              <StepCard
-                step={6}
-                icon={Zap}
-                title={t3(language, 'Injecter — Le code s\'exécute de manière asynchrone', 'Inject — The code runs asynchronously', 'Inyectar — El código se ejecuta de forma asíncrona')}
-                description={t3(language,
-                  'Cliquez sur « Injecter ». Le script est poussé vers votre site via l\'API widget-connect. Il s\'exécute de manière asynchrone (async), c\'est-à-dire qu\'il ne bloque jamais le rendu de la page : le navigateur charge d\'abord votre contenu, puis le script s\'applique silencieusement en arrière-plan. Résultat : aucun impact sur les Core Web Vitals (LCP, FID, CLS).',
-                  'Click "Inject". The script is pushed to your site via the widget-connect API. It runs asynchronously (async), meaning it never blocks page rendering: the browser loads your content first, then the script applies silently in the background. Result: zero impact on Core Web Vitals (LCP, FID, CLS).',
-                  'Haga clic en "Inyectar". El script se envía a su sitio a través de la API widget-connect. Se ejecuta de forma asíncrona (async), es decir, nunca bloquea el renderizado de la página: el navegador carga primero su contenido, luego el script se aplica silenciosamente en segundo plano. Resultado: cero impacto en los Core Web Vitals (LCP, FID, CLS).'
+                  'Option A : Déploiement 1-clic via l\'API GTM (connectez votre compte Google). Option B : Nouvelle balise → HTML personnalisée → Collez → Déclencheur : All Pages → Publiez. Option C : Collez directement avant </head> dans votre code source.',
+                  'Option A: 1-click deploy via GTM API (connect your Google account). Option B: New tag → Custom HTML → Paste → Trigger: All Pages → Publish. Option C: Paste directly before </head> in your source code.',
+                  'Opción A: Despliegue 1-clic vía la API GTM (conecte su cuenta Google). Opción B: Nueva etiqueta → HTML personalizado → Pegue → Activador: All Pages → Publique. Opción C: Pegue directamente antes de </head> en su código fuente.'
                 )}
               />
             </div>
+
+            <Card className="mt-6 bg-muted/30">
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-2">
+                  {t3(language, 'Compatible avec tous les CMS', 'Compatible with all CMS', 'Compatible con todos los CMS')}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {['WordPress', 'Shopify', 'Webflow', 'Wix', 'Squarespace', 'PrestaShop', 'Magento', 'Drupal', 'Next.js', 'Gatsby', t3(language, 'Site custom', 'Custom site', 'Sitio personalizado')].map(cms => (
+                    <Badge key={cms} variant="secondary" className="text-xs">
+                      <MonitorSmartphone className="h-3 w-3 mr-1" />{cms}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           {/* ─── Sandboxing sémantique ─── */}
@@ -317,9 +370,9 @@ export default function IntegrationGTM() {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               {t3(language,
-                'Les scripts injectés par Crawlers.fr ne modifient pas votre code source. Ils opèrent dans une couche d\'isolation DOM (sandboxing sémantique) qui garantit :',
-                'Scripts injected by Crawlers.fr do not modify your source code. They operate in a DOM isolation layer (semantic sandboxing) that ensures:',
-                'Los scripts inyectados por Crawlers.fr no modifican su código fuente. Operan en una capa de aislamiento DOM (sandboxing semántico) que garantiza:'
+                'Quelle que soit la méthode choisie, les scripts injectés par Crawlers.AI opèrent dans une couche d\'isolation DOM :',
+                'Regardless of the method chosen, scripts injected by Crawlers.AI operate in a DOM isolation layer:',
+                'Independientemente del método elegido, los scripts inyectados por Crawlers.AI operan en una capa de aislamiento DOM:'
               )}
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -327,17 +380,17 @@ export default function IntegrationGTM() {
                 {
                   icon: Layers,
                   title: t3(language, 'Isolation complète', 'Complete isolation', 'Aislamiento completo'),
-                  desc: t3(language, 'Le script opère sur des éléments qu\'il crée lui-même (<script type="application/ld+json">, <meta>). Il ne touche jamais au DOM existant.', 'The script operates on elements it creates itself. It never touches the existing DOM.', 'El script opera sobre elementos que crea él mismo. Nunca toca el DOM existente.'),
+                  desc: t3(language, 'Le script opère sur des éléments qu\'il crée lui-même (JSON-LD, <meta>). Il ne touche jamais au DOM existant.', 'The script operates on elements it creates itself. It never touches the existing DOM.', 'El script opera sobre elementos que crea él mismo. Nunca toca el DOM existente.'),
                 },
                 {
                   icon: RefreshCw,
                   title: t3(language, 'Réversibilité totale', 'Total reversibility', 'Reversibilidad total'),
-                  desc: t3(language, 'Supprimez la balise GTM ou débranchez le site : les éléments injectés disparaissent instantanément au prochain chargement.', 'Remove the GTM tag or disconnect the site: injected elements disappear instantly on next load.', 'Elimine la etiqueta GTM o desconecte el sitio: los elementos inyectados desaparecen instantáneamente en la próxima carga.'),
+                  desc: t3(language, 'Débranchez le site : les éléments injectés disparaissent instantanément au prochain chargement.', 'Disconnect the site: injected elements disappear instantly on next load.', 'Desconecte el sitio: los elementos inyectados desaparecen instantáneamente en la próxima carga.'),
                 },
                 {
                   icon: ShieldCheck,
                   title: t3(language, 'Aucun conflit CSS/JS', 'No CSS/JS conflicts', 'Sin conflictos CSS/JS'),
-                  desc: t3(language, 'Aucun stylesheet, aucun listener d\'événement, aucune modification visuelle. Seules les métadonnées et données structurées sont enrichies.', 'No stylesheets, no event listeners, no visual changes. Only metadata and structured data are enriched.', 'Sin hojas de estilo, sin listeners de eventos, sin cambios visuales. Solo los metadatos y datos estructurados se enriquecen.'),
+                  desc: t3(language, 'Aucun stylesheet, aucun listener. Seules les métadonnées et données structurées sont enrichies.', 'No stylesheets, no event listeners. Only metadata and structured data are enriched.', 'Sin hojas de estilo, sin listeners. Solo los metadatos y datos estructurados se enriquecen.'),
                 },
               ].map(({ icon: Icon, title, desc }, i) => (
                 <Card key={i} className="bg-card">
@@ -355,14 +408,14 @@ export default function IntegrationGTM() {
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Unplug className="h-6 w-6 text-destructive" />
-              {t3(language, '« Débrancher mon site » — Contrôle total et instantané', '"Disconnect my site" — Total and instant control', '"Desconectar mi sitio" — Control total e instantáneo')}
+              {t3(language, '« Débrancher mon site » — Contrôle total', '"Disconnect my site" — Total control', '"Desconectar mi sitio" — Control total')}
             </h2>
             <div className="bg-muted/50 rounded-lg p-6 space-y-4">
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Vous gardez le contrôle absolu de la connexion. À tout moment, depuis votre console (Mes sites), vous pouvez débrancher un site en un clic :',
-                  'You keep absolute control of the connection. At any time, from your console (My Sites), you can disconnect a site in one click:',
-                  'Usted mantiene el control absoluto de la conexión. En cualquier momento, desde su consola (Mis sitios), puede desconectar un sitio con un clic:'
+                  'Vous gardez le contrôle absolu. À tout moment, depuis votre console (Mes sites), vous pouvez débrancher un site en un clic :',
+                  'You keep absolute control. At any time, from your console (My Sites), you can disconnect a site in one click:',
+                  'Usted mantiene el control absoluto. En cualquier momento, desde su consola (Mis sitios), puede desconectar un sitio con un clic:'
                 )}
               </p>
               <div className="overflow-x-auto">
@@ -376,40 +429,40 @@ export default function IntegrationGTM() {
                   <tbody>
                     <tr className="border-b border-border/50">
                       <td className="p-3 font-medium text-foreground flex items-center gap-2">
-                        <Plug className="h-4 w-4 text-emerald-500" />
-                        {t3(language, 'Brancher mon site', 'Connect my site', 'Conectar mi sitio')}
+                        <Plug className="h-4 w-4 text-primary" />
+                        {t3(language, 'Brancher', 'Connect', 'Conectar')}
                       </td>
                       <td className="p-3 text-muted-foreground">
                         {t3(language,
-                          'Affiche le snippet GTM, active la synchronisation, l\'icône prise devient verte. Le ping widget démarre.',
-                          'Shows the GTM snippet, activates sync, the plug icon turns green. Widget ping starts.',
-                          'Muestra el snippet GTM, activa la sincronización, el ícono de enchufe se vuelve verde. El ping del widget comienza.'
+                          'Active la synchronisation. L\'icône passe en vert. Le ping de connectivité démarre.',
+                          'Activates sync. Icon turns green. Connectivity ping starts.',
+                          'Activa la sincronización. El ícono se vuelve verde. El ping de conectividad comienza.'
                         )}
                       </td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="p-3 font-medium text-foreground flex items-center gap-2">
                         <Unplug className="h-4 w-4 text-destructive" />
-                        {t3(language, 'Débrancher mon site', 'Disconnect my site', 'Desconectar mi sitio')}
+                        {t3(language, 'Débrancher', 'Disconnect', 'Desconectar')}
                       </td>
                       <td className="p-3 text-muted-foreground">
                         {t3(language,
-                          'Le code correctif cesse d\'être injecté. La configuration (current_config) est conservée mais inactive. L\'icône prise repasse en mode « brancher ». Aucun résidu sur votre site.',
-                          'Corrective code stops being injected. Configuration (current_config) is retained but inactive. Plug icon switches back to "connect" mode. No residue on your site.',
-                          'El código correctivo deja de inyectarse. La configuración (current_config) se conserva pero inactiva. El ícono de enchufe vuelve al modo "conectar". Ningún residuo en su sitio.'
+                          'Le code correctif cesse d\'être injecté. Configuration conservée mais inactive. Aucun résidu.',
+                          'Corrective code stops being injected. Configuration retained but inactive. No residue.',
+                          'El código correctivo deja de inyectarse. Configuración conservada pero inactiva. Ningún residuo.'
                         )}
                       </td>
                     </tr>
                     <tr>
                       <td className="p-3 font-medium text-foreground flex items-center gap-2">
-                        <ToggleRight className="h-4 w-4 text-amber-500" />
+                        <ToggleRight className="h-4 w-4 text-primary" />
                         {t3(language, 'Rebrancher', 'Reconnect', 'Reconectar')}
                       </td>
                       <td className="p-3 text-muted-foreground">
                         {t3(language,
-                          'Réactive la dernière configuration sauvegardée. Pas besoin de reconfigurer les correctifs : l\'injection reprend instantanément.',
-                          'Reactivates the last saved configuration. No need to reconfigure fixes: injection resumes instantly.',
-                          'Reactiva la última configuración guardada. No es necesario reconfigurar las correcciones: la inyección se reanuda instantáneamente.'
+                          'Réactive la dernière configuration. Pas besoin de reconfigurer : l\'injection reprend instantanément.',
+                          'Reactivates the last configuration. No need to reconfigure: injection resumes instantly.',
+                          'Reactiva la última configuración. No es necesario reconfigurar: la inyección se reanuda instantáneamente.'
                         )}
                       </td>
                     </tr>
@@ -417,66 +470,6 @@ export default function IntegrationGTM() {
                 </table>
               </div>
             </div>
-          </section>
-
-          {/* ─── Tableau comparatif ─── */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              {t3(language, 'GTM vs modification directe du code source', 'GTM vs direct source code modification', 'GTM vs modificación directa del código fuente')}
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border border-border rounded-lg" role="table">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="text-left p-3 font-semibold text-foreground border-b border-border">{t3(language, 'Critère', 'Criteria', 'Criterio')}</th>
-                    <th className="text-center p-3 font-semibold text-foreground border-b border-border">
-                      {t3(language, 'Via GTM (Crawlers)', 'Via GTM (Crawlers)', 'Via GTM (Crawlers)')}
-                    </th>
-                    <th className="text-center p-3 font-semibold text-foreground border-b border-border">
-                      {t3(language, 'Code source direct', 'Direct source code', 'Código fuente directo')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    [t3(language, 'Temps de déploiement', 'Deployment time', 'Tiempo de despliegue'), '30 sec', t3(language, '30 min – 2h', '30 min – 2h', '30 min – 2h')],
-                    [t3(language, 'Compétence technique', 'Technical skill', 'Competencia técnica'), t3(language, 'Aucune', 'None', 'Ninguna'), t3(language, 'HTML/PHP/JS', 'HTML/PHP/JS', 'HTML/PHP/JS')],
-                    [t3(language, 'Risque de casser le site', 'Risk of breaking site', 'Riesgo de romper el sitio'), t3(language, 'Zéro (isolation DOM)', 'Zero (DOM isolation)', 'Cero (aislamiento DOM)'), t3(language, 'Modéré', 'Moderate', 'Moderado')],
-                    [t3(language, 'Réversibilité', 'Reversibility', 'Reversibilidad'), t3(language, 'Instantanée (1 clic)', 'Instant (1 click)', 'Instantánea (1 clic)'), t3(language, 'Git revert / backup', 'Git revert / backup', 'Git revert / backup')],
-                    [t3(language, 'Impact Core Web Vitals', 'Core Web Vitals impact', 'Impacto Core Web Vitals'), t3(language, 'Aucun (async)', 'None (async)', 'Ninguno (async)'), t3(language, 'Variable', 'Variable', 'Variable')],
-                    [t3(language, 'Mise à jour centralisée', 'Centralized updates', 'Actualización centralizada'), '✅', '❌'],
-                  ].map(([label, gtm, direct], i) => (
-                    <tr key={i} className="border-b border-border/50 hover:bg-muted/20">
-                      <td className="p-3 font-medium text-foreground">{label}</td>
-                      <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-medium">{gtm}</td>
-                      <td className="p-3 text-center text-muted-foreground">{direct}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* ─── Compatibilité CMS ─── */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              {t3(language, 'Compatibilité CMS & plateformes', 'CMS & Platform Compatibility', 'Compatibilidad CMS & plataformas')}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {['WordPress', 'Shopify', 'Webflow', 'Wix', 'Squarespace', 'PrestaShop', 'Magento', 'Drupal', 'Joomla', 'Next.js', 'Gatsby', 'Hugo', t3(language, 'Site custom', 'Custom site', 'Sitio personalizado')].map((cms) => (
-                <Badge key={cms} variant="secondary" className="text-sm px-3 py-1.5">
-                  <MonitorSmartphone className="h-3.5 w-3.5 mr-1.5" />
-                  {cms}
-                </Badge>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-3">
-              {t3(language,
-                'Tout site acceptant un tag <script> ou intégrant Google Tag Manager est compatible.',
-                'Any site accepting a <script> tag or integrating Google Tag Manager is compatible.',
-                'Cualquier sitio que acepte un tag <script> o integre Google Tag Manager es compatible.'
-              )}
-            </p>
           </section>
 
           {/* ─── FAQ ─── */}
@@ -487,43 +480,43 @@ export default function IntegrationGTM() {
             <Accordion type="single" collapsible className="space-y-2">
               {[
                 {
-                  q: t3(language, 'Le snippet GTM ralentit-il mon site ?', 'Does the GTM snippet slow down my site?', '¿El snippet GTM ralentiza mi sitio?'),
+                  q: t3(language, 'Le code injecté ralentit-il mon site ?', 'Does the injected code slow down my site?', '¿El código inyectado ralentiza mi sitio?'),
                   a: t3(language,
-                    'Non. Le code s\'exécute de manière asynchrone après le DOMContentLoaded. Il n\'intervient qu\'une fois la page entièrement chargée, garantissant zéro impact sur le LCP (Largest Contentful Paint), le FID (First Input Delay) et le CLS (Cumulative Layout Shift).',
-                    'No. The code runs asynchronously after DOMContentLoaded. It only executes once the page is fully loaded, ensuring zero impact on LCP, FID, and CLS.',
-                    'No. El código se ejecuta de forma asíncrona después del DOMContentLoaded. Solo interviene una vez que la página está completamente cargada, garantizando cero impacto en LCP, FID y CLS.'
+                    'Non. Le plugin WordPress pèse < 50 Ko. Le snippet GTM pèse ~2 Ko et s\'exécute en mode defer. Exécution 100% asynchrone, zéro impact sur les Core Web Vitals (LCP, FID, CLS).',
+                    'No. The WordPress plugin weighs < 50 KB. The GTM snippet weighs ~2 KB and runs in defer mode. 100% asynchronous execution, zero impact on Core Web Vitals (LCP, FID, CLS).',
+                    'No. El plugin de WordPress pesa < 50 KB. El snippet GTM pesa ~2 KB y se ejecuta en modo defer. Ejecución 100% asíncrona, cero impacto en Core Web Vitals (LCP, FID, CLS).'
                   ),
                 },
                 {
-                  q: t3(language, 'Les robots de Google voient-ils le code injecté via GTM ?', 'Do Google bots see code injected via GTM?', '¿Los robots de Google ven el código inyectado vía GTM?'),
+                  q: t3(language, 'Les robots de Google voient-ils le code injecté ?', 'Do Google bots see the injected code?', '¿Los robots de Google ven el código inyectado?'),
                   a: t3(language,
-                    'Oui. Googlebot exécute JavaScript depuis 2019 (Evergreen rendering). Les balises JSON-LD, meta et Open Graph injectées via GTM sont indexées normalement par Google et les autres moteurs.',
-                    'Yes. Googlebot has executed JavaScript since 2019 (Evergreen rendering). JSON-LD, meta, and Open Graph tags injected via GTM are indexed normally by Google and other search engines.',
-                    'Sí. Googlebot ejecuta JavaScript desde 2019 (renderizado Evergreen). Las etiquetas JSON-LD, meta y Open Graph inyectadas vía GTM son indexadas normalmente por Google y otros motores.'
+                    'Oui. Googlebot exécute JavaScript depuis 2019 (Evergreen rendering). Les balises JSON-LD, meta et Open Graph injectées sont indexées normalement.',
+                    'Yes. Googlebot has executed JavaScript since 2019 (Evergreen rendering). Injected JSON-LD, meta, and Open Graph tags are indexed normally.',
+                    'Sí. Googlebot ejecuta JavaScript desde 2019 (renderizado Evergreen). Las etiquetas JSON-LD, meta y Open Graph inyectadas son indexadas normalmente.'
                   ),
                 },
                 {
-                  q: t3(language, 'Puis-je utiliser l\'intégration sans GTM ?', 'Can I use the integration without GTM?', '¿Puedo usar la integración sin GTM?'),
+                  q: t3(language, 'Quelle est la différence entre l\'API CMS et le plugin WordPress ?', 'What\'s the difference between the CMS API and the WordPress plugin?', '¿Cuál es la diferencia entre la API CMS y el plugin WordPress?'),
                   a: t3(language,
-                    'Oui. Le snippet peut être collé directement dans votre code HTML avant la balise </head>. GTM est simplement la méthode la plus pratique pour les non-développeurs.',
-                    'Yes. The snippet can be pasted directly into your HTML before the </head> tag. GTM is simply the most convenient method for non-developers.',
-                    'Sí. El snippet se puede pegar directamente en su HTML antes de la etiqueta </head>. GTM es simplemente el método más conveniente para los no-desarrolladores.'
+                    'L\'API CMS utilise le Lien Magique pour connecter directement Crawlers.AI à l\'API REST de WordPress. Le plugin .zip est une installation manuelle classique. Les deux méthodes offrent la synchronisation automatique.',
+                    'The CMS API uses the Magic Link to directly connect Crawlers.AI to the WordPress REST API. The .zip plugin is a classic manual installation. Both methods offer automatic synchronization.',
+                    'La API CMS usa el Enlace Mágico para conectar directamente Crawlers.AI a la API REST de WordPress. El plugin .zip es una instalación manual clásica. Ambos métodos ofrecen sincronización automática.'
                   ),
                 },
                 {
-                  q: t3(language, 'Que se passe-t-il si le ping widget échoue ?', 'What happens if the widget ping fails?', '¿Qué sucede si el ping del widget falla?'),
+                  q: t3(language, 'Puis-je débrancher mon site à tout moment ?', 'Can I disconnect my site at any time?', '¿Puedo desconectar mi sitio en cualquier momento?'),
                   a: t3(language,
-                    'Si aucun ping n\'est reçu depuis plus de 24 heures, l\'Architecte Génératif bloque l\'injection et affiche un message « Branchez votre site ». Le système détecte automatiquement la déconnexion et protège contre toute injection orpheline.',
-                    'If no ping is received for over 24 hours, the Generative Architect blocks injection and displays a "Connect your site" message. The system automatically detects disconnection and protects against orphan injections.',
-                    'Si no se recibe ningún ping durante más de 24 horas, el Arquitecto Generativo bloquea la inyección y muestra un mensaje "Conecte su sitio". El sistema detecta automáticamente la desconexión y protege contra inyecciones huérfanas.'
+                    'Oui. Un clic suffit depuis Mes sites. Le code correctif cesse immédiatement d\'être injecté. Aucun résidu ne reste sur votre site. C\'est réversible et instantané.',
+                    'Yes. One click from My Sites. Corrective code stops being injected immediately. No residue remains on your site. It\'s reversible and instant.',
+                    'Sí. Un clic desde Mis sitios. El código correctivo deja de inyectarse inmediatamente. Ningún residuo permanece en su sitio. Es reversible e instantáneo.'
                   ),
                 },
                 {
-                  q: t3(language, 'L\'intégration GTM est-elle gratuite ?', 'Is the GTM integration free?', '¿La integración GTM es gratuita?'),
+                  q: t3(language, 'L\'intégration est-elle gratuite ?', 'Is the integration free?', '¿La integración es gratuita?'),
                   a: t3(language,
-                    'Oui. La connexion widget est entièrement gratuite. Seule la génération des codes correctifs consomme des crédits (1 crédit par génération, ou illimité avec l\'abonnement Pro Agency).',
-                    'Yes. The widget connection is completely free. Only corrective code generation consumes credits (1 credit per generation, or unlimited with Pro Agency subscription).',
-                    'Sí. La conexión del widget es completamente gratuita. Solo la generación de códigos correctivos consume créditos (1 crédito por generación, o ilimitado con la suscripción Pro Agency).'
+                    'Oui. La connexion est entièrement gratuite. Seule la génération des codes correctifs consomme des crédits (1 crédit par génération, ou illimité avec l\'abonnement Pro Agency).',
+                    'Yes. The connection is completely free. Only corrective code generation consumes credits (1 credit per generation, or unlimited with Pro Agency subscription).',
+                    'Sí. La conexión es completamente gratuita. Solo la generación de códigos correctivos consume créditos (1 crédito por generación, o ilimitado con la suscripción Pro Agency).'
                   ),
                 },
               ].map(({ q, a }, i) => (
@@ -542,13 +535,13 @@ export default function IntegrationGTM() {
           {/* ─── CTA ─── */}
           <div className="text-center py-8">
             <h2 className="text-xl font-bold text-foreground mb-3">
-              {t3(language, 'Prêt à automatiser vos corrections SEO ?', 'Ready to automate your SEO fixes?', '¿Listo para automatizar sus correcciones SEO?')}
+              {t3(language, 'Prêt à brancher votre site ?', 'Ready to connect your site?', '¿Listo para conectar su sitio?')}
             </h2>
             <p className="text-muted-foreground mb-6">
               {t3(language,
-                'Lancez un audit gratuit, suivez votre site, branchez GTM — et laissez l\'Architecte faire le reste.',
-                'Run a free audit, track your site, connect GTM — and let the Architect do the rest.',
-                'Ejecute una auditoría gratuita, siga su sitio, conecte GTM — y deje que el Arquitecto haga el resto.'
+                'Lancez un audit gratuit, suivez votre site, choisissez votre méthode — et laissez l\'Architecte faire le reste.',
+                'Run a free audit, track your site, choose your method — and let the Architect do the rest.',
+                'Ejecute una auditoría gratuita, siga su sitio, elija su método — y deje que el Arquitecto haga el resto.'
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -561,18 +554,38 @@ export default function IntegrationGTM() {
               <Button asChild variant="outline" size="lg" className="gap-2">
                 <Link to="/modifier-code-wordpress">
                   <FileCode className="h-4 w-4" />
-                  {t3(language, 'Plugin WordPress alternatif', 'Alternative WordPress Plugin', 'Plugin WordPress alternativo')}
+                  {t3(language, 'Guide WordPress détaillé', 'Detailed WordPress Guide', 'Guía WordPress detallada')}
                 </Link>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              {t3(language, 'Plus de 200 critères analysés — Audit technique et stratégique complet', 'Over 200 criteria analyzed — Complete technical and strategic audit', 'Más de 200 criterios analizados — Auditoría técnica y estratégica completa')}
-            </p>
           </div>
 
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+/* ─── Method summary sub-component ─── */
+function MethodSummaryCard({ icon: Icon, title, badge, desc, cms }: {
+  icon: React.ElementType;
+  title: string;
+  badge?: string;
+  desc: string;
+  cms: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-2">
+      <div className="flex items-center gap-2">
+        <Icon className="h-5 w-5 text-primary" />
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        {badge && (
+          <Badge className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">{badge}</Badge>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+      <p className="text-[10px] text-muted-foreground/70">{cms}</p>
     </div>
   );
 }
