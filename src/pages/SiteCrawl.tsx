@@ -881,7 +881,7 @@ export default function SiteCrawl() {
 
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!isUnlimitedUser && (
-          <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className={`fixed inset-x-0 top-20 bottom-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px]" />
             <div className="relative z-10 w-full max-w-lg mx-4">
               <div className="relative z-20 mb-4">
