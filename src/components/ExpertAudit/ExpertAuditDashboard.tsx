@@ -1454,10 +1454,10 @@ export function ExpertAuditDashboard() {
             )}
             <Button
               onClick={handleReportButtonClick}
-              size="lg"
-              className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+              size="default"
+              className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
             >
-              <FileDown className="h-5 w-5" />
+              <FileDown className="h-4 w-4" />
               {t.viewReport}
             </Button>
           </motion.div>
