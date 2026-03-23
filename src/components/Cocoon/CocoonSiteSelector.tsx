@@ -156,8 +156,8 @@ export function CocoonSiteSelector({
       .select("id")
       .single();
     if (newSite) {
+      onSiteCreated?.({ id: newSite.id, domain, site_name: null });
       handleSelectTracked(newSite.id);
-      // Parent will reload tracked sites via its own effect
     }
   };
 
