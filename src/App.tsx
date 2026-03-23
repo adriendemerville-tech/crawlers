@@ -24,7 +24,7 @@ const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default:
 // Lazy load the chat bubble (not needed for initial render)
 const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatBubble").then(m => ({ default: m.FloatingChatBubble })));
 const SurveyModal = lazy(() => import("@/components/Survey/SurveyModal").then(m => ({ default: m.SurveyModal })));
-const SignupPromptModal = lazy(() => import("@/components/SignupPromptModal").then(m => ({ default: m.SignupPromptModal })));
+
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -156,9 +156,6 @@ const App = () => (
                       </Suspense>
                       <Suspense fallback={null}>
                         <SurveyModal />
-                      </Suspense>
-                      <Suspense fallback={null}>
-                        <SignupPromptModal />
                       </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
