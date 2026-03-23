@@ -64,6 +64,7 @@ export function UserManagement() {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
+  const [showPendingTab, setShowPendingTab] = useState(false);
 
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
