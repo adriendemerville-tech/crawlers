@@ -287,13 +287,11 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
       <Separator />
 
-      {/* Detail panel based on selected method */}
       {connectMethod === 'cms' ? (
-        {/* ═══ WordPress Plugin ═══ */}
-        <div className="space-y-4">
+        <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 mb-1">
-            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Plug className="h-4 w-4 text-blue-500" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-semibold">WordPress</h3>
