@@ -347,6 +347,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`cocoon-diag-semantic\` | ✅ | 0 | Diagnostic sémantique (clusters, cannibalization) |
 | \`cocoon-diag-structure\` | ✅ | 0 | Diagnostic structure (Hn, profondeur, orphans) |
 | \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev |
+| \`cocoon-auto-linking\` | ✅ | 0 | Auto-Maillage IA : pré-scan + sélection d'ancres contextuelles par IA (Gemini Flash) |
 | \`cocoon-deploy-links\` | ✅ | 0 | Déploiement maillage interne vers CMS |
 | \`calculate-internal-pagerank\` | ✅ | 0 | PageRank interne par page |
 | \`persist-cocoon-session\` | ✅ | 0 | Sauvegarde session Cocoon |
