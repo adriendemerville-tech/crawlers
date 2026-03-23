@@ -1718,8 +1718,41 @@ export default function SiteCrawl() {
           {/* Past crawls */}
           {pastCrawls.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-destructive"
+                  onClick={async () => {
+                    if (!user) return;
+                    // Keep only the latest crawl per domain
+                    const latestByDomain = new Map<string, string>();
+                    for (const c of pastCrawls) {
+                      if (!latestByDomain.has(c.domain)) {
+                        latestByDomain.set(c.domain, c.id);
+                      }
+                    }
+                    const idsToDelete = pastCrawls
+                      .filter(c => latestByDomain.get(c.domain) !== c.id)
+                      .map(c => c.id);
+
+                    if (idsToDelete.length > 0) {
+                      await supabase
+                        .from('site_crawls')
+                        .delete()
+                        .in('id', idsToDelete);
+                    }
+
+                    // Keep only latest per domain in front
+                    const kept = pastCrawls.filter(c => latestByDomain.get(c.domain) === c.id);
+                    setPastCrawls(kept);
+                    setViewingCrawlId(null);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  {language === 'fr' ? 'Nettoyer' : language === 'es' ? 'Limpiar' : 'Clear'}
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
