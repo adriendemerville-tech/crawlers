@@ -387,8 +387,9 @@ export function CocoonRadialGraph({
     canvas.height = dimensions.h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Clear
-    ctx.fillStyle = "#0a0a12";
+    // Clear with dynamic background
+    const bgStr = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
+    ctx.fillStyle = bgStr;
     ctx.fillRect(0, 0, dimensions.w, dimensions.h);
 
     ctx.save();
