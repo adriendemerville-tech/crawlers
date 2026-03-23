@@ -245,6 +245,32 @@ export function ReportPreviewModal({
     }
   };
 
+  const handleDownloadCSV = async () => {
+    if (type !== 'site_crawl' || !siteCrawlData) return;
+    const d = siteCrawlData;
+    const headers = ['URL', 'Path', 'Score SEO', 'HTTP Status', 'Title', 'Word Count', 'Noindex', 'Issues'];
+    const rows = d.pages.map(p => [
+      p.url,
+      p.path,
+      p.seo_score ?? '',
+      p.http_status ?? '',
+      (p.title || '').replace(/"/g, '""'),
+      p.word_count ?? '',
+      p.has_noindex ? 'Yes' : 'No',
+      (p.issues || []).join('; ').replace(/"/g, '""'),
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    const { getReportFilename } = await import('@/utils/reportFilename');
+    link.href = URL.createObjectURL(blob);
+    link.download = getReportFilename(d.domain, 'crawl', 'csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   const generateShareLink = async (): Promise<string | null> => {
     try {
       const { data: responseData, error } = await supabase.functions.invoke('share-report', {
