@@ -1387,10 +1387,10 @@ export function ExpertAuditDashboard() {
       {/* Loading States Container - scroll target */}
       <div ref={loadingRef}>
         {/* Loading State - Technical */}
-        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} />}
+        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} onPauseMusicRef={pauseMusicRef} />}
         
         {/* Loading State - Strategic */}
-        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" onStopMusicRef={stopMusicRef} />}
+        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" onStopMusicRef={stopMusicRef} onPauseMusicRef={pauseMusicRef} />}
       </div>
 
       {/* Patience Cards during strategic loading */}
