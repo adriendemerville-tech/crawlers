@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
+import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
@@ -197,7 +198,7 @@ export default function Cocoon() {
   const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [is3DMode, setIs3DMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'force' | 'radial' | '3d'>('force');
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
   const [bgWarmth, setBgWarmth] = useState(0);
@@ -811,14 +812,28 @@ export default function Cocoon() {
           <div className="h-full rounded-xl overflow-hidden border relative border-[hsl(263,70%,20%)]" style={{ backgroundColor: computedBgColor, filter: `contrast(${graphContrast}%) brightness(${50 + graphContrast / 2}%)` }}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
-              <button
-                onClick={() => setIs3DMode(v => !v)}
-                className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-mono transition-colors bg-black/50 border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
-              >
-                <span className={is3DMode ? 'text-white/25' : 'text-white/70 font-semibold'}>2D</span>
+              <div className="absolute top-3 left-3 z-20 flex items-center gap-0.5 px-1.5 py-1 rounded-md backdrop-blur-md border bg-black/50 border-white/10">
+                <button
+                  onClick={() => setViewMode('force')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'force' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  Force
+                </button>
                 <span className="text-white/15">·</span>
-                <span className={is3DMode ? 'text-white/70 font-semibold' : 'text-white/25'}>3D</span>
-              </button>
+                <button
+                  onClick={() => setViewMode('radial')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'radial' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  Radial
+                </button>
+                <span className="text-white/15">·</span>
+                <button
+                  onClick={() => setViewMode('3d')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === '3d' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                >
+                  3D
+                </button>
+              </div>
             )}
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
@@ -837,7 +852,7 @@ export default function Cocoon() {
                   <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
                 </div>
               </div>
-            ) : is3DMode ? (
+            ) : viewMode === '3d' ? (
               <CocoonForceGraph3D
                 nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
@@ -862,6 +877,19 @@ export default function Cocoon() {
                 bgWarmth={bgWarmth}
                 linkThickness={linkThickness}
                 bgColorSlider={bgColor}
+              />
+            ) : viewMode === 'radial' ? (
+              <CocoonRadialGraph
+                nodes={filteredNodes}
+                selectedNodeId={selectedNode?.id || null}
+                onNodeSelect={(node) => {
+                  if (nodePickerCallback && node) {
+                    nodePickerCallback(node);
+                    setNodePickerCallback(null);
+                  } else {
+                    setSelectedNode(node);
+                  }
+                }}
               />
             ) : (
               <CocoonForceGraph
