@@ -48,7 +48,9 @@ const reportTranslations = {
   },
   en: {
     title: 'Report Preview',
+    crawlTitle: 'Crawl Report',
     download: 'Download',
+    downloadCSV: 'CSV',
     generating: 'Generating...',
     copyLink: 'Copy link',
     copied: 'Copied!',
