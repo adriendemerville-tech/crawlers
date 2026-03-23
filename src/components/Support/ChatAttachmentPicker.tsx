@@ -114,12 +114,12 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
 
   return (
     <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border bg-background shadow-xl z-10">
-      <div className="flex items-center justify-between border-b px-3 py-2">
+      <div className="flex items-center justify-between border-b px-3 py-1.5">
         <div className="flex gap-1">
           <Button
             variant={tab === 'report' ? 'default' : 'ghost'}
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="h-6 text-[11px] gap-1 px-2"
             onClick={() => setTab('report')}
           >
             <FileText className="h-3 w-3" /> Rapports
@@ -127,13 +127,23 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
           <Button
             variant={tab === 'script' ? 'default' : 'ghost'}
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="h-6 text-[11px] gap-1 px-2"
             onClick={() => setTab('script')}
           >
             <Code2 className="h-3 w-3" /> Scripts
           </Button>
+          {onImageAttach && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[11px] gap-1 px-2"
+              onClick={() => { imageInputRef.current?.click(); setOpen(false); }}
+            >
+              <ImageIcon className="h-3 w-3" /> Image
+            </Button>
+          )}
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
+        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setOpen(false)}>
           <X className="h-3 w-3" />
         </Button>
       </div>
