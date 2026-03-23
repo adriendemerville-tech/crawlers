@@ -176,6 +176,8 @@ Visualisation interactive de l'architecture sémantique de votre site en 3D (Thr
 - **Indicateur de backlinks** : les nœuds recevant des backlinks externes sont marqués d'un anneau doré pulsant et d'un badge indiquant le nombre de domaines référents. Cela permet d'identifier visuellement les pages bénéficiant d'autorité externe.
 - **Stratège Cocoon** : chat IA intégré pour affiner la stratégie, avec mémoire persistante et reprise de session. Le Stratège peut expliquer les backlinks de chaque page (sources, ancres, impact sur l'autorité).
 - **Scan Backlinks ciblé** : depuis la page Crawl, un bouton permet de scanner les backlinks DataForSEO des 10 pages les plus autoritaires (~$0.20). Les résultats alimentent le graphe Cocoon et le rapport PDF.
+- **Auto-Maillage IA** : depuis le panneau de nœud, un bouton déclenche l'analyse automatique du contenu de la page pour identifier les meilleurs emplacements d'ancres internes. Le système utilise un **pré-scan intelligent** (détection des titres cibles déjà présents dans le texte, économisant 20-40% d'appels IA) puis l'IA sélectionne les ancres contextuelles optimales. Les suggestions incluent le texte d'ancrage, la phrase de contexte et un score de confiance.
+- **Exclusion granulaire** : chaque page peut être configurée individuellement pour exclure les liens sortants, les liens entrants, ou les deux. Cela protège les pages sponsorisées, désindexées ou légales du maillage automatique.
 - Export et persistance des sessions
 
 Disponible en Pro Agency.
