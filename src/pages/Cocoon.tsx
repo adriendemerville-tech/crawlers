@@ -17,7 +17,7 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { CocoonOnboardingStepper, shouldShowOnboarding } from "@/components/Cocoon/CocoonOnboardingStepper";
+import { CocoonOnboardingStepper, shouldShowOnboarding, incrementCocoonVisit } from "@/components/Cocoon/CocoonOnboardingStepper";
 import { AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart } from "lucide-react";
 import { generateCocoonReport } from "@/components/Cocoon/CocoonReportGenerator";
@@ -225,6 +225,9 @@ export default function Cocoon() {
   const externalClickTimestamp = useRef<number | null>(null);
   const waitingAuditNodeUrl = useRef<string | null>(null);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Increment cocoon visit counter on mount
+  useEffect(() => { incrementCocoonVisit(); }, []);
 
   // Sync selectedNode with latest nodes data after recompute
   useEffect(() => {
