@@ -751,6 +751,7 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
     } catch (e) {
       console.error("Save conversation error:", e);
     }
+    } // end if (!isGuest)
 
     return new Response(JSON.stringify({ reply, conversation_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
