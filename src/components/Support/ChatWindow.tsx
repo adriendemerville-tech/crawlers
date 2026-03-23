@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback, type WheelEvent } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -59,24 +58,9 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSent, setPhoneSent] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
-  const getScrollViewport = useCallback(() => {
-    return scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLDivElement | null;
-  }, []);
-
-  const handleFelixWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest('textarea, input')) return;
-
-    const viewport = getScrollViewport();
-    if (!viewport || viewport.scrollHeight <= viewport.clientHeight) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    viewport.scrollTop += event.deltaY;
-  }, [getScrollViewport]);
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
@@ -180,11 +164,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   // Auto-scroll
   useEffect(() => {
-    const viewport = getScrollViewport();
+    const viewport = messagesViewportRef.current;
     if (viewport) {
       viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages, getScrollViewport]);
+  }, [messages]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
@@ -378,7 +362,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-[17.5rem] sm:w-[22rem] rounded-2xl border border-border/50 bg-background/95 backdrop-blur-lg shadow-2xl flex flex-col max-h-[75vh] overflow-hidden overscroll-contain" onWheelCapture={handleFelixWheel}>
+    <div className="fixed bottom-20 right-4 z-50 flex h-[75vh] max-h-[75vh] w-[17.5rem] sm:w-[22rem] flex-col overflow-hidden overscroll-contain rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2">
@@ -406,12 +390,11 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       {/* Messages */}
       <div className="flex-1 relative overflow-hidden min-h-0">
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <ScrollArea
-          ref={scrollAreaRef}
-          type="always"
-          className="h-full overscroll-contain [&>[data-radix-scroll-area-viewport]]:!h-full [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]]:!overflow-x-hidden [&>[data-radix-scroll-area-viewport]]:overscroll-contain [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!opacity-100 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!w-2.5 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!bg-border/20 [&_[data-radix-scroll-area-thumb]]:!bg-muted-foreground/40 [&_[data-radix-scroll-area-thumb]]:!rounded-full"
+        <div
+          ref={messagesViewportRef}
+          className="h-full min-h-0 overflow-y-scroll overscroll-contain px-4 py-3 pr-3"
+          style={{ scrollbarGutter: 'stable' }}
         >
-          <div className="px-4 py-3">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -515,8 +498,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 <div className="h-6 shrink-0" />
               </div>
             )}
-          </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Phone callback prompt */}
