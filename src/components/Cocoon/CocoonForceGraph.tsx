@@ -168,6 +168,19 @@ export function CocoonForceGraph({
     return JUICE_COLORS[juiceType] || JUICE_COLORS.semantic;
   }, [particleColorsProp, hexToRgb]);
 
+  // Direction-based link color: descending=golden, ascending=blue, lateral=juice color
+  const DIRECTION_COLORS: Record<string, [number, number, number]> = {
+    descending: [251, 191, 36],   // #fbbf24 golden
+    ascending:  [96, 165, 250],   // #60a5fa blue
+    lateral:    [140, 140, 180],  // neutral
+  };
+
+  const resolveLinkColor = useCallback((link: GraphLink): [number, number, number] => {
+    if (link.direction === 'descending') return DIRECTION_COLORS.descending;
+    if (link.direction === 'ascending') return DIRECTION_COLORS.ascending;
+    return resolveJuiceColor(link.juiceType);
+  }, [resolveJuiceColor]);
+
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
     if (depth === 0) return 11; // home base radius (bigger sun)
