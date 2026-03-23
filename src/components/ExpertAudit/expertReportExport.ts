@@ -504,7 +504,7 @@ export function generateExpertReportHTML(
                 <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${frictionBgs[cf.frictionLevel] || '#f3f4f6'}; color: ${frictionColors[cf.frictionLevel] || '#374151'};">${cf.frictionLevel}</span>
               </div>
               ${statusRow(rl.forms, cf.formsCount > 0, String(cf.formsCount))}
-              ${statusRow(rl.fieldsPerForm, cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
+              ${statusRow(rl.fieldsPerForm, (cf.avgFieldsPerForm ?? 0) <= 3, (cf.avgFieldsPerForm ?? 0).toFixed(1))}
               ${statusRow('CTAs', cf.ctaCount > 0, String(cf.ctaCount))}
               ${statusRow('CTA above fold', cf.ctaAboveFold)}
             </div>`);
