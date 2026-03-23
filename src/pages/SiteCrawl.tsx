@@ -1171,9 +1171,9 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    {isLoading ? phase || t.crawling : t.launchBtn}
+                  <Button type="submit" disabled={isLoading || !url || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+                    {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
                   </Button>
                 </div>
 
@@ -1390,9 +1390,12 @@ export default function SiteCrawl() {
                     </Card>
                   );
                 })()}
-                {/* Indexed pages (DataForSEO) */}
-                {indexedPagesCount != null && (
-                  <Card className="border">
+              </div>
+
+              {/* Indexed pages card — half width, right-aligned */}
+              {indexedPagesCount != null && (
+                <div className="flex justify-end">
+                  <Card className="border w-full sm:w-1/2">
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold text-primary">{indexedPagesCount.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground mt-1">
@@ -1400,8 +1403,8 @@ export default function SiteCrawl() {
                       </div>
                     </CardContent>
                   </Card>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Near-duplicate & Schema.org alerts */}
               {(nearDuplicates.length > 0 || schemaErrorPages.length > 0) && (
