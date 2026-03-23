@@ -40,7 +40,13 @@ const i18n = {
 };
 
 export function shouldShowOnboarding(): boolean {
-  return !localStorage.getItem(STORAGE_KEY);
+  const visits = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  return visits < 3;
+}
+
+export function incrementCocoonVisit(): void {
+  const visits = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  localStorage.setItem(STORAGE_KEY, String(visits + 1));
 }
 
 export function CocoonOnboardingStepper({ onComplete }: { onComplete: () => void }) {
