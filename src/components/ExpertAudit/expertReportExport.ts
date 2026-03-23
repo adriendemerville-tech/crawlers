@@ -1,4 +1,5 @@
 import { ExpertAuditResult } from '@/types/expertAudit';
+import { generateRadialChartSVG } from './AuditRadialChart';
 import { supabase } from '@/integrations/supabase/client';
 export const expertReportTranslations = {
   fr: {
@@ -361,6 +362,9 @@ export function generateExpertReportHTML(
     const brokenChecked = scores.technical.brokenLinksChecked ?? 0;
 
     content = `
+      <!-- Radial Quality Score Chart -->
+      ${generateRadialChartSVG(result, 'technical', language)}
+
       <div style="text-align: center; margin-bottom: 28px; break-inside: avoid; page-break-inside: avoid;">
         <div style="display: inline-block; padding: 22px 44px; background: #4f46e5; border-radius: 18px; margin-bottom: 14px; min-width: 200px; min-height: 90px;">
           <div style="font-size: 48px; font-weight: bold; color: #ffffff; line-height: 1.2;">${computedTotal}/200</div>
@@ -689,7 +693,9 @@ export function generateExpertReportHTML(
 
     const strategicSections: string[] = [];
 
-    // 0. Introduction
+    // Radial Quality Score Chart
+    strategicSections.push(generateRadialChartSVG(result, 'strategic', language));
+
     if (strategic?.introduction) {
       strategicSections.push(sectionCard(t.introduction, '#7c3aed', '#faf5ff',
         `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`));

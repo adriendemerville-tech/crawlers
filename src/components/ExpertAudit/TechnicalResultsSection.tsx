@@ -1,3 +1,5 @@
+import { AuditRadialChart } from './AuditRadialChart';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +37,7 @@ interface Props {
 }
 
 export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
+  const { language } = useLanguage();
   // Defensive: guard against missing scores sub-objects
   const scores = result?.scores;
   if (!scores?.performance || !scores?.technical || !scores?.semantic || !scores?.aiReady || !scores?.security) {
@@ -55,6 +58,9 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
 
       {/* SPA Detection Alert */}
       {result.isSPA && <SPADetectionAlert />}
+
+      {/* Radial Quality Score Chart */}
+      <AuditRadialChart result={result} mode="technical" language={language} />
 
       {/* Hero Score */}
       <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">

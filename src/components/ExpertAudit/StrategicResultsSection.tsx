@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { AuditRadialChart } from './AuditRadialChart';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   result: ExpertAuditResult;
@@ -73,6 +75,7 @@ export function StrategicResultsSection({
   onNewAudit, onStrategicAudit, onForceRefresh,
 }: Props) {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [maillageData, setMaillageData] = useState<MaillageData | null>(null);
 
   // Fetch semantic_nodes for maillage analysis
@@ -125,6 +128,9 @@ export function StrategicResultsSection({
             <p className="text-sm text-muted-foreground">{t.strategicSectionDesc}</p>
           </div>
         </div>
+
+        {/* Radial Quality Score Chart */}
+        <AuditRadialChart result={result} mode="strategic" language={language} />
 
         {/* Introduction + Report button */}
         {result.strategicAnalysis?.introduction && (
