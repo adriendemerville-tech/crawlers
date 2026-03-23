@@ -362,7 +362,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
           <div className="flex items-center gap-2">
             <CrawlersLogo size={16} />
-            <span className="text-xs font-medium text-muted-foreground">Assistant Crawlers</span>
+            <span className="text-xs font-medium text-muted-foreground">Félix</span>
           </div>
           <button onClick={onClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" /></button>
         </div>
