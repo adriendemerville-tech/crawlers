@@ -1081,7 +1081,7 @@ export function SmartConfigurator({
 
   // Archive validated solution to the library
   const handleArchiveSolution = useCallback(async () => {
-    if (!generatedCode) return;
+    if (!generatedCode || !user) return;
     setIsArchiving(true);
     try {
       const enabledFixes = fixConfigs.filter(f => f.enabled);
