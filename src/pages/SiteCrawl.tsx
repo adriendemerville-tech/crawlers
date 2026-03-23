@@ -699,32 +699,37 @@ export default function SiteCrawl() {
     );
   }
 
-  async function loadPages(crawlId: string) {
+   async function loadPages(crawlId: string) {
     console.log('[loadPages] Loading pages for crawlId:', crawlId);
-    const { data, error } = await supabase
-      .from('crawl_pages')
-      .select('*')
-      .eq('crawl_id', crawlId)
-      .order('seo_score', { ascending: true });
-    console.log('[loadPages] Result:', { count: data?.length, error });
-    if (error) {
-      console.error('[loadPages] Error:', error);
-    }
-    if (data) {
-      // Sanitize fields that must be arrays to prevent React crashes
-      const sanitized = data.map((p: any) => ({
-        ...p,
-        path: p.path || p.url || '',
-        word_count: p.word_count ?? 0,
-        images_without_alt: p.images_without_alt ?? 0,
-        seo_score: p.seo_score ?? 0,
-        issues: Array.isArray(p.issues) ? p.issues : [],
-        schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
-        schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
-        broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
-        anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
-      }));
-      setPages(sanitized as any);
+    try {
+      const { data, error } = await supabase
+        .from('crawl_pages')
+        .select('*')
+        .eq('crawl_id', crawlId)
+        .order('seo_score', { ascending: true });
+      console.log('[loadPages] Result:', { count: data?.length, error });
+      if (error) {
+        console.error('[loadPages] Error:', error);
+      }
+      if (data) {
+        // Sanitize fields that must be arrays to prevent React crashes
+        const sanitized = data.map((p: any) => ({
+          ...p,
+          path: p.path || p.url || '',
+          word_count: p.word_count ?? 0,
+          images_without_alt: p.images_without_alt ?? 0,
+          seo_score: p.seo_score ?? 0,
+          issues: Array.isArray(p.issues) ? p.issues : [],
+          schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
+          schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
+          broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
+          anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
+          custom_extraction: (p.custom_extraction && typeof p.custom_extraction === 'object' && !Array.isArray(p.custom_extraction)) ? p.custom_extraction : {},
+        }));
+        setPages(sanitized as any);
+      }
+    } catch (err) {
+      console.error('[loadPages] Uncaught error:', err);
     }
   }
 
