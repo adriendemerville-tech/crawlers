@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock, Search, RefreshCw } from "lucide-react";
+import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock, Search, RefreshCw, Wand2, ShieldOff, ShieldCheck, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface SemanticNode {
   id: string;
@@ -38,6 +40,16 @@ interface CocoonNodePanelProps {
   onRefresh?: () => void;
   onAuditLaunch?: () => void;
   isWaitingAudit?: boolean;
+  trackedSiteId?: string;
+}
+
+interface LinkSuggestion {
+  target_url: string;
+  target_title: string;
+  anchor_text: string;
+  context_sentence: string;
+  confidence: number;
+  pre_scan_match: boolean;
 }
 
 const i18n = {
@@ -71,6 +83,16 @@ const i18n = {
     similarityTitle: "Proximité sémantique",
     lastUpdated: "Dernière MàJ",
     depth: "depth",
+    autoLink: "Auto-Maillage IA",
+    autoLinkRunning: "Analyse en cours…",
+    excludeSource: "Pas de liens sortants",
+    excludeTarget: "Pas de liens entrants",
+    excludeAll: "Exclure du maillage",
+    linkingSuggestions: "Suggestions de liens",
+    preScan: "Pré-scan",
+    aiGenerated: "IA",
+    deploy: "Déployer",
+    savedCalls: "appels API économisés",
   },
   en: {
     intents: { transactional: "Transactional", commercial: "Commercial", informational: "Informational", navigational: "Navigational" },
@@ -102,6 +124,16 @@ const i18n = {
     similarityTitle: "Semantic proximity",
     lastUpdated: "Last updated",
     depth: "depth",
+    autoLink: "Auto-Link AI",
+    autoLinkRunning: "Analyzing…",
+    excludeSource: "No outbound links",
+    excludeTarget: "No inbound links",
+    excludeAll: "Exclude from linking",
+    linkingSuggestions: "Link suggestions",
+    preScan: "Pre-scan",
+    aiGenerated: "AI",
+    deploy: "Deploy",
+    savedCalls: "API calls saved",
   },
   es: {
     intents: { transactional: "Transaccional", commercial: "Comercial", informational: "Informacional", navigational: "Navegacional" },
@@ -133,6 +165,16 @@ const i18n = {
     similarityTitle: "Proximidad semántica",
     lastUpdated: "Última actualización",
     depth: "profundidad",
+    autoLink: "Auto-Enlace IA",
+    autoLinkRunning: "Analizando…",
+    excludeSource: "Sin enlaces salientes",
+    excludeTarget: "Sin enlaces entrantes",
+    excludeAll: "Excluir del enlazado",
+    linkingSuggestions: "Sugerencias de enlaces",
+    preScan: "Pre-scan",
+    aiGenerated: "IA",
+    deploy: "Desplegar",
+    savedCalls: "llamadas API ahorradas",
   },
 };
 
@@ -188,20 +230,137 @@ function formatDate(dateStr: string | undefined, lang: string): string {
   }
 }
 
-export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWaitingAudit }: CocoonNodePanelProps) {
+function ExclusionToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-[11px] cursor-pointer group">
+      <div 
+        className={`w-7 h-4 rounded-full transition-colors relative ${checked ? 'bg-rose-500/60' : 'bg-white/10'}`}
+        onClick={() => onChange(!checked)}
+      >
+        <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${checked ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+      </div>
+      <span className={`${checked ? 'text-rose-400' : 'text-white/50'} group-hover:text-white/70 transition-colors`}>{label}</span>
+    </label>
+  );
+}
+
+export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWaitingAudit, trackedSiteId }: CocoonNodePanelProps) {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
   const [fadeKey, setFadeKey] = useState(0);
   const prevNodeRef = useRef(node);
 
-  // Trigger fade-in when node data changes (new scores, etc.)
+  // Auto-linking state
+  const [isAutoLinking, setIsAutoLinking] = useState(false);
+  const [linkSuggestions, setLinkSuggestions] = useState<LinkSuggestion[]>([]);
+  const [linkStats, setLinkStats] = useState<{ pre_scan_matches: number; ai_generated: number; api_calls_saved: number } | null>(null);
+
+  // Exclusion state
+  const [excludeSource, setExcludeSource] = useState(false);
+  const [excludeTarget, setExcludeTarget] = useState(false);
+  const [excludeAll, setExcludeAll] = useState(false);
+
+  // Load exclusions on mount/node change
+  useEffect(() => {
+    if (!trackedSiteId) return;
+    supabase
+      .from('cocoon_linking_exclusions' as any)
+      .select('*')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('page_url', node.url)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data) {
+          setExcludeSource(data.exclude_as_source || false);
+          setExcludeTarget(data.exclude_as_target || false);
+          setExcludeAll(data.exclude_all || false);
+        } else {
+          setExcludeSource(false);
+          setExcludeTarget(false);
+          setExcludeAll(false);
+        }
+      });
+  }, [trackedSiteId, node.url]);
+
+  // Save exclusion changes
+  const updateExclusion = async (field: string, value: boolean) => {
+    if (!trackedSiteId) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const updates: any = {
+      tracked_site_id: trackedSiteId,
+      user_id: user.id,
+      page_url: node.url,
+      [field]: value,
+    };
+
+    if (field === 'exclude_all') {
+      setExcludeAll(value);
+      if (value) { setExcludeSource(true); setExcludeTarget(true); updates.exclude_as_source = true; updates.exclude_as_target = true; }
+    } else if (field === 'exclude_as_source') {
+      setExcludeSource(value);
+    } else if (field === 'exclude_as_target') {
+      setExcludeTarget(value);
+    }
+
+    await supabase
+      .from('cocoon_linking_exclusions' as any)
+      .upsert(updates, { onConflict: 'tracked_site_id,page_url' } as any);
+  };
+
+  // Auto-linking
+  const handleAutoLink = async () => {
+    if (!trackedSiteId || isAutoLinking) return;
+    setIsAutoLinking(true);
+    setLinkSuggestions([]);
+    setLinkStats(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('cocoon-auto-linking', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          source_url: node.url,
+          max_links: 3,
+          dry_run: false,
+        },
+      });
+
+      if (error) throw error;
+      setLinkSuggestions(data.suggestions || []);
+      setLinkStats(data.stats || null);
+
+      if (data.suggestions?.length > 0) {
+        toast.success(`${data.suggestions.length} lien(s) suggéré(s)`, {
+          description: data.stats?.api_calls_saved > 0 
+            ? `${data.stats.api_calls_saved} ${t.savedCalls}` 
+            : undefined,
+        });
+      } else {
+        toast.info(data.message || 'Aucune suggestion trouvée');
+      }
+    } catch (err: any) {
+      console.error('Auto-linking error:', err);
+      toast.error('Erreur lors de l\'auto-maillage');
+    } finally {
+      setIsAutoLinking(false);
+    }
+  };
+
+  // Trigger fade-in when node data changes
   useEffect(() => {
     if (prevNodeRef.current !== node && prevNodeRef.current.url === node.url) {
       setFadeKey(k => k + 1);
     }
     prevNodeRef.current = node;
   }, [node]);
+
+  // Reset suggestions on node change
+  useEffect(() => {
+    setLinkSuggestions([]);
+    setLinkStats(null);
+  }, [node.url]);
 
   const depthLabel = (t.depths as Record<number, string>)[node.crawl_depth ?? 0] ||
     `${t.depths[1]}${"⁴⁵⁶⁷⁸⁹"[(node.crawl_depth ?? 4) - 4] || `^${node.crawl_depth}`}`;
@@ -278,7 +437,6 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
           )}
         </div>
 
-
         {/* Last updated */}
         {node.page_updated_at && (
           <div className="flex items-center gap-1.5 mt-2 text-[10px] text-white/40">
@@ -289,20 +447,75 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
       </div>
 
       <div className="p-4 space-y-5">
-        {/* ROI & Traffic — hidden for now
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gradient-to-br from-[#4c1d95]/30 to-[#4c1d95]/10 border border-[#4c1d95]/20">
-            <TrendingUp className="w-4 h-4 text-[#fbbf24] mb-1" />
-            <div className="text-lg font-bold text-white">{node.roi_predictive.toFixed(0)}€</div>
-            <div className="text-[10px] text-white/40">{t.roiLabel}</div>
+        {/* Auto-Maillage IA Button */}
+        {trackedSiteId && (
+          <div className="space-y-3">
+            <button
+              onClick={handleAutoLink}
+              disabled={isAutoLinking || excludeAll || excludeSource}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                ${isAutoLinking 
+                  ? 'bg-[#a78bfa]/20 text-[#a78bfa] cursor-wait' 
+                  : excludeAll || excludeSource
+                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#a78bfa]/20 to-[#fbbf24]/20 text-white hover:from-[#a78bfa]/30 hover:to-[#fbbf24]/30 border border-[#a78bfa]/30 hover:border-[#a78bfa]/50'
+                }`}
+            >
+              {isAutoLinking ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t.autoLinkRunning}
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4" />
+                  {t.autoLink}
+                </>
+              )}
+            </button>
+
+            {/* Exclusion toggles */}
+            <div className="space-y-1.5 pl-1">
+              <ExclusionToggle label={t.excludeSource} checked={excludeSource} onChange={(v) => updateExclusion('exclude_as_source', v)} />
+              <ExclusionToggle label={t.excludeTarget} checked={excludeTarget} onChange={(v) => updateExclusion('exclude_as_target', v)} />
+              <ExclusionToggle label={t.excludeAll} checked={excludeAll} onChange={(v) => updateExclusion('exclude_all', v)} />
+            </div>
           </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-[#4c1d95]/30 to-[#4c1d95]/10 border border-[#4c1d95]/20">
-            <Zap className="w-4 h-4 text-[#fbbf24] mb-1" />
-            <div className="text-lg font-bold text-white">{node.traffic_estimate}</div>
-            <div className="text-[10px] text-white/40">{t.trafficLabel}</div>
+        )}
+
+        {/* Link Suggestions */}
+        {linkSuggestions.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
+                <Wand2 className="w-3.5 h-3.5 text-[#a78bfa]" /> {t.linkingSuggestions}
+              </h4>
+              {linkStats && linkStats.api_calls_saved > 0 && (
+                <span className="text-[10px] text-emerald-400/70">
+                  ⚡ {linkStats.api_calls_saved} {t.savedCalls}
+                </span>
+              )}
+            </div>
+            <div className="space-y-2">
+              {linkSuggestions.map((s, i) => (
+                <div key={i} className="p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-1.5 py-0.5 text-[9px] rounded font-medium ${s.pre_scan_match ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#a78bfa]/20 text-[#a78bfa]'}`}>
+                      {s.pre_scan_match ? t.preScan : t.aiGenerated}
+                    </span>
+                    <span className="text-[10px] text-white/40 font-mono">{(s.confidence * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="text-xs text-white/80">
+                    <span className="text-[#fbbf24] font-medium">{s.anchor_text}</span>
+                    <span className="text-white/30 mx-1">→</span>
+                    <span className="text-white/50 truncate">{s.target_title}</span>
+                  </div>
+                  <p className="text-[10px] text-white/40 italic line-clamp-2">{s.context_sentence}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        */}
+        )}
 
         {/* Scores */}
         <div className="space-y-3">
