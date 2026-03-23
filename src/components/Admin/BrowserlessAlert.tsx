@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, X, RefreshCw } from 'lucide-react';
+import { AlertTriangle, X, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t3 } from '@/utils/i18n';
@@ -10,6 +10,8 @@ interface BrowserlessError {
   lastUrl: string;
   lastAt: string;
   has429: boolean;
+  flyFallbackCount: number;
+  flyFallbackLastAt: string | null;
 }
 
 export function BrowserlessAlert() {
@@ -22,18 +24,35 @@ export function BrowserlessAlert() {
     setLoading(true);
     try {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { data, error: fetchErr } = await supabase
-        .from('analytics_events')
-        .select('event_data, target_url, created_at')
-        .eq('event_type', 'browserless_error')
-        .gte('created_at', oneHourAgo)
-        .order('created_at', { ascending: false })
-        .limit(50);
 
-      if (fetchErr || !data || data.length === 0) {
+      // Fetch browserless errors and fly-playwright fallback calls in parallel
+      const [errResult, flyResult] = await Promise.all([
+        supabase
+          .from('analytics_events')
+          .select('event_data, target_url, created_at')
+          .eq('event_type', 'browserless_error')
+          .gte('created_at', oneHourAgo)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('analytics_events')
+          .select('event_data, created_at')
+          .eq('event_type', 'paid_api_call')
+          .gte('created_at', oneHourAgo)
+          .order('created_at', { ascending: false })
+          .limit(50),
+      ]);
+
+      const data = errResult.data;
+      if (errResult.error || !data || data.length === 0) {
         setError(null);
         return;
       }
+
+      // Filter fly-playwright entries from paid_api_call events
+      const flyEntries = (flyResult.data || []).filter(
+        (e: any) => (e.event_data as any)?.api_service === 'fly-playwright'
+      );
 
       const has429 = data.some((e: any) => (e.event_data as any)?.status_code === 429);
       const latest = data[0];
@@ -43,6 +62,8 @@ export function BrowserlessAlert() {
         lastUrl: latest.target_url || '',
         lastAt: latest.created_at,
         has429,
+        flyFallbackCount: flyEntries.length,
+        flyFallbackLastAt: flyEntries.length > 0 ? flyEntries[0].created_at : null,
       });
       setDismissed(false);
     } catch (_) {
@@ -61,6 +82,7 @@ export function BrowserlessAlert() {
   if (loading || !error || dismissed) return null;
 
   const locale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
+  const flyActive = error.flyFallbackCount > 0;
 
   return (
     <div className="relative rounded-lg border border-destructive/50 bg-destructive/10 p-4 mb-6">
@@ -86,6 +108,35 @@ export function BrowserlessAlert() {
               <span> {t3(language, 'sur', 'on', 'en')} <code className="text-xs bg-destructive/10 px-1 rounded">{error.lastUrl}</code></span>
             )}
           </p>
+
+          {/* Fly.io fallback status */}
+          <div className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${flyActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive/70'}`}>
+            {flyActive ? (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {t3(language,
+                  `✅ Fly.io Playwright a pris le relais — ${error.flyFallbackCount} rendu${error.flyFallbackCount > 1 ? 's' : ''} réussi${error.flyFallbackCount > 1 ? 's' : ''}`,
+                  `✅ Fly.io Playwright took over — ${error.flyFallbackCount} successful render${error.flyFallbackCount > 1 ? 's' : ''}`,
+                  `✅ Fly.io Playwright tomó el relevo — ${error.flyFallbackCount} renderizado${error.flyFallbackCount > 1 ? 's' : ''} exitoso${error.flyFallbackCount > 1 ? 's' : ''}`
+                )}
+                {error.flyFallbackLastAt && (
+                  <span className="text-muted-foreground font-normal ml-1">
+                    ({t3(language, 'dernier', 'last', 'último')} {new Date(error.flyFallbackLastAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })})
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <XCircle className="h-3.5 w-3.5" />
+                {t3(language,
+                  '❌ Fly.io Playwright — aucun rendu de secours détecté',
+                  '❌ Fly.io Playwright — no fallback renders detected',
+                  '❌ Fly.io Playwright — sin renderizados de respaldo detectados'
+                )}
+              </>
+            )}
+          </div>
+
           <p className="text-xs text-muted-foreground">
             {t3(language, 'Dernier incident', 'Last incident', 'Último incidente')} : {new Date(error.lastAt).toLocaleString(locale)}
           </p>
