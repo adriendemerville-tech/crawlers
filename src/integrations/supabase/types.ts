@@ -1778,6 +1778,56 @@ export type Database = {
           },
         ]
       }
+      crawl_page_backlinks: {
+        Row: {
+          backlinks_total: number | null
+          crawl_id: string
+          created_at: string | null
+          domain_rank_avg: number | null
+          id: string
+          page_authority_internal: number | null
+          path: string
+          referring_domains: number | null
+          top_anchors: Json | null
+          top_sources: Json | null
+          url: string
+        }
+        Insert: {
+          backlinks_total?: number | null
+          crawl_id: string
+          created_at?: string | null
+          domain_rank_avg?: number | null
+          id?: string
+          page_authority_internal?: number | null
+          path?: string
+          referring_domains?: number | null
+          top_anchors?: Json | null
+          top_sources?: Json | null
+          url: string
+        }
+        Update: {
+          backlinks_total?: number | null
+          crawl_id?: string
+          created_at?: string | null
+          domain_rank_avg?: number | null
+          id?: string
+          page_authority_internal?: number | null
+          path?: string
+          referring_domains?: number | null
+          top_anchors?: Json | null
+          top_sources?: Json | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_page_backlinks_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "site_crawls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crawl_pages: {
         Row: {
           anchor_texts: Json | null
@@ -4767,6 +4817,7 @@ export type Database = {
           eeat_score: number
           embedding: Json | null
           error_message: string | null
+          external_backlinks: Json | null
           freshness_score: number
           geo_score: number
           h1: string | null
@@ -4810,6 +4861,7 @@ export type Database = {
           eeat_score?: number
           embedding?: Json | null
           error_message?: string | null
+          external_backlinks?: Json | null
           freshness_score?: number
           geo_score?: number
           h1?: string | null
@@ -4853,6 +4905,7 @@ export type Database = {
           eeat_score?: number
           embedding?: Json | null
           error_message?: string | null
+          external_backlinks?: Json | null
           freshness_score?: number
           geo_score?: number
           h1?: string | null
