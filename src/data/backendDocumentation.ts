@@ -204,6 +204,8 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`cocoon_tasks\` | Tâches liées au cocon | \`tracked_site_id\`, \`title\`, \`priority\`, \`status\` |
 | \`cocoon_chat_histories\` | Historique chat IA Cocoon | \`tracked_site_id\`, \`messages\`, \`session_hash\` |
 | \`cocoon_errors\` | Erreurs détectées par Cocoon | \`domain\`, \`problem_description\`, \`ai_response\`, \`status\` |
+| \`cocoon_auto_links\` | Liens auto-générés par l'IA | \`tracked_site_id\`, \`source_url\`, \`target_url\`, \`anchor_text\`, \`confidence\`, \`is_deployed\`, \`is_active\` |
+| \`cocoon_linking_exclusions\` | Exclusions granulaires de maillage | \`tracked_site_id\`, \`page_url\`, \`exclude_as_source\`, \`exclude_as_target\`, \`exclude_all\` |
 
 ### Google My Business (GMB)
 
@@ -345,6 +347,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`cocoon-diag-semantic\` | ✅ | 0 | Diagnostic sémantique (clusters, cannibalization) |
 | \`cocoon-diag-structure\` | ✅ | 0 | Diagnostic structure (Hn, profondeur, orphans) |
 | \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev |
+| \`cocoon-auto-linking\` | ✅ | 0 | Auto-Maillage IA : pré-scan + sélection d'ancres contextuelles par IA (Gemini Flash) |
 | \`cocoon-deploy-links\` | ✅ | 0 | Déploiement maillage interne vers CMS |
 | \`calculate-internal-pagerank\` | ✅ | 0 | PageRank interne par page |
 | \`persist-cocoon-session\` | ✅ | 0 | Sauvegarde session Cocoon |
@@ -859,10 +862,30 @@ Le module Cocoon transforme les données de crawl d'un site en une **visualisati
 
 - **Rendu Canvas D3.js** via \`CocoonForceGraph.tsx\`
 - **CocoonNodePanel.tsx** : Panneau latéral détaillé — i18n FR/EN/ES
+  - **Bouton Auto-Maillage IA** : Déclenche \`cocoon-auto-linking\` pour la page sélectionnée. Affiche les suggestions avec badge Pré-scan (vert) ou IA (violet) et score de confiance.
+  - **Toggles d'exclusion** : 3 interrupteurs par page (pas de liens sortants / pas de liens entrants / exclure totalement). Persistés dans \`cocoon_linking_exclusions\`.
 - **CocoonAIChat** : Chat Gemini 3 Flash avec streaming SSE
 - **Mode X-Ray** : Toggle nœuds fantômes
 - **Légende dynamique** : N'affiche que les types présents
 - **Auto-refresh** : Détecte retour utilisateur après audit/crawl
+
+## Auto-Maillage IA (\`cocoon-auto-linking\`)
+
+### Algorithme
+
+1. **Vérification des exclusions** : vérifie si la page source est exclue du maillage sortant
+2. **Récupération du contenu** : charge le \`body_text_truncated\` de la page source depuis le dernier crawl
+3. **Sélection des cibles** : top 20 pages indexables triées par \`seo_score\`, filtrage des exclusions
+4. **Pré-scan intelligent** : recherche les titres/H1 des pages cibles dans le texte source (économie 20-40% d'appels IA)
+5. **Sélection d'ancres IA** (Gemini Flash via tool calling) : pour les pages non matchées, l'IA identifie le meilleur texte d'ancrage existant dans le contenu source (2-6 mots, contextuel)
+6. **Persistance** : les suggestions sont stockées dans \`cocoon_auto_links\` avec \`is_deployed = false\` pour reversibilité
+
+### Tables
+
+| Table | Usage |
+|-------|-------|
+| \`cocoon_auto_links\` | Liens IA générés (source, target, anchor, confidence, deployed) |
+| \`cocoon_linking_exclusions\` | Préférences d'exclusion par page (source, target, all) |
 `,
   },
 
