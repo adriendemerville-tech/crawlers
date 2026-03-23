@@ -653,8 +653,8 @@ export function FinancesDashboard() {
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>{tokenUsage.firecrawlCalls.toLocaleString('fr-FR')} appels (30j)</span>
-                <span>~{(tokenUsage.firecrawlCalls * 0.005).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+                <span>{(allTimeTokenUsage?.firecrawlCalls ?? tokenUsage.firecrawlCalls).toLocaleString('fr-FR')} appels (total)</span>
+                <span>{realFirecrawlUsed.toLocaleString('fr-FR')} crédits utilisés</span>
               </div>
             </div>
 
