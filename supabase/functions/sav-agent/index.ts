@@ -306,8 +306,11 @@ serve(async (req) => {
     const sb = getServiceClient();
 
     // ── Check if user is admin (creator) ──
-    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user_id, _role: "admin" });
-    const isCreator = isAdmin === true;
+    let isCreator = false;
+    if (!isGuest && user_id) {
+      const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user_id, _role: "admin" });
+      isCreator = isAdmin === true;
+    }
 
     // ── Detect backend query intent from creator ──
     if (isCreator) {
