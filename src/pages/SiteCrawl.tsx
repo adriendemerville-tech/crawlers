@@ -864,6 +864,7 @@ export default function SiteCrawl() {
     setCrawlResult(null);
     setPages([]);
     setExpandedPage(null);
+    setCrawlBacklinks([]);
   }
 
   function addSelector() {

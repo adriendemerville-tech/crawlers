@@ -32,6 +32,11 @@ interface SemanticNode {
   page_authority?: number;
   internal_links_in?: number;
   internal_links_out?: number;
+  external_backlinks?: {
+    referring_domains?: number;
+    backlinks_total?: number;
+    top_sources?: Array<{ domain: string; rank: number }>;
+  } | null;
 }
 
 interface GraphNode extends SimulationNodeDatum {
