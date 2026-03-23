@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, X, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertTriangle, X, RefreshCw, CheckCircle2, XCircle, Zap, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t3 } from '@/utils/i18n';
+import { toast } from 'sonner';
 
 interface BrowserlessError {
   count: number;
