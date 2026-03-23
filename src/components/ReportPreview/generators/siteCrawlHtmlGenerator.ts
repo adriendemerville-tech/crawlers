@@ -30,6 +30,16 @@ export interface SiteCrawlReportData {
   deepPages?: Array<{ url: string; path: string; depth: number }>;
   brokenLinks?: Array<{ source_url: string; broken_url: string; status?: number }>;
   indexabilityRatio?: { indexable: number; noindex: number; total: number };
+  // External authority
+  externalBacklinks?: Array<{
+    url: string;
+    path: string;
+    referring_domains: number;
+    backlinks_total: number;
+    domain_rank_avg: number;
+    top_anchors: string[];
+    top_sources: Array<{ domain: string; rank: number }>;
+  }>;
 }
 
 const siteCrawlI18n = {
