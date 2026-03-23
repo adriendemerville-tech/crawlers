@@ -172,17 +172,17 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
   const statusGroups: Record<string, number> = {};
   data.pages.forEach(p => {
     const s = p.http_status;
-    const group = !s ? 'unknown' : s >= 200 && s < 300 ? '2xx' : s >= 300 && s < 400 ? '3xx' : s >= 400 && s < 500 ? '4xx' : s >= 500 ? '5xx' : 'unknown';
+    const group = !s ? 'unknown' : s === 200 ? '200' : s >= 200 && s < 300 ? '2xx' : s >= 300 && s < 400 ? '3xx' : s >= 400 && s < 500 ? '4xx' : s >= 500 ? '5xx' : 'unknown';
     statusGroups[group] = (statusGroups[group] || 0) + 1;
   });
-  const statusColors: Record<string, string> = { '2xx': '#10b981', '3xx': '#f59e0b', '4xx': '#ef4444', '5xx': '#dc2626', 'unknown': '#6b7280' };
+  const statusColors: Record<string, string> = { '200': '#10b981', '2xx': '#34d399', '3xx': '#f59e0b', '4xx': '#ef4444', '5xx': '#dc2626', 'unknown': '#6b7280' };
   const statusLabels: Record<string, string> = language === 'fr'
-    ? { '2xx': 'Succès (2xx)', '3xx': 'Redirection (3xx)', '4xx': 'Erreur client (4xx)', '5xx': 'Erreur serveur (5xx)', 'unknown': 'Inconnu' }
+    ? { '200': '200 OK', '2xx': 'Autres succès (2xx)', '3xx': 'Redirection (3xx)', '4xx': 'Erreur client (4xx)', '5xx': 'Erreur serveur (5xx)', 'unknown': 'Inconnu' }
     : language === 'es'
-    ? { '2xx': 'Éxito (2xx)', '3xx': 'Redirección (3xx)', '4xx': 'Error cliente (4xx)', '5xx': 'Error servidor (5xx)', 'unknown': 'Desconocido' }
-    : { '2xx': 'Success (2xx)', '3xx': 'Redirect (3xx)', '4xx': 'Client Error (4xx)', '5xx': 'Server Error (5xx)', 'unknown': 'Unknown' };
+    ? { '200': '200 OK', '2xx': 'Otros éxitos (2xx)', '3xx': 'Redirección (3xx)', '4xx': 'Error cliente (4xx)', '5xx': 'Error servidor (5xx)', 'unknown': 'Desconocido' }
+    : { '200': '200 OK', '2xx': 'Other Success (2xx)', '3xx': 'Redirect (3xx)', '4xx': 'Client Error (4xx)', '5xx': 'Server Error (5xx)', 'unknown': 'Unknown' };
   const statusTitle = language === 'fr' ? 'Codes de réponse HTTP' : language === 'es' ? 'Códigos de respuesta HTTP' : 'HTTP Response Codes';
-  const statusEntries = ['2xx', '3xx', '4xx', '5xx', 'unknown'].filter(k => statusGroups[k] > 0);
+  const statusEntries = ['200', '2xx', '3xx', '4xx', '5xx', 'unknown'].filter(k => statusGroups[k] > 0);
   const totalPages = data.pages.length;
 
   // Build SVG donut
