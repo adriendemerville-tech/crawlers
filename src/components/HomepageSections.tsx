@@ -14,7 +14,7 @@ import llmGemini from '@/assets/llm-gemini.png';
 import llmPerplexity from '@/assets/llm-perplexity.png';
 import llmClaude from '@/assets/llm-claude.png';
 import llmGrok from '@/assets/llm-grok.png';
-import llmMistral from '@/assets/llm-mistral.png';
+import llmMistral from '@/assets/mistral-logo-2025.png';
 
 /* ─── Animated Counter ─── */
 function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffix?: string; prefix?: string }) {
