@@ -15,7 +15,6 @@ import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
-import { ChatMicButton } from './ChatMicButton';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
