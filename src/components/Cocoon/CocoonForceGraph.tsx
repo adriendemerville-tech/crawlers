@@ -707,6 +707,32 @@ export function CocoonForceGraph({
         ctx.lineWidth = (isSelected || node.isHome ? 1.2 : 0.5) * nodeScale;
         ctx.stroke();
 
+        // ─── Backlink badge (golden ring + count) ───
+        if (node.hasBacklinks && node.backlinkDomains > 0) {
+          const badgeR = r + 3 * nodeScale;
+          // Pulsing golden outer ring
+          const pulseAlpha = 0.4 + 0.3 * Math.sin(Date.now() * 0.003 + node.pulsePhase);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, badgeR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(245, 158, 11, ${pulseAlpha})`;
+          ctx.lineWidth = 1.5 * nodeScale;
+          ctx.stroke();
+
+          // Small badge with count at top-right
+          const bx = node.x + r * 0.7;
+          const by = node.y - r * 0.7;
+          const badgeSize = Math.max(5, 3 * nodeScale);
+          ctx.beginPath();
+          ctx.arc(bx, by, badgeSize, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = `bold ${Math.max(6, 4 * nodeScale)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(node.backlinkDomains > 99 ? '99+' : String(node.backlinkDomains), bx, by);
+        }
+
         // ─── Label ───
         if (isSelected || isHovered || node.isHome) {
           // Labels stay constant in screen-space: scale inversely with zoom
