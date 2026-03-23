@@ -1224,6 +1224,7 @@ export default function SiteCrawl() {
 
           {/* Résultats */}
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || pages.length > 0) && (
+            <StrategicErrorBoundary onReset={() => { setCrawlResult(null); setPages([]); setViewingCrawlId(null); }}>
             <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {viewingCrawlId && (
