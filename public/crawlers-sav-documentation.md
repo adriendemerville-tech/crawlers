@@ -416,7 +416,26 @@ Pour les outils Pro, votre token d'authentification Crawlers est transmis automa
 
 ---
 
-## 9. À propos de Crawlers.fr
+## 9. Infrastructure & Monitoring
+
+### Suivi des coûts API en temps réel
+Le module Finances du dashboard admin agrège les soldes et consommations en temps réel de toutes les APIs tierces :
+- **DataForSEO** : solde en dollars, alertes automatiques quand le solde passe sous $5
+- **SerpAPI** : recherches restantes sur le plan mensuel
+- **OpenRouter** : consommation IA en dollars vs limite du compte
+- **Firecrawl** : crédits de crawl restants vs total alloué
+
+Des alertes visuelles (critique, bas, sain) et des notifications Felix sont envoyées aux admins en cas de solde critique.
+
+### Fallback API automatique
+En cas d'épuisement des crédits DataForSEO (erreur 402), le système bascule automatiquement sur SerpAPI pour les requêtes SERP, assurant la continuité de service sans intervention manuelle.
+
+### Ahrefs Firehose API
+Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps réel. Endpoint dédié pour interroger le flux de données backlinks.
+
+---
+
+## 10. À propos de Crawlers.fr
 
 ### Qu'est-ce que Crawlers.fr ?
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
