@@ -133,7 +133,7 @@ async function scanBacklinks(
       const resp = await fetch('https://api.dataforseo.com/v3/backlinks/summary/live', {
         method: 'POST',
         headers: { 'Authorization': dfAuth, 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ target: page.url, internal_list_limit: 0, backlinks_filters: ["dofollow", "=", true"] }])
+        body: JSON.stringify([{ target: page.url, internal_list_limit: 0, backlinks_filters: ["dofollow", "=", "true"] }])
       })
 
       if (!resp.ok) {
