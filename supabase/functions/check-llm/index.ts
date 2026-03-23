@@ -192,6 +192,15 @@ async function queryLLM(
       jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
     }
 
+    // Sanitize malformed JSON from LLMs (single quotes, trailing commas, unquoted keys)
+    jsonStr = jsonStr
+      // Replace single-quoted string values with double-quoted
+      .replace(/:\s*'([^']*)'/g, ': "$1"')
+      // Replace single-quoted keys
+      .replace(/'([^']+)'\s*:/g, '"$1":')
+      // Remove trailing commas before } or ]
+      .replace(/,\s*([\]}])/g, '$1');
+
     const parsed = JSON.parse(jsonStr.trim());
 
     // Validate sentiment is one of the 5 valid values (with strict validation)
