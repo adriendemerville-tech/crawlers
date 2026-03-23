@@ -561,29 +561,33 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               }}
             />
           )}
-          <textarea
-            value={newMessage}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
-            disabled={sending}
-            className="flex-1 min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 px-3 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
-            maxLength={isAdmin ? 2000 : 500}
-            rows={1}
-            style={{ height: 'auto' }}
-            ref={(el) => {
-              if (el) {
-                el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 96) + 'px';
-              }
-            }}
-          />
-          {!newMessage.trim() && (
-            <ChatMicButton
-              onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
+          <div className="flex-1 relative">
+            <textarea
+              value={newMessage}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
+              className="w-full min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+              maxLength={isAdmin ? 2000 : 500}
+              rows={1}
+              style={{ height: 'auto' }}
+              ref={(el) => {
+                if (el) {
+                  el.style.height = 'auto';
+                  el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+                }
+              }}
             />
-          )}
+            {!newMessage.trim() && (
+              <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                <ChatMicButton
+                  onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
+                  disabled={sending}
+                />
+              </div>
+            )}
+          </div>
           <button
             onClick={handleSend}
             disabled={!newMessage.trim() || sending}
