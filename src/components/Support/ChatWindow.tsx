@@ -221,9 +221,9 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
         setConversationId(data.conversation_id);
       }
 
-      // Check if escalation should show phone prompt (after 3+ user messages)
+      // Check if escalation should show phone prompt (after 3+ user messages) — skip for admins
       const userCount = updatedMessages.filter(m => m.role === 'user').length;
-      if (userCount >= 3 && !phoneSent) {
+      if (userCount >= 3 && !phoneSent && !isAdmin) {
         setShowPhonePrompt(true);
       }
     } catch (err) {
@@ -358,13 +358,13 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
   if (!user) {
     return (
-      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-lg border bg-background shadow-xl">
-        <div className="flex items-center justify-between border-b p-3">
+      <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-2xl border border-border/50 bg-background/95 backdrop-blur-lg shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
           <div className="flex items-center gap-2">
-            <CrawlersLogo size={20} />
-            <h3 className="font-semibold text-sm">Assistant SAV</h3>
+            <CrawlersLogo size={16} />
+            <span className="text-xs font-medium text-muted-foreground">Assistant Crawlers</span>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={onClose}><X className="h-3.5 w-3.5" /></Button>
+          <button onClick={onClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" /></button>
         </div>
         <div className="p-6 text-center text-muted-foreground text-sm">
           <p>Connectez-vous pour contacter le support.</p>
@@ -374,28 +374,28 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-lg border bg-background shadow-xl flex flex-col max-h-[75vh]">
+    <div className="fixed bottom-20 right-4 z-50 w-[22rem] sm:w-[28rem] rounded-2xl border border-border/50 bg-background/95 backdrop-blur-lg shadow-2xl flex flex-col max-h-[75vh]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b p-3 shrink-0">
+      <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2">
-          <CrawlersLogo size={22} />
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <h3 className="font-semibold text-sm">Assistant SAV</h3>
+          <CrawlersLogo size={16} />
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-medium text-foreground/80">Assistant Crawlers</span>
           {isAdmin && (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-              <Shield className="h-2.5 w-2.5" /> Admin
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <Shield className="h-2 w-2" /> Créateur
             </span>
           )}
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleNewConversation}>
+            <button onClick={handleNewConversation} className="text-[10px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-full hover:bg-muted/50 transition-colors">
               Nouveau
-            </Button>
+            </button>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10" onClick={handleClose}>
-            <X className="h-3.5 w-3.5" />
-          </Button>
+          <button onClick={handleClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-3 w-3" />
+          </button>
         </div>
       </div>
 
@@ -406,30 +406,30 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 space-y-3">
+          <div className="text-center text-muted-foreground py-8 space-y-2">
             <div className="flex justify-center">
-              <CrawlersLogo size={36} />
+              <CrawlersLogo size={28} />
             </div>
-            <p className="text-sm font-medium">Bonjour ! Je suis votre assistant SAV.</p>
+            <p className="text-xs font-medium">Bonjour ! Comment puis-je vous aider ?</p>
             {isAdmin ? (
-              <p className="text-xs">Mode Créateur actif. Posez vos questions sur le backend, les tables, les métriques ou les fonctions.</p>
+              <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
             ) : (
-              <p className="text-xs">Posez-moi vos questions sur les audits SEO, le GEO Score, vos crédits ou tout problème technique.</p>
+              <p className="text-[11px] text-muted-foreground/70">Audits SEO, GEO Score, crédits ou problème technique.</p>
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
                 <div className={cn(
-                  'max-w-[90%] rounded-lg px-3 py-2',
+                  'max-w-[90%] rounded-2xl px-3 py-2',
                   msg.role === 'assistant'
-                    ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
-                    : 'bg-primary text-primary-foreground'
+                    ? 'bg-muted/60 text-foreground rounded-bl-md'
+                    : 'bg-primary/90 text-primary-foreground rounded-br-md'
                 )}>
                   {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <CrawlersLogo size={14} />
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <CrawlersLogo size={12} />
                     </div>
                   )}
                   <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
@@ -471,8 +471,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                     );
                   })()}
                   <span className={cn(
-                    'text-[10px] block mt-1',
-                    msg.role === 'assistant' ? 'text-violet-500 dark:text-violet-400' : 'text-primary-foreground/70'
+                    'text-[9px] block mt-0.5 opacity-50',
+                    msg.role === 'assistant' ? 'text-foreground' : 'text-primary-foreground'
                   )}>
                     {format(new Date(msg.timestamp), 'HH:mm', { locale: fr })}
                   </span>
@@ -495,14 +495,14 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
             {sending && (
               <div className="flex justify-start">
-                <div className="bg-violet-100 dark:bg-violet-900/40 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <CrawlersLogo size={14} />
+                <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <CrawlersLogo size={12} />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -542,7 +542,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
       )}
 
       {/* Input */}
-      <div className="border-t px-3 py-1.5 shrink-0 relative">
+      <div className="border-t border-border/30 px-3 py-2 shrink-0 relative">
         <ChatAttachmentPicker
           userId={user.id}
           onAttach={(item) => {
@@ -556,7 +556,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
             disabled={sending}
           />
-          <label htmlFor="chat-image-upload" className="flex items-center justify-center h-8 w-8 shrink-0 cursor-pointer rounded-none border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors">
+          <label htmlFor="chat-image-upload" className="flex items-center justify-center h-7 w-7 shrink-0 cursor-pointer rounded-full text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors">
             <input
               id="chat-image-upload"
               type="file"
@@ -569,7 +569,7 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 e.target.value = '';
               }}
             />
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </label>
           <textarea
             value={newMessage}
@@ -577,8 +577,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
             onKeyDown={handleKeyDown}
             placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
             disabled={sending}
-            className="flex-1 min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-md border border-input bg-background px-3 py-1.5 text-[13px] ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring caret-primary"
-            maxLength={500}
+            className="flex-1 min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 px-3 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+            maxLength={isAdmin ? 2000 : 500}
             rows={1}
             style={{ height: 'auto' }}
             ref={(el) => {
@@ -588,9 +588,13 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
               }
             }}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} size="icon" className="h-8 w-8 shrink-0 rounded-none border border-[hsl(var(--brand-violet))] text-[hsl(var(--brand-violet))] bg-transparent hover:bg-[hsl(var(--brand-violet))]/10 disabled:opacity-30">
-            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-          </Button>
+          <button
+            onClick={handleSend}
+            disabled={!newMessage.trim() || sending}
+            className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+          </button>
         </div>
       </div>
     </div>
