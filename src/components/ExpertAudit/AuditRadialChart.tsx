@@ -7,6 +7,7 @@ interface AuditRadialChartProps {
   result: ExpertAuditResult;
   mode: 'technical' | 'strategic';
   language: string;
+  inline?: boolean;
 }
 
 const COLORS = {
@@ -73,7 +74,7 @@ const labels = {
   },
 };
 
-export function AuditRadialChart({ result, mode, language }: AuditRadialChartProps) {
+export function AuditRadialChart({ result, mode, language, inline = false }: AuditRadialChartProps) {
   const t = labels[language as keyof typeof labels] || labels.fr;
   const colors = COLORS[mode];
 
@@ -131,48 +132,58 @@ export function AuditRadialChart({ result, mode, language }: AuditRadialChartPro
 
   const scoreRatio = totalScore / maxScore;
 
+  const radarContent = (
+    <div style={{ height: inline ? 240 : 280 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
+          <PolarGrid stroke="hsl(var(--border))" />
+          <PolarAngleAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 100]}
+            tick={false}
+            axisLine={false}
+          />
+          <Radar
+            dataKey="value"
+            stroke={colors.stroke}
+            fill={colors.fill}
+            fillOpacity={colors.fillOpacity}
+            strokeWidth={2}
+            dot={{ r: 4, fill: colors.stroke, strokeWidth: 0 }}
+          />
+          <Tooltip
+            contentStyle={{
+              fontSize: 12,
+              borderRadius: 8,
+              background: 'hsl(var(--popover))',
+              border: '1px solid hsl(var(--border))',
+              color: 'hsl(var(--popover-foreground))',
+            }}
+            formatter={(value: number, _name: string, entry: any) => {
+              const item = entry.payload;
+              return [`${item.raw}/${item.max}`, item.name];
+            }}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  if (inline) {
+    return radarContent;
+  }
+
   return (
     <Card className="bg-gradient-to-br from-card via-card to-muted/20 border overflow-hidden">
       <CardContent className="p-6">
         <div className="flex items-center gap-8">
           {/* Radial Chart */}
-          <div className="flex-1 min-w-0" style={{ height: 280 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-                <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <PolarRadiusAxis
-                  angle={90}
-                  domain={[0, 100]}
-                  tick={false}
-                  axisLine={false}
-                />
-                <Radar
-                  dataKey="value"
-                  stroke={colors.stroke}
-                  fill={colors.fill}
-                  fillOpacity={colors.fillOpacity}
-                  strokeWidth={2}
-                  dot={{ r: 4, fill: colors.stroke, strokeWidth: 0 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 12,
-                    borderRadius: 8,
-                    background: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    color: 'hsl(var(--popover-foreground))',
-                  }}
-                  formatter={(value: number, _name: string, entry: any) => {
-                    const item = entry.payload;
-                    return [`${item.raw}/${item.max}`, item.name];
-                  }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+          <div className="flex-1 min-w-0">
+            {radarContent}
           </div>
 
           {/* Central Score */}
