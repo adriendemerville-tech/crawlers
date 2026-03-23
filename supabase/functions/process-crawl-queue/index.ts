@@ -988,6 +988,32 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     // Exclude the homepage from orphan count (it's the root, often has no internal links pointing to it from itself)
     const homePath = normalizeUrl(`https://${job.domain}/`);
     const orphanCount = inboundCount.get(homePath) === 0 ? Math.max(0, trueOrphanCount - 1) : trueOrphanCount;
+
+    const prompt = `Tu es un expert SEO senior. Analyse ce crawl de ${job.domain} (${pages.length} pages, score moyen: ${avgScore}/200).
+
+PROBLÈMES DÉTECTÉS:
+${topIssues.join('\n')}
+
+MEILLEURES PAGES:
+${bestPages.map((p: any) => `- ${p.path} (${p.seo_score}/200)`).join('\n')}
+
+PIRES PAGES:
+${worstPages.map((p: any) => `- ${p.path} (${p.seo_score}/200) — Problèmes: ${(p.issues || []).join(', ')}`).join('\n')}
+
+STATS DÉTAILLÉES:
+- Pages avec Schema.org: ${schemaPages.length}/${pages.length}
+- Pages avec Schema.org valide (sans erreurs): ${schemaPages.length - schemaErrorPages.length}/${pages.length}
+- Pages avec erreurs Schema.org: ${schemaErrorPages.length}
+- Pages avec canonical: ${pages.filter((p: any) => p.has_canonical).length}/${pages.length}
+- Pages avec OG: ${pages.filter((p: any) => p.has_og).length}/${pages.length}
+- Pages noindex: ${pages.filter((p: any) => p.has_noindex).length}
+- Pages nofollow: ${pages.filter((p: any) => p.has_nofollow).length}
+- Titres dupliqués: ${duplicateTitleCount} pages
+- Meta descriptions dupliquées: ${duplicateMetaCount} pages
+- Contenu quasi-dupliqué (hash): ${nearDuplicateCount} pages
+- Contenu fin (<100 mots): ${pages.filter((p: any) => (p.word_count || 0) < 100).length}
+- Images sans alt: ${pages.reduce((s: number, p: any) => s + (p.images_without_alt || 0), 0)}
+- Pages orphelines (0 liens entrants): ${orphanCount}
 - H1 multiples: ${pages.filter((p: any) => ((p.issues as string[]) || []).includes('multiple_h1')).length}
 - H2 manquants: ${pages.filter((p: any) => (p.h2_count || 0) === 0).length}/${pages.length}
 ${avgResponseTime ? `- Temps de réponse moyen: ${avgResponseTime}ms` : ''}
