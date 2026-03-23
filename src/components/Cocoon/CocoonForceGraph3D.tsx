@@ -548,7 +548,8 @@ function Links({
           {particleData.current.map((p, i) => {
             const link = links[p.linkIdx];
             const activeJuice2 = { ...JUICE_COLORS, ...customParticleColors };
-            const color = link ? activeJuice2[link.juiceType] : "#508cff";
+            const dirColor3D = link?.direction === 'descending' ? '#fbbf24' : link?.direction === 'ascending' ? '#60a5fa' : (link ? activeJuice2[link.juiceType] : "#508cff");
+            const color = dirColor3D;
             return (
               <mesh key={i} position={[0, 0, 0]}>
                 <sphereGeometry args={[0.3 * linkThickness, 8, 8]} />
