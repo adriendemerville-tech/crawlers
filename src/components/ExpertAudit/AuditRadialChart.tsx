@@ -74,7 +74,7 @@ const labels = {
   },
 };
 
-export function AuditRadialChart({ result, mode, language }: AuditRadialChartProps) {
+export function AuditRadialChart({ result, mode, language, inline = false }: AuditRadialChartProps) {
   const t = labels[language as keyof typeof labels] || labels.fr;
   const colors = COLORS[mode];
 
