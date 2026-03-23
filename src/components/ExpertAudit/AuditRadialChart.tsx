@@ -96,7 +96,7 @@ export function AuditRadialChart({ result, mode, language }: AuditRadialChartPro
     }
 
     // Strategic mode: combine technical + strategic metrics
-    const items = [
+    const items: ChartItem[] = [
       { name: t.performance, value: Math.round((scores.performance.score / scores.performance.maxScore) * 100), raw: scores.performance.score, max: scores.performance.maxScore },
       { name: t.semantic, value: Math.round((scores.semantic.score / scores.semantic.maxScore) * 100), raw: scores.semantic.score, max: scores.semantic.maxScore },
       { name: t.aiReady, value: Math.round((scores.aiReady.score / scores.aiReady.maxScore) * 100), raw: scores.aiReady.score, max: scores.aiReady.maxScore },
