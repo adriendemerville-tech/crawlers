@@ -773,10 +773,11 @@ function SceneContent({
    return (
     <>
       {/* Ambient + directional light */}
-      <ambientLight intensity={isDayMode ? 0.7 : 0.15} color={isDayMode ? "#ffffff" : "#6c5ce7"} />
-      <directionalLight position={[10, 10, 10]} intensity={isDayMode ? 0.8 : 0.4} color="#ffffff" />
-      <directionalLight position={[0, 30, 5]} intensity={isDayMode ? 0.6 : 0.5} color={isDayMode ? "#ffffff" : "#c8d0e0"} />
-      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
+      <ambientLight intensity={isDayMode ? 0.7 : 0.35} color={isDayMode ? "#ffffff" : "#8878e7"} />
+      <directionalLight position={[10, 10, 10]} intensity={isDayMode ? 0.8 : 0.6} color="#ffffff" />
+      <directionalLight position={[0, 30, 5]} intensity={isDayMode ? 0.6 : 0.6} color={isDayMode ? "#ffffff" : "#e0d8f0"} />
+      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.8} color="#ffc83c" distance={200} decay={2} />
+      <hemisphereLight args={["#6c5ce7", "#1a1030", isDayMode ? 0.3 : 0.25]} />
 
       {/* Background */}
       <color attach="background" args={[sceneBgColor]} />
