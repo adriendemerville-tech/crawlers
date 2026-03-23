@@ -65,7 +65,9 @@ const reportTranslations = {
   },
   es: {
     title: 'Vista previa del informe',
+    crawlTitle: 'Informe Crawl',
     download: 'Descargar',
+    downloadCSV: 'CSV',
     generating: 'Generando...',
     copyLink: 'Copiar enlace',
     copied: '¡Copiado!',
