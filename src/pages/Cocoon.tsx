@@ -653,18 +653,13 @@ export default function Cocoon() {
 
             {/* Site selector — centered on desktop, full row on mobile */}
             <div className="order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2">
-              <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-full sm:w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
-                  <SelectValue placeholder={t.selectSite} />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
-                  {trackedSites.map((site) => (
-                    <SelectItem key={site.id} value={site.id} className="text-white text-xs">
-                      {site.site_name || site.domain}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CocoonSiteSelector
+                userId={user?.id || ""}
+                trackedSites={trackedSites}
+                selectedSiteId={selectedSiteId}
+                onSelect={setSelectedSiteId}
+                placeholder={t.selectSite}
+              />
             </div>
 
             {/* Controls */}
