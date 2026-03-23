@@ -1434,25 +1434,27 @@ export default function SiteCrawl() {
                 </div>
               )}
 
-              {/* HTTP Status Distribution Chart */}
-              {pages.length > 0 && (
-                <HttpStatusChart pages={pages} language={language} />
-              )}
-
-              {/* Action bar: Sitemap Export */}
-              <div className="flex flex-wrap gap-3">
-                <Button variant="outline" size="sm" className="gap-2" onClick={handleSitemapExport}>
-                  <Download className="w-4 h-4" />
-                  {t.sitemapExport}
-                </Button>
-                <Button
-                  onClick={() => setIsReportOpen(true)}
-                  size="default"
-                  className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
-                >
-                  <FileText className="h-4 w-4" />
-                  {t.viewReport}
-                </Button>
+              {/* Action bar + HTTP Status compact */}
+              <div className="flex flex-wrap items-stretch gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={handleSitemapExport}>
+                    <Download className="w-4 h-4" />
+                    {t.sitemapExport}
+                  </Button>
+                  <Button
+                    onClick={() => setIsReportOpen(true)}
+                    size="default"
+                    className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {t.viewReport}
+                  </Button>
+                </div>
+                {pages.length > 0 && (
+                  <div className="ml-auto w-full sm:w-auto sm:max-w-[280px]">
+                    <HttpStatusChart pages={pages} language={language} />
+                  </div>
+                )}
               </div>
 
               {/* Synthèse IA */}
