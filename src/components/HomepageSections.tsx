@@ -55,7 +55,7 @@ const i18n = {
     stat1: '200M', stat1Label: "d'utilisateurs de LLMs en Europe",
     stat2: 'x3', stat2Label: "taux de conversion LLM vs Google",
     stat3: '6', stat3Label: 'LLMs interrogés simultanément',
-    stat4: '30s', stat4Label: "pour votre Score GEO",
+    stat4: '5', stat4Label: "outils GEO automatisés",
     // Features
     feat1Title: 'Score GEO — Visibilité IA en temps réel',
     feat1Desc: "Votre site est-il cité par ChatGPT, Gemini, Perplexity ou Claude ? Le Score GEO est le premier indicateur français qui mesure votre présence dans les réponses générées par l'intelligence artificielle. En 30 secondes, obtenez un score sur 100 avec des recommandations actionnables : données structurées manquantes, fichiers robots.txt mal configurés, absence de llms.txt, sémantique insuffisante. Chaque point gagné améliore votre probabilité d'être cité comme source par les LLMs.",
