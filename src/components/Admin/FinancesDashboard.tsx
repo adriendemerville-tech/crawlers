@@ -250,10 +250,16 @@ export function FinancesDashboard() {
         setAvgCostPerSubscriber({ avg: 0, count: 0 });
       }
 
-      // DB size
+      // DB size + DataForSEO balance
       try {
-        const { data: sizeData } = await supabase.rpc('get_database_size' as any);
-        if (sizeData) setDbSize(sizeData as any);
+        const [sizeRes, balanceRes] = await Promise.all([
+          supabase.rpc('get_database_size' as any),
+          supabase.functions.invoke('dataforseo-balance'),
+        ]);
+        if (sizeRes.data) setDbSize(sizeRes.data as any);
+        if (balanceRes.data && !balanceRes.error) {
+          setDataforseoBalance(balanceRes.data as any);
+        }
       } catch {}
 
     } catch (err) {
