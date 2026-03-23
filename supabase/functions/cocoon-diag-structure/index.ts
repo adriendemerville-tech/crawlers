@@ -141,23 +141,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Orphan pages — computed from incoming links (count how many other pages link to each page)
-    const urlSet = new Set(pages.map(p => p.url));
-    const incomingCounts = new Map<string, number>();
-    for (const p of pages) {
-      // Count internal anchor_texts pointing to other crawled pages
-      const anchors = (p.broken_links as any[] || []); // broken_links is not right, use anchor data approach
-      // Since crawl_pages doesn't store incoming links directly, 
-      // count from anchor_texts of all pages
-    }
-    // Better approach: count from anchor_texts across all pages
-    const inboundMap = new Map<string, number>();
-    for (const p of okPages) {
-      // Each page's internal_links count represents outgoing links
-      // We need to check which pages are linked TO by checking all pages' outgoing links
-      // Since we don't have anchor_texts in the select, use the semantic_nodes data
-    }
-    // Use semantic_nodes internal_links_in if available
+    // 2. Orphan pages — use semantic_nodes internal_links_in (computed by cocoon-logic from real crawl anchors)
     const { data: semanticNodes } = await supabase
       .from('semantic_nodes' as any)
       .select('url, internal_links_in')
