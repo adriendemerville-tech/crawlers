@@ -455,6 +455,7 @@ export default function SiteCrawl() {
   const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'noindex'>('all');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
+  const [isLoadingPastCrawl, setIsLoadingPastCrawl] = useState(false);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
@@ -697,9 +698,12 @@ export default function SiteCrawl() {
   }
 
   async function viewCrawl(crawl: CrawlResult) {
+    setIsLoadingPastCrawl(true);
+    setPages([]);
     setCrawlResult(crawl);
     setViewingCrawlId(crawl.id);
     await loadPages(crawl.id);
+    setIsLoadingPastCrawl(false);
   }
 
   function addSelector() {
@@ -1170,8 +1174,15 @@ export default function SiteCrawl() {
             </CardContent>
           </Card>
 
+          {/* Loading past crawl */}
+          {crawlResult && isLoadingPastCrawl && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
           {/* Résultats */}
-          {crawlResult && crawlResult.status === 'completed' && (
+          {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || pages.length > 0) && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
