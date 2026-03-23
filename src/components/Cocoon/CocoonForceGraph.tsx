@@ -67,6 +67,7 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
   targetDepth: number;
   juiceType: JuiceType;
   juiceIntensity: number;
+  direction: 'descending' | 'ascending' | 'lateral';
 }
 
 type JuiceType = 'authority' | 'semantic' | 'traffic' | 'hierarchy';
@@ -166,6 +167,19 @@ export function CocoonForceGraph({
     if (particleColorsProp?.[juiceType]) return hexToRgb(particleColorsProp[juiceType]);
     return JUICE_COLORS[juiceType] || JUICE_COLORS.semantic;
   }, [particleColorsProp, hexToRgb]);
+
+  // Direction-based link color: descending=golden, ascending=blue, lateral=juice color
+  const DIRECTION_COLORS: Record<string, [number, number, number]> = {
+    descending: [251, 191, 36],   // #fbbf24 golden
+    ascending:  [96, 165, 250],   // #60a5fa blue
+    lateral:    [140, 140, 180],  // neutral
+  };
+
+  const resolveLinkColor = useCallback((link: GraphLink): [number, number, number] => {
+    if (link.direction === 'descending') return DIRECTION_COLORS.descending;
+    if (link.direction === 'ascending') return DIRECTION_COLORS.ascending;
+    return resolveJuiceColor(link.juiceType);
+  }, [resolveJuiceColor]);
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
@@ -282,18 +296,58 @@ export function CocoonForceGraph({
           // Intensity = normalized authority flow
           const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
 
+          // Direction based on actual crawl depth
+          let direction: 'descending' | 'ascending' | 'lateral' = 'lateral';
+          if (srcDepth < tgtDepth) {
+            direction = 'descending'; // from shallow to deep
+          } else if (srcDepth > tgtDepth) {
+            direction = 'ascending'; // from deep to shallow
+          }
+
           gLinks.push({
             source: node.id,
             target: targetId,
             strength: edge.score,
             type: edge.type,
-            sourceDepth: isHomeSrc ? 0 : 1,
-            targetDepth: isHomeTgt ? 0 : 1,
+            sourceDepth: srcDepth,
+            targetDepth: tgtDepth,
             juiceType,
             juiceIntensity,
+            direction,
           });
         }
       }
+    }
+
+    // Also check reverse edges: if node B → node A exists but A → B was already added,
+    // we may have missed the correct direction. Re-scan for reverse edges.
+    const pairDirections = new Map<string, 'descending' | 'ascending' | 'lateral'>();
+    for (const node of nodes) {
+      for (const edge of node.similarity_edges || []) {
+        const targetId = urlToId.get(edge.target_url);
+        if (!targetId || !idSet.has(targetId) || targetId === node.id) continue;
+        const srcDepth = node.crawl_depth ?? node.depth ?? 0;
+        const targetNode = nodeById.get(targetId);
+        const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
+        const pairKey = [node.id, targetId].sort().join('|');
+        // If source links to a deeper target → descending from source's perspective
+        if (srcDepth < tgtDepth) {
+          pairDirections.set(pairKey, 'descending');
+        } else if (srcDepth > tgtDepth) {
+          // The node linking is deeper → this is an ascending link
+          if (!pairDirections.has(pairKey)) {
+            pairDirections.set(pairKey, 'ascending');
+          }
+        }
+      }
+    }
+    // Apply refined directions
+    for (const link of gLinks) {
+      const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+      const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+      const pairKey = [srcId, tgtId].sort().join('|');
+      const dir = pairDirections.get(pairKey);
+      if (dir) link.direction = dir;
     }
 
     return { graphNodes: gNodes, graphLinks: gLinks };
@@ -484,8 +538,8 @@ export function CocoonForceGraph({
           ctx.lineWidth = lineW * 1.5;
           ctx.stroke();
         } else {
-          // Default: color by juice type
-          const [lr, lg, lb] = resolveJuiceColor(link.juiceType);
+          // Default: color by direction (descending=gold, ascending=blue, lateral=juice)
+          const [lr, lg, lb] = resolveLinkColor(link);
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
@@ -524,7 +578,7 @@ export function CocoonForceGraph({
           const py = source.y + (target.y - source.y) * p.progress;
           const fadeEdge = Math.sin(p.progress * Math.PI);
 
-          const [jr, jg, jb] = resolveJuiceColor(p.juiceType);
+          const [jr, jg, jb] = resolveLinkColor(link);
           const particleSize = p.size * nodeScale * (0.8 + link.juiceIntensity * 0.6);
           ctx.beginPath();
           ctx.arc(px, py, particleSize, 0, Math.PI * 2);

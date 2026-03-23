@@ -60,6 +60,7 @@ interface GraphLink3D {
   type: string;
   juiceType: JuiceType;
   juiceIntensity: number;
+  direction: 'descending' | 'ascending' | 'lateral';
 }
 
 type JuiceType = "authority" | "semantic" | "traffic" | "hierarchy";
@@ -519,9 +520,14 @@ function Links({
           const activeJuice = { ...JUICE_COLORS, ...customParticleColors };
           const isSelectedLink =
             selectedNodeId && (link.sourceId === selectedNodeId || link.targetId === selectedNodeId);
+          const DIRECTION_COLORS_3D: Record<string, string> = {
+            descending: '#fbbf24',
+            ascending: '#60a5fa',
+            lateral: activeJuice[link.juiceType] || '#7864dc',
+          };
           const color = isSelectedLink
             ? "#ffc83c"
-            : activeJuice[link.juiceType] || "#7864dc";
+            : DIRECTION_COLORS_3D[link.direction] || activeJuice[link.juiceType] || "#7864dc";
           const opacity = isSelectedLink ? 0.7 : Math.min(link.strength * 0.5 + 0.1, 0.4);
           return (
             <Line
@@ -542,7 +548,8 @@ function Links({
           {particleData.current.map((p, i) => {
             const link = links[p.linkIdx];
             const activeJuice2 = { ...JUICE_COLORS, ...customParticleColors };
-            const color = link ? activeJuice2[link.juiceType] : "#508cff";
+            const dirColor3D = link?.direction === 'descending' ? '#fbbf24' : link?.direction === 'ascending' ? '#60a5fa' : (link ? activeJuice2[link.juiceType] : "#508cff");
+            const color = dirColor3D;
             return (
               <mesh key={i} position={[0, 0, 0]}>
                 <sphereGeometry args={[0.3 * linkThickness, 8, 8]} />
@@ -968,6 +975,11 @@ export function CocoonForceGraph3D({
 
           const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
 
+          // Direction based on actual crawl depth
+          let direction: 'descending' | 'ascending' | 'lateral' = 'lateral';
+          if (srcDepth < tgtDepth) direction = 'descending';
+          else if (srcDepth > tgtDepth) direction = 'ascending';
+
           gLinks.push({
             sourceId: node.id,
             targetId,
@@ -975,6 +987,7 @@ export function CocoonForceGraph3D({
             type: edge.type,
             juiceType,
             juiceIntensity,
+            direction,
           });
       }
     }
