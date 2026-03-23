@@ -579,8 +579,8 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
                 }
               }}
             />
-            {!newMessage.trim() && (
-              <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            {!newMessage && (
+              <div className="absolute right-1 top-1/2 -translate-y-[55%]">
                 <ChatMicButton
                   onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
                   disabled={sending}
