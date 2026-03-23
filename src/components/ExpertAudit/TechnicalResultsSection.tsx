@@ -59,33 +59,37 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
       {/* SPA Detection Alert */}
       {result.isSPA && <SPADetectionAlert />}
 
-      {/* Radial Quality Score Chart */}
-      <AuditRadialChart result={result} mode="technical" language={language} />
-
-      {/* Hero Score */}
+      {/* Hero Score with integrated Radar */}
       <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
         <CardContent className="p-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
-              <a
-                href={result.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-              >
-                {result.url} <ExternalLink className="h-3 w-3" />
-              </a>
-              <div className="mt-4 space-y-1">
-                <p className="text-base font-semibold text-foreground">Score Global SEO</p>
-                <p className="text-lg">
-                  {computedTotal < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
-                  {computedTotal >= 100 && computedTotal < 150 && <span className="text-warning font-medium">{t.correct}</span>}
-                  {computedTotal >= 150 && <span className="text-primary font-medium">{t.excellent}</span>}
-                </p>
-              </div>
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            {/* Left: Radar chart */}
+            <div className="w-full lg:w-1/2 max-w-md">
+              <AuditRadialChart result={result} mode="technical" language={language} inline />
             </div>
-            <ScoreGauge200 score={computedTotal} />
+            {/* Right: Domain info + Score */}
+            <div className="flex flex-col items-center lg:items-end gap-4">
+              <div className="text-center lg:text-right">
+                <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
+                <a
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                >
+                  {result.url} <ExternalLink className="h-3 w-3" />
+                </a>
+                <div className="mt-4 space-y-1">
+                  <p className="text-base font-semibold text-foreground">Score Global SEO</p>
+                  <p className="text-lg">
+                    {computedTotal < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
+                    {computedTotal >= 100 && computedTotal < 150 && <span className="text-warning font-medium">{t.correct}</span>}
+                    {computedTotal >= 150 && <span className="text-primary font-medium">{t.excellent}</span>}
+                  </p>
+                </div>
+              </div>
+              <ScoreGauge200 score={computedTotal} />
+            </div>
           </div>
           <MethodologyPopover variant="global_score" />
         </CardContent>
