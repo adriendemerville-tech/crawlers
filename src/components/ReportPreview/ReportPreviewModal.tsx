@@ -84,6 +84,7 @@ export function ReportPreviewModal({
   geoResult,
   llmResult,
   pageSpeedResult,
+  siteCrawlData,
   currentUrl,
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
