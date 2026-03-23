@@ -24,6 +24,7 @@ import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
+import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
 
 const crawlI18n = {
   fr: {
