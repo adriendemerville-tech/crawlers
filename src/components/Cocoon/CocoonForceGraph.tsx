@@ -234,6 +234,8 @@ export function CocoonForceGraph({
         pageAuthority: n.page_authority ?? 0,
         linksIn: n.internal_links_in ?? 0,
         linksOut: n.internal_links_out ?? 0,
+        hasBacklinks: !!(n.external_backlinks?.referring_domains && n.external_backlinks.referring_domains > 0),
+        backlinkDomains: n.external_backlinks?.referring_domains ?? 0,
         x: Math.cos((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
         y: Math.sin((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
       };
