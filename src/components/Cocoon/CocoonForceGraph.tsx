@@ -67,6 +67,7 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
   targetDepth: number;
   juiceType: JuiceType;
   juiceIntensity: number;
+  direction: 'descending' | 'ascending' | 'lateral';
 }
 
 type JuiceType = 'authority' | 'semantic' | 'traffic' | 'hierarchy';
