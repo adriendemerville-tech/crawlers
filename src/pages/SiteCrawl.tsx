@@ -436,7 +436,7 @@ export default function SiteCrawl() {
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
 
-  const isUnlimitedUser = isAgencyPro || isAdmin;
+  const isUnlimited = isAgencyPro || isAdmin;
 
   const [url, setUrl] = useState(() => {
     try {
