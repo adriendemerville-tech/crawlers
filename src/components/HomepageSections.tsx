@@ -201,7 +201,7 @@ const MomentumSection = memo(() => {
   ];
 
   const llmLogos = [
-    { name: 'ChatGPT', src: llmChatgpt },
+    { name: 'ChatGPT', src: llmChatgpt, srcDark: llmChatgptWhite },
     { name: 'Gemini', src: llmGemini },
     { name: 'Perplexity', src: llmPerplexity },
     { name: 'Claude', src: llmClaude },
