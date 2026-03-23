@@ -1044,6 +1044,7 @@ const AuditCompare = () => {
   useCanonicalHreflang('/audit-compare');
   const t = i18n[language];
   const isUnlimited = isAgencyPro || isAdmin;
+  const { saveReport } = useSaveReport();
 
   // Pre-fill url1 from expert audit session if available
   const [url1, setUrl1] = useState(() => {
