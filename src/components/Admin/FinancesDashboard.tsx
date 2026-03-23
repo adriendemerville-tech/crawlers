@@ -79,6 +79,7 @@ export function FinancesDashboard() {
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
+  const [dataforseoBalance, setDataforseoBalance] = useState<{ balance: number | null; total_deposited: number | null; total_spent: number | null; fetched_at: string | null } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0, promptTokens: 0, completionTokens: 0, callCount: 0,
     byFunction: {}, byModel: {},
@@ -249,10 +250,16 @@ export function FinancesDashboard() {
         setAvgCostPerSubscriber({ avg: 0, count: 0 });
       }
 
-      // DB size
+      // DB size + DataForSEO balance
       try {
-        const { data: sizeData } = await supabase.rpc('get_database_size' as any);
-        if (sizeData) setDbSize(sizeData as any);
+        const [sizeRes, balanceRes] = await Promise.all([
+          supabase.rpc('get_database_size' as any),
+          supabase.functions.invoke('dataforseo-balance'),
+        ]);
+        if (sizeRes.data) setDbSize(sizeRes.data as any);
+        if (balanceRes.data && !balanceRes.error) {
+          setDataforseoBalance(balanceRes.data as any);
+        }
       } catch {}
 
     } catch (err) {
@@ -449,17 +456,65 @@ export function FinancesDashboard() {
               estimatedCost={tokenUsage.flyEstimatedCost}
             />
 
-            {/* DataForSEO */}
-            <ApiQuotaGauge
-              name="DataForSEO"
-              icon={<Search className="h-4 w-4" />}
-              calls={tokenUsage.dataforseoCalls}
-              quota={null}
-              costPerCall={0.01}
-              color="blue"
-              status="ok"
-              statusLabel="✅ Pay-as-you-go"
-            />
+            {/* DataForSEO — with real balance */}
+            <div className="rounded-xl border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  <span className="text-sm font-semibold">DataForSEO</span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  dataforseoBalance?.balance != null && dataforseoBalance.balance < 5
+                    ? 'bg-destructive/10 text-destructive'
+                    : dataforseoBalance?.balance != null && dataforseoBalance.balance < 20
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {dataforseoBalance?.balance != null
+                    ? dataforseoBalance.balance < 5
+                      ? `⛔ Solde critique: $${dataforseoBalance.balance.toFixed(2)}`
+                      : dataforseoBalance.balance < 20
+                      ? `⚠️ Solde bas: $${dataforseoBalance.balance.toFixed(2)}`
+                      : `✅ $${dataforseoBalance.balance.toFixed(2)}`
+                    : '✅ Pay-as-you-go'}
+                </span>
+              </div>
+              {dataforseoBalance?.balance != null && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Solde réel</span>
+                    <span className="font-mono font-semibold text-foreground">${dataforseoBalance.balance.toFixed(2)}</span>
+                  </div>
+                  {dataforseoBalance.total_deposited != null && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Total déposé</span>
+                      <span className="font-mono">${dataforseoBalance.total_deposited.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {dataforseoBalance.total_spent != null && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Total dépensé</span>
+                      <span className="font-mono">${dataforseoBalance.total_spent.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {/* Usage bar */}
+                  {dataforseoBalance.total_deposited != null && dataforseoBalance.total_deposited > 0 && (
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          dataforseoBalance.balance < 5 ? 'bg-destructive' : dataforseoBalance.balance < 20 ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.max(2, (dataforseoBalance.balance / dataforseoBalance.total_deposited) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                <span>{tokenUsage.dataforseoCalls.toLocaleString('fr-FR')} appels (30j)</span>
+                <span>~{(tokenUsage.dataforseoCalls * 0.01).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}€ estimé</span>
+              </div>
+            </div>
 
             {/* Spider.cloud (Primary) */}
             <ApiQuotaGauge
