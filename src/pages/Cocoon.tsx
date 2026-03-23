@@ -890,6 +890,10 @@ export default function Cocoon() {
                     setSelectedNode(node);
                   }
                 }}
+                showClusters={cocoonFilters.showAllClusters}
+                visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                colorIntensity={colorIntensity}
+                nodeColors={cocoonTheme.nodeColors}
               />
             ) : (
               <CocoonForceGraph

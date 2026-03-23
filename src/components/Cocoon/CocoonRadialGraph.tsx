@@ -36,14 +36,12 @@ interface RadialNode {
   pageType: string;
   linksIn: number;
   linksOut: number;
-  // Layout
   x: number;
   y: number;
   radius: number;
   angle: number;
   children: RadialNode[];
   parent: RadialNode | null;
-  // Silo metrics (level 2 only)
   siloIntraRatio?: number;
   siloLeakRatio?: number;
 }
@@ -52,39 +50,56 @@ interface CocoonRadialGraphProps {
   nodes: SemanticNode[];
   selectedNodeId: string | null;
   onNodeSelect: (node: SemanticNode | null) => void;
+  showClusters?: boolean;
+  visibleJuiceTypes?: Set<string>;
+  colorIntensity?: number;
+  nodeColors?: Record<string, string>;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
 const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
-  homepage:    [255, 204, 0],    // #ffcc00
-  blog:        [140, 120, 255],  // #8c78ff
-  produit:     [0, 240, 160],    // #00f0a0
-  "catégorie": [61, 184, 255],   // #3db8ff
-  faq:         [255, 128, 48],   // #ff8030
-  contact:     [255, 92, 170],   // #ff5caa
-  tarifs:      [245, 158, 11],   // #f59e0b
-  guide:       [192, 122, 255],  // #c07aff
-  "légal":     [160, 170, 180],  // #a0aab4
-  "à propos":  [0, 229, 240],    // #00e5f0
-  page:        [122, 122, 158],  // #7a7a9e
-  unknown:     [122, 122, 158],  // #7a7a9e
+  homepage:    [255, 204, 0],
+  blog:        [140, 120, 255],
+  produit:     [0, 240, 160],
+  "catégorie": [61, 184, 255],
+  faq:         [255, 128, 48],
+  contact:     [255, 92, 170],
+  tarifs:      [245, 158, 11],
+  guide:       [192, 122, 255],
+  "légal":     [160, 170, 180],
+  "à propos":  [0, 229, 240],
+  page:        [122, 122, 158],
+  unknown:     [122, 122, 158],
 };
 
-function getNodeColor(pageType: string): string {
-  const [r, g, b] = PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return null;
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
+
+function getNodeColorRgb(pageType: string, nodeColors?: Record<string, string>): [number, number, number] {
+  if (nodeColors?.[pageType]) {
+    const rgb = hexToRgb(nodeColors[pageType]);
+    if (rgb) return rgb;
+  }
+  return PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
+}
+
+function getNodeColor(pageType: string, nodeColors?: Record<string, string>): string {
+  const [r, g, b] = getNodeColorRgb(pageType, nodeColors);
   return `rgb(${r},${g},${b})`;
 }
 
-function getNodeColorAlpha(pageType: string, alpha: number): string {
-  const [r, g, b] = PAGE_TYPE_COLORS[pageType] || PAGE_TYPE_COLORS.unknown;
+function getNodeColorAlpha(pageType: string, alpha: number, nodeColors?: Record<string, string>): string {
+  const [r, g, b] = getNodeColorRgb(pageType, nodeColors);
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// Depth ring colors (subtle, just for the concentric rings)
 const DEPTH_RING_COLORS = [
-  "rgba(255,204,0,0.08)",   // depth 0
-  "rgba(140,120,255,0.05)", // depth 1
-  "rgba(122,122,158,0.04)", // depth 2+
+  "rgba(255,204,0,0.08)",
+  "rgba(140,120,255,0.05)",
+  "rgba(122,122,158,0.04)",
 ];
 
 function getDepthRingColor(depth: number): string {
@@ -116,10 +131,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
       pageType: sn.page_type || 'page',
       linksIn: sn.internal_links_in ?? 0,
       linksOut: sn.internal_links_out ?? 0,
-      x: 0,
-      y: 0,
-      radius: 0,
-      angle: 0,
+      x: 0, y: 0, radius: 0, angle: 0,
       children: [],
       parent,
     };
@@ -171,7 +183,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
 
     const sn = urlMap.get(level1.url);
     if (!sn) continue;
-    
+
     let intraCount = 0;
     let leakCount = 0;
 
@@ -182,7 +194,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
         const targetUrl = edge.target_url;
         if (targetUrl === root.url) continue;
         if (targetUrl === level1.url) continue;
-        
+
         if (clusterUrls.has(targetUrl)) {
           intraCount++;
         } else if (urlMap.has(targetUrl)) {
@@ -263,6 +275,10 @@ export function CocoonRadialGraph({
   nodes,
   selectedNodeId,
   onNodeSelect,
+  showClusters = true,
+  visibleJuiceTypes,
+  colorIntensity = 5,
+  nodeColors,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -293,6 +309,12 @@ export function CocoonRadialGraph({
     return result;
   }, [tree]);
 
+  // Filter edges by visibleJuiceTypes
+  const shouldShowEdge = useCallback((edgeType?: string) => {
+    if (!visibleJuiceTypes || visibleJuiceTypes.size === 0) return true;
+    return visibleJuiceTypes.has(edgeType || 'semantic');
+  }, [visibleJuiceTypes]);
+
   // Resize observer
   useEffect(() => {
     const container = containerRef.current;
@@ -306,6 +328,9 @@ export function CocoonRadialGraph({
     ro.observe(container);
     return () => ro.disconnect();
   }, []);
+
+  // Compute halo intensity from colorIntensity prop
+  const haloAlpha = useMemo(() => Math.min(0.5, (colorIntensity / 10) * 0.5), [colorIntensity]);
 
   // Drawing
   const draw = useCallback(() => {
@@ -327,7 +352,7 @@ export function CocoonRadialGraph({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // Draw depth rings (subtle)
+    // Draw depth rings
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
@@ -342,13 +367,21 @@ export function CocoonRadialGraph({
       ctx.stroke();
     }
 
-    // Draw discovery tree links — colored by child's page type
+    // Draw links — filter by juice type visibility
     function drawLinks(node: RadialNode) {
       for (const child of node.children) {
+        // Find the original edge to check type
+        const origNode = nodes.find(n => n.url === node.url);
+        const edge = origNode?.similarity_edges?.find(e => e.target_url === child.url);
+        if (!shouldShowEdge(edge?.type)) {
+          drawLinks(child);
+          continue;
+        }
+
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
         ctx.lineTo(child.x, child.y);
-        ctx.strokeStyle = getNodeColorAlpha(child.pageType, 0.2);
+        ctx.strokeStyle = getNodeColorAlpha(child.pageType, 0.2, nodeColors);
         ctx.lineWidth = 1;
         ctx.stroke();
         drawLinks(child);
@@ -356,50 +389,59 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
-    // Draw silo fan arcs at level 1
-    for (const level1 of tree.children) {
-      if (level1.siloIntraRatio === undefined) continue;
-      const fanRadius = level1.radius + 14;
-      const fanSpan = Math.PI * 0.3;
+    // Draw silo fan arcs at level 1 (only if showClusters)
+    if (showClusters) {
+      for (const level1 of tree.children) {
+        if (level1.siloIntraRatio === undefined) continue;
+        const fanRadius = level1.radius + 14;
+        const fanSpan = Math.PI * 0.3;
 
-      const intraAngle = fanSpan * level1.siloIntraRatio;
-      if (intraAngle > 0.01) {
-        ctx.beginPath();
-        ctx.arc(level1.x, level1.y, fanRadius, level1.angle - fanSpan / 2, level1.angle - fanSpan / 2 + intraAngle);
-        ctx.strokeStyle = "rgba(80, 220, 120, 0.7)";
-        ctx.lineWidth = 4;
-        ctx.lineCap = "round";
-        ctx.stroke();
-      }
+        const intraAngle = fanSpan * level1.siloIntraRatio;
+        if (intraAngle > 0.01) {
+          ctx.beginPath();
+          ctx.arc(level1.x, level1.y, fanRadius, level1.angle - fanSpan / 2, level1.angle - fanSpan / 2 + intraAngle);
+          ctx.strokeStyle = "rgba(80, 220, 120, 0.7)";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.stroke();
+        }
 
-      const leakAngle = fanSpan * level1.siloLeakRatio;
-      if (leakAngle > 0.01) {
-        ctx.beginPath();
-        ctx.arc(level1.x, level1.y, fanRadius, level1.angle - fanSpan / 2 + intraAngle, level1.angle - fanSpan / 2 + intraAngle + leakAngle);
-        ctx.strokeStyle = "rgba(60, 140, 255, 0.7)";
-        ctx.lineWidth = 4;
-        ctx.lineCap = "round";
-        ctx.stroke();
+        const leakAngle = fanSpan * level1.siloLeakRatio!;
+        if (leakAngle > 0.01) {
+          ctx.beginPath();
+          ctx.arc(level1.x, level1.y, fanRadius, level1.angle - fanSpan / 2 + intraAngle, level1.angle - fanSpan / 2 + intraAngle + leakAngle);
+          ctx.strokeStyle = "rgba(60, 140, 255, 0.7)";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.stroke();
+        }
       }
     }
 
-    // Draw nodes — colored by page type (same as Force & 3D)
+    // Draw nodes
     for (const node of allRadialNodes) {
       const isHovered = node.id === hoveredNodeId;
       const isSelected = node.id === selectedNodeId;
 
-      // Glow for selected/hovered
+      // Halo glow (intensity controlled by colorIntensity)
       if (isSelected || isHovered) {
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius + 6, 0, Math.PI * 2);
-        ctx.fillStyle = getNodeColorAlpha(node.pageType, 0.2);
+        ctx.fillStyle = getNodeColorAlpha(node.pageType, haloAlpha, nodeColors);
+        ctx.fill();
+      } else if (colorIntensity > 3) {
+        // Ambient halo for all nodes when intensity is high
+        const ambientAlpha = ((colorIntensity - 3) / 7) * 0.12;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = getNodeColorAlpha(node.pageType, ambientAlpha, nodeColors);
         ctx.fill();
       }
 
       // Node circle
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = getNodeColor(node.pageType);
+      ctx.fillStyle = getNodeColor(node.pageType, nodeColors);
       ctx.fill();
 
       // Border
@@ -407,14 +449,13 @@ export function CocoonRadialGraph({
       ctx.lineWidth = isSelected ? 2 : 1;
       ctx.stroke();
 
-      // Labels: ONLY for selected or hovered nodes (not by default)
+      // Labels: ONLY for selected or hovered nodes
       if (isSelected || isHovered) {
         const label = node.title.length > 25 ? node.title.slice(0, 23) + '…' : node.title;
         ctx.font = node.isHome ? "bold 11px sans-serif" : "10px sans-serif";
         ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.textAlign = "center";
 
-        // Background pill for readability
         const metrics = ctx.measureText(label);
         const padH = 4;
         const padV = 2;
@@ -434,13 +475,11 @@ export function CocoonRadialGraph({
 
     ctx.restore();
 
-    // Legend — drawn on the RIGHT side
+    // Legend
     drawLegend(ctx, dimensions.w, dimensions.h);
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId]);
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
-    // Page type legend (matches Force & 3D)
-    const rightMargin = 14;
     const x = w - 140;
     let y = 20;
 
@@ -463,7 +502,7 @@ export function CocoonRadialGraph({
     for (const [key, label] of pageTypeEntries) {
       ctx.beginPath();
       ctx.arc(x + 6, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = getNodeColor(key);
+      ctx.fillStyle = getNodeColor(key, nodeColors);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.5)";
       ctx.font = "9px sans-serif";
@@ -471,32 +510,33 @@ export function CocoonRadialGraph({
       y += 15;
     }
 
-    // Fan legend
-    y += 10;
-    ctx.font = "bold 10px sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.fillText("Éventails (silos)", x, y);
-    y += 14;
+    if (showClusters) {
+      y += 10;
+      ctx.font = "bold 10px sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.fillText("Éventails (silos)", x, y);
+      y += 14;
 
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 16, y);
-    ctx.strokeStyle = "rgba(80, 220, 120, 0.7)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = "9px sans-serif";
-    ctx.fillText("Intra-silo", x + 22, y + 3);
-    y += 14;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 16, y);
+      ctx.strokeStyle = "rgba(80, 220, 120, 0.7)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "9px sans-serif";
+      ctx.fillText("Intra-silo", x + 22, y + 3);
+      y += 14;
 
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 16, y);
-    ctx.strokeStyle = "rgba(60, 140, 255, 0.7)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.fillText("Fuites inter-silos", x + 22, y + 3);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 16, y);
+      ctx.strokeStyle = "rgba(60, 140, 255, 0.7)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.fillText("Fuites inter-silos", x + 22, y + 3);
+    }
   }
 
   // Animate
@@ -554,7 +594,7 @@ export function CocoonRadialGraph({
     setHoveredNodeId(node?.id || null);
 
     if (canvasRef.current) {
-      canvasRef.current.style.cursor = node ? "pointer" : "grab";
+      canvasRef.current.style.cursor = node ? "pointer" : isPanning.current ? "grabbing" : "grab";
     }
   };
 
@@ -587,6 +627,22 @@ export function CocoonRadialGraph({
     setZoom(newZoom);
   };
 
+  // Zoom centered on home node (center of graph)
+  const zoomToHome = useCallback((factor: number) => {
+    const homeCx = dimensions.w / 2;
+    const homeCy = dimensions.h / 2;
+    // Screen position of home = homeCx * zoom + pan.x
+    const homeScreenX = homeCx * zoom + pan.x;
+    const homeScreenY = homeCy * zoom + pan.y;
+    const newZoom = Math.max(0.2, Math.min(5, zoom * factor));
+    // After zoom, home should stay at same screen position
+    setPan({
+      x: homeScreenX - homeCx * newZoom,
+      y: homeScreenY - homeCy * newZoom,
+    });
+    setZoom(newZoom);
+  }, [zoom, pan, dimensions]);
+
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -596,7 +652,7 @@ export function CocoonRadialGraph({
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#0a0a12]">
       <canvas
         ref={canvasRef}
-        style={{ width: dimensions.w, height: dimensions.h }}
+        style={{ width: dimensions.w, height: dimensions.h, cursor: "grab" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -611,7 +667,7 @@ export function CocoonRadialGraph({
           variant="ghost"
           size="icon"
           className="w-7 h-7 bg-black/50 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white/80"
-          onClick={() => setZoom(z => Math.min(5, z * 1.3))}
+          onClick={() => zoomToHome(1.3)}
         >
           <Plus className="w-3.5 h-3.5" />
         </Button>
@@ -619,7 +675,7 @@ export function CocoonRadialGraph({
           variant="ghost"
           size="icon"
           className="w-7 h-7 bg-black/50 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white/80"
-          onClick={() => setZoom(z => Math.max(0.2, z * 0.7))}
+          onClick={() => zoomToHome(0.7)}
         >
           <Minus className="w-3.5 h-3.5" />
         </Button>
