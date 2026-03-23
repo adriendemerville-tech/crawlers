@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSaveReport } from '@/hooks/useSaveReport';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
@@ -1043,6 +1044,7 @@ const AuditCompare = () => {
   useCanonicalHreflang('/audit-compare');
   const t = i18n[language];
   const isUnlimited = isAgencyPro || isAdmin;
+  const { saveReport } = useSaveReport();
 
   // Pre-fill url1 from expert audit session if available
   const [url1, setUrl1] = useState(() => {
@@ -1222,6 +1224,16 @@ const AuditCompare = () => {
           supabase.functions.invoke('agent-cto', {
             body: { auditResult: data.data, auditType: 'compare', url: url1.trim(), domain: new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname }
           }).catch(() => {});
+
+          // Auto-save report to console
+          const domain1 = (() => { try { return new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname; } catch { return url1.trim(); } })();
+          const domain2 = (() => { try { return new URL(url2.trim().startsWith('http') ? url2.trim() : `https://${url2.trim()}`).hostname; } catch { return url2.trim(); } })();
+          saveReport({
+            reportType: 'seo_technical' as any,
+            title: `Audit Comparé – ${domain1} vs ${domain2}`,
+            url: url1.trim(),
+            reportData: data.data,
+          }).catch(() => {});
         }, 3000);
       } catch (e: any) {
         const msg = e.message || 'Erreur inconnue';
@@ -1253,6 +1265,15 @@ const AuditCompare = () => {
               playDing();
               setResult(cached);
               setIsLoading(false);
+              // Auto-save recovered result
+              const domain1 = (() => { try { return new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname; } catch { return url1.trim(); } })();
+              const domain2 = (() => { try { return new URL(url2.trim().startsWith('http') ? url2.trim() : `https://${url2.trim()}`).hostname; } catch { return url2.trim(); } })();
+              saveReport({
+                reportType: 'seo_technical' as any,
+                title: `Audit Comparé – ${domain1} vs ${domain2}`,
+                url: url1.trim(),
+                reportData: cached,
+              }).catch(() => {});
             }, 1500);
             return;
           }
