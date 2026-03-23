@@ -222,6 +222,7 @@ function NodeSphere({
   customNodeColors,
   spreadScale,
   colorIntensity,
+  sizeScale = 1,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -233,6 +234,7 @@ function NodeSphere({
   customNodeColors: Record<string, string>;
   spreadScale: number;
   colorIntensity: number;
+  sizeScale?: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
