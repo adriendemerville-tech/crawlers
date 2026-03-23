@@ -56,6 +56,8 @@ interface GraphNode extends SimulationNodeDatum {
   pageAuthority: number;
   linksIn: number;
   linksOut: number;
+  hasBacklinks: boolean;
+  backlinkDomains: number;
 }
 
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
