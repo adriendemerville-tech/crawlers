@@ -419,22 +419,104 @@ Deno.serve(async (req) => {
         urls = urls.filter(u => regex.test(u));
       } catch {}
     }
-    
-    // Update site_crawls with actual URL count
+
+    // ── Incremental crawl: reuse pages from last 24h crawl of same domain ──
+    let reusedCount = 0;
+    try {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const { data: recentCrawls } = await supabase
+        .from('site_crawls')
+        .select('id')
+        .eq('domain', domain)
+        .eq('status', 'completed')
+        .neq('id', crawlId)
+        .gte('completed_at', twentyFourHoursAgo)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (recentCrawls?.length) {
+        const prevCrawlId = recentCrawls[0].id;
+        // Fetch all pages from the previous crawl
+        const { data: prevPages } = await supabase
+          .from('crawl_pages')
+          .select('url, title, seo_score, word_count, internal_links, external_links, h1, h2_count, h3_count, h4_h6_count, has_noindex, has_nofollow, has_canonical, has_og, has_schema_org, has_hreflang, is_indexable, crawl_depth, page_type_override, issues, body_text_truncated, meta_description, canonical_url, http_status, response_time_ms, images_total, images_without_alt, html_size_bytes, content_hash, path, broken_links, anchor_texts, schema_org_types, schema_org_errors, redirect_url, index_source, custom_extraction')
+          .eq('crawl_id', prevCrawlId);
+
+        if (prevPages?.length) {
+          const prevUrlSet = new Set(prevPages.map((p: any) => p.url));
+          const urlsToSkip = urls.filter(u => prevUrlSet.has(u));
+          const urlsToProcess = urls.filter(u => !prevUrlSet.has(u));
+
+          if (urlsToSkip.length > 0) {
+            // Copy previous pages into new crawl (batch insert)
+            const pagesToCopy = prevPages
+              .filter((p: any) => urlsToSkip.includes(p.url))
+              .map((p: any) => {
+                const { id: _id, created_at: _ca, crawl_id: _cid, ...rest } = p as any;
+                return { ...rest, crawl_id: crawlId };
+              });
+
+            // Insert in batches of 50
+            for (let i = 0; i < pagesToCopy.length; i += 50) {
+              const batch = pagesToCopy.slice(i, i + 50);
+              await supabase.from('crawl_pages').insert(batch);
+            }
+
+            reusedCount = urlsToSkip.length;
+            urls = urlsToProcess;
+            console.log(`[${crawlId}] ♻️ Crawl incrémental: ${reusedCount} pages réutilisées du crawl ${prevCrawlId}, ${urls.length} nouvelles à crawler`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[${crawlId}] Incremental crawl check failed (non-blocking):`, e);
+    }
+
+    const totalPages = urls.length + reusedCount;
+
+    // Update site_crawls with actual URL count (including reused)
     await supabase.from('site_crawls').update({
-      total_pages: urls.length,
-      status: 'queued',
+      total_pages: totalPages,
+      crawled_pages: reusedCount,
+      status: urls.length > 0 ? 'queued' : 'completed',
     }).eq('id', crawlId);
 
-    // Update monthly page counter with ACTUAL urls discovered (not the max limit)
-    if (!isUnlimited) {
+    // Update monthly page counter with ACTUAL new urls only (reused pages are free)
+    if (!isUnlimited && urls.length > 0) {
       await supabase
         .from('profiles')
         .update({ crawl_pages_this_month: usedThisMonth + urls.length } as any)
         .eq('user_id', userId);
     }
 
-    // Create the crawl job with advanced options
+    // If all pages were reused, finalize immediately without creating a job
+    if (urls.length === 0) {
+      console.log(`[${crawlId}] ♻️ 100% incrémental — toutes les ${reusedCount} pages réutilisées, pas de worker nécessaire`);
+
+      // Generate summary for the crawl
+      await supabase.from('site_crawls').update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        crawled_pages: reusedCount,
+        total_pages: reusedCount,
+      }).eq('id', crawlId);
+
+      return new Response(JSON.stringify({
+        success: true,
+        crawlId,
+        totalPages: reusedCount,
+        reusedPages: reusedCount,
+        newPages: 0,
+        status: 'completed',
+        incremental: true,
+        sitemapPageCount,
+        gscIndexedCount,
+        dataforseoIndexedCount,
+        message: `♻️ ${reusedCount} pages réutilisées du crawl précédent — aucun re-crawl nécessaire`,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Create the crawl job with only NEW urls to process
     const { data: job, error: jobError } = await supabase
       .from('crawl_jobs')
       .insert({
@@ -460,7 +542,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
+    console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} nouvelles URLs (${reusedCount} réutilisées) — en attente du worker`);
 
     // Trigger the worker immediately (fire-and-forget with logging)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -480,12 +562,17 @@ Deno.serve(async (req) => {
       success: true,
       crawlId,
       jobId: job.id,
-      totalPages: urls.length,
+      totalPages,
+      reusedPages: reusedCount,
+      newPages: urls.length,
       status: 'queued',
+      incremental: reusedCount > 0,
       sitemapPageCount,
       gscIndexedCount,
       dataforseoIndexedCount,
-      message: `${urls.length} pages découvertes — audit en file d'attente`,
+      message: reusedCount > 0
+        ? `♻️ ${reusedCount} pages réutilisées + ${urls.length} nouvelles à crawler`
+        : `${urls.length} pages découvertes — audit en file d'attente`,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
