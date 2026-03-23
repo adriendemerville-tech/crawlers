@@ -288,7 +288,6 @@ async function handleSendCode(body: any) {
   }
 
   const emailPayload = {
-    run_id: crypto.randomUUID(),
     message_id: crypto.randomUUID(),
     to: email,
     subject: 'Votre code de vérification Crawlers',
@@ -310,6 +309,7 @@ async function handleSendCode(body: any) {
     sender_domain: 'notify.crawlers.fr',
     purpose: 'transactional',
     label: 'verification-code',
+    idempotency_key: `verification-code-${email}-${Date.now()}`,
     text: `Votre code de vérification Crawlers : ${code}`,
     queued_at: new Date().toISOString(),
   };
