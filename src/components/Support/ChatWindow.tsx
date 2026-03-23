@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type WheelEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
