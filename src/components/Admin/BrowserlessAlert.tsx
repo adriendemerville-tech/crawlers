@@ -15,6 +15,69 @@ interface BrowserlessError {
   flyFallbackLastAt: string | null;
 }
 
+function FlyForceButton({ language, onSuccess }: { language: string; onSuccess: () => void }) {
+  const [flyLoading, setFlyLoading] = useState(false);
+  const [flyResult, setFlyResult] = useState<{ status: string; message: string } | null>(null);
+
+  const forceFly = async () => {
+    setFlyLoading(true);
+    setFlyResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke('fly-health-check', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
+      if (error) throw error;
+      setFlyResult(data);
+      if (data?.status === 'ok') {
+        toast.success(data.message);
+        onSuccess();
+      } else {
+        toast.error(data?.message || 'Fly.io inaccessible');
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Erreur';
+      setFlyResult({ status: 'error', message: msg });
+      toast.error(msg);
+    } finally {
+      setFlyLoading(false);
+    }
+  };
+
+  if (flyResult?.status === 'ok') {
+    return (
+      <>
+        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+        <span className="text-emerald-600 dark:text-emerald-400">{flyResult.message}</span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <XCircle className="h-3.5 w-3.5" />
+      <span>
+        {t3(language,
+          '❌ Fly.io — aucun rendu de secours détecté',
+          '❌ Fly.io — no fallback renders detected',
+          '❌ Fly.io — sin renderizados detectados'
+        )}
+      </span>
+      <button
+        onClick={forceFly}
+        disabled={flyLoading}
+        className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[11px] font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+      >
+        {flyLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+        {t3(language, 'Forcer Fly.io', 'Force Fly.io', 'Forzar Fly.io')}
+      </button>
+      {flyResult?.status === 'error' && (
+        <span className="text-[10px] text-destructive/70 ml-1">{flyResult.message}</span>
+      )}
+    </>
+  );
+}
+
 export function BrowserlessAlert() {
   const [error, setError] = useState<BrowserlessError | null>(null);
   const [dismissed, setDismissed] = useState(false);
