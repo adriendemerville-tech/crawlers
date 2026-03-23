@@ -1,4 +1,5 @@
 import { ExpertAuditResult } from '@/types/expertAudit';
+import { generateRadialChartSVG } from './AuditRadialChart';
 import { supabase } from '@/integrations/supabase/client';
 export const expertReportTranslations = {
   fr: {
