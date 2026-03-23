@@ -149,7 +149,7 @@ const i18n = {
     stat1: '200M', stat1Label: 'usuarios de LLMs en Europa',
     stat2: 'x3', stat2Label: 'tasa de conversión LLM vs Google',
     stat3: '6', stat3Label: 'LLMs consultados simultáneamente',
-    stat4: '30s', stat4Label: 'para tu Score GEO',
+    stat4: '5', stat4Label: 'herramientas GEO automatizadas',
     feat1Title: 'Score GEO — Visibilidad IA en tiempo real',
     feat1Desc: '¿Tu sitio es citado por ChatGPT, Gemini, Perplexity o Claude? El Score GEO es el primer indicador francés que mide tu presencia en las respuestas generadas por IA. En 30 segundos, obtén una puntuación sobre 100 con recomendaciones accionables: datos estructurados faltantes, robots.txt mal configurado, ausencia de llms.txt, semántica insuficiente.',
     feat1Cta: 'Probar mi Score GEO',
