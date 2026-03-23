@@ -316,6 +316,8 @@ export default function Cocoon() {
     if (params.get('contrast')) setGraphContrast(Number(params.get('contrast')));
     if (params.get('halo')) setColorIntensity(Number(params.get('halo')));
     if (params.get('thickness')) setLinkThickness(Number(params.get('thickness')));
+    const vmParam = params.get('viewMode');
+    if (vmParam === 'force' || vmParam === 'radial' || vmParam === '3d') setViewMode(vmParam);
     // daymode param removed
     const siteParam = params.get('site');
     if (siteParam) {
