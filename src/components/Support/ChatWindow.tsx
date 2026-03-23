@@ -43,6 +43,8 @@ interface ChatMessage {
 
 interface ChatWindowProps {
   onClose: () => void;
+  triggerOnboarding?: boolean;
+  onOnboardingConsumed?: () => void;
 }
 
 // NLP detection for bug/problem intent
