@@ -420,9 +420,9 @@ Deno.serve(async (req) => {
       } catch {}
     }
 
-    // ── Incremental crawl: reuse pages from last 24h crawl of same domain ──
+    // ── Incremental crawl: reuse pages from last 12h crawl of same domain (skip for admins) ──
     let reusedCount = 0;
-    try {
+    if (!isUnlimited) try {
       const twelveHoursAgo = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
       const { data: recentCrawls } = await supabase
         .from('site_crawls')
