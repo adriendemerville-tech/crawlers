@@ -773,7 +773,7 @@ export default function SiteCrawl() {
         setCrawlResult(crawl as any);
         setPhase(`${data.totalPages} ${t.auditQueued}`);
       }
-      toast.success(`${data.totalPages} ${t.pagesDiscovered}`);
+      // Silent — no toast for pages discovered
     } catch (err: any) {
       toast.error(err.message || t.errorCrawl);
       setIsLoading(false);
