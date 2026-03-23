@@ -73,6 +73,18 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errorText = await resp.text()
       console.error('[fetch-serp-kpis] DataForSEO error:', resp.status, errorText)
+      // 402 = Payment Required — return empty data instead of crashing
+      if (resp.status === 402 || resp.status === 429) {
+        return new Response(JSON.stringify({
+          data: {
+            total_keywords: 0, avg_position: null, homepage_position: null,
+            top_3: 0, top_10: 0, top_50: 0, etv: 0, sample_keywords: [],
+            _fallback: true, _reason: `DataForSEO ${resp.status}`,
+          },
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
       return new Response(JSON.stringify({ error: 'DataForSEO API error', status: resp.status }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
