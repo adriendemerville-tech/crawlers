@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminNotifications {
-  intelligence: number;  // Supervisor correlations
+  intelligence: number;
   silentErrors: number;
   injectionErrors: number;
-  support: number;       // Unread support tickets
+  support: number;
+  apiBilling: number;  // DataForSEO / API billing alerts
 }
 
-const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0 };
+const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0 };
 
 export function useAdminNotifications() {
   const [notifications, setNotifications] = useState<AdminNotifications>(EMPTY);
