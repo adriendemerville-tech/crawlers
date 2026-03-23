@@ -405,114 +405,118 @@ export function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Messages */}
       <div className="flex-1 relative overflow-hidden min-h-0">
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      <ScrollArea className="h-full px-4 py-3 overscroll-contain [&>[data-radix-scroll-area-viewport]]:!h-full [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]]:!overflow-x-hidden [&>[data-radix-scroll-area-viewport]]:overscroll-contain [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!opacity-100 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!w-2 [&_[data-radix-scroll-area-thumb]]:!bg-muted-foreground/40 [&_[data-radix-scroll-area-thumb]]:!rounded-full" ref={scrollAreaRef}>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 space-y-2">
-            <div className="flex justify-center">
-              <CrawlersLogo size={28} />
-            </div>
-           <p className="text-xs font-medium">Salut moi c'est Félix !</p>
-            {isAdmin ? (
-              <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
-            ) : !user ? (
-              <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour répondre à tes questions sur Crawlers.fr et t'aider à booster ta visibilité SEO et IA. Tu veux en savoir plus ?</p>
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <ScrollArea
+          ref={scrollAreaRef}
+          type="always"
+          className="h-full overscroll-contain [&>[data-radix-scroll-area-viewport]]:!h-full [&>[data-radix-scroll-area-viewport]]:!overflow-y-auto [&>[data-radix-scroll-area-viewport]]:!overflow-x-hidden [&>[data-radix-scroll-area-viewport]]:overscroll-contain [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!opacity-100 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!w-2.5 [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!bg-border/20 [&_[data-radix-scroll-area-thumb]]:!bg-muted-foreground/40 [&_[data-radix-scroll-area-thumb]]:!rounded-full"
+        >
+          <div className="px-4 py-3">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 space-y-2">
+                <div className="flex justify-center">
+                  <CrawlersLogo size={28} />
+                </div>
+                <p className="text-xs font-medium">Salut moi c'est Félix !</p>
+                {isAdmin ? (
+                  <p className="text-[11px] text-muted-foreground/70">Mode Créateur — posez vos questions sur le backend, les tables ou les fonctions.</p>
+                ) : !user ? (
+                  <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour répondre à tes questions sur Crawlers.fr et t'aider à booster ta visibilité SEO et IA. Tu veux en savoir plus ?</p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour te filer un coup de main et t'aider à analyser les metrics de tes sites. Tu as une première question ?</p>
+                )}
+              </div>
             ) : (
-              <p className="text-[11px] text-muted-foreground/70">Je serai toujours dispo pour te filer un coup de main et t'aider à analyser les metrics de tes sites. Tu as une première question ?</p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {messages.map((msg, i) => (
-              <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
-                <div className={cn(
-                  'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
-                  msg.role === 'assistant'
-                    ? 'bg-muted/60 text-foreground rounded-bl-md'
-                    : 'bg-violet-600 text-white rounded-br-md'
-                )}>
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <CrawlersLogo size={12} />
-                    </div>
-                  )}
-                  <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
-                    <ReactMarkdown
-                      components={{
-                        a: ({ href, children }) => (
-                          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                            {children}
-                          </a>
-                        ),
-                      }}
-                    >{msg.content}</ReactMarkdown>
-                  </div>
-                  {/* Action buttons for internal links */}
-                  {(() => {
-                    const linkRegex = /\[([^\]]+)\]\(https?:\/\/crawlers\.fr(\/[^\s)]+)\)/g;
-                    const actions: { label: string; path: string }[] = [];
-                    let m;
-                    while ((m = linkRegex.exec(msg.content)) !== null) {
-                      const path = m[2];
-                      if (['/site-crawl', '/cocoon', '/console', '/audit-expert', '/matrice', '/architecte-generatif'].some(p => path.startsWith(p))) {
-                        actions.push({ label: m[1], path });
-                      }
-                    }
-                    if (actions.length === 0) return null;
-                    return (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {actions.map((a, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => { navigate(a.path); onClose(); }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-muted-foreground/20 text-muted-foreground text-[11px] font-medium hover:bg-muted/50 hover:text-foreground transition-all"
-                          >
-                            {a.label}
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        ))}
+              <div className="space-y-2.5">
+                {messages.map((msg, i) => (
+                  <div key={i} className={cn('flex', msg.role === 'assistant' ? 'justify-start' : 'justify-end')}>
+                    <div className={cn(
+                      'max-w-[85%] rounded-2xl px-3 py-2 overflow-hidden break-words',
+                      msg.role === 'assistant'
+                        ? 'bg-muted/60 text-foreground rounded-bl-md'
+                        : 'bg-violet-600 text-white rounded-br-md'
+                    )}>
+                      {msg.role === 'assistant' && (
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <CrawlersLogo size={12} />
+                        </div>
+                      )}
+                      <div className="whitespace-pre-wrap break-words overflow-hidden prose prose-xs dark:prose-invert max-w-none text-[13px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2">
+                        <ReactMarkdown
+                          components={{
+                            a: ({ href, children }) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >{msg.content}</ReactMarkdown>
                       </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            ))}
+                      {(() => {
+                        const linkRegex = /\[([^\]]+)\]\(https?:\/\/crawlers\.fr(\/[^\s)]+)\)/g;
+                        const actions: { label: string; path: string }[] = [];
+                        let m;
+                        while ((m = linkRegex.exec(msg.content)) !== null) {
+                          const path = m[2];
+                          if (['/site-crawl', '/cocoon', '/console', '/audit-expert', '/matrice', '/architecte-generatif'].some(p => path.startsWith(p))) {
+                            actions.push({ label: m[1], path });
+                          }
+                        }
+                        if (actions.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {actions.map((a, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => { navigate(a.path); onClose(); }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-muted-foreground/20 text-muted-foreground text-[11px] font-medium hover:bg-muted/50 hover:text-foreground transition-all"
+                              >
+                                {a.label}
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ))}
 
-            {/* Bug report prompt button */}
-            {bugReportMode === 'prompt' && (
-              <div className="flex justify-start">
-                <button
-                  onClick={activateBugReportMode}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
-                >
-                  <Bug className="h-3.5 w-3.5" />
-                  Signaler un problème / bug
-                </button>
+                {bugReportMode === 'prompt' && (
+                  <div className="flex justify-start">
+                    <button
+                      onClick={activateBugReportMode}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                    >
+                      <Bug className="h-3.5 w-3.5" />
+                      Signaler un problème / bug
+                    </button>
+                  </div>
+                )}
+
+                {sending && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <CrawlersLogo size={12} />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="h-6 shrink-0" />
               </div>
             )}
-
-            {sending && (
-              <div className="flex justify-start">
-                <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <CrawlersLogo size={12} />
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="h-6 shrink-0" />
           </div>
-        )}
-      </ScrollArea>
+        </ScrollArea>
       </div>
 
       {/* Phone callback prompt */}
