@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PageData {
   http_status: number | null;
@@ -23,30 +23,30 @@ const STATUS_COLORS: Record<string, string> = {
 const STATUS_LABELS: Record<string, Record<string, string>> = {
   fr: {
     '200': '200 OK',
-    '2xx': 'Autres succès (2xx)',
-    '3xx': 'Redirection (3xx)',
-    '4xx': 'Erreur client (4xx)',
-    '5xx': 'Erreur serveur (5xx)',
+    '2xx': 'Autres 2xx',
+    '3xx': 'Redir. 3xx',
+    '4xx': 'Err. 4xx',
+    '5xx': 'Err. 5xx',
     'unknown': 'Inconnu',
-    title: 'Codes de réponse HTTP',
+    title: 'Codes HTTP',
   },
   en: {
     '200': '200 OK',
-    '2xx': 'Other Success (2xx)',
-    '3xx': 'Redirect (3xx)',
-    '4xx': 'Client Error (4xx)',
-    '5xx': 'Server Error (5xx)',
+    '2xx': 'Other 2xx',
+    '3xx': 'Redir. 3xx',
+    '4xx': 'Err. 4xx',
+    '5xx': 'Err. 5xx',
     'unknown': 'Unknown',
-    title: 'HTTP Response Codes',
+    title: 'HTTP Codes',
   },
   es: {
     '200': '200 OK',
-    '2xx': 'Otros éxitos (2xx)',
-    '3xx': 'Redirección (3xx)',
-    '4xx': 'Error cliente (4xx)',
-    '5xx': 'Error servidor (5xx)',
+    '2xx': 'Otros 2xx',
+    '3xx': 'Redir. 3xx',
+    '4xx': 'Err. 4xx',
+    '5xx': 'Err. 5xx',
     'unknown': 'Desconocido',
-    title: 'Códigos de respuesta HTTP',
+    title: 'Códigos HTTP',
   },
 };
 
@@ -59,19 +59,6 @@ function getStatusGroup(status: number | null): string {
   if (status >= 500) return '5xx';
   return 'unknown';
 }
-
-const RADIAN = Math.PI / 180;
-const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }: any) => {
-  if (percent < 0.04) return null;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>
-      {value}
-    </text>
-  );
-};
 
 export function HttpStatusChart({ pages, language }: HttpStatusChartProps) {
   const labels = STATUS_LABELS[language] || STATUS_LABELS.fr;
@@ -89,59 +76,50 @@ export function HttpStatusChart({ pages, language }: HttpStatusChartProps) {
         name: labels[k],
         value: groups[k],
         key: k,
-        pct: ((groups[k] / pages.length) * 100).toFixed(1),
+        pct: ((groups[k] / pages.length) * 100).toFixed(0),
       }));
   }, [pages, labels]);
 
   if (chartData.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="h-full">
+      <CardContent className="p-4">
+        <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
           🌐 {labels.title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col gap-2">
-            {chartData.map(d => (
-              <div key={d.key} className="flex items-center gap-2 text-sm">
-                <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: STATUS_COLORS[d.key] }}
-                />
-                <span className="text-muted-foreground">{d.name}</span>
-                <span className="font-semibold text-foreground ml-auto tabular-nums">{d.value} ({d.pct}%)</span>
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 min-w-0" style={{ height: 220 }}>
+        </p>
+        <div className="flex items-center gap-3">
+          <div className="w-[72px] h-[72px] shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={95}
+                  innerRadius={20}
+                  outerRadius={34}
                   paddingAngle={2}
                   dataKey="value"
-                  label={renderCustomLabel}
-                  labelLine={false}
+                  stroke="none"
                 >
                   {chartData.map(d => (
-                    <Cell key={d.key} fill={STATUS_COLORS[d.key]} stroke="none" />
+                    <Cell key={d.key} fill={STATUS_COLORS[d.key]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [`${value} (${((value / pages.length) * 100).toFixed(1)}%)`, name]}
-                  contentStyle={{ fontSize: 12, borderRadius: 8, background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))' }}
-                  itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                  labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            {chartData.map(d => (
+              <div key={d.key} className="flex items-center gap-1.5 text-[11px]">
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: STATUS_COLORS[d.key] }}
+                />
+                <span className="text-muted-foreground truncate">{d.name}</span>
+                <span className="font-semibold text-foreground ml-auto tabular-nums whitespace-nowrap">{d.value} ({d.pct}%)</span>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
