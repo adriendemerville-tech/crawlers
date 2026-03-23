@@ -589,6 +589,16 @@ export default function Cocoon() {
         } else {
           setTruncationInfo(null);
         }
+
+        // Run PageRank to compute internal_links_in (otherwise all pages show 0 inbound links)
+        try {
+          await supabase.functions.invoke("calculate-internal-pagerank", {
+            body: { tracked_site_id: selectedSiteId },
+          });
+        } catch (prErr) {
+          console.warn("PageRank calculation failed (non-blocking):", prErr);
+        }
+
         toast({
           title: t.successTitle,
           description: t.successDesc(stats?.nodes_count || 0, stats?.clusters_count || 0),
