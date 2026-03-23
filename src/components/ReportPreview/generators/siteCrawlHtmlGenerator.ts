@@ -168,6 +168,64 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
     </div>
   ` : '';
 
+  // HTTP Status Distribution donut chart (SVG)
+  const statusGroups: Record<string, number> = {};
+  data.pages.forEach(p => {
+    const s = p.http_status;
+    const group = !s ? 'unknown' : s >= 200 && s < 300 ? '2xx' : s >= 300 && s < 400 ? '3xx' : s >= 400 && s < 500 ? '4xx' : s >= 500 ? '5xx' : 'unknown';
+    statusGroups[group] = (statusGroups[group] || 0) + 1;
+  });
+  const statusColors: Record<string, string> = { '2xx': '#10b981', '3xx': '#f59e0b', '4xx': '#ef4444', '5xx': '#dc2626', 'unknown': '#6b7280' };
+  const statusLabels: Record<string, string> = language === 'fr'
+    ? { '2xx': 'Succès (2xx)', '3xx': 'Redirection (3xx)', '4xx': 'Erreur client (4xx)', '5xx': 'Erreur serveur (5xx)', 'unknown': 'Inconnu' }
+    : language === 'es'
+    ? { '2xx': 'Éxito (2xx)', '3xx': 'Redirección (3xx)', '4xx': 'Error cliente (4xx)', '5xx': 'Error servidor (5xx)', 'unknown': 'Desconocido' }
+    : { '2xx': 'Success (2xx)', '3xx': 'Redirect (3xx)', '4xx': 'Client Error (4xx)', '5xx': 'Server Error (5xx)', 'unknown': 'Unknown' };
+  const statusTitle = language === 'fr' ? 'Codes de réponse HTTP' : language === 'es' ? 'Códigos de respuesta HTTP' : 'HTTP Response Codes';
+  const statusEntries = ['2xx', '3xx', '4xx', '5xx', 'unknown'].filter(k => statusGroups[k] > 0);
+  const totalPages = data.pages.length;
+
+  // Build SVG donut
+  let donutPaths = '';
+  let startAngle = 0;
+  statusEntries.forEach(k => {
+    const pct = statusGroups[k] / totalPages;
+    const angle = pct * 360;
+    const endAngle = startAngle + angle;
+    const largeArc = angle > 180 ? 1 : 0;
+    const r = 80, ir = 50, cx = 110, cy = 110;
+    const s1 = Math.sin((startAngle * Math.PI) / 180), c1 = Math.cos((startAngle * Math.PI) / 180);
+    const s2 = Math.sin((endAngle * Math.PI) / 180), c2 = Math.cos((endAngle * Math.PI) / 180);
+    const x1o = cx + r * s1, y1o = cy - r * c1;
+    const x2o = cx + r * s2, y2o = cy - r * c2;
+    const x1i = cx + ir * s2, y1i = cy - ir * c2;
+    const x2i = cx + ir * s1, y2i = cy - ir * c1;
+    donutPaths += `<path d="M${x1o},${y1o} A${r},${r} 0 ${largeArc} 1 ${x2o},${y2o} L${x1i},${y1i} A${ir},${ir} 0 ${largeArc} 0 ${x2i},${y2i} Z" fill="${statusColors[k]}" />`;
+    startAngle = endAngle;
+  });
+
+  const statusLegend = statusEntries.map(k => `
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+      <div style="width: 12px; height: 12px; border-radius: 50%; background: ${statusColors[k]}; flex-shrink: 0;"></div>
+      <span style="color: #9ca3af;">${statusLabels[k]}</span>
+      <span style="font-weight: 600; margin-left: auto;">${statusGroups[k]} (${((statusGroups[k] / totalPages) * 100).toFixed(1)}%)</span>
+    </div>
+  `).join('');
+
+  const httpStatusChart = statusEntries.length > 0 ? `
+    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">🌐 ${statusTitle}</h3>
+      <div style="display: flex; align-items: center; gap: 32px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 200px;">
+          ${statusLegend}
+        </div>
+        <div style="flex: 1; display: flex; justify-content: center;">
+          <svg viewBox="0 0 220 220" width="200" height="200">${donutPaths}</svg>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   // Pages table (top 50)
   const sortedPages = [...data.pages].sort((a, b) => (a.seo_score || 0) - (b.seo_score || 0));
   const displayPages = sortedPages.slice(0, 50);
