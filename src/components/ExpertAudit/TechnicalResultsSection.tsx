@@ -63,25 +63,28 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
 
       {/* Hero Score with integrated Radar */}
       <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
-        <CardContent className="p-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+        <CardContent className="p-5">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             {/* Left: Radar chart */}
-            <div className="w-full lg:w-1/2 max-w-md">
+            <div className="w-full lg:w-1/2 max-w-sm">
               <AuditRadialChart result={result} mode="technical" language={language} inline previousData={previousData} />
             </div>
             {/* Right: Domain info + Score */}
-            <div className="flex flex-col items-center lg:items-end gap-4">
+            <div className="flex flex-col items-center lg:items-end gap-3">
               <div className="text-center lg:text-right">
-                <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
-                <a
-                  href={result.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                >
-                  {result.url} <ExternalLink className="h-3 w-3" />
-                </a>
-                <div className="mt-4 space-y-1">
+                <div className="flex items-center justify-center lg:justify-end gap-2 mb-2">
+                  <h2 className="text-xl font-bold text-foreground">{result.domain}</h2>
+                  <a
+                    href={result.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    title={result.url}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+                <div className="space-y-1">
                   <p className="text-base font-semibold text-foreground">Score Global SEO</p>
                   <p className="text-lg">
                     {computedTotal < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
