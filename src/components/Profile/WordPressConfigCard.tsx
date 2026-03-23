@@ -117,7 +117,8 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  
+  const [connectMethod, setConnectMethod] = useState<'cms' | 'gtm'>('cms');
+
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -257,15 +258,40 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
+      {/* ─── Method selector ─── */}
+      <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+        <p className="text-xs font-semibold text-foreground">
+          {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant={connectMethod === 'cms' ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2 h-9"
+            onClick={() => setConnectMethod('cms')}
+          >
+            <Plug className="h-3.5 w-3.5" />
+            {t3(language, 'API CMS (WordPress)', 'CMS API (WordPress)', 'API CMS (WordPress)')}
+          </Button>
+          <Button
+            variant={connectMethod === 'gtm' ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2 h-9"
+            onClick={() => setConnectMethod('gtm')}
+          >
+            <Code className="h-3.5 w-3.5" />
+            {t3(language, 'API Google Tag Manager', 'Google Tag Manager API', 'API Google Tag Manager')}
+          </Button>
+        </div>
+      </div>
+
       <Separator />
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-2 gap-6 pt-2">
-        {/* ═══ LEFT: WordPress Plugin ═══ */}
-        <div className="space-y-4">
+      {connectMethod === 'cms' ? (
+        <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 mb-1">
-            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Plug className="h-4 w-4 text-blue-500" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-semibold">WordPress</h3>
@@ -280,7 +306,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             <p className="text-xs font-medium text-muted-foreground">
               {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
             </p>
-            <Button onClick={handleDownloadPlugin} className="w-3/4 gap-2 bg-[hsl(263,70%,50%)] hover:bg-[hsl(263,70%,45%)] text-white" size="sm">
+            <Button onClick={handleDownloadPlugin} className="w-3/4 gap-2" size="sm">
               <Download className="h-3.5 w-3.5" />
               {t3(language, 'Télécharger le Plugin .zip', 'Download Plugin .zip', 'Descargar Plugin .zip')}
             </Button>
@@ -365,9 +391,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </AccordionItem>
           </Accordion>
         </div>
-
-        {/* ═══ RIGHT: GTM / Script universel ═══ */}
-        <div className="space-y-4">
+      ) : (
+        <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 mb-1">
             <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
               <Code className="h-4 w-4 text-amber-500" />
@@ -607,7 +632,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             {t3(language, 'Tester la connexion GTM', 'Test GTM connection', 'Probar conexión GTM')}
           </Button>
         </div>
-      </div>
+      )}
 
       {/* Shared: API Key section at the bottom */}
       <Separator className="mt-2" />

@@ -625,7 +625,7 @@ export function MyCorrectiveCodes() {
 
     {/* Plug Modal */}
     <Dialog open={showPlugModal} onOpenChange={setShowPlugModal}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl">
         {injectableSites.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Plug className="h-10 w-10 mx-auto mb-3 opacity-30" />
