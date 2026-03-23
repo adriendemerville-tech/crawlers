@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.0"
-date: "2026-03-22"
+version: "3.1"
+date: "2026-03-23"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -106,15 +106,22 @@ Analyse technique complète de votre site en 200 points couvrant :
 - Sémantique : balises title, meta, H1-H6, densité de mots-clés
 - Performance : Core Web Vitals, PageSpeed, temps de chargement
 - Sécurité : HTTPS, mixed content, vulnérabilités
+- IA & GEO : accessibilité LLM, citabilité, données structurées
+
+Les résultats incluent un **graphique radar de qualité** montrant les scores par catégorie (Performance, Technique, Contenu, IA & GEO, Sécurité) avec un score global /200. Ce radar apparaît aussi en haut du rapport PDF exporté.
 
 Disponible : 1 fois par jour en freemium inscrit. Illimité en Pro Agency.
 
-### Audit Stratégique IA
+### Audit Stratégique IA (GEO)
 Analyse approfondie multi-axes avec scoring IA :
 - Score IAS (23 variables)
 - Analyse E-E-A-T
+- GEO Readiness : citabilité, accessibilité IA
+- Autorité de marque et signaux sociaux
 - Recommandations prioritaires classées par impact
 - Génération de plan d'action
+
+Les résultats incluent un **graphique radar adaptatif** avec des axes dynamiques (Performance, Contenu, IA & GEO, Citabilité, GEO Ready, Marque, Social, Marché) selon les données disponibles. Ce radar apparaît aussi en haut du rapport PDF exporté.
 
 Coût : 1 crédit.
 
@@ -220,6 +227,7 @@ Analyse récursive de votre site :
 - Jusqu'à 5000 pages par crawl
 - Détection d'erreurs techniques page par page
 - Analyse du maillage interne
+- **Graphique circulaire des codes HTTP** : visualisation de la distribution des réponses HTTP (200 OK en vert, redirections 3xx, erreurs client 4xx, erreurs serveur 5xx) dans les résultats et dans le rapport PDF
 - Rapport exportable
 
 Disponible en Pro Agency (inclus dans l'abonnement).
@@ -408,7 +416,26 @@ Pour les outils Pro, votre token d'authentification Crawlers est transmis automa
 
 ---
 
-## 9. À propos de Crawlers.fr
+## 9. Infrastructure & Monitoring
+
+### Suivi des coûts API en temps réel
+Le module Finances du dashboard admin agrège les soldes et consommations en temps réel de toutes les APIs tierces :
+- **DataForSEO** : solde en dollars, alertes automatiques quand le solde passe sous $5
+- **SerpAPI** : recherches restantes sur le plan mensuel
+- **OpenRouter** : consommation IA en dollars vs limite du compte
+- **Firecrawl** : crédits de crawl restants vs total alloué
+
+Des alertes visuelles (critique, bas, sain) et des notifications Felix sont envoyées aux admins en cas de solde critique.
+
+### Fallback API automatique
+En cas d'épuisement des crédits DataForSEO (erreur 402), le système bascule automatiquement sur SerpAPI pour les requêtes SERP, assurant la continuité de service sans intervention manuelle.
+
+### Ahrefs Firehose API
+Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps réel. Endpoint dédié pour interroger le flux de données backlinks.
+
+---
+
+## 10. À propos de Crawlers.fr
 
 ### Qu'est-ce que Crawlers.fr ?
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
