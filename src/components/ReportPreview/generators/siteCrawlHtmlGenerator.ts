@@ -149,6 +149,13 @@ const siteCrawlI18n = {
     indexability: 'Ratio de indexabilidad',
     indexable: 'Indexables',
     notIndexable: 'No indexables',
+    externalAuthority: 'Fuentes de autoridad externa',
+    externalAuthorityDesc: 'Páginas que reciben más backlinks externos (top 10)',
+    referringDomains: 'dominios referentes',
+    backlinksTotal: 'backlinks',
+    topAnchors: 'Anclas principales',
+    topSources: 'Fuentes principales',
+    avgDomainRank: 'Rango promedio de fuentes',
   },
 };
 
