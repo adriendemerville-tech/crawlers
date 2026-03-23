@@ -632,7 +632,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             {t3(language, 'Tester la connexion GTM', 'Test GTM connection', 'Probar conexión GTM')}
           </Button>
         </div>
-      </div>
+      )}
 
       {/* Shared: API Key section at the bottom */}
       <Separator className="mt-2" />
