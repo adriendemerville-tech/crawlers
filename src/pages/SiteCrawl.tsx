@@ -867,15 +867,7 @@ export default function SiteCrawl() {
       <Header />
 
       <main className="min-h-screen bg-background pt-20 pb-16 relative">
-        {/* Back to home arrow */}
-        <Link
-          to="/"
-          className="fixed top-20 left-4 z-40 flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
-          aria-label="Retour à l'accueil"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
-        </Link>
+        {/* Back arrow removed - now only above Pro Agency modal */}
 
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!isUnlimitedUser && (
