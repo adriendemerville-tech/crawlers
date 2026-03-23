@@ -936,10 +936,16 @@ export function CocoonForceGraph3D({
     const maxTraffic = Math.max(1, ...nodes.map((n) => n.traffic_estimate ?? 0));
 
     const gLinks: GraphLink3D[] = [];
+    const seenPairs = new Set<string>();
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
         const targetId = urlToId.get(edge.target_url);
-        if (targetId && idSet.has(targetId) && node.id < targetId) {
+        if (!targetId || !idSet.has(targetId) || targetId === node.id) continue;
+        // Deduplicate: only keep one link per pair regardless of direction
+        const pairKey = [node.id, targetId].sort().join('|');
+        if (seenPairs.has(pairKey)) continue;
+        seenPairs.add(pairKey);
+
           const isHomeSrc = node.id === homeId;
           const isHomeTgt = targetId === homeId;
           const targetNode = nodeById.get(targetId);
@@ -965,7 +971,6 @@ export function CocoonForceGraph3D({
             juiceType,
             juiceIntensity,
           });
-        }
       }
     }
 
