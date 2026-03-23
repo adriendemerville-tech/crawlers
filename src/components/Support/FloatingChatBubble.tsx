@@ -190,11 +190,3 @@ export function FloatingChatBubble() {
     </>
   );
 }
-          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
-    </>
-  );
-}
