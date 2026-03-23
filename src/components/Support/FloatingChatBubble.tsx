@@ -18,18 +18,27 @@ export function FloatingChatBubble() {
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
+  const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Detect first-time logged-in user → red pulse + sound
+  // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
-    if (!user || isOnboardingDone()) {
+    if (!user || isOnboardingDone() || notifDismissedThisSession) {
       setShowOnboardingPulse(false);
       return;
     }
-    // Small delay so it feels like Felix noticed you
+    // Track visit count
+    const key = 'felix_notif_visit_count';
+    const count = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, String(count));
+    // Show only every 3 visits (1st, 4th, 7th…)
+    if (count % 3 !== 1) {
+      setShowOnboardingPulse(false);
+      return;
+    }
     const timer = setTimeout(() => {
       setShowOnboardingPulse(true);
       if (!onboardingSoundPlayed.current) {
@@ -38,7 +47,7 @@ export function FloatingChatBubble() {
       }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [user, notifDismissedThisSession]);
 
   // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
@@ -169,7 +178,7 @@ export function FloatingChatBubble() {
           onClick={handleOpen}
         >
           <button
-            onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); }}
+            onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); setNotifDismissedThisSession(true); }}
             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
             aria-label="Fermer"
           >
