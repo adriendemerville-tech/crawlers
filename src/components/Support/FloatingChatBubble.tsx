@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { CrawlersLogo } from './CrawlersLogo';
+import { isOnboardingDone } from '@/utils/felixOnboarding';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 // Lazy load the chat window (heavy component with forms and messages)
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
@@ -15,8 +17,28 @@ export function FloatingChatBubble() {
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
+  const [triggerOnboarding, setTriggerOnboarding] = useState(false);
+  const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+
+  // Detect first-time logged-in user → red pulse + sound
+  useEffect(() => {
+    if (!user || isOnboardingDone()) {
+      setShowOnboardingPulse(false);
+      return;
+    }
+    // Small delay so it feels like Felix noticed you
+    const timer = setTimeout(() => {
+      setShowOnboardingPulse(true);
+      if (!onboardingSoundPlayed.current) {
+        playNotificationSound();
+        onboardingSoundPlayed.current = true;
+      }
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
