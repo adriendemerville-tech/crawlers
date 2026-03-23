@@ -8,8 +8,9 @@ import { generateCrawlersHTML } from './generators/crawlersHtmlGenerator';
 import { generateGeoHTML } from './generators/geoHtmlGenerator';
 import { generateLLMHTML } from './generators/llmHtmlGenerator';
 import { generatePageSpeedHTML } from './generators/pagespeedHtmlGenerator';
+import { generateSiteCrawlHTML, SiteCrawlReportData } from './generators/siteCrawlHtmlGenerator';
 
-export type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
+export type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' | 'full';
 
 export interface WhiteLabelBranding {
   logoUrl?: string | null;
@@ -21,7 +22,10 @@ interface ReportData {
   geoResult?: GeoResult | null;
   llmResult?: LLMAnalysisResult | null;
   pageSpeedResult?: PageSpeedResult | null;
+  siteCrawlData?: SiteCrawlReportData | null;
 }
+
+export type { SiteCrawlReportData };
 
 function generateHeader(t: TranslationKeys, title: string, date: string): string {
   return `
@@ -54,7 +58,7 @@ function generateSeparator(): string {
 
 export function generateReportHTML(
   type: ReportType, 
-  data: ReportData | CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult, 
+  data: ReportData | CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult | SiteCrawlReportData, 
   url: string, 
   language: string,
   branding?: WhiteLabelBranding
@@ -110,6 +114,10 @@ export function generateReportHTML(
       case 'pagespeed':
         title = t.pagespeed;
         content = generatePageSpeedHTML(data as PageSpeedResult, t);
+        break;
+      case 'site_crawl':
+        title = language === 'fr' ? 'Audit Multi-Pages' : language === 'es' ? 'Auditoría Multi-Páginas' : 'Multi-Page Audit';
+        content = generateSiteCrawlHTML(data as SiteCrawlReportData, t, language);
         break;
     }
   }

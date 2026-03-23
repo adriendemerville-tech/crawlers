@@ -12,9 +12,9 @@ import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
-import { generateReportHTML, WhiteLabelBranding } from './reportHtmlGenerator';
+import { generateReportHTML, WhiteLabelBranding, SiteCrawlReportData } from './reportHtmlGenerator';
 
-type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
+type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' | 'full';
 
 interface ReportPreviewModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface ReportPreviewModalProps {
   geoResult?: GeoResult | null;
   llmResult?: LLMAnalysisResult | null;
   pageSpeedResult?: PageSpeedResult | null;
+  siteCrawlData?: SiteCrawlReportData | null;
   currentUrl?: string;
 }
 
@@ -83,6 +84,7 @@ export function ReportPreviewModal({
   geoResult,
   llmResult,
   pageSpeedResult,
+  siteCrawlData,
   currentUrl,
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
@@ -99,8 +101,9 @@ export function ReportPreviewModal({
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
 
   // For 'full' type, determine which result to use as primary for single-type operations
-  const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' => {
-    if (type !== 'full') return type;
+  const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl' => {
+    if (type === 'site_crawl') return 'site_crawl';
+    if (type !== 'full') return type as 'crawlers' | 'geo' | 'llm' | 'pagespeed';
     if (crawlResult) return 'crawlers';
     if (geoResult) return 'geo';
     if (llmResult) return 'llm';
@@ -115,6 +118,8 @@ export function ReportPreviewModal({
   const useFullType = type === 'full' && hasMultipleResults;
 
   const getData = (): any => {
+    if (type === 'site_crawl') return siteCrawlData || null;
+    
     // For full type with multiple results, return all data
     if (useFullType) {
       return {
@@ -142,6 +147,7 @@ export function ReportPreviewModal({
 
   const getUrl = (): string => {
     if (currentUrl) return currentUrl;
+    if (type === 'site_crawl') return siteCrawlData?.domain || '';
     switch (effectiveType) {
       case 'crawlers':
         return crawlResult?.url || '';
@@ -160,7 +166,7 @@ export function ReportPreviewModal({
   const url = getUrl();
 
   // Check if we have any data at all
-  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult;
+  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult || siteCrawlData;
   if (!hasAnyData) return null;
 
   // Auto-save report for authenticated users when modal opens
@@ -176,6 +182,7 @@ export function ReportPreviewModal({
       geo: { fr: 'Analyse GEO', en: 'GEO Analysis', es: 'Análisis GEO' },
       llm: { fr: 'Visibilité LLM', en: 'LLM Visibility', es: 'Visibilidad LLM' },
       pagespeed: { fr: 'PageSpeed', en: 'PageSpeed', es: 'PageSpeed' },
+      site_crawl: { fr: 'Audit Multi-Pages', en: 'Multi-Page Audit', es: 'Auditoría Multi-Páginas' },
     };
     const domain = (() => { try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { return url; } })();
     const label = titleMap[effectiveType]?.[language] || effectiveType;

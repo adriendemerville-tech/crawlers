@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -22,6 +22,8 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ReportPreviewModal } from '@/components/ReportPreview';
+import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 
 const crawlI18n = {
   fr: {
@@ -459,6 +461,7 @@ export default function SiteCrawl() {
   const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -651,6 +654,30 @@ export default function SiteCrawl() {
   const schemaErrorPages = useMemo(() => pages.filter(p => (p.issues || []).includes('schema_org_errors')), [pages]);
 
   const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
+
+  const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
+    if (!crawlResult || crawlResult.status !== 'completed') return null;
+    return {
+      domain: crawlResult.domain,
+      crawledPages: crawlResult.crawled_pages,
+      totalPages: crawlResult.total_pages,
+      avgScore: crawlResult.avg_score,
+      aiSummary: crawlResult.ai_summary,
+      aiRecommendations: crawlResult.ai_recommendations || [],
+      issueStats,
+      pages: pages.map(p => ({
+        url: p.url,
+        path: p.path,
+        seo_score: p.seo_score,
+        http_status: p.http_status,
+        title: p.title,
+        issues: p.issues || [],
+        has_noindex: p.is_indexable === false || (p.issues || []).includes('noindex'),
+        word_count: p.word_count,
+      })),
+      createdAt: crawlResult.created_at,
+    };
+  }, [crawlResult, pages, issueStats]);
 
   if (loading || adminLoading) {
     return (
@@ -1241,6 +1268,14 @@ export default function SiteCrawl() {
                   <Download className="w-4 h-4" />
                   {t.sitemapExport}
                 </Button>
+                <Button
+                  onClick={() => setIsReportOpen(true)}
+                  size="default"
+                  className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
+                >
+                  <FileText className="h-4 w-4" />
+                  {t.viewReport}
+                </Button>
               </div>
 
               {/* Synthèse IA */}
@@ -1675,6 +1710,13 @@ export default function SiteCrawl() {
           onClose={() => setShowLimitModal(false)}
         />
       )}
+
+      <ReportPreviewModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        type="site_crawl"
+        siteCrawlData={siteCrawlReportData}
+      />
 
       <Footer />
     </>
