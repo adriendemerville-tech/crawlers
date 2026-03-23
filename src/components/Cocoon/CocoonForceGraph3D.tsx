@@ -969,6 +969,11 @@ export function CocoonForceGraph3D({
 
           const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
 
+          // Direction based on actual crawl depth
+          let direction: 'descending' | 'ascending' | 'lateral' = 'lateral';
+          if (srcDepth < tgtDepth) direction = 'descending';
+          else if (srcDepth > tgtDepth) direction = 'ascending';
+
           gLinks.push({
             sourceId: node.id,
             targetId,
@@ -976,6 +981,7 @@ export function CocoonForceGraph3D({
             type: edge.type,
             juiceType,
             juiceIntensity,
+            direction,
           });
       }
     }
