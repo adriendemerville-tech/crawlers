@@ -992,6 +992,31 @@ export function CocoonForceGraph3D({
       }
     }
 
+    // Refine directions using all directed edges (not just deduplicated pairs)
+    const directedEdges3D = new Map<string, 'descending' | 'ascending' | 'lateral'>();
+    for (const node of nodes) {
+      for (const edge of node.similarity_edges || []) {
+        const targetId = urlToId.get(edge.target_url);
+        if (!targetId || !idSet.has(targetId) || targetId === node.id) continue;
+        const srcDepth = node.crawl_depth ?? node.depth ?? 0;
+        const targetNode = nodeById.get(targetId);
+        const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
+        const dirKey = `${node.id}→${targetId}`;
+        if (srcDepth < tgtDepth) {
+          directedEdges3D.set(dirKey, 'descending');
+        } else if (srcDepth > tgtDepth) {
+          directedEdges3D.set(dirKey, 'ascending');
+        }
+      }
+    }
+    for (const link of gLinks) {
+      const fwd = directedEdges3D.get(`${link.sourceId}→${link.targetId}`);
+      const rev = directedEdges3D.get(`${link.targetId}→${link.sourceId}`);
+      if (rev === 'ascending' || fwd === 'ascending') {
+        link.direction = 'ascending';
+      }
+    }
+
     simulate3D(gNodes, gLinks, 400);
 
     // Filter links by visible juice types

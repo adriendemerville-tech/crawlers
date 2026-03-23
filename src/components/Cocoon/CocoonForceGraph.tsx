@@ -319,9 +319,11 @@ export function CocoonForceGraph({
       }
     }
 
-    // Also check reverse edges: if node B → node A exists but A → B was already added,
-    // we may have missed the correct direction. Re-scan for reverse edges.
-    const pairDirections = new Map<string, 'descending' | 'ascending' | 'lateral'>();
+    // Refine directions: check BOTH edge directions per pair.
+    // A pair can have edges in both directions (A→B and B→A).
+    // If the actual link source is deeper than target → ascending (blue).
+    // Track per directed edge (not just pair).
+    const directedEdges = new Map<string, 'descending' | 'ascending' | 'lateral'>();
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
         const targetId = urlToId.get(edge.target_url);
@@ -329,25 +331,31 @@ export function CocoonForceGraph({
         const srcDepth = node.crawl_depth ?? node.depth ?? 0;
         const targetNode = nodeById.get(targetId);
         const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
-        const pairKey = [node.id, targetId].sort().join('|');
-        // If source links to a deeper target → descending from source's perspective
+        // Directed key: actual source → actual target
+        const dirKey = `${node.id}→${targetId}`;
         if (srcDepth < tgtDepth) {
-          pairDirections.set(pairKey, 'descending');
+          directedEdges.set(dirKey, 'descending');
         } else if (srcDepth > tgtDepth) {
-          // The node linking is deeper → this is an ascending link
-          if (!pairDirections.has(pairKey)) {
-            pairDirections.set(pairKey, 'ascending');
-          }
+          directedEdges.set(dirKey, 'ascending');
         }
       }
     }
-    // Apply refined directions
+
+    // For each deduplicated link, check if both directions exist
+    // Priority: if ascending edge exists for this pair, mark as ascending
+    // (since descending is already the default / majority)
     for (const link of gLinks) {
       const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
       const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
-      const pairKey = [srcId, tgtId].sort().join('|');
-      const dir = pairDirections.get(pairKey);
-      if (dir) link.direction = dir;
+      const fwd = directedEdges.get(`${srcId}→${tgtId}`);
+      const rev = directedEdges.get(`${tgtId}→${srcId}`);
+      
+      // If any directed edge in this pair is ascending, mark the link ascending
+      if (rev === 'ascending' || fwd === 'ascending') {
+        link.direction = 'ascending';
+      } else if (rev === 'descending' && !fwd) {
+        link.direction = 'descending';
+      }
     }
 
     return { graphNodes: gNodes, graphLinks: gLinks };
