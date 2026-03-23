@@ -227,6 +227,7 @@ Analyse récursive de votre site :
 - Jusqu'à 5000 pages par crawl
 - Détection d'erreurs techniques page par page
 - Analyse du maillage interne
+- **Graphique circulaire des codes HTTP** : visualisation de la distribution des réponses HTTP (200 OK en vert, redirections 3xx, erreurs client 4xx, erreurs serveur 5xx) dans les résultats et dans le rapport PDF
 - Rapport exportable
 
 Disponible en Pro Agency (inclus dans l'abonnement).
