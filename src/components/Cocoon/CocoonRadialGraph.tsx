@@ -329,6 +329,29 @@ export function CocoonRadialGraph({
     return result;
   }, [tree]);
 
+  // Initialize particles along tree edges
+  useEffect(() => {
+    if (!tree) { particlesRef.current = []; return; }
+    const particles: typeof particlesRef.current = [];
+    function walk(node: RadialNode) {
+      for (const child of node.children) {
+        // 1-2 particles per edge
+        const count = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            fromId: node.id,
+            toId: child.id,
+            t: Math.random(),
+            speed: 0.002 + Math.random() * 0.004,
+          });
+        }
+        walk(child);
+      }
+    }
+    walk(tree);
+    particlesRef.current = particles;
+  }, [tree]);
+
   // Filter edges by visibleJuiceTypes
   const shouldShowEdge = useCallback((edgeType?: string) => {
     if (!visibleJuiceTypes || visibleJuiceTypes.size === 0) return true;
