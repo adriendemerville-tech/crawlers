@@ -779,8 +779,17 @@ export default function SiteCrawl() {
       deepPages,
       brokenLinks: brokenLinksArr,
       indexabilityRatio: { indexable, noindex, total: pages.length },
+      externalBacklinks: crawlBacklinks.map((bl: any) => ({
+        url: bl.url,
+        path: bl.path,
+        referring_domains: bl.referring_domains || 0,
+        backlinks_total: bl.backlinks_total || 0,
+        domain_rank_avg: Number(bl.domain_rank_avg) || 0,
+        top_anchors: Array.isArray(bl.top_anchors) ? bl.top_anchors : [],
+        top_sources: Array.isArray(bl.top_sources) ? bl.top_sources : [],
+      })),
     };
-  }, [crawlResult, pages, issueStats]);
+  }, [crawlResult, pages, issueStats, crawlBacklinks]);
 
   if (loading || adminLoading) {
     return (
