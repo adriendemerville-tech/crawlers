@@ -281,10 +281,10 @@ function NodeSphere({
 
   return (
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
-      {/* ── Home: Outer halo (halved radius, soft blur edge) ── */}
+      {/* ── Home: Outer halo ── */}
       {node.isHome && (
         <mesh ref={haloRef}>
-          <sphereGeometry args={[node.radius * 1.4, 32, 32]} />
+          <sphereGeometry args={[r * 1.4, 32, 32]} />
           <meshBasicMaterial
             color="#ff8c20"
             transparent
@@ -295,10 +295,10 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Home: Blur fringe (slightly larger, very faint) ── */}
+      {/* ── Home: Blur fringe ── */}
       {node.isHome && (
         <mesh>
-          <sphereGeometry args={[node.radius * 1.55, 28, 28]} />
+          <sphereGeometry args={[r * 1.55, 28, 28]} />
           <meshBasicMaterial
             color="#ff8c20"
             transparent
@@ -309,10 +309,10 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Home: Inner warm glow (halved) ── */}
+      {/* ── Home: Inner warm glow ── */}
       {node.isHome && (
         <mesh>
-          <sphereGeometry args={[node.radius * 1.2, 28, 28]} />
+          <sphereGeometry args={[r * 1.2, 28, 28]} />
           <meshBasicMaterial
             color="#ffc83c"
             transparent
@@ -325,8 +325,8 @@ function NodeSphere({
 
       {/* ── Home: Bottom shadow ── */}
       {node.isHome && (
-        <mesh position={[0, -node.radius * 0.4, 0]}>
-          <sphereGeometry args={[node.radius * 1.1, 20, 20]} />
+        <mesh position={[0, -r * 0.4, 0]}>
+          <sphereGeometry args={[r * 1.1, 20, 20]} />
           <meshBasicMaterial
             color="#000000"
             transparent
@@ -336,10 +336,10 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Non-Home: Silver-white halo (small radius, blurred) ── */}
+      {/* ── Non-Home: Silver-white halo ── */}
       {!node.isHome && !isGhost && (
         <mesh>
-          <sphereGeometry args={[node.radius * 1.55, 24, 24]} />
+          <sphereGeometry args={[r * 1.55, 24, 24]} />
           <meshBasicMaterial
             color="#e0e8f0"
             transparent
@@ -350,10 +350,10 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Non-Home: Dark shadow beneath the node ── */}
+      {/* ── Non-Home: Dark shadow beneath ── */}
       {!node.isHome && !isGhost && (
-        <mesh position={[0, -node.radius * 0.35, 0]}>
-          <sphereGeometry args={[node.radius * 1.25, 20, 20]} />
+        <mesh position={[0, -r * 0.35, 0]}>
+          <sphereGeometry args={[r * 1.25, 20, 20]} />
           <meshBasicMaterial
             color="#000000"
             transparent
@@ -363,9 +363,9 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* Opaque border ring (slightly larger sphere behind) */}
+      {/* Opaque border ring */}
       <mesh ref={node.isHome ? glowRef : undefined}>
-        <sphereGeometry args={[node.radius * (node.isHome ? 1.18 : 1.12), 24, 24]} />
+        <sphereGeometry args={[r * (node.isHome ? 1.18 : 1.12), 24, 24]} />
         <meshBasicMaterial
           color={node.isHome ? color : "#d0d8e0"}
           transparent
@@ -373,29 +373,29 @@ function NodeSphere({
         />
       </mesh>
 
-      {/* Core sphere — matched to 2D: solid opaque fill with emissive glow */}
+      {/* Core sphere — solid opaque fill with strong emissive glow for color visibility */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
         onPointerOut={(e) => { e.stopPropagation(); onPointerOut(); }}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
-        <sphereGeometry args={[node.radius, 24, 24]} />
+        <sphereGeometry args={[r, 24, 24]} />
         <meshStandardMaterial
-          color={node.isHome ? color : color}
+          color={color}
           emissive={color}
-          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.7}
+          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.8}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.85 : 0.8}
-          roughness={node.isHome ? 0.2 : 0.35}
-          metalness={node.isHome ? 0.7 : 0.6}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.9 : 0.85}
+          roughness={node.isHome ? 0.15 : 0.25}
+          metalness={node.isHome ? 0.5 : 0.4}
         />
       </mesh>
 
-      {/* Inner bright core (white highlight — matching 2D) */}
+      {/* Inner bright core */}
       {!isGhost && (
         <mesh>
-          <sphereGeometry args={[node.radius * (node.isHome ? 0.35 : 0.5), 16, 16]} />
+          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.5), 16, 16]} />
           <meshBasicMaterial
             color="#ffffff"
             transparent
@@ -406,7 +406,7 @@ function NodeSphere({
       )}
 
       {(isSelected || isHovered) && (
-        <Billboard position={[0, -node.radius - 1.5, 0]}>
+        <Billboard position={[0, -r - 1.5, 0]}>
           <Text
             fontSize={node.isHome ? 1.2 : 0.63}
             color={isSelected || node.isHome ? "#ffdc64" : "#ffffffb3"}
