@@ -101,7 +101,19 @@ export function ParmenionDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); }, [fetchLogs, fetchAutopilotConfig]);
+  const fetchIkHistory = useCallback(async () => {
+    setIkLoading(true);
+    const { data } = await supabase
+      .from('analytics_events')
+      .select('id, created_at, event_data')
+      .eq('event_type', 'cms_action:iktracker')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (data) setIkHistory(data as any);
+    setIkLoading(false);
+  }, []);
+
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
