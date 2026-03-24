@@ -517,9 +517,6 @@ export default function MatricePrompt() {
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
           {/* Top bar */}
           <div className="flex items-center gap-3 mb-6">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/app/console')}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Console
-            </Button>
             <h1 className="text-xl font-bold">Matrice d'audit</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
             <div className="flex-1" />
@@ -560,12 +557,17 @@ export default function MatricePrompt() {
             </div>
           )}
 
-          {/* CSV Selector + Import + URL */}
-          <div className="flex flex-col gap-3 mb-6">
-            {/* Row 1: CSV batch selector + import */}
-            <div className="flex items-center gap-3">
-              <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
-              {batches.length > 0 ? (
+          {/* Import row: import button + explanation + batch selector */}
+          <div className="flex items-center gap-3 mb-4">
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2 shrink-0">
+              {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
+            </Button>
+            <p className="text-xs text-muted-foreground">Importez votre méthode d'audit dans un fichier .doc, .csv ou .xlsx.</p>
+            <div className="flex-1" />
+            {batches.length > 0 && (
+              <div className="flex items-center gap-2">
+                <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
                 <Select value={activeBatchId || ''} onValueChange={handleBatchChange}>
                   <SelectTrigger className="w-64">
                     <SelectValue placeholder="Sélectionner un CSV…" />
@@ -578,25 +580,18 @@ export default function MatricePrompt() {
                     ))}
                   </SelectContent>
                 </Select>
-              ) : (
-                <span className="text-sm text-muted-foreground">Aucun fichier importé</span>
-              )}
-              <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-xs text-muted-foreground">Importez votre méthode d'audit dans un fichier .doc, .csv ou .xlsx.</p>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2">
-                  {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
-                </Button>
+                {rows.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              {rows.length > 0 && (
-                <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            )}
+          </div>
 
-            {/* Row 2: URL + analyze */}
-            <div className="flex gap-2">
+          {/* URL + Analyze — centered, reduced width */}
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-2 w-full max-w-xl">
               <Input
                 placeholder="https://example.com"
                 value={url}
@@ -606,7 +601,7 @@ export default function MatricePrompt() {
               <Button
                 onClick={handleAnalyze}
                 disabled={analyzing || rows.length === 0}
-                className="gap-2 bg-purple-600 hover:bg-purple-700 text-white rounded-none"
+                className="gap-2 bg-purple-600 hover:bg-purple-700 text-white shrink-0"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 Analyser
