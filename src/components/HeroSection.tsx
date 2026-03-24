@@ -134,9 +134,12 @@ function HeroSectionComponent() {
               className="h-14 gap-2 border-amber-400 border-2 px-6 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
               <FileSearch className="h-5 w-5 text-amber-400" />
-              <span className="font-bold text-amber-400">
-                {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
-              </span>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="font-bold text-amber-400">
+                  {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
+                </span>
+                <span className="text-xs font-normal text-muted-foreground">Audit SEO-GEO. 5 min</span>
+              </div>
             </Button>
           </Link>
         </div>
