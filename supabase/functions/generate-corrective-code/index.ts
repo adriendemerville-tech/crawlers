@@ -109,8 +109,6 @@ async function fetchSiteSettings(siteUrl: string): Promise<SiteSettings> {
   const DEFAULT_SETTINGS: SiteSettings = { hasApiConnection: false, cmsType: null };
 
   try {
-    if (!supabaseUrl || !serviceKey) return DEFAULT_SETTINGS;
-
     const supabase = getServiceClient();
 
     // Normaliser le domaine depuis l'URL
@@ -2936,15 +2934,9 @@ Deno.serve(async (req) => {
     try {
       const authHeader = req.headers.get('Authorization') || '';
       if (authHeader) {
-        const supabaseUrl2 = Deno.env.get('SUPABASE_URL') || '';
-        const supabaseKey2 = Deno.env.get('SUPABASE_ANON_KEY') || '';
-        if (supabaseUrl2 && supabaseKey2) {
-          const sb2 = createClient(supabaseUrl2, supabaseKey2, {
-            global: { headers: { Authorization: authHeader } }
-          });
-          const { data: { user } } = await sb2.auth.getUser();
-          userId = user?.id || null;
-        }
+        const sb2 = getUserClient(authHeader);
+        const { data: { user } } = await sb2.auth.getUser();
+        userId = user?.id || null;
       }
     } catch { /* silent */ }
 
