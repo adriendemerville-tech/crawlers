@@ -1368,11 +1368,38 @@ Chaque phase est configurable indépendamment via des cases à cocher.
 |-------|------|
 | \`autopilot_configs\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
 | \`autopilot_modification_log\` | Registre de chaque modification (phase, action, URL, diff, statut) |
+| \`parmenion_decision_log\` | Registre décisionnel de Parménion (but, tactique, risque, impact, tokens, coût) |
+
+## Moteur d'exécution (autopilot-engine)
+
+L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invoqué par un **cron job quotidien** (3h UTC) via \`pg_cron\` + \`pg_net\`.
+
+### Pipeline d'exécution
+
+1. **Fetch** : Récupère toutes les \`autopilot_configs\` actives
+2. **Cooldown** : Vérifie le délai minimum (défaut 48h) depuis \`last_cycle_at\`
+3. **Orchestration** : Appelle \`parmenion-orchestrator\` (Gemini Flash)
+4. **Exécution** : Invoque les fonctions décidées
+5. **MAJ** : Met à jour compteurs et insère dans \`autopilot_modification_log\`
+
+### Parménion — Intelligence décisionnelle
+
+- **Modèle** : Gemini 2.5 Flash (escalade vers Pro si nécessaire)
+- **Raisonnement** : But → Tactique → Prudence (risque 1-5)
+- **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20%
+- **Apprentissage** : Boucle rétroaction T+30 via \`parmenion-feedback\`
+
+### Cron jobs
+
+| Cron | Fréquence | Fonction |
+|------|-----------|----------|
+| \`autopilot-engine-cycle\` | Quotidien 3h UTC | \`autopilot-engine\` |
+| \`refresh-serp-all\` | Hebdo | \`refresh-serp-all\` |
+| \`watchdog-scripts\` | 15 min | \`watchdog-scripts\` |
 
 ## Registre des modifications
 
 - Affiché en bas du dashboard "Mes sites" (créateurs uniquement)
-- Colonnes : statut (appliqué/rollback/échec/simulé), phase, action, cycle, URL, date
 - Historique des 50 dernières modifications par site
 `,
   },
