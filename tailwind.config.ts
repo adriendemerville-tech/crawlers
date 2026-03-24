@@ -129,6 +129,7 @@ export default {
         "shimmer": "shimmer 2.5s ease-in-out infinite",
         "shake": "shake 0.4s ease-in-out",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "autopilot-glow": "autopilot-glow 4s ease-in-out infinite",
       },
     },
   },
