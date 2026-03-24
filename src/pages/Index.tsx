@@ -766,8 +766,8 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
-              <div className="flex-shrink-0 w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20 flex items-center justify-center">
-                <Grid3X3 className="h-20 w-20 text-violet-500/60" />
+              <div className="flex-shrink-0 w-full md:w-[420px] rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
+                <img src={matriceScreenshot} alt="Matrice d'audit Crawlers" className="w-full h-auto" loading="lazy" />
               </div>
             </div>
           </div>
