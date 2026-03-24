@@ -109,26 +109,19 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const { data, error } = await supabase.functions.invoke('serpapi-actions', {
-          body: {
-            action: 'search-local',
-            query: value,
-            location: ownBusinessName ? `near ${ownBusinessName}` : undefined,
-            num: 5,
-          },
+        const { data, error } = await supabase.functions.invoke('gmb-places-autocomplete', {
+          body: { query: value },
         });
 
-        if (!error && data?.organic_results) {
-          const mapped: Competitor[] = data.organic_results.slice(0, 5).map((r: any, i: number) => ({
-            competitor_name: r.title || r.name || value,
-            competitor_address: r.address || r.snippet || '',
-            competitor_category: r.type || r.category || '',
-            competitor_website: r.link || r.website || '',
+        if (!error && data?.predictions) {
+          const mapped: Competitor[] = data.predictions.map((r: any, i: number) => ({
+            competitor_name: r.name || value,
+            competitor_place_id: r.place_id || '',
+            competitor_address: r.address || r.description || '',
+            competitor_category: r.category || '',
+            competitor_website: r.website || '',
             avg_rating: r.rating || 0,
-            total_reviews: r.reviews || 0,
+            total_reviews: r.reviews_count || 0,
             maps_position: i + 1,
             position_change: 0,
           }));
