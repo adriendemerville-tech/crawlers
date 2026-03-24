@@ -1000,6 +1000,16 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
           </div>
         </DialogContent>
       </Dialog>
+      <XlsxSheetSelector
+        open={xlsxSheetNames.length > 0}
+        sheetNames={xlsxSheetNames}
+        onSelect={(name) => {
+          setXlsxSheetNames([]);
+          xlsxPendingWorkbook?.processSheet(name);
+          setXlsxPendingWorkbook(null);
+        }}
+        onClose={() => { setXlsxSheetNames([]); setXlsxPendingWorkbook(null); }}
+      />
     </>
   );
 }
