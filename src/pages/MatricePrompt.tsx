@@ -331,8 +331,10 @@ export default function MatricePrompt() {
         axe: r.axe,
         poids: r.poids,
         crawlers_score: r.crawlers_score,
+        parsed_score: r.parsed_score ?? r.crawlers_score,
         detected_type: r.detected_type,
         raw_data: r.raw_data,
+        parsed_raw: r.parsed_raw,
         seuil_bon: r.seuil_bon,
         seuil_moyen: r.seuil_moyen,
         seuil_mauvais: r.seuil_mauvais,
@@ -403,9 +405,10 @@ export default function MatricePrompt() {
     const reportData = {
       kind: 'matrice' as const,
       url,
-      results,
+      results: results.map((r: any) => ({ ...r, score: r.crawlers_score })),
       totalWeight: tw,
       weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
+      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/rapport/matrice', '_blank');
@@ -415,6 +418,24 @@ export default function MatricePrompt() {
     if (score >= bon) return 'text-green-600';
     if (score >= moyen) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const AXE_COLORS: Record<string, string> = {
+    'Général': 'bg-slate-500/15 text-slate-600 border-slate-300',
+    'SEO': 'bg-blue-500/15 text-blue-600 border-blue-300',
+    'Performance': 'bg-orange-500/15 text-orange-600 border-orange-300',
+    'Sécurité': 'bg-red-500/15 text-red-600 border-red-300',
+    'Contenu': 'bg-emerald-500/15 text-emerald-600 border-emerald-300',
+    'Technique': 'bg-purple-500/15 text-purple-600 border-purple-300',
+    'UX': 'bg-pink-500/15 text-pink-600 border-pink-300',
+    'E-E-A-T': 'bg-amber-500/15 text-amber-600 border-amber-300',
+    'GEO': 'bg-cyan-500/15 text-cyan-600 border-cyan-300',
+    'Données structurées': 'bg-indigo-500/15 text-indigo-600 border-indigo-300',
+    'Maillage': 'bg-teal-500/15 text-teal-600 border-teal-300',
+  };
+
+  const getAxeBadgeClass = (axe: string) => {
+    return AXE_COLORS[axe] || 'bg-muted text-muted-foreground border-border';
   };
 
   if (adminLoading || authLoading) {
@@ -561,15 +582,15 @@ export default function MatricePrompt() {
                         aria-label="Tout sélectionner"
                       />
                     </TableHead>
-                    <TableHead>Prompt / KPI</TableHead>
+                    <TableHead>KPI</TableHead>
+                    <TableHead className="w-28">Catégorie</TableHead>
                     <TableHead className="w-20">Poids</TableHead>
-                    <TableHead className="w-28">Axe</TableHead>
                     <TableHead className="w-20">Bon</TableHead>
                     <TableHead className="w-20">Moyen</TableHead>
                     <TableHead className="w-20">Mauvais</TableHead>
-                    <TableHead className="w-36">Modèle</TableHead>
                     {results && <TableHead className="w-20">Type</TableHead>}
-                    {results && <TableHead className="w-24">Crawlers</TableHead>}
+                    {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
+                    {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -583,14 +604,17 @@ export default function MatricePrompt() {
                             onCheckedChange={() => toggleRow(row.id)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium text-sm max-w-xs truncate">{row.prompt}</TableCell>
+                        <TableCell className="font-medium text-sm max-w-xs">
+                          <span className="truncate block">{row.prompt}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
+                            {row.axe}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           {row.poids}
                           {row.isDefault.poids && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {row.axe}
-                          {row.isDefault.axe && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
                         <TableCell>
                           {row.seuil_bon}
@@ -604,10 +628,6 @@ export default function MatricePrompt() {
                           {row.seuil_mauvais}
                           {row.isDefault.seuil_mauvais && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">
-                          {row.llm_name}
-                          {row.isDefault.llm_name && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
                         {results && (
                           <TableCell>
                             {resultRow ? (
@@ -618,7 +638,12 @@ export default function MatricePrompt() {
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? `${resultRow.parsed_score}/100` : '—'}
+                          </TableCell>
+                        )}
+                        {results && (
+                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
                           </TableCell>
                         )}
@@ -634,10 +659,12 @@ export default function MatricePrompt() {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
                   const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
                   if (tw === 0) return null;
+                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw);
                   const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
                   return (
-                    <span className="ml-auto font-medium text-foreground">
-                      Score Crawlers pondéré : {crawlersScore}/100
+                    <span className="ml-auto font-medium text-foreground flex gap-4">
+                      <span>Parsé : {parsedScore}/100</span>
+                      <span className="text-primary">Crawlers : {crawlersScore}/100</span>
                     </span>
                   );
                 })()}

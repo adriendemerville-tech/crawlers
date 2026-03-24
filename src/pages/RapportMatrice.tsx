@@ -14,12 +14,15 @@ interface MatriceReportData {
     axe: string;
     poids: number;
     score: number;
+    parsed_score?: number;
+    crawlers_score?: number;
     seuil_bon: number;
     seuil_moyen: number;
     seuil_mauvais: number;
   }>;
   totalWeight: number;
   weightedScore: number;
+  parsedWeightedScore?: number;
 }
 
 function getScoreLabel(score: number, bon: number, moyen: number): string {
@@ -30,21 +33,26 @@ function getScoreLabel(score: number, bon: number, moyen: number): string {
 
 function generateMatriceHTML(data: MatriceReportData, branding?: { logoUrl?: string | null; primaryColor?: string | null }): string {
   const primary = branding?.primaryColor || '#6366f1';
-  const rows = data.results.map(r => `
+  const rows = data.results.map(r => {
+    const pScore = r.parsed_score ?? r.score;
+    const cScore = r.crawlers_score ?? r.score;
+    return `
     <tr>
       <td style="padding:8px;border-bottom:1px solid #eee;font-size:13px;">${r.prompt}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${r.axe}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;"><span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:11px;">${r.axe}</span></td>
       <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${r.poids}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:${r.score >= r.seuil_bon ? '#16a34a' : r.score >= r.seuil_moyen ? '#ca8a04' : '#dc2626'}">${r.score}/100</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${getScoreLabel(r.score, r.seuil_bon, r.seuil_moyen)}</td>
-    </tr>`).join('');
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:${pScore >= r.seuil_bon ? '#16a34a' : pScore >= r.seuil_moyen ? '#ca8a04' : '#dc2626'}">${pScore}/100</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:${cScore >= r.seuil_bon ? '#16a34a' : cScore >= r.seuil_moyen ? '#ca8a04' : '#dc2626'}">${cScore}/100</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${getScoreLabel(cScore, r.seuil_bon, r.seuil_moyen)}</td>
+    </tr>`;
+  }).join('');
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:40px;color:#1a1a2e;}table{width:100%;border-collapse:collapse;margin:24px 0;}th{background:${primary};color:white;padding:10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}h1{color:${primary};font-size:22px;}h2{font-size:16px;margin-top:32px;color:#555;}</style></head><body>
     ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="height:32px;margin-bottom:16px;" />` : ''}
     <h1>Rapport Matrice d'audit</h1>
     <p style="color:#666;font-size:14px;">URL analysée : <strong>${data.url}</strong></p>
-    <p style="font-size:18px;margin:16px 0;">Score pondéré global : <strong style="color:${primary}">${data.weightedScore}/100</strong></p>
-    <table><thead><tr><th>Prompt / KPI</th><th>Axe</th><th>Poids</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
+    <p style="font-size:18px;margin:16px 0;">Score Parsé : <strong>${data.parsedWeightedScore ?? data.weightedScore}/100</strong> — Score Crawlers : <strong style="color:${primary}">${data.weightedScore}/100</strong></p>
+    <table><thead><tr><th>KPI</th><th>Catégorie</th><th>Poids</th><th>Parsé</th><th>Crawlers</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
     <p style="color:#999;font-size:11px;margin-top:40px;">Généré par ${branding?.logoUrl ? '' : 'Crawlers AI — '}${new Date().toLocaleDateString('fr-FR')}</p>
   </body></html>`;
 }
