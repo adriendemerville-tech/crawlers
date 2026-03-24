@@ -83,6 +83,7 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
+  <GlobalErrorBoundary>
   <Suspense fallback={null}>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
