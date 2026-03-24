@@ -190,8 +190,9 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
   const [csvRawRows, setCsvRawRows] = useState<Record<string, string>[]>([]);
   const [pendingFileName, setPendingFileName] = useState('');
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
-  const [xlsxSheetNames, setXlsxSheetNames] = useState<string[]>([]);
-  const [xlsxPendingWorkbook, setXlsxPendingWorkbook] = useState<{ workbook: any; processSheet: (name: string) => void } | null>(null);
+  const [xlsxStepperOpen, setXlsxStepperOpen] = useState(false);
+  const [xlsxStepperSheets, setXlsxStepperSheets] = useState<string[]>([]);
+  const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
 
   // URL audit state
   const [auditUrl, setAuditUrl] = useState('');
