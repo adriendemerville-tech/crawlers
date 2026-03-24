@@ -716,15 +716,19 @@ Réponds UNIQUEMENT en JSON :
     const currentVersion = champion?.version || 0
     const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.'
 
-    // Determine evidence basis
-    // Evidence basis: now factors in GA4 coverage
+    // Determine evidence basis — adaptive to available data sources
+    // Sites without GSC/GA4 can still be evaluated using crawl + PageSpeed + audit data
+    const hasGSC = reliability.snapshots_with_gsc >= 3
+    const hasGA4 = reliability.snapshots_with_ga4 >= 2
+    const hasEnoughSnapshots = reliability.total_snapshots >= 3
+
     let evidenceBasis: AgentDecision['evidence_basis'] = 'insufficient_data'
     if (reliability.snapshots_with_gsc >= 5 && reliability.total_snapshots >= 10) {
       evidenceBasis = 'real_data'
-    } else if (reliability.snapshots_with_gsc >= 3 && reliability.snapshots_with_ga4 >= 2) {
-      // GA4 can supplement insufficient GSC to reach 'real_data' threshold
+    } else if (hasGSC && hasGA4) {
       evidenceBasis = 'real_data'
-    } else if (reliability.total_snapshots >= 3) {
+    } else if (hasEnoughSnapshots) {
+      // Sites without GSC/GA4: crawl data, PageSpeed, audit scores are valid heuristics
       evidenceBasis = 'heuristic'
     }
 
