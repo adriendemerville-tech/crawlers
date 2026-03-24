@@ -186,6 +186,12 @@ export default function MatricePrompt() {
       toast.info(`Colonnes ignorées : ${mappingResult.unmapped.join(', ')}`, { duration: 4000 });
     }
 
+    // Store reverse mapping: field → original column header for dynamic labels
+    const labels: Record<string, string> = {};
+    for (const [header, mapping] of Object.entries(mappingResult.mappings)) {
+      labels[mapping.field] = header;
+    }
+    setColumnLabels(labels);
     // Step 2: Transform rows using the mapping
     const transformedRows = transformRows(rawRows, mappingResult);
 
