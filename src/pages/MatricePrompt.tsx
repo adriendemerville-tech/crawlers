@@ -832,7 +832,7 @@ export default function MatricePrompt() {
                         {results && (
                           <TableCell>
                             {resultRow ? (
-                              <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                              <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${getTypeBadgeClass(resultRow.detected_type)}`}>
                                 {resultRow.detected_type || '—'}
                               </Badge>
                             ) : '—'}
