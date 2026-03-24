@@ -202,7 +202,7 @@ const ProductShowcaseSection = memo(() => {
       description: language === 'fr'
         ? 'Gérez vos fiches Google Business Profile directement depuis Crawlers. Suivez vos avis, répondez aux clients et analysez la concurrence locale — le tout intégré à votre stratégie SEO globale.'
         : 'Manage your Google Business Profile listings directly from Crawlers. Track reviews, respond to customers and analyze local competition — all integrated into your global SEO strategy.',
-      badge: 'GBP',
+      badge: 'GMB',
       badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
       icon: MapPin,
       tiltDirection: 'right' as const,
@@ -211,13 +211,13 @@ const ProductShowcaseSection = memo(() => {
             'Gestion multi-établissements (Paris, Lyon…)',
             'Suivi des avis et réponses directement depuis la console',
             'Analyse de la concurrence locale par zone',
-            'Statistiques d\'engagement et visibilité GBP',
+            'Statistiques d\'engagement et visibilité GMB',
           ]
         : [
             'Multi-location management (Paris, Lyon…)',
             'Review tracking and responses directly from the console',
             'Local competition analysis by area',
-            'GBP engagement and visibility statistics',
+            'GMB engagement and visibility statistics',
           ],
     },
   ];
