@@ -6,11 +6,11 @@ import {
   BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap, Code2, Lock
 } from 'lucide-react';
 
-import consoleDashboard from '@/assets/screenshots/console-dashboard.png';
-import cocoonGraph from '@/assets/screenshots/cocoon-graph.png';
-import keywordsAudit from '@/assets/screenshots/keywords-audit.png';
-import architectCode from '@/assets/screenshots/architect-code.png';
-import gmbReviews from '@/assets/screenshots/gmb-reviews.png';
+import consoleDashboard from '@/assets/screenshots/crawlers.fr_console-seo-monitoring-dashboard.png';
+import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.png';
+import keywordsAudit from '@/assets/screenshots/crawlers.fr_intelligence-mots-cles-seo.png';
+import architectCode from '@/assets/screenshots/crawlers.fr_architecte-code-correctif-seo.png';
+import gmbReviews from '@/assets/screenshots/crawlers.fr_google-business-profile-avis.png';
 
 /** Animated screenshot card with 3D perspective tilt */
 function ShowcaseCard({
