@@ -1008,8 +1008,8 @@ export function ExpertAuditDashboard() {
       setStrategicResult(strategicData);
       setStrategicProgressiveReveal(true);
       // Store cached context for fast relaunches (competitor corrections, etc.)
-      if (data.data._cachedContext) {
-        setStrategicCachedContext(data.data._cachedContext);
+      if (data._cachedContext) {
+        setStrategicCachedContext(data._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       // Signal expert audit completion for signup prompt
