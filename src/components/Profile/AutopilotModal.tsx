@@ -332,12 +332,17 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
           <div className="flex items-center gap-2 pt-2">
             {configId && (
               <Button
-                variant={isActive ? 'destructive' : 'success'}
+                variant={isActive ? 'destructive' : 'default'}
                 size="sm"
-                onClick={() => setIsActive(!isActive)}
-                className="gap-1.5"
+                disabled={toggling}
+                onClick={handleToggleActive}
+                className={`gap-1.5 transition-all duration-500 ${
+                  isActive
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 animate-autopilot-glow'
+                    : ''
+                }`}
               >
-                {isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                 {isActive ? 'Désactiver' : 'Activer'}
               </Button>
             )}
