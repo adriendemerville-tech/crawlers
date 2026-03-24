@@ -841,17 +841,17 @@ export default function MatricePrompt() {
         </main>
       </div>
       <MatriceHelpModal open={showHelp} onOpenChange={setShowHelp} />
-      <XlsxSheetSelector
-        open={xlsxSheetNames.length > 0}
-        sheetNames={xlsxSheetNames}
-        onSelect={async (name) => {
-          setXlsxSheetNames([]);
-          if (xlsxWorkbookRef) {
-            await processXlsxSheet(xlsxWorkbookRef, name, xlsxFileName);
-            setXlsxWorkbookRef(null);
-          }
+      <ImportStepper
+        open={xlsxStepperOpen}
+        sheetNames={xlsxStepperSheets}
+        workbook={xlsxWorkbookRef}
+        onComplete={({ rows, matriceType }) => {
+          setXlsxStepperOpen(false);
+          setActiveMatriceType(matriceType);
+          processImportedRows(rows, xlsxFileName);
+          setXlsxWorkbookRef(null);
         }}
-        onClose={() => { setXlsxSheetNames([]); setXlsxWorkbookRef(null); }}
+        onClose={() => { setXlsxStepperOpen(false); setXlsxWorkbookRef(null); }}
       />
     </>
   );
