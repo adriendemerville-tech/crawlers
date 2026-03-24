@@ -93,9 +93,7 @@ const AIAgentsSection = memo(() => {
           <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             {/* Icon */}
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-primary/20 border border-primary/20">
-                <MessageCircle className="h-7 w-7 text-primary" />
-              </div>
+              <VioletRoundCrawlersLogo size={56} />
               <div>
                 <h3 className="text-2xl font-bold text-foreground font-display">Félix</h3>
                 <p className="text-sm text-muted-foreground">
