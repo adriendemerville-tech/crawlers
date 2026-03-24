@@ -109,11 +109,6 @@ function HeroSectionComponent() {
               : "La seule plateforme européenne qui couvre le SEO classique, le GEO (Generative Engine Optimization) et le SEO local dans un seul outil."}
         </p>
 
-        {/* Audit Expert info */}
-        <p className="text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
-          {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
-        </p>
-
         {/* URL input + CTA Audit Expert */}
         <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
           <div className="flex-1 relative">
