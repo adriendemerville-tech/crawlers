@@ -17,7 +17,7 @@ interface TrackedSite {
 interface CmsConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix';
+  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo';
 }
 
 const translations = {
