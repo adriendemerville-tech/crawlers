@@ -423,7 +423,19 @@ IMPORTANT: L'utilisateur a sélectionné plusieurs pages pour une analyse compar
    - ✨ **Quick Wins** : actions rapides à fort impact
 4. Conclure avec des recommandations concrètes de maillage interne` : '';
 
-    const systemPrompt = basePrompt + analysisPrompt;
+    const subdomainPrompt = subdomainMode ? `
+
+ANALYSE CROSS-SUBDOMAIN ACTIVÉE :
+Tu as reçu les données d'analyse des sous-domaines. Présente le diagnostic comme SI C'ÉTAIT TOI qui avais scanné le domaine.
+- Commence par le score d'architecture et le type (monolithique/distribué/hybride)
+- Liste les sous-domaines découverts avec leur taille
+- Identifie les risques de cannibalization entre sous-domaines
+- Propose des recommandations concrètes : fusionner sous-domaines en répertoires, redirections, consolidation
+- Utilise le même ton conversationnel que le mode stratège
+- Recommande-toi de "nos algorithmes de cartographie" — ne mentionne jamais Firecrawl
+LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).` : '';
+
+    const systemPrompt = basePrompt + analysisPrompt + subdomainPrompt;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
