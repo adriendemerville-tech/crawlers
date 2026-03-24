@@ -216,7 +216,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`gmb_posts\` | Publications GMB | \`gmb_location_id\`, \`post_type\` (STANDARD/EVENT/OFFER), \`summary\`, \`status\`, \`published_at\` |
 | \`gmb_performance\` | Stats hebdomadaires | \`gmb_location_id\`, \`week_start_date\`, \`search_views\`, \`maps_views\`, \`website_clicks\`, \`phone_calls\`, \`avg_rating\` |
 | \`gmb_tracked_keywords\` | Mots-clés locaux suivis (Suggestions KW) | \`tracked_site_id\`, \`keyword\`, \`source\`, \`search_volume\`, \`current_position\`, \`last_checked_at\` |
-| \`gmb_local_competitors\` | Snapshots hebdo concurrents Google Maps | \`gmb_location_id\`, \`competitor_name\`, \`competitor_place_id\`, \`maps_position\`, \`position_change\`, \`avg_rating\`, \`total_reviews\`, \`snapshot_week\` |
+| \`gmb_local_competitors\` | Concurrents Google Maps via Google Places API | \`gmb_location_id\`, \`competitor_name\`, \`competitor_place_id\`, \`maps_position\`, \`position_change\`, \`avg_rating\`, \`total_reviews\`, \`snapshot_week\` |
 
 ### CMS & Intégrations
 
