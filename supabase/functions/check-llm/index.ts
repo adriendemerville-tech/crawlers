@@ -298,13 +298,25 @@ Deno.serve(async (req) => {
       console.warn('[check-llm] Could not fetch site context:', e);
     }
 
-    // Query all LLMs with staggered delays to avoid 429 rate limiting
-    const citationPromises = LLM_PROVIDERS.map(async (provider, index) => {
+    // Filter providers if targetProvider is specified
+    const activeProviders = targetProvider
+      ? LLM_PROVIDERS.filter(p => p.id.toLowerCase().includes(targetProvider.toLowerCase()) || p.name.toLowerCase().includes(targetProvider.toLowerCase()) || p.company.toLowerCase().includes(targetProvider.toLowerCase()))
+      : LLM_PROVIDERS;
+    const providersToQuery = activeProviders.length > 0 ? activeProviders : LLM_PROVIDERS;
+
+    // Query LLMs with staggered delays to avoid 429 rate limiting
+    const citationPromises = providersToQuery.map(async (provider, index) => {
       // Stagger requests by 250ms each to avoid overwhelming OpenRouter
       await delay(index * 250);
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
-      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext, siteContextStr);
+      // Use customPrompt if provided, otherwise use standard prompt
+      const effectivePrompt = customPrompt
+        ? `${customPrompt}\n\nRéponds au format JSON :\n{"cited": boolean, "sentiment": "positive"|"mostly_positive"|"neutral"|"mixed"|"negative", "recommends": boolean, "summary": "string", "coreValueMatch": boolean, "hallucinations": []}`
+        : undefined;
+      const result = effectivePrompt
+        ? await queryLLMWithCustomPrompt(apiKey, provider.model, effectivePrompt)
+        : await queryLLM(apiKey, provider.model, domain, lang, correctionContext, siteContextStr);
       const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
 
       return {
