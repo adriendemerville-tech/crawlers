@@ -315,6 +315,30 @@ export default function MatricePrompt() {
     e.target.value = '';
   }, [user, processImportedRows]);
 
+  /* --- Sorting --- */
+  type SortField = 'prompt' | 'axe' | 'poids' | 'seuil_bon' | 'seuil_moyen' | 'seuil_mauvais';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortField) return rows;
+    return [...rows].sort((a, b) => {
+      const va = a[sortField];
+      const vb = b[sortField];
+      const cmp = typeof va === 'string' ? va.localeCompare(vb as string, 'fr') : (va as number) - (vb as number);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [rows, sortField, sortDir]);
+
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
   const someSelected = rows.some(r => r.selected);
