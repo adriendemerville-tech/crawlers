@@ -260,13 +260,17 @@ const features = [
 
 const FeatureShowcase = memo(() => {
   const { language } = useLanguage();
+  const { isAdmin } = useAdmin();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
-  const items = [
+  const allItems = [
     { title: t.feat1Title, desc: t.feat1Desc, cta: t.feat1Cta },
     { title: t.feat2Title, desc: t.feat2Desc, cta: t.feat2Cta },
     { title: t.feat3Title, desc: t.feat3Desc, cta: t.feat3Cta },
     { title: t.feat4Title, desc: t.feat4Desc, cta: t.feat4Cta },
   ];
+  // Hide Matrice (index 3) for non-admins
+  const visibleFeatures = isAdmin ? features : features.filter((_, i) => i !== 3);
+  const items = isAdmin ? allItems : allItems.filter((_, i) => i !== 3);
 
   return (
     <section className="py-16 md:py-24">
