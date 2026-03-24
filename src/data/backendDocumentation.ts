@@ -424,6 +424,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`google-ads-connector\` | ✅ | OAuth2 Google Ads + données campagnes |
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
 | \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
+| \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
 | \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
