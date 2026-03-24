@@ -242,6 +242,8 @@ const MomentumSection = memo(() => {
           ))}
         </div>
 
+        {/* AI Bots Lead Magnet */}
+        <AIBotsLeadMagnet />
       </div>
     </section>
   );
