@@ -288,6 +288,7 @@ const labels = {
     optimize: 'Optimizar enlaces',
     strategy: 'Estrategia 360°',
     strategyBtn: 'Diagnóstico y Estrategia',
+    subdomains: 'Subdominios',
   },
 };
 
