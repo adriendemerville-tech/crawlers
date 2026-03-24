@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle, RefreshCw } from 'lucide-react';
+import cmsWordpress from '@/assets/cms-wordpress.png';
+import cmsShopify from '@/assets/cms-shopify.png';
+import cmsWix from '@/assets/cms-wix.png';
+import cmsPrestashop from '@/assets/cms-prestashop.png';
+import cmsGtm from '@/assets/cms-gtm.png';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
