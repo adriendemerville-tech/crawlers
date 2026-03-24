@@ -1301,7 +1301,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
     id: 'autopilot',
     title: 'Autopilote (Créateur)',
     icon: 'Package',
-    content: \`
+    content: `
 # Autopilote — Pipeline d'Automation SEO
 
 ## Accès
@@ -1314,9 +1314,9 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 
 Pipeline cumulatif en 3 phases séquentielles :
 
-\\\`\\\`\\\`
+\`\`\`
 Diagnostic → Prescription → Implémentation
-\\\`\\\`\\\`
+\`\`\`
 
 Chaque phase est configurable indépendamment via des cases à cocher.
 
@@ -1326,17 +1326,17 @@ Chaque phase est configurable indépendamment via des cases à cocher.
 
 | Option | Description | Fonction backend |
 |--------|-------------|-----------------|
-| Audit complet | SEO + Performance + GEO + LLM | \\\`check-crawlers\\\`, \\\`check-pagespeed\\\`, \\\`check-geo\\\`, \\\`check-llm\\\` |
-| Crawl | Crawl technique du site | \\\`crawl-site\\\` |
-| Stratège Cocoon | Analyse du maillage interne | \\\`cocoon-strategist\\\` |
+| Audit complet | SEO + Performance + GEO + LLM | \`check-crawlers\`, \`check-pagespeed\`, \`check-geo\`, \`check-llm\` |
+| Crawl | Crawl technique du site | \`crawl-site\` |
+| Stratège Cocoon | Analyse du maillage interne | \`cocoon-strategist\` |
 
 ### 2. Prescription (multi-select)
 
 | Option | Description | Fonction backend |
 |--------|-------------|-----------------|
-| Stratège Cocoon | Recommandations maillage | \\\`cocoon-strategist\\\` |
-| Architect | Génération de code correctif | \\\`generate-corrective-code\\\` |
-| Content Architect | Optimisation contenu éditorial | \\\`content-architect\\\` |
+| Stratège Cocoon | Recommandations maillage | \`cocoon-strategist\` |
+| Architect | Génération de code correctif | \`generate-corrective-code\` |
+| Content Architect | Optimisation contenu éditorial | \`content-architect\` |
 
 ### 3. Implémentation (single-select)
 
@@ -1359,22 +1359,22 @@ Chaque phase est configurable indépendamment via des cases à cocher.
 
 ## Interdictions strictes
 
-- ❌ **Suppression de pages** : L'autopilote ne peut JAMAIS supprimer une page
-- ❌ **Charte graphique** : Aucune modification du design/CSS/thème du site
+- **Suppression de pages** : L'autopilote ne peut JAMAIS supprimer une page
+- **Charte graphique** : Aucune modification du design/CSS/thème du site
 
 ## Tables
 
 | Table | Rôle |
 |-------|------|
-| \\\`autopilot_configs\\\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
-| \\\`autopilot_modification_log\\\` | Registre de chaque modification (phase, action, URL, diff, statut) |
+| \`autopilot_configs\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
+| \`autopilot_modification_log\` | Registre de chaque modification (phase, action, URL, diff, statut) |
 
 ## Registre des modifications
 
 - Affiché en bas du dashboard "Mes sites" (créateurs uniquement)
 - Colonnes : statut (appliqué/rollback/échec/simulé), phase, action, cycle, URL, date
 - Historique des 50 dernières modifications par site
-\`,
+`,
   },
 ];
 
