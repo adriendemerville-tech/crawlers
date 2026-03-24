@@ -432,8 +432,10 @@ interface ItemInput {
 interface ItemResult {
   id: string; prompt: string; axe: string; poids: number
   detected_type: ItemType
-  crawlers_score: number  // 0-100
+  crawlers_score: number  // 0-100 (engine)
+  parsed_score: number    // 0-100 (LLM evaluation of user's prompt)
   raw_data: Record<string, any>
+  parsed_raw?: Record<string, any>
   seuil_bon: number; seuil_moyen: number; seuil_mauvais: number
 }
 
