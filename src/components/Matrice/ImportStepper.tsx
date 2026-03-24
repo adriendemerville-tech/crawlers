@@ -47,6 +47,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
 
+  // Reset state when modal opens with new data
+  const prevOpenRef = useState(false);
+  useMemo(() => {
+    if (open && sheetNames.length > 0) {
+      setStep(sheetNames.length > 1 ? 'sheet' : 'type');
+      setSelectedSheet(sheetNames[0] || '');
+      setSelectedType(null);
+      setHeaders([]);
+      setRawRows([]);
+      setDetection(null);
+      setCleaning(null);
+    }
+  }, [open, sheetNames]);
+
   const currentStepIndex = STEPS.findIndex(s => s.key === step);
 
   // ── Sheet selection ────────────────────────────────────────────────
