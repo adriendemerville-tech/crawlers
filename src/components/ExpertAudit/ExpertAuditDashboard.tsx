@@ -1095,18 +1095,33 @@ export function ExpertAuditDashboard() {
       if (!recovered) {
         // Step 2: Full retry
         try {
-          console.log('Strategic audit: auto-retrying...');
-          const retryData = await invokeWithTimeout('audit-strategique-ia', {
+          console.log('Strategic audit: auto-retrying (async mode)...');
+          const retryLaunch = await invokeWithTimeout('audit-strategique-ia', {
             url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
             cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
-          });
-          const strategicData = mapStrategicData(retryData.data, normalizedUrl, hallucinationCorrections);
+            async: true,
+          }, 30000);
+
+          if (!retryLaunch.job_id) throw new Error('No job_id on retry');
+
+          const retryJobId = retryLaunch.job_id;
+          const retryPollStart = Date.now();
+          let retryData: any = null;
+          while (Date.now() - retryPollStart < 10 * 60 * 1000) {
+            await new Promise(r => setTimeout(r, 5000));
+            const { data: job } = await supabase.from('async_jobs').select('status, result_data, error_message').eq('id', retryJobId).single();
+            if (job?.status === 'completed' && job.result_data) { retryData = job.result_data; break; }
+            if (job?.status === 'failed') throw new Error(job.error_message || 'Retry job failed');
+          }
+          if (!retryData) throw new Error('Retry timeout');
+
+          const strategicData = mapStrategicData(retryData, normalizedUrl, hallucinationCorrections);
 
           setResult(strategicData);
           setStrategicResult(strategicData);
           setStrategicProgressiveReveal(true);
-          if (retryData.data._cachedContext) {
-            setStrategicCachedContext(retryData.data._cachedContext);
+          if (retryData._cachedContext) {
+            setStrategicCachedContext(retryData._cachedContext);
           }
           setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
           setHallucinationDiagnosis(null);
