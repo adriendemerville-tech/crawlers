@@ -71,7 +71,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ## 3. Architecture Frontend
 
-### 3.1 Pages (36 pages)
+### 3.1 Pages (40 pages)
 
 | Catégorie | Pages |
 |-----------|-------|
