@@ -956,14 +956,50 @@ export function ExpertAuditDashboard() {
     
     try {
       
-      const data = await invokeWithTimeout('audit-strategique-ia', { 
+      // Use async mode: submit job, then poll for completion (avoids HTTP timeout)
+      const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
         url: normalizedUrl, 
         toolsData: null,
         hallucinationCorrections: hallucinationCorrections || null,
         competitorCorrections: competitorCorrections || null,
         cachedContext: useCachedContext ? strategicCachedContext : null,
         lang: language,
-      });
+        async: true,
+      }, 30000); // 30s timeout just for the initial submission
+
+      if (!launchResp.job_id) throw new Error('No job_id returned from async audit');
+
+      // Poll async_jobs table until completion (max 10 minutes)
+      const jobId = launchResp.job_id;
+      const pollStart = Date.now();
+      const MAX_POLL_MS = 10 * 60 * 1000; // 10 min
+      let data: any = null;
+
+      while (Date.now() - pollStart < MAX_POLL_MS) {
+        await new Promise(r => setTimeout(r, 5000)); // poll every 5s
+
+        const { data: job, error: jobErr } = await supabase
+          .from('async_jobs')
+          .select('status, result_data, error_message, progress')
+          .eq('id', jobId)
+          .single();
+
+        if (jobErr) {
+          console.warn('[strategic-poll] query error:', jobErr);
+          continue;
+        }
+
+        if (job?.status === 'completed' && job.result_data) {
+          data = job.result_data as any;
+          break;
+        }
+
+        if (job?.status === 'failed') {
+          throw new Error(job.error_message || 'Audit job failed');
+        }
+      }
+
+      if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
