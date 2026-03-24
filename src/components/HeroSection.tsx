@@ -1,8 +1,9 @@
 import { useState, useEffect, memo, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileSearch } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { FileSearch, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
@@ -15,6 +16,8 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent() {
   const { language } = useLanguage();
+  const navigate = useNavigate();
+  const [url, setUrl] = useState('');
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -111,16 +114,32 @@ function HeroSectionComponent() {
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
-        {/* CTA Audit Expert — golden border */}
-        <div className="mt-6 flex justify-center">
-          <Link to="/audit-expert">
+        {/* URL input + CTA Audit Expert */}
+        <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
+          <div className="flex-1 relative">
+            <Input
+              type="text"
+              placeholder="url : crawlers.fr"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && url.trim()) {
+                  navigate(`/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}`);
+                }
+              }}
+              className="h-14 pl-4 pr-12 text-base placeholder:text-xs placeholder:font-light placeholder:text-muted-foreground/50"
+              aria-label="URL du site web"
+            />
+            <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          </div>
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}` : '/audit-expert'}>
             <Button
               variant="outline"
               size="lg"
-              className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-8 py-4 text-lg shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+              className="h-14 gap-2 border-amber-400 border-2 px-6 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
-              <FileSearch className="h-5 w-5 text-primary" />
-              <span className="font-bold text-foreground">
+              <FileSearch className="h-5 w-5 text-amber-400" />
+              <span className="font-bold text-amber-400">
                 {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
               </span>
             </Button>
