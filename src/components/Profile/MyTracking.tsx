@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, Bar, BarChart, ComposedChart } from 'recharts';
@@ -215,6 +216,7 @@ export function MyTracking() {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
+  const { isDemoMode } = useDemoMode();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1133,7 +1135,7 @@ export function MyTracking() {
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Autopilot button — creator only */}
-                      {isAdmin && (
+                      {isAdmin && !isDemoMode && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -2055,7 +2057,7 @@ export function MyTracking() {
       )}
 
       {/* Autopilot Modal */}
-      {currentSite && isAdmin && (
+      {currentSite && isAdmin && !isDemoMode && (
         <AutopilotModal
           open={showAutopilotModal}
           onOpenChange={setShowAutopilotModal}
@@ -2065,7 +2067,7 @@ export function MyTracking() {
       )}
 
       {/* Modification Registry */}
-      {isAdmin && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
+      {isAdmin && !isDemoMode && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
     </div>
   );
 }
