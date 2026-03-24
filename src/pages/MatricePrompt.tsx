@@ -142,6 +142,42 @@ export default function MatricePrompt() {
     })();
   }, [user]);
 
+  // Demo mode: inject simulated data for screenshots
+  useEffect(() => {
+    if (!isDemoMode || rows.length > 0) return;
+    const demoRows: MatrixRow[] = [
+      { id: 'd-1', prompt: 'Balise Title optimisée (longueur, mot-clé principal)', poids: 3, axe: 'SEO', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-2', prompt: 'Meta Description unique et incitative', poids: 2, axe: 'SEO', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-3', prompt: 'Données structurées Schema.org (JSON-LD)', poids: 3, axe: 'Données structurées', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-4', prompt: 'Score E-E-A-T (Expertise, Expérience, Autorité, Fiabilité)', poids: 4, axe: 'E-E-A-T', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-5', prompt: 'Qualité du contenu (profondeur, pertinence, originalité)', poids: 4, axe: 'Contenu', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-6', prompt: 'Temps de chargement (LCP < 2.5s)', poids: 2, axe: 'Performance', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-7', prompt: 'Certificat SSL / HTTPS', poids: 1, axe: 'Sécurité', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-8', prompt: 'Robots.txt et directives d\'indexation', poids: 2, axe: 'Technique', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-9', prompt: 'Accessibilité des images (alt text)', poids: 2, axe: 'SEO', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-10', prompt: 'Maillage interne (liens contextuels pertinents)', poids: 3, axe: 'Maillage', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+      { id: 'd-11', prompt: 'Visibilité LLM — citation par ChatGPT / Perplexity', poids: 4, axe: 'GEO', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: 'openai/gpt-5', selected: true, isDefault: {} },
+      { id: 'd-12', prompt: 'UX Mobile (responsive, touch targets)', poids: 2, axe: 'UX', seuil_bon: 70, seuil_moyen: 40, seuil_mauvais: 0, llm_name: '', selected: true, isDefault: {} },
+    ];
+    const demoResults = [
+      { id: 'd-1', prompt: demoRows[0].prompt, poids: 3, detected_type: 'meta-tags', parsed_score: 85, crawlers_score: 85 },
+      { id: 'd-2', prompt: demoRows[1].prompt, poids: 2, detected_type: 'meta-tags', parsed_score: 72, crawlers_score: 78 },
+      { id: 'd-3', prompt: demoRows[2].prompt, poids: 3, detected_type: 'structured-data', parsed_score: 90, crawlers_score: 92 },
+      { id: 'd-4', prompt: demoRows[3].prompt, poids: 4, detected_type: 'eeat', parsed_score: 65, crawlers_score: 71 },
+      { id: 'd-5', prompt: demoRows[4].prompt, poids: 4, detected_type: 'content-quality', parsed_score: 78, crawlers_score: 82 },
+      { id: 'd-6', prompt: demoRows[5].prompt, poids: 2, detected_type: 'pagespeed', parsed_score: 55, crawlers_score: 60 },
+      { id: 'd-7', prompt: demoRows[6].prompt, poids: 1, detected_type: 'robots', parsed_score: 100, crawlers_score: 100 },
+      { id: 'd-8', prompt: demoRows[7].prompt, poids: 2, detected_type: 'robots', parsed_score: 88, crawlers_score: 88 },
+      { id: 'd-9', prompt: demoRows[8].prompt, poids: 2, detected_type: 'images', parsed_score: 45, crawlers_score: 52 },
+      { id: 'd-10', prompt: demoRows[9].prompt, poids: 3, detected_type: 'cocoon', parsed_score: 62, crawlers_score: 68 },
+      { id: 'd-11', prompt: demoRows[10].prompt, poids: 4, detected_type: 'check-llm', parsed_score: 35, crawlers_score: 42 },
+      { id: 'd-12', prompt: demoRows[11].prompt, poids: 2, detected_type: 'pagespeed', parsed_score: 70, crawlers_score: 74 },
+    ];
+    setRows(demoRows);
+    setResults(demoResults);
+    setUrl('https://example.com');
+  }, [isDemoMode, rows.length]);
+
   // Load a specific batch's prompts
   const loadBatch = async (batchId: string) => {
     if (!user) return;
