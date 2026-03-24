@@ -414,6 +414,95 @@ export function ParmenionDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* IKTracker History */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4 text-primary" />
+                Historique IKTracker
+              </CardTitle>
+              <CardDescription>Actions CMS effectuées sur iktracker.fr</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={fetchIkHistory}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {ikLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+              Chargement…
+            </div>
+          ) : ikHistory.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Globe className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Aucune action IKTracker enregistrée</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[350px] pr-4">
+              <div className="space-y-2">
+                {ikHistory.map((ev) => {
+                  const d = ev.event_data || {};
+                  const action = (d.action as string) || '—';
+                  const slug = (d.slug as string) || (d.page_key as string) || '';
+                  const title = (d.title as string) || '';
+                  const updatesKeys = (d.updates_keys as string[]) || [];
+                  const responseStatus = d.response_status as number | undefined;
+
+                  const actionIcon = action.startsWith('create') ? PlusCircle
+                    : action.startsWith('update') ? Pencil
+                    : action.startsWith('delete') ? Trash
+                    : action.startsWith('list') ? Eye
+                    : FileText;
+
+                  const ActionIcon = actionIcon;
+
+                  const actionColor = action.startsWith('create') ? 'text-green-600'
+                    : action.startsWith('update') ? 'text-amber-600'
+                    : action.startsWith('delete') ? 'text-destructive'
+                    : 'text-muted-foreground';
+
+                  return (
+                    <div key={ev.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+                      <ActionIcon className={cn('h-4 w-4 mt-0.5 shrink-0', actionColor)} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium font-mono text-xs">{action}</span>
+                          {slug && (
+                            <Badge variant="secondary" className="text-[10px] font-mono truncate max-w-[200px]">
+                              {slug}
+                            </Badge>
+                          )}
+                          {title && (
+                            <span className="text-xs text-muted-foreground truncate">« {title} »</span>
+                          )}
+                          {responseStatus && (
+                            <Badge variant="outline" className={cn('text-[10px]', responseStatus < 300 ? 'text-green-600 border-green-500/40' : 'text-destructive border-destructive/40')}>
+                              {responseStatus}
+                            </Badge>
+                          )}
+                        </div>
+                        {updatesKeys.length > 0 && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Champs modifiés : {updatesKeys.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                        {new Date(ev.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
