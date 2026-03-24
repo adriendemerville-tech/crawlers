@@ -2057,7 +2057,7 @@ export function MyTracking() {
       )}
 
       {/* Autopilot Modal */}
-      {currentSite && isAdmin && (
+      {currentSite && isAdmin && !isDemoMode && (
         <AutopilotModal
           open={showAutopilotModal}
           onOpenChange={setShowAutopilotModal}
