@@ -13,6 +13,8 @@ const FIELD_ALIASES: Record<string, string[]> = {
     'audit point', 'point d\'audit', 'règle', 'regle', 'rule',
     'label', 'nom', 'name', 'description', 'item', 'élément', 'element',
     'what to check', 'quoi vérifier', 'objectif', 'objective',
+    'aller_vite', 'aller vite', 'libellé', 'libelle', 'intitulé', 'intitule',
+    'titre', 'title', 'sujet', 'subject',
   ],
   poids: [
     'poids', 'weight', 'pondération', 'ponderation', 'pond', 'w',
@@ -44,6 +46,14 @@ const FIELD_ALIASES: Record<string, string[]> = {
     'moteur', 'engine', 'ia', 'ai',
   ],
 };
+
+// ── Result-file detection keywords (columns to skip) ────────────────────
+const RESULT_COLUMN_PATTERNS = [
+  /score/i, /mentionne/i, /cit[eé]/i, /recommand/i, /rang/i,
+  /url_/i, /type_de_source/i, /prioritaire/i, /^id$/i,
+  /chatgpt/i, /gemini/i, /perplexity/i, /copilot/i, /claude/i,
+  /result/i, /résultat/i, /found/i, /trouvé/i, /brand/i, /marque/i,
+];
 
 // ── Fuzzy similarity (Dice coefficient on bigrams) ──────────────────────
 function bigrams(s: string): Set<string> {
