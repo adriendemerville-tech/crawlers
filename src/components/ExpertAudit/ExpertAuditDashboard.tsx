@@ -1351,6 +1351,7 @@ export function ExpertAuditDashboard() {
         hasStrategicResult={!!strategicResult}
         onNavigateToTechnical={handleNavigateToTechnical}
         onNavigateToStrategic={handleNavigateToStrategic}
+        completedAuditsCount={completedAuditsCount}
         validationBanner={
           <UrlValidationBanner
             suggestedUrl={urlValidation.suggestedUrl}
