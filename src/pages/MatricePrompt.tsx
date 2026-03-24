@@ -315,6 +315,30 @@ export default function MatricePrompt() {
     e.target.value = '';
   }, [user, processImportedRows]);
 
+  /* --- Sorting --- */
+  type SortField = 'prompt' | 'axe' | 'poids' | 'seuil_bon' | 'seuil_moyen' | 'seuil_mauvais';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortField) return rows;
+    return [...rows].sort((a, b) => {
+      const va = a[sortField];
+      const vb = b[sortField];
+      const cmp = typeof va === 'string' ? va.localeCompare(vb as string, 'fr') : (va as number) - (vb as number);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [rows, sortField, sortDir]);
+
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
   const someSelected = rows.some(r => r.selected);
@@ -602,23 +626,41 @@ export default function MatricePrompt() {
                         aria-label="Tout sélectionner"
                       />
                     </TableHead>
-                     <TableHead>
-                       <span className="block text-xs font-semibold">{columnLabels.prompt || 'KPI'}</span>
+                     <TableHead className="cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('prompt')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.prompt || 'KPI'}
+                         {sortField === 'prompt' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
-                     <TableHead className="w-28">
-                       <span className="block text-xs font-semibold">{columnLabels.axe || 'Catégorie'}</span>
+                     <TableHead className="w-28 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('axe')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.axe || 'Catégorie'}
+                         {sortField === 'axe' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
-                     <TableHead className="w-20">
-                       <span className="block text-xs font-semibold">{columnLabels.poids || 'Poids'}</span>
+                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.poids || 'Poids'}
+                         {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
-                     <TableHead className="w-20">
-                       <span className="block text-xs font-semibold">{columnLabels.seuil_bon || 'Bon'}</span>
+                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.seuil_bon || 'Bon'}
+                         {sortField === 'seuil_bon' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
-                     <TableHead className="w-20">
-                       <span className="block text-xs font-semibold">{columnLabels.seuil_moyen || 'Moyen'}</span>
+                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_moyen')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.seuil_moyen || 'Moyen'}
+                         {sortField === 'seuil_moyen' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
-                     <TableHead className="w-20">
-                       <span className="block text-xs font-semibold">{columnLabels.seuil_mauvais || 'Mauvais'}</span>
+                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_mauvais')}>
+                       <span className="flex items-center gap-1 text-xs font-semibold">
+                         {columnLabels.seuil_mauvais || 'Mauvais'}
+                         {sortField === 'seuil_mauvais' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                       </span>
                      </TableHead>
                      {results && <TableHead className="w-20">Type</TableHead>}
                      {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
@@ -626,7 +668,7 @@ export default function MatricePrompt() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map(row => {
+                  {sortedRows.map(row => {
                     const resultRow = results?.find((r: any) => r.id === row.id || r.prompt === row.prompt);
                     return (
                       <TableRow key={row.id} className={!row.selected ? 'opacity-40' : ''}>
