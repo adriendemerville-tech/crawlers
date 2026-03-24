@@ -1213,19 +1213,12 @@ export default function SiteCrawl() {
                       <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
-                    {isUnlimited ? (
-                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 gap-1">
-                        <span className="text-base text-amber-500">∞</span>
-                        {t.unlimited}
-                      </Badge>
-                    ) : (
-                      <>
-                        <CreditCoin size="md" />
-                        <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
-                      </>
-                    )}
-                  </button>
+                  {!isUnlimited && (
+                    <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
+                      <CreditCoin size="md" />
+                      <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Advanced Options */}
