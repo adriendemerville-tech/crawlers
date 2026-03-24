@@ -139,6 +139,34 @@ export function mapColumns(
   const usedFields = new Set<string>();
   const warnings: string[] = [];
 
+  // Phase 0: Detect result-type files (many score/result columns)
+  const resultColCount = headers.filter(h =>
+    RESULT_COLUMN_PATTERNS.some(p => p.test(h))
+  ).length;
+  const isResultFile = resultColCount > headers.length * 0.4;
+
+  if (isResultFile) {
+    warnings.push('Fichier de résultats détecté — extraction des critères uniquement');
+    // In result files, find the "label" column (short descriptive text, not a score)
+    const candidateHeaders = headers.filter(h =>
+      !RESULT_COLUMN_PATTERNS.some(p => p.test(h))
+    );
+    // Pick the best text column from non-result columns
+    if (candidateHeaders.length > 0 && sampleRows.length > 0) {
+      let bestHeader = candidateHeaders[0];
+      let bestAvgLen = 0;
+      for (const h of candidateHeaders) {
+        const avgLen = sampleRows.reduce((sum, r) => sum + String(r[h] ?? '').length, 0) / sampleRows.length;
+        if (avgLen > bestAvgLen) { bestAvgLen = avgLen; bestHeader = h; }
+      }
+      mappings[bestHeader] = { field: 'prompt', confidence: 0.7, source: 'content' };
+      usedFields.add('prompt');
+    }
+    // Skip all result columns — return early with just prompt mapped
+    const unmapped = headers.filter(h => !mappings[h]);
+    return { mappings, unmapped, warnings };
+  }
+
   // Phase 1: Fuzzy match on headers
   for (const header of headers) {
     const headerLower = header.toLowerCase().trim();
@@ -155,7 +183,6 @@ export function mapColumns(
       // Fuzzy match
       for (const alias of aliases) {
         const score = diceSimilarity(headerLower, alias);
-        // Also check if header contains the alias or vice versa
         const containsBonus = headerLower.includes(alias) || alias.includes(headerLower) ? 0.2 : 0;
         const total = Math.min(1, score + containsBonus);
         if (total > bestScore) {
@@ -174,7 +201,6 @@ export function mapColumns(
   // Phase 2: Content analysis for unmapped columns
   const unmappedHeaders = headers.filter(h => !mappings[h]);
   if (unmappedHeaders.length > 0 && sampleRows.length > 0) {
-    // Track which content types map to which fields
     const contentAnalysis: { header: string; type: ContentType }[] = [];
 
     for (const header of unmappedHeaders) {
@@ -183,7 +209,6 @@ export function mapColumns(
       contentAnalysis.push({ header, type });
     }
 
-    // If no 'prompt' mapped yet, assign first text_long column
     if (!usedFields.has('prompt')) {
       const textLong = contentAnalysis.find(c => c.type === 'text_long');
       const textShort = contentAnalysis.find(c => c.type === 'text_short');
@@ -195,7 +220,6 @@ export function mapColumns(
       }
     }
 
-    // If no 'axe' mapped yet, assign remaining short text column
     if (!usedFields.has('axe')) {
       const textShort = contentAnalysis.find(c => c.type === 'text_short');
       if (textShort) {
@@ -205,7 +229,6 @@ export function mapColumns(
       }
     }
 
-    // Assign numeric_small columns to unmapped threshold/weight fields
     const numericCols = contentAnalysis.filter(c => c.type === 'numeric_small');
     const numericFields = ['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].filter(f => !usedFields.has(f));
     for (let i = 0; i < Math.min(numericCols.length, numericFields.length); i++) {
