@@ -84,7 +84,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (270+ fichiers, 12 modules)
+### 3.2 Composants (303+ fichiers, 12 modules)
 
 | Module | Rôle |
 |--------|------|
