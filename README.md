@@ -50,7 +50,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.3 Base de données
 
-- **~52 tables** PostgreSQL avec RLS
+- **~60 tables** PostgreSQL avec RLS
 - **160+ migrations** versionnées
 - Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`
 - Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
