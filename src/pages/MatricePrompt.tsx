@@ -228,7 +228,7 @@ export default function MatricePrompt() {
     toast.success(`${parsed.length} KPIs importés — "${fileName}"`);
   }, [user]);
 
-  /* --- File Import (CSV + DOC/DOCX) --- */
+  /* --- File Import (CSV + XLSX + DOC/DOCX) --- */
   const [docParsing, setDocParsing] = useState(false);
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -245,6 +245,25 @@ export default function MatricePrompt() {
         },
         error: () => toast.error('Erreur de parsing CSV'),
       });
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      const fileName = file.name.replace(/\.(xlsx|xls)$/i, '');
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const { read, utils } = await import('xlsx');
+          const workbook = read(evt.target?.result, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = utils.sheet_to_json<Record<string, string>>(firstSheet, { defval: '' });
+          if (!rows.length) {
+            toast.error('Le fichier XLSX est vide ou mal formaté');
+            return;
+          }
+          await processImportedRows(rows, fileName);
+        } catch {
+          toast.error('Erreur de parsing XLSX');
+        }
+      };
+      reader.readAsArrayBuffer(file);
     } else if (ext === 'doc' || ext === 'docx') {
       // Send to edge function for AI extraction
       setDocParsing(true);
@@ -265,7 +284,7 @@ export default function MatricePrompt() {
         toast.error('Erreur lors du parsing du document');
       });
     } else {
-      toast.error('Format non supporté. Utilisez .csv, .doc ou .docx');
+      toast.error('Format non supporté. Utilisez .csv, .xlsx, .doc ou .docx');
     }
     e.target.value = '';
   }, [user, processImportedRows]);
@@ -496,7 +515,7 @@ export default function MatricePrompt() {
               ) : (
                 <span className="text-sm text-muted-foreground">Aucun fichier importé</span>
               )}
-              <input ref={fileInputRef} type="file" accept=".csv,.doc,.docx" className="hidden" onChange={handleFileImport} />
+              <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2">
                 {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
               </Button>
@@ -626,7 +645,7 @@ export default function MatricePrompt() {
           {rows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Upload className="h-10 w-10 mb-3 opacity-30" />
-              <p className="text-sm">Importez un fichier .csv ou .doc pour commencer</p>
+              <p className="text-sm">Importez un fichier .csv, .xlsx ou .doc pour commencer</p>
               <p className="text-xs mt-1">Colonnes supportées : prompt, poids, axe, seuil_bon, seuil_moyen, seuil_mauvais, llm_name</p>
             </div>
           )}

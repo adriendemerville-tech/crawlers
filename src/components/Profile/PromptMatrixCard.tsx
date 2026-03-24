@@ -256,15 +256,56 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase();
-    const isDoc = ext === 'doc' || ext === 'docx';
+   const isDoc = ext === 'doc' || ext === 'docx';
     const isCsv = ext === 'csv' || ext === 'tsv';
+    const isXlsx = ext === 'xlsx' || ext === 'xls';
 
-    if (!isDoc && !isCsv) {
-      toast.error('Format non supporté. Utilisez .csv, .doc ou .docx');
+    if (!isDoc && !isCsv && !isXlsx) {
+      toast.error('Format non supporté. Utilisez .csv, .xlsx, .doc ou .docx');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Fichier trop volumineux (max 10 Mo)');
+      return;
+    }
+
+    if (isXlsx) {
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const { read, utils } = await import('xlsx');
+          const workbook = read(evt.target?.result, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = utils.sheet_to_json<Record<string, string>>(firstSheet, { defval: '' });
+          if (!rows.length) {
+            toast.error('Le fichier XLSX est vide ou mal formaté');
+            return;
+          }
+          const headers = Object.keys(rows[0]);
+          setCsvHeaders(headers);
+          setCsvRawRows(rows);
+          setPendingFileName(file.name);
+          const autoMap: Record<string, string> = {};
+          headers.forEach(h => {
+            const lower = h.toLowerCase().trim();
+            if (/prompt|question|query|requête|critère|criteria/i.test(lower)) autoMap.prompt = h;
+            if (/poids|weight|coefficient|coeff|pondéra/i.test(lower)) autoMap.poids = h;
+            if (/axe|axis|module|catégorie|category|type/i.test(lower)) autoMap.axe = h;
+            if (/seuil.*bon|threshold.*good|bon|good/i.test(lower) && !/moyen|mauvais/i.test(lower)) autoMap.seuil_bon = h;
+            if (/seuil.*moyen|threshold.*medium|moyen|medium|average/i.test(lower)) autoMap.seuil_moyen = h;
+            if (/seuil.*mauvais|threshold.*bad|mauvais|bad|poor/i.test(lower)) autoMap.seuil_mauvais = h;
+            if (/llm|model|modèle|engine/i.test(lower)) autoMap.llm_name = h;
+            if (/score|note|rating/i.test(lower)) autoMap.score = h;
+            if (/brand|marque|found|trouvé/i.test(lower)) autoMap.brand_found = h;
+          });
+          setColumnMapping(autoMap);
+          setShowMappingDialog(true);
+        } catch {
+          toast.error('Erreur de parsing XLSX');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      e.target.value = '';
       return;
     }
 
@@ -634,7 +675,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                     {docParsing ? 'Parsing…' : hasImport ? 'Remplacer' : 'Importer'}
                   </span>
                 </Button>
-                <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
+                <input type="file" accept=".csv,.tsv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileUpload} />
               </label>
             </div>
           </div>
@@ -659,7 +700,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                       Choisir un fichier
                     </span>
                   </Button>
-                  <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
+                  <input type="file" accept=".csv,.tsv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileUpload} />
                 </label>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
                   <FlaskConical className="h-3.5 w-3.5" />
