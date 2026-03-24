@@ -816,6 +816,14 @@ export function GMBDashboard() {
             </TabsList>
 
             <TabsContent value="stats"><StatsTab t={t} /></TabsContent>
+            <TabsContent value="keywords">
+              <GmbKeywordsTab
+                trackedSiteId={null}
+                businessName={activeLocation.name}
+                businessCategory={activeLocation.category}
+                businessCity={activeLocation.address?.split(',').pop()?.trim()}
+              />
+            </TabsContent>
             <TabsContent value="reviews"><ReviewsTab t={t} language={language} /></TabsContent>
             <TabsContent value="posts"><PostsTab t={t} language={language} /></TabsContent>
             <TabsContent value="competitors">
