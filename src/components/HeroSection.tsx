@@ -131,7 +131,7 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-14 gap-2 border-amber-400 border-2 px-6 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
+              className="h-14 gap-2 border-amber-400 border-2 px-8 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
               <FileSearch className="h-5 w-5 text-amber-400" />
               <div className="flex flex-col items-start leading-tight">
