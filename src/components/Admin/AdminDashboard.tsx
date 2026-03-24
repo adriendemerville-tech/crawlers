@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -26,6 +26,7 @@ import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
+import { ParmenionDashboard } from './ParmenionDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -231,6 +232,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
           items: [{ id: 'docs', label: t.docs, icon: BookOpen, group: 'docs' }],
         }]
       : []),
+    {
+      label: 'Parménion',
+      items: [
+        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'parmenion' },
+      ],
+    },
   ];
 
   const renderContent = () => {
@@ -259,6 +266,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'functions': return <FunctionsManagement />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
+      case 'parmenion': return <ParmenionDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
