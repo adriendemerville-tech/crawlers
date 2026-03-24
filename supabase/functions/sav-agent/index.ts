@@ -1031,8 +1031,8 @@ ${screen_context}
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
-    // Enforce char limit (3000 for creator, 1000 for users)
-    const charLimit = isCreator ? 3000 : 1000;
+    // Enforce char limit (3000 for creator, 1500 for screen context, 1000 for users)
+    const charLimit = isCreator ? 3000 : screenHint ? 1500 : 1000;
     if (reply.length > charLimit) {
       reply = reply.substring(0, charLimit - 3) + "...";
     }
