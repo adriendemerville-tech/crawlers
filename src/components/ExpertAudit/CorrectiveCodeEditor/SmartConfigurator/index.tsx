@@ -1718,7 +1718,7 @@ export function SmartConfigurator({
                 <div className="flex-1 min-h-0 overflow-hidden bg-background">
                   <ScrollArea className="h-full">
                     <div className="p-4">
-                      <CodeBlock code={generatedCode} language="javascript" />
+                      <CodeBlock code={generatedCode} isTyping={false} allowScroll />
                     </div>
                   </ScrollArea>
                 </div>
