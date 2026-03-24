@@ -64,7 +64,7 @@ const AIAgentsSection = memo(() => {
   return (
     <section className="relative overflow-hidden border-y border-border py-16 sm:py-24">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-violet-950/5 via-background to-emerald-950/5 dark:from-violet-950/20 dark:via-background dark:to-emerald-950/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-violet-950/5 via-background to-violet-950/10 dark:from-violet-950/20 dark:via-background dark:to-violet-950/30" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.04),transparent_70%)]" />
 
       <div className="relative mx-auto max-w-6xl px-4">
