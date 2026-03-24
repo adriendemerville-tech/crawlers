@@ -357,15 +357,17 @@ export function CocoonRadialGraph({
     }
   }, [bgColorSlider]);
 
-  // Build tree
+  // Build tree — layout adapts to zoom: when zoomed out, spread nodes further
   const tree = useMemo(() => {
     const root = buildSpanningTree(nodes);
     if (root) {
-      const maxR = Math.min(dimensions.w, dimensions.h) * 0.42;
-      layoutRadialTree(root, dimensions.w / 2, dimensions.h / 2, maxR);
+      // Base radius from canvas size; when zoom < 1, expand layout proportionally
+      const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+      const effectiveR = zoom < 1 ? baseR / zoom : baseR;
+      layoutRadialTree(root, dimensions.w / 2, dimensions.h / 2, effectiveR);
     }
     return root;
-  }, [nodes, dimensions]);
+  }, [nodes, dimensions, zoom]);
 
   // Collect all nodes flat
   const allRadialNodes = useMemo(() => {
@@ -447,7 +449,8 @@ export function CocoonRadialGraph({
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
-    const maxR = Math.min(dimensions.w, dimensions.h) * 0.42;
+    const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+    const maxR = zoom < 1 ? baseR / zoom : baseR;
 
     // Recompute dynamic ring radii for drawing (same logic as layout)
     const nodesPerDepthDraw = new Map<number, number>();
