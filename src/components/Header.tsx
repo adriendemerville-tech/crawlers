@@ -279,6 +279,12 @@ export function Header() {
                   <span className="text-sm font-semibold">Cocoon</span>
                 </Button>
               </Link>
+              <Link to="/app/site-crawl">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                  <Bug className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Crawl</span>
+                </Button>
+              </Link>
               <Link to="/matrice">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
