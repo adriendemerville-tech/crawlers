@@ -316,6 +316,164 @@ serve(async (req) => {
     // ── Detect backend query intent from creator ──
     if (isCreator) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      
+      // ── Parménion intent detection ──
+      const parmenionKeywords = [
+        "parménion", "parmenion", "autopilot", "autopilote",
+        "que fait-il", "qu'est-ce qu'il fait", "qu'a-t-il fait",
+        "cycle en cours", "dernier cycle", "prochain cycle",
+        "diagnostic autopilot", "observations autopilot",
+      ];
+      const lowerMsgCheck = lastUserMsg.toLowerCase();
+      const isParmenionQuestion = parmenionKeywords.some(kw => lowerMsgCheck.includes(kw));
+      
+      if (isParmenionQuestion) {
+        // Fetch Parménion context and let Felix narrate it
+        try {
+          const authHeader = req.headers.get("Authorization") || "";
+          
+          // Fetch latest decision logs, autopilot configs, and modification logs in parallel
+          const [decisionsResp, configsResp, modsResp] = await Promise.all([
+            sb.from("parmenion_decision_log")
+              .select("cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, risk_calibrated, is_error, error_category, calibration_note, impact_predicted, impact_actual, estimated_tokens, functions_called, scope_reductions, goal_changed, execution_error, created_at, domain, final_scope")
+              .order("created_at", { ascending: false })
+              .limit(10),
+            sb.from("autopilot_configs")
+              .select("tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, implementation_mode, diag_audit_complet, diag_crawl, diag_stratege_cocoon, presc_architect, presc_content_architect, presc_stratege_cocoon, excluded_subdomains, excluded_page_types")
+              .limit(10),
+            sb.from("autopilot_modification_log")
+              .select("action_type, phase, description, page_url, status, cycle_number, created_at, domain")
+              .order("created_at", { ascending: false })
+              .limit(15),
+          ]);
+
+          // Also get error rate
+          const domains = [...new Set((decisionsResp.data || []).map((d: any) => d.domain))];
+          let errorRates: Record<string, any> = {};
+          for (const domain of domains.slice(0, 3)) {
+            const { data: rate } = await sb.rpc("parmenion_error_rate", { p_domain: domain });
+            if (rate) errorRates[domain] = rate;
+          }
+
+          // Build Parménion narrative context
+          let parmenionContext = "\n\n# ÉTAT DE PARMÉNION (AUTOPILOTE)\n";
+          
+          // Configs
+          if (configsResp.data?.length) {
+            parmenionContext += "\n## Configurations actives\n";
+            for (const cfg of configsResp.data) {
+              parmenionContext += `- Site ${cfg.tracked_site_id}: ${cfg.is_active ? '🟢 ACTIF' : '⏸️ EN PAUSE'} | Mode: ${cfg.implementation_mode} | ${cfg.total_cycles_run || 0} cycles exécutés | Dernier: ${cfg.last_cycle_at?.slice(0, 16) || 'jamais'} | Cooldown: ${cfg.cooldown_hours}h | Seuil pause auto: -${cfg.auto_pause_threshold}%\n`;
+              parmenionContext += `  Phases diag: ${[cfg.diag_audit_complet && 'audit', cfg.diag_crawl && 'crawl', cfg.diag_stratege_cocoon && 'stratège'].filter(Boolean).join(', ') || 'aucune'} | Phases presc: ${[cfg.presc_architect && 'architect', cfg.presc_content_architect && 'content', cfg.presc_stratege_cocoon && 'stratège'].filter(Boolean).join(', ') || 'aucune'}\n`;
+            }
+          }
+
+          // Decision logs
+          if (decisionsResp.data?.length) {
+            parmenionContext += "\n## Dernières décisions (du plus récent au plus ancien)\n";
+            for (const d of decisionsResp.data) {
+              parmenionContext += `\n### Cycle ${d.cycle_number} — ${d.domain} (${d.created_at?.slice(0, 16)})\n`;
+              parmenionContext += `- **But**: ${d.goal_type} — ${d.goal_description}\n`;
+              parmenionContext += `- **Action**: ${d.action_type} | Statut: ${d.status} | Impact: ${d.impact_level}\n`;
+              parmenionContext += `- **Risque**: prédit=${d.risk_predicted}${d.risk_calibrated ? `, calibré=${d.risk_calibrated}` : ''} | Réductions scope: ${d.scope_reductions} | But changé: ${d.goal_changed ? 'oui' : 'non'}\n`;
+              if (d.impact_predicted) parmenionContext += `- **Impact prédit**: ${d.impact_predicted}\n`;
+              if (d.impact_actual) parmenionContext += `- **Impact réel**: ${d.impact_actual}\n`;
+              if (d.is_error) parmenionContext += `- ⚠️ **ERREUR**: ${d.error_category || 'non catégorisée'}${d.calibration_note ? ` — ${d.calibration_note}` : ''}\n`;
+              if (d.execution_error) parmenionContext += `- ❌ **Erreur d'exécution**: ${d.execution_error}\n`;
+              if (d.functions_called?.length) parmenionContext += `- Fonctions appelées: ${d.functions_called.join(', ')}\n`;
+              if (d.estimated_tokens) parmenionContext += `- Tokens estimés: ${d.estimated_tokens.toLocaleString()}\n`;
+            }
+          }
+
+          // Modification log
+          if (modsResp.data?.length) {
+            parmenionContext += "\n## Dernières modifications appliquées\n";
+            for (const m of modsResp.data) {
+              parmenionContext += `- [${m.created_at?.slice(0, 16)}] ${m.domain} — Phase: ${m.phase} | Action: ${m.action_type} | ${m.description || ''} ${m.page_url ? `(${m.page_url})` : ''} → ${m.status}\n`;
+            }
+          }
+
+          // Error rates
+          if (Object.keys(errorRates).length) {
+            parmenionContext += "\n## Taux d'erreur\n";
+            for (const [domain, rate] of Object.entries(errorRates)) {
+              const r = rate as any;
+              parmenionContext += `- ${domain}: ${r.error_rate}% d'erreur (${r.errors}/${r.total}) ${r.conservative_mode ? '⚠️ MODE CONSERVATEUR ACTIF' : ''}\n`;
+            }
+          }
+
+          // Narrative instructions
+          parmenionContext += `\n## INSTRUCTIONS DE NARRATION
+Tu dois traduire ces données techniques en langage clair et naturel pour le créateur :
+- Décris ce que Parménion fait EN CE MOMENT (dernier cycle avec statut 'pending' ou 'in_progress')
+- Résume ce qu'il a fait AVANT (derniers cycles complétés, succès/échecs, impact)
+- Déduis ce qu'il COMPTE FAIRE ensuite (en fonction du goal_type, du pattern de décisions, du cooldown restant, et des phases activées)
+- Traduis les observations : "scope_reductions=2" → "il a réduit son périmètre 2 fois pour rester prudent"
+- Traduis les diagnostics : "risk_predicted=4, goal_changed=true" → "il a jugé l'action trop risquée et a changé de stratégie"
+- Si mode conservateur actif, explique pourquoi (trop d'erreurs récentes)
+- Utilise un ton narratif engageant, comme si tu racontais les décisions d'un général de terrain
+- Tu peux nommer Parménion directement ("Parménion a décidé de...")
+- Pas de limite de caractères pour ces réponses narratives (max 3000)`;
+
+          // Build the prompt and call LLM directly with this rich context
+          const narrativePrompt = SYSTEM_PROMPT + parmenionContext + `\n\n# MODE CRÉATEUR (ADMIN)\nCet utilisateur est le créateur de la plateforme. Tu peux parler librement de l'architecture et des données internes.`;
+          
+          const aiMessages = [
+            { role: "system", content: narrativePrompt },
+            ...messages.slice(-20),
+          ];
+
+          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: aiMessages,
+              stream: false,
+              max_tokens: 2500,
+            }),
+          });
+
+          if (aiResp.ok) {
+            const aiData = await aiResp.json();
+            let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer l'état de Parménion.";
+            if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
+
+            // Save conversation
+            let savedConvId = conversation_id;
+            try {
+              const allMessages = [...messages, { role: "assistant", content: reply }];
+              if (conversation_id) {
+                await sb.from("sav_conversations").update({
+                  messages: allMessages,
+                  message_count: allMessages.length,
+                }).eq("id", conversation_id);
+              } else {
+                const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                const { data: newConv } = await sb.from("sav_conversations").insert({
+                  user_id,
+                  user_email: prof?.email || null,
+                  messages: allMessages,
+                  message_count: allMessages.length,
+                }).select("id").single();
+                savedConvId = newConv?.id;
+              }
+            } catch (e) {
+              console.error("Save parmenion conv error:", e);
+            }
+
+            return new Response(JSON.stringify({ reply, conversation_id: savedConvId || conversation_id }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } catch (e) {
+          console.error("Parmenion context fetch error:", e);
+          // Fall through to normal flow
+        }
+      }
+      
       const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
         "utilisateurs", "users", "profils", "profiles", "edge function",
