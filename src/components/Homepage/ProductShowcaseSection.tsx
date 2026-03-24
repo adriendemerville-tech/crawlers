@@ -263,7 +263,7 @@ const ProductShowcaseSection = memo(() => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground font-display">
             {language === 'fr' ? 'Tout ce dont vous avez besoin,' : 'Everything you need,'}
             <br />
-            <span className="text-primary">
+            <span className="text-primary font-extrabold">
               {language === 'fr' ? 'au même endroit.' : 'in one place.'}
             </span>
           </h2>
