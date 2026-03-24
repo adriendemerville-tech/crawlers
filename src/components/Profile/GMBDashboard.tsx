@@ -12,6 +12,7 @@ import {
   ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical, Swords
 } from 'lucide-react';
 import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
+import { GmbKeywordsTab } from './GmbKeywordsTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
