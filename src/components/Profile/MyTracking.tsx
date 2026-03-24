@@ -1132,6 +1132,18 @@ export function MyTracking() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* Autopilot button — creator only */}
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => setShowAutopilotModal(true)}
+                        >
+                          <Bot className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Autopilote</span>
+                        </Button>
+                      )}
 
                       {/* Connect/Disconnect site button → opens modal */}
                       {(() => {
