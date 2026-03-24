@@ -32,6 +32,7 @@ export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
   showAllClusters: boolean;
+  showParticles: boolean;
 }
 
 interface CocoonFilterSelectorProps {
