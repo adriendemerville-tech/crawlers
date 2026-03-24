@@ -171,6 +171,7 @@ const App = () => (
       </QueryClientProvider>
     </HelmetProvider>
   </Suspense>
+  </GlobalErrorBoundary>
 );
 
 export default App;
