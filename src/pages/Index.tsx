@@ -757,7 +757,7 @@ const Index = () => {
                   ))}
                 </ul>
               </div>
-              <div className="flex-shrink-0 w-full md:w-[420px] space-y-5">
+              <div className="flex-shrink-0 w-full md:w-[420px] space-y-6">
                 <div className="rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
                   <img src={matriceScreenshot} alt="Crawlers.fr matrice audit SEO grille personnalisée" className="w-full h-auto" loading="lazy" />
                 </div>
