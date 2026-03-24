@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { correctTranscript } from '@/utils/sttVocabulary';
+import { correctTranscript, type SiteIdentity } from '@/utils/sttVocabulary';
 
 interface ChatMicButtonProps {
   onTranscript: (text: string) => void;
@@ -11,9 +11,11 @@ interface ChatMicButtonProps {
   compact?: boolean;
   /** User's tracked domain names for STT vocabulary correction */
   userDomains?: string[];
+  /** Full site identity data for auto-enriched vocabulary */
+  siteIdentities?: SiteIdentity[];
 }
 
-export function ChatMicButton({ onTranscript, disabled, compact = true, userDomains }: ChatMicButtonProps) {
+export function ChatMicButton({ onTranscript, disabled, compact = true, userDomains, siteIdentities }: ChatMicButtonProps) {
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
