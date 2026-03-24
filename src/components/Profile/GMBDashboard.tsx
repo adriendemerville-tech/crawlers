@@ -788,9 +788,13 @@ export function GMBDashboard() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-6 h-9">
+            <TabsList className="w-full grid grid-cols-7 h-9">
               <TabsTrigger value="stats" className="text-xs gap-1">
                 <span className="hidden sm:inline">Stats</span>
+              </TabsTrigger>
+              <TabsTrigger value="keywords" className="text-xs gap-1">
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Keywords</span>
               </TabsTrigger>
               <TabsTrigger value="reviews" className="text-xs gap-1">
                 <Star className="h-3.5 w-3.5" />
