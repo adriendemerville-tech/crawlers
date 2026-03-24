@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   TrendingUp, TrendingDown, Minus, MapPin, Star, Globe, Search,
-  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown,
+  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -75,6 +76,90 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
   const [isSimulated, setIsSimulated] = useState(true);
   const [searchInfo, setSearchInfo] = useState<{ query?: string; location?: string; radius_km?: number } | null>(null);
 
+  // Search bar state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Competitor[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Debounced search for suggestions
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase.functions.invoke('serpapi-actions', {
+          body: {
+            action: 'search-local',
+            query: value,
+            location: ownBusinessName ? `near ${ownBusinessName}` : undefined,
+            num: 5,
+          },
+        });
+
+        if (!error && data?.organic_results) {
+          const mapped: Competitor[] = data.organic_results.slice(0, 5).map((r: any, i: number) => ({
+            competitor_name: r.title || r.name || value,
+            competitor_address: r.address || r.snippet || '',
+            competitor_category: r.type || r.category || '',
+            competitor_website: r.link || r.website || '',
+            avg_rating: r.rating || 0,
+            total_reviews: r.reviews || 0,
+            maps_position: i + 1,
+            position_change: 0,
+          }));
+          setSuggestions(mapped);
+          setShowSuggestions(true);
+        }
+      } catch (e) {
+        console.error('Search suggestions error:', e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, [ownBusinessName]);
+
+  const handleAddCompetitor = (comp: Competitor) => {
+    const alreadyExists = competitors.some(
+      (c) => c.competitor_name.toLowerCase() === comp.competitor_name.toLowerCase()
+    );
+    if (alreadyExists) {
+      toast.info(`${comp.competitor_name} est déjà dans la liste`);
+      return;
+    }
+    const newComp = { ...comp, maps_position: competitors.length + 1 };
+    setCompetitors((prev) => [...prev, newComp]);
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsSimulated(false);
+    toast.success(`${comp.competitor_name} ajouté au suivi`);
+  };
+
   const handleScan = async () => {
     if (!gmbLocationId || !trackedSiteId) {
       toast.error('Aucune fiche GMB connectée');
@@ -116,6 +201,81 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
 
   return (
     <div className="space-y-3">
+      {/* Search bar to add competitors */}
+      <div ref={searchRef} className="relative">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Rechercher un concurrent à ajouter..."
+              className="pl-9 h-9 text-xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(''); setSuggestions([]); setShowSuggestions(false); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 w-9 p-0 shrink-0"
+            disabled={!searchQuery.trim()}
+            onClick={() => {
+              if (searchQuery.trim()) {
+                handleAddCompetitor({
+                  competitor_name: searchQuery.trim(),
+                  competitor_address: '',
+                  maps_position: competitors.length + 1,
+                  position_change: 0,
+                });
+              }
+            }}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Suggestions dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-50 top-full mt-1 w-full rounded-md border border-border bg-popover shadow-lg overflow-hidden">
+            {suggestions.map((s, i) => (
+              <button
+                key={s.competitor_name + i}
+                onClick={() => handleAddCompetitor(s)}
+                className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center gap-3 border-b border-border/50 last:border-0"
+              >
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">{s.competitor_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{s.competitor_address}</p>
+                </div>
+                {(s.avg_rating || 0) > 0 && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <span className="text-[10px] font-medium">{s.avg_rating?.toFixed(1)}</span>
+                    <Star className="h-2.5 w-2.5 text-yellow-500 fill-yellow-500" />
+                  </div>
+                )}
+                <Plus className="h-3.5 w-3.5 text-primary shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isSearching && (
+          <div className="absolute z-50 top-full mt-1 w-full rounded-md border border-border bg-popover shadow-lg p-3 text-center">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-[10px] text-muted-foreground mt-1">Recherche en cours...</p>
+          </div>
+        )}
+      </div>
+
       {/* Simulated banner */}
       {isSimulated && (
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/5">
@@ -124,8 +284,6 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
           </p>
         </div>
       )}
-
-      {/* Search info + scan button */}
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">
           {searchInfo ? (
