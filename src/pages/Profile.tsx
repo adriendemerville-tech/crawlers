@@ -123,7 +123,7 @@ const translations = {
   },
 };
 
-export default function Profile() {
+function ProfileContent() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
   const { isAdmin, isViewer, isViewerLevel2, hasAdminAccess, isReadOnly, isAuditor, auditorExpired, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, canSeeIntelligence, loading: adminLoading } = useAdmin();
