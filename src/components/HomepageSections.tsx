@@ -480,7 +480,7 @@ const TrustBanner = memo(() => {
         </div>
 
         {/* Doubt phrase */}
-        <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-brand-violet dark:text-white text-center mb-8">
           {t.trustDoubt}<br />
           {(t as any).trustDoubtLine2}
         </h2>
