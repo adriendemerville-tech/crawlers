@@ -419,6 +419,24 @@ export default function MatricePrompt() {
     return 'text-red-600';
   };
 
+  const AXE_COLORS: Record<string, string> = {
+    'Général': 'bg-slate-500/15 text-slate-600 border-slate-300',
+    'SEO': 'bg-blue-500/15 text-blue-600 border-blue-300',
+    'Performance': 'bg-orange-500/15 text-orange-600 border-orange-300',
+    'Sécurité': 'bg-red-500/15 text-red-600 border-red-300',
+    'Contenu': 'bg-emerald-500/15 text-emerald-600 border-emerald-300',
+    'Technique': 'bg-purple-500/15 text-purple-600 border-purple-300',
+    'UX': 'bg-pink-500/15 text-pink-600 border-pink-300',
+    'E-E-A-T': 'bg-amber-500/15 text-amber-600 border-amber-300',
+    'GEO': 'bg-cyan-500/15 text-cyan-600 border-cyan-300',
+    'Données structurées': 'bg-indigo-500/15 text-indigo-600 border-indigo-300',
+    'Maillage': 'bg-teal-500/15 text-teal-600 border-teal-300',
+  };
+
+  const getAxeBadgeClass = (axe: string) => {
+    return AXE_COLORS[axe] || 'bg-muted text-muted-foreground border-border';
+  };
+
   if (adminLoading || authLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
