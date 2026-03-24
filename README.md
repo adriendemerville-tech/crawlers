@@ -41,7 +41,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Content & Blog** | `generate-blog-from-news`, `fetch-news`, `generate-infotainment`, `rss-feed`, `sitemap` | Génération de contenu, flux RSS |
 | **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO), supervision par Supervisor |
 | **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
-| **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress |
+| **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress, Shopify, Wix, PrestaShop, Drupal |
 | **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
 
 ### 2.2 Modules partagés (`_shared/`)
