@@ -55,6 +55,7 @@ export default function MatricePrompt() {
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { user, loading: authLoading } = useAuth();
+  const { isDemoMode } = useDemoMode();
 
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [url, setUrl] = useState('');
