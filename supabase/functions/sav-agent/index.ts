@@ -1008,7 +1008,7 @@ ${screen_context}
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
         stream: false,
-        max_tokens: isCreator ? 2000 : 600,
+        max_tokens: isCreator ? 2000 : screenHint ? 1200 : 600,
       }),
     });
 
