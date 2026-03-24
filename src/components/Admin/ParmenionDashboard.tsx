@@ -127,6 +127,15 @@ export function ParmenionDashboard() {
 
   const activeDecision = logs.find(l => ['thinking', 'executing', 'pending'].includes(l.status));
 
+  // LLM cost calculation based on estimated_tokens
+  const llmCostStats = useMemo(() => {
+    const totalTokens = logs.reduce((sum, l) => sum + (l.estimated_tokens || 0), 0);
+    // Gemini 2.5 Flash pricing: ~$0.15/1M input + ~$0.60/1M output ≈ ~$0.35/1M avg
+    const costUsd = totalTokens * 0.00000035;
+    const costEur = costUsd * 0.92;
+    return { totalTokens, costEur };
+  }, [logs]);
+
   return (
     <div className="space-y-6">
       {/* Header with controls */}
