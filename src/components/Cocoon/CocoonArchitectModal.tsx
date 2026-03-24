@@ -516,7 +516,15 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                       </Button>
                     </div>
                   </div>
-                  <pre className="text-[10px] leading-relaxed font-mono text-emerald-300/80 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre border border-white/5 max-h-[50vh]">
+                  <pre
+                    tabIndex={0}
+                    onKeyDown={e => {
+                      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+                        e.stopPropagation();
+                      }
+                    }}
+                    className="text-[10px] leading-relaxed font-mono text-emerald-300/80 bg-black/40 rounded-lg p-3 overflow-x-auto overflow-y-auto whitespace-pre border border-white/5 max-h-[50vh] focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  >
                     {generatedCode}
                   </pre>
                 </div>
