@@ -254,6 +254,7 @@ const labels = {
     optimize: 'Optimiser le maillage',
     strategy: 'Stratégie 360°',
     strategyBtn: 'Diagnostic & Stratégie',
+    subdomains: 'Sous-domaines',
   },
   en: {
     title: 'Cocoon Strategist',
