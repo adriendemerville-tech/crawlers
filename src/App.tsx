@@ -70,6 +70,12 @@ const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
 const Aide = lazy(() => import("./pages/Aide"));
 
+// Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
+const LegacyRapportRedirect = () => {
+  const reportId = window.location.pathname.split('/rapport/')[1];
+  return <Navigate to={`/app/rapport/${reportId}`} replace />;
+};
+
 // Loading fallback
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
