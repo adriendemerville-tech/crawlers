@@ -675,7 +675,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                     {docParsing ? 'Parsing…' : hasImport ? 'Remplacer' : 'Importer'}
                   </span>
                 </Button>
-                <input type="file" accept=".csv,.tsv,.doc,.docx" className="hidden" onChange={handleFileUpload} />
+                <input type="file" accept=".csv,.tsv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileUpload} />
               </label>
             </div>
           </div>
