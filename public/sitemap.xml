@@ -629,4 +629,36 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/architecte-generatif?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/architecte-generatif"/>
   </url>
+
+  <!-- Matrice de Prompts - Test Visibilité LLM -->
+  <url>
+    <loc>https://crawlers.fr/matrice</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/matrice"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/matrice?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/matrice?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/matrice"/>
+  </url>
+
+  <!-- Centre d'aide -->
+  <url>
+    <loc>https://crawlers.fr/aide</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/aide"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/aide?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/aide?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/aide"/>
+  </url>
+
+  <!-- Reset Password -->
+  <url>
+    <loc>https://crawlers.fr/reset-password</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>
