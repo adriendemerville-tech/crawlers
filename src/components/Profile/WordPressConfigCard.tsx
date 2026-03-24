@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle, RefreshCw } from 'lucide-react';
+import cmsWordpress from '@/assets/cms-wordpress.png';
+import cmsShopify from '@/assets/cms-shopify.png';
+import cmsWix from '@/assets/cms-wix.png';
+import cmsPrestashop from '@/assets/cms-prestashop.png';
+import cmsGtm from '@/assets/cms-gtm.png';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -263,34 +268,27 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         <p className="text-xs font-semibold text-foreground">
           {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {([
-            { key: 'wordpress' as const, label: 'WordPress', icon: '🔵' },
-            { key: 'shopify' as const, label: 'Shopify', icon: '🟢' },
-            { key: 'wix' as const, label: 'Wix', icon: '🟡' },
-            { key: 'prestashop' as const, label: 'PrestaShop', icon: '🟣' },
+            { key: 'wordpress' as const, label: 'WordPress', logo: cmsWordpress },
+            { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
+            { key: 'wix' as const, label: 'Wix', logo: cmsWix },
+            { key: 'prestashop' as const, label: 'PrestaShop', logo: cmsPrestashop },
+            { key: 'gtm' as const, label: 'GTM', logo: cmsGtm },
           ]).map(cms => (
-            <Button
+            <button
               key={cms.key}
-              variant={connectMethod === cms.key ? 'default' : 'outline'}
-              size="sm"
-              className="gap-1.5 h-8 text-xs px-3"
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                connectMethod === cms.key
+                  ? 'bg-primary/10 border-primary/40 text-foreground shadow-sm'
+                  : 'bg-muted/30 border-border hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+              }`}
               onClick={() => setConnectMethod(cms.key)}
             >
-              <span className="text-sm">{cms.icon}</span>
+              <img src={cms.logo} alt={cms.label} className="h-6 w-6 object-contain" loading="lazy" width={24} height={24} />
               {cms.label}
-            </Button>
+            </button>
           ))}
-          <Separator orientation="vertical" className="h-8 mx-1" />
-          <Button
-            variant={connectMethod === 'gtm' ? 'default' : 'outline'}
-            size="sm"
-            className="gap-1.5 h-8 text-xs px-3"
-            onClick={() => setConnectMethod('gtm')}
-          >
-            <Code className="h-3.5 w-3.5" />
-            GTM
-          </Button>
         </div>
       </div>
 
