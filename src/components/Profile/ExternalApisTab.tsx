@@ -139,7 +139,7 @@ export function ExternalApisTab() {
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
-  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix'>('wordpress');
+  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo'>('wordpress');
   const [rankMathDialogOpen, setRankMathDialogOpen] = useState(false);
   const [rankMathLoading, setRankMathLoading] = useState(false);
   const [wpConnection, setWpConnection] = useState<{ id: string; site_url: string } | null>(null);
