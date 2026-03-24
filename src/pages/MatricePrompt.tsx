@@ -247,7 +247,7 @@ export default function MatricePrompt() {
       parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
     }
 
-    const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
+    const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length, last_used_at: new Date().toISOString() };
     setBatches(prev => [newBatch, ...prev]);
     setActiveBatchId(newBatchId);
     localStorage.setItem(LAST_BATCH_KEY, newBatchId);
