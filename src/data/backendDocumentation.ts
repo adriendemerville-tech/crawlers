@@ -660,6 +660,7 @@ Ces secrets sont configurés dans Lovable Cloud :
 | \`OPENROUTER_API_KEY\` | fallback IA | Clé OpenRouter (backup) |
 | \`LOVABLE_API_KEY\` | Lovable AI | Accès aux modèles Gemini/GPT |
 | \`IKTRACKER_API_KEY\` | \`iktracker-actions\` | Clé bridge IKtracker |
+| \`GOOGLE_PLACES_API_KEY\` | \`gmb-places-autocomplete\` | Clé Google Places API (autocomplete concurrents GMB) |
 | \`FLY_RENDERER_URL\` | rendering SPA | URL du renderer Fly.io |
 | \`FLY_RENDERER_SECRET\` | rendering SPA | Secret Fly.io |
 | \`RENDERING_API_KEY\` | rendu headless | Clé API rendering |
