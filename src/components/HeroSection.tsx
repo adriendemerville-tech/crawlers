@@ -1,13 +1,8 @@
-import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react';
+import { useState, useEffect, memo, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Zap, Bot, Brain, Gauge, FileSearch } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ToolTab } from './ToolTabs';
+import { FileSearch } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
-import { UrlValidationBanner } from '@/components/UrlValidationBanner';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
@@ -16,88 +11,23 @@ const MotionSpan = lazy(() =>
   }))
 );
 
-interface HeroSectionProps {
-  onSubmit: (url: string) => void;
-  activeTab: ToolTab;
-  isLoading: boolean;
-  onTabChange: (tab: ToolTab) => void;
-  currentUrl?: string;
-}
-
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
-function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, currentUrl }: HeroSectionProps) {
-  const [searchParams] = useSearchParams();
-  const [url, setUrl] = useState(() => searchParams.get('url') || '');
-  const { t, language } = useLanguage();
-  const validation = useUrlValidation(language);
+function HeroSectionComponent() {
+  const { language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [glowActive, setGlowActive] = useState(false);
-  const prevTabRef = useRef(activeTab);
 
-  // Trigger glow on tab change
-  useEffect(() => {
-    if (prevTabRef.current !== activeTab) {
-      prevTabRef.current = activeTab;
-      setGlowActive(true);
-      const timer = setTimeout(() => setGlowActive(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab]);
-
-  // Mark as hydrated after first render for animations
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Rotate words every 2.5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prev) => (prev + 1) % animatedWords.length);
     }, 2500);
     return () => clearInterval(interval);
   }, []);
-
-  const handleUrlChange = (value: string) => {
-    setUrl(value);
-    validation.resetValidation();
-  };
-
-  const handleUrlBlur = () => {
-    if (url.trim()) {
-      const normalized = normalizeUrl(url);
-      setUrl(normalized);
-      localStorage.setItem('crawlers_last_url', normalized);
-    }
-  };
-
-  const handleAcceptSuggestion = () => {
-    if (!validation.suggestedUrl) return;
-    const accepted = validation.suggestedUrl;
-    setUrl(accepted);
-    localStorage.setItem('crawlers_last_url', accepted);
-    validation.acceptSuggestion(accepted, onSubmit);
-  };
-
-  const handleIgnoreSuggestion = () => {
-    validation.dismissSuggestion();
-    validation.showNotFound();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) return;
-    const normalized = normalizeUrl(url);
-    setUrl(normalized);
-    localStorage.setItem('crawlers_last_url', normalized);
-
-    await validation.validateAndCorrect(url, (validUrl) => {
-      setUrl(validUrl);
-      localStorage.setItem('crawlers_last_url', validUrl);
-      onSubmit(validUrl);
-    });
-  };
 
   const getIgnoreText = () => {
     switch (language) {
@@ -115,92 +45,50 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
     }
   };
 
-  const getHeroContent = () => {
-    switch (activeTab) {
-      case 'crawlers':
-        return {
-          badge: t.hero.badge.crawlers,
-          useAnimatedHeadline: true,
-          subheadline: t.hero.subheadline.crawlers,
-          buttonText: t.hero.button.crawlers,
-          loadingText: t.hero.button.loading.crawlers
-        };
-      case 'llm':
-        return {
-          badge: t.hero.badge.llm,
-          headline: <>{t.hero.headline.llm}{' '}<span className="text-gradient">{t.hero.headline.llmHighlight}</span> ?</>,
-          useAnimatedHeadline: false,
-          subheadline: t.hero.subheadline.llm,
-          buttonText: t.hero.button.llm,
-          loadingText: t.hero.button.loading.llm
-        };
-      case 'pagespeed':
-        return {
-          badge: t.hero.badge.pagespeed,
-          headline: <>{t.hero.headline.pagespeed}{' '}<span className="text-gradient">{t.hero.headline.pagespeedHighlight}</span> ?</>,
-          useAnimatedHeadline: false,
-          subheadline: t.hero.subheadline.pagespeed,
-          buttonText: t.hero.button.pagespeed,
-          loadingText: t.hero.button.loading.pagespeed
-        };
-    }
-  };
-
-  const content = getHeroContent();
-
-  const renderAnimatedHeadline = () => (
-    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
-        <span
-          className="hero-word-container relative inline-flex items-center justify-end overflow-hidden align-baseline"
-          style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
-        >
-          {isHydrated ? (
-            <Suspense fallback={
-              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
-                {animatedWords[wordIndex]}
-              </span>
-            }>
-              <MotionSpan
-                key={wordIndex}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="relative whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right w-full"
-              >
-                {animatedWords[wordIndex]}
-              </MotionSpan>
-            </Suspense>
-          ) : (
-            <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
-              {animatedWords[0]}
-            </span>
-          )}
-        </span>{' '}
-        <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
-          {getIgnoreText()} {getSiteText()}
-        </span>
-        {' '}
-        <span className="text-foreground">?</span>
-    </h1>
-  );
-
   return (
-    <section className="relative overflow-hidden px-4 py-6 sm:py-8">
+    <section className="relative overflow-hidden px-4 py-10 sm:py-16">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-4xl text-center">
+        {/* Animated headline */}
+        <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
+          <span
+            className="hero-word-container relative inline-flex items-center justify-end overflow-hidden align-baseline"
+            style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
+          >
+            {isHydrated ? (
+              <Suspense fallback={
+                <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
+                  {animatedWords[wordIndex]}
+                </span>
+              }>
+                <MotionSpan
+                  key={wordIndex}
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className="relative whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right w-full"
+                >
+                  {animatedWords[wordIndex]}
+                </MotionSpan>
+              </Suspense>
+            ) : (
+              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
+                {animatedWords[0]}
+              </span>
+            )}
+          </span>{' '}
+          <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
+            {getIgnoreText()} {getSiteText()}
+          </span>
+          {' '}
+          <span className="text-foreground">?</span>
+        </h1>
 
-        {content.useAnimatedHeadline ? (
-          renderAnimatedHeadline()
-        ) : (
-          <h1 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
-            {content.headline}
-          </h1>
-        )}
-
+        {/* Tagline */}
         <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
           {language === 'es'
             ? <>Audite su sitio. Afine la estrategia. Implemente el <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">código</code>.</>
@@ -209,7 +97,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
         </h2>
 
-        <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
+        {/* Description */}
+        <p className="mx-auto mb-8 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
           {language === 'es'
             ? 'La única plataforma europea que cubre SEO clásico, GEO (Generative Engine Optimization) y SEO local en una sola herramienta.'
             : language === 'en'
@@ -217,105 +106,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               : "La seule plateforme européenne qui couvre le SEO classique, le GEO (Generative Engine Optimization) et le SEO local dans un seul outil."}
         </p>
 
-        <h3 
-          className="mx-auto mb-10 max-w-2xl text-base font-normal text-muted-foreground sm:text-xl"
-          dangerouslySetInnerHTML={{ __html: content.subheadline }}
-        />
-
-        <div className="mx-auto w-full text-left" style={{ maxWidth: 'min(85%, 48rem)' }}>
-        <form onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <div className="mb-2 flex overflow-x-auto scrollbar-hide rounded-lg border border-border bg-card p-1 -mx-1 sm:mx-0">
-                {([
-                  { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
-                  { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
-                  { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
-                ]).map(({ key, icon: Icon, label }, index) => (
-                  <div key={key} className="flex shrink-0 flex-1 items-center min-w-0">
-                    {index > 0 && <div className="h-5 w-px bg-border shrink-0" />}
-                    <button
-                      type="button"
-                      data-tour={`tab-${key}`}
-                      onClick={() => onTabChange(key)}
-                      className={cn(
-                        "flex flex-1 items-center justify-center gap-1 sm:gap-1.5 rounded-md py-2 px-1.5 sm:px-3 text-xs sm:text-sm font-medium transition-all whitespace-nowrap",
-                        activeTab === key
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                      aria-current={activeTab === key ? 'page' : undefined}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="hidden xs:inline sm:inline">{label}</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="url : crawlers.fr"
-                  value={url}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                  onBlur={handleUrlBlur}
-                  className="h-14 pl-4 pr-12 text-base placeholder:text-xs placeholder:font-light placeholder:text-muted-foreground/50"
-                  required
-                  aria-label="URL du site web"
-                />
-                <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              variant="hero" 
-              size="lg" 
-              disabled={isLoading || validation.isValidating}
-              className={cn(
-                "h-14 min-w-[122px] transition-shadow duration-500",
-                glowActive && "animate-cta-glow"
-              )}
-              style={{ paddingLeft: 20, paddingRight: 20 }}
-            >
-              {validation.isValidating ? (
-                <>
-                  <Zap className="h-5 w-5 animate-pulse" />
-                  {language === 'fr' ? 'Vérification…' : language === 'es' ? 'Verificando…' : 'Checking…'}
-                </>
-              ) : isLoading ? (
-                <>
-                  <Zap className="h-5 w-5 animate-pulse" />
-                  {content.loadingText}
-                </>
-              ) : (
-                content.buttonText
-              )}
-            </Button>
-        </div>
-        </form>
-        </div>
-
-        <UrlValidationBanner
-          suggestedUrl={validation.suggestedUrl}
-          urlNotFound={validation.urlNotFound}
-          suggestionPrefix={validation.getSuggestionPrefix()}
-          notFoundMessage={validation.getNotFoundMessage()}
-          onAcceptSuggestion={handleAcceptSuggestion}
-          onDismissSuggestion={validation.dismissSuggestion}
-          onDismissNotFound={validation.dismissNotFound}
-          onIgnoreSuggestion={handleIgnoreSuggestion}
-        />
-
-        <p className="mt-6 text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
+        {/* Audit Expert info */}
+        <p className="text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
-        <div className="mt-4 flex justify-center gap-3" data-tour="audit-expert">
-          <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
+        {/* CTA Audit Expert — golden border */}
+        <div className="mt-6 flex justify-center">
+          <Link to="/audit-expert">
             <Button
               variant="outline"
               size="lg"
-              className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-6 py-3 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+              className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-8 py-4 text-lg shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
             >
               <FileSearch className="h-5 w-5 text-primary" />
               <span className="font-bold text-foreground">
