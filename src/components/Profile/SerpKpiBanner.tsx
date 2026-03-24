@@ -217,7 +217,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
               <Target className="h-3 w-3" />
               ETV
             </div>
-            <p className="text-lg font-semibold text-primary">{data.etv.toLocaleString()}</p>
+            <p className="text-lg font-semibold text-primary">{(data.etv ?? 0).toLocaleString()}</p>
           </div>
 
           <div className="rounded-lg border bg-card p-3 space-y-1">
