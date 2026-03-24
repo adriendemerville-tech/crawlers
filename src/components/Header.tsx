@@ -114,6 +114,7 @@ export function Header() {
   const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
   const isHomePage = location.pathname === '/';
   const isCrawlPage = location.pathname === '/site-crawl' || location.pathname === '/crawl';
+  const isMatricePage = location.pathname === '/matrice';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
