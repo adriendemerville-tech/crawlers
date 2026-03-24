@@ -16,6 +16,8 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent() {
   const { language } = useLanguage();
+  const navigate = useNavigate();
+  const [url, setUrl] = useState('');
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
 
