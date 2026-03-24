@@ -6,10 +6,11 @@ export interface AdminNotifications {
   silentErrors: number;
   injectionErrors: number;
   support: number;
-  apiBilling: number;  // DataForSEO / API billing alerts
+  apiBilling: number;
+  frontendCrashes: number;
 }
 
-const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0 };
+const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0, frontendCrashes: 0 };
 
 export function useAdminNotifications() {
   const [notifications, setNotifications] = useState<AdminNotifications>(EMPTY);
