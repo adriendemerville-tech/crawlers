@@ -82,6 +82,7 @@ export function CtoAgentDashboard() {
   const [cacheHealth, setCacheHealth] = useState<CacheHealthReport | null>(null);
   const [checkingCache, setCheckingCache] = useState(false);
   const [refreshingJournal, setRefreshingJournal] = useState(false);
+  const [diagnosingCrashes, setDiagnosingCrashes] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [functionToggles, setFunctionToggles] = useState<Record<string, boolean>>({});
   const [savingToggles, setSavingToggles] = useState(false);
@@ -583,6 +584,34 @@ export function CtoAgentDashboard() {
             >
               {refreshingJournal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
               Mettre à jour
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={diagnosingCrashes}
+              onClick={async () => {
+                setDiagnosingCrashes(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('agent-cto', {
+                    body: { action: 'diagnose_frontend_crashes' },
+                  });
+                  if (error) throw error;
+                  toast({
+                    title: '🏥 Diagnostic frontend terminé',
+                    description: `${data?.crashes_analyzed || 0} crash(s) analysé(s)`,
+                  });
+                  fetchData();
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de diagnostiquer les crashs.', variant: 'destructive' });
+                } finally {
+                  setDiagnosingCrashes(false);
+                }
+              }}
+            >
+              {diagnosingCrashes ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <HeartPulse className="h-3.5 w-3.5" />}
+              Diagnostiquer crashs
             </Button>
             <Button
               variant="outline"
