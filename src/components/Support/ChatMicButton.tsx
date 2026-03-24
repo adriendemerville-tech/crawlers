@@ -13,7 +13,7 @@ interface ChatMicButtonProps {
   userDomains?: string[];
 }
 
-export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMicButtonProps) {
+export function ChatMicButton({ onTranscript, disabled, compact = true, userDomains }: ChatMicButtonProps) {
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
