@@ -606,7 +606,7 @@ export default function MatricePrompt() {
   };
 
 
-    if (score >= bon) return 'text-green-600';
+    const getScoreColor = (score: number, bon: number, moyen: number) => {
     if (score >= moyen) return 'text-yellow-600';
     return 'text-red-600';
   };
