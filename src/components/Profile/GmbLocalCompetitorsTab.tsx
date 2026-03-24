@@ -317,7 +317,7 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
           const reviews = comp.total_reviews || comp.reviews_count || 0;
 
           return (
-            <Card key={comp.competitor_place_id || comp.competitor_name + idx} className="overflow-hidden">
+            <Card key={comp.competitor_place_id || comp.competitor_name + idx} className="overflow-hidden group relative">
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
                   {/* Position number */}
