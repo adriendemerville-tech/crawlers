@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Play, Pause } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -256,6 +256,7 @@ export function MyTracking() {
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showAutopilotModal, setShowAutopilotModal] = useState(false);
+  const [autopilotStatus, setAutopilotStatus] = useState<'none' | 'active' | 'paused'>('none');
 
   // Fetch admin config for simulated data toggle
   useEffect(() => {
@@ -272,6 +273,25 @@ export function MyTracking() {
     };
     loadSimulatedFlag();
   }, []);
+
+  // Fetch autopilot status for current site
+  useEffect(() => {
+    if (!selectedSite || !user || !isAdmin || isDemoMode) {
+      setAutopilotStatus('none');
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('autopilot_configs')
+        .select('is_active')
+        .eq('tracked_site_id', selectedSite)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data) setAutopilotStatus('none');
+      else if (data.is_active) setAutopilotStatus('active');
+      else setAutopilotStatus('paused');
+    })();
+  }, [selectedSite, user, isAdmin, isDemoMode, showAutopilotModal]);
 
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
@@ -1139,10 +1159,16 @@ export function MyTracking() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          className={`gap-1.5 ${
+                            autopilotStatus === 'active'
+                              ? 'border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/5'
+                              : autopilotStatus === 'paused'
+                                ? 'border-primary/30 text-primary hover:bg-primary/5'
+                                : 'border-muted-foreground/20 text-muted-foreground hover:bg-muted/50'
+                          }`}
                           onClick={() => setShowAutopilotModal(true)}
                         >
-                          <Bot className="h-3.5 w-3.5" />
+                          {autopilotStatus === 'active' ? <Play className="h-3.5 w-3.5" /> : autopilotStatus === 'paused' ? <Pause className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                           <span className="hidden sm:inline">Autopilote</span>
                         </Button>
                       )}
