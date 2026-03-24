@@ -175,7 +175,7 @@ export function ParmenionDashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">État</CardTitle>
@@ -230,6 +230,23 @@ export function ParmenionDashboard() {
             )}
             <p className="text-xs text-muted-foreground mt-1">
               Risque max : {errorRate?.conservative_mode ? '2' : '3'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+              <Coins className="h-3.5 w-3.5 text-amber-500" />
+              Coût LLM
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {llmCostStats.costEur < 0.01 ? '<0,01' : llmCostStats.costEur.toFixed(2)} €
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {llmCostStats.totalTokens.toLocaleString('fr-FR')} tokens consommés
             </p>
           </CardContent>
         </Card>
