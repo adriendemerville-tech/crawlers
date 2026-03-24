@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Select removed — batches now shown as cards
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Header } from '@/components/Header';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -61,9 +61,11 @@ export default function MatricePrompt() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Batch management
-  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; }
+  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; last_used_at: string; }
   const [batches, setBatches] = useState<Batch[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [renamingBatchId, setRenamingBatchId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorTitle, setErrorTitle] = useState('');
@@ -116,7 +118,7 @@ export default function MatricePrompt() {
       const map = new Map<string, Batch>();
       data.forEach((row: any) => {
         if (!map.has(row.batch_id)) {
-          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0 });
+          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0, last_used_at: row.created_at });
         }
         map.get(row.batch_id)!.count++;
       });
@@ -167,7 +169,44 @@ export default function MatricePrompt() {
   // Switch batch
   const handleBatchChange = async (batchId: string) => {
     setActiveBatchId(batchId);
+    // Move to top (last used)
+    setBatches(prev => {
+      const updated = prev.map(b => b.batch_id === batchId ? { ...b, last_used_at: new Date().toISOString() } : b);
+      return updated.sort((a, b) => new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime());
+    });
     await loadBatch(batchId);
+  };
+
+  // Rename batch
+  const handleRenameBatch = async (batchId: string, newLabel: string) => {
+    if (!newLabel.trim() || !user) return;
+    const { error } = await supabase
+      .from('prompt_matrix_items')
+      .update({ batch_label: newLabel.trim() })
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId);
+    if (error) { toast.error('Erreur lors du renommage'); return; }
+    setBatches(prev => prev.map(b => b.batch_id === batchId ? { ...b, batch_label: newLabel.trim() } : b));
+    setRenamingBatchId(null);
+    toast.success('Prompt renommé');
+  };
+
+  // Delete batch
+  const handleDeleteBatch = async (batchId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('prompt_matrix_items')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId);
+    if (error) { toast.error('Erreur lors de la suppression'); return; }
+    setBatches(prev => prev.filter(b => b.batch_id !== batchId));
+    if (activeBatchId === batchId) {
+      setActiveBatchId(null);
+      setRows([]);
+      setResults(null);
+    }
+    toast.success('Prompt supprimé');
   };
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
@@ -245,7 +284,7 @@ export default function MatricePrompt() {
       parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
     }
 
-    const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length };
+    const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length, last_used_at: new Date().toISOString() };
     setBatches(prev => [newBatch, ...prev]);
     setActiveBatchId(newBatchId);
     localStorage.setItem(LAST_BATCH_KEY, newBatchId);
@@ -557,37 +596,77 @@ export default function MatricePrompt() {
             </div>
           )}
 
-          {/* Import row: import button + explanation + batch selector */}
+          {/* Import row: import button + explanation */}
           <div className="flex items-center gap-3 mb-4">
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2 shrink-0">
               {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
             </Button>
             <p className="text-xs text-muted-foreground">Importez votre méthode d'audit dans un fichier .doc, .csv ou .xlsx.</p>
-            <div className="flex-1" />
-            {batches.length > 0 && (
-              <div className="flex items-center gap-2">
-                <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                <Select value={activeBatchId || ''} onValueChange={handleBatchChange}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Sélectionner un CSV…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {batches.map(b => (
-                      <SelectItem key={b.batch_id} value={b.batch_id}>
-                        {b.batch_label} ({b.count} KPIs)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {rows.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }} className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Batch cards */}
+          {batches.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {batches.map(b => (
+                <div
+                  key={b.batch_id}
+                  onClick={() => handleBatchChange(b.batch_id)}
+                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs ${
+                    activeBatchId === b.batch_id
+                      ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
+                  }`}
+                >
+                  <FileDown className="h-3.5 w-3.5 shrink-0" />
+                  {renamingBatchId === b.batch_id ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); handleRenameBatch(b.batch_id, renameValue); }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1"
+                    >
+                      <Input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        className="h-6 text-xs w-36 px-1.5"
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === 'Escape') setRenamingBatchId(null); }}
+                      />
+                      <button type="submit" className="text-primary hover:text-primary/80"><Check className="h-3.5 w-3.5" /></button>
+                      <button type="button" onClick={() => setRenamingBatchId(null)} className="text-muted-foreground hover:text-foreground"><XIcon className="h-3.5 w-3.5" /></button>
+                    </form>
+                  ) : (
+                    <span
+                      className="font-medium truncate max-w-[180px]"
+                      onDoubleClick={(e) => { e.stopPropagation(); setRenamingBatchId(b.batch_id); setRenameValue(b.batch_label); }}
+                      title="Double-cliquer pour renommer"
+                    >
+                      {b.batch_label}
+                    </span>
+                  )}
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">{b.count}</Badge>
+                  {/* Rename button */}
+                  {renamingBatchId !== b.batch_id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRenamingBatchId(b.batch_id); setRenameValue(b.batch_label); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                      title="Renommer"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
+                  {/* Delete button — hover only */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteBatch(b.batch_id); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* URL + Analyze — centered, reduced width */}
           <div className="flex justify-center mb-6">
