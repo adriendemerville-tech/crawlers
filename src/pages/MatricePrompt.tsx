@@ -169,7 +169,44 @@ export default function MatricePrompt() {
   // Switch batch
   const handleBatchChange = async (batchId: string) => {
     setActiveBatchId(batchId);
+    // Move to top (last used)
+    setBatches(prev => {
+      const updated = prev.map(b => b.batch_id === batchId ? { ...b, last_used_at: new Date().toISOString() } : b);
+      return updated.sort((a, b) => new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime());
+    });
     await loadBatch(batchId);
+  };
+
+  // Rename batch
+  const handleRenameBatch = async (batchId: string, newLabel: string) => {
+    if (!newLabel.trim() || !user) return;
+    const { error } = await supabase
+      .from('prompt_matrix_items')
+      .update({ batch_label: newLabel.trim() })
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId);
+    if (error) { toast.error('Erreur lors du renommage'); return; }
+    setBatches(prev => prev.map(b => b.batch_id === batchId ? { ...b, batch_label: newLabel.trim() } : b));
+    setRenamingBatchId(null);
+    toast.success('Prompt renommé');
+  };
+
+  // Delete batch
+  const handleDeleteBatch = async (batchId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('prompt_matrix_items')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('batch_id', batchId);
+    if (error) { toast.error('Erreur lors de la suppression'); return; }
+    setBatches(prev => prev.filter(b => b.batch_id !== batchId));
+    if (activeBatchId === batchId) {
+      setActiveBatchId(null);
+      setRows([]);
+      setResults(null);
+    }
+    toast.success('Prompt supprimé');
   };
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
