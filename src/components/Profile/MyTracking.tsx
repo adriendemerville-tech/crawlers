@@ -2067,7 +2067,7 @@ export function MyTracking() {
       )}
 
       {/* Modification Registry */}
-      {isAdmin && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
+      {isAdmin && !isDemoMode && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
     </div>
   );
 }
