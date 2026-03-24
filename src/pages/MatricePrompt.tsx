@@ -72,6 +72,7 @@ export default function MatricePrompt() {
   const [errorTitle, setErrorTitle] = useState('');
   const [errorDesc, setErrorDesc] = useState('');
   const [submittingError, setSubmittingError] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
