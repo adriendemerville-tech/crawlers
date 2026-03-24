@@ -266,6 +266,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'functions': return <FunctionsManagement />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
+      case 'parmenion': return <ParmenionDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
