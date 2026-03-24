@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
         });
       }
     }
-    const { url, lang: requestLang, correction } = await req.json();
+    const { url, lang: requestLang, correction, customPrompt, targetProvider } = await req.json();
     const lang = parseLanguage(requestLang);
     const t = getLLMTranslations(lang);
 
