@@ -815,6 +815,149 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_configs: {
+        Row: {
+          auto_pause_threshold: number | null
+          cooldown_hours: number | null
+          created_at: string | null
+          diag_audit_complet: boolean | null
+          diag_crawl: boolean | null
+          diag_stratege_cocoon: boolean | null
+          excluded_page_types: string[] | null
+          excluded_subdomains: string[] | null
+          id: string
+          implementation_mode: string | null
+          is_active: boolean | null
+          last_cycle_at: string | null
+          max_pages_per_cycle: number | null
+          presc_architect: boolean | null
+          presc_content_architect: boolean | null
+          presc_stratege_cocoon: boolean | null
+          status: string | null
+          total_cycles_run: number | null
+          tracked_site_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_pause_threshold?: number | null
+          cooldown_hours?: number | null
+          created_at?: string | null
+          diag_audit_complet?: boolean | null
+          diag_crawl?: boolean | null
+          diag_stratege_cocoon?: boolean | null
+          excluded_page_types?: string[] | null
+          excluded_subdomains?: string[] | null
+          id?: string
+          implementation_mode?: string | null
+          is_active?: boolean | null
+          last_cycle_at?: string | null
+          max_pages_per_cycle?: number | null
+          presc_architect?: boolean | null
+          presc_content_architect?: boolean | null
+          presc_stratege_cocoon?: boolean | null
+          status?: string | null
+          total_cycles_run?: number | null
+          tracked_site_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_pause_threshold?: number | null
+          cooldown_hours?: number | null
+          created_at?: string | null
+          diag_audit_complet?: boolean | null
+          diag_crawl?: boolean | null
+          diag_stratege_cocoon?: boolean | null
+          excluded_page_types?: string[] | null
+          excluded_subdomains?: string[] | null
+          id?: string
+          implementation_mode?: string | null
+          is_active?: boolean | null
+          last_cycle_at?: string | null
+          max_pages_per_cycle?: number | null
+          presc_architect?: boolean | null
+          presc_content_architect?: boolean | null
+          presc_stratege_cocoon?: boolean | null
+          status?: string | null
+          total_cycles_run?: number | null
+          tracked_site_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_configs_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autopilot_modification_log: {
+        Row: {
+          action_type: string
+          config_id: string | null
+          created_at: string | null
+          cycle_number: number | null
+          description: string | null
+          diff_after: Json | null
+          diff_before: Json | null
+          id: string
+          page_url: string | null
+          phase: string
+          status: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          config_id?: string | null
+          created_at?: string | null
+          cycle_number?: number | null
+          description?: string | null
+          diff_after?: Json | null
+          diff_before?: Json | null
+          id?: string
+          page_url?: string | null
+          phase: string
+          status?: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          config_id?: string | null
+          created_at?: string | null
+          cycle_number?: number | null
+          description?: string | null
+          diff_after?: Json | null
+          diff_before?: Json | null
+          id?: string
+          page_url?: string | null
+          phase?: string
+          status?: string | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_modification_log_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "autopilot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autopilot_modification_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backlink_snapshots: {
         Row: {
           anchor_distribution: Json | null
