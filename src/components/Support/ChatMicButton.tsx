@@ -138,7 +138,7 @@ export function ChatMicButton({ onTranscript, disabled, compact = true, userDoma
       setRecording(false);
       stopAudioMonitor();
       if (fullTranscript.trim()) {
-        const corrected = correctTranscript(fullTranscript.trim(), userDomains);
+        const corrected = correctTranscript(fullTranscript.trim(), userDomains, siteIdentities);
         onTranscript(corrected);
       }
       recognitionRef.current = null;
