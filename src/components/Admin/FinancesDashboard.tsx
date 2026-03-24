@@ -459,6 +459,36 @@ export function FinancesDashboard() {
           </CardContent>
         </Card>
 
+        <Card className="border-amber-500/30">
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">MRR</CardTitle>
+            <CreditCard className="h-3.5 w-3.5 text-amber-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {businessMetrics.payingSubscribers} × 59€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
+            </p>
+          </CardContent>
+        </Card>
+        {dbSize && (
+          <Card className="border-cyan-500/30">
+            <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Poids-mémoire BDD</CardTitle>
+              <HardDrive className="h-3.5 w-3.5 text-cyan-500" />
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold">
+                {dbSize.total_gb >= 1
+                  ? `${dbSize.total_gb.toLocaleString('fr-FR')} Go`
+                  : `${dbSize.total_mb.toLocaleString('fr-FR')} Mo`}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Stockage total base de données</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* Spending Evolution Chart */}
       {spendingChartOpen && spendingChartData.length > 0 && (
         <Card className="border-primary/10">
@@ -495,37 +525,7 @@ export function FinancesDashboard() {
           </CardContent>
         </Card>
       )}
-        <Card className="border-amber-500/30">
-          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-muted-foreground">MRR</CardTitle>
-            <CreditCard className="h-3.5 w-3.5 text-amber-500" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {businessMetrics.payingSubscribers} × 59€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
-            </p>
-          </CardContent>
-        </Card>
-        {dbSize && (
-          <Card className="border-cyan-500/30">
-            <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Poids-mémoire BDD</CardTitle>
-              <HardDrive className="h-3.5 w-3.5 text-cyan-500" />
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <div className="text-lg font-bold">
-                {dbSize.total_gb >= 1
-                  ? `${dbSize.total_gb.toLocaleString('fr-FR')} Go`
-                  : `${dbSize.total_mb.toLocaleString('fr-FR')} Mo`}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Stockage total base de données</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
 
-      {/* MCR + ACPU Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className={cc[mcrColor].border}>
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
