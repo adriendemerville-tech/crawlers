@@ -181,6 +181,20 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
 - Audit Stratégique IA : scoring IAS + E-E-A-T + plan d'action. 1 crédit.
 - [Audit Comparé](https://crawlers.fr/audit-compare) : benchmark vs 3 concurrents. 4 crédits.
 - [Matrice d'audit](https://crawlers.fr/matrice) : moteur d'audit sur-mesure multi-critères (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
+  **Comment l'utiliser :**
+  1. Importer un fichier (CSV, XLSX, DOCX) OU saisir des critères manuellement OU charger un template pré-défini.
+  2. Chaque critère = une ligne avec un prompt/KPI à évaluer. Le moteur supporte 7 champs :
+     - \`prompt\` (obligatoire) : le critère à évaluer (ex: "La page a-t-elle un title unique ?")
+     - \`poids\` : pondération du critère (défaut: 1). Plus le poids est élevé, plus le critère compte dans le score global.
+     - \`axe\` : catégorie de classement (défaut: Général). Ex: Technique, Contenu, E-E-A-T.
+     - \`seuil_bon\` : score min pour être "bon" (défaut: 70)
+     - \`seuil_moyen\` : score min pour être "moyen" (défaut: 40)
+     - \`seuil_mauvais\` : score plancher (défaut: 0)
+     - \`llm_name\` : modèle IA à utiliser (défaut: Gemini Flash)
+  3. Le parseur utilise un algorithme de correspondance floue (Dice coefficient) pour détecter automatiquement les colonnes. Il accepte des variantes FR/EN (critère, criteria, weight, pondération, catégorie, category, etc.).
+  4. Entrer une URL cible et lancer l'audit → double scoring : Crawlers Score (moteur propriétaire) + Parsed Score (LLM).
+  5. Les lots (batches) sont sauvegardés, renommables, et le dernier utilisé s'affiche en premier.
+  6. Export en rapport PDF/HTML avec les deux méthodes de scoring.
 - [Cocon Sémantique 3D](https://crawlers.fr/cocoon) : Three.js, TF-IDF, clusters. Pro Agency.
 - [Architecte Génératif](https://crawlers.fr/architecte-generatif) : code correctif JSON-LD. 1 crédit.
 - [Crawl Multi-Pages](https://crawlers.fr/site-crawl) : jusqu'à 5000 pages. Pro Agency.
