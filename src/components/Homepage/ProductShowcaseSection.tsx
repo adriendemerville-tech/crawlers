@@ -3,12 +3,13 @@ import { motion, useInView } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap
+  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap, Code2, Lock
 } from 'lucide-react';
 
 import consoleDashboard from '@/assets/screenshots/console-dashboard.png';
 import cocoonGraph from '@/assets/screenshots/cocoon-graph.png';
 import keywordsAudit from '@/assets/screenshots/keywords-audit.png';
+import architectCode from '@/assets/screenshots/architect-code.png';
 import gmbReviews from '@/assets/screenshots/gmb-reviews.png';
 
 /** Animated screenshot card with 3D perspective tilt */
@@ -193,6 +194,31 @@ const ProductShowcaseSection = memo(() => {
             'Automatic classification: Transactional, Decisional, Informational',
             'Difficulty and position analysis for each keyword',
             'Missing content detection vs competition',
+          ],
+    },
+    {
+      image: architectCode,
+      title: language === 'fr' ? 'Architecte · Code Correctif' : 'Architect · Corrective Code',
+      subtitle: language === 'fr' ? 'Génération IA · Injection sécurisée' : 'AI Generation · Secure Injection',
+      description: language === 'fr'
+        ? 'L\'Architecte génère un script correctif sur-mesure pour votre site : Schema.org, anti-hallucination IA, performance PageSpeed et contenu sémantique. Chaque fix est configurable, prévisualisable et injectable en un clic sur votre CMS.'
+        : 'The Architect generates a custom corrective script for your site: Schema.org, AI anti-hallucination, PageSpeed performance and semantic content. Each fix is configurable, previewable and injectable in one click on your CMS.',
+      badge: 'Architect',
+      badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+      icon: Code2,
+      tiltDirection: 'right' as const,
+      features: language === 'fr'
+        ? [
+            'CMS intégrés : WordPress, Shopify, Wix, Webflow, Drupal, Odoo',
+            'Protocole CLS-ZERO : zéro régression de layout, exécution non-bloquante',
+            'Système de verrous anti-doublon (setLock / hasLock) par fonction',
+            'Prompting contextuel IA adapté au CMS détecté (PHP, Liquid, Velo…)',
+          ]
+        : [
+            'Integrated CMS: WordPress, Shopify, Wix, Webflow, Drupal, Odoo',
+            'CLS-ZERO protocol: zero layout regression, non-blocking execution',
+            'Anti-duplicate lock system (setLock / hasLock) per function',
+            'CMS-aware AI prompting (PHP, Liquid, Velo…)',
           ],
     },
     {
