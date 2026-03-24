@@ -228,54 +228,6 @@ const AIAgentsSection = memo(() => {
           </div>
         </div>
 
-        {/* Comparison row */}
-        <div className="mt-12 rounded-xl border border-border/50 bg-muted/30 p-6">
-          <div className="grid grid-cols-3 gap-4 text-center text-sm">
-            <div />
-            <div className="font-semibold text-foreground flex items-center justify-center gap-2">
-              <MessageCircle className="h-4 w-4 text-primary" /> Félix
-            </div>
-            <div className="font-semibold text-foreground flex items-center justify-center gap-2">
-              <Network className="h-4 w-4 text-emerald-500" /> Stratège Cocoon
-            </div>
-
-            {[
-              { 
-                label: language === 'fr' ? 'Rôle' : 'Role',
-                felix: language === 'fr' ? 'Comprendre' : 'Understand',
-                strat: language === 'fr' ? 'Agir' : 'Act'
-              },
-              { 
-                label: language === 'fr' ? 'Contexte' : 'Context',
-                felix: language === 'fr' ? 'Écran visible' : 'Visible screen',
-                strat: language === 'fr' ? 'Graphe du site' : 'Site graph'
-              },
-              { 
-                label: language === 'fr' ? 'Mémoire' : 'Memory',
-                felix: language === 'fr' ? 'Session' : 'Session',
-                strat: language === 'fr' ? 'Persistante' : 'Persistent'
-              },
-              { 
-                label: language === 'fr' ? 'Accès' : 'Access',
-                felix: language === 'fr' ? 'Tous les utilisateurs' : 'All users',
-                strat: 'Pro Agency'
-              },
-            ].map((row, i) => (
-              <div key={i} className="contents">
-                <div className="py-2.5 text-left text-muted-foreground border-t border-border/50 flex items-center">
-                  {row.label}
-                </div>
-                <div className="py-2.5 text-foreground/80 border-t border-border/50">
-                  {row.felix}
-                </div>
-                <div className="py-2.5 text-foreground/80 border-t border-border/50 flex items-center justify-center gap-1.5">
-                  {row.strat}
-                  {row.strat === 'Pro Agency' && <Crown className="h-3 w-3 text-amber-500" />}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
