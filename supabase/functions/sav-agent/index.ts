@@ -963,7 +963,7 @@ Pour les questions nécessitant des données précises, suggère au créateur de
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + guestHint + escalationHint + greetingHint + creatorHint;
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + guestHint + escalationHint + greetingHint + creatorHint;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
