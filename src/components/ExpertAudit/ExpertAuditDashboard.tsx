@@ -953,95 +953,92 @@ export function ExpertAuditDashboard() {
 
     // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
     const useCachedContext = isCorrection && strategicCachedContext;
+    const canUseAsync = !!user;
     
     try {
-      
-      // Use async mode: submit job, then poll for completion (avoids HTTP timeout)
-      const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
-        url: normalizedUrl, 
-        toolsData: null,
-        hallucinationCorrections: hallucinationCorrections || null,
-        competitorCorrections: competitorCorrections || null,
-        cachedContext: useCachedContext ? strategicCachedContext : null,
-        lang: language,
-        async: true,
-      }, 30000); // 30s timeout just for the initial submission
+      let rawStrategicData: any = null;
 
-      if (!launchResp.job_id) throw new Error('No job_id returned from async audit');
+      if (canUseAsync) {
+        // Use async mode for authenticated users: submit job, then poll for completion
+        const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
+          url: normalizedUrl, 
+          toolsData: null,
+          hallucinationCorrections: hallucinationCorrections || null,
+          competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
+          lang: language,
+          async: true,
+        }, 30000);
 
-      // Poll async_jobs table until completion (max 10 minutes)
-      const jobId = launchResp.job_id;
-      const pollStart = Date.now();
-      const MAX_POLL_MS = 10 * 60 * 1000; // 10 min
-      let data: any = null;
+        if (!launchResp.job_id) throw new Error('No job_id returned from async audit');
 
-      while (Date.now() - pollStart < MAX_POLL_MS) {
-        await new Promise(r => setTimeout(r, 5000)); // poll every 5s
+        const jobId = launchResp.job_id;
+        const pollStart = Date.now();
+        const MAX_POLL_MS = 10 * 60 * 1000;
 
-        const { data: job, error: jobErr } = await supabase
-          .from('async_jobs')
-          .select('status, result_data, error_message, progress')
-          .eq('id', jobId)
-          .single();
+        while (Date.now() - pollStart < MAX_POLL_MS) {
+          await new Promise(r => setTimeout(r, 5000));
 
-        if (jobErr) {
-          console.warn('[strategic-poll] query error:', jobErr);
-          continue;
+          const { data: job, error: jobErr } = await supabase
+            .from('async_jobs')
+            .select('status, result_data, error_message, progress')
+            .eq('id', jobId)
+            .single();
+
+          if (jobErr) {
+            console.warn('[strategic-poll] query error:', jobErr);
+            continue;
+          }
+
+          if (job?.status === 'completed' && job.result_data) {
+            rawStrategicData = job.result_data as any;
+            break;
+          }
+
+          if (job?.status === 'failed') {
+            throw new Error(job.error_message || 'Audit job failed');
+          }
         }
 
-        if (job?.status === 'completed' && job.result_data) {
-          data = job.result_data as any;
-          break;
-        }
+        if (!rawStrategicData) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
+      } else {
+        const syncResp = await invokeWithTimeout('audit-strategique-ia', {
+          url: normalizedUrl,
+          toolsData: null,
+          hallucinationCorrections: hallucinationCorrections || null,
+          competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
+          lang: language,
+        }, 540000);
 
-        if (job?.status === 'failed') {
-          throw new Error(job.error_message || 'Audit job failed');
-        }
+        rawStrategicData = syncResp?.data ?? syncResp;
+        if (!rawStrategicData) throw new Error('Aucune donnée retournée par l\'audit stratégique');
       }
 
-      if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
-
-      // Polled data is result.data directly (not the {success, data} wrapper)
-      const strategicData = mapStrategicData(data, normalizedUrl, hallucinationCorrections);
+      const strategicData = mapStrategicData(rawStrategicData, normalizedUrl, hallucinationCorrections);
 
       setResult(strategicData);
       setStrategicResult(strategicData);
       setStrategicProgressiveReveal(true);
-      // Store cached context for fast relaunches (competitor corrections, etc.)
-      if (data._cachedContext) {
-        setStrategicCachedContext(data._cachedContext);
+      if (rawStrategicData._cachedContext) {
+        setStrategicCachedContext(rawStrategicData._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-      // Signal expert audit completion for signup prompt
       window.dispatchEvent(new Event('expert-audit-complete'));
-      // Save to domain-level strategic cache for future audits
       if (domain) {
         setStrategicCache(domain, strategicData);
         setStrategicCacheInfo({ auditCount: 1, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
       }
-      // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
-      // Fire-and-forget: sync SERP KPIs to tracked site
       if (user) syncSerpToTrackedSite(domain, user.id);
-      // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
-      
-      // Pre-summarize for downloadable report (runs in background)
       setPreSummarizedResult(null);
       summarizeStrategicResult(strategicData, language).then((summarized) => {
         setPreSummarizedResult(summarized);
       }).catch((err) => console.error('[pre-summarize] error:', err));
-      
-      // Track step 2 completion
       trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-      
-      // Site tracking is now manual via TrackSiteButton
-
-      // Fetch stored corrections for this domain (community knowledge)
       const auditDomain = new URL(normalizedUrl).hostname;
       fetchStoredCorrections(auditDomain);
-
-      // Toast removed — results appear directly in the UI
     } catch (error) {
       console.error('Strategic audit error:', error);
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
@@ -1093,44 +1090,69 @@ export function ExpertAuditDashboard() {
       }
 
       if (!recovered) {
-        // Step 2: Full retry
         try {
-          console.log('Strategic audit: auto-retrying (async mode)...');
-          const retryLaunch = await invokeWithTimeout('audit-strategique-ia', {
-            url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
-            cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
-            async: true,
-          }, 30000);
+          if (canUseAsync) {
+            console.log('Strategic audit: auto-retrying (async mode)...');
+            const retryLaunch = await invokeWithTimeout('audit-strategique-ia', {
+              url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
+              cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
+              async: true,
+            }, 30000);
 
-          if (!retryLaunch.job_id) throw new Error('No job_id on retry');
+            if (!retryLaunch.job_id) throw new Error('No job_id on retry');
 
-          const retryJobId = retryLaunch.job_id;
-          const retryPollStart = Date.now();
-          let retryData: any = null;
-          while (Date.now() - retryPollStart < 10 * 60 * 1000) {
-            await new Promise(r => setTimeout(r, 5000));
-            const { data: job } = await supabase.from('async_jobs').select('status, result_data, error_message').eq('id', retryJobId).single();
-            if (job?.status === 'completed' && job.result_data) { retryData = job.result_data; break; }
-            if (job?.status === 'failed') throw new Error(job.error_message || 'Retry job failed');
+            const retryJobId = retryLaunch.job_id;
+            const retryPollStart = Date.now();
+            let retryData: any = null;
+            while (Date.now() - retryPollStart < 10 * 60 * 1000) {
+              await new Promise(r => setTimeout(r, 5000));
+              const { data: job } = await supabase.from('async_jobs').select('status, result_data, error_message').eq('id', retryJobId).single();
+              if (job?.status === 'completed' && job.result_data) { retryData = job.result_data; break; }
+              if (job?.status === 'failed') throw new Error(job.error_message || 'Retry job failed');
+            }
+            if (!retryData) throw new Error('Retry timeout');
+
+            const strategicData = mapStrategicData(retryData, normalizedUrl, hallucinationCorrections);
+
+            setResult(strategicData);
+            setStrategicResult(strategicData);
+            setStrategicProgressiveReveal(true);
+            if (retryData._cachedContext) {
+              setStrategicCachedContext(retryData._cachedContext);
+            }
+            setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+            setHallucinationDiagnosis(null);
+            setPreSummarizedResult(null);
+            summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
+            trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+            const retryDomain = new URL(normalizedUrl).hostname;
+            fetchStoredCorrections(retryDomain);
+          } else {
+            console.log('Strategic audit: auto-retrying (sync guest mode)...');
+            const retryResp = await invokeWithTimeout('audit-strategique-ia', {
+              url: normalizedUrl,
+              toolsData: null,
+              hallucinationCorrections: hallucinationCorrections || null,
+              competitorCorrections: competitorCorrections || null,
+              cachedContext: useCachedContext ? strategicCachedContext : null,
+              lang: language,
+            }, 540000);
+
+            const retryData = retryResp?.data ?? retryResp;
+            if (!retryData) throw new Error('Retry returned no data');
+
+            const strategicData = mapStrategicData(retryData, normalizedUrl, hallucinationCorrections);
+            setResult(strategicData);
+            setStrategicResult(strategicData);
+            setStrategicProgressiveReveal(true);
+            if (retryData._cachedContext) setStrategicCachedContext(retryData._cachedContext);
+            setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+            setHallucinationDiagnosis(null);
+            setPreSummarizedResult(null);
+            summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
+            trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+            fetchStoredCorrections(new URL(normalizedUrl).hostname);
           }
-          if (!retryData) throw new Error('Retry timeout');
-
-          const strategicData = mapStrategicData(retryData, normalizedUrl, hallucinationCorrections);
-
-          setResult(strategicData);
-          setStrategicResult(strategicData);
-          setStrategicProgressiveReveal(true);
-          if (retryData._cachedContext) {
-            setStrategicCachedContext(retryData._cachedContext);
-          }
-          setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-          setHallucinationDiagnosis(null);
-          setPreSummarizedResult(null);
-          summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
-          trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-          const retryDomain = new URL(normalizedUrl).hostname;
-          fetchStoredCorrections(retryDomain);
-          // Toast removed
         } catch (retryError) {
           console.error('Strategic audit retry also failed:', retryError);
           // Increment fail counter for this URL
