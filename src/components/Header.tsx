@@ -349,8 +349,8 @@ export function Header() {
         {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
 
-          {/* Credit recharge button - on home and /audit-expert (show for all users) */}
-          {isAuditExpertPage && (
+          {/* Credit recharge button - on audit-expert only, hidden for agency pro subscribers */}
+          {isAuditExpertPage && !isAgencyPro && (
             <Suspense fallback={null}>
               <CreditRechargeButton showZeroForGuest />
             </Suspense>
