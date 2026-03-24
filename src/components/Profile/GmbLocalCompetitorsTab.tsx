@@ -379,6 +379,15 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
                       {getPositionLabel(pos)}
                     </Badge>
                   </div>
+
+                  {/* Delete button — hover only */}
+                  <button
+                    onClick={() => handleRemoveCompetitor(idx)}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                    title="Retirer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </CardContent>
             </Card>
