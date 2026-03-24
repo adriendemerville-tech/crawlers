@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   TrendingUp, TrendingDown, Minus, MapPin, Star, Globe, Search,
-  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown,
+  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
