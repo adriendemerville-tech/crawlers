@@ -577,6 +577,24 @@ export default function MatricePrompt() {
     return AXE_COLORS[axe] || 'bg-muted text-muted-foreground border-border';
   };
 
+  const TYPE_COLORS: Record<string, string> = {
+    'meta-tags': 'bg-blue-500/15 text-blue-600 border-blue-300',
+    'structured-data': 'bg-indigo-500/15 text-indigo-600 border-indigo-300',
+    'robots': 'bg-slate-500/15 text-slate-600 border-slate-300',
+    'images': 'bg-amber-500/15 text-amber-600 border-amber-300',
+    'backlinks': 'bg-violet-500/15 text-violet-600 border-violet-300',
+    'content-quality': 'bg-emerald-500/15 text-emerald-600 border-emerald-300',
+    'eeat': 'bg-orange-500/15 text-orange-600 border-orange-300',
+    'pagespeed': 'bg-rose-500/15 text-rose-600 border-rose-300',
+    'check-llm': 'bg-cyan-500/15 text-cyan-600 border-cyan-300',
+    'check-geo': 'bg-teal-500/15 text-teal-600 border-teal-300',
+    'cocoon': 'bg-purple-500/15 text-purple-600 border-purple-300',
+  };
+
+  const getTypeBadgeClass = (type: string) => {
+    return TYPE_COLORS[type] || 'bg-muted text-muted-foreground border-border';
+  };
+
   if (adminLoading || authLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
