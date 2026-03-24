@@ -108,6 +108,7 @@ Deno.serve(async (req: Request) => {
             tracked_site_id: config.tracked_site_id,
             domain: site.domain,
             cycle_number: cycleNumber,
+            user_id: config.user_id,
           }),
         });
 
