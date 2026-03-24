@@ -216,10 +216,10 @@ const AIAgentsSection = memo(() => {
             {/* CTA */}
             <Link to="/cocoon">
               <Button 
-                variant="outline" 
-                size="sm"
-                className="gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
-              >
+                 variant="outline" 
+                 size="sm"
+                 className="gap-2 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+               >
                 <Network className="h-4 w-4" />
                 {language === 'fr' ? 'Découvrir le Cocoon' : language === 'es' ? 'Descubrir el Cocoon' : 'Discover Cocoon'}
                 <ArrowRight className="h-3.5 w-3.5" />
