@@ -41,6 +41,7 @@ const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(
 const IdentityFirstSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.IdentityFirstSection })));
 const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
+const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
@@ -652,6 +653,11 @@ const Index = () => {
 
         <Suspense fallback={<SectionSkeleton />}>
           <FeatureShowcase />
+        </Suspense>
+
+        {/* AI Agents — Félix & Stratège Cocoon */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <AIAgentsSection />
         </Suspense>
 
         {/* Active crawl notification banner */}
