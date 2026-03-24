@@ -343,3 +343,38 @@ function ProfileContent() {
     </>
   );
 }
+
+class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[Profile] Crash:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-destructive">Erreur d'affichage</p>
+            <p className="text-sm text-muted-foreground max-w-md">{this.state.error?.message}</p>
+            <button onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">Recharger</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function Profile() {
+  return (
+    <ProfileErrorBoundary>
+      <ProfileContent />
+    </ProfileErrorBoundary>
+  );
+}
