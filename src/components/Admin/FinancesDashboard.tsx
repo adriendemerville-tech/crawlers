@@ -226,6 +226,21 @@ export function FinancesDashboard() {
       setAllTimePlatformCost(grandTotalCostAll);
       setAllTimeTokenUsage(statsAll);
 
+      // Store raw events for spending chart
+      const rawCosts: { created_at: string; cost: number }[] = [];
+      tokenEventsAll.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (!data) return;
+        const model = (data.model as string) || 'unknown';
+        const p = Number(data.prompt_tokens) || 0;
+        const c = Number(data.completion_tokens) || 0;
+        rawCosts.push({ created_at: e.created_at, cost: estimateCost(model, p, c) });
+      });
+      paidApiEventsAll.forEach(e => {
+        rawCosts.push({ created_at: e.created_at, cost: 0.005 });
+      });
+      setAllTimeRawEvents(rawCosts);
+
       // Active users
       const activeUserIds = new Set<string>();
       events.forEach(e => { if (e.user_id) activeUserIds.add(e.user_id); });
