@@ -251,8 +251,8 @@ export function ExternalApisTab() {
       return;
     }
 
-    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix'].includes(service.id)) {
-      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix');
+    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'odoo'].includes(service.id)) {
+      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo');
       setCmsDialogOpen(true);
     }
   };

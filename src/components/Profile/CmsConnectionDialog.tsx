@@ -44,6 +44,7 @@ const translations = {
     shopifyHelp: 'Entrez l\'URL de votre boutique Shopify et votre token d\'accès Admin API.',
     webflowHelp: 'Entrez votre token API Webflow (Site Settings → Integrations → API Access).',
     wixHelp: 'Entrez votre clé API Wix (Tableau de bord Wix → Dev Center → API Keys).',
+    odooHelp: 'Entrez l\'URL de votre instance Odoo, le nom de la base de données, et votre clé API ou mot de passe.',
     webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
     webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
     webhookManualTitle: 'Configuration manuelle du webhook',
