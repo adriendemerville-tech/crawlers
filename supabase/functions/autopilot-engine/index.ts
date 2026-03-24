@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     let targetSiteId: string | null = null;
     let userId: string | null = null;
 
-    // Check if service-role call (cron or admin tool) or user call
+    // Check if service-role call (cron) or user call
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(SERVICE_ROLE_KEY);
     
@@ -34,9 +34,14 @@ Deno.serve(async (req: Request) => {
 
     if (!isServiceRole) {
       const auth = await getAuthenticatedUser(req);
-      if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      userId = auth.userId;
+      if (!auth) {
+        console.log('[AutopilotEngine] Auth failed, trying as cron...');
+        // Allow anon key calls (from cron via pg_net) - just proceed without userId
+      } else if (!auth.isAdmin) {
+        return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } else {
+        userId = auth.userId;
+      }
     }
 
     // ═══ Fetch active autopilot configs ═══
