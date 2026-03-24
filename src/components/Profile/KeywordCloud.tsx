@@ -70,7 +70,7 @@ export function KeywordCloud({ keywords }: KeywordCloudProps) {
                 <TooltipContent side="top" className="text-xs">
                   <p className="font-semibold">{kw.keyword}</p>
                   <p>Position : #{kw.position}</p>
-                  <p>Volume : {kw.search_volume.toLocaleString()}/mois</p>
+                  <p>Volume : {(kw.search_volume ?? 0).toLocaleString()}/mois</p>
                   {kw.url && <p className="truncate max-w-[200px] text-muted-foreground">{kw.url}</p>}
                 </TooltipContent>
               </Tooltip>

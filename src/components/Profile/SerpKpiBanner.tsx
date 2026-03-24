@@ -209,7 +209,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
               <Hash className="h-3 w-3" />
               {t.totalKeywords}
             </div>
-            <p className="text-lg font-semibold">{data.total_keywords.toLocaleString()}</p>
+            <p className="text-lg font-semibold">{(data.total_keywords ?? 0).toLocaleString()}</p>
           </div>
 
           <div className="rounded-lg border bg-card p-3 space-y-1">
@@ -217,7 +217,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
               <Target className="h-3 w-3" />
               ETV
             </div>
-            <p className="text-lg font-semibold text-primary">{data.etv.toLocaleString()}</p>
+            <p className="text-lg font-semibold text-primary">{(data.etv ?? 0).toLocaleString()}</p>
           </div>
 
           <div className="rounded-lg border bg-card p-3 space-y-1">

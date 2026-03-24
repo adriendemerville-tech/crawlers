@@ -54,7 +54,7 @@ export function TopKeywordsList({ keywords }: TopKeywordsListProps) {
           >
             <span className="text-[11px] text-muted-foreground w-5 text-right shrink-0">{i + 1}.</span>
             <span className="flex-1 text-sm truncate">{kw.keyword}</span>
-            <span className="text-[11px] text-muted-foreground shrink-0">{kw.search_volume.toLocaleString()}/m</span>
+            <span className="text-[11px] text-muted-foreground shrink-0">{(kw.search_volume ?? 0).toLocaleString()}/m</span>
             <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 shrink-0', positionBadgeClass(kw.position))}>
               #{kw.position}
             </Badge>
