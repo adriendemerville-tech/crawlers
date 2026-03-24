@@ -351,6 +351,30 @@ export function FinancesDashboard() {
   const grandTotalSinceLaunchUSD = realDataforseoSpent + realOpenrouterSpent;
   const grandTotalSinceLaunchEUR = grandTotalSinceLaunchUSD * 0.92 + allTimePlatformCost;
 
+  // Spending chart data
+  const spendingChartData = useMemo(() => {
+    if (!allTimeRawEvents.length) return [];
+    const buckets = new Map<string, number>();
+    
+    allTimeRawEvents.forEach(evt => {
+      const date = new Date(evt.created_at);
+      let key: string;
+      if (spendingScale === 'day') key = format(startOfDay(date), 'yyyy-MM-dd');
+      else if (spendingScale === 'week') key = format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      else key = format(startOfMonth(date), 'yyyy-MM');
+      buckets.set(key, (buckets.get(key) || 0) + evt.cost);
+    });
+
+    const sorted = [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    let cumulative = 0;
+    return sorted.map(([key, cost]) => {
+      cumulative += cost;
+      const labelFmt = spendingScale === 'month' ? 'MMM yy' : 'dd MMM';
+      const label = format(new Date(key), labelFmt, { locale: fr });
+      return { date: key, label, cost: Math.round(cost * 100) / 100, cumulative: Math.round(cumulative * 100) / 100 };
+    });
+  }, [allTimeRawEvents, spendingScale]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
