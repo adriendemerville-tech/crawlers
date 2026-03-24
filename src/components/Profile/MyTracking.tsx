@@ -2053,6 +2053,19 @@ export function MyTracking() {
           onUpdate={() => fetchSites()}
         />
       )}
+
+      {/* Autopilot Modal */}
+      {currentSite && isAdmin && (
+        <AutopilotModal
+          open={showAutopilotModal}
+          onOpenChange={setShowAutopilotModal}
+          trackedSiteId={currentSite.id}
+          siteDomain={currentSite.domain}
+        />
+      )}
+
+      {/* Modification Registry */}
+      {isAdmin && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
     </div>
   );
 }
