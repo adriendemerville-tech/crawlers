@@ -138,7 +138,7 @@ function HeroSectionComponent() {
                 <span className="font-bold text-amber-400">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
-                <span className="text-xs font-normal text-muted-foreground">Audit SEO-GEO. 5 min</span>
+                <span className="text-xs font-normal text-muted-foreground">SEO-GEO. 5 min</span>
               </div>
             </Button>
           </Link>
