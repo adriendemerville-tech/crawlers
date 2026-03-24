@@ -258,6 +258,10 @@ export function MyTracking() {
   const [showAutopilotModal, setShowAutopilotModal] = useState(false);
   const [autopilotStatus, setAutopilotStatus] = useState<'none' | 'active' | 'paused'>('none');
 
+  // IKTracker connection state
+  const [ikTrackerConnected, setIkTrackerConnected] = useState<boolean | null>(null);
+  const [ikTrackerToggling, setIkTrackerToggling] = useState(false);
+
   // Fetch admin config for simulated data toggle
   useEffect(() => {
     const loadSimulatedFlag = async () => {
