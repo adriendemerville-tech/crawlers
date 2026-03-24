@@ -625,6 +625,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                 <ChatMicButton
                   onTranscript={(text) => setNewMessage(prev => prev ? `${prev} ${text}` : text)}
                   disabled={sending}
+                  userDomains={userDomains}
                 />
               </div>
             )}
