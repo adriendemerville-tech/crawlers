@@ -150,6 +150,16 @@ const App = () => (
                           <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
+                          {/* Legacy redirects → /app/* */}
+                          <Route path="/console" element={<Navigate to="/app/console" replace />} />
+                          <Route path="/profil" element={<Navigate to="/app/profil" replace />} />
+                          <Route path="/cocoon" element={<Navigate to="/app/cocoon" replace />} />
+                          <Route path="/site-crawl" element={<Navigate to="/app/site-crawl" replace />} />
+                          <Route path="/audit-compare" element={<Navigate to="/app/audit-compare" replace />} />
+                          <Route path="/rapport/audit" element={<Navigate to="/app/rapport/audit" replace />} />
+                          <Route path="/rapport/cocoon" element={<Navigate to="/app/rapport/cocoon" replace />} />
+                          <Route path="/rapport/matrice" element={<Navigate to="/app/rapport/matrice" replace />} />
+                          <Route path="/rapport/:reportId" element={<Navigate to="/app/rapport/:reportId" replace />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
