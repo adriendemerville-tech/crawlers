@@ -25,11 +25,19 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const auth = await getAuthenticatedUser(req);
-    if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Accept service-role calls (from autopilot-engine) or admin users
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
+    
+    let authUserId: string | null = null;
+    if (!isServiceRole) {
+      const auth = await getAuthenticatedUser(req);
+      if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      authUserId = auth.userId;
+    }
 
-    const { tracked_site_id, domain, cycle_number = 1 } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -92,7 +100,7 @@ serve(async (req: Request) => {
     // ═══ PHASE 3: Persist decision ═══
     const logEntry = {
       tracked_site_id,
-      user_id: auth.userId,
+      user_id: authUserId || bodyUserId || tracked_site_id,
       domain,
       cycle_number,
       goal_type: decision.goal.type,
