@@ -94,7 +94,7 @@ const App = () => (
   <Suspense fallback={null}>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LanguageProvider>
             <Suspense fallback={null}>
               <AuthProvider>

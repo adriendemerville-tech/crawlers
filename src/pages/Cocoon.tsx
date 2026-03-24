@@ -655,7 +655,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
+      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e]">
 
         {/* Top Bar */}
         {!isFullscreen && (
