@@ -2,12 +2,15 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { correctTranscript } from '@/utils/sttVocabulary';
 
 interface ChatMicButtonProps {
   onTranscript: (text: string) => void;
   disabled?: boolean;
   /** Compact mode for chat inputs (smaller size) */
   compact?: boolean;
+  /** User's tracked domain names for STT vocabulary correction */
+  userDomains?: string[];
 }
 
 export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMicButtonProps) {
