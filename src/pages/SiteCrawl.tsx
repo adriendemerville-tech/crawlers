@@ -1213,19 +1213,12 @@ export default function SiteCrawl() {
                       <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
-                    {isUnlimited ? (
-                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 gap-1">
-                        <span className="text-base text-amber-500">∞</span>
-                        {t.unlimited}
-                      </Badge>
-                    ) : (
-                      <>
-                        <CreditCoin size="md" />
-                        <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
-                      </>
-                    )}
-                  </button>
+                  {!isUnlimited && (
+                    <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
+                      <CreditCoin size="md" />
+                      <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Advanced Options */}
@@ -1966,28 +1959,32 @@ export default function SiteCrawl() {
             </Card>
           )}
 
-          {/* CTA Cocoon */}
-          <div className="flex justify-center mt-12 mb-8">
-            <Link
-              to={`/app/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
-            >
-              <Sparkles className="h-4 w-4" />
-              Cocoon · Assistant Sémantique
-            </Link>
-          </div>
+          {/* CTA Cocoon + SEO content — hidden for subscribers */}
+          {!isAgencyPro && (
+            <>
+              <div className="flex justify-center mt-12 mb-8">
+                <Link
+                  to={`/app/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Cocoon · Assistant Sémantique
+                </Link>
+              </div>
 
-          {/* SEO content — H2s at bottom */}
-          <div className="mt-16 mb-10 max-w-3xl mx-auto space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
-            </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
-            </div>
-          </div>
+              {/* SEO content — H2s at bottom */}
+              <div className="mt-16 mb-10 max-w-3xl mx-auto space-y-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
+                </div>
+              </div>
+            </>
+          )}
 
         </div>
       </main>
@@ -2012,7 +2009,7 @@ export default function SiteCrawl() {
         currentUrl={siteCrawlReportData?.domain || url}
       />
 
-      <Footer />
+      {!isAgencyPro && <Footer />}
     </>
   );
 }
