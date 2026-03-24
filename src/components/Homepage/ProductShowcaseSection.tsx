@@ -211,7 +211,7 @@ const ProductShowcaseSection = memo(() => {
             'Gestion multi-établissements (Paris, Lyon…)',
             'Suivi des avis et réponses directement depuis la console',
             'Analyse de la concurrence locale par zone',
-            'Statistiques d\'engagement et visibilité GBP',
+            'Statistiques d\'engagement et visibilité GMB',
           ]
         : [
             'Multi-location management (Paris, Lyon…)',
