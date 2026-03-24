@@ -713,9 +713,12 @@ function computeCombinedScore(prompt: string, html: HtmlData, robots: RobotsData
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
+
+  const MAX_RETRIES = 2
+  const RETRY_DELAYS = [2000, 5000] // exponential backoff
 
   try {
     const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
@@ -724,8 +727,8 @@ Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string 
 
     const userPrompt = `URL: ${url}
 
-EXTRAIT HTML (premiers 3000 caractères):
-${htmlSummary.substring(0, 3000)}
+EXTRAIT HTML (contenu principal):
+${htmlSummary}
 
 CRITÈRE À ÉVALUER:
 ${prompt}
@@ -752,9 +755,25 @@ Score de 0 à 100 pour ce critère:`
     if (!resp.ok) {
       const status = resp.status
       await resp.text()
-      if (status === 429) return { score: 50, raw: { error: 'Rate limited', status: 429 } }
+
+      // Retry on 429 rate limit with exponential backoff
+      if (status === 429 && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000
+        console.log(`[audit-matrice] LLM 429 rate-limited, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(r => setTimeout(r, delay))
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      }
+
+      // Retry on 500/502/503 server errors
+      if (status >= 500 && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000
+        console.log(`[audit-matrice] LLM ${status} server error, retrying in ${delay}ms`)
+        await new Promise(r => setTimeout(r, delay))
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      }
+
       if (status === 402) return { score: 50, raw: { error: 'Payment required', status: 402 } }
-      return { score: 50, raw: { error: `API error ${status}` } }
+      return { score: 50, raw: { error: `API error ${status}`, retries: retryCount } }
     }
 
     const data = await resp.json()
@@ -779,7 +798,14 @@ Score de 0 à 100 pour ce critère:`
       return { score: 50, raw: { llm_raw: content.substring(0, 200), parse_error: true } }
     }
   } catch (e) {
-    return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error' } }
+    // Retry on timeout/network errors
+    if (retryCount < MAX_RETRIES) {
+      const delay = RETRY_DELAYS[retryCount] || 5000
+      console.log(`[audit-matrice] LLM error "${e instanceof Error ? e.message : 'unknown'}", retrying in ${delay}ms`)
+      await new Promise(r => setTimeout(r, delay))
+      return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+    }
+    return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error', retries: retryCount } }
   }
 }
 
