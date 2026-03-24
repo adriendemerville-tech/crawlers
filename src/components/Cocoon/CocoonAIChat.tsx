@@ -271,6 +271,7 @@ const labels = {
     optimize: 'Optimize linking',
     strategy: '360° Strategy',
     strategyBtn: 'Diagnosis & Strategy',
+    subdomains: 'Subdomains',
   },
   es: {
     title: 'Estratega Cocoon',
