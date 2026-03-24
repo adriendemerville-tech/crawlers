@@ -342,7 +342,7 @@ export function WorkflowCarousel({
                   size="sm"
                   disabled={isLoading || !url.trim()}
                   onClick={onStartTechnical}
-                  className="h-10 px-5 border border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-medium shrink-0 hidden sm:flex items-center text-sm ml-2 rounded-md"
+                  className="h-10 px-5 border border-border text-muted-foreground bg-transparent hover:bg-muted hover:text-foreground font-medium shrink-0 hidden sm:flex items-center text-sm ml-2 rounded-md"
                 >
                   {t.start}
                 </Button>
