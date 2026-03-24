@@ -17,7 +17,7 @@ interface TrackedSite {
 interface CmsConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix';
+  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo';
 }
 
 const translations = {
@@ -44,6 +44,7 @@ const translations = {
     shopifyHelp: 'Entrez l\'URL de votre boutique Shopify et votre token d\'accès Admin API.',
     webflowHelp: 'Entrez votre token API Webflow (Site Settings → Integrations → API Access).',
     wixHelp: 'Entrez votre clé API Wix (Tableau de bord Wix → Dev Center → API Keys).',
+    odooHelp: 'Entrez l\'URL de votre instance Odoo, le nom de la base de données, et votre clé API ou mot de passe.',
     webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
     webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
     webhookManualTitle: 'Configuration manuelle du webhook',
@@ -77,6 +78,7 @@ const translations = {
     shopifyHelp: 'Enter your Shopify store URL and Admin API access token.',
     webflowHelp: 'Enter your Webflow API token (Site Settings → Integrations → API Access).',
     wixHelp: 'Enter your Wix API key (Wix Dashboard → Dev Center → API Keys).',
+    odooHelp: 'Enter your Odoo instance URL, database name, and API key or password.',
     webhookAutoSuccess: 'Order tracking webhook registered automatically ✓',
     webhookAutoFailed: 'Automatic webhook registration failed. See manual instructions below.',
     webhookManualTitle: 'Manual webhook setup',
@@ -110,6 +112,7 @@ const translations = {
     shopifyHelp: 'Ingrese la URL de su tienda Shopify y el token de acceso Admin API.',
     webflowHelp: 'Ingrese su token API de Webflow (Configuración del sitio → Integraciones → Acceso API).',
     wixHelp: 'Ingrese su clave API de Wix (Panel de Wix → Dev Center → API Keys).',
+    odooHelp: 'Ingrese la URL de su instancia Odoo, el nombre de la base de datos y su clave API o contraseña.',
     webhookAutoSuccess: 'Webhook de seguimiento de pedidos registrado automáticamente ✓',
     webhookAutoFailed: 'Registro automático del webhook fallido. Vea las instrucciones manuales.',
     webhookManualTitle: 'Configuración manual del webhook',
@@ -305,17 +308,17 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     toast.success(t.copied);
   };
 
-  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix';
+  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo';
   const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
   const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
-  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : 'Drupal';
+  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : cmsType === 'odoo' ? 'Odoo' : 'Drupal';
 
-  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : t.drupalHelp;
+  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : cmsType === 'odoo' ? t.odooHelp : t.drupalHelp;
 
-  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'wordpress' ? t.apiKey : t.password;
+  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'odoo' ? t.apiKey : cmsType === 'wordpress' ? t.apiKey : t.password;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -372,6 +375,16 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
                 className="flex items-center gap-1 text-primary hover:underline"
               >
                 ↗ {language === 'fr' ? 'Ouvrir les réglages API Wix' : language === 'es' ? 'Abrir configuración API Wix' : 'Open Wix API settings'}
+              </a>
+            )}
+            {cmsType === 'odoo' && siteUrl && (
+              <a
+                href={`${siteUrl.replace(/\/$/, '')}/web#action=base.action_res_users`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages Odoo' : language === 'es' ? 'Abrir configuración Odoo' : 'Open Odoo settings'}
               </a>
             )}
           </DialogDescription>
