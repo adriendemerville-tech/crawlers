@@ -46,7 +46,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.2 Modules partagés (`_shared/`)
 
-21 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, etc.
+32 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, etc.
 
 ### 2.3 Base de données
 
