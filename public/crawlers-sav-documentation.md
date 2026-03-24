@@ -411,7 +411,7 @@ Snippet léger (~2 Ko) compatible tous CMS et sites custom.
 Guide complet : https://crawlers.fr/integration-gtm
 
 ### Compatible avec WordPress ?
-Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Lien Magique, plugin .zip classique, et snippet GTM/Script universel. Les codes correctifs sont compatibles avec Elementor, Divi, Astra, GeneratePress et tous les thèmes majeurs.
+Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Lien Magique, plugin .zip classique, et snippet GTM/Script universel. Les codes correctifs sont compatibles avec Elementor, Divi, Astra, GeneratePress et tous les thèmes majeurs. Le système supporte également Shopify, Wix, PrestaShop et Drupal.
 
 ---
 
