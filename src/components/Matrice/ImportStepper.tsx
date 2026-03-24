@@ -48,7 +48,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
 
   // Reset state when modal opens with new data
-  const prevOpenRef = useState(false);
+  
   useMemo(() => {
     if (open && sheetNames.length > 0) {
       setStep(sheetNames.length > 1 ? 'sheet' : 'type');
