@@ -328,13 +328,10 @@ export default function MatricePrompt() {
         try {
           const { read } = await import('xlsx');
           const workbook = read(evt.target?.result, { type: 'array' });
-          if (workbook.SheetNames.length > 1) {
-            setXlsxWorkbookRef(workbook);
-            setXlsxFileName(fileName);
-            setXlsxSheetNames(workbook.SheetNames);
-          } else {
-            await processXlsxSheet(workbook, workbook.SheetNames[0], fileName);
-          }
+          setXlsxWorkbookRef(workbook);
+          setXlsxFileName(fileName);
+          setXlsxStepperSheets(workbook.SheetNames);
+          setXlsxStepperOpen(true);
         } catch {
           toast.error('Erreur de parsing XLSX');
         }
