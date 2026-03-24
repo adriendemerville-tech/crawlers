@@ -276,7 +276,7 @@ const FeatureShowcase = memo(() => {
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-4xl space-y-14 md:space-y-20">
         {items.map((item, i) => {
-          const feat = features[i];
+          const feat = visibleFeatures[i];
           const Icon = feat.icon;
           return (
             <div key={i} className="space-y-3">
