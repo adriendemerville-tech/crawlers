@@ -258,6 +258,10 @@ export function MyTracking() {
   const [showAutopilotModal, setShowAutopilotModal] = useState(false);
   const [autopilotStatus, setAutopilotStatus] = useState<'none' | 'active' | 'paused'>('none');
 
+  // IKTracker connection state
+  const [ikTrackerConnected, setIkTrackerConnected] = useState<boolean | null>(null);
+  const [ikTrackerToggling, setIkTrackerToggling] = useState(false);
+
   // Fetch admin config for simulated data toggle
   useEffect(() => {
     const loadSimulatedFlag = async () => {
@@ -293,7 +297,45 @@ export function MyTracking() {
     })();
   }, [selectedSite, user, isAdmin, isDemoMode, showAutopilotModal]);
 
-  // GSC state
+  // Check IKTracker API on selected site change
+  const isIkTrackerSite = (domain: string) => domain.replace(/^www\./, '').includes('iktracker');
+
+  useEffect(() => {
+    if (!selectedSite || !user) return;
+    const site = sites.find(s => s.id === selectedSite);
+    if (!site || !isIkTrackerSite(site.domain)) {
+      setIkTrackerConnected(null);
+      return;
+    }
+    // Check if manually disabled via current_config
+    const config = site.current_config as Record<string, unknown> | null;
+    if (config?.iktracker_disabled === true) {
+      setIkTrackerConnected(false);
+      return;
+    }
+    // Test API
+    (async () => {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`https://${projectId}.supabase.co/functions/v1/iktracker-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: 'test-connection' }),
+        });
+        const json = await res.json();
+        setIkTrackerConnected(json?.result?.connected === true);
+      } catch {
+        setIkTrackerConnected(false);
+      }
+    })();
+  }, [selectedSite, user, sites]);
+
+
   const [gscConnecting, setGscConnecting] = useState(false);
   const [gscData, setGscData] = useState<GscData | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
@@ -1173,8 +1215,75 @@ export function MyTracking() {
                         </Button>
                       )}
 
-                      {/* Connect/Disconnect site button → opens modal */}
+                      {/* Connect/Disconnect site button → opens modal or toggles IKTracker */}
                       {(() => {
+                        const siteIsIkTracker = isIkTrackerSite(currentSite.domain);
+
+                        if (siteIsIkTracker) {
+                          // IKTracker: direct toggle button
+                          const isOn = ikTrackerConnected === true;
+                          const tooltipText = isOn
+                            ? (language === 'fr' ? 'API IKTracker branchée' : language === 'es' ? 'API IKTracker conectada' : 'IKTracker API connected')
+                            : (language === 'fr' ? 'API IKTracker débranchée' : language === 'es' ? 'API IKTracker desconectada' : 'IKTracker API disconnected');
+
+                          const handleToggleIkTracker = async () => {
+                            if (ikTrackerToggling) return;
+                            setIkTrackerToggling(true);
+                            try {
+                              const newDisabled = isOn;
+                              const config = (currentSite.current_config as Record<string, unknown>) || {};
+                              const updated = { ...config, iktracker_disabled: newDisabled };
+                              if (!newDisabled) delete (updated as any).iktracker_disabled;
+
+                              await supabase
+                                .from('tracked_sites')
+                                .update({ current_config: updated })
+                                .eq('id', currentSite.id);
+
+                              setIkTrackerConnected(!newDisabled);
+                              setSites(prev => prev.map(s => s.id === currentSite.id ? { ...s, current_config: updated } : s));
+                              toast.success(
+                                newDisabled
+                                  ? (language === 'fr' ? 'API IKTracker débranchée' : 'IKTracker API disconnected')
+                                  : (language === 'fr' ? 'API IKTracker branchée' : 'IKTracker API connected')
+                              );
+                            } catch {
+                              toast.error(language === 'fr' ? 'Erreur lors du basculement' : 'Toggle error');
+                            } finally {
+                              setIkTrackerToggling(false);
+                            }
+                          };
+
+                          return (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className={cn(
+                                "h-8 w-8 relative group",
+                                isOn && "border-emerald-500/50 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10",
+                                !isOn && ""
+                              )}
+                              onClick={handleToggleIkTracker}
+                              disabled={ikTrackerToggling || ikTrackerConnected === null}
+                            >
+                              {ikTrackerToggling ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : isOn ? (
+                                <Unplug className="h-3.5 w-3.5" />
+                              ) : (
+                                <>
+                                  <Plug className="h-3.5 w-3.5" />
+                                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-orange-500" />
+                                </>
+                              )}
+                              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                {tooltipText}
+                              </span>
+                            </Button>
+                          );
+                        }
+
+                        // Default: WordPress/GTM modal
                         const synced = isSiteSynced(currentSite.current_config as Record<string, unknown>);
                         const pingDate = currentSite.last_widget_ping ? new Date(currentSite.last_widget_ping as string) : null;
                         const isWidgetAlive = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
@@ -1215,7 +1324,6 @@ export function MyTracking() {
                                     )} />
                                   </>
                                 )}
-                                {/* Hover tooltip banner */}
                                 <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                   {tooltipText}
                                 </span>
