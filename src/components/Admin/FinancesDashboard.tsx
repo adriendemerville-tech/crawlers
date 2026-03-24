@@ -459,42 +459,6 @@ export function FinancesDashboard() {
           </CardContent>
         </Card>
 
-      {/* Spending Evolution Chart */}
-      {spendingChartOpen && spendingChartData.length > 0 && (
-        <Card className="border-primary/10">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-muted-foreground">Évolution des dépenses</p>
-              <ToggleGroup type="single" value={spendingScale} onValueChange={v => v && setSpendingScale(v as 'day' | 'week' | 'month')} size="sm">
-                <ToggleGroupItem value="day" className="text-xs px-2 h-7">Jour</ToggleGroupItem>
-                <ToggleGroupItem value="week" className="text-xs px-2 h-7">Semaine</ToggleGroupItem>
-                <ToggleGroupItem value="month" className="text-xs px-2 h-7">Mois</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={spendingChartData}>
-                  <defs>
-                    <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" tickFormatter={v => `${v}€`} />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
-                    formatter={(value: number, name: string) => [`${value.toFixed(2)}€`, name === 'cumulative' ? 'Cumulé' : 'Période']}
-                  />
-                  <Area type="monotone" dataKey="cost" stroke="hsl(var(--primary))" fill="url(#spendGrad)" strokeWidth={1.5} name="Période" />
-                  <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--muted-foreground))" fill="none" strokeWidth={1} strokeDasharray="4 2" name="Cumulé" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
         <Card className="border-amber-500/30">
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground">MRR</CardTitle>
