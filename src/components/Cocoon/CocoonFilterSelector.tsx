@@ -115,9 +115,13 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
   };
 
+  const toggleParticles = () => {
+    onFiltersChange({ ...filters, showParticles: !filters.showParticles });
+  };
+
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 1;
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 2;
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
