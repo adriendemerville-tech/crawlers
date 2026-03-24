@@ -244,7 +244,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
   return (
     <>
-      {/* Header */}
+      {/* Header — Title above CMS cards */}
       <DialogHeader className="pb-3">
         <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
           <Cable className="h-6 w-6 text-primary" />
@@ -265,30 +265,35 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
-      {/* ─── CMS selector ─── */}
+      {/* ─── CMS selector — square cards ─── */}
       <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
-        <p className="text-sm font-bold text-foreground">
-          {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
-        </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {([
             { key: 'wordpress' as const, label: 'WordPress', logo: cmsWordpress },
             { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
-            { key: 'wix' as const, label: 'Wix', logo: cmsWix },
+            { key: 'wix' as const, label: 'Wix', logo: cmsWix, darkInvert: true },
             { key: 'prestashop' as const, label: 'PrestaShop', logo: cmsPrestashop },
             { key: 'drupal' as const, label: 'Drupal', logo: cmsDrupal },
+            { key: 'odoo' as const, label: 'Odoo', logo: cmsOdoo },
             { key: 'gtm' as const, label: 'GTM', logo: cmsGtm },
-          ]).map(cms => (
+          ] as const).map(cms => (
             <button
               key={cms.key}
-              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-2 ${
+              className={`flex flex-col items-center justify-center gap-1.5 aspect-square rounded-xl text-[11px] font-semibold transition-all border-2 p-2 ${
                 connectMethod === cms.key
                   ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
                   : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
               }`}
-              onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key)}
+              onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key as any)}
             >
-              <img src={cms.logo} alt={cms.label} className="h-8 w-8 object-contain" loading="lazy" width={32} height={32} />
+              <img
+                src={cms.logo}
+                alt={cms.label}
+                className={`h-8 w-8 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
+                loading="lazy"
+                width={32}
+                height={32}
+              />
               {cms.label}
             </button>
           ))}
