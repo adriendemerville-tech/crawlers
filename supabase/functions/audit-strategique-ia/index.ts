@@ -2564,8 +2564,6 @@ Deno.serve(async (req) => {
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
-      const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
         // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
