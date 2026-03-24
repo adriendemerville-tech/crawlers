@@ -6,10 +6,11 @@ export interface AdminNotifications {
   silentErrors: number;
   injectionErrors: number;
   support: number;
-  apiBilling: number;  // DataForSEO / API billing alerts
+  apiBilling: number;
+  frontendCrashes: number;
 }
 
-const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0 };
+const EMPTY: AdminNotifications = { intelligence: 0, silentErrors: 0, injectionErrors: 0, support: 0, apiBilling: 0, frontendCrashes: 0 };
 
 export function useAdminNotifications() {
   const [notifications, setNotifications] = useState<AdminNotifications>(EMPTY);
@@ -23,7 +24,7 @@ export function useAdminNotifications() {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes] = await Promise.all([
+        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes, frontendRes] = await Promise.all([
           supabase
             .from('cto_agent_logs')
             .select('id, created_at')
@@ -49,6 +50,12 @@ export function useAdminNotifications() {
             .from('analytics_events')
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'api_billing_alert')
+            .gte('created_at', sevenDaysAgo),
+          // Frontend crashes (last 7 days)
+          supabase
+            .from('analytics_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_type', 'frontend_crash')
             .gte('created_at', sevenDaysAgo),
         ]);
 
@@ -84,6 +91,7 @@ export function useAdminNotifications() {
           injectionErrors: injectionRes.count || 0,
           support: supportRes.count || 0,
           apiBilling: billingRes.count || 0,
+          frontendCrashes: frontendRes.count || 0,
         });
       } catch (err) {
         console.error('Admin notifications fetch error:', err);

@@ -475,6 +475,8 @@ Deno.serve(async (req) => {
       'content-architect': 'content-architecture-advisor',
       // Anomaly detection
       'anomaly-detection': 'detect-anomalies',
+      // Frontend crashes
+      'frontend-crash': 'frontend_crash',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 

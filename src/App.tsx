@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "next-themes";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 // Lazy load providers not needed for first paint
 const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
@@ -82,6 +83,7 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
+  <GlobalErrorBoundary>
   <Suspense fallback={null}>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
@@ -169,6 +171,7 @@ const App = () => (
       </QueryClientProvider>
     </HelmetProvider>
   </Suspense>
+  </GlobalErrorBoundary>
 );
 
 export default App;
