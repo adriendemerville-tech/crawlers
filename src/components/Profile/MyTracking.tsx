@@ -1135,7 +1135,7 @@ export function MyTracking() {
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Autopilot button — creator only */}
-                      {isAdmin && (
+                      {isAdmin && !isDemoMode && (
                         <Button
                           variant="outline"
                           size="sm"
