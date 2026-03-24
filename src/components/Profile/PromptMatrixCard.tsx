@@ -969,15 +969,31 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
           </div>
         </DialogContent>
       </Dialog>
-      <XlsxSheetSelector
-        open={xlsxSheetNames.length > 0}
-        sheetNames={xlsxSheetNames}
-        onSelect={(name) => {
-          setXlsxSheetNames([]);
-          xlsxPendingWorkbook?.processSheet(name);
-          setXlsxPendingWorkbook(null);
+      <ImportStepper
+        open={xlsxStepperOpen}
+        sheetNames={xlsxStepperSheets}
+        workbook={xlsxWorkbookRef}
+        onComplete={({ rows }) => {
+          setXlsxStepperOpen(false);
+          // Feed cleaned rows into existing mapping dialog
+          if (rows.length > 0) {
+            const headers = Object.keys(rows[0]);
+            setCsvHeaders(headers);
+            setCsvRawRows(rows as Record<string, string>[]);
+            setPendingFileName('imported');
+            const autoMap: Record<string, string> = {};
+            headers.forEach(h => {
+              const lower = h.toLowerCase().trim();
+              if (/prompt|question|critère|aller.vite|libellé/i.test(lower)) autoMap.prompt = h;
+              if (/poids|weight|coeff/i.test(lower)) autoMap.poids = h;
+              if (/axe|catégorie|category/i.test(lower)) autoMap.axe = h;
+            });
+            setColumnMapping(autoMap);
+            setShowMappingDialog(true);
+          }
+          setXlsxWorkbookRef(null);
         }}
-        onClose={() => { setXlsxSheetNames([]); setXlsxPendingWorkbook(null); }}
+        onClose={() => { setXlsxStepperOpen(false); setXlsxWorkbookRef(null); }}
       />
     </>
   );
