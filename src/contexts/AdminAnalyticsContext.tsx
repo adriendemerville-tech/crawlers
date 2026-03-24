@@ -5,7 +5,7 @@ import { subDays } from 'date-fns';
 const EXCLUDED_IPS = ['5.49.156.158'];
 const ADMIN_EMAIL = 'adriendemerville@gmail.com';
 const PAGE_SIZE = 1000;
-const MAX_PAGES = 5; // Cap at 5000 events to avoid long load times
+const MAX_PAGES = 20; // Cap at 20000 events to cover full 30 days
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 type AnalyticsEvent = {
