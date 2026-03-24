@@ -875,6 +875,7 @@ export default function MatricePrompt() {
                           <Checkbox
                             checked={row.selected}
                             onCheckedChange={() => toggleRow(row.id)}
+                            className="border-muted-foreground/40 data-[state=checked]:bg-muted-foreground/60 data-[state=checked]:border-muted-foreground/60"
                           />
                         </TableCell>
                         <TableCell className="font-medium text-sm max-w-xs">
