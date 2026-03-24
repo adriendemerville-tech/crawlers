@@ -56,6 +56,8 @@ export default function MatricePrompt() {
   const [url, setUrl] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
+  // Dynamic column labels from fuzzy mapping (original header → mapped field)
+  const [columnLabels, setColumnLabels] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Batch management
