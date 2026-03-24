@@ -109,8 +109,6 @@ async function fetchSiteSettings(siteUrl: string): Promise<SiteSettings> {
   const DEFAULT_SETTINGS: SiteSettings = { hasApiConnection: false, cmsType: null };
 
   try {
-    if (!supabaseUrl || !serviceKey) return DEFAULT_SETTINGS;
-
     const supabase = getServiceClient();
 
     // Normaliser le domaine depuis l'URL
