@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   TrendingUp, TrendingDown, Minus, MapPin, Star, Globe, Search,
-  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X,
+  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X, Trash2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -151,6 +151,12 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
     setShowSuggestions(false);
     setIsSimulated(false);
     toast.success(`${comp.competitor_name} ajouté au suivi`);
+  };
+
+  const handleRemoveCompetitor = (idx: number) => {
+    const name = competitors[idx]?.competitor_name;
+    setCompetitors((prev) => prev.filter((_, i) => i !== idx));
+    if (name) toast.success(`${name} retiré`);
   };
 
   const handleScan = async () => {
@@ -311,7 +317,7 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
           const reviews = comp.total_reviews || comp.reviews_count || 0;
 
           return (
-            <Card key={comp.competitor_place_id || comp.competitor_name + idx} className="overflow-hidden">
+            <Card key={comp.competitor_place_id || comp.competitor_name + idx} className="overflow-hidden group relative">
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
                   {/* Position number */}
@@ -373,6 +379,15 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
                       {getPositionLabel(pos)}
                     </Badge>
                   </div>
+
+                  {/* Delete button — hover only */}
+                  <button
+                    onClick={() => handleRemoveCompetitor(idx)}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                    title="Retirer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </CardContent>
             </Card>
