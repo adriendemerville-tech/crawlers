@@ -61,9 +61,11 @@ export default function MatricePrompt() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Batch management
-  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; }
+  interface Batch { batch_id: string; batch_label: string; created_at: string; count: number; last_used_at: string; }
   const [batches, setBatches] = useState<Batch[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [renamingBatchId, setRenamingBatchId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorTitle, setErrorTitle] = useState('');
