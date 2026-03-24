@@ -156,6 +156,7 @@ const App = () => (
                           <Route path="/matrice" element={<MatricePrompt />} />
                           <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />
+                          <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
