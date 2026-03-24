@@ -5120,6 +5120,7 @@ export type Database = {
           id: string
           message_count: number
           messages: Json
+          metadata: Json | null
           phone_callback: string | null
           phone_callback_expires_at: string | null
           satisfaction_resolved: boolean | null
@@ -5136,6 +5137,7 @@ export type Database = {
           id?: string
           message_count?: number
           messages?: Json
+          metadata?: Json | null
           phone_callback?: string | null
           phone_callback_expires_at?: string | null
           satisfaction_resolved?: boolean | null
@@ -5152,6 +5154,7 @@ export type Database = {
           id?: string
           message_count?: number
           messages?: Json
+          metadata?: Json | null
           phone_callback?: string | null
           phone_callback_expires_at?: string | null
           satisfaction_resolved?: boolean | null
