@@ -32,6 +32,7 @@ export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
   showAllClusters: boolean;
+  showParticles: boolean;
 }
 
 interface CocoonFilterSelectorProps {
@@ -43,9 +44,9 @@ interface CocoonFilterSelectorProps {
 }
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
@@ -63,21 +64,20 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     return Array.from(types).sort();
   }, [nodes]);
 
-  // Detect present juice types from similarity edges
+  // Detect present juice types from similarity edges (aligned with graph logic)
   const presentJuiceTypes = useMemo(() => {
     const types = new Set<string>();
-    // Derive from graph structure (same logic as CocoonForceGraph3D)
+    const urlToNode = new Map(nodes.map((n: any) => [n.url, n]));
     const maxAuth = Math.max(1, ...nodes.map((n: any) => n.page_authority ?? 0));
     const maxTraffic = Math.max(1, ...nodes.map((n: any) => n.traffic_estimate ?? 0));
-    const nodeById = new Map(nodes.map((n: any) => [n.id, n]));
     const homeNode = nodes.find((n: any) => n.page_type === 'homepage') 
       || [...nodes].sort((a: any, b: any) => (a.crawl_depth ?? 99) - (b.crawl_depth ?? 99))[0];
     const homeId = homeNode?.id;
 
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
-        const targetNode = nodes.find((n: any) => n.url === edge.target_url);
-        if (!targetNode) continue;
+        const targetNode = urlToNode.get(edge.target_url);
+        if (!targetNode || targetNode.id === node.id) continue;
         const srcDepth = node.crawl_depth ?? node.depth ?? 0;
         const tgtDepth = targetNode.crawl_depth ?? targetNode.depth ?? 0;
         const depthDelta = Math.abs(srcDepth - tgtDepth);
@@ -114,9 +114,13 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
   };
 
+  const toggleParticles = () => {
+    onFiltersChange({ ...filters, showParticles: !filters.showParticles });
+  };
+
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 1;
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 2;
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
@@ -215,7 +219,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
         <Separator className="bg-white/5 my-1" />
 
         {/* Show All Clusters */}
-        <div className="px-3 py-2 pb-3">
+        <div className="px-3 py-2 space-y-1.5">
           <label
             className="flex items-center gap-2 cursor-pointer group"
             onClick={toggleClusters}
@@ -227,6 +231,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             />
             <Layers className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.clusters}</span>
+          </label>
+          <label
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={toggleParticles}
+          >
+            <Checkbox
+              checked={!filters.showParticles}
+              className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+              tabIndex={-1}
+            />
+            <Sparkles className="w-3 h-3 text-white/40" />
+            <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideParticles}</span>
           </label>
         </div>
       </PopoverContent>

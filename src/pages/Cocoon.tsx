@@ -217,7 +217,7 @@ export default function Cocoon() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
@@ -264,7 +264,7 @@ export default function Cocoon() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true, showParticles: true });
       setFiltersInitialized(true);
     }
     if (nodes.length === 0) setFiltersInitialized(false);
@@ -888,7 +888,7 @@ export default function Cocoon() {
                 }}
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
-                particlesEnabled={particlesEnabled}
+                particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 haloColors={cocoonTheme.haloColors}
@@ -932,7 +932,7 @@ export default function Cocoon() {
                 }}
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
-                particlesEnabled={particlesEnabled}
+                particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
                 isDayMode={false}
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}

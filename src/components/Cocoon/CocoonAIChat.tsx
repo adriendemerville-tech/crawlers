@@ -1556,15 +1556,6 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 return (
                   <div className="flex flex-col items-center gap-2 pt-1">
                     {linkingFirst ? [linkingBtn, strategyBtn] : [strategyBtn, linkingBtn]}
-                    <button
-                      key="subdomains"
-                      onClick={handleSubdomainAnalysis}
-                      disabled={isLoading || !trackedSiteId}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 text-white/50 bg-transparent hover:bg-white/5 hover:text-white/70 text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Globe className="w-3.5 h-3.5" />
-                      {t.subdomains}
-                    </button>
                   </div>
                 );
               }
