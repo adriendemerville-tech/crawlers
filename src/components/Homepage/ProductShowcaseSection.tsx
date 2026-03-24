@@ -249,7 +249,7 @@ const ProductShowcaseSection = memo(() => {
   ];
 
   return (
-    <section className="relative py-20 sm:py-32 overflow-hidden">
+    <section className="relative py-14 sm:py-20 overflow-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_50%)]" />
 
