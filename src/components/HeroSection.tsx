@@ -109,11 +109,6 @@ function HeroSectionComponent() {
               : "La seule plateforme européenne qui couvre le SEO classique, le GEO (Generative Engine Optimization) et le SEO local dans un seul outil."}
         </p>
 
-        {/* Audit Expert info */}
-        <p className="text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
-          {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
-        </p>
-
         {/* URL input + CTA Audit Expert */}
         <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
           <div className="flex-1 relative">
@@ -139,12 +134,20 @@ function HeroSectionComponent() {
               className="h-14 gap-2 border-amber-400 border-2 px-6 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
               <FileSearch className="h-5 w-5 text-amber-400" />
-              <span className="font-bold text-amber-400">
-                {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
-              </span>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="font-bold text-amber-400">
+                  {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
+                </span>
+                <span className="text-xs font-normal text-muted-foreground">Audit SEO-GEO. 5 min</span>
+              </div>
             </Button>
           </Link>
         </div>
+
+        {/* Audit Expert info */}
+        <p className="mt-4 text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
+          {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
+        </p>
       </div>
     </section>
   );
