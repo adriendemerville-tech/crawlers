@@ -37,7 +37,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1 } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
