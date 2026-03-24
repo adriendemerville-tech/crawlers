@@ -424,6 +424,15 @@ export function FinancesDashboard() {
               </div>
             </div>
           </div>
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={() => setSpendingChartOpen(prev => !prev)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>{spendingChartOpen ? 'Masquer' : 'Évolution'}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${spendingChartOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </CardContent>
       </Card>
 
@@ -447,17 +456,8 @@ export function FinancesDashboard() {
           <CardContent className="p-3 pt-0">
             <div className="text-lg font-bold">{businessMetrics.creditsPurchased.toLocaleString('fr-FR')}</div>
             <p className="text-[10px] text-muted-foreground mt-0.5">Total historique</p>
-          <div className="flex justify-end mt-2">
-            <button
-              onClick={() => setSpendingChartOpen(prev => !prev)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span>{spendingChartOpen ? 'Masquer' : 'Évolution'}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${spendingChartOpen ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       {/* Spending Evolution Chart */}
       {spendingChartOpen && spendingChartData.length > 0 && (
