@@ -315,7 +315,7 @@ serve(async (req) => {
       });
     }
 
-    const { messages, conversation_id, user_id, guest_mode } = body;
+    const { messages, conversation_id, user_id, guest_mode, screen_context } = body;
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
