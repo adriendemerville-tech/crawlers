@@ -274,6 +274,25 @@ export function MyTracking() {
     loadSimulatedFlag();
   }, []);
 
+  // Fetch autopilot status for current site
+  useEffect(() => {
+    if (!selectedSite || !user || !isAdmin || isDemoMode) {
+      setAutopilotStatus('none');
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('autopilot_configs')
+        .select('is_active')
+        .eq('tracked_site_id', selectedSite)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data) setAutopilotStatus('none');
+      else if (data.is_active) setAutopilotStatus('active');
+      else setAutopilotStatus('paused');
+    })();
+  }, [selectedSite, user, isAdmin, isDemoMode, showAutopilotModal]);
+
   // GSC state
   const [gscConnecting, setGscConnecting] = useState(false);
   const [gscData, setGscData] = useState<GscData | null>(null);
