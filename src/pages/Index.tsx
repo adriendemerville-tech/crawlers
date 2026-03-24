@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
-import matriceScreenshot from '@/assets/screenshots/matrice-audit.png';
+import matriceScreenshot from '@/assets/screenshots/crawlers.fr_matrice-audit-seo-grille-personnalisee.png';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
