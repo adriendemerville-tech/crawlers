@@ -157,6 +157,8 @@ Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
 - Gestion multi-établissements avec glisser-déposer
 - Informations de la fiche (nom, adresse, catégorie, horaires)
 - Les données GMB alimentent automatiquement l'Audit Local SEO et le diagnostic de la Stratégie 360°
+- **Suggestions de mots-clés** (onglet "Suggestions KW") : génère 5 mots-clés locaux stratégiques à partir du nom, de la catégorie et de la ville de l'établissement via SerpAPI. Chaque mot-clé peut être ajouté à un suivi local dédié (table `gmb_tracked_keywords`). Les résultats sont mis en cache 24h pour optimiser les coûts API.
+- **Concurrence locale** (onglet "Concurrence") : scanne les concurrents analogues sur Google Maps via DataForSEO Maps API (fallback SerpAPI). Affiche jusqu'à 10 concurrents avec leur position Maps, note moyenne, nombre d'avis et évolution hebdomadaire (flèches vertes montantes / rouges descendantes). Classification automatique : Goliath (#1), Concurrent direct (#2-3), Challenger (#4-7), Inspiration (#8+). Le rayon de recherche est estimé automatiquement selon la catégorie d'activité (3km commerce de proximité, 10km professions libérales, 5km par défaut).
 
 **Prérequis :** abonnement Pro Agency et compte Google propriétaire/gestionnaire de la fiche.
 
