@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   TrendingUp, TrendingDown, Minus, MapPin, Star, Globe, Search,
-  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X,
+  RefreshCw, Trophy, Target, Swords, Lightbulb, ArrowUp, ArrowDown, Plus, X, Trash2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
