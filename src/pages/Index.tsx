@@ -717,7 +717,7 @@ const Index = () => {
         
 
         {/* CTA Matrice — Freelance SEO */}
-        <section className="relative overflow-hidden border-y border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
+        <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.06),transparent_60%)]" />
           <div className="relative container mx-auto max-w-4xl px-4">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
