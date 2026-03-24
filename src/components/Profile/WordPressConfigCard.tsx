@@ -310,7 +310,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : connectMethod === 'drupal' ? 'Drupal' : 'PrestaShop'}</h3>
+              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : connectMethod === 'drupal' ? 'Drupal' : connectMethod === 'odoo' ? 'Odoo' : 'PrestaShop'}</h3>
               <p className="text-[10px] text-muted-foreground">
                 {connectMethod === 'wordpress'
                   ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
