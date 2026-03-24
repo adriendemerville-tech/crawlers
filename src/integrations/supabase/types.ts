@@ -4251,6 +4251,143 @@ export type Database = {
         }
         Relationships: []
       }
+      parmenion_decision_log: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          baseline_clicks: number | null
+          baseline_ctr: number | null
+          baseline_impressions: number | null
+          baseline_position: number | null
+          calibration_note: string | null
+          created_at: string
+          cycle_number: number
+          domain: string
+          error_category: string | null
+          estimated_tokens: number | null
+          execution_completed_at: string | null
+          execution_error: string | null
+          execution_started_at: string | null
+          final_scope: Json
+          functions_called: string[]
+          goal_changed: boolean
+          goal_cluster_id: string | null
+          goal_description: string
+          goal_type: string
+          id: string
+          impact_actual: string | null
+          impact_level: string
+          impact_predicted: string | null
+          initial_scope: Json
+          is_error: boolean
+          measured_at: string | null
+          risk_calibrated: number | null
+          risk_iterations: number
+          risk_predicted: number
+          scope_reductions: number
+          status: string
+          t30_clicks: number | null
+          t30_ctr: number | null
+          t30_impressions: number | null
+          t30_position: number | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: string
+          baseline_clicks?: number | null
+          baseline_ctr?: number | null
+          baseline_impressions?: number | null
+          baseline_position?: number | null
+          calibration_note?: string | null
+          created_at?: string
+          cycle_number?: number
+          domain: string
+          error_category?: string | null
+          estimated_tokens?: number | null
+          execution_completed_at?: string | null
+          execution_error?: string | null
+          execution_started_at?: string | null
+          final_scope?: Json
+          functions_called?: string[]
+          goal_changed?: boolean
+          goal_cluster_id?: string | null
+          goal_description: string
+          goal_type: string
+          id?: string
+          impact_actual?: string | null
+          impact_level?: string
+          impact_predicted?: string | null
+          initial_scope?: Json
+          is_error?: boolean
+          measured_at?: string | null
+          risk_calibrated?: number | null
+          risk_iterations?: number
+          risk_predicted?: number
+          scope_reductions?: number
+          status?: string
+          t30_clicks?: number | null
+          t30_ctr?: number | null
+          t30_impressions?: number | null
+          t30_position?: number | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          baseline_clicks?: number | null
+          baseline_ctr?: number | null
+          baseline_impressions?: number | null
+          baseline_position?: number | null
+          calibration_note?: string | null
+          created_at?: string
+          cycle_number?: number
+          domain?: string
+          error_category?: string | null
+          estimated_tokens?: number | null
+          execution_completed_at?: string | null
+          execution_error?: string | null
+          execution_started_at?: string | null
+          final_scope?: Json
+          functions_called?: string[]
+          goal_changed?: boolean
+          goal_cluster_id?: string | null
+          goal_description?: string
+          goal_type?: string
+          id?: string
+          impact_actual?: string | null
+          impact_level?: string
+          impact_predicted?: string | null
+          initial_scope?: Json
+          is_error?: boolean
+          measured_at?: string | null
+          risk_calibrated?: number | null
+          risk_iterations?: number
+          risk_predicted?: number
+          scope_reductions?: number
+          status?: string
+          t30_clicks?: number | null
+          t30_ctr?: number | null
+          t30_impressions?: number | null
+          t30_position?: number | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parmenion_decision_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patience_cards: {
         Row: {
           card_type: string
@@ -6909,6 +7046,24 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      parmenion_error_rate: {
+        Args: { p_domain: string; p_last_n?: number }
+        Returns: Json
+      }
+      parmenion_recent_errors: {
+        Args: { p_domain: string; p_limit?: number }
+        Returns: {
+          action_type: string
+          calibration_note: string
+          cycle_number: number
+          error_category: string
+          goal_description: string
+          impact_actual: string
+          impact_predicted: string
+          risk_calibrated: number
+          risk_predicted: number
+        }[]
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

@@ -141,3 +141,7 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.firehose-actions]
     verify_jwt = false
+  [functions.parmenion-orchestrator]
+    verify_jwt = false
+  [functions.parmenion-feedback]
+    verify_jwt = false
