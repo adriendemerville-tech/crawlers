@@ -835,6 +835,7 @@ export default function MatricePrompt() {
           )}
         </main>
       </div>
+      <MatriceHelpModal open={showHelp} onOpenChange={setShowHelp} />
     </>
   );
 }
