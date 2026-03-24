@@ -713,9 +713,12 @@ function computeCombinedScore(prompt: string, html: HtmlData, robots: RobotsData
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
+
+  const MAX_RETRIES = 2
+  const RETRY_DELAYS = [2000, 5000] // exponential backoff
 
   try {
     const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
@@ -724,8 +727,8 @@ Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string 
 
     const userPrompt = `URL: ${url}
 
-EXTRAIT HTML (premiers 3000 caractères):
-${htmlSummary.substring(0, 3000)}
+EXTRAIT HTML (contenu principal):
+${htmlSummary}
 
 CRITÈRE À ÉVALUER:
 ${prompt}
@@ -752,9 +755,25 @@ Score de 0 à 100 pour ce critère:`
     if (!resp.ok) {
       const status = resp.status
       await resp.text()
-      if (status === 429) return { score: 50, raw: { error: 'Rate limited', status: 429 } }
+
+      // Retry on 429 rate limit with exponential backoff
+      if (status === 429 && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000
+        console.log(`[audit-matrice] LLM 429 rate-limited, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(r => setTimeout(r, delay))
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      }
+
+      // Retry on 500/502/503 server errors
+      if (status >= 500 && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000
+        console.log(`[audit-matrice] LLM ${status} server error, retrying in ${delay}ms`)
+        await new Promise(r => setTimeout(r, delay))
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      }
+
       if (status === 402) return { score: 50, raw: { error: 'Payment required', status: 402 } }
-      return { score: 50, raw: { error: `API error ${status}` } }
+      return { score: 50, raw: { error: `API error ${status}`, retries: retryCount } }
     }
 
     const data = await resp.json()
@@ -779,7 +798,14 @@ Score de 0 à 100 pour ce critère:`
       return { score: 50, raw: { llm_raw: content.substring(0, 200), parse_error: true } }
     }
   } catch (e) {
-    return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error' } }
+    // Retry on timeout/network errors
+    if (retryCount < MAX_RETRIES) {
+      const delay = RETRY_DELAYS[retryCount] || 5000
+      console.log(`[audit-matrice] LLM error "${e instanceof Error ? e.message : 'unknown'}", retrying in ${delay}ms`)
+      await new Promise(r => setTimeout(r, delay))
+      return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+    }
+    return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error', retries: retryCount } }
   }
 }
 
@@ -836,13 +862,64 @@ Deno.serve(async (req) => {
       needsPsi ? fetchPsi(normalizedUrl) : { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null } as PsiData,
     ])
 
-    const html = htmlResult?.html || ''
+    let html = htmlResult?.html || ''
+
+    // SPA fallback: if HTML is too short or looks like a shell, try Firecrawl
+    const visibleText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (needsHtml && visibleText.length < 200) {
+      console.log(`[audit-matrice] HTML too short (${visibleText.length} chars), trying Firecrawl fallback`)
+      try {
+        const fcKey = Deno.env.get('FIRECRAWL_API_KEY')
+        if (fcKey) {
+          const fcResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: normalizedUrl, formats: ['html'], waitFor: 3000 }),
+            signal: AbortSignal.timeout(20000),
+          })
+          if (fcResp.ok) {
+            const fcData = await fcResp.json()
+            const fcHtml = fcData?.data?.html || fcData?.html || ''
+            if (fcHtml.length > html.length) {
+              html = fcHtml
+              console.log(`[audit-matrice] Firecrawl fallback success: ${fcHtml.length} chars`)
+            }
+          } else {
+            await fcResp.text()
+          }
+        }
+      } catch (e) {
+        console.error('[audit-matrice] Firecrawl fallback error:', e)
+      }
+    }
+
     const htmlData = html ? analyzeHtmlFull(html, normalizedUrl) : null
 
-    // Process each item — compute BOTH crawlers_score (engine) AND parsed_score (LLM)
-    const results: ItemResult[] = []
-    const llmPromises: Promise<void>[] = []
-    const htmlSummary = html.substring(0, 5000)
+    // Build smart HTML summary for LLM: extract head + main content, up to 8000 chars
+    const buildHtmlSummary = (rawHtml: string): string => {
+      if (!rawHtml) return ''
+      // Extract <head> meta info (title, meta, schema)
+      const headMatch = rawHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i)
+      const headContent = headMatch ? headMatch[1]
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<link[^>]*stylesheet[^>]*>/gi, '')
+        .trim()
+        .substring(0, 1500) : ''
+
+      // Extract body visible text  
+      const bodyMatch = rawHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+      const bodyHtml = bodyMatch ? bodyMatch[1] : rawHtml
+      const cleanBody = bodyHtml
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '[NAV]')
+        .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '[FOOTER]')
+        .substring(0, 6500)
+
+      return `<head>${headContent}</head>\n<body>${cleanBody}</body>`
+    }
+
+    const htmlSummary = buildHtmlSummary(html)
 
     for (const item of detectedTypes) {
       // Always queue LLM evaluation for parsed_score
