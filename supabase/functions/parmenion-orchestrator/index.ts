@@ -100,7 +100,7 @@ serve(async (req: Request) => {
     // ═══ PHASE 3: Persist decision ═══
     const logEntry = {
       tracked_site_id,
-      user_id: authUserId || tracked_site_id, // fallback for service-role calls
+      user_id: authUserId || bodyUserId || tracked_site_id,
       domain,
       cycle_number,
       goal_type: decision.goal.type,
