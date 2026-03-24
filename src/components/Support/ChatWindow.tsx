@@ -84,13 +84,19 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
 
-  // Fetch user's tracked domains for STT vocabulary correction
+  // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
+  const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
   useEffect(() => {
     if (!user) return;
-    supabase.from('tracked_sites').select('domain').eq('user_id', user.id)
+    supabase.from('tracked_sites')
+      .select('domain, products_services, market_sector, target_audience, main_serp_competitor, confusion_risk, business_type')
+      .eq('user_id', user.id)
       .then(({ data }) => {
-        if (data) setUserDomains(data.map(s => s.domain));
+        if (data) {
+          setUserDomains(data.map(s => s.domain));
+          setSiteIdentities(data as import('@/utils/sttVocabulary').SiteIdentity[]);
+        }
       });
   }, [user]);
 
