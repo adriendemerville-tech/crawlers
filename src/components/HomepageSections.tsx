@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
-import { AIBotsLeadMagnet } from '@/components/Homepage/AIBotsLeadMagnet';
+
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
