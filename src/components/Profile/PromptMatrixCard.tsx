@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import XlsxSheetSelector from '@/components/Matrice/XlsxSheetSelector';
+import ImportStepper from '@/components/Matrice/ImportStepper';
 
 // ── Types ──────────────────────────────────────────────────────
 
