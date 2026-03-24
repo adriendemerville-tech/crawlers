@@ -76,6 +76,90 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
   const [isSimulated, setIsSimulated] = useState(true);
   const [searchInfo, setSearchInfo] = useState<{ query?: string; location?: string; radius_km?: number } | null>(null);
 
+  // Search bar state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Competitor[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Debounced search for suggestions
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase.functions.invoke('serpapi-actions', {
+          body: {
+            action: 'search-local',
+            query: value,
+            location: ownBusinessName ? `near ${ownBusinessName}` : undefined,
+            num: 5,
+          },
+        });
+
+        if (!error && data?.organic_results) {
+          const mapped: Competitor[] = data.organic_results.slice(0, 5).map((r: any, i: number) => ({
+            competitor_name: r.title || r.name || value,
+            competitor_address: r.address || r.snippet || '',
+            competitor_category: r.type || r.category || '',
+            competitor_website: r.link || r.website || '',
+            avg_rating: r.rating || 0,
+            total_reviews: r.reviews || 0,
+            maps_position: i + 1,
+            position_change: 0,
+          }));
+          setSuggestions(mapped);
+          setShowSuggestions(true);
+        }
+      } catch (e) {
+        console.error('Search suggestions error:', e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, [ownBusinessName]);
+
+  const handleAddCompetitor = (comp: Competitor) => {
+    const alreadyExists = competitors.some(
+      (c) => c.competitor_name.toLowerCase() === comp.competitor_name.toLowerCase()
+    );
+    if (alreadyExists) {
+      toast.info(`${comp.competitor_name} est déjà dans la liste`);
+      return;
+    }
+    const newComp = { ...comp, maps_position: competitors.length + 1 };
+    setCompetitors((prev) => [...prev, newComp]);
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsSimulated(false);
+    toast.success(`${comp.competitor_name} ajouté au suivi`);
+  };
+
   const handleScan = async () => {
     if (!gmbLocationId || !trackedSiteId) {
       toast.error('Aucune fiche GMB connectée');
