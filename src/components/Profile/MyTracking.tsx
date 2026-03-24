@@ -256,6 +256,7 @@ export function MyTracking() {
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showAutopilotModal, setShowAutopilotModal] = useState(false);
+  const [autopilotStatus, setAutopilotStatus] = useState<'none' | 'active' | 'paused'>('none');
 
   // Fetch admin config for simulated data toggle
   useEffect(() => {
