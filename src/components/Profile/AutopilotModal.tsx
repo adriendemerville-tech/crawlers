@@ -364,8 +364,8 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
                     : ''
                 }`}
               >
-                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
-                {isActive ? 'Actif' : 'En pause'}
+                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {isActive ? 'Actif : mettre sur pause' : 'Inactif : cliquer pour activer'}
               </Button>
             )}
             <div className="ml-auto flex gap-2">
