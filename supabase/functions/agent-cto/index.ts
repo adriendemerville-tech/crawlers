@@ -716,22 +716,26 @@ Réponds UNIQUEMENT en JSON :
     const currentVersion = champion?.version || 0
     const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.'
 
-    // Determine evidence basis
-    // Evidence basis: now factors in GA4 coverage
+    // Determine evidence basis — adaptive to available data sources
+    // Sites without GSC/GA4 can still be evaluated using crawl + PageSpeed + audit data
+    const hasGSC = reliability.snapshots_with_gsc >= 3
+    const hasGA4 = reliability.snapshots_with_ga4 >= 2
+    const hasEnoughSnapshots = reliability.total_snapshots >= 3
+
     let evidenceBasis: AgentDecision['evidence_basis'] = 'insufficient_data'
     if (reliability.snapshots_with_gsc >= 5 && reliability.total_snapshots >= 10) {
       evidenceBasis = 'real_data'
-    } else if (reliability.snapshots_with_gsc >= 3 && reliability.snapshots_with_ga4 >= 2) {
-      // GA4 can supplement insufficient GSC to reach 'real_data' threshold
+    } else if (hasGSC && hasGA4) {
       evidenceBasis = 'real_data'
-    } else if (reliability.total_snapshots >= 3) {
+    } else if (hasEnoughSnapshots) {
+      // Sites without GSC/GA4: crawl data, PageSpeed, audit scores are valid heuristics
       evidenceBasis = 'heuristic'
     }
 
     const auditSummary = JSON.stringify(auditResult).substring(0, 6000)
 
     // ─── Phase 2: Build evidence-aware prompt ───────────────────────
-    const systemPrompt = `Tu es un Agent CTO v2 spécialisé en SEO/GEO. Tu disposes désormais de DONNÉES RÉELLES provenant de Google Search Console, DataForSEO et PageSpeed pour évaluer la pertinence des audits.
+    const systemPrompt = `Tu es un Agent CTO v2 spécialisé en SEO/GEO. Tu évalues la pertinence des audits en utilisant TOUTES les données disponibles.
 
 DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Fonction analysée : ${functionName}
@@ -746,27 +750,35 @@ DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Tendance : ${reliability.trend}
 - Base d'évidence : ${evidenceBasis}
 
-RÈGLES STRICTES :
-1. RÈGLE DES 10% : Max 10% de modification du prompt existant.
-2. SEUIL DE CONFIANCE : 95% minimum. Sans données GSC suffisantes (${reliability.snapshots_with_gsc} snapshots), tu ne peux PAS approuver de changement.
-3. CORRÉLATION OBLIGATOIRE : Toute suggestion doit être justifiée par les métriques réelles ci-dessus, pas par ton intuition.
-4. Si le score d'impact moyen est < 0 (grade D/F dominant), concentre-toi sur les corrections majeures.
-5. Si la tendance est "declining", identifie pourquoi et propose un correctif ciblé.
-6. Si "insufficient_data", propose uniquement des observations, AUCUN changement.
+SOURCES DE DONNÉES DISPONIBLES (par ordre de fiabilité) :
+- Tier 1 (vérité terrain) : GSC (clics, impressions, CTR, positions) + GA4 (sessions, conversions)
+- Tier 2 (données propriétaires) : Crawl multi-pages, audits techniques, PageSpeed, DataForSEO SERP
+- Tier 3 (signaux indirects) : Score d'audit, recommandations appliquées, backlinks
+
+RÈGLES D'ÉVALUATION ADAPTATIVES :
+1. SI GSC+GA4 connectés : Évalue avec la rigueur maximale (corrélation données réelles). Seuil de confiance 95%.
+2. SI GSC uniquement : Évalue avec les données GSC + crawl. Seuil de confiance 85%.
+3. SI AUCUNE source Tier 1 connectée : Évalue en mode "audit technique pur" basé sur les données Tier 2+3 collectées par Crawlers (crawl, PageSpeed, SERP, scores d'audit). Seuil de confiance 70%. C'est un mode VALIDE — ne t'alarme PAS du manque de GSC/GA4, ces données ne sont simplement pas disponibles pour ce site. Concentre-toi sur ce que tu peux mesurer.
+4. RÈGLE DES 10% : Max 10% de modification du prompt existant.
+5. CORRÉLATION OBLIGATOIRE : Justifie par les données disponibles, pas par intuition.
+6. Si "insufficient_data" (< 3 snapshots total), propose uniquement des observations.
+7. NE DIS JAMAIS "impossible de valider" pour un site sans GSC/GA4 — adapte ton analyse aux données disponibles.
 
 Réponds UNIQUEMENT en JSON :
 {
-  "analysis_summary": "Analyse basée sur les données réelles",
+  "analysis_summary": "Analyse basée sur les données disponibles",
   "self_critique": "Risques identifiés + biais potentiels",
   "confidence_score": 0-100,
   "proposed_change": "Nouveau prompt (null si aucun)",
   "change_diff_pct": 0-100,
-  "data_driven_insights": "Ce que les métriques réelles révèlent"
+  "data_driven_insights": "Ce que les données disponibles révèlent",
+  "data_tier_used": "tier1|tier2|tier3"
 }`
 
     const userPrompt = `FONCTION : ${functionName}
 DOMAINE : ${domain || 'N/A'}
 URL : ${url || 'N/A'}
+SOURCES CONNECTÉES : ${hasGSC ? 'GSC ✓' : 'GSC ✗'} | ${hasGA4 ? 'GA4 ✓' : 'GA4 ✗'} | Crawl ✓ | PageSpeed ✓
 
 PROMPT ACTUEL (v${currentVersion}) :
 ---
@@ -778,7 +790,7 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ${auditSummary}
 ---
 
-Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournies dans ton contexte. Les métriques GSC sont la seule vérité terrain — si tu n'en as pas assez, dis-le clairement.`
+Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}`
 
     console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 
