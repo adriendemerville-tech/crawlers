@@ -386,10 +386,12 @@ Non. Vos données (site, scores, historiques) sont strictement personnelles et n
 ### Comment intégrer le SDK Crawlers ?
 Trois méthodes sont disponibles pour brancher votre site à Crawlers.AI, accessibles depuis Console → Mes Sites → icône 🔌 :
 
+**CMS supportés** : WordPress, Shopify, Wix, PrestaShop, Drupal (sélection par logo-bouton dans la modale).
+
 ### Méthode 1 : API CMS (recommandé)
-Connexion directe via l'API REST de votre CMS (WordPress, Shopify, Webflow).
+Connexion directe via l'API REST de votre CMS (WordPress, Shopify, Wix, PrestaShop, Drupal).
 1. Ouvrez la modale « Brancher mon site »
-2. Sélectionnez « API CMS (WordPress) »
+2. Sélectionnez votre CMS via le logo correspondant
 3. Entrez l'URL de votre site
 4. Cliquez sur « Lien Magique » — un onglet s'ouvre sur votre admin pour valider automatiquement la connexion
 
@@ -409,7 +411,7 @@ Snippet léger (~2 Ko) compatible tous CMS et sites custom.
 Guide complet : https://crawlers.fr/integration-gtm
 
 ### Compatible avec WordPress ?
-Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Lien Magique, plugin .zip classique, et snippet GTM/Script universel. Les codes correctifs sont compatibles avec Elementor, Divi, Astra, GeneratePress et tous les thèmes majeurs.
+Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Lien Magique, plugin .zip classique, et snippet GTM/Script universel. Les codes correctifs sont compatibles avec Elementor, Divi, Astra, GeneratePress et tous les thèmes majeurs. Le système supporte également Shopify, Wix, PrestaShop et Drupal.
 
 ---
 
@@ -473,7 +475,7 @@ Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps ré
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 125 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 195 000 lignes de code, avec 14 algorithmes propriétaires, 141 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).

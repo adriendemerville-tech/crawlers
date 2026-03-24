@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
-> **Dernière mise à jour** : 20 mars 2026  
-> **Version** : 2.10.0  
-> **Lignes de code** : ~158 000 (Backend: 43 460 · Frontend: 109 144 · SQL: 5 045)
+> **Dernière mise à jour** : 24 mars 2026  
+> **Version** : 2.11.0  
+> **Lignes de code** : ~195 000 (Backend: 59 648 · Frontend: 129 400 · SQL: 6 377)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (95 fonctions + 21 modules partagés)
+### 2.1 Edge Functions (141 fonctions + 32 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
@@ -41,17 +41,17 @@ Organisées en **13 domaines fonctionnels** :
 | **Content & Blog** | `generate-blog-from-news`, `fetch-news`, `generate-infotainment`, `rss-feed`, `sitemap` | Génération de contenu, flux RSS |
 | **Agents IA** | `agent-cto`, `agent-seo`, `supervisor-actions` | Agents autonomes (CTO, SEO), supervision par Supervisor |
 | **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
-| **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress |
+| **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress, Shopify, Wix, PrestaShop, Drupal |
 | **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
 
 ### 2.2 Modules partagés (`_shared/`)
 
-21 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, etc.
+32 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, etc.
 
 ### 2.3 Base de données
 
-- **~52 tables** PostgreSQL avec RLS
-- **160+ migrations** versionnées
+- **~60 tables** PostgreSQL avec RLS
+- **215+ migrations** versionnées
 - Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`
 - Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
 - File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
@@ -71,7 +71,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ## 3. Architecture Frontend
 
-### 3.1 Pages (36 pages)
+### 3.1 Pages (40 pages)
 
 | Catégorie | Pages |
 |-----------|-------|
@@ -84,7 +84,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (270+ fichiers, 12 modules)
+### 3.2 Composants (303+ fichiers, 12 modules)
 
 | Module | Rôle |
 |--------|------|
