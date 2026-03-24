@@ -275,6 +275,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
             { key: 'wix' as const, label: 'Wix', logo: cmsWix },
             { key: 'prestashop' as const, label: 'PrestaShop', logo: cmsPrestashop },
+            { key: 'drupal' as const, label: 'Drupal', logo: cmsDrupal },
             { key: 'gtm' as const, label: 'GTM', logo: cmsGtm },
           ]).map(cms => (
             <button
