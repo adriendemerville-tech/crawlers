@@ -715,6 +715,207 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
     }
     } // end if (!isGuest)
 
+    // ── Live Search: Felix answers user questions using DataForSEO / SerpAPI / Google Places ──
+    let liveSearchContext = "";
+    if (!isGuest && user_id) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerSearch = lastUserMsg.toLowerCase();
+
+      // Detect search intent keywords
+      const serpKeywords = [
+        "position google", "résultats google", "classement google", "serp", "ranking",
+        "première page", "top 10", "top 3", "mot-clé", "mot clé", "keyword",
+        "cherche sur google", "recherche google", "qui est premier", "qui apparaît",
+        "quelle position", "quel classement", "résultats de recherche",
+        "concurrents sur", "qui se positionne", "visibilité sur google",
+      ];
+      const placesKeywords = [
+        "avis google", "fiche google", "google maps", "note google", "étoiles google",
+        "avis clients", "google my business", "gmb", "fiche établissement",
+        "restaurant", "magasin", "commerce", "horaires", "adresse de",
+        "avis sur", "note de", "où se trouve", "trouver un", "trouver une",
+      ];
+
+      const isSerpIntent = serpKeywords.some(kw => lowerSearch.includes(kw));
+      const isPlacesIntent = placesKeywords.some(kw => lowerSearch.includes(kw));
+      const hasSearchIntent = isSerpIntent || isPlacesIntent;
+
+      if (hasSearchIntent) {
+        // Check plan type for rate limiting
+        const { data: planProfile } = await sb
+          .from("profiles")
+          .select("plan_type, subscription_status")
+          .eq("user_id", user_id)
+          .single();
+
+        const isPro = planProfile?.plan_type === "agency_pro" &&
+          (planProfile?.subscription_status === "active" || planProfile?.subscription_status === "canceling");
+
+        // For free users: check if they already used their 1 live search this session
+        let searchAllowed = true;
+        if (!isPro && !isCreator && conversation_id) {
+          const { data: convData } = await sb
+            .from("sav_conversations")
+            .select("metadata")
+            .eq("id", conversation_id)
+            .maybeSingle();
+
+          const metadata = (convData?.metadata as any) || {};
+          const liveSearchCount = metadata.live_search_count || 0;
+          if (liveSearchCount >= 1) {
+            searchAllowed = false;
+            liveSearchContext = `\n\n# RECHERCHE EN DIRECT — LIMITE ATTEINTE
+L'utilisateur gratuit a déjà utilisé sa recherche en direct pour cette conversation. 
+Explique-lui qu'il peut passer à Pro Agency pour des recherches illimitées, ou ouvrir une nouvelle conversation.
+Ne fais PAS de recherche, réponds avec tes connaissances existantes.`;
+          }
+        }
+
+        if (searchAllowed) {
+          try {
+            // Extract search query from the user message using a simple heuristic
+            let searchQuery = lastUserMsg
+              .replace(/position google|résultats google|classement google|cherche sur google|recherche google|qui est premier|qui apparaît sur|avis google|fiche google|google maps|note google|sur google|dans google/gi, "")
+              .replace(/pour|de|du|des|le|la|les|un|une|mon|ma|mes|quel|quelle|quels|quelles|est|sont|donne|montre|affiche/gi, "")
+              .trim();
+
+            // If query is too short, use the full message
+            if (searchQuery.length < 3) searchQuery = lastUserMsg;
+
+            let searchResults: any = null;
+            let searchSource = "";
+
+            if (isPlacesIntent) {
+              // Google Places API
+              const GOOGLE_PLACES_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
+              if (GOOGLE_PLACES_KEY) {
+                const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&language=fr&key=${GOOGLE_PLACES_KEY}`;
+                const placesResp = await fetch(placesUrl);
+                if (placesResp.ok) {
+                  const placesData = await placesResp.json();
+                  const topResults = (placesData.results || []).slice(0, 5).map((r: any) => ({
+                    name: r.name,
+                    address: r.formatted_address,
+                    rating: r.rating,
+                    reviews_count: r.user_ratings_total,
+                    types: r.types?.slice(0, 3),
+                    open_now: r.opening_hours?.open_now,
+                  }));
+                  searchResults = topResults;
+                  searchSource = "Google Places";
+                }
+              }
+            }
+
+            if (isSerpIntent && !searchResults) {
+              // Try DataForSEO first, fallback to SerpAPI
+              const DFS_LOGIN = Deno.env.get("DATAFORSEO_LOGIN");
+              const DFS_PASS = Deno.env.get("DATAFORSEO_PASSWORD");
+              const SERP_KEY = Deno.env.get("SERPAPI_KEY");
+
+              if (DFS_LOGIN && DFS_PASS) {
+                try {
+                  const dfsResp = await fetch("https://api.dataforseo.com/v3/serp/google/organic/live/advanced", {
+                    method: "POST",
+                    headers: {
+                      Authorization: "Basic " + btoa(`${DFS_LOGIN}:${DFS_PASS}`),
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify([{
+                      keyword: searchQuery,
+                      language_name: "French",
+                      location_name: "France",
+                      depth: 10,
+                    }]),
+                  });
+
+                  if (dfsResp.ok) {
+                    const dfsData = await dfsResp.json();
+                    const items = dfsData?.tasks?.[0]?.result?.[0]?.items || [];
+                    const organic = items
+                      .filter((i: any) => i.type === "organic")
+                      .slice(0, 10)
+                      .map((i: any) => ({
+                        position: i.rank_absolute,
+                        title: i.title,
+                        url: i.url,
+                        description: i.description?.slice(0, 120),
+                      }));
+                    searchResults = organic;
+                    searchSource = "Google SERP (live)";
+                  }
+                } catch (e) {
+                  console.error("[Felix Live Search] DataForSEO error:", e);
+                }
+              }
+
+              // Fallback to SerpAPI
+              if (!searchResults && SERP_KEY) {
+                try {
+                  const serpUrl = `https://serpapi.com/search.json?api_key=${SERP_KEY}&engine=google&q=${encodeURIComponent(searchQuery)}&hl=fr&gl=fr&num=10`;
+                  const serpResp = await fetch(serpUrl);
+                  if (serpResp.ok) {
+                    const serpData = await serpResp.json();
+                    const organic = (serpData.organic_results || []).slice(0, 10).map((r: any) => ({
+                      position: r.position,
+                      title: r.title,
+                      url: r.link,
+                      description: r.snippet?.slice(0, 120),
+                    }));
+                    searchResults = organic;
+                    searchSource = "Google SERP (live)";
+                  }
+                } catch (e) {
+                  console.error("[Felix Live Search] SerpAPI error:", e);
+                }
+              }
+            }
+
+            if (searchResults && searchResults.length > 0) {
+              liveSearchContext = `\n\n# RÉSULTATS DE RECHERCHE EN DIRECT (${searchSource})
+Requête : "${searchQuery}"
+Résultats obtenus en temps réel :\n`;
+
+              if (isPlacesIntent) {
+                for (const r of searchResults) {
+                  liveSearchContext += `- **${r.name}** — ${r.address || "adresse inconnue"} | Note: ${r.rating ?? "N/A"}/5 (${r.reviews_count ?? 0} avis)${r.open_now !== undefined ? (r.open_now ? " 🟢 Ouvert" : " 🔴 Fermé") : ""}\n`;
+                }
+              } else {
+                for (const r of searchResults) {
+                  liveSearchContext += `${r.position}. [${r.title}](${r.url}) — ${r.description || ""}\n`;
+                }
+              }
+
+              liveSearchContext += `\nUtilise ces données RÉELLES pour répondre à l'utilisateur. Présente-les de manière claire et actionnable. Mentionne que ce sont des données en temps réel.`;
+
+              // Track usage: increment live_search_count in conversation metadata
+              if (conversation_id) {
+                const { data: convMeta } = await sb
+                  .from("sav_conversations")
+                  .select("metadata")
+                  .eq("id", conversation_id)
+                  .maybeSingle();
+
+                const existingMeta = (convMeta?.metadata as any) || {};
+                await sb.from("sav_conversations").update({
+                  metadata: { ...existingMeta, live_search_count: (existingMeta.live_search_count || 0) + 1 },
+                }).eq("id", conversation_id);
+              }
+
+              // Log API call
+              await sb.from("analytics_events").insert({
+                user_id,
+                event_type: "felix_live_search",
+                event_data: { source: searchSource, query: searchQuery, results_count: searchResults.length, is_pro: isPro },
+              });
+            }
+          } catch (e) {
+            console.error("[Felix Live Search] Error:", e);
+          }
+        }
+      }
+    }
+
     // Guest sales mode prompt
     let guestHint = "";
     if (isGuest) {
