@@ -88,6 +88,7 @@ interface WorkflowCarouselProps {
   onNavigateToTechnical?: () => void;
   onNavigateToStrategic?: () => void;
   validationBanner?: React.ReactNode;
+  completedAuditsCount?: number;
 }
 
 export function WorkflowCarousel({
