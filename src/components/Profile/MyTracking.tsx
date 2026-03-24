@@ -216,6 +216,7 @@ export function MyTracking() {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
+  const { isDemoMode } = useDemoMode();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
