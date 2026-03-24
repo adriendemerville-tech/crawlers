@@ -287,12 +287,14 @@ export function Header() {
                   <span className="text-sm font-semibold">Crawl</span>
                 </Button>
               </a>
-              <a href="/matrice" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Grid3X3 className="h-4 w-4" />
-                  <span className="text-sm">Matrice</span>
-                </Button>
-              </a>
+              {isAdmin && (
+                <a href="/matrice" target="_blank" rel="noopener noreferrer">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Grid3X3 className="h-4 w-4" />
+                    <span className="text-sm">Matrice</span>
+                  </Button>
+                </a>
+              )}
             </>
           ) : (
             (isCrawlPage || isMatricePage) ? (
