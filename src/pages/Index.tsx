@@ -756,19 +756,23 @@ const Index = () => {
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
-                <Link to="/matrice">
-                  <Button
-                    size="lg"
-                    className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-8 shadow-lg"
-                  >
-                    <Grid3X3 className="h-5 w-5" />
-                    {language === 'fr' ? 'Essayer la Matrice' : language === 'es' ? 'Probar la Matriz' : 'Try the Matrix'}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
               </div>
-              <div className="flex-shrink-0 w-full md:w-[420px] rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
-                <img src={matriceScreenshot} alt="Matrice d'audit Crawlers" className="w-full h-auto" loading="lazy" />
+              <div className="flex-shrink-0 w-full md:w-[420px] space-y-5">
+                <div className="rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
+                  <img src={matriceScreenshot} alt="Crawlers.fr matrice audit SEO grille personnalisée" className="w-full h-auto" loading="lazy" />
+                </div>
+                <div className="text-center">
+                  <Link to="/matrice">
+                    <Button
+                      size="lg"
+                      className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-8 shadow-lg"
+                    >
+                      <Grid3X3 className="h-5 w-5" />
+                      {language === 'fr' ? 'Essayer la Matrice' : language === 'es' ? 'Probar la Matriz' : 'Try the Matrix'}
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
