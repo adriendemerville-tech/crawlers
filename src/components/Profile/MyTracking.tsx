@@ -1159,10 +1159,16 @@ export function MyTracking() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          className={`gap-1.5 ${
+                            autopilotStatus === 'active'
+                              ? 'border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/5'
+                              : autopilotStatus === 'paused'
+                                ? 'border-primary/30 text-primary hover:bg-primary/5'
+                                : 'border-muted-foreground/20 text-muted-foreground hover:bg-muted/50'
+                          }`}
                           onClick={() => setShowAutopilotModal(true)}
                         >
-                          <Bot className="h-3.5 w-3.5" />
+                          {autopilotStatus === 'active' ? <Play className="h-3.5 w-3.5" /> : autopilotStatus === 'paused' ? <Pause className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                           <span className="hidden sm:inline">Autopilote</span>
                         </Button>
                       )}
