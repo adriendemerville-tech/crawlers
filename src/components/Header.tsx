@@ -114,6 +114,7 @@ export function Header() {
   const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
   const isHomePage = location.pathname === '/';
   const isCrawlPage = location.pathname === '/site-crawl' || location.pathname === '/crawl';
+  const isMatricePage = location.pathname === '/matrice';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -294,7 +295,7 @@ export function Header() {
               </a>
             </>
           ) : (
-            isCrawlPage ? (
+            (isCrawlPage || isMatricePage) ? (
               <Link to="/cocoon">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
