@@ -1966,28 +1966,32 @@ export default function SiteCrawl() {
             </Card>
           )}
 
-          {/* CTA Cocoon */}
-          <div className="flex justify-center mt-12 mb-8">
-            <Link
-              to={`/app/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
-            >
-              <Sparkles className="h-4 w-4" />
-              Cocoon · Assistant Sémantique
-            </Link>
-          </div>
+          {/* CTA Cocoon + SEO content — hidden for subscribers */}
+          {!isAgencyPro && (
+            <>
+              <div className="flex justify-center mt-12 mb-8">
+                <Link
+                  to={`/app/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Cocoon · Assistant Sémantique
+                </Link>
+              </div>
 
-          {/* SEO content — H2s at bottom */}
-          <div className="mt-16 mb-10 max-w-3xl mx-auto space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
-            </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
-            </div>
-          </div>
+              {/* SEO content — H2s at bottom */}
+              <div className="mt-16 mb-10 max-w-3xl mx-auto space-y-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
+                </div>
+              </div>
+            </>
+          )}
 
         </div>
       </main>
