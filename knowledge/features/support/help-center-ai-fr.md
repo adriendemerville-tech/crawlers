@@ -1,11 +1,26 @@
 # Memory: features/support/help-center-ai-fr
 Updated: now
 
-## Agent SAV "Crawler"
+## Agent SAV "Félix"
 - Modèle : Gemini Flash via Lovable AI Gateway (`LOVABLE_API_KEY`)
-- Limite stricte : 1000 caractères par message
+- Limite stricte : 800 caractères par message (1500 en mode compréhension d'audit, 3000 en mode créateur)
 - Base de connaissance : documentation /aide + taxonomie front-end complète (routes, onglets, positions des composants)
 - Accès aux données backend : `tracked_sites`, `crawl_pages`, `site_crawls`, `cocoon_sessions`, `profiles`
+- Consigne : ne produit pas (pas d'audits, crawls, génération de code) — explique et conseille uniquement
+- Détection automatique de la langue de l'utilisateur (FR/EN/ES)
+- Utilise le prénom si disponible dans `profiles`
+- Peut envoyer des liens internes (ex: `/cocoon`, `/matrice`, `/console`)
+- Logo robot Crawlers dans la conversation (remplace emoji et "Crawler" texte)
+
+## Compréhension d'audit en temps réel (Screen Context)
+- Le frontend capture le contenu visible à l'écran de l'utilisateur (`captureScreenContext`)
+- Actif sur les routes : `/audit-expert`, `/matrice`, `/cocoon`, `/site-crawl`, `/console`
+- Extraction : headings (H1-H3), scores, badges, métriques, tableaux, cards, insights, recommendations
+- Envoyé au backend via `screen_context` dans le body de la requête sav-agent
+- Félix peut expliquer les scores, les piliers d'audit, les seuils, les badges
+- Si des données manquent (au-dessus ou en dessous du viewport), Félix demande à l'utilisateur de scroller
+- Limite de caractères augmentée à 1500 en mode compréhension d'audit
+- Couvre : Audit Expert (5 piliers, Score 200), Audit Stratégique (IAS, E-E-A-T), Matrice (double scoring)
 - Consigne : ne produit pas (pas d'audits, crawls, génération de code) — explique et conseille uniquement
 - Détection automatique de la langue de l'utilisateur (FR/EN/ES)
 - Utilise le prénom si disponible dans `profiles`
