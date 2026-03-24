@@ -603,10 +603,6 @@ const Index = () => {
           <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
             <div className="relative mx-auto max-w-3xl px-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-violet-600/20 text-violet-400 border border-violet-500/30 text-sm px-4 py-1.5 mb-5">
-                <Crown className="h-4 w-4 text-yellow-500" />
-                {language === 'fr' ? 'Offre Pro Agency' : language === 'es' ? 'Oferta Pro Agency' : 'Pro Agency Plan'}
-              </div>
               <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
                 {language === 'fr' ? 'Passez au niveau supérieur avec ' : language === 'es' ? 'Sube de nivel con ' : 'Level up with '}
                 <span className="bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">Pro Agency</span>
