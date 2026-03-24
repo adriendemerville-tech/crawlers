@@ -1415,7 +1415,7 @@ export const docMetadata = {
   version: '6.2.0',
   lastUpdated: '2026-03-24',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 124,
+  totalEdgeFunctions: 125,
   totalSharedModules: 22,
   totalTables: '68+',
   totalLinesOfCode: '187 000+',
