@@ -308,17 +308,17 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     toast.success(t.copied);
   };
 
-  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix';
+  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo';
   const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
   const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
-  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : 'Drupal';
+  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : cmsType === 'odoo' ? 'Odoo' : 'Drupal';
 
-  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : t.drupalHelp;
+  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : cmsType === 'odoo' ? t.odooHelp : t.drupalHelp;
 
-  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'wordpress' ? t.apiKey : t.password;
+  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'odoo' ? t.apiKey : cmsType === 'wordpress' ? t.apiKey : t.password;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
