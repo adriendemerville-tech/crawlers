@@ -2,15 +2,18 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { correctTranscript } from '@/utils/sttVocabulary';
 
 interface ChatMicButtonProps {
   onTranscript: (text: string) => void;
   disabled?: boolean;
   /** Compact mode for chat inputs (smaller size) */
   compact?: boolean;
+  /** User's tracked domain names for STT vocabulary correction */
+  userDomains?: string[];
 }
 
-export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMicButtonProps) {
+export function ChatMicButton({ onTranscript, disabled, compact = true, userDomains }: ChatMicButtonProps) {
   const { toast } = useToast();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -133,7 +136,8 @@ export function ChatMicButton({ onTranscript, disabled, compact = true }: ChatMi
       setRecording(false);
       stopAudioMonitor();
       if (fullTranscript.trim()) {
-        onTranscript(fullTranscript.trim());
+        const corrected = correctTranscript(fullTranscript.trim(), userDomains);
+        onTranscript(corrected);
       }
       recognitionRef.current = null;
       // Small delay so user sees the spinner briefly
