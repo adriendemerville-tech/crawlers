@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
