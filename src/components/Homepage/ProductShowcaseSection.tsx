@@ -3,12 +3,13 @@ import { motion, useInView } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap
+  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap, Code2, Lock
 } from 'lucide-react';
 
 import consoleDashboard from '@/assets/screenshots/console-dashboard.png';
 import cocoonGraph from '@/assets/screenshots/cocoon-graph.png';
 import keywordsAudit from '@/assets/screenshots/keywords-audit.png';
+import architectCode from '@/assets/screenshots/architect-code.png';
 import gmbReviews from '@/assets/screenshots/gmb-reviews.png';
 
 /** Animated screenshot card with 3D perspective tilt */
