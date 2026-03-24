@@ -136,7 +136,8 @@ export function ChatMicButton({ onTranscript, disabled, compact = true, userDoma
       setRecording(false);
       stopAudioMonitor();
       if (fullTranscript.trim()) {
-        onTranscript(fullTranscript.trim());
+        const corrected = correctTranscript(fullTranscript.trim(), userDomains);
+        onTranscript(corrected);
       }
       recognitionRef.current = null;
       // Small delay so user sees the spinner briefly
