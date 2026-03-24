@@ -6,6 +6,7 @@ import cmsWix from '@/assets/cms-wix.png';
 import cmsPrestashop from '@/assets/cms-prestashop.png';
 import cmsGtm from '@/assets/cms-gtm.png';
 import cmsDrupal from '@/assets/cms-drupal.png';
+import cmsOdoo from '@/assets/cms-odoo.png';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
