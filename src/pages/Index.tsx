@@ -594,13 +594,7 @@ const Index = () => {
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
-        <HeroSection 
-          onSubmit={handleCheck} 
-          isLoading={isLoading} 
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          currentUrl={currentUrl}
-        />
+        <HeroSection />
 
         {/* ─── Homepage marketing sections ─── */}
 
