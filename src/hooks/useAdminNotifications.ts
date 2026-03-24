@@ -91,6 +91,7 @@ export function useAdminNotifications() {
           injectionErrors: injectionRes.count || 0,
           support: supportRes.count || 0,
           apiBilling: billingRes.count || 0,
+          frontendCrashes: frontendRes.count || 0,
         });
       } catch (err) {
         console.error('Admin notifications fetch error:', err);
