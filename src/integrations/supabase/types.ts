@@ -671,6 +671,122 @@ export type Database = {
           },
         ]
       }
+      audit_matrix_results: {
+        Row: {
+          confidence_level: number | null
+          crawlers_data: Json | null
+          crawlers_score: number | null
+          created_at: string
+          criterion_category: string | null
+          criterion_id: string
+          criterion_title: string
+          custom_prompt: string | null
+          id: string
+          match_type: string
+          parsed_response: string | null
+          parsed_score: number | null
+          session_id: string
+          source_function: string | null
+          target_provider: string | null
+        }
+        Insert: {
+          confidence_level?: number | null
+          crawlers_data?: Json | null
+          crawlers_score?: number | null
+          created_at?: string
+          criterion_category?: string | null
+          criterion_id: string
+          criterion_title: string
+          custom_prompt?: string | null
+          id?: string
+          match_type?: string
+          parsed_response?: string | null
+          parsed_score?: number | null
+          session_id: string
+          source_function?: string | null
+          target_provider?: string | null
+        }
+        Update: {
+          confidence_level?: number | null
+          crawlers_data?: Json | null
+          crawlers_score?: number | null
+          created_at?: string
+          criterion_category?: string | null
+          criterion_id?: string
+          criterion_title?: string
+          custom_prompt?: string | null
+          id?: string
+          match_type?: string
+          parsed_response?: string | null
+          parsed_score?: number | null
+          session_id?: string
+          source_function?: string | null
+          target_provider?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_matrix_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "audit_matrix_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_matrix_sessions: {
+        Row: {
+          audit_plan: Json | null
+          completed_criteria: number | null
+          created_at: string
+          detection_method: string | null
+          domain: string
+          error_message: string | null
+          id: string
+          parsed_criteria: Json | null
+          source_file_name: string
+          source_file_type: string
+          status: string
+          total_criteria: number | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          audit_plan?: Json | null
+          completed_criteria?: number | null
+          created_at?: string
+          detection_method?: string | null
+          domain: string
+          error_message?: string | null
+          id?: string
+          parsed_criteria?: Json | null
+          source_file_name: string
+          source_file_type: string
+          status?: string
+          total_criteria?: number | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          audit_plan?: Json | null
+          completed_criteria?: number | null
+          created_at?: string
+          detection_method?: string | null
+          domain?: string
+          error_message?: string | null
+          id?: string
+          parsed_criteria?: Json | null
+          source_file_name?: string
+          source_file_type?: string
+          status?: string
+          total_criteria?: number | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_raw_data: {
         Row: {
           audit_type: string
