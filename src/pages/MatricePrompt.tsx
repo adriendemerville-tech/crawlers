@@ -554,8 +554,59 @@ export default function MatricePrompt() {
     window.open('/app/rapport/matrice', '_blank');
   };
 
-  const getScoreColor = (score: number, bon: number, moyen: number) => {
-    if (score >= bon) return 'text-green-600';
+  /* ── Dynamic explanation builders for hover tooltips ─────────── */
+  const buildParsedExplanation = (row: MatrixRow, result: any): string => {
+    const score = result.parsed_score;
+    const raw = result.parsed_raw || {};
+    const justification = raw.justification || raw.seo_justification || '';
+    const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
+    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
+    
+    let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${score}/100 (verdict : ${verdict}).`;
+    if (justification) {
+      explanation += ` Justification : ${justification.length > 120 ? justification.substring(0, 117) + '…' : justification}`;
+    }
+    if (result.geo_score != null) {
+      explanation += ` Score GEO associé : ${result.geo_score}/100.`;
+    }
+    return explanation;
+  };
+
+  const buildCrawlersExplanation = (row: MatrixRow, result: any): string => {
+    const score = result.crawlers_score;
+    const rawData = result.raw_data || {};
+    const engineScore = rawData.seo_engine;
+    const detectedType = result.detected_type || 'auto';
+    const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
+    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
+    
+    let explanation = `Pour « ${prompt} », Crawlers a mesuré ${score}/100 (${verdict}) via ses micro-fonctions (type détecté : ${detectedType}).`;
+    
+    if (engineScore != null) {
+      explanation += ` Score moteur technique pur : ${engineScore}/100, pondéré à 60% avec le score LLM à 40%.`;
+    }
+    
+    // Surface specific raw findings
+    const details: string[] = [];
+    if (rawData.title_length != null) details.push(`title: ${rawData.title_length} car.`);
+    if (rawData.meta_desc_length != null) details.push(`meta desc: ${rawData.meta_desc_length} car.`);
+    if (rawData.h1_count != null) details.push(`H1: ${rawData.h1_count}`);
+    if (rawData.lcp != null) details.push(`LCP: ${rawData.lcp}ms`);
+    if (rawData.cls != null) details.push(`CLS: ${rawData.cls}`);
+    if (rawData.robots_ok != null) details.push(`robots.txt: ${rawData.robots_ok ? '✓' : '✗'}`);
+    if (rawData.sitemap_ok != null) details.push(`sitemap: ${rawData.sitemap_ok ? '✓' : '✗'}`);
+    if (rawData.schema_types?.length) details.push(`schemas: ${rawData.schema_types.join(', ')}`);
+    if (rawData.https != null) details.push(`HTTPS: ${rawData.https ? '✓' : '✗'}`);
+    
+    if (details.length > 0) {
+      explanation += ` Détails : ${details.slice(0, 5).join(' · ')}.`;
+    }
+    
+    return explanation;
+  };
+
+
+    const getScoreColor = (score: number, bon: number, moyen: number) => {
     if (score >= moyen) return 'text-yellow-600';
     return 'text-red-600';
   };
@@ -868,9 +919,9 @@ export default function MatricePrompt() {
                                       <HelpCircle className="h-3.5 w-3.5" />
                                     </button>
                                   </HoverCardTrigger>
-                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Parsé</p>
-                                    <p className="text-muted-foreground">Résultat obtenu en soumettant <strong>votre prompt exact</strong> à un LLM qui analyse le contenu brut de la page. Reflète la réponse littérale à votre critère tel que formulé.</p>
+                                  <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Parsé — {resultRow.parsed_score}/100</p>
+                                    <p className="text-muted-foreground">{buildParsedExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
                               </span>
@@ -888,9 +939,9 @@ export default function MatricePrompt() {
                                       <HelpCircle className="h-3.5 w-3.5" />
                                     </button>
                                   </HoverCardTrigger>
-                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Crawlers</p>
-                                    <p className="text-muted-foreground">Résultat obtenu via les <strong>micro-fonctions techniques</strong> de Crawlers (meta-tags, données structurées, PageSpeed, backlinks…). Mesure objective et reproductible, indépendante du prompt.</p>
+                                  <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Crawlers — {resultRow.crawlers_score}/100</p>
+                                    <p className="text-muted-foreground">{buildCrawlersExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
                               </span>
