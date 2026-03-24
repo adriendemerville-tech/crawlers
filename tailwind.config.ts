@@ -116,6 +116,10 @@ export default {
           "0%, 100%": { boxShadow: "0 0 12px 2px rgba(16,185,129,0.25), 0 0 24px 4px rgba(16,185,129,0.12)" },
           "50%": { boxShadow: "0 0 20px 4px rgba(16,185,129,0.4), 0 0 40px 8px rgba(16,185,129,0.2)" },
         },
+        "autopilot-glow": {
+          "0%, 100%": { boxShadow: "0 0 8px 2px rgba(16,185,129,0.2)" },
+          "50%": { boxShadow: "0 0 18px 5px rgba(16,185,129,0.35), 0 0 36px 8px rgba(16,185,129,0.15)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
