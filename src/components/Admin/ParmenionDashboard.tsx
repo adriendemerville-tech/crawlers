@@ -79,7 +79,27 @@ export function ParmenionDashboard() {
     if (data) setErrorRate(data as unknown as { total: number; errors: number; error_rate: number; conservative_mode: boolean });
   }, [logs]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  const fetchAutopilotConfig = useCallback(async () => {
+    const { data } = await supabase
+      .from('autopilot_configs')
+      .select('is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      const ts = data.tracked_sites as unknown as { domain: string };
+      setAutopilotConfig({
+        is_active: data.is_active ?? false,
+        status: data.status ?? 'idle',
+        last_cycle_at: data.last_cycle_at,
+        domain: ts?.domain || '—',
+        total_cycles_run: data.total_cycles_run ?? 0,
+      });
+    }
+  }, []);
+
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); }, [fetchLogs, fetchAutopilotConfig]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
