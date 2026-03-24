@@ -44,9 +44,9 @@ interface CocoonFilterSelectorProps {
 }
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
