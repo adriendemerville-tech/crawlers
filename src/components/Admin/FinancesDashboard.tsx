@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,8 +19,12 @@ import {
   Shield,
   Gauge,
   Server,
+  ChevronDown,
 } from 'lucide-react';
-import { subDays } from 'date-fns';
+import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
@@ -95,6 +99,9 @@ export function FinancesDashboard() {
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
   const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
+  const [allTimeRawEvents, setAllTimeRawEvents] = useState<{ created_at: string; cost: number }[]>([]);
+  const [spendingChartOpen, setSpendingChartOpen] = useState(false);
+  const [spendingScale, setSpendingScale] = useState<'day' | 'week' | 'month'>('week');
 
   // Fetch events with optional date filter
   const fetchEventsByType = useCallback(async (eventType: string, sinceDate?: string) => {
@@ -219,6 +226,21 @@ export function FinancesDashboard() {
       setAllTimePlatformCost(grandTotalCostAll);
       setAllTimeTokenUsage(statsAll);
 
+      // Store raw events for spending chart
+      const rawCosts: { created_at: string; cost: number }[] = [];
+      tokenEventsAll.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (!data) return;
+        const model = (data.model as string) || 'unknown';
+        const p = Number(data.prompt_tokens) || 0;
+        const c = Number(data.completion_tokens) || 0;
+        rawCosts.push({ created_at: e.created_at, cost: estimateCost(model, p, c) });
+      });
+      paidApiEventsAll.forEach(e => {
+        rawCosts.push({ created_at: e.created_at, cost: 0.005 });
+      });
+      setAllTimeRawEvents(rawCosts);
+
       // Active users
       const activeUserIds = new Set<string>();
       events.forEach(e => { if (e.user_id) activeUserIds.add(e.user_id); });
@@ -329,6 +351,30 @@ export function FinancesDashboard() {
   const grandTotalSinceLaunchUSD = realDataforseoSpent + realOpenrouterSpent;
   const grandTotalSinceLaunchEUR = grandTotalSinceLaunchUSD * 0.92 + allTimePlatformCost;
 
+  // Spending chart data
+  const spendingChartData = useMemo(() => {
+    if (!allTimeRawEvents.length) return [];
+    const buckets = new Map<string, number>();
+    
+    allTimeRawEvents.forEach(evt => {
+      const date = new Date(evt.created_at);
+      let key: string;
+      if (spendingScale === 'day') key = format(startOfDay(date), 'yyyy-MM-dd');
+      else if (spendingScale === 'week') key = format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      else key = format(startOfMonth(date), 'yyyy-MM');
+      buckets.set(key, (buckets.get(key) || 0) + evt.cost);
+    });
+
+    const sorted = [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    let cumulative = 0;
+    return sorted.map(([key, cost]) => {
+      cumulative += cost;
+      const labelFmt = spendingScale === 'month' ? 'MMM yy' : 'dd MMM';
+      const label = format(new Date(key), labelFmt, { locale: fr });
+      return { date: key, label, cost: Math.round(cost * 100) / 100, cumulative: Math.round(cumulative * 100) / 100 };
+    });
+  }, [allTimeRawEvents, spendingScale]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -399,8 +445,54 @@ export function FinancesDashboard() {
           <CardContent className="p-3 pt-0">
             <div className="text-lg font-bold">{businessMetrics.creditsPurchased.toLocaleString('fr-FR')}</div>
             <p className="text-[10px] text-muted-foreground mt-0.5">Total historique</p>
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={() => setSpendingChartOpen(prev => !prev)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>{spendingChartOpen ? 'Masquer' : 'Évolution'}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${spendingChartOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Spending Evolution Chart */}
+      {spendingChartOpen && spendingChartData.length > 0 && (
+        <Card className="border-primary/10">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-muted-foreground">Évolution des dépenses</p>
+              <ToggleGroup type="single" value={spendingScale} onValueChange={v => v && setSpendingScale(v as 'day' | 'week' | 'month')} size="sm">
+                <ToggleGroupItem value="day" className="text-xs px-2 h-7">Jour</ToggleGroupItem>
+                <ToggleGroupItem value="week" className="text-xs px-2 h-7">Semaine</ToggleGroupItem>
+                <ToggleGroupItem value="month" className="text-xs px-2 h-7">Mois</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={spendingChartData}>
+                  <defs>
+                    <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                  <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" tickFormatter={v => `${v}€`} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                    formatter={(value: number, name: string) => [`${value.toFixed(2)}€`, name === 'cumulative' ? 'Cumulé' : 'Période']}
+                  />
+                  <Area type="monotone" dataKey="cost" stroke="hsl(var(--primary))" fill="url(#spendGrad)" strokeWidth={1.5} name="Période" />
+                  <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--muted-foreground))" fill="none" strokeWidth={1} strokeDasharray="4 2" name="Cumulé" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
+      )}
         <Card className="border-amber-500/30">
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground">MRR</CardTitle>
