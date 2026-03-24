@@ -220,7 +220,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
         <Separator className="bg-white/5 my-1" />
 
         {/* Show All Clusters */}
-        <div className="px-3 py-2 pb-3">
+        <div className="px-3 py-2 space-y-1.5">
           <label
             className="flex items-center gap-2 cursor-pointer group"
             onClick={toggleClusters}
@@ -232,6 +232,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             />
             <Layers className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.clusters}</span>
+          </label>
+          <label
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={toggleParticles}
+          >
+            <Checkbox
+              checked={!filters.showParticles}
+              className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+              tabIndex={-1}
+            />
+            <Sparkles className="w-3 h-3 text-white/40" />
+            <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideParticles}</span>
           </label>
         </div>
       </PopoverContent>
