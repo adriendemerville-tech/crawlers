@@ -581,15 +581,15 @@ export default function MatricePrompt() {
                         aria-label="Tout sélectionner"
                       />
                     </TableHead>
-                    <TableHead>Prompt / KPI</TableHead>
+                    <TableHead>KPI</TableHead>
+                    <TableHead className="w-28">Catégorie</TableHead>
                     <TableHead className="w-20">Poids</TableHead>
-                    <TableHead className="w-28">Axe</TableHead>
                     <TableHead className="w-20">Bon</TableHead>
                     <TableHead className="w-20">Moyen</TableHead>
                     <TableHead className="w-20">Mauvais</TableHead>
-                    <TableHead className="w-36">Modèle</TableHead>
                     {results && <TableHead className="w-20">Type</TableHead>}
-                    {results && <TableHead className="w-24">Crawlers</TableHead>}
+                    {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
+                    {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -603,14 +603,17 @@ export default function MatricePrompt() {
                             onCheckedChange={() => toggleRow(row.id)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium text-sm max-w-xs truncate">{row.prompt}</TableCell>
+                        <TableCell className="font-medium text-sm max-w-xs">
+                          <span className="truncate block">{row.prompt}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
+                            {row.axe}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           {row.poids}
                           {row.isDefault.poids && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {row.axe}
-                          {row.isDefault.axe && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
                         <TableCell>
                           {row.seuil_bon}
@@ -624,10 +627,6 @@ export default function MatricePrompt() {
                           {row.seuil_mauvais}
                           {row.isDefault.seuil_mauvais && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">
-                          {row.llm_name}
-                          {row.isDefault.llm_name && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
                         {results && (
                           <TableCell>
                             {resultRow ? (
@@ -638,7 +637,12 @@ export default function MatricePrompt() {
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? `${resultRow.parsed_score}/100` : '—'}
+                          </TableCell>
+                        )}
+                        {results && (
+                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
                           </TableCell>
                         )}
@@ -654,10 +658,12 @@ export default function MatricePrompt() {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
                   const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
                   if (tw === 0) return null;
+                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw);
                   const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
                   return (
-                    <span className="ml-auto font-medium text-foreground">
-                      Score Crawlers pondéré : {crawlersScore}/100
+                    <span className="ml-auto font-medium text-foreground flex gap-4">
+                      <span>Parsé : {parsedScore}/100</span>
+                      <span className="text-primary">Crawlers : {crawlersScore}/100</span>
                     </span>
                   );
                 })()}
