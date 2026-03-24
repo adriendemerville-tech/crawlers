@@ -82,6 +82,7 @@ export function CtoAgentDashboard() {
   const [cacheHealth, setCacheHealth] = useState<CacheHealthReport | null>(null);
   const [checkingCache, setCheckingCache] = useState(false);
   const [refreshingJournal, setRefreshingJournal] = useState(false);
+  const [diagnosingCrashes, setDiagnosingCrashes] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [functionToggles, setFunctionToggles] = useState<Record<string, boolean>>({});
   const [savingToggles, setSavingToggles] = useState(false);
