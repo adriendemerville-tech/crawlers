@@ -169,6 +169,21 @@ Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultaném
 - Définissez vos prompts cibles (ex : "meilleure agence SEO Paris")
 - Crawlers interroge ChatGPT, Gemini, Perplexity, Claude
 - Résultats : taux de citation, sentiment, position dans la réponse
+- **Gestion des prompts** : les prompts sauvegardés sont affichés sous forme de cartes, renommables (double-clic ou icône crayon), supprimables au survol, et triés automatiquement par dernière utilisation (le plus récent en premier)
+
+### Rapports (Console)
+Onglet dédié à la gestion des rapports (réservé Pro Agency) :
+- **Menu vertical gauche** avec les URLs trackées depuis "Mes Sites" + un menu "Autres" pour les rapports hors domaines suivis
+- **Système de dossiers imbriqués** : créez, renommez, supprimez des dossiers (avec avertissement du nombre de rapports contenus)
+- **Actions rapports** : renommer, archiver, télécharger le PDF
+- **Archives** : les éléments supprimés sont rangés dans un menu déroulant en bas, avec possibilité de restauration
+- **Drag & drop** pour réordonner les sites dans le menu latéral
+
+### Intégration IKTracker
+Pour les sites hébergés sur IKTracker, le bouton "Brancher" dans Console > Mes Sites fonctionne différemment :
+- **Auto-détection** : l'API IKTracker est testée automatiquement au chargement — le bouton s'affiche en vert si l'API répond OK
+- **Toggle direct** : cliquer sur le bouton active/désactive la connexion API IKTracker sans ouvrir de modale
+- Le bridge `iktracker-actions` permet les opérations CRUD complètes (pages et articles) via l'API Content d'IKTracker
 
 ### Cocon Sémantique 3D
 Visualisation interactive de l'architecture sémantique de votre site en 3D (Three.js) :
