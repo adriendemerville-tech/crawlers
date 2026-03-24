@@ -276,31 +276,41 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
         try {
           const { read, utils } = await import('xlsx');
           const workbook = read(evt.target?.result, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = utils.sheet_to_json<Record<string, string>>(firstSheet, { defval: '' });
-          if (!rows.length) {
-            toast.error('Le fichier XLSX est vide ou mal formaté');
-            return;
+
+          const processSheet = (sheetName: string) => {
+            const sheet = workbook.Sheets[sheetName];
+            const rows = utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
+            if (!rows.length) {
+              toast.error(`L'onglet "${sheetName}" est vide`);
+              return;
+            }
+            const headers = Object.keys(rows[0]);
+            setCsvHeaders(headers);
+            setCsvRawRows(rows);
+            setPendingFileName(file.name);
+            const autoMap: Record<string, string> = {};
+            headers.forEach(h => {
+              const lower = h.toLowerCase().trim();
+              if (/prompt|question|query|requête|critère|criteria/i.test(lower)) autoMap.prompt = h;
+              if (/poids|weight|coefficient|coeff|pondéra/i.test(lower)) autoMap.poids = h;
+              if (/axe|axis|module|catégorie|category|type/i.test(lower)) autoMap.axe = h;
+              if (/seuil.*bon|threshold.*good|bon|good/i.test(lower) && !/moyen|mauvais/i.test(lower)) autoMap.seuil_bon = h;
+              if (/seuil.*moyen|threshold.*medium|moyen|medium|average/i.test(lower)) autoMap.seuil_moyen = h;
+              if (/seuil.*mauvais|threshold.*bad|mauvais|bad|poor/i.test(lower)) autoMap.seuil_mauvais = h;
+              if (/llm|model|modèle|engine/i.test(lower)) autoMap.llm_name = h;
+              if (/score|note|rating/i.test(lower)) autoMap.score = h;
+              if (/brand|marque|found|trouvé/i.test(lower)) autoMap.brand_found = h;
+            });
+            setColumnMapping(autoMap);
+            setShowMappingDialog(true);
+          };
+
+          if (workbook.SheetNames.length > 1) {
+            setXlsxPendingWorkbook({ workbook, processSheet });
+            setXlsxSheetNames(workbook.SheetNames);
+          } else {
+            processSheet(workbook.SheetNames[0]);
           }
-          const headers = Object.keys(rows[0]);
-          setCsvHeaders(headers);
-          setCsvRawRows(rows);
-          setPendingFileName(file.name);
-          const autoMap: Record<string, string> = {};
-          headers.forEach(h => {
-            const lower = h.toLowerCase().trim();
-            if (/prompt|question|query|requête|critère|criteria/i.test(lower)) autoMap.prompt = h;
-            if (/poids|weight|coefficient|coeff|pondéra/i.test(lower)) autoMap.poids = h;
-            if (/axe|axis|module|catégorie|category|type/i.test(lower)) autoMap.axe = h;
-            if (/seuil.*bon|threshold.*good|bon|good/i.test(lower) && !/moyen|mauvais/i.test(lower)) autoMap.seuil_bon = h;
-            if (/seuil.*moyen|threshold.*medium|moyen|medium|average/i.test(lower)) autoMap.seuil_moyen = h;
-            if (/seuil.*mauvais|threshold.*bad|mauvais|bad|poor/i.test(lower)) autoMap.seuil_mauvais = h;
-            if (/llm|model|modèle|engine/i.test(lower)) autoMap.llm_name = h;
-            if (/score|note|rating/i.test(lower)) autoMap.score = h;
-            if (/brand|marque|found|trouvé/i.test(lower)) autoMap.brand_found = h;
-          });
-          setColumnMapping(autoMap);
-          setShowMappingDialog(true);
         } catch {
           toast.error('Erreur de parsing XLSX');
         }
