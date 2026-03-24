@@ -19,8 +19,12 @@ import {
   Shield,
   Gauge,
   Server,
+  ChevronDown,
 } from 'lucide-react';
-import { subDays } from 'date-fns';
+import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
