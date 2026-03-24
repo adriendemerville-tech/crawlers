@@ -48,6 +48,30 @@ interface LLMResponse {
 // Helper function for delay between API calls
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: string): Promise<LLMResponse> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      signal: controller.signal,
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 500 }),
+    });
+    clearTimeout(timeout);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error('No content');
+    let jsonStr = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
+    const fb = jsonStr.indexOf('{'), lb = jsonStr.lastIndexOf('}');
+    if (fb !== -1 && lb > fb) jsonStr = jsonStr.substring(fb, lb + 1);
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    return { cited: false, sentiment: 'neutral', recommends: false, summary: `Custom prompt error: ${e.message}`, coreValueMatch: false };
+  }
+}
+
 // Prompts traduits par langue avec 5 niveaux de sentiment (descriptions améliorées)
 const llmPrompts: Record<Language, (domain: string, siteContext?: string) => string> = {
   fr: (domain, siteContext) => `Tu analyses le site web/marque "${domain}".${siteContext ? `\n\nContexte vérifié sur ce site :\n${siteContext}` : ''}\nRéponds à ces questions au format JSON :
