@@ -270,7 +270,19 @@ export function ExpertAuditDashboard() {
   const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
   const [fromCocoon, setFromCocoon] = useState(false);
   const [cocoonDomain, setCocoonDomain] = useState<string>('');
+  const [completedAuditsCount, setCompletedAuditsCount] = useState(0);
 
+  // Fetch completed audits count for current user
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('audits')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => {
+        setCompletedAuditsCount(count || 0);
+      });
+  }, [user]);
   const STRATEGIC_CACHE_MAX = 10;
 
   // Helpers for domain-level strategic cache
