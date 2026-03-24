@@ -232,6 +232,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
           items: [{ id: 'docs', label: t.docs, icon: BookOpen, group: 'docs' }],
         }]
       : []),
+    {
+      label: 'Parménion',
+      items: [
+        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'parmenion' },
+      ],
+    },
   ];
 
   const renderContent = () => {
