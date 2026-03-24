@@ -316,7 +316,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             <p className="text-xs font-medium text-muted-foreground">
               {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
             </p>
-            <Button onClick={handleDownloadPlugin} className="w-3/4 gap-2" size="sm">
+            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90" size="sm">
               <Download className="h-3.5 w-3.5" />
               {t3(language, 'Télécharger le Plugin .zip', 'Download Plugin .zip', 'Descargar Plugin .zip')}
             </Button>
