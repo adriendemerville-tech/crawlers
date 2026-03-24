@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
-import XlsxSheetSelector from '@/components/Matrice/XlsxSheetSelector';
+import ImportStepper from '@/components/Matrice/ImportStepper';
+import type { MatriceType } from '@/utils/matrice/typeDetector';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
