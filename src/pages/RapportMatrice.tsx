@@ -14,12 +14,15 @@ interface MatriceReportData {
     axe: string;
     poids: number;
     score: number;
+    parsed_score?: number;
+    crawlers_score?: number;
     seuil_bon: number;
     seuil_moyen: number;
     seuil_mauvais: number;
   }>;
   totalWeight: number;
   weightedScore: number;
+  parsedWeightedScore?: number;
 }
 
 function getScoreLabel(score: number, bon: number, moyen: number): string {
