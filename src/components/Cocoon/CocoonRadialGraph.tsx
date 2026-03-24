@@ -449,7 +449,8 @@ export function CocoonRadialGraph({
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
-    const maxR = Math.min(dimensions.w, dimensions.h) * 0.42;
+    const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+    const maxR = zoom < 1 ? baseR / zoom : baseR;
 
     // Recompute dynamic ring radii for drawing (same logic as layout)
     const nodesPerDepthDraw = new Map<number, number>();
