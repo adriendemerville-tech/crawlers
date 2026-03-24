@@ -786,7 +786,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       const { error } = await supabase.functions.invoke('submit-bug-report', {
         body: {
           raw_message: message,
-          route: '/cocoon',
+          route: '/app/cocoon',
           source_assistant: 'cocoon',
           context_data: {
             user_agent: navigator.userAgent,

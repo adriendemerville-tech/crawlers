@@ -159,7 +159,7 @@ export default function Auth() {
         } else {
           toast.success(language === 'fr' ? 'Invitation acceptée !' : 'Invitation accepted!');
         }
-        navigate('/console');
+        navigate('/app/console');
       });
       return;
     }
@@ -177,7 +177,7 @@ export default function Auth() {
         if (auditUrl) {
           navigate('/audit-expert');
         } else {
-          navigate('/console');
+          navigate('/app/console');
         }
       }
     }

@@ -121,7 +121,7 @@ const Index = () => {
 
       setIsRedirecting(true);
       const timer = setTimeout(() => {
-        navTo('/console?tab=tracking', { replace: true });
+        navTo('/app/console?tab=tracking', { replace: true });
       }, 900);
       return () => clearTimeout(timer);
     }

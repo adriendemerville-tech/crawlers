@@ -184,7 +184,7 @@ export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { language } = useLanguage();
-  useCanonicalHreflang('/cocoon');
+  useCanonicalHreflang('/app/cocoon');
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
@@ -308,7 +308,7 @@ export default function Cocoon() {
     const domain = params.get('autolaunch');
     if (domain) {
       setAutoLaunchDomain(domain);
-      navigate('/cocoon', { replace: true });
+      navigate('/app/cocoon', { replace: true });
     }
     if (params.get('fullscreen') === '1') {
       setIsFullscreen(true);
@@ -804,7 +804,7 @@ export default function Cocoon() {
                   params.set('contrast', String(graphContrast));
                   params.set('halo', String(colorIntensity));
                   params.set('thickness', String(linkThickness));
-                  window.open(`/cocoon?${params.toString()}`, '_blank');
+                  window.open(`/app/cocoon?${params.toString()}`, '_blank');
                 }}
                 className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
               >
@@ -1035,7 +1035,7 @@ export default function Cocoon() {
         <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
-            onClick={() => navigate('/console')}
+            onClick={() => navigate('/app/console')}
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md shrink-0 ml-2 sm:ml-4"
           >
             <ArrowLeft className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
@@ -1209,7 +1209,7 @@ export default function Cocoon() {
                         const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
                         const domain = selectedSite?.domain || '';
                         setShowPrereqModal(false);
-                        navigate(`/site-crawl${domain ? `?url=${encodeURIComponent(domain)}&from=cocoon` : '?from=cocoon'}`);
+                        navigate(`/app/site-crawl${domain ? `?url=${encodeURIComponent(domain)}&from=cocoon` : '?from=cocoon'}`);
                       }}
                     >
                       {t.prereqCrawlCta}

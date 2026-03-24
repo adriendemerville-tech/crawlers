@@ -411,7 +411,7 @@ export default function MatricePrompt() {
       parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
-    window.open('/rapport/matrice', '_blank');
+    window.open('/app/rapport/matrice', '_blank');
   };
 
   const getScoreColor = (score: number, bon: number, moyen: number) => {
@@ -466,7 +466,7 @@ export default function MatricePrompt() {
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
           {/* Top bar */}
           <div className="flex items-center gap-3 mb-6">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/console')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/app/console')}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Console
             </Button>
             <h1 className="text-xl font-bold">Matrice d'audit</h1>

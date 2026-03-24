@@ -39,7 +39,7 @@ export function CreditRechargeButton({ showZeroForGuest = false }: CreditRecharg
       <Button
         variant="outline"
         size="sm"
-        onClick={() => navigate('/console?tab=wallet')}
+        onClick={() => navigate('/app/console?tab=wallet')}
         className="gap-1 border-yellow-500/40 hover:border-yellow-500/60 hover:bg-yellow-500/10 px-3"
       >
         <Infinity className="h-5 w-5 text-yellow-500" />

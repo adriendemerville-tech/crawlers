@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "next-themes";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -70,6 +70,12 @@ const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
 const Aide = lazy(() => import("./pages/Aide"));
 
+// Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
+const LegacyRapportRedirect = () => {
+  const reportId = window.location.pathname.split('/rapport/')[1];
+  return <Navigate to={`/app/rapport/${reportId}`} replace />;
+};
+
 // Loading fallback
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
@@ -117,11 +123,11 @@ const App = () => (
                           <Route path="/rgpd" element={<RGPD />} />
                           <Route path="/auth" element={<Auth />} />
                           <Route path="/signup" element={<SignupPage />} />
-                          <Route path="/console" element={<Profile />} />
-                          <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
-                          <Route path="/rapport/audit" element={<RapportViewer />} />
-                          <Route path="/rapport/cocoon" element={<RapportViewer />} />
-                          <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                          <Route path="/app/console" element={<Profile />} />
+                          <Route path="/app/profil" element={<Profile />} /> {/* Legacy redirect */}
+                          <Route path="/app/rapport/audit" element={<RapportViewer />} />
+                          <Route path="/app/rapport/cocoon" element={<RapportViewer />} />
+                          <Route path="/app/rapport/:reportId" element={<ReportViewer />} />
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
@@ -139,17 +145,27 @@ const App = () => (
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
-                          <Route path="/site-crawl" element={<SiteCrawl />} />
-                          <Route path="/audit-compare" element={<AuditCompare />} />
+                          <Route path="/app/site-crawl" element={<SiteCrawl />} />
+                          <Route path="/app/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="/indice-alignement-strategique" element={<IndiceAlignementStrategique />} />
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
-                          <Route path="/cocoon" element={<Cocoon />} />
+                          <Route path="/app/cocoon" element={<Cocoon />} />
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
-                          <Route path="/rapport/matrice" element={<RapportMatrice />} />
+                          <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
+                          {/* Legacy redirects → /app/* */}
+                          <Route path="/console" element={<Navigate to="/app/console" replace />} />
+                          <Route path="/profil" element={<Navigate to="/app/profil" replace />} />
+                          <Route path="/cocoon" element={<Navigate to="/app/cocoon" replace />} />
+                          <Route path="/site-crawl" element={<Navigate to="/app/site-crawl" replace />} />
+                          <Route path="/audit-compare" element={<Navigate to="/app/audit-compare" replace />} />
+                          <Route path="/rapport/audit" element={<Navigate to="/app/rapport/audit" replace />} />
+                          <Route path="/rapport/cocoon" element={<Navigate to="/app/rapport/cocoon" replace />} />
+                          <Route path="/rapport/matrice" element={<Navigate to="/app/rapport/matrice" replace />} />
+                          <Route path="/rapport/:reportId" element={<LegacyRapportRedirect />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

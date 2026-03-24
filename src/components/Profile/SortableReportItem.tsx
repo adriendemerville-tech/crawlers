@@ -75,7 +75,7 @@ export function SortableReportItem({ report, onDelete, translations: t, isProUse
     year: 'numeric',
   });
 
-  const reportHref = `/rapport/${report.id}`;
+  const reportHref = `/app/rapport/${report.id}`;
 
   const handleSendToClient = (e: React.MouseEvent) => {
     e.stopPropagation();

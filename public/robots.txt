@@ -38,9 +38,10 @@
 # 
 # ============================================
 
-# Autoriser tous les robots
+# Autoriser tous les robots (pages publiques)
 User-agent: *
 Allow: /
+Disallow: /app/
 Crawl-delay: 1
 
 # ============================================

@@ -253,7 +253,7 @@ MomentumSection.displayName = 'MomentumSection';
 const features = [
   { icon: Target, ctaLink: '/?tab=geo' },
   { icon: FileSearch, ctaLink: '/audit-expert' },
-  { icon: Network, ctaLink: '/cocoon' },
+  { icon: Network, ctaLink: '/app/cocoon' },
   { icon: Layers, ctaLink: '/matrice' },
 ];
 

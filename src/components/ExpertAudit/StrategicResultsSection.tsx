@@ -247,7 +247,7 @@ export function StrategicResultsSection({
                 data={maillageData}
                 onExploreCocoon={() => {
                   const domain = (result.domain || url).replace(/^https?:\/\//, '').replace(/^www\./, '');
-                  window.location.href = `/cocoon?domain=${encodeURIComponent(domain)}`;
+                  window.location.href = `/app/cocoon?domain=${encodeURIComponent(domain)}`;
                 }}
               />
             )}

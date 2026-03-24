@@ -461,7 +461,7 @@ export function MyReportsTab() {
                     <ContextMenu key={report.id}>
                       <ContextMenuTrigger asChild>
                         <div
-                          onClick={() => window.open(`/rapport/${report.id}`, '_blank')}
+                          onClick={() => window.open(`/app/rapport/${report.id}`, '_blank')}
                           className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors group cursor-pointer"
                         >
                           <FileText className="h-5 w-5 text-muted-foreground shrink-0" />

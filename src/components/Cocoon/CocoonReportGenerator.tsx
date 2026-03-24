@@ -566,7 +566,7 @@ export async function generateCocoonReport(data: CocoonReportData): Promise<void
     nodes: nodes.slice(0, 200), // limit size for sessionStorage
   });
   sessionStorage.setItem('rapport_cocoon_data', payload);
-  window.open('/rapport/cocoon', '_blank');
+  window.open('/app/rapport/cocoon', '_blank');
 }
 
 /** Export the HTML builder for reuse (e.g. by RapportViewer) */

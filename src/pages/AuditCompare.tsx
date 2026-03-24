@@ -1041,7 +1041,7 @@ const AuditCompare = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  useCanonicalHreflang('/audit-compare');
+  useCanonicalHreflang('/app/audit-compare');
   const t = i18n[language];
   const isUnlimited = isAgencyPro || isAdmin;
   const { saveReport } = useSaveReport();

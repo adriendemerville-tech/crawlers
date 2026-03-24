@@ -19,7 +19,7 @@ import { stealthFetch } from '../_shared/stealthFetch.ts';
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY') || '';
 
 // ─── Allowed targets ─────────────────────────────────────────────────
-const FORBIDDEN_ROUTES = ['/', '/audit-expert', '/site-crawl', '/audit-compare', '/console', '/profil'];
+const FORBIDDEN_ROUTES = ['/', '/audit-expert', '/app/site-crawl', '/app/audit-compare', '/app/console', '/app/profil'];
 
 const LANDING_PAGES = [
   { slug: 'generative-engine-optimization', url: '/generative-engine-optimization', type: 'landing' as const },
@@ -222,7 +222,7 @@ function computeSeoScoreV2(html: string, textContent: string, pageType: 'blog' |
   const internalLinkMatches = html.match(/<a[^>]*href=["']\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi) || [];
   const externalLinkMatches = html.match(/<a[^>]*href=["']https?:\/\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi) || [];
 
-  const crawlersKeyPaths = ['/audit-expert', '/blog', '/lexique', '/tarifs', '/generative-engine-optimization', '/cocoon', '/console', '/aide', '/methodologie', '/faq'];
+  const crawlersKeyPaths = ['/audit-expert', '/blog', '/lexique', '/tarifs', '/generative-engine-optimization', '/app/cocoon', '/app/console', '/aide', '/methodologie', '/faq'];
   let crawlersLinks = 0;
   for (const path of crawlersKeyPaths) {
     if (html.includes(`href="${path}"`) || html.includes(`href="${path}/"`)) crawlersLinks++;

@@ -433,7 +433,7 @@ export default function SiteCrawl() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAdmin, loading: adminLoading } = useAdmin();
-  useCanonicalHreflang('/site-crawl');
+  useCanonicalHreflang('/app/site-crawl');
   const t = crawlI18n[language];
 
   const isUnlimited = isAgencyPro || isAdmin;
@@ -1840,7 +1840,7 @@ export default function SiteCrawl() {
                     </Button>
                   )}
                   <Link
-                    to={`/cocoon?autolaunch=${encodeURIComponent(crawlResult.domain)}`}
+                    to={`/app/cocoon?autolaunch=${encodeURIComponent(crawlResult.domain)}`}
                   >
                     <Button
                       type="button"
@@ -1969,7 +1969,7 @@ export default function SiteCrawl() {
           {/* CTA Cocoon */}
           <div className="flex justify-center mt-12 mb-8">
             <Link
-              to={`/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
+              to={`/app/cocoon${crawlResult?.domain ? `?autolaunch=${encodeURIComponent(crawlResult.domain)}` : ''}`}
               className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-500 font-semibold text-sm tracking-wide uppercase hover:bg-yellow-500/10 transition-colors duration-200"
             >
               <Sparkles className="h-4 w-4" />

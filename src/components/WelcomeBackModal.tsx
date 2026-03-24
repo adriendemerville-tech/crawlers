@@ -16,7 +16,7 @@ export function WelcomeBackModal() {
     if (!user?.email) return;
 
     // Only check on /console
-    if (window.location.pathname !== '/console') return;
+    if (window.location.pathname !== '/app/console') return;
 
     // Only show once per session
     const dismissed = sessionStorage.getItem('welcome_back_dismissed');

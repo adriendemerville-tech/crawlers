@@ -1895,7 +1895,7 @@ export function SmartConfigurator({
                 className="flex-1 gap-2"
                 onClick={() => {
                   setShowWpConfigModal(false);
-                  window.location.href = '/console?tab=wordpress';
+                  window.location.href = '/app/console?tab=wordpress';
                 }}
               >
                 <Globe className="h-4 w-4" />

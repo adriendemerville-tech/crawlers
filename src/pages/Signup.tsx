@@ -148,7 +148,7 @@ export default function Signup() {
     const verified = searchParams.get('verified');
     if (verified === 'true') {
       setStep('success');
-      const doRedirect = () => setTimeout(() => navigate('/console'), 1500);
+      const doRedirect = () => setTimeout(() => navigate('/app/console'), 1500);
       if (!document.hidden) {
         doRedirect();
       } else {
@@ -352,7 +352,7 @@ export default function Signup() {
       setOtpSuccess(true);
       setTimeout(() => {
         setStep('success');
-        setTimeout(() => navigate('/console'), 1500);
+        setTimeout(() => navigate('/app/console'), 1500);
       }, 800);
     } catch {
       setOtpError(true);
