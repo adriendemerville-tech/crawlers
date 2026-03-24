@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
+import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
