@@ -3,11 +3,60 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
 import { 
   MessageCircle, Network, ArrowRight, Crown, Sparkles, 
   Search, BarChart3, Globe, Brain, HelpCircle, ScrollText,
   Compass, Target, Zap, Shield, Eye
 } from 'lucide-react';
+
+/** Gold-themed Crawlers logo (square, matching Stratège Cocoon style) */
+function GoldCrawlersLogo({ size = 48, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width={size} height={size} className={className}>
+      <defs>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: '#f5c842' }} />
+          <stop offset="50%" style={{ stopColor: '#d4a853' }} />
+          <stop offset="100%" style={{ stopColor: '#b8860b' }} />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#goldGrad)" />
+      <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M12 8V4H8" />
+        <rect x="4" y="8" width="16" height="12" rx="2" />
+        <path d="M2 14h2" />
+        <path d="M20 14h2" />
+        <path d="M9 13v2" />
+        <path d="M15 13v2" />
+      </g>
+    </svg>
+  );
+}
+
+/** Violet round Crawlers logo for Félix */
+function VioletRoundCrawlersLogo({ size = 48, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width={size} height={size} className={className}>
+      <defs>
+        <linearGradient id="violetRoundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: '#a855f7' }} />
+          <stop offset="50%" style={{ stopColor: '#7c3aed' }} />
+          <stop offset="100%" style={{ stopColor: '#6d28d9' }} />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="24" fill="url(#violetRoundGrad)" />
+      <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M12 8V4H8" />
+        <rect x="4" y="8" width="16" height="12" rx="2" />
+        <path d="M2 14h2" />
+        <path d="M20 14h2" />
+        <path d="M9 13v2" />
+        <path d="M15 13v2" />
+      </g>
+    </svg>
+  );
+}
 
 const AIAgentsSection = memo(() => {
   const { language } = useLanguage();
@@ -44,16 +93,14 @@ const AIAgentsSection = memo(() => {
           <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             {/* Icon */}
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-primary/20 border border-primary/20">
-                <MessageCircle className="h-7 w-7 text-primary" />
-              </div>
+              <VioletRoundCrawlersLogo size={56} />
               <div>
                 <h3 className="text-2xl font-bold text-foreground font-display">Félix</h3>
                 <p className="text-sm text-muted-foreground">
                   {language === 'fr' ? 'Assistant personnel' : language === 'es' ? 'Asistente personal' : 'Personal assistant'}
                 </p>
               </div>
-              <Badge className="ml-auto bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[11px]">
+              <Badge className="ml-auto bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 text-[11px]">
                 {language === 'fr' ? 'Gratuit' : language === 'es' ? 'Gratis' : 'Free'}
               </Badge>
             </div>
@@ -108,7 +155,7 @@ const AIAgentsSection = memo(() => {
           </div>
 
           {/* ─── Stratège Cocoon Card ─── */}
-          <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+          <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
             {/* Pro badge ribbon */}
             <div className="absolute -top-px -right-px">
               <div className="rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
@@ -118,9 +165,7 @@ const AIAgentsSection = memo(() => {
 
             {/* Icon */}
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20">
-                <Network className="h-7 w-7 text-emerald-500" />
-              </div>
+              <GoldCrawlersLogo size={56} />
               <div>
                 <h3 className="text-2xl font-bold text-foreground font-display">Stratège Cocoon</h3>
                 <p className="text-sm text-muted-foreground">
@@ -141,15 +186,15 @@ const AIAgentsSection = memo(() => {
             <div className="space-y-3 mb-8">
               {[
                 { 
-                  icon: Compass, 
-                  text: language === 'fr' ? 'Diagnostic du maillage interne et pages orphelines' : 'Internal linking diagnostics & orphan pages',
-                  color: 'text-emerald-500'
-                },
-                { 
-                  icon: Target, 
-                  text: language === 'fr' ? 'Prescriptions concrètes : contenus, liens, architecture' : 'Concrete prescriptions: content, links, architecture',
-                  color: 'text-teal-500'
-                },
+                   icon: Compass, 
+                   text: language === 'fr' ? 'Diagnostic du maillage interne et pages orphelines' : 'Internal linking diagnostics & orphan pages',
+                   color: 'text-amber-500'
+                 },
+                 { 
+                   icon: Target, 
+                   text: language === 'fr' ? 'Prescriptions concrètes : contenus, liens, architecture' : 'Concrete prescriptions: content, links, architecture',
+                   color: 'text-amber-500'
+                 },
                 { 
                   icon: Brain, 
                   text: language === 'fr' ? 'Mémoire persistante entre sessions — s\'améliore avec le temps' : 'Persistent memory between sessions — improves over time',
@@ -171,10 +216,10 @@ const AIAgentsSection = memo(() => {
             {/* CTA */}
             <Link to="/cocoon">
               <Button 
-                variant="outline" 
-                size="sm"
-                className="gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
-              >
+                 variant="outline" 
+                 size="sm"
+                 className="gap-2 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+               >
                 <Network className="h-4 w-4" />
                 {language === 'fr' ? 'Découvrir le Cocoon' : language === 'es' ? 'Descubrir el Cocoon' : 'Discover Cocoon'}
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -183,54 +228,6 @@ const AIAgentsSection = memo(() => {
           </div>
         </div>
 
-        {/* Comparison row */}
-        <div className="mt-12 rounded-xl border border-border/50 bg-muted/30 p-6">
-          <div className="grid grid-cols-3 gap-4 text-center text-sm">
-            <div />
-            <div className="font-semibold text-foreground flex items-center justify-center gap-2">
-              <MessageCircle className="h-4 w-4 text-primary" /> Félix
-            </div>
-            <div className="font-semibold text-foreground flex items-center justify-center gap-2">
-              <Network className="h-4 w-4 text-emerald-500" /> Stratège Cocoon
-            </div>
-
-            {[
-              { 
-                label: language === 'fr' ? 'Rôle' : 'Role',
-                felix: language === 'fr' ? 'Comprendre' : 'Understand',
-                strat: language === 'fr' ? 'Agir' : 'Act'
-              },
-              { 
-                label: language === 'fr' ? 'Contexte' : 'Context',
-                felix: language === 'fr' ? 'Écran visible' : 'Visible screen',
-                strat: language === 'fr' ? 'Graphe du site' : 'Site graph'
-              },
-              { 
-                label: language === 'fr' ? 'Mémoire' : 'Memory',
-                felix: language === 'fr' ? 'Session' : 'Session',
-                strat: language === 'fr' ? 'Persistante' : 'Persistent'
-              },
-              { 
-                label: language === 'fr' ? 'Accès' : 'Access',
-                felix: language === 'fr' ? 'Tous les utilisateurs' : 'All users',
-                strat: 'Pro Agency'
-              },
-            ].map((row, i) => (
-              <div key={i} className="contents">
-                <div className="py-2.5 text-left text-muted-foreground border-t border-border/50 flex items-center">
-                  {row.label}
-                </div>
-                <div className="py-2.5 text-foreground/80 border-t border-border/50">
-                  {row.felix}
-                </div>
-                <div className="py-2.5 text-foreground/80 border-t border-border/50 flex items-center justify-center gap-1.5">
-                  {row.strat}
-                  {row.strat === 'Pro Agency' && <Crown className="h-3 w-3 text-amber-500" />}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
