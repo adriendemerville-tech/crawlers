@@ -616,20 +616,22 @@ const Index = () => {
                   ? 'Seguimiento de 30 sitios, Arquitecto Generativo multi-páginas, crawl de 5 000 páginas/mes, informes ilimitados y correcciones automáticas.'
                   : '30-site tracking, multi-page Generative Architect, 5,000 pages/month crawl, unlimited reports & automatic fixes.'}
               </p>
-              <div className="flex items-baseline justify-center gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-foreground">59€</span>
-                <span className="text-lg text-muted-foreground">/mois</span>
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold text-foreground">59€</span>
+                  <span className="text-lg text-muted-foreground">/mois</span>
+                </div>
+                <Link to="/pro-agency">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Crown className="h-5 w-5 text-yellow-300" />
+                    {language === 'fr' ? 'Découvrir Pro Agency' : language === 'es' ? 'Descubrir Pro Agency' : 'Discover Pro Agency'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
-              <Link to="/pro-agency">
-                <Button
-                  size="lg"
-                  className="gap-2 bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Crown className="h-5 w-5 text-yellow-300" />
-                  {language === 'fr' ? 'Découvrir Pro Agency' : language === 'es' ? 'Descubrir Pro Agency' : 'Discover Pro Agency'}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
             </div>
           </section>
         )}
