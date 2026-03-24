@@ -751,7 +751,17 @@ export function GMBDashboard() {
               </SortableContext>
             </DndContext>
 
-            <Button variant="ghost" size="sm" className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
+              onClick={() => {
+                const msg = (language === 'fr')
+                  ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
+                  : 'Connect your Google Business Profile account to add a location.';
+                toast.info(msg);
+              }}
+            >
               <Plus className="h-3.5 w-3.5" />
               {t.add}
             </Button>
