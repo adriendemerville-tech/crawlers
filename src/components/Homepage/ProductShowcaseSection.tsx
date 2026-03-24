@@ -107,7 +107,7 @@ function ShowcaseCard({
         <ul className="space-y-2.5 pt-2">
           {features.map((f, i) => (
             <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
-              <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              <div className="mt-1 w-1.5 h-1.5 rounded-full bg-violet-700 dark:bg-white shrink-0" />
               {f}
             </li>
           ))}
