@@ -955,63 +955,62 @@ export function ExpertAuditDashboard() {
     const useCachedContext = isCorrection && strategicCachedContext;
     
     try {
-      
-      // Use async mode: submit job, then poll for completion (avoids HTTP timeout)
-      const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
-        url: normalizedUrl, 
-        toolsData: null,
-        hallucinationCorrections: hallucinationCorrections || null,
-        competitorCorrections: competitorCorrections || null,
-        cachedContext: useCachedContext ? strategicCachedContext : null,
-        lang: language,
-        async: true,
-      }, 30000); // 30s timeout just for the initial submission
+      const canUseAsync = !!user;
 
-      if (!launchResp.job_id) throw new Error('No job_id returned from async audit');
+      if (canUseAsync) {
+        // Use async mode for authenticated users: submit job, then poll for completion
+        const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
+          url: normalizedUrl, 
+          toolsData: null,
+          hallucinationCorrections: hallucinationCorrections || null,
+          competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
+          lang: language,
+          async: true,
+        }, 30000);
 
-      // Poll async_jobs table until completion (max 10 minutes)
-      const jobId = launchResp.job_id;
-      const pollStart = Date.now();
-      const MAX_POLL_MS = 10 * 60 * 1000; // 10 min
-      let data: any = null;
+        if (!launchResp.job_id) throw new Error('No job_id returned from async audit');
 
-      while (Date.now() - pollStart < MAX_POLL_MS) {
-        await new Promise(r => setTimeout(r, 5000)); // poll every 5s
+        const jobId = launchResp.job_id;
+        const pollStart = Date.now();
+        const MAX_POLL_MS = 10 * 60 * 1000;
+        let data: any = null;
 
-        const { data: job, error: jobErr } = await supabase
-          .from('async_jobs')
-          .select('status, result_data, error_message, progress')
-          .eq('id', jobId)
-          .single();
+        while (Date.now() - pollStart < MAX_POLL_MS) {
+          await new Promise(r => setTimeout(r, 5000));
 
-        if (jobErr) {
-          console.warn('[strategic-poll] query error:', jobErr);
-          continue;
+          const { data: job, error: jobErr } = await supabase
+            .from('async_jobs')
+            .select('status, result_data, error_message, progress')
+            .eq('id', jobId)
+            .single();
+
+          if (jobErr) {
+            console.warn('[strategic-poll] query error:', jobErr);
+            continue;
+          }
+
+          if (job?.status === 'completed' && job.result_data) {
+            data = job.result_data as any;
+            break;
+          }
+
+          if (job?.status === 'failed') {
+            throw new Error(job.error_message || 'Audit job failed');
+          }
         }
 
-        if (job?.status === 'completed' && job.result_data) {
-          data = job.result_data as any;
-          break;
+        if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
+
+        const strategicData = mapStrategicData(data, normalizedUrl, hallucinationCorrections);
+
+        setResult(strategicData);
+        setStrategicResult(strategicData);
+        setStrategicProgressiveReveal(true);
+        if (data._cachedContext) {
+          setStrategicCachedContext(data._cachedContext);
         }
-
-        if (job?.status === 'failed') {
-          throw new Error(job.error_message || 'Audit job failed');
-        }
-      }
-
-      if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
-
-      // Polled data is result.data directly (not the {success, data} wrapper)
-      const strategicData = mapStrategicData(data, normalizedUrl, hallucinationCorrections);
-
-      setResult(strategicData);
-      setStrategicResult(strategicData);
-      setStrategicProgressiveReveal(true);
-      // Store cached context for fast relaunches (competitor corrections, etc.)
-      if (data._cachedContext) {
-        setStrategicCachedContext(data._cachedContext);
-      }
-      setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       // Signal expert audit completion for signup prompt
       window.dispatchEvent(new Event('expert-audit-complete'));
       // Save to domain-level strategic cache for future audits
