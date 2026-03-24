@@ -224,7 +224,12 @@ export function ParmenionDashboard() {
             <CardTitle className="text-sm font-medium">Cycles total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{logs.length}</div>
+            <div className="text-2xl font-bold">{autopilotConfig?.total_cycles_run ?? logs.length}</div>
+            {autopilotConfig?.last_cycle_at && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Dernier : {new Date(autopilotConfig.last_cycle_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
           </CardContent>
         </Card>
 
