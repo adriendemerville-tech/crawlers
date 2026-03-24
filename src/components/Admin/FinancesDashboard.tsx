@@ -319,6 +319,30 @@ export function FinancesDashboard() {
 
   // removed old fetchData effect — now driven by shared context
 
+  // Spending chart data (must be before any early return to respect hooks rules)
+  const spendingChartData = useMemo(() => {
+    if (!allTimeRawEvents.length) return [];
+    const buckets = new Map<string, number>();
+    
+    allTimeRawEvents.forEach(evt => {
+      const date = new Date(evt.created_at);
+      let key: string;
+      if (spendingScale === 'day') key = format(startOfDay(date), 'yyyy-MM-dd');
+      else if (spendingScale === 'week') key = format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      else key = format(startOfMonth(date), 'yyyy-MM');
+      buckets.set(key, (buckets.get(key) || 0) + evt.cost);
+    });
+
+    const sorted = [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    let cumulative = 0;
+    return sorted.map(([key, cost]) => {
+      cumulative += cost;
+      const labelFmt = spendingScale === 'month' ? 'MMM yy' : 'dd MMM';
+      const label = format(new Date(key), labelFmt, { locale: fr });
+      return { date: key, label, cost: Math.round(cost * 100) / 100, cumulative: Math.round(cumulative * 100) / 100 };
+    });
+  }, [allTimeRawEvents, spendingScale]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
