@@ -186,15 +186,15 @@ const AIAgentsSection = memo(() => {
             <div className="space-y-3 mb-8">
               {[
                 { 
-                  icon: Compass, 
-                  text: language === 'fr' ? 'Diagnostic du maillage interne et pages orphelines' : 'Internal linking diagnostics & orphan pages',
-                  color: 'text-emerald-500'
-                },
-                { 
-                  icon: Target, 
-                  text: language === 'fr' ? 'Prescriptions concrètes : contenus, liens, architecture' : 'Concrete prescriptions: content, links, architecture',
-                  color: 'text-teal-500'
-                },
+                   icon: Compass, 
+                   text: language === 'fr' ? 'Diagnostic du maillage interne et pages orphelines' : 'Internal linking diagnostics & orphan pages',
+                   color: 'text-amber-500'
+                 },
+                 { 
+                   icon: Target, 
+                   text: language === 'fr' ? 'Prescriptions concrètes : contenus, liens, architecture' : 'Concrete prescriptions: content, links, architecture',
+                   color: 'text-amber-500'
+                 },
                 { 
                   icon: Brain, 
                   text: language === 'fr' ? 'Mémoire persistante entre sessions — s\'améliore avec le temps' : 'Persistent memory between sessions — improves over time',
