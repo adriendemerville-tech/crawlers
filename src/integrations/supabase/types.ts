@@ -2694,6 +2694,90 @@ export type Database = {
           },
         ]
       }
+      gmb_local_competitors: {
+        Row: {
+          avg_rating: number | null
+          competitor_address: string | null
+          competitor_category: string | null
+          competitor_name: string
+          competitor_phone: string | null
+          competitor_place_id: string | null
+          competitor_website: string | null
+          created_at: string
+          distance_km: number | null
+          gmb_location_id: string
+          id: string
+          maps_position: number | null
+          position_change: number | null
+          previous_position: number | null
+          search_query: string | null
+          snapshot_week: string
+          total_reviews: number | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_rating?: number | null
+          competitor_address?: string | null
+          competitor_category?: string | null
+          competitor_name: string
+          competitor_phone?: string | null
+          competitor_place_id?: string | null
+          competitor_website?: string | null
+          created_at?: string
+          distance_km?: number | null
+          gmb_location_id: string
+          id?: string
+          maps_position?: number | null
+          position_change?: number | null
+          previous_position?: number | null
+          search_query?: string | null
+          snapshot_week?: string
+          total_reviews?: number | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_rating?: number | null
+          competitor_address?: string | null
+          competitor_category?: string | null
+          competitor_name?: string
+          competitor_phone?: string | null
+          competitor_place_id?: string | null
+          competitor_website?: string | null
+          created_at?: string
+          distance_km?: number | null
+          gmb_location_id?: string
+          id?: string
+          maps_position?: number | null
+          position_change?: number | null
+          previous_position?: number | null
+          search_query?: string | null
+          snapshot_week?: string
+          total_reviews?: number | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_local_competitors_gmb_location_id_fkey"
+            columns: ["gmb_location_id"]
+            isOneToOne: false
+            referencedRelation: "gmb_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gmb_local_competitors_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gmb_locations: {
         Row: {
           address: string | null
