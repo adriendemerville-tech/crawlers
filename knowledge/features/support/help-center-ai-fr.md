@@ -55,3 +55,12 @@ Updated: now
 - L'agent connaît les lead magnets de la homepage (GEO Score, LLM Visibility, AI Bots) pour orienter les utilisateurs
 - Sait expliquer le fonctionnement du vérificateur de bots IA (robots.txt) et ses résultats
 - Peut rediriger vers la page /aide pour la documentation complète des outils gratuits
+
+## Couverture Matrice d'Audit
+- Connaît le workflow complet : import fichier (XLSX/CSV/DOCX) → parsing → routing → exécution → résultats
+- Sait orienter vers /matrice pour lancer un audit personnalisé
+- Explique les trois types de détection : SEO, GEO, Hybride
+- Décrit la logique de double scoring (Parsed Score vs Crawlers Score) et le matchType (exact/partial/custom_only)
+- Peut expliquer pourquoi certains critères n'ont qu'un seul score (pas d'équivalent technique ou prompt custom uniquement)
+- Connaît les micro-functions disponibles : meta-tags, structured-data, robots, images, backlinks, content-quality, eeat
+- Sait que `check-llm` accepte un prompt personnalisé et un ciblage de provider unique
