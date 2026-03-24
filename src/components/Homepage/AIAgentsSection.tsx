@@ -155,7 +155,7 @@ const AIAgentsSection = memo(() => {
           </div>
 
           {/* ─── Stratège Cocoon Card ─── */}
-          <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+          <div className="group relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-8 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
             {/* Pro badge ribbon */}
             <div className="absolute -top-px -right-px">
               <div className="rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
