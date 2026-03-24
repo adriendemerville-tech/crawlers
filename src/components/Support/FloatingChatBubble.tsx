@@ -192,17 +192,17 @@ export function FloatingChatBubble() {
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 overflow-hidden ${showOnboardingPulse ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
+        className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 ${showOnboardingPulse ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
         <CrawlersLogo size={22} className="opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-        {/* Notification Badge */}
-        {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse">
-            {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
       </button>
+      {/* Notification Badge — outside button to avoid overflow clipping */}
+      {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
+        <span className="fixed bottom-[54px] right-[14px] z-[51] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none">
+          {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
     </>
   );
 }
