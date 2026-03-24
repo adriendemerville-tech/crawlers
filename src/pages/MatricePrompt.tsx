@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 // Select removed — batches now shown as cards
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Header } from '@/components/Header';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
@@ -857,13 +858,43 @@ export default function MatricePrompt() {
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.parsed_score}/100` : '—'}
+                          <TableCell className={`font-bold text-center group/parsed ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? (
+                              <span className="inline-flex items-center gap-1">
+                                {resultRow.parsed_score}/100
+                                <HoverCard openDelay={200}>
+                                  <HoverCardTrigger asChild>
+                                    <button className="opacity-0 group-hover/parsed:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                                      <HelpCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                  </HoverCardTrigger>
+                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Parsé</p>
+                                    <p className="text-muted-foreground">Résultat obtenu en soumettant <strong>votre prompt exact</strong> à un LLM qui analyse le contenu brut de la page. Reflète la réponse littérale à votre critère tel que formulé.</p>
+                                  </HoverCardContent>
+                                </HoverCard>
+                              </span>
+                            ) : '—'}
                           </TableCell>
                         )}
                         {results && (
-                          <TableCell className={`font-bold text-center ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
-                            {resultRow ? `${resultRow.crawlers_score}/100` : '—'}
+                          <TableCell className={`font-bold text-center group/crawlers ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
+                            {resultRow ? (
+                              <span className="inline-flex items-center gap-1">
+                                {resultRow.crawlers_score}/100
+                                <HoverCard openDelay={200}>
+                                  <HoverCardTrigger asChild>
+                                    <button className="opacity-0 group-hover/crawlers:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                                      <HelpCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                  </HoverCardTrigger>
+                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Crawlers</p>
+                                    <p className="text-muted-foreground">Résultat obtenu via les <strong>micro-fonctions techniques</strong> de Crawlers (meta-tags, données structurées, PageSpeed, backlinks…). Mesure objective et reproductible, indépendante du prompt.</p>
+                                  </HoverCardContent>
+                                </HoverCard>
+                              </span>
+                            ) : '—'}
                           </TableCell>
                         )}
                       </TableRow>
