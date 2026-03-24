@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState } from 'react';
+import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
