@@ -839,22 +839,26 @@ Deno.serve(async (req) => {
     const html = htmlResult?.html || ''
     const htmlData = html ? analyzeHtmlFull(html, normalizedUrl) : null
 
-    // Process each item
+    // Process each item — compute BOTH crawlers_score (engine) AND parsed_score (LLM)
     const results: ItemResult[] = []
     const llmPromises: Promise<void>[] = []
+    const htmlSummary = html.substring(0, 5000)
 
     for (const item of detectedTypes) {
+      // Always queue LLM evaluation for parsed_score
+      const llmPromise = evaluateWithLlm(
+        item.prompt, normalizedUrl, htmlSummary,
+        item.llm_name || 'google/gemini-2.5-flash'
+      )
+
       if (item._type === 'prompt') {
-        // LLM items processed async
+        // Pure prompt items: both scores come from LLM
         llmPromises.push((async () => {
-          const { score, raw } = await evaluateWithLlm(
-            item.prompt, normalizedUrl,
-            html.substring(0, 5000),
-            item.llm_name || 'google/gemini-2.5-flash'
-          )
+          const { score, raw } = await llmPromise
           results.push({
             id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-            detected_type: 'prompt', crawlers_score: score, raw_data: raw,
+            detected_type: 'prompt', crawlers_score: score, parsed_score: score,
+            raw_data: raw, parsed_raw: raw,
             seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
           })
         })())
@@ -862,14 +866,19 @@ Deno.serve(async (req) => {
       }
 
       if (!htmlData) {
-        results.push({
-          id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-          detected_type: item._type, crawlers_score: 0, raw_data: { error: 'HTML fetch failed' },
-          seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-        })
+        llmPromises.push((async () => {
+          const { score: pScore, raw: pRaw } = await llmPromise
+          results.push({
+            id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+            detected_type: item._type, crawlers_score: 0, parsed_score: pScore,
+            raw_data: { error: 'HTML fetch failed' }, parsed_raw: pRaw,
+            seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+          })
+        })())
         continue
       }
 
+      // Compute Crawlers engine score
       let score: number
       let raw: Record<string, any>
 
@@ -892,11 +901,19 @@ Deno.serve(async (req) => {
           break
       }
 
-      results.push({
-        id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-        detected_type: item._type, crawlers_score: score, raw_data: raw,
-        seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-      })
+      const engineScore = score
+      const engineRaw = raw
+
+      // Queue LLM parsed_score in parallel
+      llmPromises.push((async () => {
+        const { score: pScore, raw: pRaw } = await llmPromise
+        results.push({
+          id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+          detected_type: item._type, crawlers_score: engineScore, parsed_score: pScore,
+          raw_data: engineRaw, parsed_raw: pRaw,
+          seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+        })
+      })())
     }
 
     // Wait for all LLM evaluations
