@@ -253,6 +253,7 @@ export function MyTracking() {
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [showAutopilotModal, setShowAutopilotModal] = useState(false);
 
   // Fetch admin config for simulated data toggle
   useEffect(() => {
