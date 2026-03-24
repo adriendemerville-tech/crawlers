@@ -25,6 +25,9 @@ const FIELD_ALIASES: Record<string, string[]> = {
     'axe', 'axis', 'catégorie', 'categorie', 'category', 'cat',
     'domaine', 'domain', 'section', 'groupe', 'group', 'type',
     'pilier', 'pillar', 'thème', 'theme', 'topic', 'famille', 'family',
+    'rubrique', 'thématique', 'thematique', 'sous-thème', 'sous-theme',
+    'volet', 'classe', 'class', 'segment', 'dimension', 'area',
+    'branche', 'branch', 'module', 'aspect', 'champ', 'field',
   ],
   seuil_bon: [
     'seuil_bon', 'seuil bon', 'threshold good', 'bon', 'good',
