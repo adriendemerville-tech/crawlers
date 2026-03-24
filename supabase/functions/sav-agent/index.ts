@@ -315,7 +315,7 @@ serve(async (req) => {
       });
     }
 
-    const { messages, conversation_id, user_id, guest_mode } = body;
+    const { messages, conversation_id, user_id, guest_mode, screen_context } = body;
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
@@ -970,7 +970,28 @@ Pour les questions nécessitant des données précises, suggère au créateur de
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + guestHint + escalationHint + greetingHint + creatorHint;
+    // Screen context: inject visible audit data for comprehension assistance
+    let screenHint = "";
+    if (screen_context && typeof screen_context === "string" && screen_context.length > 20) {
+      screenHint = `\n\n# CONTENU VISIBLE À L'ÉCRAN DE L'UTILISATEUR
+L'utilisateur voit actuellement ceci sur son écran. Utilise ces données pour répondre à ses questions sur ce qu'il voit :
+
+${screen_context}
+
+## INSTRUCTIONS D'AIDE À LA COMPRÉHENSION
+- Tu vois exactement ce que l'utilisateur voit. Réfère-toi aux scores, titres et métriques affichés.
+- Si l'utilisateur demande "c'est quoi ce score ?" ou "qu'est-ce que ça veut dire ?", explique la métrique visible.
+- Si tu as besoin de plus de contexte (données au-dessus ou en dessous), demande à l'utilisateur :
+  "Pouvez-vous scroller vers le haut / vers le bas pour que je voie le reste des résultats ?"
+- Explique les scores avec des analogies simples : vert = bon, orange = à améliorer, rouge = prioritaire.
+- Pour l'audit expert : explique les 5 piliers (Performance, Socle Technique, Sémantique & Contenu, Préparation IA & GEO, Santé/Sécurité).
+- Pour l'audit stratégique : explique l'IAS, E-E-A-T, le plan d'action, les recommandations.
+- Pour la matrice : explique le double scoring (Crawlers Score vs Parsed Score), les seuils et les badges de type.
+- Sois pédagogique et actionnable : après chaque explication, suggère une action concrète.
+- Tu peux utiliser jusqu'à 1500 caractères pour ces réponses (pas la limite habituelle de 800).`;
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
@@ -987,7 +1008,7 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
         stream: false,
-        max_tokens: isCreator ? 2000 : 600,
+        max_tokens: isCreator ? 2000 : screenHint ? 1200 : 600,
       }),
     });
 
@@ -1010,8 +1031,8 @@ Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 carac
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
-    // Enforce char limit (3000 for creator, 1000 for users)
-    const charLimit = isCreator ? 3000 : 1000;
+    // Enforce char limit (3000 for creator, 1500 for screen context, 1000 for users)
+    const charLimit = isCreator ? 3000 : screenHint ? 1500 : 1000;
     if (reply.length > charLimit) {
       reply = reply.substring(0, charLimit - 3) + "...";
     }

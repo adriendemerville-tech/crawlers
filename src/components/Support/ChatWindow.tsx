@@ -15,6 +15,7 @@ import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
+import { captureScreenContext } from '@/utils/screenContext';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -259,12 +260,16 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     setSending(true);
 
     try {
+      // Capture visible screen context for audit comprehension
+      const screenContext = captureScreenContext(location.pathname);
+
       const { data, error } = await supabase.functions.invoke('sav-agent', {
         body: {
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           conversation_id: conversationId,
           user_id: user?.id || null,
           guest_mode: !user,
+          screen_context: screenContext,
         },
       });
 
