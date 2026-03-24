@@ -148,7 +148,7 @@ function ProfileContent() {
       // Pure auditor whose session expired — kick out of admin
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'admin') {
-        navigate('/app/profile?tab=tracking', { replace: true });
+        navigate('/app/console?tab=tracking', { replace: true });
       }
     }
   }, [auditorExpired, isAdmin, isViewer, isViewerLevel2, navigate]);
