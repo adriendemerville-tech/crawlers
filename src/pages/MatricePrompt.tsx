@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
-import XlsxSheetSelector from '@/components/Matrice/XlsxSheetSelector';
+import ImportStepper from '@/components/Matrice/ImportStepper';
+import type { MatriceType } from '@/utils/matrice/typeDetector';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -299,20 +300,11 @@ export default function MatricePrompt() {
 
   /* --- File Import (CSV + XLSX + DOC/DOCX) --- */
   const [docParsing, setDocParsing] = useState(false);
-  const [xlsxSheetNames, setXlsxSheetNames] = useState<string[]>([]);
+  const [xlsxStepperOpen, setXlsxStepperOpen] = useState(false);
+  const [xlsxStepperSheets, setXlsxStepperSheets] = useState<string[]>([]);
   const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
   const [xlsxFileName, setXlsxFileName] = useState('');
-
-  const processXlsxSheet = useCallback(async (workbook: any, sheetName: string, fileName: string) => {
-    const { utils } = await import('xlsx');
-    const sheet = workbook.Sheets[sheetName];
-    const rows = utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
-    if (!rows.length) {
-      toast.error(`L'onglet "${sheetName}" est vide`);
-      return;
-    }
-    await processImportedRows(rows, fileName);
-  }, [processImportedRows]);
+  const [activeMatriceType, setActiveMatriceType] = useState<MatriceType>('seo');
 
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -336,13 +328,10 @@ export default function MatricePrompt() {
         try {
           const { read } = await import('xlsx');
           const workbook = read(evt.target?.result, { type: 'array' });
-          if (workbook.SheetNames.length > 1) {
-            setXlsxWorkbookRef(workbook);
-            setXlsxFileName(fileName);
-            setXlsxSheetNames(workbook.SheetNames);
-          } else {
-            await processXlsxSheet(workbook, workbook.SheetNames[0], fileName);
-          }
+          setXlsxWorkbookRef(workbook);
+          setXlsxFileName(fileName);
+          setXlsxStepperSheets(workbook.SheetNames);
+          setXlsxStepperOpen(true);
         } catch {
           toast.error('Erreur de parsing XLSX');
         }
@@ -424,8 +413,12 @@ export default function MatricePrompt() {
         seuil_mauvais: row.seuil_mauvais,
       }));
 
-      // Call real audit-matrice edge function
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('audit-matrice', {
+      // Route to the correct edge function based on matrice type
+      const functionName = activeMatriceType === 'geo' ? 'parse-matrix-geo'
+        : activeMatriceType === 'hybrid' ? 'parse-matrix-hybrid'
+        : 'audit-matrice';
+
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
         body: { url: url.trim(), items },
       });
 
@@ -852,17 +845,17 @@ export default function MatricePrompt() {
         </main>
       </div>
       <MatriceHelpModal open={showHelp} onOpenChange={setShowHelp} />
-      <XlsxSheetSelector
-        open={xlsxSheetNames.length > 0}
-        sheetNames={xlsxSheetNames}
-        onSelect={async (name) => {
-          setXlsxSheetNames([]);
-          if (xlsxWorkbookRef) {
-            await processXlsxSheet(xlsxWorkbookRef, name, xlsxFileName);
-            setXlsxWorkbookRef(null);
-          }
+      <ImportStepper
+        open={xlsxStepperOpen}
+        sheetNames={xlsxStepperSheets}
+        workbook={xlsxWorkbookRef}
+        onComplete={({ rows, matriceType }) => {
+          setXlsxStepperOpen(false);
+          setActiveMatriceType(matriceType);
+          processImportedRows(rows, xlsxFileName);
+          setXlsxWorkbookRef(null);
         }}
-        onClose={() => { setXlsxSheetNames([]); setXlsxWorkbookRef(null); }}
+        onClose={() => { setXlsxStepperOpen(false); setXlsxWorkbookRef(null); }}
       />
     </>
   );
