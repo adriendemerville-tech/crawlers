@@ -820,7 +820,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setMessages(prev => [...prev, promptMsg]);
   }, []);
 
-  const sendMessage = async (overrideContext?: string, useStrategist = false) => {
+  const sendMessage = async (overrideContext?: string, useStrategist = false, useSubdomain = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
 
