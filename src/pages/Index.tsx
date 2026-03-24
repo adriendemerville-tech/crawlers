@@ -655,6 +655,11 @@ const Index = () => {
           <FeatureShowcase />
         </Suspense>
 
+        {/* AI Agents — Félix & Stratège Cocoon */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <AIAgentsSection />
+        </Suspense>
+
         {/* Active crawl notification banner */}
         <div className="max-w-3xl mx-auto px-4 mb-4">
           <ActiveCrawlBanner />
