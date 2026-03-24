@@ -106,6 +106,7 @@ export function WorkflowCarousel({
   onNavigateToTechnical,
   onNavigateToStrategic,
   validationBanner,
+  completedAuditsCount = 0,
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
