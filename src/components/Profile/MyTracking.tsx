@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,8 @@ import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
+import { AutopilotModal } from '@/components/Profile/AutopilotModal';
+import { AutopilotModificationRegistry } from '@/components/Profile/AutopilotModificationRegistry';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -251,6 +253,7 @@ export function MyTracking() {
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [showAutopilotModal, setShowAutopilotModal] = useState(false);
 
   // Fetch admin config for simulated data toggle
   useEffect(() => {
@@ -1129,6 +1132,18 @@ export function MyTracking() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* Autopilot button — creator only */}
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => setShowAutopilotModal(true)}
+                        >
+                          <Bot className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Autopilote</span>
+                        </Button>
+                      )}
 
                       {/* Connect/Disconnect site button → opens modal */}
                       {(() => {
@@ -2038,6 +2053,19 @@ export function MyTracking() {
           onUpdate={() => fetchSites()}
         />
       )}
+
+      {/* Autopilot Modal */}
+      {currentSite && isAdmin && (
+        <AutopilotModal
+          open={showAutopilotModal}
+          onOpenChange={setShowAutopilotModal}
+          trackedSiteId={currentSite.id}
+          siteDomain={currentSite.domain}
+        />
+      )}
+
+      {/* Modification Registry */}
+      {isAdmin && <AutopilotModificationRegistry trackedSiteId={selectedSite} />}
     </div>
   );
 }
