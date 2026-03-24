@@ -1841,6 +1841,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                     setInput(prev => prev ? prev + ' ' + text : text);
                   }}
                   disabled={isLoading}
+                  userDomains={domain ? [domain] : undefined}
                 />
               )}
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
