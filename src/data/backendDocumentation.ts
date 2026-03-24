@@ -1383,13 +1383,13 @@ Chaque phase est configurable indépendamment via des cases à cocher.
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.1.0',
+  version: '6.2.0',
   lastUpdated: '2026-03-24',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote',
-  totalEdgeFunctions: 122,
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
+  totalEdgeFunctions: 124,
   totalSharedModules: 22,
-  totalTables: '67+',
-  totalLinesOfCode: '176 000+',
+  totalTables: '68+',
+  totalLinesOfCode: '187 000+',
   totalMigrations: 199,
   totalPages: 41,
   totalComponents: 303,
