@@ -29,8 +29,11 @@ Updated: now
 - À la résolution, notification automatique à l'utilisateur via assistant (Crawler ou Stratège Cocoon)
 
 ### Agent CTO
-- Monitore désormais `content-architecture-advisor` + `drop-detector` en plus des autres edge functions
+- Monitore désormais `content-architecture-advisor` + `drop-detector` + `frontend_crash` en plus des autres edge functions
 - Registry dans `AUDIT_TYPE_TO_FUNCTION`
+- **Diagnostic crashs frontend** : Action `diagnose_frontend_crashes` — analyse chaque crash frontend avec LLM, classifie en data-side (corrigeable, confiance ≥ 85%) ou code-side (recommandation), crée automatiquement un signalement dans `user_bug_reports` avec diagnostic complet
+- Bouton "Diagnostiquer crashs" dans le journal CTO du Hub Intelligence
+- `GlobalErrorBoundary` (App.tsx) + `globalErrorListener` (main.tsx) capturent tous les crashs React et JS et les loguent dans `analytics_events` (`event_type: 'frontend_crash'`)
 
 ### Scripts — Drop Detector
 - Bouton ON/OFF pour le détecteur de chute (`drop_detector_config`)
