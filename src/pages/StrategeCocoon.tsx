@@ -8,10 +8,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Network, ArrowRight, Crown, Brain, Compass, Target,
   BarChart3, Shield, Zap, MessageSquare, GitBranch,
-  Layers, Search, Eye, CheckCircle, ChevronRight
+  Layers, Search, Eye, CheckCircle, ChevronRight,
+  TrendingUp, Globe, FileText, ShoppingCart, Building2, Newspaper
 } from 'lucide-react';
 
-/** Gold Crawlers logo for branding */
+/* ─── Gold Logo ─── */
 function GoldCrawlersLogo({ size = 64 }: { size?: number }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width={size} height={size}>
@@ -37,6 +38,8 @@ function GoldCrawlersLogo({ size = 64 }: { size?: number }) {
 
 const Header = lazy(() => import('@/components/Header').then(m => ({ default: m.Header })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
+/* ─── Data ─── */
 
 const features = [
   {
@@ -78,6 +81,76 @@ const workflow = [
   { step: '04', title: 'Appliquez et mesurez', desc: 'Validez les recommandations, déployez et suivez l\'impact à T+30, T+60 et T+90.' },
 ];
 
+const mathConcepts = [
+  {
+    title: 'Graphe orienté pondéré',
+    formula: 'G = (V, E, w)',
+    explanation: 'Votre site est modélisé comme un graphe orienté où chaque page est un nœud (V), chaque lien interne une arête (E), et chaque arête porte un poids (w) proportionnel à la pertinence sémantique du lien.',
+    detail: 'La direction des arêtes distingue les liens descendant (page mère → page fille) des liens ascendant (page profonde → page stratégique), permettant d\'identifier les flux de "jus SEO".',
+  },
+  {
+    title: 'Distribution d\'autorité',
+    formula: 'A(p) = (1−d)/N + d × Σ A(q)/L(q)',
+    explanation: 'Inspiré du PageRank, l\'algorithme calcule l\'autorité relative de chaque page en fonction du nombre et de la qualité des liens internes qu\'elle reçoit.',
+    detail: 'Le facteur d\'amortissement (d ≈ 0.85) simule la probabilité qu\'un visiteur suive un lien plutôt que de naviguer vers une URL aléatoire. Les pages avec une forte autorité transmettent davantage de poids via leurs liens sortants.',
+  },
+  {
+    title: 'Clustering thématique',
+    formula: 'Sim(a,b) = cos(θ) = (A·B) / (‖A‖×‖B‖)',
+    explanation: 'Les pages sont regroupées en clusters sémantiques via la similarité cosinus entre leurs vecteurs de contenu. Chaque cluster forme un "cocon" thématique cohérent.',
+    detail: 'La proximité sémantique entre deux pages détermine si elles devraient être liées. Un cluster bien formé renforce la pertinence topique du site aux yeux des moteurs de recherche et des LLMs.',
+  },
+  {
+    title: 'Détection des orphelins',
+    formula: 'Orphelin(p) = { p ∈ V | deg⁻(p) = 0 }',
+    explanation: 'Une page orpheline est un nœud sans aucun lien entrant interne. Elle est invisible pour les robots de crawl et ne reçoit aucune autorité du reste du site.',
+    detail: 'Le Stratège identifie ces pages et propose des liens contextuels depuis les pages les plus pertinentes du même cluster, restaurant le flux d\'autorité et la découvrabilité.',
+  },
+  {
+    title: 'Profondeur et accessibilité',
+    formula: 'Prof(p) = min_path(racine, p)',
+    explanation: 'La profondeur d\'une page est le nombre minimal de clics depuis la page d\'accueil. Au-delà de 3 niveaux, une page perd significativement en visibilité.',
+    detail: 'Le Stratège mesure la profondeur de chaque nœud par BFS (parcours en largeur) et recommande la création de raccourcis internes pour les pages stratégiques enterrées trop profondément.',
+  },
+  {
+    title: 'Score de cannibalisation',
+    formula: 'Cann(a,b) = Sim(a,b) × Overlap(Qa, Qb)',
+    explanation: 'Deux pages cannibalisent lorsqu\'elles ciblent les mêmes requêtes avec un contenu trop similaire, diluant leur potentiel de classement.',
+    detail: 'Le score combine la similarité sémantique du contenu et le chevauchement des requêtes cibles. Au-delà d\'un seuil de 0.75, le Stratège propose une fusion ou une différenciation de l\'angle éditorial.',
+  },
+];
+
+const useCases = [
+  {
+    icon: ShoppingCart,
+    title: 'E-commerce',
+    problem: '2 000 fiches produits, 80% orphelines',
+    solution: 'Le Stratège détecte les fiches isolées, les rattache aux catégories parentes et crée des liens croisés vers les produits complémentaires.',
+    result: '+34% de pages indexées en 60 jours',
+  },
+  {
+    icon: Newspaper,
+    title: 'Média / Blog éditorial',
+    problem: '500 articles sans maillage thématique',
+    solution: 'Clustering automatique par sujet, génération de pages piliers manquantes et maillage descendant structuré vers les articles de fond.',
+    result: '+28% de trafic organique sur les clusters traités',
+  },
+  {
+    icon: Building2,
+    title: 'Site corporate B2B',
+    problem: 'Pages services enterrées à 4+ clics de profondeur',
+    solution: 'Réduction de la profondeur moyenne de 4.2 à 2.1 clics via des liens contextuels et une restructuration de l\'arborescence.',
+    result: '+45% d\'impressions GSC sur les pages services',
+  },
+  {
+    icon: Globe,
+    title: 'Site multilingue',
+    problem: 'Cannibalisation entre versions linguistiques',
+    solution: 'Détection des pages en compétition inter-langues, correction des hreflang manquants et différenciation du contenu localisé.',
+    result: 'Résolution de 90% des conflits hreflang détectés',
+  },
+];
+
 export default function StrategeCocoon() {
   const { language } = useLanguage();
 
@@ -116,9 +189,9 @@ export default function StrategeCocoon() {
               Votre consultant IA SEO senior
             </p>
             <p className="mt-6 text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Le Stratège connaît votre site. Il analyse votre cocon sémantique, prescrit des actions concrètes 
-              — maillage, contenus, arborescence — et conserve une mémoire de toutes vos conversations 
-              pour affiner ses recommandations au fil du temps.
+              Le Stratège analyse la topologie de votre site comme un graphe mathématique, identifie 
+              les failles structurelles invisibles à l'œil nu et prescrit des actions concrètes 
+              dont l'impact est mesuré automatiquement dans le temps.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -138,8 +211,42 @@ export default function StrategeCocoon() {
           </div>
         </section>
 
-        {/* ─── Features Grid ─── */}
+        {/* ─── Qu'est-ce que le Cocon Sémantique ? ─── */}
         <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-4xl px-4">
+            <div className="text-center mb-10">
+              <Badge variant="outline" className="mb-4 text-xs border-amber-500/30 text-amber-600 dark:text-amber-400">
+                Le concept
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-display">
+                Qu'est-ce que le Cocon Sémantique ?
+              </h2>
+            </div>
+
+            <div className="space-y-6 text-muted-foreground leading-relaxed">
+              <p>
+                Le <strong className="text-foreground">cocon sémantique</strong> est une architecture de site 
+                inventée par Laurent Bourrelly. L'idée : organiser vos pages en <strong className="text-foreground">clusters thématiques</strong> reliés 
+                par des liens internes contextuels, formant une structure en arbre où chaque branche 
+                traite un sujet en profondeur.
+              </p>
+              <p>
+                Contrairement au maillage classique (menu, footer, sidebar), le cocon sémantique crée 
+                des <strong className="text-foreground">chemins de navigation thématiques</strong> qui guident à la fois l'internaute 
+                et les robots de crawl vers vos pages stratégiques. Résultat : une meilleure répartition 
+                de l'autorité, une indexation plus rapide et un signal de pertinence topique plus fort.
+              </p>
+              <p>
+                Le problème ? Sur un site de plus de 100 pages, construire et maintenir un cocon manuellement 
+                est un travail titanesque. C'est là que le <strong className="text-foreground">Stratège Cocoon</strong> intervient : 
+                il automatise l'analyse, la détection des failles et la prescription d'actions.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Features Grid ─── */}
+        <section className="py-16 sm:py-24 bg-muted/30 border-y border-border">
           <div className="mx-auto max-w-6xl px-4">
             <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-display">
@@ -167,8 +274,103 @@ export default function StrategeCocoon() {
           </div>
         </section>
 
-        {/* ─── How it works ─── */}
+        {/* ─── Fonctionnement Mathématique ─── */}
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-5xl px-4">
+            <div className="text-center mb-14">
+              <Badge variant="outline" className="mb-4 text-xs border-amber-500/30 text-amber-600 dark:text-amber-400">
+                Sous le capot
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-display">
+                Le moteur mathématique
+              </h2>
+              <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
+                Le Stratège repose sur des algorithmes de théorie des graphes et d'algèbre linéaire 
+                pour modéliser, analyser et optimiser votre architecture de site.
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {mathConcepts.map((c, i) => (
+                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-sm group hover:border-amber-500/20 transition-colors">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 border border-amber-500/20 text-sm font-bold text-amber-600 dark:text-amber-400">
+                        {String(i + 1).padStart(2, '0')}
+                      </div>
+                      <h3 className="font-semibold text-foreground">{c.title}</h3>
+                    </div>
+
+                    {/* Formula */}
+                    <div className="mb-3 px-3 py-2 rounded-md bg-muted/60 border border-border font-mono text-sm text-foreground/90 overflow-x-auto">
+                      {c.formula}
+                    </div>
+
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-2">{c.explanation}</p>
+                    <p className="text-xs text-muted-foreground/70 leading-relaxed">{c.detail}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Applications concrètes ─── */}
         <section className="py-16 sm:py-24 bg-muted/30 border-y border-border">
+          <div className="mx-auto max-w-5xl px-4">
+            <div className="text-center mb-14">
+              <Badge variant="outline" className="mb-4 text-xs border-amber-500/30 text-amber-600 dark:text-amber-400">
+                Cas d'usage
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-display">
+                Applications concrètes
+              </h2>
+              <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
+                Le Stratège s'adapte à tous les types de sites. Voici des scénarios réels 
+                où l'analyse de graphe transforme la performance SEO.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              {useCases.map((uc, i) => (
+                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <uc.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="font-semibold text-foreground">{uc.title}</h3>
+                    </div>
+
+                    <div className="px-6 py-4 space-y-3">
+                      {/* Problem */}
+                      <div>
+                        <span className="text-xs font-medium text-destructive/80 uppercase tracking-wider">Problème</span>
+                        <p className="text-sm text-muted-foreground mt-0.5">{uc.problem}</p>
+                      </div>
+
+                      {/* Solution */}
+                      <div>
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Solution</span>
+                        <p className="text-sm text-muted-foreground mt-0.5">{uc.solution}</p>
+                      </div>
+
+                      {/* Result */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <TrendingUp className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{uc.result}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── How it works ─── */}
+        <section className="py-16 sm:py-24">
           <div className="mx-auto max-w-4xl px-4">
             <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-display">
@@ -193,7 +395,7 @@ export default function StrategeCocoon() {
         </section>
 
         {/* ─── Comparison: Félix vs Stratège ─── */}
-        <section className="py-16 sm:py-24">
+        <section className="py-16 sm:py-24 bg-muted/30 border-y border-border">
           <div className="mx-auto max-w-4xl px-4">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-foreground font-display">
@@ -242,7 +444,7 @@ export default function StrategeCocoon() {
         </section>
 
         {/* ─── CTA Final ─── */}
-        <section className="py-16 sm:py-24 border-t border-border">
+        <section className="py-16 sm:py-24">
           <div className="mx-auto max-w-3xl px-4 text-center">
             <GoldCrawlersLogo size={56} />
             <h2 className="mt-6 text-3xl font-bold text-foreground font-display">
