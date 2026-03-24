@@ -18,7 +18,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown, ArrowRight, FileSearch } from 'lucide-react';
+import { Crown, ArrowRight, FileSearch, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
@@ -714,6 +714,64 @@ const Index = () => {
         {/* Mobile-only Lexique button */}
         <MobileLexiqueButton />
         
+
+        {/* CTA Matrice — Freelance SEO */}
+        <section className="relative overflow-hidden border-y border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.06),transparent_60%)]" />
+          <div className="relative container mx-auto max-w-4xl px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-500 dark:text-violet-400 mb-4">
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  BETA
+                </div>
+                <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl mb-3">
+                  {language === 'fr' ? 'Matrice d\'audit : votre grille, nos robots' : language === 'es' ? 'Matriz de auditoría: su grilla, nuestros robots' : 'Audit Matrix: your grid, our bots'}
+                </h2>
+                <p className="text-muted-foreground mb-4 max-w-lg">
+                  {language === 'fr'
+                    ? 'Freelances SEO, importez votre propre grille d\'audit (Excel, CSV, Google Sheets) et laissez Crawlers analyser chaque critère automatiquement. Comparez le score parsé du document avec le score mesuré par nos crawlers — critère par critère, page par page.'
+                    : language === 'es'
+                    ? 'Freelancers SEO, importen su propia grilla de auditoría (Excel, CSV, Google Sheets) y dejen que Crawlers analice cada criterio automáticamente. Comparen la puntuación parseada con la medida por nuestros crawlers.'
+                    : 'SEO freelancers, import your own audit grid (Excel, CSV, Google Sheets) and let Crawlers analyze each criterion automatically. Compare the parsed document score with the one measured by our crawlers — criterion by criterion, page by page.'}
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1.5 mb-6 max-w-lg">
+                  {(language === 'fr' ? [
+                    '✓ Importez n\'importe quelle grille d\'audit client',
+                    '✓ Détection automatique des critères SEO, GEO, E-E-A-T, Performance…',
+                    '✓ Double score : document parsé vs crawl réel',
+                    '✓ Rapport exportable pour vos livrables clients',
+                  ] : language === 'es' ? [
+                    '✓ Importe cualquier grilla de auditoría de cliente',
+                    '✓ Detección automática de criterios SEO, GEO, E-E-A-T, Rendimiento…',
+                    '✓ Doble puntuación: documento parseado vs crawl real',
+                    '✓ Informe exportable para sus entregables',
+                  ] : [
+                    '✓ Import any client audit grid',
+                    '✓ Auto-detection of SEO, GEO, E-E-A-T, Performance criteria…',
+                    '✓ Dual score: parsed document vs real crawl',
+                    '✓ Exportable report for your client deliverables',
+                  ]).map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+                <Link to="/matrice">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-8 shadow-lg"
+                  >
+                    <Grid3X3 className="h-5 w-5" />
+                    {language === 'fr' ? 'Essayer la Matrice' : language === 'es' ? 'Probar la Matriz' : 'Try the Matrix'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex-shrink-0 w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20 flex items-center justify-center">
+                <Grid3X3 className="h-20 w-20 text-violet-500/60" />
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* CTA Observatoire */}
         <section className="border-y border-border bg-gradient-to-r from-violet-50/50 via-muted/30 to-amber-50/50 dark:from-violet-950/10 dark:via-muted/10 dark:to-amber-950/10 py-14 md:py-20">

@@ -272,12 +272,21 @@ export function Header() {
             </Link>
           )}
           {!isAuditExpertPage && isHomePage && (
-            <Link to="/app/cocoon">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-                <span className="text-sm font-semibold">Cocoon</span>
-              </Button>
-            </Link>
+            <>
+              <Link to="/app/cocoon">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                  <span className="text-sm font-semibold">Cocoon</span>
+                </Button>
+              </Link>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Matrice</span>
+                </Button>
+              </Link>
+            </>
           )}
           {isAuditExpertPage ? (
             <>
