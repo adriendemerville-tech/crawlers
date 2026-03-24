@@ -26,6 +26,7 @@ import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
+import { ParmenionDashboard } from './ParmenionDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
