@@ -64,21 +64,20 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     return Array.from(types).sort();
   }, [nodes]);
 
-  // Detect present juice types from similarity edges
+  // Detect present juice types from similarity edges (aligned with graph logic)
   const presentJuiceTypes = useMemo(() => {
     const types = new Set<string>();
-    // Derive from graph structure (same logic as CocoonForceGraph3D)
+    const urlToNode = new Map(nodes.map((n: any) => [n.url, n]));
     const maxAuth = Math.max(1, ...nodes.map((n: any) => n.page_authority ?? 0));
     const maxTraffic = Math.max(1, ...nodes.map((n: any) => n.traffic_estimate ?? 0));
-    const nodeById = new Map(nodes.map((n: any) => [n.id, n]));
     const homeNode = nodes.find((n: any) => n.page_type === 'homepage') 
       || [...nodes].sort((a: any, b: any) => (a.crawl_depth ?? 99) - (b.crawl_depth ?? 99))[0];
     const homeId = homeNode?.id;
 
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
-        const targetNode = nodes.find((n: any) => n.url === edge.target_url);
-        if (!targetNode) continue;
+        const targetNode = urlToNode.get(edge.target_url);
+        if (!targetNode || targetNode.id === node.id) continue;
         const srcDepth = node.crawl_depth ?? node.depth ?? 0;
         const tgtDepth = targetNode.crawl_depth ?? targetNode.depth ?? 0;
         const depthDelta = Math.abs(srcDepth - tgtDepth);
