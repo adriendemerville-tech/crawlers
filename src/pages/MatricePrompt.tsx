@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
