@@ -153,6 +153,12 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
     toast.success(`${comp.competitor_name} ajouté au suivi`);
   };
 
+  const handleRemoveCompetitor = (idx: number) => {
+    const name = competitors[idx]?.competitor_name;
+    setCompetitors((prev) => prev.filter((_, i) => i !== idx));
+    if (name) toast.success(`${name} retiré`);
+  };
+
   const handleScan = async () => {
     if (!gmbLocationId || !trackedSiteId) {
       toast.error('Aucune fiche GMB connectée');
