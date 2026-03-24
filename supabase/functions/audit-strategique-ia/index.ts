@@ -2372,6 +2372,12 @@ Deno.serve(async (req) => {
   const startTime = Date.now();
   const isOverDeadline = () => Date.now() - startTime > GLOBAL_DEADLINE;
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  let jobId: string | undefined;
+  let jobSb: ReturnType<typeof getServiceClient> | null = null;
+
   try {
     const body = await req.json();
     const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = body;
@@ -2388,6 +2394,10 @@ Deno.serve(async (req) => {
 
     // ═══ ASYNC MODE: Create job, self-invoke, return 202 ═══
     if (asyncMode) {
+      if (!supabaseUrl || !serviceKey) {
+        return json({ error: 'Backend service not configured' }, 500);
+      }
+
       const sb = getServiceClient();
       const authHeader = req.headers.get('Authorization') || '';
       
@@ -2425,8 +2435,8 @@ Deno.serve(async (req) => {
     }
 
     // ═══ JOB TRACKING: if _job_id provided, update progress in DB ═══
-    const jobId: string | undefined = body._job_id;
-    const jobSb = jobId ? getServiceClient() : null;
+    jobId = body._job_id;
+    jobSb = jobId ? getServiceClient() : null;
 
     if (jobSb && jobId) {
       await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
