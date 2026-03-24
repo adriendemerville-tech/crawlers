@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins } from 'lucide-react';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,8 @@ export function ParmenionDashboard() {
   const [isPaused, setIsPaused] = useState(false);
   const [errorRate, setErrorRate] = useState<{ total: number; errors: number; error_rate: number; conservative_mode: boolean } | null>(null);
   const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number } | null>(null);
+  const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
+  const [ikLoading, setIkLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
@@ -99,7 +101,19 @@ export function ParmenionDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); }, [fetchLogs, fetchAutopilotConfig]);
+  const fetchIkHistory = useCallback(async () => {
+    setIkLoading(true);
+    const { data } = await supabase
+      .from('analytics_events')
+      .select('id, created_at, event_data')
+      .eq('event_type', 'cms_action:iktracker')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (data) setIkHistory(data as any);
+    setIkLoading(false);
+  }, []);
+
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
@@ -392,6 +406,95 @@ export function ParmenionDashboard() {
                           ⚠️ {log.execution_error}
                         </div>
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* IKTracker History */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4 text-primary" />
+                Historique IKTracker
+              </CardTitle>
+              <CardDescription>Actions CMS effectuées sur iktracker.fr</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={fetchIkHistory}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {ikLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+              Chargement…
+            </div>
+          ) : ikHistory.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Globe className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Aucune action IKTracker enregistrée</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[350px] pr-4">
+              <div className="space-y-2">
+                {ikHistory.map((ev) => {
+                  const d = ev.event_data || {};
+                  const action = (d.action as string) || '—';
+                  const slug = (d.slug as string) || (d.page_key as string) || '';
+                  const title = (d.title as string) || '';
+                  const updatesKeys = (d.updates_keys as string[]) || [];
+                  const responseStatus = d.response_status as number | undefined;
+
+                  const actionIcon = action.startsWith('create') ? PlusCircle
+                    : action.startsWith('update') ? Pencil
+                    : action.startsWith('delete') ? Trash
+                    : action.startsWith('list') ? Eye
+                    : FileText;
+
+                  const ActionIcon = actionIcon;
+
+                  const actionColor = action.startsWith('create') ? 'text-green-600'
+                    : action.startsWith('update') ? 'text-amber-600'
+                    : action.startsWith('delete') ? 'text-destructive'
+                    : 'text-muted-foreground';
+
+                  return (
+                    <div key={ev.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+                      <ActionIcon className={cn('h-4 w-4 mt-0.5 shrink-0', actionColor)} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium font-mono text-xs">{action}</span>
+                          {slug && (
+                            <Badge variant="secondary" className="text-[10px] font-mono truncate max-w-[200px]">
+                              {slug}
+                            </Badge>
+                          )}
+                          {title && (
+                            <span className="text-xs text-muted-foreground truncate">« {title} »</span>
+                          )}
+                          {responseStatus && (
+                            <Badge variant="outline" className={cn('text-[10px]', responseStatus < 300 ? 'text-green-600 border-green-500/40' : 'text-destructive border-destructive/40')}>
+                              {responseStatus}
+                            </Badge>
+                          )}
+                        </div>
+                        {updatesKeys.length > 0 && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Champs modifiés : {updatesKeys.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                        {new Date(ev.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
                   );
                 })}

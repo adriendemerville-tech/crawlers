@@ -170,9 +170,23 @@ Deno.serve(async (req) => {
     // Log action for traceability
     try {
       const supabase = getServiceClient()
+      const logData: Record<string, unknown> = {
+        action,
+        params_keys: Object.keys(params),
+      }
+      // Capture identifiers for history display
+      if (params.slug) logData.slug = params.slug
+      if (params.page_key) logData.page_key = params.page_key
+      if (params.updates) logData.updates_keys = Object.keys(params.updates)
+      if (params.body?.title) logData.title = params.body.title
+      if (params.body?.slug) logData.slug = params.body.slug
+      // Capture result status
+      if (result && typeof result === 'object' && 'status' in (result as any)) {
+        logData.response_status = (result as any).status
+      }
       await supabase.from('analytics_events').insert({
         event_type: 'cms_action:iktracker',
-        event_data: { action, params: Object.keys(params) },
+        event_data: logData,
       })
     } catch (e) {
       console.warn('[iktracker-actions] Analytics log failed:', e)
