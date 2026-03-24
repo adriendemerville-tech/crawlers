@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
+import matriceScreenshot from '@/assets/screenshots/matrice-audit.png';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -723,7 +724,7 @@ const Index = () => {
               <div className="flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-500 dark:text-violet-400 mb-4">
                   <Grid3X3 className="h-3.5 w-3.5" />
-                  BETA
+                  Gratuit
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl mb-3">
                   {language === 'fr' ? 'Matrice d\'audit : votre grille, nos robots' : language === 'es' ? 'Matriz de auditoría: su grilla, nuestros robots' : 'Audit Matrix: your grid, our bots'}
@@ -766,8 +767,8 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
-              <div className="flex-shrink-0 w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20 flex items-center justify-center">
-                <Grid3X3 className="h-20 w-20 text-violet-500/60" />
+              <div className="flex-shrink-0 w-full md:w-[420px] rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
+                <img src={matriceScreenshot} alt="Matrice d'audit Crawlers" className="w-full h-auto" loading="lazy" />
               </div>
             </div>
           </div>
