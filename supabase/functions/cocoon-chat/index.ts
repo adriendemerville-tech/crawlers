@@ -219,6 +219,78 @@ serve(async (req) => {
       }
     }
 
+    // ══════════════════════════════════════════════════════
+    // ★ SUBDOMAIN MODE: Fetch subdomain analysis if requested
+    // ══════════════════════════════════════════════════════
+    let subdomainBlock = '';
+    if (subdomainMode && trackedSiteId && domain) {
+      try {
+        console.log('[cocoon-chat] Subdomain mode: fetching subdomain analysis...');
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+        const { data: recentDiag } = await supabase
+          .from('cocoon_diagnostic_results')
+          .select('findings, scores, metadata, created_at')
+          .eq('tracked_site_id', trackedSiteId)
+          .eq('diagnostic_type', 'subdomains')
+          .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let subdomainData: any = recentDiag;
+
+        if (!subdomainData) {
+          const diagResp = await fetch(`${supabaseUrl}/functions/v1/cocoon-diag-subdomains`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+            body: JSON.stringify({ tracked_site_id: trackedSiteId, domain }),
+          });
+          if (diagResp.ok) {
+            const result = await diagResp.json();
+            subdomainData = {
+              findings: result.analysis?.cannibalization_risks || [],
+              scores: { architecture_score: result.analysis?.architecture_score, subdomain_count: result.subdomain_count, total_urls: result.total_urls },
+              metadata: { subdomains: result.subdomains, recommendations: result.analysis?.recommendations, summary: result.analysis?.summary },
+            };
+          }
+        }
+
+        if (subdomainData) {
+          const meta = (subdomainData.metadata || {}) as any;
+          const scores = (subdomainData.scores || {}) as any;
+          const parts: string[] = ['═══ ANALYSE CROSS-SUBDOMAIN ═══'];
+          parts.push(`Architecture: ${scores.architecture_type || '?'} | Score: ${scores.architecture_score || '?'}/100`);
+          parts.push(`Sous-domaines: ${scores.subdomain_count || '?'} | URLs totales: ${scores.total_urls || '?'}`);
+          if (meta.subdomains?.length) {
+            parts.push('\nDÉTAIL:');
+            for (const s of meta.subdomains) {
+              parts.push(`  ${s.isRoot ? '🏠' : '🔹'} ${s.host}: ${s.pageCount} pages`);
+            }
+          }
+          const findings = (subdomainData.findings || []) as any[];
+          if (findings.length > 0) {
+            parts.push('\nRISQUES:');
+            for (const f of findings) {
+              const icon = f.severity === 'critical' ? '🔴' : f.severity === 'warning' ? '🟡' : '🟢';
+              parts.push(`  ${icon} ${f.subdomain1 || f.subdomain || ''}: ${f.overlap_description || f.issue || ''}`);
+            }
+          }
+          if (meta.recommendations?.length) {
+            parts.push('\nRECOMMANDATIONS:');
+            for (const r of meta.recommendations) {
+              parts.push(`  [P${r.priority}] ${r.action}: ${r.description}`);
+            }
+          }
+          if (meta.summary) parts.push(`\nRÉSUMÉ: ${meta.summary}`);
+          subdomainBlock = `\n\n${parts.join('\n')}`;
+        }
+      } catch (e) {
+        console.error('[cocoon-chat] Subdomain analysis error:', e);
+      }
+    }
+
     const langInstruction = language === 'en'
       ? 'You MUST reply entirely in English. All responses, headings, bullet points and suggestions must be in English.'
       : language === 'es'
