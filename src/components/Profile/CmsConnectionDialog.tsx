@@ -377,6 +377,16 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
                 ↗ {language === 'fr' ? 'Ouvrir les réglages API Wix' : language === 'es' ? 'Abrir configuración API Wix' : 'Open Wix API settings'}
               </a>
             )}
+            {cmsType === 'odoo' && siteUrl && (
+              <a
+                href={`${siteUrl.replace(/\/$/, '')}/web#action=base.action_res_users`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages Odoo' : language === 'es' ? 'Abrir configuración Odoo' : 'Open Odoo settings'}
+              </a>
+            )}
           </DialogDescription>
         </DialogHeader>
 
