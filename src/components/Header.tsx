@@ -115,6 +115,7 @@ export function Header() {
   const isHomePage = location.pathname === '/';
   const isCrawlPage = location.pathname === '/app/site-crawl' || location.pathname === '/crawl';
   const isMatricePage = location.pathname === '/matrice';
+  const isCocoonPage = location.pathname === '/app/cocoon';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
