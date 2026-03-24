@@ -51,6 +51,12 @@ export function useAdminNotifications() {
             .select('id', { count: 'exact', head: true })
             .eq('event_type', 'api_billing_alert')
             .gte('created_at', sevenDaysAgo),
+          // Frontend crashes (last 7 days)
+          supabase
+            .from('analytics_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_type', 'frontend_crash')
+            .gte('created_at', sevenDaysAgo),
         ]);
 
         if (cancelled) return;
