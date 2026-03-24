@@ -216,7 +216,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`gmb_posts\` | Publications GMB | \`gmb_location_id\`, \`post_type\` (STANDARD/EVENT/OFFER), \`summary\`, \`status\`, \`published_at\` |
 | \`gmb_performance\` | Stats hebdomadaires | \`gmb_location_id\`, \`week_start_date\`, \`search_views\`, \`maps_views\`, \`website_clicks\`, \`phone_calls\`, \`avg_rating\` |
 | \`gmb_tracked_keywords\` | Mots-clés locaux suivis (Suggestions KW) | \`tracked_site_id\`, \`keyword\`, \`source\`, \`search_volume\`, \`current_position\`, \`last_checked_at\` |
-| \`gmb_local_competitors\` | Snapshots hebdo concurrents Google Maps | \`gmb_location_id\`, \`competitor_name\`, \`competitor_place_id\`, \`maps_position\`, \`position_change\`, \`avg_rating\`, \`total_reviews\`, \`snapshot_week\` |
+| \`gmb_local_competitors\` | Concurrents Google Maps via Google Places API | \`gmb_location_id\`, \`competitor_name\`, \`competitor_place_id\`, \`maps_position\`, \`position_change\`, \`avg_rating\`, \`total_reviews\`, \`snapshot_week\` |
 
 ### CMS & Intégrations
 
@@ -424,6 +424,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`google-ads-connector\` | ✅ | OAuth2 Google Ads + données campagnes |
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
 | \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
+| \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
 | \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
@@ -659,6 +660,7 @@ Ces secrets sont configurés dans Lovable Cloud :
 | \`OPENROUTER_API_KEY\` | fallback IA | Clé OpenRouter (backup) |
 | \`LOVABLE_API_KEY\` | Lovable AI | Accès aux modèles Gemini/GPT |
 | \`IKTRACKER_API_KEY\` | \`iktracker-actions\` | Clé bridge IKtracker |
+| \`GOOGLE_PLACES_API_KEY\` | \`gmb-places-autocomplete\` | Clé Google Places API (autocomplete concurrents GMB) |
 | \`FLY_RENDERER_URL\` | rendering SPA | URL du renderer Fly.io |
 | \`FLY_RENDERER_SECRET\` | rendering SPA | Secret Fly.io |
 | \`RENDERING_API_KEY\` | rendu headless | Clé API rendering |
@@ -1413,7 +1415,7 @@ export const docMetadata = {
   version: '6.2.0',
   lastUpdated: '2026-03-24',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 124,
+  totalEdgeFunctions: 125,
   totalSharedModules: 22,
   totalTables: '68+',
   totalLinesOfCode: '187 000+',

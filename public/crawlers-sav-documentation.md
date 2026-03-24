@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.1"
-date: "2026-03-23"
+version: "3.2"
+date: "2026-03-24"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -158,7 +158,7 @@ Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
 - Informations de la fiche (nom, adresse, catégorie, horaires)
 - Les données GMB alimentent automatiquement l'Audit Local SEO et le diagnostic de la Stratégie 360°
 - **Suggestions de mots-clés** (onglet "Suggestions KW") : génère 5 mots-clés locaux stratégiques à partir du nom, de la catégorie et de la ville de l'établissement via SerpAPI. Chaque mot-clé peut être ajouté à un suivi local dédié (table `gmb_tracked_keywords`). Les résultats sont mis en cache 24h pour optimiser les coûts API.
-- **Concurrence locale** (onglet "Concurrence") : scanne les concurrents analogues sur Google Maps via DataForSEO Maps API (fallback SerpAPI). Affiche jusqu'à 10 concurrents avec leur position Maps, note moyenne, nombre d'avis et évolution hebdomadaire (flèches vertes montantes / rouges descendantes). Classification automatique : Goliath (#1), Concurrent direct (#2-3), Challenger (#4-7), Inspiration (#8+). Le rayon de recherche est estimé automatiquement selon la catégorie d'activité (3km commerce de proximité, 10km professions libérales, 5km par défaut).
+- **Concurrence locale** (onglet "Concurrence") : scanne les concurrents analogues sur Google Maps via Google Places API (autocomplete + détails). Affiche les concurrents avec leur note moyenne, nombre d'avis et adresse. Classification automatique : Goliath (#1), Concurrent direct (#2-3), Challenger (#4-7), Inspiration (#8+). Les concurrents peuvent être supprimés au survol de leur carte. Le rayon de recherche est estimé automatiquement selon la catégorie d'activité.
 
 **Prérequis :** abonnement Pro Agency et compte Google propriétaire/gestionnaire de la fiche.
 
@@ -169,6 +169,21 @@ Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultaném
 - Définissez vos prompts cibles (ex : "meilleure agence SEO Paris")
 - Crawlers interroge ChatGPT, Gemini, Perplexity, Claude
 - Résultats : taux de citation, sentiment, position dans la réponse
+- **Gestion des prompts** : les prompts sauvegardés sont affichés sous forme de cartes, renommables (double-clic ou icône crayon), supprimables au survol, et triés automatiquement par dernière utilisation (le plus récent en premier)
+
+### Rapports (Console)
+Onglet dédié à la gestion des rapports (réservé Pro Agency) :
+- **Menu vertical gauche** avec les URLs trackées depuis "Mes Sites" + un menu "Autres" pour les rapports hors domaines suivis
+- **Système de dossiers imbriqués** : créez, renommez, supprimez des dossiers (avec avertissement du nombre de rapports contenus)
+- **Actions rapports** : renommer, archiver, télécharger le PDF
+- **Archives** : les éléments supprimés sont rangés dans un menu déroulant en bas, avec possibilité de restauration
+- **Drag & drop** pour réordonner les sites dans le menu latéral
+
+### Intégration IKTracker
+Pour les sites hébergés sur IKTracker, le bouton "Brancher" dans Console > Mes Sites fonctionne différemment :
+- **Auto-détection** : l'API IKTracker est testée automatiquement au chargement — le bouton s'affiche en vert si l'API répond OK
+- **Toggle direct** : cliquer sur le bouton active/désactive la connexion API IKTracker sans ouvrir de modale
+- Le bridge `iktracker-actions` permet les opérations CRUD complètes (pages et articles) via l'API Content d'IKTracker
 
 ### Cocon Sémantique 3D
 Visualisation interactive de l'architecture sémantique de votre site en 3D (Three.js) :
@@ -458,7 +473,7 @@ Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps ré
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 124 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 125 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).
