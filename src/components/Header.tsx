@@ -258,32 +258,63 @@ export function Header() {
 
         {/* Center: Navigation links - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* Audit button first - hidden on audit-expert page */}
+          {/* Audit */}
           {!isAuditExpertPage && (
             <Link to="/audit-expert">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10"
-              >
+              <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10">
                 <Sparkles className="h-4 w-4" />
                 <span className="text-sm">Audit</span>
               </Button>
             </Link>
           )}
-          {!isAuditExpertPage && isHomePage && (
-            <>
+
+          {/* Cocoon */}
+          {!isCocoonPage && (
+            isAuditExpertPage ? (
+              <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                  <span className="text-sm font-semibold">Cocoon</span>
+                </Button>
+              </a>
+            ) : (
               <Link to="/app/cocoon">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                   <span className="text-sm font-semibold">Cocoon</span>
                 </Button>
               </Link>
+            )
+          )}
+
+          {/* Crawl */}
+          {!isCrawlPage && (
+            isAuditExpertPage ? (
+              <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
+                  <Bug className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Crawl</span>
+                </Button>
+              </a>
+            ) : (
               <Link to="/app/site-crawl">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
                   <Bug className="h-3.5 w-3.5" />
                   <span className="text-sm font-semibold">Crawl</span>
                 </Button>
               </Link>
+            )
+          )}
+
+          {/* Matrice */}
+          {!isMatricePage && (
+            isAuditExpertPage ? (
+              <a href="/matrice" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Matrice</span>
+                </Button>
+              </a>
+            ) : (
               <Link to="/matrice">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
@@ -291,60 +322,11 @@ export function Header() {
                   <span className="text-sm font-semibold">Matrice</span>
                 </Button>
               </Link>
-            </>
+            )
           )}
-          {isAuditExpertPage ? (
-            <>
-              <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
-                  <Bug className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Crawl</span>
-                </Button>
-              </a>
-              {isAdmin && (
-                <a href="/matrice" target="_blank" rel="noopener noreferrer">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Grid3X3 className="h-4 w-4" />
-                    <span className="text-sm">Matrice</span>
-                  </Button>
-                </a>
-              )}
-            </>
-          ) : (
-            (isCrawlPage || isMatricePage) ? (
-              <Link to="/app/cocoon">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                  <span className="text-sm font-semibold">Cocoon</span>
-                </Button>
-              </Link>
-            ) : !isHomePage ? (
-              <Link to="/app/site-crawl">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
-                  <Bug className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Crawl</span>
-                </Button>
-              </Link>
-            ) : null
-          )}
-          {isProfilePage && (
-            <>
-              <Link to="/app/cocoon">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                  <span className="text-sm font-semibold">Cocoon</span>
-                </Button>
-              </Link>
-              {user && isAdmin && (
-                <Link to="/matrice">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-                    <Grid3X3 className="h-3.5 w-3.5" />
-                    <span className="text-sm font-semibold">Matrice</span>
-                  </Button>
-                </Link>
-              )}
-            </>
-          )}
-          {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
+
+          {/* Console — for paid users, hidden on console page */}
+          {!isProfilePage && (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) && (
             isAuditExpertPage ? (
               <a href="/app/console" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
@@ -360,7 +342,7 @@ export function Header() {
                 </Button>
               </Link>
             )
-          ) : null}
+          )}
         </div>
 
         {/* Right side: Audit CTA, Credits, Theme, User */}
