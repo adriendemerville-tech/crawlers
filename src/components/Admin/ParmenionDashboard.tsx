@@ -59,6 +59,7 @@ export function ParmenionDashboard() {
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [errorRate, setErrorRate] = useState<{ total: number; errors: number; error_rate: number; conservative_mode: boolean } | null>(null);
+  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number } | null>(null);
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
@@ -78,7 +79,27 @@ export function ParmenionDashboard() {
     if (data) setErrorRate(data as unknown as { total: number; errors: number; error_rate: number; conservative_mode: boolean });
   }, [logs]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  const fetchAutopilotConfig = useCallback(async () => {
+    const { data } = await supabase
+      .from('autopilot_configs')
+      .select('is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      const ts = data.tracked_sites as unknown as { domain: string };
+      setAutopilotConfig({
+        is_active: data.is_active ?? false,
+        status: data.status ?? 'idle',
+        last_cycle_at: data.last_cycle_at,
+        domain: ts?.domain || '—',
+        total_cycles_run: data.total_cycles_run ?? 0,
+      });
+    }
+  }, []);
+
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); }, [fetchLogs, fetchAutopilotConfig]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
@@ -187,6 +208,11 @@ export function ParmenionDashboard() {
               <Badge className={statusConfig[activeDecision.status]?.color || ''}>
                 {statusConfig[activeDecision.status]?.label || activeDecision.status}
               </Badge>
+            ) : autopilotConfig?.is_active ? (
+              <div>
+                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">✅ Actif — en veille</Badge>
+                <p className="text-[11px] text-muted-foreground mt-1">{autopilotConfig.domain}</p>
+              </div>
             ) : (
               <Badge variant="secondary">💤 Inactif</Badge>
             )}
@@ -198,7 +224,12 @@ export function ParmenionDashboard() {
             <CardTitle className="text-sm font-medium">Cycles total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{logs.length}</div>
+            <div className="text-2xl font-bold">{autopilotConfig?.total_cycles_run ?? logs.length}</div>
+            {autopilotConfig?.last_cycle_at && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Dernier : {new Date(autopilotConfig.last_cycle_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
           </CardContent>
         </Card>
 
