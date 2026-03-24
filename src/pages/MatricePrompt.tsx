@@ -602,15 +602,27 @@ export default function MatricePrompt() {
                         aria-label="Tout sélectionner"
                       />
                     </TableHead>
-                    <TableHead>KPI</TableHead>
-                    <TableHead className="w-28">Catégorie</TableHead>
-                    <TableHead className="w-20">Poids</TableHead>
-                    <TableHead className="w-20">Bon</TableHead>
-                    <TableHead className="w-20">Moyen</TableHead>
-                    <TableHead className="w-20">Mauvais</TableHead>
-                    {results && <TableHead className="w-20">Type</TableHead>}
-                    {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
-                    {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
+                     <TableHead>
+                       <span className="block text-xs font-semibold">{columnLabels.prompt || 'KPI'}</span>
+                     </TableHead>
+                     <TableHead className="w-28">
+                       <span className="block text-xs font-semibold">{columnLabels.axe || 'Catégorie'}</span>
+                     </TableHead>
+                     <TableHead className="w-20">
+                       <span className="block text-xs font-semibold">{columnLabels.poids || 'Poids'}</span>
+                     </TableHead>
+                     <TableHead className="w-20">
+                       <span className="block text-xs font-semibold">{columnLabels.seuil_bon || 'Bon'}</span>
+                     </TableHead>
+                     <TableHead className="w-20">
+                       <span className="block text-xs font-semibold">{columnLabels.seuil_moyen || 'Moyen'}</span>
+                     </TableHead>
+                     <TableHead className="w-20">
+                       <span className="block text-xs font-semibold">{columnLabels.seuil_mauvais || 'Mauvais'}</span>
+                     </TableHead>
+                     {results && <TableHead className="w-20">Type</TableHead>}
+                     {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
+                     {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
