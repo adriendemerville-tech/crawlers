@@ -55,7 +55,7 @@ function FooterComponent() {
     { 
       icon: GitCompareArrows, 
       label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'),
-      href: '/audit-compare',
+      href: '/app/audit-compare',
       description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'),
       gold: false,
       isRoute: true
@@ -79,7 +79,7 @@ function FooterComponent() {
     { 
       icon: ScanSearch, 
       label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'),
-      href: '/site-crawl',
+      href: '/app/site-crawl',
       description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'),
       gold: true,
       isRoute: true,
@@ -96,7 +96,7 @@ function FooterComponent() {
     {
       icon: Network,
       label: 'Cocoon',
-      href: '/cocoon',
+      href: '/app/cocoon',
       description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
       gold: true,
       isRoute: true

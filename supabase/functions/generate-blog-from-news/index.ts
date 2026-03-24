@@ -49,7 +49,7 @@ const INTERNAL_PAGES = [
   { path: '/methodologie', label: 'méthodologie', keywords: ['algorithme', 'méthode', 'score', 'calcul'] },
   { path: '/indice-alignement-strategique', label: 'IAS', keywords: ['ias', 'alignement', 'stratégique', 'indice'] },
   { path: '/aide', label: 'centre d\'aide', keywords: ['aide', 'documentation', 'support', 'faq'] },
-  { path: '/cocoon', label: 'cocon sémantique', keywords: ['cocon', 'sémantique', 'maillage', 'cluster'] },
+  { path: '/app/cocoon', label: 'cocon sémantique', keywords: ['cocon', 'sémantique', 'maillage', 'cluster'] },
   { path: '/faq', label: 'FAQ', keywords: ['question', 'fréquente', 'réponse'] },
 ];
 

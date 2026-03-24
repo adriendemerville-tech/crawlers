@@ -79,7 +79,7 @@ const defaultSurvey: Omit<Survey, 'id' | 'created_at' | 'created_by'> = {
   title: '',
   description: null,
   status: 'draft',
-  target_pages: ['/console'],
+  target_pages: ['/app/console'],
   target_persona: {},
   schedule_at: null,
   duration_days: 7,
@@ -335,7 +335,7 @@ function SurveyEditor({ survey, onSave, onCancel }: { survey: Partial<Survey>; o
                 <Textarea
                   value={(form.target_pages || []).join('\n')}
                   onChange={e => updateField('target_pages', e.target.value.split('\n').filter(Boolean) as any)}
-                  placeholder="/console&#10;/&#10;/tarifs"
+                  placeholder="/app/console&#10;/&#10;/tarifs"
                   rows={2}
                 />
               </div>

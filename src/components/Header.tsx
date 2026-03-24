@@ -111,9 +111,9 @@ export function Header() {
 
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
-  const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
+  const isProfilePage = location.pathname === '/app/console' || location.pathname === '/app/profil';
   const isHomePage = location.pathname === '/';
-  const isCrawlPage = location.pathname === '/site-crawl' || location.pathname === '/crawl';
+  const isCrawlPage = location.pathname === '/app/site-crawl' || location.pathname === '/crawl';
   const isMatricePage = location.pathname === '/matrice';
 
   const toggleTheme = () => {
@@ -272,7 +272,7 @@ export function Header() {
             </Link>
           )}
           {!isAuditExpertPage && isHomePage && (
-            <Link to="/cocoon">
+            <Link to="/app/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
                 <span className="text-sm font-semibold">Cocoon</span>
@@ -281,7 +281,7 @@ export function Header() {
           )}
           {isAuditExpertPage ? (
             <>
-              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
+              <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
                   <Bug className="h-3.5 w-3.5" />
                   <span className="text-sm font-semibold">Crawl</span>
@@ -296,14 +296,14 @@ export function Header() {
             </>
           ) : (
             (isCrawlPage || isMatricePage) ? (
-              <Link to="/cocoon">
+              <Link to="/app/cocoon">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
                   <span className="text-sm font-semibold">Cocoon</span>
                 </Button>
               </Link>
             ) : (
-              <Link to="/site-crawl">
+              <Link to="/app/site-crawl">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
                   <Bug className="h-3.5 w-3.5" />
                   <span className="text-sm font-semibold">Crawl</span>
@@ -313,7 +313,7 @@ export function Header() {
           )}
           {isProfilePage && (
             <>
-              <Link to="/cocoon">
+              <Link to="/app/cocoon">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
                   
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
@@ -333,14 +333,14 @@ export function Header() {
           )}
           {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
             isAuditExpertPage ? (
-              <a href="/console" target="_blank" rel="noopener noreferrer">
+              <a href="/app/console" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="text-sm">{t.console}</span>
                 </Button>
               </a>
             ) : (
-              <Link to="/console">
+              <Link to="/app/console">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="text-sm">{t.console}</span>
@@ -364,7 +364,7 @@ export function Header() {
           {/* Console button (logged in, hidden on /console) */}
           {!loading && user && !isProfilePage && (
               <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" asChild>
-                <Link to="/console" aria-label={t.console}>
+                <Link to="/app/console" aria-label={t.console}>
                   <LayoutDashboard className="h-4 w-4" />
                 </Link>
               </Button>
@@ -394,7 +394,7 @@ export function Header() {
                       variant="ghost" 
                       className="relative h-9 w-9 rounded-full" 
                       aria-label={t.profile}
-                      onClick={() => navigate('/console')}
+                      onClick={() => navigate('/app/console')}
                     >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
@@ -425,7 +425,7 @@ export function Header() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.console}</p>
                     </div>
                     <DropdownMenuItem asChild className="p-0">
-                      <Link to="/console" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
+                      <Link to="/app/console" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
@@ -443,7 +443,7 @@ export function Header() {
                     <DropdownMenuSeparator />
                     {/* Console shortcut */}
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=tracking" className="gap-2 cursor-pointer">
+                      <Link to="/app/console?tab=tracking" className="gap-2 cursor-pointer">
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
                       </Link>
@@ -462,26 +462,26 @@ export function Header() {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=settings" className="gap-2 cursor-pointer">
+                      <Link to="/app/console?tab=settings" className="gap-2 cursor-pointer">
                         <Settings className="h-4 w-4" />
                         {t.settings}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=reports" className="gap-2 cursor-pointer">
+                      <Link to="/app/console?tab=reports" className="gap-2 cursor-pointer">
                         <FileText className="h-4 w-4" />
                         {t.myReports}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=action-plans" className="gap-2 cursor-pointer">
+                      <Link to="/app/console?tab=action-plans" className="gap-2 cursor-pointer">
                         <ClipboardList className="h-4 w-4" />
                         {t.actionPlans}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=corrective-codes" className="gap-2 cursor-pointer">
+                      <Link to="/app/console?tab=corrective-codes" className="gap-2 cursor-pointer">
                         <Code2 className="h-4 w-4" />
                         {t.correctiveCodes}
                       </Link>

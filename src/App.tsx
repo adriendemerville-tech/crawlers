@@ -117,11 +117,11 @@ const App = () => (
                           <Route path="/rgpd" element={<RGPD />} />
                           <Route path="/auth" element={<Auth />} />
                           <Route path="/signup" element={<SignupPage />} />
-                          <Route path="/console" element={<Profile />} />
-                          <Route path="/profil" element={<Profile />} /> {/* Legacy redirect */}
-                          <Route path="/rapport/audit" element={<RapportViewer />} />
-                          <Route path="/rapport/cocoon" element={<RapportViewer />} />
-                          <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                          <Route path="/app/console" element={<Profile />} />
+                          <Route path="/app/profil" element={<Profile />} /> {/* Legacy redirect */}
+                          <Route path="/app/rapport/audit" element={<RapportViewer />} />
+                          <Route path="/app/rapport/cocoon" element={<RapportViewer />} />
+                          <Route path="/app/rapport/:reportId" element={<ReportViewer />} />
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
@@ -139,15 +139,15 @@ const App = () => (
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
-                          <Route path="/site-crawl" element={<SiteCrawl />} />
-                          <Route path="/audit-compare" element={<AuditCompare />} />
+                          <Route path="/app/site-crawl" element={<SiteCrawl />} />
+                          <Route path="/app/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="/indice-alignement-strategique" element={<IndiceAlignementStrategique />} />
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
-                          <Route path="/cocoon" element={<Cocoon />} />
+                          <Route path="/app/cocoon" element={<Cocoon />} />
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
-                          <Route path="/rapport/matrice" element={<RapportMatrice />} />
+                          <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />

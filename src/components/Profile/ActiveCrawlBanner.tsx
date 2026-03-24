@@ -114,7 +114,7 @@ export function ActiveCrawlBanner() {
                 duration: 15000,
                 action: {
                   label: t.viewReport,
-                  onClick: () => navigate('/site-crawl'),
+                  onClick: () => navigate('/app/site-crawl'),
                 },
               });
             }

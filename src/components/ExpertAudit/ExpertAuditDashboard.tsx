@@ -621,7 +621,7 @@ export function ExpertAuditDashboard() {
         preSummarizedResult: auditMode === 'strategic' ? preSummarizedResult : null,
       });
       sessionStorage.setItem('rapport_audit_data', payload);
-      window.open('/rapport/audit', '_blank');
+      window.open('/app/rapport/audit', '_blank');
       // Also save to profile
       await handleSaveReportToProfile(result, auditMode);
     }
@@ -1276,7 +1276,7 @@ export function ExpertAuditDashboard() {
           <Button
             onClick={() => {
               const domain = cocoonDomain || (technicalResult?.domain) || '';
-              navigate(`/cocoon${domain ? `?autolaunch=${encodeURIComponent(domain)}` : ''}`);
+              navigate(`/app/cocoon${domain ? `?autolaunch=${encodeURIComponent(domain)}` : ''}`);
             }}
             className="gap-2 font-semibold bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] shadow-lg shadow-[#fbbf24]/20"
           >

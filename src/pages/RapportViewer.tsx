@@ -153,7 +153,7 @@ export default function RapportViewer() {
   const [copied, setCopied] = useState(false);
 
   // Determine kind from path
-  const kind: ReportKind = location.pathname.includes('/rapport/cocoon') ? 'cocoon' : 'audit';
+  const kind: ReportKind = location.pathname.includes('/app/rapport/cocoon') ? 'cocoon' : 'audit';
 
   // Read payload from sessionStorage on mount
   useEffect(() => {

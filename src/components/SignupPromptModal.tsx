@@ -52,7 +52,7 @@ export function SignupPromptModal() {
 
   useEffect(() => {
     if (!shouldActivate) return;
-    if (window.location.pathname === '/console') {
+    if (window.location.pathname === '/app/console') {
       setVisible(true);
     }
   }, [shouldActivate]);
@@ -60,7 +60,7 @@ export function SignupPromptModal() {
   // Trigger 2: 60s on any feature page
   useEffect(() => {
     if (!shouldActivate || visible) return;
-    const featurePages = ['/audit', '/console', '/cocoon', '/matrice'];
+    const featurePages = ['/audit', '/app/console', '/app/cocoon', '/matrice'];
     const isFeaturePage = featurePages.some(p => window.location.pathname.startsWith(p));
     if (!isFeaturePage) return;
 

@@ -254,7 +254,7 @@ export function MyCrawls() {
           <div className="text-center py-12 text-muted-foreground">
             <Bug className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p className="mb-4">{t.empty}</p>
-            <Button onClick={() => navigate('/site-crawl')} variant="outline">
+            <Button onClick={() => navigate('/app/site-crawl')} variant="outline">
               {t.emptyCta}
             </Button>
           </div>
@@ -375,7 +375,7 @@ export function MyCrawls() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/site-crawl?view=${crawl.id}`)}
+                          onClick={() => navigate(`/app/site-crawl?view=${crawl.id}`)}
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
                           {t.viewReport}

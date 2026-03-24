@@ -37,7 +37,7 @@ const translations = {
           'Choisissez WordPress (plugin) ou GTM (snippet)',
           'Le code correctif s\'injecte automatiquement à chaque génération'
         ],
-        link: '/profil',
+        link: '/app/profil',
         linkLabel: 'Accéder à Mes Sites',
         recommended: true,
       },
@@ -118,7 +118,7 @@ const translations = {
           'Choose WordPress (plugin) or GTM (snippet)',
           'Corrective code is automatically injected on each generation'
         ],
-        link: '/profil',
+        link: '/app/profil',
         linkLabel: 'Go to My Sites',
         recommended: true,
       },
@@ -199,7 +199,7 @@ const translations = {
           'Elija WordPress (plugin) o GTM (snippet)',
           'El código correctivo se inyecta automáticamente en cada generación'
         ],
-        link: '/profil',
+        link: '/app/profil',
         linkLabel: 'Ir a Mis Sitios',
         recommended: true,
       },

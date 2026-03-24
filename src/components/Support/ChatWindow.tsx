@@ -489,7 +489,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                         let m;
                         while ((m = linkRegex.exec(msg.content)) !== null) {
                           const path = m[2];
-                          if (['/site-crawl', '/cocoon', '/console', '/audit-expert', '/matrice', '/architecte-generatif'].some(p => path.startsWith(p))) {
+                          if (['/app/site-crawl', '/app/cocoon', '/app/console', '/audit-expert', '/matrice', '/architecte-generatif'].some(p => path.startsWith(p))) {
                             actions.push({ label: m[1], path });
                           }
                         }
