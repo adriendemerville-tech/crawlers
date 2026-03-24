@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
+import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -166,11 +167,28 @@ export default function MatricePrompt() {
     await loadBatch(batchId);
   };
 
-  /* --- Parse raw rows into MatrixRow[] and persist --- */
+  /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
   const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
-    if (!user) return;
+    if (!user || rawRows.length === 0) return;
+
+    // Step 1: Fuzzy column mapping
+    const headers = Object.keys(rawRows[0] || {});
+    const sampleRows = rawRows.slice(0, Math.min(10, rawRows.length));
+    const mappingResult = mapColumns(headers, sampleRows);
+
+    // Show mapping warnings to user
+    if (mappingResult.warnings.length > 0) {
+      toast.info(`Mapping auto : ${mappingResult.warnings.join(' • ')}`, { duration: 6000 });
+    }
+    if (mappingResult.unmapped.length > 0) {
+      toast.info(`Colonnes ignorées : ${mappingResult.unmapped.join(', ')}`, { duration: 4000 });
+    }
+
+    // Step 2: Transform rows using the mapping
+    const transformedRows = transformRows(rawRows, mappingResult);
+
     const newBatchId = crypto.randomUUID();
-    const parsed: MatrixRow[] = rawRows.map((raw: any, i: number) => {
+    const parsed: MatrixRow[] = transformedRows.map((raw: any, i: number) => {
       const isDefault: Record<string, boolean> = {};
       const val = (key: string, def: any) => {
         const v = raw[key];
@@ -183,7 +201,7 @@ export default function MatricePrompt() {
       };
       return {
         id: `row-${i}-${Date.now()}`,
-        prompt: raw.prompt || raw.Prompt || raw.kpi || raw.KPI || `KPI #${i + 1}`,
+        prompt: val('prompt', `KPI #${i + 1}`),
         poids: val('poids', DEFAULTS.poids),
         axe: val('axe', DEFAULTS.axe),
         seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
