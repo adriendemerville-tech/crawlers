@@ -322,54 +322,59 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </div>
           </div>
 
-          {/* Step 1: Download */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
-            </p>
-            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
-              <Download className="h-3 w-3" />
-              {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
-            </Button>
-            <p className="text-[9px] text-muted-foreground">
-              {t3(language,
-                'WordPress → Extensions → Ajouter → Téléverser.',
-                'WordPress → Plugins → Add New → Upload.',
-                'WordPress → Plugins → Añadir → Subir.'
-              )}
-            </p>
-          </div>
+          {/* Steps 1 & 2 side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Step 1: Download */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
+              </p>
+              <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
+                <Download className="h-3 w-3" />
+                {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
+              </Button>
+              <p className="text-[9px] text-muted-foreground">
+                {t3(language,
+                  'WordPress → Extensions → Ajouter → Téléverser.',
+                  'WordPress → Plugins → Add New → Upload.',
+                  'WordPress → Plugins → Añadir → Subir.'
+                )}
+              </p>
+            </div>
 
-          {/* Step 2: URL + Magic Link */}
-          <div className="space-y-2">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
-            </p>
-            <div className="flex items-center gap-2">
-              <Input
-                value={wpUrl}
-                readOnly
-                className="font-mono text-[11px] h-8 max-w-[50%] bg-muted/50 cursor-default"
-              />
-              <Button
-                onClick={handleMagicLink}
-                disabled={!isValidWpUrl || generatingLink || !user}
-                className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-4"
-                size="sm"
-              >
-                {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
-                {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
-              </Button>
-              <Button
-                onClick={handleTestConnection}
-                disabled={!isValidWpUrl || testingConnection}
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs h-8 px-3"
-              >
-                {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                {t3(language, 'Tester', 'Test', 'Probar')}
-              </Button>
+            {/* Step 2: URL + Magic Link */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={wpUrl}
+                  readOnly
+                  className="font-mono text-[11px] h-8 bg-muted/50 cursor-default"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  onClick={handleMagicLink}
+                  disabled={!isValidWpUrl || generatingLink || !user}
+                  className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-3"
+                  size="sm"
+                >
+                  {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+                  {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
+                </Button>
+                <Button
+                  onClick={handleTestConnection}
+                  disabled={!isValidWpUrl || testingConnection}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs h-8 px-3"
+                >
+                  {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                  {t3(language, 'Tester', 'Test', 'Probar')}
+                </Button>
+              </div>
             </div>
           </div>
 
