@@ -473,7 +473,7 @@ Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps ré
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 124 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 125 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).
