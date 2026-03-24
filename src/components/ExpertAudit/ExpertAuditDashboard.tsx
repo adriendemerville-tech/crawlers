@@ -953,9 +953,10 @@ export function ExpertAuditDashboard() {
 
     // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
     const useCachedContext = isCorrection && strategicCachedContext;
+    const canUseAsync = !!user;
     
     try {
-      const canUseAsync = !!user;
+      let rawStrategicData: any = null;
 
       if (canUseAsync) {
         // Use async mode for authenticated users: submit job, then poll for completion
@@ -974,7 +975,6 @@ export function ExpertAuditDashboard() {
         const jobId = launchResp.job_id;
         const pollStart = Date.now();
         const MAX_POLL_MS = 10 * 60 * 1000;
-        let data: any = null;
 
         while (Date.now() - pollStart < MAX_POLL_MS) {
           await new Promise(r => setTimeout(r, 5000));
@@ -991,7 +991,7 @@ export function ExpertAuditDashboard() {
           }
 
           if (job?.status === 'completed' && job.result_data) {
-            data = job.result_data as any;
+            rawStrategicData = job.result_data as any;
             break;
           }
 
@@ -1000,47 +1000,45 @@ export function ExpertAuditDashboard() {
           }
         }
 
-        if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
+        if (!rawStrategicData) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
+      } else {
+        const syncResp = await invokeWithTimeout('audit-strategique-ia', {
+          url: normalizedUrl,
+          toolsData: null,
+          hallucinationCorrections: hallucinationCorrections || null,
+          competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
+          lang: language,
+        }, 540000);
 
-        const strategicData = mapStrategicData(data, normalizedUrl, hallucinationCorrections);
+        rawStrategicData = syncResp?.data ?? syncResp;
+        if (!rawStrategicData) throw new Error('Aucune donnée retournée par l\'audit stratégique');
+      }
 
-        setResult(strategicData);
-        setStrategicResult(strategicData);
-        setStrategicProgressiveReveal(true);
-        if (data._cachedContext) {
-          setStrategicCachedContext(data._cachedContext);
-        }
-        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-      // Signal expert audit completion for signup prompt
+      const strategicData = mapStrategicData(rawStrategicData, normalizedUrl, hallucinationCorrections);
+
+      setResult(strategicData);
+      setStrategicResult(strategicData);
+      setStrategicProgressiveReveal(true);
+      if (rawStrategicData._cachedContext) {
+        setStrategicCachedContext(rawStrategicData._cachedContext);
+      }
+      setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       window.dispatchEvent(new Event('expert-audit-complete'));
-      // Save to domain-level strategic cache for future audits
       if (domain) {
         setStrategicCache(domain, strategicData);
         setStrategicCacheInfo({ auditCount: 1, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
       }
-      // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
-      // Fire-and-forget: sync SERP KPIs to tracked site
       if (user) syncSerpToTrackedSite(domain, user.id);
-      // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
-      
-      // Pre-summarize for downloadable report (runs in background)
       setPreSummarizedResult(null);
       summarizeStrategicResult(strategicData, language).then((summarized) => {
         setPreSummarizedResult(summarized);
       }).catch((err) => console.error('[pre-summarize] error:', err));
-      
-      // Track step 2 completion
       trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-      
-      // Site tracking is now manual via TrackSiteButton
-
-      // Fetch stored corrections for this domain (community knowledge)
       const auditDomain = new URL(normalizedUrl).hostname;
       fetchStoredCorrections(auditDomain);
-
-      // Toast removed — results appear directly in the UI
     } catch (error) {
       console.error('Strategic audit error:', error);
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
