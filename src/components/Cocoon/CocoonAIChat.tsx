@@ -1256,7 +1256,17 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     };
 
     sendMessage(prompts[language] || prompts.fr, true);
-  }, [language, isLoading, trackedSiteId]);
+  }, [language, isLoading, trackedSiteId, sendMessage]);
+
+  const handleSubdomainAnalysis = useCallback(() => {
+    if (isLoading || !trackedSiteId) return;
+    const prompts: Record<string, string> = {
+      fr: `ANALYSE CROSS-SUBDOMAIN\n\nScanne tous les sous-domaines de mon site et analyse leur architecture. Identifie les risques de cannibalization et recommande des optimisations.`,
+      en: `CROSS-SUBDOMAIN ANALYSIS\n\nScan all subdomains and analyze their architecture. Identify cannibalization risks and recommend optimizations.`,
+      es: `ANÁLISIS CROSS-SUBDOMAIN\n\nEscanea todos los subdominios y analiza su arquitectura. Identifica riesgos de canibalización y recomienda optimizaciones.`,
+    };
+    sendMessage(prompts[language] || prompts.fr, false, true);
+  }, [language, isLoading, trackedSiteId, sendMessage]);
 
   const clearChat = () => {
     setMessages([]);
