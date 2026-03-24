@@ -16,8 +16,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
   if (enabledFixes.length === 0) return '';
 
   const scriptParts: string[] = [];
-  
-  // Add console log for debugging
   scriptParts.push(`console.log('[Architecte Preview] Applying ${enabledFixes.length} fixes...');`);
 
   enabledFixes.forEach(fix => {
@@ -32,7 +30,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           }
         `);
         break;
-      
       case 'fix_meta_desc':
         scriptParts.push(`
           if (!document.querySelector('meta[name="description"]')) {
@@ -43,7 +40,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           }
         `);
         break;
-
       case 'fix_h1':
         scriptParts.push(`
           const h1s = document.querySelectorAll('h1');
@@ -55,7 +51,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           }
         `);
         break;
-
       case 'fix_jsonld':
         scriptParts.push(`
           if (!document.querySelector('script[type="application/ld+json"]')) {
@@ -71,7 +66,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           }
         `);
         break;
-
       case 'fix_lazy_images':
         scriptParts.push(`
           document.querySelectorAll('img:not([loading])').forEach(img => {
@@ -81,7 +75,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           });
         `);
         break;
-
       case 'fix_alt_images':
         scriptParts.push(`
           document.querySelectorAll('img:not([alt]), img[alt=""]').forEach((img, i) => {
@@ -91,7 +84,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           });
         `);
         break;
-
       case 'fix_contrast':
         scriptParts.push(`
           document.querySelectorAll('*').forEach(el => {
@@ -103,7 +95,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           });
         `);
         break;
-
       case 'inject_faq':
         scriptParts.push(`
           const faqContainer = document.createElement('section');
@@ -132,7 +123,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           else document.body.appendChild(faqContainer);
         `);
         break;
-
       case 'inject_blog_section':
         scriptParts.push(`
           const blogContainer = document.createElement('section');
@@ -154,12 +144,11 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
               </div>
             </div>
           \`;
-          const footer = document.querySelector('footer');
-          if (footer) footer.before(blogContainer);
+          const footer2 = document.querySelector('footer');
+          if (footer2) footer2.before(blogContainer);
           else document.body.appendChild(blogContainer);
         `);
         break;
-
       case 'inject_breadcrumbs':
         scriptParts.push(`
           const breadcrumb = document.createElement('nav');
@@ -179,8 +168,7 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           else document.body.prepend(breadcrumb);
         `);
         break;
-
-      case 'inject_local_business':
+      case 'inject_local_business': {
         const businessData = fix.data || {};
         scriptParts.push(`
           const localBiz = document.createElement('div');
@@ -202,7 +190,7 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
           document.body.appendChild(localBiz);
         `);
         break;
-
+      }
       case 'fix_hallucination':
         scriptParts.push(`
           const clarification = document.createElement('meta');
@@ -217,98 +205,116 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
   return `(function(){${scriptParts.join('\n')}})();`;
 }
 
-const MAX_RETRY_ATTEMPTS = 3;
-const RETRY_DELAY_MS = 2000;
-
 export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
-  const [proxiedHtml, setProxiedHtml] = useState<string | null>(null);
+  // Cache the raw HTML from proxy (fetched ONCE per URL, not per fix change)
+  const cachedHtmlRef = useRef<string | null>(null);
+  const cachedUrlRef = useRef<string | null>(null);
   const [proxyLoading, setProxyLoading] = useState(false);
   const [proxyError, setProxyError] = useState<string | null>(null);
+  const [renderedHtml, setRenderedHtml] = useState<string | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
-  
-  // Generate a hash of enabled fixes to detect changes
-  const enabledFixesHash = useMemo(() => {
-    return fixes
-      .filter(f => f.enabled)
-      .map(f => f.id)
-      .sort()
-      .join(',');
-  }, [fixes]);
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
-  // Generate preview script based on enabled fixes
-  const previewScript = useMemo(() => {
-    return generatePreviewScript(fixes);
-  }, [fixes]);
+  // Preview script derived from current fixes
+  const previewScript = useMemo(() => generatePreviewScript(fixes), [fixes]);
 
-  // Fetch site via proxy
+  // Build final HTML by injecting preview script into cached HTML
+  const injectScriptIntoHtml = useCallback((rawHtml: string, script: string): string => {
+    let html = rawHtml;
+
+    // Aggressive SPA suppression: kill all <script src="..."> to prevent React/Vite from running
+    // Keep only inline scripts that are JSON-LD or non-module
+    html = html.replace(/<script\b[^>]*\bsrc\s*=\s*[^>]*>[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<script\b[^>]*\btype\s*=\s*["']module["'][^>]*>[\s\S]*?<\/script>/gi, '');
+    // Remove link preloads/modulepreload that would fail
+    html = html.replace(/<link\b[^>]*\brel\s*=\s*["']modulepreload["'][^>]*\/?>/gi, '');
+
+    // Error handler to suppress any remaining JS errors
+    const errorHandler = `<script>window.onerror=function(){return true};window.addEventListener('error',function(e){e.preventDefault();e.stopPropagation();return true},true);window.addEventListener('unhandledrejection',function(e){e.preventDefault();},true);</script>`;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/<head[^>]*>/i, `$&\n${errorHandler}`);
+    } else {
+      html = errorHandler + html;
+    }
+
+    // Inject preview script
+    if (script) {
+      const scriptTag = `<script>${script}</script>`;
+      if (/<\/body>/i.test(html)) {
+        html = html.replace(/<\/body>/i, `${scriptTag}\n</body>`);
+      } else {
+        html += scriptTag;
+      }
+    }
+
+    return html;
+  }, []);
+
+  // Fetch raw HTML from proxy — only when URL changes
   const fetchViaProxy = useCallback(async (url: string) => {
+    // Abort any in-flight request
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
     setProxyLoading(true);
     setProxyError(null);
-    setProxiedHtml(null);
 
     try {
       const { data, error } = await supabase.functions.invoke('fetch-external-site', {
         body: { url },
       });
 
-      if (error) {
-        throw new Error(error.message || 'Erreur du proxy');
-      }
+      if (controller.signal.aborted) return;
 
-      // If the response is JSON with an error field
-      if (typeof data === 'object' && data?.error) {
-        throw new Error(data.error);
-      }
+      if (error) throw new Error(error.message || 'Erreur du proxy');
+      if (typeof data === 'object' && data?.error) throw new Error(data.error);
 
-      // data is the raw HTML string
       let html = typeof data === 'string' ? data : '';
-      if (!html || html.length < 50) {
-        throw new Error('Le proxy a retourné un contenu vide.');
-      }
+      if (!html || html.length < 50) throw new Error('Le proxy a retourné un contenu vide.');
 
-      // Inject error handler early in <head> to suppress SPA framework crashes (Next.js, etc.)
-      const errorHandler = `<script>window.onerror=function(){return true};window.addEventListener('error',function(e){e.preventDefault();e.stopPropagation();return true},true);window.addEventListener('unhandledrejection',function(e){e.preventDefault();},true);<\/script>`;
-      if (/<head[^>]*>/i.test(html)) {
-        html = html.replace(/<head[^>]*>/i, `$&\n${errorHandler}`);
-      } else {
-        html = errorHandler + html;
-      }
+      // Cache the raw HTML
+      cachedHtmlRef.current = html;
+      cachedUrlRef.current = url;
 
-      // Inject our preview script before </body>
-      if (previewScript) {
-        const scriptTag = `<script>${previewScript}<\/script>`;
-        if (/<\/body>/i.test(html)) {
-          html = html.replace(/<\/body>/i, `${scriptTag}\n</body>`);
-        } else {
-          html += scriptTag;
-        }
-      }
-
-      setProxiedHtml(html);
-    } catch (err: any) {
-      console.error('[VisualPreview] Proxy error:', err);
-      setProxyError(err.message || 'Impossible de charger le site via le proxy.');
+      // Build initial render with current fixes
+      const finalHtml = injectScriptIntoHtml(html, previewScript);
+      setRenderedHtml(finalHtml);
+      setIframeKey(k => k + 1);
+    } catch (err: unknown) {
+      if (controller.signal.aborted) return;
+      const msg = err instanceof Error ? err.message : 'Impossible de charger le site via le proxy.';
+      console.error('[VisualPreview] Proxy error:', msg);
+      setProxyError(msg);
     } finally {
-      setProxyLoading(false);
+      if (!controller.signal.aborted) setProxyLoading(false);
     }
-  }, [previewScript]);
+  }, [injectScriptIntoHtml, previewScript]);
 
-  // Fetch when URL changes
+  // Fetch only when URL changes
   useEffect(() => {
-    if (siteUrl) {
-      fetchViaProxy(siteUrl);
-    } else {
-      setProxiedHtml(null);
+    if (!siteUrl) {
+      setRenderedHtml(null);
       setProxyError(null);
+      cachedHtmlRef.current = null;
+      cachedUrlRef.current = null;
+      return;
     }
-  }, [siteUrl]);
-
-  // Re-fetch when fixes change (to re-inject script)
-  useEffect(() => {
-    if (siteUrl && proxiedHtml) {
+    // Only re-fetch if URL actually changed
+    if (cachedUrlRef.current !== siteUrl) {
       fetchViaProxy(siteUrl);
     }
-  }, [enabledFixesHash]);
+    return () => { fetchAbortRef.current?.abort(); };
+  }, [siteUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When fixes change, re-inject script into cached HTML (NO re-fetch)
+  useEffect(() => {
+    if (cachedHtmlRef.current && siteUrl) {
+      const finalHtml = injectScriptIntoHtml(cachedHtmlRef.current, previewScript);
+      setRenderedHtml(finalHtml);
+      setIframeKey(k => k + 1);
+    }
+  }, [previewScript, injectScriptIntoHtml, siteUrl]);
 
   // If we have a URL, show the proxy-based iframe
   if (siteUrl) {
@@ -334,27 +340,17 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">Aperçu indisponible</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    {proxyError}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">{proxyError}</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                     Les correctifs seront tout de même appliqués via le plugin WordPress.
                   </p>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchViaProxy(siteUrl)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => fetchViaProxy(siteUrl)}>
                     <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                     Réessayer
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(siteUrl, '_blank')}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => window.open(siteUrl, '_blank')}>
                     <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                     Ouvrir le site
                   </Button>
@@ -363,13 +359,13 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
             </div>
           )}
           
-          {proxiedHtml && !proxyLoading && (
+          {renderedHtml && !proxyLoading && (
             <iframe
               key={iframeKey}
-              srcDoc={proxiedHtml}
+              srcDoc={renderedHtml}
               className="w-full h-full border-0 rounded-lg"
               title="Site Preview"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
             />
           )}
         </div>
@@ -412,7 +408,6 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
           <p className="text-sm font-medium">Activez des correctifs stratégiques</p>
           <p className="text-xs mt-1">pour voir un aperçu visuel</p>
         </div>
-        {/* Attribution toujours visible */}
         <div className="mt-8 border-t pt-4 w-full max-w-sm">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-[10px] text-muted-foreground mb-1">Attribution incluse automatiquement</p>
@@ -432,110 +427,119 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   }
 
   return (
-    <div className="p-4 space-y-4 text-sm">
-      {/* Breadcrumbs Preview */}
-      {hasBreadcrumbs && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-background via-muted/20 to-background">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 text-xs text-muted-foreground"
+          transition={{ duration: 0.5 }}
+          className="space-y-6"
         >
-          <Navigation className="w-3 h-3" />
-          <span className="text-blue-600 hover:underline cursor-pointer">Accueil</span>
-          <span>/</span>
-          <span className="text-blue-600 hover:underline cursor-pointer">Services</span>
-          <span>/</span>
-          <span>Page actuelle</span>
-        </motion.div>
-      )}
-
-
-      {/* Semantic Injection Preview */}
-      {hasSemantic && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
-        >
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
-          <div className="bg-gradient-to-r from-blue-500/10 to-violet-500/10 border-l-4 border-blue-500 p-3 rounded-r">
-            <Quote className="w-4 h-4 text-blue-500 mb-1" />
-            <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
-              {semanticParagraph}
-            </p>
-          </div>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-        </motion.div>
-      )}
-
-      {/* FAQ Preview */}
-      {hasFAQ && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
-        >
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-blue-500" />
-            <h3 className="font-semibold">Questions fréquentes</h3>
-          </div>
-          {['Quels sont vos services ?', 'Comment fonctionne votre offre ?', 'Quels sont les délais ?'].map((q, i) => (
-            <div key={i} className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">{q}</span>
-                <span className="text-muted-foreground text-lg">+</span>
+          {/* Visual Mock of the page with injections */}
+          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+            {/* Mock Header */}
+            <div className="bg-muted/50 border-b p-4 flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400" />
+              <div className="w-3 h-3 rounded-full bg-green-400" />
+              <div className="flex-1 bg-muted rounded-md px-3 py-1 text-xs text-muted-foreground truncate ml-2">
+                {siteUrl || 'votre-site.fr'}
               </div>
             </div>
-          ))}
-        </motion.div>
-      )}
 
-      {/* Local Business Preview */}
-      {hasLocalBusiness && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-3 bg-muted/50 rounded-lg p-3"
+            {/* Page Content Mock */}
+            <div className="p-6 space-y-6">
+              {/* Breadcrumbs Preview */}
+              {hasBreadcrumbs && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Navigation className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-primary hover:underline cursor-pointer">Accueil</span>
+                    <span className="text-muted-foreground">›</span>
+                    <span className="text-primary hover:underline cursor-pointer">Services</span>
+                    <span className="text-muted-foreground">›</span>
+                    <span className="text-muted-foreground">Page actuelle</span>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Semantic Meta Preview */}
+              {hasSemantic && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Quote className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <p className="text-sm text-foreground/80 leading-relaxed italic">
+                        {semanticParagraph}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-primary/60 mt-2 text-right">Paragraphe sémantique injecté par l'Architecte</p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Content placeholder */}
+              <div className="space-y-3">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-full" />
+                <div className="h-4 bg-muted rounded w-5/6" />
+                <div className="h-4 bg-muted rounded w-2/3" />
+              </div>
+
+              {/* FAQ Preview */}
+              {hasFAQ && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/30 px-4 py-3 border-b">
+                      <h3 className="text-sm font-semibold flex items-center gap-2">
+                        ❓ Questions Fréquentes
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">FAQPage Schema</span>
+                      </h3>
+                    </div>
+                    {['Quels sont vos services ?', 'Comment ça fonctionne ?', 'Quels sont les délais ?'].map((q, i) => (
+                      <div key={i} className={`px-4 py-3 text-sm ${i < 2 ? 'border-b' : ''} hover:bg-muted/20 cursor-pointer transition-colors`}>
+                        <span className="font-medium">{q}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Local Business Preview */}
+              {hasLocalBusiness && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>
+                  <div className="bg-card border rounded-lg p-4 shadow-sm max-w-xs">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                        <MapPin className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold">{businessName}</h4>
+                        <p className="text-xs text-muted-foreground">{localBusinessFix?.data?.address || '123 Rue de Paris'}</p>
+                        <p className="text-xs text-muted-foreground">{localBusinessFix?.data?.city || 'Paris'} {localBusinessFix?.data?.postalCode || '75001'}</p>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded mt-1 inline-block">LocalBusiness Schema</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Attribution */}
+      <div className="px-3 py-2 bg-muted/30 border-t text-center">
+        <a 
+          href="https://crawlers.fr" 
+          target="_blank" 
+          rel="noopener"
+          className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-1"
         >
-          <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-sm">{businessName}</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              {localBusinessFix?.data?.address || '123 Rue de Paris'}, {localBusinessFix?.data?.city || 'Paris'} {localBusinessFix?.data?.postalCode || '75001'}
-            </p>
-            {localBusinessFix?.data?.phone && (
-              <p className="text-xs text-blue-600 mt-1">{localBusinessFix.data.phone}</p>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Attribution Preview - Toujours affiché */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="border-t pt-4 mt-6"
-      >
-        <div className="bg-muted/30 rounded-lg p-4 text-center">
-          <p className="text-[10px] text-muted-foreground mb-2">Attribution incluse automatiquement</p>
-          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-            <span>© 2025 Votre Entreprise •</span>
-            <a 
-              href="https://crawlers.fr" 
-              target="_blank" 
-              rel="noopener"
-              className="text-emerald-600 hover:underline inline-flex items-center gap-1"
-            >
-              Powered by Crawlers.fr
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        </div>
-      </motion.div>
+          Powered by Crawlers.fr
+          <ExternalLink className="w-2.5 h-2.5" />
+        </a>
+      </div>
     </div>
   );
 }
