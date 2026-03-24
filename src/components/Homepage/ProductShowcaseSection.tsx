@@ -197,6 +197,31 @@ const ProductShowcaseSection = memo(() => {
           ],
     },
     {
+      image: architectCode,
+      title: language === 'fr' ? 'Architecte · Code Correctif' : 'Architect · Corrective Code',
+      subtitle: language === 'fr' ? 'Génération IA · Injection sécurisée' : 'AI Generation · Secure Injection',
+      description: language === 'fr'
+        ? 'L\'Architecte génère un script correctif sur-mesure pour votre site : Schema.org, anti-hallucination IA, performance PageSpeed et contenu sémantique. Chaque fix est configurable, prévisualisable et injectable en un clic sur votre CMS.'
+        : 'The Architect generates a custom corrective script for your site: Schema.org, AI anti-hallucination, PageSpeed performance and semantic content. Each fix is configurable, previewable and injectable in one click on your CMS.',
+      badge: 'Architect',
+      badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+      icon: Code2,
+      tiltDirection: 'right' as const,
+      features: language === 'fr'
+        ? [
+            'CMS intégrés : WordPress, Shopify, Wix, Webflow, Drupal, Odoo',
+            'Protocole CLS-ZERO : zéro régression de layout, exécution non-bloquante',
+            'Système de verrous anti-doublon (setLock / hasLock) par fonction',
+            'Prompting contextuel IA adapté au CMS détecté (PHP, Liquid, Velo…)',
+          ]
+        : [
+            'Integrated CMS: WordPress, Shopify, Wix, Webflow, Drupal, Odoo',
+            'CLS-ZERO protocol: zero layout regression, non-blocking execution',
+            'Anti-duplicate lock system (setLock / hasLock) per function',
+            'CMS-aware AI prompting (PHP, Liquid, Velo…)',
+          ],
+    },
+    {
       image: gmbReviews,
       title: language === 'fr' ? 'Google Business Profile' : 'Google Business Profile',
       subtitle: language === 'fr' ? 'Avis · Fiches · Concurrence locale' : 'Reviews · Listings · Local Competition',
