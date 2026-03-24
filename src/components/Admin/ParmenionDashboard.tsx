@@ -208,6 +208,11 @@ export function ParmenionDashboard() {
               <Badge className={statusConfig[activeDecision.status]?.color || ''}>
                 {statusConfig[activeDecision.status]?.label || activeDecision.status}
               </Badge>
+            ) : autopilotConfig?.is_active ? (
+              <div>
+                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">✅ Actif — en veille</Badge>
+                <p className="text-[11px] text-muted-foreground mt-1">{autopilotConfig.domain}</p>
+              </div>
             ) : (
               <Badge variant="secondary">💤 Inactif</Badge>
             )}
