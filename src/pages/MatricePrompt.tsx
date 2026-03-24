@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
+import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -71,6 +72,7 @@ export default function MatricePrompt() {
   const [errorTitle, setErrorTitle] = useState('');
   const [errorDesc, setErrorDesc] = useState('');
   const [submittingError, setSubmittingError] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
@@ -558,6 +560,9 @@ export default function MatricePrompt() {
           <div className="flex items-center gap-3 mb-6">
             <h1 className="text-xl font-bold">Matrice d'audit</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" onClick={() => setShowHelp(true)} title="Aide">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <div className="flex-1" />
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
@@ -830,6 +835,7 @@ export default function MatricePrompt() {
           )}
         </main>
       </div>
+      <MatriceHelpModal open={showHelp} onOpenChange={setShowHelp} />
     </>
   );
 }
