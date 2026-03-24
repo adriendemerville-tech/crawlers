@@ -888,9 +888,9 @@ export default function MatricePrompt() {
                                       <HelpCircle className="h-3.5 w-3.5" />
                                     </button>
                                   </HoverCardTrigger>
-                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Crawlers</p>
-                                    <p className="text-muted-foreground">Résultat obtenu via les <strong>micro-fonctions techniques</strong> de Crawlers (meta-tags, données structurées, PageSpeed, backlinks…). Mesure objective et reproductible, indépendante du prompt.</p>
+                                  <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Crawlers — {resultRow.crawlers_score}/100</p>
+                                    <p className="text-muted-foreground">{buildCrawlersExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
                               </span>
