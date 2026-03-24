@@ -862,13 +862,64 @@ Deno.serve(async (req) => {
       needsPsi ? fetchPsi(normalizedUrl) : { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null } as PsiData,
     ])
 
-    const html = htmlResult?.html || ''
+    let html = htmlResult?.html || ''
+
+    // SPA fallback: if HTML is too short or looks like a shell, try Firecrawl
+    const visibleText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (needsHtml && visibleText.length < 200) {
+      console.log(`[audit-matrice] HTML too short (${visibleText.length} chars), trying Firecrawl fallback`)
+      try {
+        const fcKey = Deno.env.get('FIRECRAWL_API_KEY')
+        if (fcKey) {
+          const fcResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: normalizedUrl, formats: ['html'], waitFor: 3000 }),
+            signal: AbortSignal.timeout(20000),
+          })
+          if (fcResp.ok) {
+            const fcData = await fcResp.json()
+            const fcHtml = fcData?.data?.html || fcData?.html || ''
+            if (fcHtml.length > html.length) {
+              html = fcHtml
+              console.log(`[audit-matrice] Firecrawl fallback success: ${fcHtml.length} chars`)
+            }
+          } else {
+            await fcResp.text()
+          }
+        }
+      } catch (e) {
+        console.error('[audit-matrice] Firecrawl fallback error:', e)
+      }
+    }
+
     const htmlData = html ? analyzeHtmlFull(html, normalizedUrl) : null
 
-    // Process each item — compute BOTH crawlers_score (engine) AND parsed_score (LLM)
-    const results: ItemResult[] = []
-    const llmPromises: Promise<void>[] = []
-    const htmlSummary = html.substring(0, 5000)
+    // Build smart HTML summary for LLM: extract head + main content, up to 8000 chars
+    const buildHtmlSummary = (rawHtml: string): string => {
+      if (!rawHtml) return ''
+      // Extract <head> meta info (title, meta, schema)
+      const headMatch = rawHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i)
+      const headContent = headMatch ? headMatch[1]
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<link[^>]*stylesheet[^>]*>/gi, '')
+        .trim()
+        .substring(0, 1500) : ''
+
+      // Extract body visible text  
+      const bodyMatch = rawHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+      const bodyHtml = bodyMatch ? bodyMatch[1] : rawHtml
+      const cleanBody = bodyHtml
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '[NAV]')
+        .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '[FOOTER]')
+        .substring(0, 6500)
+
+      return `<head>${headContent}</head>\n<body>${cleanBody}</body>`
+    }
+
+    const htmlSummary = buildHtmlSummary(html)
 
     for (const item of detectedTypes) {
       // Always queue LLM evaluation for parsed_score
