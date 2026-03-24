@@ -92,12 +92,13 @@ export default function MatricePrompt() {
     setErrorDesc('');
   };
 
-  // Guard: authenticated users only
+  // Guard: admin only
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
+    if (!authLoading && !adminLoading) {
+      if (!user) navigate('/auth');
+      else if (!isAdmin) navigate('/');
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, adminLoading, user, isAdmin, navigate]);
 
   // Load available batches on mount
   useEffect(() => {
@@ -497,7 +498,7 @@ export default function MatricePrompt() {
       <Helmet>
         <title>Matrice d'audit SEO & GEO | Crawlers.fr</title>
         <meta name="description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="robots" content="noindex, nofollow" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/matrice" />

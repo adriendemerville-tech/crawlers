@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Download, FileSpreadsheet, Link2, Mail, Printer, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 
 interface MatriceReportData {
@@ -59,9 +61,19 @@ function generateMatriceHTML(data: MatriceReportData, branding?: { logoUrl?: str
 
 export default function RapportMatrice() {
   const { language } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const navigate = useNavigate();
   const [data, setData] = useState<MatriceReportData | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Admin guard
+  useEffect(() => {
+    if (!authLoading && !adminLoading) {
+      if (!user) navigate('/auth');
+      else if (!isAdmin) navigate('/');
+    }
+  }, [authLoading, adminLoading, user, isAdmin, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem('rapport_matrice_data');
