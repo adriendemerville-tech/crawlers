@@ -243,12 +243,12 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   return (
     <>
       {/* Header */}
-      <DialogHeader className="pb-2">
-        <DialogTitle className="flex items-center gap-2.5 text-lg">
-          <Cable className="h-5 w-5 text-primary" />
+      <DialogHeader className="pb-3">
+        <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+          <Cable className="h-6 w-6 text-primary" />
           {t3(language, 'Brancher mon site', 'Connect my site', 'Conectar mi sitio')}
         </DialogTitle>
-        <DialogDescription className="flex items-center gap-2">
+        <DialogDescription className="flex items-center gap-2 mt-1">
           <span className="font-mono text-xs">{siteDomain}</span>
           <Badge
             variant={isConnected ? 'default' : 'outline'}
@@ -263,9 +263,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
-      {/* ─── Method selector ─── */}
-      <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-        <p className="text-xs font-semibold text-foreground">
+      {/* ─── CMS selector ─── */}
+      <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+        <p className="text-sm font-bold text-foreground">
           {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -278,14 +278,14 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           ]).map(cms => (
             <button
               key={cms.key}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-2 ${
                 connectMethod === cms.key
-                  ? 'bg-primary/10 border-primary/40 text-foreground shadow-sm'
-                  : 'bg-muted/30 border-border hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
+                  : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key)}
             >
-              <img src={cms.logo} alt={cms.label} className="h-5 w-5 object-contain" loading="lazy" width={20} height={20} />
+              <img src={cms.logo} alt={cms.label} className="h-8 w-8 object-contain" loading="lazy" width={32} height={32} />
               {cms.label}
             </button>
           ))}
@@ -295,14 +295,15 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
       <Separator />
 
       {connectMethod !== 'gtm' ? (
-        <div className="space-y-3 pt-1">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="space-y-4 pt-1">
+          {/* CMS name + subtitle */}
+          <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : 'PrestaShop'}</h3>
-              <p className="text-[11px] text-muted-foreground">
+              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : 'PrestaShop'}</h3>
+              <p className="text-[10px] text-muted-foreground">
                 {connectMethod === 'wordpress'
                   ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
                   : t3(language, 'Connexion via API REST', 'REST API connection', 'Conexión vía API REST')
@@ -313,38 +314,37 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
           {/* Step 1: Download */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">
+            <p className="text-[11px] font-medium text-muted-foreground">
               {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
             </p>
-            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90" size="sm">
-              <Download className="h-3.5 w-3.5" />
-              {t3(language, 'Télécharger le Plugin .zip', 'Download Plugin .zip', 'Descargar Plugin .zip')}
+            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
+              <Download className="h-3 w-3" />
+              {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
             </Button>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[9px] text-muted-foreground">
               {t3(language,
-                'Uploadez dans WordPress → Extensions → Ajouter → Téléverser.',
-                'Upload in WordPress → Plugins → Add New → Upload.',
-                'Suba en WordPress → Plugins → Añadir → Subir.'
+                'WordPress → Extensions → Ajouter → Téléverser.',
+                'WordPress → Plugins → Add New → Upload.',
+                'WordPress → Plugins → Añadir → Subir.'
               )}
             </p>
           </div>
 
           {/* Step 2: URL + Magic Link */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">
-              {t3(language, '2. Connectez-vous automatiquement', '2. Auto-connect', '2. Conéctese automáticamente')}
+          <div className="space-y-2">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
             </p>
-            <Input
-              value={wpUrl}
-              onChange={e => setWpUrl(e.target.value)}
-              placeholder="https://mon-site.fr"
-              className="font-mono text-xs h-8"
-            />
-            <div className="flex gap-1.5">
+            <div className="flex items-center gap-2">
+              <Input
+                value={wpUrl}
+                readOnly
+                className="font-mono text-[11px] h-8 max-w-[50%] bg-muted/50 cursor-default"
+              />
               <Button
                 onClick={handleMagicLink}
                 disabled={!isValidWpUrl || generatingLink || !user}
-                className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
+                className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-4"
                 size="sm"
               >
                 {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
@@ -355,7 +355,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                 disabled={!isValidWpUrl || testingConnection}
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 text-xs h-8 px-3"
               >
                 {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
                 {t3(language, 'Tester', 'Test', 'Probar')}
@@ -366,7 +366,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           {/* Manual install accordion */}
           <Accordion type="single" collapsible>
             <AccordionItem value="manual" className="border-dashed">
-              <AccordionTrigger className="text-xs py-2 text-muted-foreground hover:text-foreground">
+              <AccordionTrigger className="text-[11px] py-2 text-muted-foreground hover:text-foreground">
                 {t3(language, 'Installation manuelle (PHP)', 'Manual install (PHP)', 'Instalación manual (PHP)')}
               </AccordionTrigger>
               <AccordionContent>
@@ -402,15 +402,15 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </div>
       ) : (
         <div className="space-y-3 pt-1">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <Code className="h-4 w-4 text-amber-500" />
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Code className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold">
+              <h3 className="text-sm font-bold">
                 {t3(language, 'Google Tag Manager / Script', 'Google Tag Manager / Script', 'Google Tag Manager / Script')}
               </h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground">
                 {t3(language, 'Tous sites (React, Shopify, HTML…)', 'All sites (React, Shopify, HTML…)', 'Todos los sitios (React, Shopify, HTML…)')}
               </p>
             </div>
@@ -418,7 +418,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
           {/* Step 1: Copy snippet */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">
+            <p className="text-[11px] font-medium text-muted-foreground">
               {t3(language, '1. Copiez ce code', '1. Copy this code', '1. Copie este código')}
             </p>
             <div className="relative group rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden">
@@ -447,15 +447,15 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
           {/* Step 2: Auto-deploy via GTM API OR manual paste */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">
+            <p className="text-[11px] font-medium text-muted-foreground">
               {t3(language, '2. Déployez automatiquement ou manuellement', '2. Deploy automatically or manually', '2. Despliegue automático o manual')}
             </p>
             
             {/* 1-Click GTM Deploy */}
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
               <div className="flex items-center gap-2">
-                <div className="h-6 w-6 rounded bg-amber-500/20 flex items-center justify-center">
-                  <Plug className="h-3.5 w-3.5 text-amber-500" />
+                <div className="h-6 w-6 rounded bg-primary/20 flex items-center justify-center">
+                  <Plug className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold">{t3(language, 'Déploiement 1-clic via GTM', '1-Click GTM Deploy', 'Despliegue 1-clic GTM')}</p>
@@ -506,7 +506,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                  className="w-full gap-2 border-primary/30 hover:bg-primary/10"
                   disabled={gtmLoadingContainers}
                   onClick={async () => {
                     setGtmLoadingContainers(true);
@@ -581,7 +581,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
           {/* Info box */}
           <div className="flex items-start gap-2 text-[10px] text-muted-foreground bg-muted/50 rounded-md p-2.5 border">
-            <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
+            <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary" />
             <span>
               {t3(language,
                 'Le widget est léger (~2 Ko), fail-safe et ne ralentit pas votre site. Il se connecte automatiquement à votre espace Crawlers.AI.',
@@ -595,7 +595,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           <Button
             variant="outline"
             size="sm"
-            className="w-full gap-2"
+            className="gap-2 text-xs"
             disabled={testingGtm}
             onClick={async () => {
               setTestingGtm(true);
@@ -643,17 +643,17 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </div>
       )}
 
-      {/* Shared: API Key section at the bottom */}
-      <Separator className="mt-2" />
+      {/* Shared: API Key section */}
+      <Separator className="mt-3" />
       <div className="space-y-2 pt-2">
-        <label className="text-xs font-medium text-muted-foreground">
+        <label className="text-[11px] font-medium text-muted-foreground">
           {t3(language, 'Clé API de ce site', 'Site API Key', 'Clave API del sitio')}
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Input
             readOnly
             value={apiKeyVisible ? siteApiKey : maskedKey}
-            className="font-mono text-xs bg-muted h-8"
+            className="font-mono text-[11px] bg-muted h-8 max-w-[50%] cursor-default"
           />
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
             {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -662,7 +662,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
           </Button>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[9px] text-muted-foreground">
           {t3(language,
             'Cette clé est pré-remplie dans les snippets ci-dessus. Ne la partagez pas.',
             'This key is pre-filled in the snippets above. Do not share it.',
