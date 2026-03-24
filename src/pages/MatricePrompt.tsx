@@ -300,20 +300,11 @@ export default function MatricePrompt() {
 
   /* --- File Import (CSV + XLSX + DOC/DOCX) --- */
   const [docParsing, setDocParsing] = useState(false);
-  const [xlsxSheetNames, setXlsxSheetNames] = useState<string[]>([]);
+  const [xlsxStepperOpen, setXlsxStepperOpen] = useState(false);
+  const [xlsxStepperSheets, setXlsxStepperSheets] = useState<string[]>([]);
   const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
   const [xlsxFileName, setXlsxFileName] = useState('');
-
-  const processXlsxSheet = useCallback(async (workbook: any, sheetName: string, fileName: string) => {
-    const { utils } = await import('xlsx');
-    const sheet = workbook.Sheets[sheetName];
-    const rows = utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
-    if (!rows.length) {
-      toast.error(`L'onglet "${sheetName}" est vide`);
-      return;
-    }
-    await processImportedRows(rows, fileName);
-  }, [processImportedRows]);
+  const [activeMatriceType, setActiveMatriceType] = useState<MatriceType>('seo');
 
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
