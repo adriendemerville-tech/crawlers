@@ -84,6 +84,16 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
 
+  // Fetch user's tracked domains for STT vocabulary correction
+  const [userDomains, setUserDomains] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('tracked_sites').select('domain').eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) setUserDomains(data.map(s => s.domain));
+      });
+  }, [user]);
+
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
 
