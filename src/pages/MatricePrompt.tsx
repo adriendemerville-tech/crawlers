@@ -560,6 +560,9 @@ export default function MatricePrompt() {
           <div className="flex items-center gap-3 mb-6">
             <h1 className="text-xl font-bold">Matrice d'audit</h1>
             <Badge variant="secondary" className="text-muted-foreground text-[10px]">BETA</Badge>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground" onClick={() => setShowHelp(true)} title="Aide">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <div className="flex-1" />
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
