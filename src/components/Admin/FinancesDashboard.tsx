@@ -99,6 +99,9 @@ export function FinancesDashboard() {
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
   const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
+  const [allTimeRawEvents, setAllTimeRawEvents] = useState<{ created_at: string; cost: number }[]>([]);
+  const [spendingChartOpen, setSpendingChartOpen] = useState(false);
+  const [spendingScale, setSpendingScale] = useState<'day' | 'week' | 'month'>('week');
 
   // Fetch events with optional date filter
   const fetchEventsByType = useCallback(async (eventType: string, sinceDate?: string) => {
