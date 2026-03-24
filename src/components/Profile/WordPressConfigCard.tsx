@@ -278,14 +278,14 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           ]).map(cms => (
             <button
               key={cms.key}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                 connectMethod === cms.key
                   ? 'bg-primary/10 border-primary/40 text-foreground shadow-sm'
                   : 'bg-muted/30 border-border hover:bg-muted/60 text-muted-foreground hover:text-foreground'
               }`}
-              onClick={() => setConnectMethod(cms.key)}
+              onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key)}
             >
-              <img src={cms.logo} alt={cms.label} className="h-6 w-6 object-contain" loading="lazy" width={24} height={24} />
+              <img src={cms.logo} alt={cms.label} className="h-5 w-5 object-contain" loading="lazy" width={20} height={20} />
               {cms.label}
             </button>
           ))}
@@ -316,7 +316,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             <p className="text-xs font-medium text-muted-foreground">
               {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
             </p>
-            <Button onClick={handleDownloadPlugin} className="w-3/4 gap-2" size="sm">
+            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90" size="sm">
               <Download className="h-3.5 w-3.5" />
               {t3(language, 'Télécharger le Plugin .zip', 'Download Plugin .zip', 'Descargar Plugin .zip')}
             </Button>
@@ -344,8 +344,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Button
                 onClick={handleMagicLink}
                 disabled={!isValidWpUrl || generatingLink || !user}
-                className="flex-1 gap-1.5"
-                variant="secondary"
+                className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
                 size="sm"
               >
                 {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
