@@ -944,6 +944,7 @@ Deno.serve(async (req) => {
     }
 
     const htmlSummary = buildHtmlSummary(html)
+    const llmPromises: Promise<void>[] = []
 
     for (const item of detectedTypes) {
       // Always queue LLM evaluation for parsed_score
