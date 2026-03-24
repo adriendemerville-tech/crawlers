@@ -344,8 +344,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Button
                 onClick={handleMagicLink}
                 disabled={!isValidWpUrl || generatingLink || !user}
-                className="flex-1 gap-1.5"
-                variant="secondary"
+                className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
                 size="sm"
               >
                 {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
