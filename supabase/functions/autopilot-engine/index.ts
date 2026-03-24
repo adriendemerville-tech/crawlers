@@ -25,16 +25,17 @@ Deno.serve(async (req: Request) => {
     let targetSiteId: string | null = null;
     let userId: string | null = null;
 
-    // Check if manual invocation (authenticated) or cron (service role via header)
-    const isCron = req.headers.get('Authorization')?.includes(Deno.env.get('SUPABASE_ANON_KEY') || '___');
+    // Check if service-role call (cron or admin tool) or user call
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceRole = authHeader.includes(SERVICE_ROLE_KEY);
     
-    if (!isCron) {
+    const body = await req.json().catch(() => ({}));
+    targetSiteId = body.tracked_site_id || null;
+
+    if (!isServiceRole) {
       const auth = await getAuthenticatedUser(req);
       if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      
-      const body = await req.json().catch(() => ({}));
-      targetSiteId = body.tracked_site_id || null;
       userId = auth.userId;
     }
 
