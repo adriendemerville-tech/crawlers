@@ -101,7 +101,7 @@ function HeroSectionComponent() {
         </h2>
 
         {/* Description */}
-        <p className="mx-auto mb-8 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
+        <p className="hidden sm:block mx-auto mb-8 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
           {language === 'es'
             ? 'La única plataforma europea que cubre SEO clásico, GEO (Generative Engine Optimization) y SEO local en una sola herramienta.'
             : language === 'en'
