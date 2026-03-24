@@ -1715,7 +1715,15 @@ export function SmartConfigurator({
             {/* Right Content */}
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               {viewMode === 'code' && generatedCode ? (
-                <div className="flex-1 min-h-0 overflow-hidden bg-background">
+                <div
+                  className="flex-1 min-h-0 overflow-hidden bg-background"
+                  tabIndex={0}
+                  onKeyDown={e => {
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
                   <ScrollArea className="h-full">
                     <div className="p-4">
                       <CodeBlock code={generatedCode} isTyping={false} allowScroll />
