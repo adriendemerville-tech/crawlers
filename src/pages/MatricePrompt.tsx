@@ -405,9 +405,10 @@ export default function MatricePrompt() {
     const reportData = {
       kind: 'matrice' as const,
       url,
-      results,
+      results: results.map((r: any) => ({ ...r, score: r.crawlers_score })),
       totalWeight: tw,
       weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
+      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/rapport/matrice', '_blank');
