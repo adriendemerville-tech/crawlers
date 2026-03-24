@@ -413,8 +413,12 @@ export default function MatricePrompt() {
         seuil_mauvais: row.seuil_mauvais,
       }));
 
-      // Call real audit-matrice edge function
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('audit-matrice', {
+      // Route to the correct edge function based on matrice type
+      const functionName = activeMatriceType === 'geo' ? 'parse-matrix-geo'
+        : activeMatriceType === 'hybrid' ? 'parse-matrix-hybrid'
+        : 'audit-matrice';
+
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
         body: { url: url.trim(), items },
       });
 
