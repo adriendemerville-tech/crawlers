@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
-import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -254,6 +254,7 @@ const labels = {
     optimize: 'Optimiser le maillage',
     strategy: 'Stratégie 360°',
     strategyBtn: 'Diagnostic & Stratégie',
+    subdomains: 'Sous-domaines',
   },
   en: {
     title: 'Cocoon Strategist',
@@ -270,6 +271,7 @@ const labels = {
     optimize: 'Optimize linking',
     strategy: '360° Strategy',
     strategyBtn: 'Diagnosis & Strategy',
+    subdomains: 'Subdomains',
   },
   es: {
     title: 'Estratega Cocoon',
@@ -286,6 +288,7 @@ const labels = {
     optimize: 'Optimizar enlaces',
     strategy: 'Estrategia 360°',
     strategyBtn: 'Diagnóstico y Estrategia',
+    subdomains: 'Subdominios',
   },
 };
 
@@ -817,7 +820,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setMessages(prev => [...prev, promptMsg]);
   }, []);
 
-  const sendMessage = async (overrideContext?: string, useStrategist = false) => {
+  const sendMessage = async (overrideContext?: string, useStrategist = false, useSubdomain = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
 
@@ -872,8 +875,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         body: JSON.stringify({
           messages: newMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
-          analysisMode: !!overrideContext && !useStrategist,
+          analysisMode: !!overrideContext && !useStrategist && !useSubdomain,
           strategistMode: useStrategist || isStrategistMode,
+          subdomainMode: useSubdomain,
           language,
           domain,
           trackedSiteId,
@@ -1252,7 +1256,17 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     };
 
     sendMessage(prompts[language] || prompts.fr, true);
-  }, [language, isLoading, trackedSiteId]);
+  }, [language, isLoading, trackedSiteId, sendMessage]);
+
+  const handleSubdomainAnalysis = useCallback(() => {
+    if (isLoading || !trackedSiteId) return;
+    const prompts: Record<string, string> = {
+      fr: `ANALYSE CROSS-SUBDOMAIN\n\nScanne tous les sous-domaines de mon site et analyse leur architecture. Identifie les risques de cannibalization et recommande des optimisations.`,
+      en: `CROSS-SUBDOMAIN ANALYSIS\n\nScan all subdomains and analyze their architecture. Identify cannibalization risks and recommend optimizations.`,
+      es: `ANÁLISIS CROSS-SUBDOMAIN\n\nEscanea todos los subdominios y analiza su arquitectura. Identifica riesgos de canibalización y recomienda optimizaciones.`,
+    };
+    sendMessage(prompts[language] || prompts.fr, false, true);
+  }, [language, isLoading, trackedSiteId, sendMessage]);
 
   const clearChat = () => {
     setMessages([]);
@@ -1542,6 +1556,15 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 return (
                   <div className="flex flex-col items-center gap-2 pt-1">
                     {linkingFirst ? [linkingBtn, strategyBtn] : [strategyBtn, linkingBtn]}
+                    <button
+                      key="subdomains"
+                      onClick={handleSubdomainAnalysis}
+                      disabled={isLoading || !trackedSiteId}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 text-white/50 bg-transparent hover:bg-white/5 hover:text-white/70 text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      {t.subdomains}
+                    </button>
                   </div>
                 );
               }

@@ -145,3 +145,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.parmenion-feedback]
     verify_jwt = false
+  [functions.cocoon-diag-subdomains]
+    verify_jwt = false
