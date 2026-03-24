@@ -165,9 +165,7 @@ const AIAgentsSection = memo(() => {
 
             {/* Icon */}
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20">
-                <Network className="h-7 w-7 text-emerald-500" />
-              </div>
+              <GoldCrawlersLogo size={56} />
               <div>
                 <h3 className="text-2xl font-bold text-foreground font-display">Stratège Cocoon</h3>
                 <p className="text-sm text-muted-foreground">
