@@ -5,6 +5,7 @@ import cmsShopify from '@/assets/cms-shopify.png';
 import cmsWix from '@/assets/cms-wix.png';
 import cmsPrestashop from '@/assets/cms-prestashop.png';
 import cmsGtm from '@/assets/cms-gtm.png';
+import cmsDrupal from '@/assets/cms-drupal.png';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -122,7 +123,7 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const [connectMethod, setConnectMethod] = useState<'wordpress' | 'shopify' | 'wix' | 'prestashop' | 'gtm'>('wordpress');
+  const [connectMethod, setConnectMethod] = useState<'wordpress' | 'shopify' | 'wix' | 'prestashop' | 'drupal' | 'gtm'>('wordpress');
 
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
@@ -274,6 +275,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
             { key: 'wix' as const, label: 'Wix', logo: cmsWix },
             { key: 'prestashop' as const, label: 'PrestaShop', logo: cmsPrestashop },
+            { key: 'drupal' as const, label: 'Drupal', logo: cmsDrupal },
             { key: 'gtm' as const, label: 'GTM', logo: cmsGtm },
           ]).map(cms => (
             <button
@@ -302,7 +304,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : 'PrestaShop'}</h3>
+              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : connectMethod === 'drupal' ? 'Drupal' : 'PrestaShop'}</h3>
               <p className="text-[10px] text-muted-foreground">
                 {connectMethod === 'wordpress'
                   ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
