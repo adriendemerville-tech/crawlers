@@ -217,7 +217,7 @@ export default function Cocoon() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
