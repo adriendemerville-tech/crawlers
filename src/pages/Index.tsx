@@ -642,6 +642,11 @@ const Index = () => {
           <MomentumSection />
         </Suspense>
 
+        {/* AI Agents — Félix & Stratège Cocoon */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <AIAgentsSection />
+        </Suspense>
+
         <Suspense fallback={<SectionSkeleton />}>
           <HybridSection />
         </Suspense>
@@ -653,11 +658,6 @@ const Index = () => {
 
         <Suspense fallback={<SectionSkeleton />}>
           <FeatureShowcase />
-        </Suspense>
-
-        {/* AI Agents — Félix & Stratège Cocoon */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <AIAgentsSection />
         </Suspense>
 
         {/* Active crawl notification banner */}
