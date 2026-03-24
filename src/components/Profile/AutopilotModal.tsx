@@ -54,9 +54,31 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
 
   // State
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [configId, setConfigId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<string>('idle');
+
+  const handleToggleActive = async () => {
+    if (!configId || !user) return;
+    setToggling(true);
+    try {
+      const newActive = !isActive;
+      const newStatus = newActive ? 'running' : 'idle';
+      const { error } = await supabase
+        .from('autopilot_configs')
+        .update({ is_active: newActive, status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', configId);
+      if (error) throw error;
+      setIsActive(newActive);
+      setStatus(newStatus);
+      toast.success(newActive ? 'Autopilote activé' : 'Autopilote désactivé');
+    } catch {
+      toast.error('Erreur lors du changement de statut');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   // Load existing config
   useEffect(() => {
@@ -332,12 +354,17 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
           <div className="flex items-center gap-2 pt-2">
             {configId && (
               <Button
-                variant={isActive ? 'destructive' : 'success'}
+                variant={isActive ? 'destructive' : 'default'}
                 size="sm"
-                onClick={() => setIsActive(!isActive)}
-                className="gap-1.5"
+                disabled={toggling}
+                onClick={handleToggleActive}
+                className={`gap-1.5 transition-all duration-500 ${
+                  isActive
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 animate-autopilot-glow'
+                    : ''
+                }`}
               >
-                {isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                 {isActive ? 'Désactiver' : 'Activer'}
               </Button>
             )}
