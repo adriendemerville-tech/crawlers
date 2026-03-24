@@ -92,6 +92,27 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - Coche verte si valide, vibration + effacement si invalide
 - Code persisté dans `profiles.affiliate_code_used` au signup via sessionStorage
 
+### Matrice d'Audit v2 (BETA — Admin only)
+- Import XLSX/CSV/DOCX → parsing automatique des critères SEO/GEO/Hybride
+- Nettoyage client-side (`cleanMatrixData()`) : suppression URLs, scores existants, balises HTML, emails, IPs
+- Normalisation DOCX via LLM (Gemini Flash Lite) → `normalizeDocxToMatrix()`
+- Routing intelligent (`resolveAuditRoutes()`) : mappe chaque critère vers une micro-function backend via regex
+- `matchType` : `exact` (1 appel, double score), `partial` (2 appels), `custom_only` (LLM seul)
+- Orchestrateur (`matrixOrchestrator`) : parallélisme technique, stagger LLM (250ms), fallback `expert-audit`
+- Tables : `audit_matrix_sessions` (état global), `audit_matrix_results` (scores individuels)
+- Validation post-parsing obligatoire (UI) avec indicateur de confiance par critère
+- Barre de progression temps réel (X/N critères évalués)
+
+### Micro-Functions Matrice (Phase 1)
+- `check-meta-tags` : Title, meta desc, canonical, H1, H2-H6, Open Graph (coût 0)
+- `check-structured-data` : JSON-LD, types Schema.org, validation (coût 0)
+- `check-robots-indexation` : robots.txt, directives bots IA, meta robots, sitemap (coût 0)
+- `check-images` : Alt manquants, formats, images lourdes (coût 0)
+- `check-backlinks` : Domaines référents, Domain Rank, distribution ancres (DataForSEO ~$0.05)
+- `check-content-quality` : Score rédactionnel, lisibilité, profondeur (Gemini Flash Lite ~$0.002)
+- `check-eeat` : Signaux E-E-A-T ciblés (Gemini Flash Lite ~$0.003)
+- `check-llm` modifié : ajout `customPrompt` (prompt exact user) + `targetProvider` (ciblage 1 LLM)
+
 ### Edge Functions associées
 - `content-architecture-advisor` : Analyse et recommandations de structure de contenu
 - `generate-infotainment` : Génération de cartes news/tips SEO/GEO
@@ -100,6 +121,7 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `process-script-queue` : File d'attente FIFO pour génération de scripts
 - `supervisor-actions` : Audit des agents + assistant SAV
 - `drop-detector` : Détection de chute réactive + prédictive
+
 
 ## Homepage — Section LLM & Lead Magnets
 

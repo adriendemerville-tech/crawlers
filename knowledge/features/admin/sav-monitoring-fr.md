@@ -51,3 +51,14 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - Alertes dans `anomaly_alerts` (bandeau défilant /console)
 - Admin : bouton ON/OFF dans Scripts, registre des analyses et alertes
 - Gratuit Pro Agency/Admin, 3 crédits autres
+
+## Matrice d'Audit v2 (BETA)
+- Système modulaire d'audit personnalisé (import XLSX/CSV/DOCX)
+- Détection automatique SEO/GEO/Hybride avec validation utilisateur
+- Routing intelligent : chaque critère parsé est mappé vers une micro-function backend
+- `matchType` évite la redondance : `exact` = 1 appel pour les deux scores, `partial` = 2 appels, `custom_only` = LLM seul
+- 7 micro-functions Phase 1 : `check-meta-tags`, `check-structured-data`, `check-robots-indexation`, `check-images`, `check-backlinks`, `check-content-quality`, `check-eeat`
+- `check-llm` modifié : `customPrompt` + `targetProvider` pour ciblage unitaire
+- Orchestrateur avec parallélisme technique, stagger LLM, fallback `expert-audit`
+- Tables : `audit_matrix_sessions`, `audit_matrix_results` (avec RLS user isolation)
+- Coût estimé : ~$0.10-0.15 par matrice de 30 critères
