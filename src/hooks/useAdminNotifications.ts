@@ -24,7 +24,7 @@ export function useAdminNotifications() {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes] = await Promise.all([
+        const [supervisorRes, silentRes, injectionRes, supportRes, billingRes, frontendRes] = await Promise.all([
           supabase
             .from('cto_agent_logs')
             .select('id, created_at')
