@@ -209,7 +209,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
               <Hash className="h-3 w-3" />
               {t.totalKeywords}
             </div>
-            <p className="text-lg font-semibold">{data.total_keywords.toLocaleString()}</p>
+            <p className="text-lg font-semibold">{(data.total_keywords ?? 0).toLocaleString()}</p>
           </div>
 
           <div className="rounded-lg border bg-card p-3 space-y-1">
