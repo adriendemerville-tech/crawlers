@@ -131,14 +131,14 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-14 gap-2 border-amber-400 border-2 px-6 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
+              className="h-14 gap-2 border-amber-400 border-2 px-8 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
               <FileSearch className="h-5 w-5 text-amber-400" />
               <div className="flex flex-col items-start leading-tight">
                 <span className="font-bold text-amber-400">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
-                <span className="text-xs font-normal text-muted-foreground">Audit SEO-GEO. 5 min</span>
+                <span className="text-xs font-normal text-muted-foreground">SEO-GEO. 5 min</span>
               </div>
             </Button>
           </Link>
@@ -146,7 +146,7 @@ function HeroSectionComponent() {
 
         {/* Audit Expert info */}
         <p className="mt-4 text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
-          {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
+          {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
       </div>
     </section>
