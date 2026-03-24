@@ -427,7 +427,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex h-[75vh] max-h-[75vh] w-[17.5rem] sm:w-[22rem] flex-col overflow-hidden overscroll-contain rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg">
+    <div className="fixed bottom-20 right-4 z-50 flex h-[55vh] max-h-[55vh] w-[17.5rem] sm:w-[22rem] flex-col overflow-hidden overscroll-contain rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2">
