@@ -1293,6 +1293,89 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **File d'attente** : \\\`process-script-queue\\\` (FIFO)
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : AUTOPILOTE
+  // ───────────────────────────────────────────────
+  {
+    id: 'autopilot',
+    title: 'Autopilote (Créateur)',
+    icon: 'Package',
+    content: \`
+# Autopilote — Pipeline d'Automation SEO
+
+## Accès
+
+- **Réservé aux créateurs** (rôle admin)
+- Bouton "Autopilote" dans le header de chaque site tracké (/console → Mes sites)
+- **Non exposé aux utilisateurs** — Félix ne connaît pas cette fonctionnalité
+
+## Concept
+
+Pipeline cumulatif en 3 phases séquentielles :
+
+\\\`\\\`\\\`
+Diagnostic → Prescription → Implémentation
+\\\`\\\`\\\`
+
+Chaque phase est configurable indépendamment via des cases à cocher.
+
+## Phases
+
+### 1. Diagnostic (multi-select)
+
+| Option | Description | Fonction backend |
+|--------|-------------|-----------------|
+| Audit complet | SEO + Performance + GEO + LLM | \\\`check-crawlers\\\`, \\\`check-pagespeed\\\`, \\\`check-geo\\\`, \\\`check-llm\\\` |
+| Crawl | Crawl technique du site | \\\`crawl-site\\\` |
+| Stratège Cocoon | Analyse du maillage interne | \\\`cocoon-strategist\\\` |
+
+### 2. Prescription (multi-select)
+
+| Option | Description | Fonction backend |
+|--------|-------------|-----------------|
+| Stratège Cocoon | Recommandations maillage | \\\`cocoon-strategist\\\` |
+| Architect | Génération de code correctif | \\\`generate-corrective-code\\\` |
+| Content Architect | Optimisation contenu éditorial | \\\`content-architect\\\` |
+
+### 3. Implémentation (single-select)
+
+| Mode | Description |
+|------|-------------|
+| Dry-run (simulation) | Simule sans modifier le site |
+| One shot | Exécute une seule fois |
+| One shot + rétroaction | Exécute → re-crawl → vérifie → corrige |
+| Automatique | Boucle continue jusqu'à l'arrêt (cooldown 48h) |
+
+## Garde-fous
+
+| Paramètre | Défaut | Description |
+|-----------|--------|-------------|
+| Max pages/cycle | 10 | Plafond de pages modifiées par cycle |
+| Cooldown | 48h | Délai minimum entre deux cycles automatiques |
+| Auto-pause | 15% | Pause automatique si chute des métriques > seuil |
+| Exclusions sous-domaines | — | Sous-domaines exclus du pipeline |
+| Exclusions types de pages | — | Types de pages exclus (produit, catégorie…) |
+
+## Interdictions strictes
+
+- ❌ **Suppression de pages** : L'autopilote ne peut JAMAIS supprimer une page
+- ❌ **Charte graphique** : Aucune modification du design/CSS/thème du site
+
+## Tables
+
+| Table | Rôle |
+|-------|------|
+| \\\`autopilot_configs\\\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
+| \\\`autopilot_modification_log\\\` | Registre de chaque modification (phase, action, URL, diff, statut) |
+
+## Registre des modifications
+
+- Affiché en bas du dashboard "Mes sites" (créateurs uniquement)
+- Colonnes : statut (appliqué/rollback/échec/simulé), phase, action, cycle, URL, date
+- Historique des 50 dernières modifications par site
+\`,
+  },
 ];
 
 /**
@@ -1300,14 +1383,14 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.0.0',
-  lastUpdated: '2026-03-22',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA',
+  version: '6.1.0',
+  lastUpdated: '2026-03-24',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote',
   totalEdgeFunctions: 122,
   totalSharedModules: 22,
-  totalTables: '65+',
-  totalLinesOfCode: '175 000+',
-  totalMigrations: 198,
+  totalTables: '67+',
+  totalLinesOfCode: '176 000+',
+  totalMigrations: 199,
   totalPages: 41,
-  totalComponents: 300,
+  totalComponents: 303,
 };
