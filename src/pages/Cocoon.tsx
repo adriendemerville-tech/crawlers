@@ -264,7 +264,7 @@ export default function Cocoon() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true, showParticles: true });
       setFiltersInitialized(true);
     }
     if (nodes.length === 0) setFiltersInitialized(false);
