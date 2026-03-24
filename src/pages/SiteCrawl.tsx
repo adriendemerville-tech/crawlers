@@ -2016,7 +2016,7 @@ export default function SiteCrawl() {
         currentUrl={siteCrawlReportData?.domain || url}
       />
 
-      <Footer />
+      {!isAgencyPro && <Footer />}
     </>
   );
 }
