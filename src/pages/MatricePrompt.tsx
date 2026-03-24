@@ -868,9 +868,9 @@ export default function MatricePrompt() {
                                       <HelpCircle className="h-3.5 w-3.5" />
                                     </button>
                                   </HoverCardTrigger>
-                                  <HoverCardContent side="top" className="w-72 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Parsé</p>
-                                    <p className="text-muted-foreground">Résultat obtenu en soumettant <strong>votre prompt exact</strong> à un LLM qui analyse le contenu brut de la page. Reflète la réponse littérale à votre critère tel que formulé.</p>
+                                  <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
+                                    <p className="font-semibold text-foreground mb-1">Score Parsé — {resultRow.parsed_score}/100</p>
+                                    <p className="text-muted-foreground">{buildParsedExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
                               </span>
