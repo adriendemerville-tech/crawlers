@@ -314,6 +314,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <p className="text-[10px] text-muted-foreground">
                 {connectMethod === 'wordpress'
                   ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
+                  : connectMethod === 'odoo'
+                  ? t3(language, 'Connexion via API XML-RPC / REST', 'XML-RPC / REST API connection', 'Conexión vía API XML-RPC / REST')
                   : t3(language, 'Connexion via API REST', 'REST API connection', 'Conexión vía API REST')
                 }
               </p>
