@@ -1545,40 +1545,59 @@ export function SmartConfigurator({
 
           {/* Right Column: Preview & Security */}
           <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
-            {/* View Mode Toggle + Generate Button */}
+            {/* View Mode Toggle + Actions */}
             <div className="p-3 flex items-center justify-between bg-background flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground">Preview</span>
-              </div>
-
-              {/* Connect site button - centered */}
-              {siteConnected ? (
-                <Badge className="gap-1.5 text-xs h-7 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15 cursor-default">
-                  <Cable className="w-3 h-3" />
-                  Branché {siteConnected === 'wordpress' ? '(WordPress)' : '(GTM)'}
-                </Badge>
-              ) : siteConnected === null ? (
-                <Badge variant="outline" className="gap-1.5 text-xs h-7 text-muted-foreground border-dashed">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Vérification...
-                </Badge>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowConnectSiteModal(true)}
-                  className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+              <div className="flex items-center gap-3">
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(value) => {
+                    if (value === 'visual' || value === 'code') {
+                      setViewMode(value as ViewMode);
+                    }
+                  }}
+                  className="rounded-md border bg-muted/30 p-1"
                 >
-                  <Cable className="w-3 h-3" />
-                  Brancher mon site
-                </Button>
-              )}
+                  <ToggleGroupItem value="visual" aria-label="Vue preview" className="h-7 gap-1.5 px-2.5 text-xs">
+                    <Globe className="w-3.5 h-3.5" />
+                    Preview
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="code"
+                    aria-label="Vue code"
+                    className="h-7 gap-1.5 px-2.5 text-xs"
+                    disabled={!generatedCode}
+                  >
+                    <Code className="w-3.5 h-3.5" />
+                    Code
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+                {siteConnected ? (
+                  <Badge className="gap-1.5 text-xs h-7 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15 cursor-default">
+                    <Cable className="w-3 h-3" />
+                    Branché {siteConnected === 'wordpress' ? '(WordPress)' : '(GTM)'}
+                  </Badge>
+                ) : siteConnected === null ? (
+                  <Badge variant="outline" className="gap-1.5 text-xs h-7 text-muted-foreground border-dashed">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Vérification...
+                  </Badge>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowConnectSiteModal(true)}
+                    className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                  >
+                    <Cable className="w-3 h-3" />
+                    Brancher mon site
+                  </Button>
+                )}
+              </div>
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
-
-                {/* Save button - visible after unlock (code hidden from user) */}
                 {generatedCode && hasPaid && (
                   <>
                     {user && !isAgencyPro && !isAdmin && (
@@ -1592,7 +1611,7 @@ export function SmartConfigurator({
                         <Save className="w-3 h-3" />
                       </Button>
                     )}
-                    {/* Inject rejection — Popover with install snippet */}
+
                     {injectRejected && (
                       <Popover open={injectRejected} onOpenChange={(open) => { if (!open) setInjectRejected(false); }}>
                         <PopoverTrigger asChild>
@@ -1612,46 +1631,9 @@ export function SmartConfigurator({
                         </PopoverContent>
                       </Popover>
                     )}
-                    {/* Inject to site button */}
-                    <motion.div
-                      animate={shakeInject ? { x: [0, -6, 6, -5, 5, -3, 3, -1, 1, 0] } : {}}
-                      transition={shakeInject ? { duration: 1.5, ease: 'easeInOut' } : {}}
-                    >
-                    <Button
-                      onClick={handleApplyToWordPress}
-                      disabled={isApplying || applySuccess}
-                      size="sm"
-                      className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8"
-                    >
-                      {isApplying ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          Vérification...
-                        </>
-                      ) : applySuccess ? (
-                        <>Injecté</>
-                      ) : (
-                        <>
-                          <Upload className="w-3 h-3" />
-                          Injecter
-                        </>
-                      )}
-                    </Button>
-                    </motion.div>
-                    {applySuccess && (
-                      <motion.span
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="text-xs font-medium text-emerald-500 whitespace-nowrap"
-                      >
-                        Injecté
-                      </motion.span>
-                    )}
                   </>
                 )}
 
-                {/* Dynamic Price in Credits - hidden when code is generated */}
                 {!generatedCode && (
                   <motion.span 
                     key={`${calculatedPrice}-${enabledCount}`}
@@ -1670,7 +1652,6 @@ export function SmartConfigurator({
                   </motion.span>
                 )}
 
-                {/* Generate / Reset Button */}
                 {generatedCode ? (
                   <>
                     <Button
@@ -1731,9 +1712,19 @@ export function SmartConfigurator({
               </div>
             </div>
 
-            {/* Preview Content - always visual mode, code hidden from user */}
+            {/* Right Content */}
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
+              {viewMode === 'code' && generatedCode ? (
+                <div className="flex-1 min-h-0 overflow-hidden bg-background">
+                  <ScrollArea className="h-full">
+                    <div className="p-4">
+                      <CodeBlock code={generatedCode} language="javascript" />
+                    </div>
+                  </ScrollArea>
+                </div>
+              ) : (
+                <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
+              )}
             </div>
 
 
