@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import {
   Construction, Star, MapPin, Phone, Globe, Clock, Search, Map, MousePointerClick,
   Navigation, PhoneCall, Image, MessageSquare, Send, Flag, TrendingUp, Eye,
-  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical
+  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical, Swords
 } from 'lucide-react';
+import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
