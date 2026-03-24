@@ -297,7 +297,45 @@ export function MyTracking() {
     })();
   }, [selectedSite, user, isAdmin, isDemoMode, showAutopilotModal]);
 
-  // GSC state
+  // Check IKTracker API on selected site change
+  const isIkTrackerSite = (domain: string) => domain.replace(/^www\./, '').includes('iktracker');
+
+  useEffect(() => {
+    if (!selectedSite || !user) return;
+    const site = sites.find(s => s.id === selectedSite);
+    if (!site || !isIkTrackerSite(site.domain)) {
+      setIkTrackerConnected(null);
+      return;
+    }
+    // Check if manually disabled via current_config
+    const config = site.current_config as Record<string, unknown> | null;
+    if (config?.iktracker_disabled === true) {
+      setIkTrackerConnected(false);
+      return;
+    }
+    // Test API
+    (async () => {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`https://${projectId}.supabase.co/functions/v1/iktracker-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: 'test-connection' }),
+        });
+        const json = await res.json();
+        setIkTrackerConnected(json?.result?.connected === true);
+      } catch {
+        setIkTrackerConnected(false);
+      }
+    })();
+  }, [selectedSite, user, sites]);
+
+
   const [gscConnecting, setGscConnecting] = useState(false);
   const [gscData, setGscData] = useState<GscData | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
