@@ -6,6 +6,7 @@ import cmsWix from '@/assets/cms-wix.png';
 import cmsPrestashop from '@/assets/cms-prestashop.png';
 import cmsGtm from '@/assets/cms-gtm.png';
 import cmsDrupal from '@/assets/cms-drupal.png';
+import cmsOdoo from '@/assets/cms-odoo.png';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,7 +124,7 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig, onConnectionSuccess }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const [connectMethod, setConnectMethod] = useState<'wordpress' | 'shopify' | 'wix' | 'prestashop' | 'drupal' | 'gtm'>('wordpress');
+  const [connectMethod, setConnectMethod] = useState<'wordpress' | 'shopify' | 'wix' | 'prestashop' | 'drupal' | 'odoo' | 'gtm'>('wordpress');
 
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
@@ -243,7 +244,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
   return (
     <>
-      {/* Header */}
+      {/* Header — Title above CMS cards */}
       <DialogHeader className="pb-3">
         <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
           <Cable className="h-6 w-6 text-primary" />
@@ -264,30 +265,35 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
-      {/* ─── CMS selector ─── */}
+      {/* ─── CMS selector — square cards ─── */}
       <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
-        <p className="text-sm font-bold text-foreground">
-          {t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio')}
-        </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {([
             { key: 'wordpress' as const, label: 'WordPress', logo: cmsWordpress },
             { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
-            { key: 'wix' as const, label: 'Wix', logo: cmsWix },
+            { key: 'wix' as const, label: 'Wix', logo: cmsWix, darkInvert: true },
             { key: 'prestashop' as const, label: 'PrestaShop', logo: cmsPrestashop },
             { key: 'drupal' as const, label: 'Drupal', logo: cmsDrupal },
+            { key: 'odoo' as const, label: 'Odoo', logo: cmsOdoo },
             { key: 'gtm' as const, label: 'GTM', logo: cmsGtm },
-          ]).map(cms => (
+          ] as const).map(cms => (
             <button
               key={cms.key}
-              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-2 ${
+              className={`flex flex-col items-center justify-center gap-1.5 aspect-square rounded-xl text-[11px] font-semibold transition-all border-2 p-2 ${
                 connectMethod === cms.key
                   ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
                   : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
               }`}
-              onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key)}
+              onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key as any)}
             >
-              <img src={cms.logo} alt={cms.label} className="h-8 w-8 object-contain" loading="lazy" width={32} height={32} />
+              <img
+                src={cms.logo}
+                alt={cms.label}
+                className={`h-8 w-8 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
+                loading="lazy"
+                width={32}
+                height={32}
+              />
               {cms.label}
             </button>
           ))}
@@ -304,64 +310,71 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <Plug className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : connectMethod === 'drupal' ? 'Drupal' : 'PrestaShop'}</h3>
+              <h3 className="text-sm font-bold">{connectMethod === 'wordpress' ? 'WordPress' : connectMethod === 'shopify' ? 'Shopify' : connectMethod === 'wix' ? 'Wix' : connectMethod === 'drupal' ? 'Drupal' : connectMethod === 'odoo' ? 'Odoo' : 'PrestaShop'}</h3>
               <p className="text-[10px] text-muted-foreground">
                 {connectMethod === 'wordpress'
                   ? t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')
+                  : connectMethod === 'odoo'
+                  ? t3(language, 'Connexion via API XML-RPC / REST', 'XML-RPC / REST API connection', 'Conexión vía API XML-RPC / REST')
                   : t3(language, 'Connexion via API REST', 'REST API connection', 'Conexión vía API REST')
                 }
               </p>
             </div>
           </div>
 
-          {/* Step 1: Download */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
-            </p>
-            <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
-              <Download className="h-3 w-3" />
-              {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
-            </Button>
-            <p className="text-[9px] text-muted-foreground">
-              {t3(language,
-                'WordPress → Extensions → Ajouter → Téléverser.',
-                'WordPress → Plugins → Add New → Upload.',
-                'WordPress → Plugins → Añadir → Subir.'
-              )}
-            </p>
-          </div>
+          {/* Steps 1 & 2 side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Step 1: Download */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
+              </p>
+              <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
+                <Download className="h-3 w-3" />
+                {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
+              </Button>
+              <p className="text-[9px] text-muted-foreground">
+                {t3(language,
+                  'WordPress → Extensions → Ajouter → Téléverser.',
+                  'WordPress → Plugins → Add New → Upload.',
+                  'WordPress → Plugins → Añadir → Subir.'
+                )}
+              </p>
+            </div>
 
-          {/* Step 2: URL + Magic Link */}
-          <div className="space-y-2">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
-            </p>
-            <div className="flex items-center gap-2">
-              <Input
-                value={wpUrl}
-                readOnly
-                className="font-mono text-[11px] h-8 max-w-[50%] bg-muted/50 cursor-default"
-              />
-              <Button
-                onClick={handleMagicLink}
-                disabled={!isValidWpUrl || generatingLink || !user}
-                className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-4"
-                size="sm"
-              >
-                {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
-                {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
-              </Button>
-              <Button
-                onClick={handleTestConnection}
-                disabled={!isValidWpUrl || testingConnection}
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs h-8 px-3"
-              >
-                {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                {t3(language, 'Tester', 'Test', 'Probar')}
-              </Button>
+            {/* Step 2: URL + Magic Link */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium text-muted-foreground">
+                {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={wpUrl}
+                  readOnly
+                  className="font-mono text-[11px] h-8 bg-muted/50 cursor-default"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  onClick={handleMagicLink}
+                  disabled={!isValidWpUrl || generatingLink || !user}
+                  className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-3"
+                  size="sm"
+                >
+                  {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+                  {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
+                </Button>
+                <Button
+                  onClick={handleTestConnection}
+                  disabled={!isValidWpUrl || testingConnection}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs h-8 px-3"
+                >
+                  {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                  {t3(language, 'Tester', 'Test', 'Probar')}
+                </Button>
+              </div>
             </div>
           </div>
 

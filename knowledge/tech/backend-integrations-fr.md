@@ -44,6 +44,16 @@
 - Requiert secret : `FIREHOSE_MANAGEMENT_KEY`
 - Accès : Pro Agency ou Admin uniquement
 
+### Odoo (ERP/CMS)
+- Edge function : `odoo-connector`
+- API : XML-RPC `/xmlrpc/2/common` + `/xmlrpc/2/object` (execute_kw)
+- API REST (Odoo 17+) : `/api/{model}` (JSON)
+- Authentification : Login/Password + DB name (XML-RPC auth), ou API Key (header)
+- Modèles : `website.page`, `blog.post`, `product.template`, `website.menu`
+- Actions : test_connection, save_connection, list_pages, list_blog_posts, create_draft
+- Capabilities stockées : uid, db, models disponibles
+- Pas de secret global requis (chaque connexion a ses propres credentials)
+
 ## Bundle Options
 - Table : `bundle_api_catalog` (api_name, api_url, seo_segment, crawlers_feature)
 - Table : `bundle_subscriptions` (user_id, selected_apis, api_count, monthly_price_cents)

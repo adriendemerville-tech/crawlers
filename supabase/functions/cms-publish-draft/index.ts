@@ -185,6 +185,31 @@ Deno.serve(async (req) => {
       }
       publishResult = await articleResp.json();
 
+    } else if (conn.platform === "odoo") {
+      // Odoo — create blog.post via XML-RPC through odoo-connector
+      const odooRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/odoo-connector`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": req.headers.get("authorization") || "",
+          },
+          body: JSON.stringify({
+            action: "create_draft",
+            tracked_site_id,
+            title,
+            content: htmlContent,
+            subtitle: metaDescription,
+          }),
+        }
+      );
+      if (!odooRes.ok) {
+        const errText = await odooRes.text();
+        throw new Error(`Odoo API error [${odooRes.status}]: ${errText}`);
+      }
+      publishResult = await odooRes.json();
+
     } else {
       return new Response(JSON.stringify({ error: `Unsupported CMS platform: ${conn.platform}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

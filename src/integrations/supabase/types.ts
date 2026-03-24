@@ -7228,7 +7228,13 @@ export type Database = {
         | "unpublished"
         | "archived"
         | "deleted"
-      cms_platform: "wordpress" | "shopify" | "webflow" | "wix" | "drupal"
+      cms_platform:
+        | "wordpress"
+        | "shopify"
+        | "webflow"
+        | "wix"
+        | "drupal"
+        | "odoo"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -7386,7 +7392,14 @@ export const Constants = {
         "archived",
         "deleted",
       ],
-      cms_platform: ["wordpress", "shopify", "webflow", "wix", "drupal"],
+      cms_platform: [
+        "wordpress",
+        "shopify",
+        "webflow",
+        "wix",
+        "drupal",
+        "odoo",
+      ],
       report_type: [
         "seo_technical",
         "seo_strategic",
