@@ -118,7 +118,7 @@ export default function MatricePrompt() {
       const map = new Map<string, Batch>();
       data.forEach((row: any) => {
         if (!map.has(row.batch_id)) {
-          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0 });
+          map.set(row.batch_id, { batch_id: row.batch_id, batch_label: row.batch_label, created_at: row.created_at, count: 0, last_used_at: row.created_at });
         }
         map.get(row.batch_id)!.count++;
       });
