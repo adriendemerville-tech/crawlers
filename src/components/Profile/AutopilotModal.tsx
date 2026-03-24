@@ -54,9 +54,31 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
 
   // State
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [configId, setConfigId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<string>('idle');
+
+  const handleToggleActive = async () => {
+    if (!configId || !user) return;
+    setToggling(true);
+    try {
+      const newActive = !isActive;
+      const newStatus = newActive ? 'running' : 'idle';
+      const { error } = await supabase
+        .from('autopilot_configs')
+        .update({ is_active: newActive, status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', configId);
+      if (error) throw error;
+      setIsActive(newActive);
+      setStatus(newStatus);
+      toast.success(newActive ? 'Autopilote activé' : 'Autopilote désactivé');
+    } catch {
+      toast.error('Erreur lors du changement de statut');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   // Load existing config
   useEffect(() => {
