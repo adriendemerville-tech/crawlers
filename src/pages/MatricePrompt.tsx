@@ -596,37 +596,77 @@ export default function MatricePrompt() {
             </div>
           )}
 
-          {/* Import row: import button + explanation + batch selector */}
+          {/* Import row: import button + explanation */}
           <div className="flex items-center gap-3 mb-4">
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2 shrink-0">
               {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
             </Button>
             <p className="text-xs text-muted-foreground">Importez votre méthode d'audit dans un fichier .doc, .csv ou .xlsx.</p>
-            <div className="flex-1" />
-            {batches.length > 0 && (
-              <div className="flex items-center gap-2">
-                <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                <Select value={activeBatchId || ''} onValueChange={handleBatchChange}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Sélectionner un CSV…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {batches.map(b => (
-                      <SelectItem key={b.batch_id} value={b.batch_id}>
-                        {b.batch_label} ({b.count} KPIs)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {rows.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={() => { setRows([]); setResults(null); }} className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Batch cards */}
+          {batches.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {batches.map(b => (
+                <div
+                  key={b.batch_id}
+                  onClick={() => handleBatchChange(b.batch_id)}
+                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs ${
+                    activeBatchId === b.batch_id
+                      ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
+                  }`}
+                >
+                  <FileDown className="h-3.5 w-3.5 shrink-0" />
+                  {renamingBatchId === b.batch_id ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); handleRenameBatch(b.batch_id, renameValue); }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1"
+                    >
+                      <Input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        className="h-6 text-xs w-36 px-1.5"
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === 'Escape') setRenamingBatchId(null); }}
+                      />
+                      <button type="submit" className="text-primary hover:text-primary/80"><Check className="h-3.5 w-3.5" /></button>
+                      <button type="button" onClick={() => setRenamingBatchId(null)} className="text-muted-foreground hover:text-foreground"><XIcon className="h-3.5 w-3.5" /></button>
+                    </form>
+                  ) : (
+                    <span
+                      className="font-medium truncate max-w-[180px]"
+                      onDoubleClick={(e) => { e.stopPropagation(); setRenamingBatchId(b.batch_id); setRenameValue(b.batch_label); }}
+                      title="Double-cliquer pour renommer"
+                    >
+                      {b.batch_label}
+                    </span>
+                  )}
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">{b.count}</Badge>
+                  {/* Rename button */}
+                  {renamingBatchId !== b.batch_id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRenamingBatchId(b.batch_id); setRenameValue(b.batch_label); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                      title="Renommer"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
+                  {/* Delete button — hover only */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteBatch(b.batch_id); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* URL + Analyze — centered, reduced width */}
           <div className="flex justify-center mb-6">
