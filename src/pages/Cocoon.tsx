@@ -888,7 +888,7 @@ export default function Cocoon() {
                 }}
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
-                particlesEnabled={particlesEnabled}
+                particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 haloColors={cocoonTheme.haloColors}
