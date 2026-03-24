@@ -1001,9 +1001,8 @@ export function ExpertAuditDashboard() {
 
       if (!data) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
 
-      if (!data.success) throw new Error(data.error || 'Strategic audit failed');
-
-      const strategicData = mapStrategicData(data.data, normalizedUrl, hallucinationCorrections);
+      // Polled data is result.data directly (not the {success, data} wrapper)
+      const strategicData = mapStrategicData(data, normalizedUrl, hallucinationCorrections);
 
       setResult(strategicData);
       setStrategicResult(strategicData);
