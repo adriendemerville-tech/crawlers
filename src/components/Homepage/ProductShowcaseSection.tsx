@@ -217,7 +217,7 @@ const ProductShowcaseSection = memo(() => {
             'Multi-location management (Paris, Lyon…)',
             'Review tracking and responses directly from the console',
             'Local competition analysis by area',
-            'GBP engagement and visibility statistics',
+            'GMB engagement and visibility statistics',
           ],
     },
   ];
