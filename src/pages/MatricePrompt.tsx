@@ -299,6 +299,21 @@ export default function MatricePrompt() {
 
   /* --- File Import (CSV + XLSX + DOC/DOCX) --- */
   const [docParsing, setDocParsing] = useState(false);
+  const [xlsxSheetNames, setXlsxSheetNames] = useState<string[]>([]);
+  const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
+  const [xlsxFileName, setXlsxFileName] = useState('');
+
+  const processXlsxSheet = useCallback(async (workbook: any, sheetName: string, fileName: string) => {
+    const { utils } = await import('xlsx');
+    const sheet = workbook.Sheets[sheetName];
+    const rows = utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
+    if (!rows.length) {
+      toast.error(`L'onglet "${sheetName}" est vide`);
+      return;
+    }
+    await processImportedRows(rows, fileName);
+  }, [processImportedRows]);
+
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -319,15 +334,15 @@ export default function MatricePrompt() {
       const reader = new FileReader();
       reader.onload = async (evt) => {
         try {
-          const { read, utils } = await import('xlsx');
+          const { read } = await import('xlsx');
           const workbook = read(evt.target?.result, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = utils.sheet_to_json<Record<string, string>>(firstSheet, { defval: '' });
-          if (!rows.length) {
-            toast.error('Le fichier XLSX est vide ou mal formaté');
-            return;
+          if (workbook.SheetNames.length > 1) {
+            setXlsxWorkbookRef(workbook);
+            setXlsxFileName(fileName);
+            setXlsxSheetNames(workbook.SheetNames);
+          } else {
+            await processXlsxSheet(workbook, workbook.SheetNames[0], fileName);
           }
-          await processImportedRows(rows, fileName);
         } catch {
           toast.error('Erreur de parsing XLSX');
         }
