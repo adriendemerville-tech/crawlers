@@ -3002,6 +3002,59 @@ export type Database = {
           },
         ]
       }
+      gmb_tracked_keywords: {
+        Row: {
+          created_at: string | null
+          current_position: number | null
+          id: string
+          keyword: string
+          last_checked_at: string | null
+          position_change: number | null
+          previous_position: number | null
+          search_volume: number | null
+          source: string | null
+          tracked_site_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_position?: number | null
+          id?: string
+          keyword: string
+          last_checked_at?: string | null
+          position_change?: number | null
+          previous_position?: number | null
+          search_volume?: number | null
+          source?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_position?: number | null
+          id?: string
+          keyword?: string
+          last_checked_at?: string | null
+          position_change?: number | null
+          previous_position?: number | null
+          search_volume?: number | null
+          source?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_tracked_keywords_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_ads_connections: {
         Row: {
           access_token: string | null
