@@ -25,6 +25,12 @@ Updated: now
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES), transcription en temps réel
 - **Pièces jointes** : Bouton + — charge un rapport (`pdf_audits`) ou script (`site_script_rules`) du compte de l'utilisateur, avec bouton "Explique-moi"
 - **Suggestions opérationnelles** : rappels de scans, suggestions Cocoon, recommandations d'audit, suggestions GMB si établissement local détecté
+- **Recherche en direct (Live Search)** : Félix peut interroger Google en temps réel (SERP, Google Places) pour répondre aux questions des utilisateurs
+  - Pro Agency : recherches illimitées
+  - Gratuit : 1 recherche par conversation (compteur dans `sav_conversations.metadata.live_search_count`)
+  - Sources : DataForSEO (prioritaire), SerpAPI (fallback), Google Places API (pour les requêtes locales)
+  - Détection automatique d'intention : SERP (positions, classement, mots-clés) vs Places (avis, fiches, établissements)
+  - Les noms d'API ne sont jamais révélés à l'utilisateur
 
 ## Scoring de précision (`sav_quality_scores`)
 - `precision_score` (0-100) : qualité globale
