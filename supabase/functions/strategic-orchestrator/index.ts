@@ -56,10 +56,9 @@ Deno.serve(async (req) => {
   try {
     // ── Rate limiting ──
     const clientIp = getClientIp(req);
-    const ipCheck = checkIpRate(clientIp, 'strategic-orchestrator', 5, 60);
-    if (!ipCheck.allowed) return rateLimitResponse(ipCheck);
-    const concurrencyOk = acquireConcurrency('strategic-orchestrator');
-    if (!concurrencyOk) return concurrencyResponse(corsHeaders);
+    const ipCheck = checkIpRate(clientIp, 'strategic-orchestrator', 5, 60_000);
+    if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+    if (!acquireConcurrency('strategic-orchestrator', 50)) return concurrencyResponse(corsHeaders);
 
     const body = await req.json();
     const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = body;
