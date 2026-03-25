@@ -458,6 +458,46 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
 
     console.log(`[Marina] ✅ Pipeline completed for ${domain}`);
 
+    // ─── Step 6: Persist structured training data for ML ───
+    try {
+      const scores = expertResult.data?.scores || {};
+      await sb.from('marina_training_data').upsert({
+        job_id: jobId,
+        domain,
+        url,
+        language: detectedLang,
+        seo_total_score: expertResult.data.totalScore || null,
+        seo_max_score: expertResult.data.maxScore || null,
+        seo_performance_score: scores.performance?.score || null,
+        seo_technical_score: scores.technical?.score || null,
+        seo_semantic_score: scores.semantic?.score || null,
+        seo_ai_ready_score: scores.aiReady?.score || null,
+        seo_security_score: scores.security?.score || null,
+        geo_overall_score: strategicData?.overallScore || null,
+        geo_scores: strategicData?.scores || {},
+        cocoon_nodes_count: cocoonResult?.stats?.nodes_count || null,
+        cocoon_clusters_count: cocoonResult?.stats?.clusters_count || null,
+        has_schema_org: scores.aiReady?.hasSchemaOrg || null,
+        has_robots_txt: scores.aiReady?.hasRobotsTxt || null,
+        is_https: scores.technical?.isHttps === true || scores.technical?.isHttps === 'Oui' || null,
+        word_count: scores.semantic?.wordCount || null,
+        broken_links_count: scores.technical?.brokenLinksCount || null,
+        psi_performance: scores.performance?.psiPerformance || null,
+        psi_seo: scores.technical?.psiSeo || null,
+        lcp_ms: scores.performance?.lcp || null,
+        cls: scores.performance?.cls || null,
+        tbt_ms: scores.performance?.tbt || null,
+        is_spa: expertResult.data.isSPA || null,
+        report_url: signedUrlData?.signedUrl || null,
+        raw_seo_data: { recommendations: expertResult.data.recommendations || [], insights: expertResult.data.insights || {} },
+        raw_geo_data: { executive_roadmap: strategicData?.executive_roadmap || [], scores: strategicData?.scores || {} },
+        raw_cocoon_data: cocoonResult ? { stats: cocoonResult.stats || {}, cluster_summary: cocoonResult.cluster_summary || {} } : {},
+      }, { onConflict: 'job_id' });
+      console.log(`[Marina] 📊 Training data saved for ${domain}`);
+    } catch (trainErr) {
+      console.warn(`[Marina] ⚠️ Training data save failed (non-fatal):`, trainErr);
+    }
+
   } catch (error) {
     console.error(`[Marina] ❌ Pipeline failed:`, error);
     await trackEdgeFunctionError('marina', error instanceof Error ? error.message : String(error)).catch(() => {});

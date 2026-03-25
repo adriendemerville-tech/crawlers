@@ -3951,6 +3951,117 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_training_data: {
+        Row: {
+          broken_links_count: number | null
+          cls: number | null
+          cms_detected: string | null
+          cocoon_clusters_count: number | null
+          cocoon_nodes_count: number | null
+          created_at: string
+          domain: string
+          geo_overall_score: number | null
+          geo_scores: Json | null
+          has_robots_txt: boolean | null
+          has_schema_org: boolean | null
+          id: string
+          is_https: boolean | null
+          is_spa: boolean | null
+          job_id: string
+          language: string | null
+          lcp_ms: number | null
+          psi_performance: number | null
+          psi_seo: number | null
+          raw_cocoon_data: Json | null
+          raw_geo_data: Json | null
+          raw_seo_data: Json | null
+          report_url: string | null
+          seo_ai_ready_score: number | null
+          seo_max_score: number | null
+          seo_performance_score: number | null
+          seo_security_score: number | null
+          seo_semantic_score: number | null
+          seo_technical_score: number | null
+          seo_total_score: number | null
+          site_type: string | null
+          tbt_ms: number | null
+          url: string
+          word_count: number | null
+        }
+        Insert: {
+          broken_links_count?: number | null
+          cls?: number | null
+          cms_detected?: string | null
+          cocoon_clusters_count?: number | null
+          cocoon_nodes_count?: number | null
+          created_at?: string
+          domain: string
+          geo_overall_score?: number | null
+          geo_scores?: Json | null
+          has_robots_txt?: boolean | null
+          has_schema_org?: boolean | null
+          id?: string
+          is_https?: boolean | null
+          is_spa?: boolean | null
+          job_id: string
+          language?: string | null
+          lcp_ms?: number | null
+          psi_performance?: number | null
+          psi_seo?: number | null
+          raw_cocoon_data?: Json | null
+          raw_geo_data?: Json | null
+          raw_seo_data?: Json | null
+          report_url?: string | null
+          seo_ai_ready_score?: number | null
+          seo_max_score?: number | null
+          seo_performance_score?: number | null
+          seo_security_score?: number | null
+          seo_semantic_score?: number | null
+          seo_technical_score?: number | null
+          seo_total_score?: number | null
+          site_type?: string | null
+          tbt_ms?: number | null
+          url: string
+          word_count?: number | null
+        }
+        Update: {
+          broken_links_count?: number | null
+          cls?: number | null
+          cms_detected?: string | null
+          cocoon_clusters_count?: number | null
+          cocoon_nodes_count?: number | null
+          created_at?: string
+          domain?: string
+          geo_overall_score?: number | null
+          geo_scores?: Json | null
+          has_robots_txt?: boolean | null
+          has_schema_org?: boolean | null
+          id?: string
+          is_https?: boolean | null
+          is_spa?: boolean | null
+          job_id?: string
+          language?: string | null
+          lcp_ms?: number | null
+          psi_performance?: number | null
+          psi_seo?: number | null
+          raw_cocoon_data?: Json | null
+          raw_geo_data?: Json | null
+          raw_seo_data?: Json | null
+          report_url?: string | null
+          seo_ai_ready_score?: number | null
+          seo_max_score?: number | null
+          seo_performance_score?: number | null
+          seo_security_score?: number | null
+          seo_semantic_score?: number | null
+          seo_technical_score?: number | null
+          seo_total_score?: number | null
+          site_type?: string | null
+          tbt_ms?: number | null
+          url?: string
+          word_count?: number | null
+        }
+        Relationships: []
+      }
       market_trends: {
         Row: {
           id: string
