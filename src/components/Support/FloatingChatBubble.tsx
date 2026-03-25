@@ -192,7 +192,7 @@ export function FloatingChatBubble() {
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className="fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-primary hover:bg-primary/90 hover:scale-105 focus:outline-none overflow-hidden"
+        className="fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 focus:outline-none overflow-hidden"
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
         <CrawlersLogo size={44} className="opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
