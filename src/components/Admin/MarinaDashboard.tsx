@@ -314,7 +314,16 @@ export function MarinaDashboard() {
                             {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <button
-                            onClick={() => setJobs(prev => prev.filter(j => j.id !== job.id))}
+                            onClick={async () => {
+                              setJobs(prev => prev.filter(j => j.id !== job.id));
+                              try {
+                                await supabase.functions.invoke('marina', {
+                                  body: { action: 'delete_job', job_id: job.id },
+                                });
+                              } catch (e) {
+                                console.error('Failed to delete job:', e);
+                              }
+                            }}
                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                             title="Supprimer"
                           >
