@@ -173,7 +173,7 @@ export function FloatingChatBubble() {
       {/* Chat Window - lazy loaded */}
       {isOpen && (
         <Suspense fallback={
-          <div className="fixed bottom-20 right-4 z-50 w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center">
+          <div className="fixed bottom-20 z-50 w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
@@ -188,7 +188,8 @@ export function FloatingChatBubble() {
       {/* Onboarding tooltip */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] right-5 z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          className="fixed bottom-[72px] z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
           onClick={handleOpen}
         >
           <button
@@ -206,14 +207,15 @@ export function FloatingChatBubble() {
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
+        className={`fixed bottom-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
+        style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
         <CrawlersLogo size={44} className="transition-opacity duration-300" />
       </button>
       {/* Notification Badge — outside button to avoid overflow clipping */}
       {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
-        <span className="fixed bottom-[54px] right-[14px] z-[51] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none">
+        <span className="fixed bottom-[54px] z-[51] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
           {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}
