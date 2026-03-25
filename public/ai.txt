@@ -163,6 +163,14 @@ Serveur MCP natif exposant 12 outils d'audit SEO/GEO :
 - Rate limit : 30 appels/heure
 - Endpoint : POST /functions/v1/mcp-server
 
+## 12. MARINA — PIPELINE DE PROSPECTION AUTOMATISÉ (Admin)
+Pipeline backend autonome pour la prospection :
+- Orchestre en une passe : Crawl, Cocon sémantique, Audit Expert SEO, Audit Stratégique GEO
+- Détection automatique de la langue (FR, EN, ES)
+- Rapport HTML consolidé accessible via liens signés (7 jours)
+- Dashboard Admin : lancement de jobs, progression temps réel, suppression persistante
+- Collecte de données d'entraînement ML (scores structurés + signaux bruts)
+
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
