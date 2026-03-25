@@ -67,91 +67,39 @@ const ExpertAudit = () => {
   // Fix canonical & hreflang for multilingual indexation
   useCanonicalHreflang('/audit-expert');
 
-  useEffect(() => {
-    // Update document title
-    document.title = meta.title;
+  // Build JSON-LD schemas for Helmet injection
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(item => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": { "@type": "Answer", "text": item.a }
+    }))
+  };
 
-    // Update or create meta description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": meta.title,
+    "description": meta.description,
+    "url": "https://crawlers.fr/audit-expert",
+    "inLanguage": language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
+    "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
+    "about": {
+      "name": "Audit Technique & Stratégique SEO/GEO",
+      "applicationCategory": "WebApplication",
+      "operatingSystem": "Web Browser",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
+        { "@type": "ListItem", "position": 2, "name": "Audit Technique & Stratégique SEO/GEO", "item": "https://crawlers.fr/audit-expert" }
+      ]
     }
-    metaDesc.setAttribute('content', meta.description);
-
-    // Canonical is now managed by useCanonicalHreflang hook
-
-    // Homepage FAQ schema is no longer in index.html - injected only on homepage via React
-
-    // Create FAQ Schema.org JSON-LD
-    const faqSchema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqItems.map(item => ({
-        "@type": "Question",
-        "name": item.q,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": item.a
-        }
-      }))
-    };
-
-    // Create WebPage Schema.org JSON-LD
-    const webPageSchema = {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": meta.title,
-      "description": meta.description,
-      "url": "https://crawlers.fr/audit-expert",
-      "inLanguage": language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
-      "isPartOf": {
-        "@type": "WebSite",
-        "name": "Crawlers.fr",
-        "url": "https://crawlers.fr"
-      },
-      "about": {
-        "name": "Audit Technique & Stratégique SEO/GEO",
-        "applicationCategory": "WebApplication",
-        "operatingSystem": "Web Browser",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "EUR"
-        }
-      },
-      "breadcrumb": {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "Audit Technique & Stratégique SEO/GEO", "item": "https://crawlers.fr/audit-expert" }
-        ]
-      }
-    };
-
-    // Remove existing schema scripts
-    document.querySelectorAll('script[data-schema="expert-audit"]').forEach(el => el.remove());
-
-    // Add FAQ Schema
-    const faqScriptEl = document.createElement('script');
-    faqScriptEl.type = 'application/ld+json';
-    faqScriptEl.setAttribute('data-schema', 'expert-audit');
-    faqScriptEl.textContent = JSON.stringify(faqSchema);
-    document.head.appendChild(faqScriptEl);
-
-    // Add WebPage Schema
-    const webPageScriptEl = document.createElement('script');
-    webPageScriptEl.type = 'application/ld+json';
-    webPageScriptEl.setAttribute('data-schema', 'expert-audit');
-    webPageScriptEl.textContent = JSON.stringify(webPageSchema);
-    document.head.appendChild(webPageScriptEl);
-
-    // Cleanup on unmount
-    return () => {
-      document.querySelectorAll('script[data-schema="expert-audit"]').forEach(el => el.remove());
-    };
-  }, [language, meta, faqItems]);
+  };
 
   // Force all links inside audit-expert to open in new tab
   useEffect(() => {
@@ -180,21 +128,23 @@ const ExpertAudit = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr</title>
-        <meta name="description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <title>{meta.title}</title>
+        <meta name="description" content={meta.description} />
+        <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/audit-expert" />
-        <meta property="og:title" content="Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr" />
-        <meta property="og:description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
+        <meta property="og:title" content={meta.title} />
+        <meta property="og:description" content={meta.description} />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Audit SEO expert 200 points + Score GEO gratuit | Crawlers.fr" />
-        <meta name="twitter:description" content="Audit SEO expert 200 points + Score GEO gratuit. Technique, sémantique, performance, visibilité IA. 7 algorithmes propriétaires. Résultats en 60 secondes." />
+        <meta name="twitter:title" content={meta.title} />
+        <meta name="twitter:description" content={meta.description} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(webPageSchema)}</script>
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
