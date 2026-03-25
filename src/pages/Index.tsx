@@ -83,27 +83,18 @@ const Index = () => {
   const { toast } = useToast();
   const { language } = useLanguage();
 
-  // Dynamic SEO metadata per language (Option A: Fear/Urgency)
-  useEffect(() => {
-    const titles: Record<string, string> = {
-      fr: "Votre site est-il invisible pour l'IA ? Audit SEO & GEO expert | Crawlers.fr",
-      en: "Is your site invisible to AI? Expert SEO & GEO Audit | Crawlers.fr",
-      es: "¿Tu sitio es invisible para la IA? Auditoría SEO & GEO experta | Crawlers.fr",
-    };
-    const descriptions: Record<string, string> = {
-      fr: "ChatGPT, Gemini, SGE : votre site est-il cité ou ignoré ? Obtenez votre Score GEO en 30 secondes. Audit technique et stratégique complet. Découvrez si les LLM vous voient.",
-      en: "ChatGPT, Gemini, SGE: is your site cited or ignored? Get your GEO Score in 30 seconds. Complete technical & strategic audit. Find out if LLMs can see you.",
-      es: "ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Obtén tu Score GEO en 30 segundos. Auditoría técnica y estratégica completa. Descubre si los LLM te ven.",
-    };
-    document.title = titles[language] || titles.fr;
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', descriptions[language] || descriptions.fr);
-  }, [language]);
+  // SEO metadata constants (used in Helmet below)
+  const seoTitle = language === 'es'
+    ? 'Auditoría SEO & GEO experta gratis | Crawlers.fr'
+    : language === 'en'
+    ? 'Free Expert SEO & GEO Audit | Crawlers.fr'
+    : 'Audit SEO & GEO expert gratuit | Crawlers.fr';
+
+  const seoDescription = language === 'es'
+    ? 'ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Obtén tu Score GEO en 30 segundos. Auditoría técnica y estratégica completa.'
+    : language === 'en'
+    ? 'ChatGPT, Gemini, SGE: is your site cited or ignored? Get your GEO Score in 30 seconds. Complete technical & strategic audit.'
+    : 'ChatGPT, Gemini, SGE : votre site est-il cité ou ignoré ? Score GEO en 30 sec. Audit technique et stratégique complet. Gratuit sans inscription.';
 
   // Auto-redirect subscribed users to console with loading animation
   const { user: authUser } = useAuth();
@@ -579,20 +570,20 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>{language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO' : 'Crawlers.fr — Leading French SEO + GEO Tool'}</title>
-        <meta name="description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
         <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/" />
-        <meta property="og:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
-        <meta property="og:description" content={language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO. Auditez et optimisez votre visibilité sur Google ET ChatGPT, Perplexity, Gemini, Claude. Gratuit sans inscription.' : language === 'es' ? 'Crawlers.fr — Primera herramienta francófona SEO + GEO. Audite y optimice su visibilidad en Google Y ChatGPT, Perplexity, Gemini, Claude. Gratis sin registro.' : 'Crawlers.fr — Leading French SEO + GEO tool. Audit and optimize your visibility on Google AND ChatGPT, Perplexity, Gemini, Claude. Free, no sign-up.'} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
         <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content={`${language === 'fr' ? 'Crawlers.fr — Premier outil francophone SEO + GEO' : language === 'es' ? 'Crawlers.fr — Primera herramienta SEO + GEO' : 'Crawlers.fr — Leading SEO + GEO Tool'} | Crawlers.fr`} />
-        <meta name="twitter:description" content={language === 'fr' ? 'Premier outil francophone SEO + GEO. Auditez votre visibilité sur Google ET ChatGPT.' : language === 'es' ? 'Primera herramienta francófona SEO + GEO. Audite su visibilidad en Google Y ChatGPT.' : 'Leading French SEO + GEO tool. Audit your visibility on Google AND ChatGPT.'} />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
       <Header />
