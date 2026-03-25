@@ -65,6 +65,16 @@ Deno.serve(async (req) => {
     const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = body;
     const isAsync = body.async !== false;
 
+    // ── Check if admin has enabled Flash mode for strategic GEO ──
+    let modelOverride: string | null = body._modelOverride || null;
+    if (!modelOverride) {
+      try {
+        const sb = getServiceClient();
+        const { data: cfg } = await sb.from('system_config').select('value').eq('key', 'strategic_geo_flash_mode').single();
+        if (cfg?.value === true) modelOverride = 'google/gemini-2.5-flash';
+      } catch { /* ignore, default to pro */ }
+    }
+
     if (!url) return json({ error: 'URL requise' }, 400);
 
     // ── Fair use check ──
@@ -123,6 +133,7 @@ Deno.serve(async (req) => {
         competitorsData: { competitors: null, founderInfo: cachedContext.founderInfo, gmbData: cachedContext.gmbData, facebookPageInfo: cachedContext.facebookPageInfo },
         llmData: cachedContext.llmData,
         toolsData, lang, hallucinationCorrections, competitorCorrections,
+        modelOverride,
       }, 200_000);
 
       if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'completed', result_data: synthResult.data || synthResult, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
@@ -226,6 +237,7 @@ Deno.serve(async (req) => {
         competitorsData: competitorsResult || { competitors: null, founderInfo: null, gmbData: null, facebookPageInfo: null },
         llmData: llmResult,
         toolsData, lang, hallucinationCorrections, competitorCorrections,
+        modelOverride,
       }, 200_000);
     } catch (synthError) {
       console.error('❌ [orchestrator] Synthesis failed:', synthError);
