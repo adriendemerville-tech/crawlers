@@ -209,7 +209,7 @@ export function FloatingChatBubble() {
         className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
-        <CrawlersLogo size={44} className="opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+        <CrawlersLogo size={44} className="transition-opacity duration-300" />
       </button>
       {/* Notification Badge — outside button to avoid overflow clipping */}
       {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
