@@ -255,60 +255,60 @@ export function ParmenionDashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">État</CardTitle>
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium">État</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-2">
             {isPaused ? (
-              <Badge className="bg-orange-500/15 text-orange-600 border-orange-500/30">⏸ En pause</Badge>
+              <span className="text-sm font-semibold text-orange-600">⏸ En pause</span>
             ) : activeDecision ? (
-              <Badge className={statusConfig[activeDecision.status]?.color || ''}>
+              <span className={cn("text-sm font-semibold", statusConfig[activeDecision.status]?.color ? 'text-blue-600' : '')}>
                 {statusConfig[activeDecision.status]?.label || activeDecision.status}
-              </Badge>
+              </span>
             ) : autopilotConfig?.is_active ? (
               <div>
-                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">✅ Actif — en veille</Badge>
-                <p className="text-[11px] text-muted-foreground mt-1">{autopilotConfig.domain}</p>
+                <span className="text-sm font-semibold text-emerald-600">Actif — en veille</span>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{autopilotConfig.domain}</p>
               </div>
             ) : (
-              <Badge variant="secondary">💤 Inactif</Badge>
+              <span className="text-sm font-semibold text-muted-foreground">💤 Inactif</span>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cycles total</CardTitle>
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium">Cycles total</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{autopilotConfig?.total_cycles_run ?? logs.length}</div>
+          <CardContent className="px-3 pb-2">
+            <div className="text-lg font-bold">{autopilotConfig?.total_cycles_run ?? logs.length}</div>
             {autopilotConfig?.last_cycle_at && (
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 Dernier : {new Date(autopilotConfig.last_cycle_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </p>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Taux d'erreur</CardTitle>
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium">Taux d'erreur</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={cn("text-2xl font-bold", (errorRate?.error_rate ?? 0) > 20 ? 'text-destructive' : 'text-green-600')}>
+          <CardContent className="px-3 pb-2">
+            <div className={cn("text-lg font-bold", (errorRate?.error_rate ?? 0) > 20 ? 'text-destructive' : 'text-green-600')}>
               {errorRate ? `${errorRate.error_rate}%` : '—'}
             </div>
-            <p className="text-xs text-muted-foreground">sur {errorRate?.total ?? 0} cycles mesurés</p>
+            <p className="text-[10px] text-muted-foreground">sur {errorRate?.total ?? 0} cycles</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mode</CardTitle>
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium">Mode</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-2">
             {errorRate?.conservative_mode ? (
               <Badge variant="destructive" className="gap-1">
                 <Shield className="h-3 w-3" /> Conservateur
@@ -318,37 +318,37 @@ export function ParmenionDashboard() {
                 <Target className="h-3 w-3" /> Normal
               </Badge>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] text-muted-foreground mt-0.5">
               Risque max : {errorRate?.conservative_mode ? '2' : '3'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-              <Coins className="h-3.5 w-3.5 text-amber-500" />
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium flex items-center gap-1">
+              <Coins className="h-3 w-3 text-amber-500" />
               Coût LLM
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
+          <CardContent className="px-3 pb-2">
+            <div className="text-lg font-bold text-amber-600">
               {llmCostStats.costEur < 0.01 ? '<0,01' : llmCostStats.costEur.toFixed(2)} €
             </div>
-            <p className="text-xs text-muted-foreground">
-              {llmCostStats.totalTokens.toLocaleString('fr-FR')} tokens consommés
+            <p className="text-[10px] text-muted-foreground">
+              {llmCostStats.totalTokens.toLocaleString('fr-FR')} tokens
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
-              <Timer className="h-3.5 w-3.5 text-primary" />
+        <Card className="py-2">
+          <CardHeader className="pb-1 pt-2 px-3">
+            <CardTitle className="text-xs font-medium flex items-center gap-1">
+              <Timer className="h-3 w-3 text-primary" />
               Cooldown
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-2">
             <div className="flex items-center gap-1.5">
               <Input
                 type="number"
@@ -379,7 +379,7 @@ export function ParmenionDashboard() {
                 OK
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Actuel : {autopilotConfig?.cooldown_hours ?? '—'}h</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Actuel : {autopilotConfig?.cooldown_hours ?? '—'}h</p>
           </CardContent>
         </Card>
       </div>
