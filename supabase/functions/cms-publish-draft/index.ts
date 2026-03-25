@@ -210,6 +210,31 @@ Deno.serve(async (req) => {
       }
       publishResult = await odooRes.json();
 
+    } else if (conn.platform === "prestashop") {
+      // PrestaShop — create CMS page via prestashop-connector
+      const psRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/prestashop-connector`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": req.headers.get("authorization") || "",
+          },
+          body: JSON.stringify({
+            action: "create_draft",
+            tracked_site_id,
+            title,
+            content: htmlContent,
+            subtitle: metaDescription,
+          }),
+        }
+      );
+      if (!psRes.ok) {
+        const errText = await psRes.text();
+        throw new Error(`PrestaShop API error [${psRes.status}]: ${errText}`);
+      }
+      publishResult = await psRes.json();
+
     } else {
       return new Response(JSON.stringify({ error: `Unsupported CMS platform: ${conn.platform}` }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

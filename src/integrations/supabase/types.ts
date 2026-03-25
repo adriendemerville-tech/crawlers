@@ -7476,6 +7476,7 @@ export type Database = {
         | "wix"
         | "drupal"
         | "odoo"
+        | "prestashop"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -7640,6 +7641,7 @@ export const Constants = {
         "wix",
         "drupal",
         "odoo",
+        "prestashop",
       ],
       report_type: [
         "seo_technical",

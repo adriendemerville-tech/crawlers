@@ -54,6 +54,16 @@
 - Capabilities stockées : uid, db, models disponibles
 - Pas de secret global requis (chaque connexion a ses propres credentials)
 
+### PrestaShop
+- Edge function : `prestashop-connector`
+- API : PrestaShop Webservice REST (`/api/{resource}?output_format=JSON`)
+- Authentification : API Key (Basic Auth, key comme username, pas de password)
+- Ressources : `content_management_system` (pages CMS), `products`, `orders`, `smartblog_posts` (si module blog)
+- Actions : test_connection, save_connection, list_pages, list_blog_posts, list_products, create_draft
+- Capabilities détectées : products, cms_pages, orders (via introspection `/api/`)
+- Publication draft : CMS page avec `active=0` via XML POST
+- Pas de secret global requis (chaque connexion a sa propre API key)
+
 ## Bundle Options
 - Table : `bundle_api_catalog` (api_name, api_url, seo_segment, crawlers_feature)
 - Table : `bundle_subscriptions` (user_id, selected_apis, api_count, monthly_price_cents)
