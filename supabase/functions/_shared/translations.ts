@@ -215,9 +215,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Canonical tag found',
       },
       intentInTitle: {
-        name: 'Intent in Title',
-        description: 'Main keyword or intent visible in title and first sentence',
-        recommendation: 'Place your main keyword in the title (H1 or <title>) and first sentence to maximize AI relevance',
+        name: 'Direct Answer (150 words)',
+        description: 'The first 150 words provide a clear, direct answer to the page intent — key criterion for AI engines',
+        recommendation: 'Place a direct, factual answer in the first 150 words of your content. AI engines prioritize the beginning of text to save crawl time',
       },
       faqOrSummary: {
         name: 'FAQ or Summary at Top',
