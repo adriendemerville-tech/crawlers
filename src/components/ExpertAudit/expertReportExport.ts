@@ -370,12 +370,8 @@ export function generateExpertReportHTML(
       <!-- Radial Quality Score Chart -->
       ${generateRadialChartSVG(result, 'technical', language, prevTechData)}
 
-      <div style="text-align: center; margin-bottom: 28px; break-inside: avoid; page-break-inside: avoid;">
-        <div style="display: inline-block; padding: 22px 44px; background: #4f46e5; border-radius: 18px; margin-bottom: 14px; min-width: 200px; min-height: 90px;">
-          <div style="font-size: 48px; font-weight: bold; color: #ffffff; line-height: 1.2;">${computedTotal}/200</div>
-          <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 4px;">${t.score} Global</div>
-        </div>
-      </div>
+
+
 
       <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; break-inside: avoid; page-break-inside: avoid;">
         ${[
