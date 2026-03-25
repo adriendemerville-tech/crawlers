@@ -246,6 +246,12 @@
     animation: felix-pingpong 2s ease-in-out;
   }
 
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(200%); }
+    100% { transform: translateX(-100%); }
+  }
+
 
   @keyframes scan {
     0% {
