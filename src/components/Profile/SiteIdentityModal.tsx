@@ -549,7 +549,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                   {site.client_targets.primary?.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-emerald-500 font-medium">Principales</p>
-                      {site.client_targets.primary.map((t: any, i: number) => (
+                      {Array.isArray(site.client_targets.primary) && site.client_targets.primary.map((t: any, i: number) => (
                         <p key={`p-${i}`} className="text-xs text-foreground pl-2 border-l-2 border-emerald-500/30">{formatTargetSummary(t)}</p>
                       ))}
                     </div>

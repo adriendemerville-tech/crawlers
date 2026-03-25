@@ -86,7 +86,7 @@ export function ClientTargetsCard({ data }: Props) {
         <h3 className="text-base font-semibold text-foreground">Cibles Clients</h3>
       </div>
 
-      {data.primary?.length > 0 && (
+      {Array.isArray(data.primary) && data.primary.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-sm font-medium text-foreground/90">
             <Target className="h-3.5 w-3.5 text-emerald-500" />
@@ -96,7 +96,7 @@ export function ClientTargetsCard({ data }: Props) {
         </div>
       )}
 
-      {data.secondary?.length > 0 && (
+      {Array.isArray(data.secondary) && data.secondary.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-sm font-medium text-foreground/90">
             <Building2 className="h-3.5 w-3.5 text-amber-500" />
