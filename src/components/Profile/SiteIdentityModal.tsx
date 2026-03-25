@@ -549,26 +549,26 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
               <div className="pt-3 mt-2 border-t border-border/30 space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cibles Clients</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {site.client_targets.primary?.length > 0 && (
+                  {safePrimary.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-emerald-500 font-medium">Principales</p>
-                      {Array.isArray(site.client_targets.primary) && site.client_targets.primary.map((t: any, i: number) => (
+                      {safePrimary.map((t: any, i: number) => (
                         <p key={`p-${i}`} className="text-xs text-foreground pl-2 border-l-2 border-emerald-500/30">{formatTargetSummary(t)}</p>
                       ))}
                     </div>
                   )}
-                  {Array.isArray(site.client_targets.secondary) && site.client_targets.secondary.length > 0 && (
+                  {safeSecondary.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-amber-500 font-medium">Secondaires</p>
-                      {site.client_targets.secondary.map((t: any, i: number) => (
+                      {safeSecondary.map((t: any, i: number) => (
                         <p key={`s-${i}`} className="text-xs text-foreground pl-2 border-l-2 border-amber-500/30">{formatTargetSummary(t)}</p>
                       ))}
                     </div>
                   )}
-                  {Array.isArray(site.client_targets.untapped) && site.client_targets.untapped.length > 0 && (
+                  {safeUntapped.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-violet-500 font-medium">Potentielles</p>
-                      {site.client_targets.untapped.map((t: any, i: number) => (
+                      {safeUntapped.map((t: any, i: number) => (
                         <p key={`u-${i}`} className="text-xs text-foreground/70 italic pl-2 border-l-2 border-violet-500/30">{formatTargetSummary(t)}</p>
                       ))}
                     </div>
