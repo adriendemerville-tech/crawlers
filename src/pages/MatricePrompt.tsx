@@ -101,13 +101,7 @@ export default function MatricePrompt() {
     setErrorDesc('');
   };
 
-  // Guard: admin only
-  useEffect(() => {
-    if (!authLoading && !adminLoading) {
-      if (!user) navigate('/auth');
-      else if (!isAdmin) navigate('/');
-    }
-  }, [authLoading, adminLoading, user, isAdmin, navigate]);
+  // No auth guard — /matrice is publicly accessible
 
   // Load available batches on mount
   useEffect(() => {
@@ -254,7 +248,7 @@ export default function MatricePrompt() {
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
   const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
-    if (!user || rawRows.length === 0) return;
+    if (rawRows.length === 0) return;
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -304,27 +298,30 @@ export default function MatricePrompt() {
       };
     });
 
-    const dbRows = parsed.map(p => ({
-      user_id: user.id,
-      batch_id: newBatchId,
-      batch_label: fileName,
-      prompt: p.prompt,
-      poids: p.poids,
-      axe: p.axe,
-      seuil_bon: p.seuil_bon,
-      seuil_moyen: p.seuil_moyen,
-      seuil_mauvais: p.seuil_mauvais,
-      llm_name: p.llm_name,
-      is_default_flags: p.isDefault,
-    }));
+    // Persist to DB only if logged in
+    if (user) {
+      const dbRows = parsed.map(p => ({
+        user_id: user.id,
+        batch_id: newBatchId,
+        batch_label: fileName,
+        prompt: p.prompt,
+        poids: p.poids,
+        axe: p.axe,
+        seuil_bon: p.seuil_bon,
+        seuil_moyen: p.seuil_moyen,
+        seuil_mauvais: p.seuil_mauvais,
+        llm_name: p.llm_name,
+        is_default_flags: p.isDefault,
+      }));
 
-    const { data: inserted, error } = await supabase
-      .from('prompt_matrix_items')
-      .insert(dbRows)
-      .select('id');
+      const { data: inserted, error } = await supabase
+        .from('prompt_matrix_items')
+        .insert(dbRows)
+        .select('id');
 
-    if (!error && inserted) {
-      parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+      if (!error && inserted) {
+        parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+      }
     }
 
     const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length, last_used_at: new Date().toISOString() };
@@ -347,7 +344,7 @@ export default function MatricePrompt() {
 
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase();
 
     if (ext === 'csv') {
@@ -437,7 +434,6 @@ export default function MatricePrompt() {
   const handleAnalyze = async () => {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
-    if (!user) return;
     setAnalyzing(true);
     try {
       // Build items payload for the edge function
@@ -489,44 +485,46 @@ export default function MatricePrompt() {
       const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
       const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
 
-      // Persist audit session
-      const { data: session, error: sessErr } = await supabase
-        .from('matrix_audit_sessions')
-        .insert({
-          user_id: user.id,
-          url: url.trim(),
-          domain,
-          crawlers_global_score: crawlersGlobal,
-          csv_weighted_score: crawlersGlobal,
-          total_prompts: rows.length,
-          selected_prompts: selectedRows.length,
-        })
-        .select('id')
-        .single();
-
-      if (sessErr) console.error('Session save error:', sessErr);
-
-      // Persist per-KPI results
-      if (session) {
-        const resultRows = auditResults.map((r: any) => {
-          const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
-          return {
-            session_id: session.id,
-            prompt_item_id: r.dbId || null,
+      // Persist audit session (only if logged in)
+      if (user) {
+        const { data: session, error: sessErr } = await supabase
+          .from('matrix_audit_sessions')
+          .insert({
             user_id: user.id,
-            prompt: r.prompt,
-            axe: r.axe,
-            poids: r.poids,
-            crawlers_score: r.crawlers_score,
-            csv_weighted_score: r.crawlers_score,
-            seuil_bon: r.seuil_bon,
-            seuil_moyen: r.seuil_moyen,
-            seuil_mauvais: r.seuil_mauvais,
-            verdict,
-          };
-        });
-        const { error: resErr } = await supabase.from('matrix_audit_results').insert(resultRows);
-        if (resErr) console.error('Results save error:', resErr);
+            url: url.trim(),
+            domain,
+            crawlers_global_score: crawlersGlobal,
+            csv_weighted_score: crawlersGlobal,
+            total_prompts: rows.length,
+            selected_prompts: selectedRows.length,
+          })
+          .select('id')
+          .single();
+
+        if (sessErr) console.error('Session save error:', sessErr);
+
+        // Persist per-KPI results
+        if (session) {
+          const resultRows = auditResults.map((r: any) => {
+            const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
+            return {
+              session_id: session.id,
+              prompt_item_id: r.dbId || null,
+              user_id: user.id,
+              prompt: r.prompt,
+              axe: r.axe,
+              poids: r.poids,
+              crawlers_score: r.crawlers_score,
+              csv_weighted_score: r.crawlers_score,
+              seuil_bon: r.seuil_bon,
+              seuil_moyen: r.seuil_moyen,
+              seuil_mauvais: r.seuil_mauvais,
+              verdict,
+            };
+          });
+          const { error: resErr } = await supabase.from('matrix_audit_results').insert(resultRows);
+          if (resErr) console.error('Results save error:', resErr);
+        }
       }
 
       setResults(auditResults);
