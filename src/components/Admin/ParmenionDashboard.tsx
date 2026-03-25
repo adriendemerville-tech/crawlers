@@ -91,13 +91,14 @@ export function ParmenionDashboard() {
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (data) {
       const ts = data.tracked_sites as unknown as { domain: string };
+      const cd = data.cooldown_hours ?? 2;
       setAutopilotConfig({
         is_active: data.is_active ?? false,
         status: data.status ?? 'idle',
@@ -105,7 +106,10 @@ export function ParmenionDashboard() {
         domain: ts?.domain || '—',
         total_cycles_run: data.total_cycles_run ?? 0,
         tracked_site_id: data.tracked_site_id,
+        cooldown_hours: cd,
+        config_id: data.id,
       });
+      setCooldownInput(String(cd));
     }
   }, []);
 
