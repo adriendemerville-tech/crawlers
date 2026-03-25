@@ -153,11 +153,14 @@ export function IntroductionCard({
                 {t.competitors}
               </h3>
               <ul className="text-sm text-muted-foreground pl-6 flex flex-wrap gap-2">
-                {introduction.competitors.map((competitor, index) => (
-                  <li key={index} className="bg-muted/50 px-3 py-1 rounded-full text-xs font-medium">
-                    {competitor}
-                  </li>
-                ))}
+                {introduction.competitors.map((competitor, index) => {
+                  const label = typeof competitor === 'string' ? competitor : (competitor as any)?.name || (competitor as any)?.url || JSON.stringify(competitor);
+                  return (
+                    <li key={index} className="bg-muted/50 px-3 py-1 rounded-full text-xs font-medium">
+                      {label}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
