@@ -468,9 +468,15 @@ export default function SiteCrawl() {
   const [isDetectingPages, setIsDetectingPages] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  // Sitemap directory selector
-  const [sitemapTree, setSitemapTree] = useState<Array<{ path: string; label: string; count: number; category?: string }>>([]);
+  // Sitemap directory & page selectors
+  const [sitemapTree, setSitemapTree] = useState<Array<{ path: string; label: string; count: number }>>([]);
+  const [sitemapPages, setSitemapPages] = useState<Array<{ path: string; label: string }>>([]);
   const [selectedDirectory, setSelectedDirectory] = useState<string>('');
+  // Filter modes: include_dirs, exclude_dirs, include_pages, exclude_pages
+  const [includeDir, setIncludeDir] = useState<string>('');
+  const [excludeDir, setExcludeDir] = useState<string>('');
+  const [includePage, setIncludePage] = useState<string>('');
+  const [excludePage, setExcludePage] = useState<string>('');
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
