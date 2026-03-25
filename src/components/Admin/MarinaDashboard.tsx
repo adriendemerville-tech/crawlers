@@ -339,6 +339,15 @@ export function MarinaDashboard() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {reportModal && (
+        <MarinaReportPreviewModal
+          isOpen={!!reportModal}
+          onClose={() => setReportModal(null)}
+          htmlContent={reportModal.html}
+          domain={reportModal.domain}
+        />
+      )}
     </div>
   );
 }
