@@ -116,6 +116,7 @@ export function ScriptKillSwitches() {
   const [freemiumOpen, setFreemiumOpen] = useState(false);
   const [hideHomeLeadmagnet, setHideHomeLeadmagnet] = useState(false);
   const [contentArchitectHidden, setContentArchitectHidden] = useState(false);
+  const [strategicGeoFlash, setStrategicGeoFlash] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
@@ -133,7 +134,7 @@ export function ScriptKillSwitches() {
       const { data: configs } = await supabase
         .from('system_config')
         .select('key, value')
-        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode', 'hide_home_leadmagnet', 'content_architect_hidden']);
+        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode', 'hide_home_leadmagnet', 'content_architect_hidden', 'strategic_geo_flash_mode']);
 
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
@@ -141,6 +142,7 @@ export function ScriptKillSwitches() {
         if (cfg.key === 'freemium_open_mode') setFreemiumOpen(cfg.value === true);
         if (cfg.key === 'hide_home_leadmagnet') setHideHomeLeadmagnet(cfg.value === true);
         if (cfg.key === 'content_architect_hidden') setContentArchitectHidden(cfg.value === true);
+        if (cfg.key === 'strategic_geo_flash_mode') setStrategicGeoFlash(cfg.value === true);
         if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
@@ -394,6 +396,32 @@ export function ScriptKillSwitches() {
                 setContentArchitectHidden(checked);
                 await saveConfig('content_architect_hidden', checked);
                 toast({ title: checked ? 'Content Architect masqué pour les non-admins' : 'Content Architect visible pour tous' });
+              }}
+              disabled={saving}
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Strategic GEO: Flash mode (A/B test) */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Audit Stratégique GEO → Flash</Label>
+            <p className="text-xs text-muted-foreground">
+              Utilise Gemini 2.5 Flash au lieu de Gemini Pro pour l'audit stratégique GEO. Permet de tester la qualité à moindre coût/latence.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={strategicGeoFlash ? 'default' : 'secondary'} className={`text-[10px] ${strategicGeoFlash ? 'bg-amber-500 hover:bg-amber-600' : ''}`}>
+              {strategicGeoFlash ? 'Flash' : 'Pro'}
+            </Badge>
+            <Switch
+              checked={strategicGeoFlash}
+              onCheckedChange={async (checked) => {
+                setStrategicGeoFlash(checked);
+                await saveConfig('strategic_geo_flash_mode', checked);
+                toast({ title: checked ? 'Audit GEO → Gemini 2.5 Flash activé' : 'Audit GEO → Gemini Pro restauré' });
               }}
               disabled={saving}
             />

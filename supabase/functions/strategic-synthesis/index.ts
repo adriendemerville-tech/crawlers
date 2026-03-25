@@ -180,11 +180,14 @@ Deno.serve(async (req) => {
     console.log(`🤖 [strategic-synthesis] LLM call starting (${isContentMode ? pageType : 'homepage'} mode)...`);
 
     // ── LLM Call ──
+    const selectedModel = body.modelOverride || 'google/gemini-2.5-pro';
+    console.log(`🤖 [strategic-synthesis] Using model: ${selectedModel}`);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: selectedModel,
         messages: [
           { role: 'system', content: isContentMode ? CONTENT_SYSTEM_PROMPT : SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },
@@ -202,7 +205,7 @@ Deno.serve(async (req) => {
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
-    trackTokenUsage('strategic-synthesis', 'google/gemini-2.5-pro', aiResponse.usage, url);
+    trackTokenUsage('strategic-synthesis', selectedModel, aiResponse.usage, url);
 
     if (!content) return json({ success: false, error: 'Empty LLM response' }, 502);
 
