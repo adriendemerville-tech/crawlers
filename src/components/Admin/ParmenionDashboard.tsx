@@ -17,6 +17,7 @@ interface DecisionLog {
   goal_description: string;
   goal_cluster_id: string | null;
   action_type: string;
+  pipeline_phase: string | null;
   status: string;
   impact_level: string;
   impact_predicted: string | null;
@@ -32,6 +33,7 @@ interface DecisionLog {
   error_category: string | null;
   calibration_note: string | null;
   execution_error: string | null;
+  execution_results: any | null;
   created_at: string;
   updated_at: string;
 }
