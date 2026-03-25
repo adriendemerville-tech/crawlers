@@ -55,6 +55,41 @@ serve(async (req) => {
       console.warn('[cocoon-chat] Could not fetch site context:', e);
     }
 
+    // ── Fetch user autonomy level ──
+    let autonomyBlock = '';
+    if (userCtx?.userId) {
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('autonomy_score, autonomy_level')
+          .eq('user_id', userCtx.userId)
+          .maybeSingle();
+
+        const aLevel = (prof as any)?.autonomy_level;
+        const aScore = (prof as any)?.autonomy_score;
+        if (aLevel && aScore != null) {
+          const hints: Record<string, string> = {
+            beginner: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Débutant) :
+- Langage SIMPLE et pédagogique, explique chaque terme SEO utilisé
+- Messages détaillés avec exemples concrets et étapes numérotées
+- Sois proactif : guide l'utilisateur vers la prochaine action
+- Encourage et rassure`,
+            intermediate: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Intermédiaire) :
+- Langage professionnel, jargon SEO OK mais explique les termes avancés
+- Messages équilibrés, va à l'essentiel avec contexte suffisant
+- Propose des options, laisse l'utilisateur décider`,
+            expert: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Expert) :
+- CONCIS et technique, jargon SEO/GEO direct, pas de vulgarisation
+- Messages courts et denses, données brutes privilégiées
+- Traite l'utilisateur comme un pair professionnel`,
+          };
+          autonomyBlock = hints[aLevel] || '';
+        }
+      } catch (e) {
+        console.warn('[cocoon-chat] Could not fetch autonomy:', e);
+      }
+    }
+
     // ── Fetch domain data (skip in strategist mode — strategist already has all data) ──
     let domainDataBlock = '';
     if (!strategistMode) {
