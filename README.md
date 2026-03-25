@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
-> **Dernière mise à jour** : 24 mars 2026  
-> **Version** : 2.11.0  
-> **Lignes de code** : ~195 000 (Backend: 59 648 · Frontend: 129 400 · SQL: 6 377)
+> **Dernière mise à jour** : 25 mars 2026  
+> **Version** : 2.12.0  
+> **Lignes de code** : ~203 000 (Backend: 63 966 · Frontend: 132 823 · SQL: 6 540)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (141 fonctions + 32 modules partagés)
+### 2.1 Edge Functions (157 fonctions + 32 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
