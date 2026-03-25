@@ -20,9 +20,23 @@ export function FloatingChatBubble() {
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
+  const [showBounce, setShowBounce] = useState(false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+
+  // Ping-pong bounce animation on first home visit after 20s
+  useEffect(() => {
+    if (location.pathname !== '/') return;
+    const key = 'felix_bounce_played';
+    if (sessionStorage.getItem(key)) return;
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(key, '1');
+      setShowBounce(true);
+      setTimeout(() => setShowBounce(false), 2000);
+    }, 20000);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
