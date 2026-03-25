@@ -248,7 +248,7 @@ export default function MatricePrompt() {
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
   const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
-    if (!user || rawRows.length === 0) return;
+    if (rawRows.length === 0) return;
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -298,27 +298,30 @@ export default function MatricePrompt() {
       };
     });
 
-    const dbRows = parsed.map(p => ({
-      user_id: user.id,
-      batch_id: newBatchId,
-      batch_label: fileName,
-      prompt: p.prompt,
-      poids: p.poids,
-      axe: p.axe,
-      seuil_bon: p.seuil_bon,
-      seuil_moyen: p.seuil_moyen,
-      seuil_mauvais: p.seuil_mauvais,
-      llm_name: p.llm_name,
-      is_default_flags: p.isDefault,
-    }));
+    // Persist to DB only if logged in
+    if (user) {
+      const dbRows = parsed.map(p => ({
+        user_id: user.id,
+        batch_id: newBatchId,
+        batch_label: fileName,
+        prompt: p.prompt,
+        poids: p.poids,
+        axe: p.axe,
+        seuil_bon: p.seuil_bon,
+        seuil_moyen: p.seuil_moyen,
+        seuil_mauvais: p.seuil_mauvais,
+        llm_name: p.llm_name,
+        is_default_flags: p.isDefault,
+      }));
 
-    const { data: inserted, error } = await supabase
-      .from('prompt_matrix_items')
-      .insert(dbRows)
-      .select('id');
+      const { data: inserted, error } = await supabase
+        .from('prompt_matrix_items')
+        .insert(dbRows)
+        .select('id');
 
-    if (!error && inserted) {
-      parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+      if (!error && inserted) {
+        parsed.forEach((p, i) => { p.dbId = inserted[i]?.id; });
+      }
     }
 
     const newBatch: Batch = { batch_id: newBatchId, batch_label: fileName, created_at: new Date().toISOString(), count: parsed.length, last_used_at: new Date().toISOString() };
