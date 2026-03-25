@@ -72,7 +72,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ## 3. Architecture Frontend
 
-### 3.1 Pages (40 pages)
+### 3.1 Pages (41 pages)
 
 | Catégorie | Pages |
 |-----------|-------|
@@ -85,11 +85,11 @@ Organisées en **13 domaines fonctionnels** :
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (303+ fichiers, 12 modules)
+### 3.2 Composants (307+ fichiers, 13 modules)
 
 | Module | Rôle |
 |--------|------|
-| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor |
+| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor, Marina (pipeline prospection) |
 | **Cocoon/** | Graphe 3D (Three.js), assistant IA, rapport, recommandations, tâches |
 | **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif, lecteur Spotify (prev/next) |
 | **Profile/** | Mes sites, crawls, rapports, wallet, scripts, intégrations, GMB |
