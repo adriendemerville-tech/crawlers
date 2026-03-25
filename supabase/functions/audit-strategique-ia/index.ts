@@ -3152,12 +3152,33 @@ Réponds en JSON STRICT:
       } catch {}
     }
 
-    // ═══ PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
+    // ═══ NORMALIZE + PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
     if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
         const svcSb = getServiceClient();
         const updatePayload: Record<string, any> = {};
-        if (parsedAnalysis?.client_targets) updatePayload.client_targets = parsedAnalysis.client_targets;
+        if (parsedAnalysis?.client_targets) {
+          // Normalize client_targets to guarantee {primary:[], secondary:[], untapped:[]}
+          const raw = parsedAnalysis.client_targets;
+          const ensureArray = (v: any): any[] => {
+            if (Array.isArray(v)) return v;
+            if (v && typeof v === 'object' && !Array.isArray(v)) return [v]; // single object → wrap
+            return [];
+          };
+          const normalized = {
+            primary: ensureArray(raw?.primary),
+            secondary: ensureArray(raw?.secondary),
+            untapped: ensureArray(raw?.untapped),
+          };
+          // Validate each target has required fields
+          const validateTarget = (t: any) => t && typeof t === 'object' && typeof t.market === 'string' && typeof t.confidence === 'number';
+          normalized.primary = normalized.primary.filter(validateTarget);
+          normalized.secondary = normalized.secondary.filter(validateTarget);
+          normalized.untapped = normalized.untapped.filter(validateTarget);
+          updatePayload.client_targets = normalized;
+          parsedAnalysis.client_targets = normalized; // also fix the response
+          console.log(`[audit-strategique-ia] client_targets normalized: P=${normalized.primary.length} S=${normalized.secondary.length} U=${normalized.untapped.length}`);
+        }
         if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
         await svcSb
           .from('tracked_sites')
