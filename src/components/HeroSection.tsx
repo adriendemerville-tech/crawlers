@@ -59,7 +59,7 @@ function HeroSectionComponent() {
         {/* Animated headline */}
         <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
           <span
-            className="hero-word-container relative inline-flex items-center justify-end overflow-hidden align-baseline"
+            className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
           >
             {isHydrated ? (
