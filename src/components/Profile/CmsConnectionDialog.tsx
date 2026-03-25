@@ -17,7 +17,7 @@ interface TrackedSite {
 interface CmsConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo';
+  cmsType: 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo' | 'prestashop';
 }
 
 const translations = {
@@ -45,6 +45,8 @@ const translations = {
     webflowHelp: 'Entrez votre token API Webflow (Site Settings → Integrations → API Access).',
     wixHelp: 'Entrez votre clé API Wix (Tableau de bord Wix → Dev Center → API Keys).',
     odooHelp: 'Entrez l\'URL de votre instance Odoo, le nom de la base de données, et votre clé API ou mot de passe.',
+    prestashopHelp: 'Entrez votre clé API Webservice PrestaShop (Back Office → Paramètres avancés → Webservice).',
+    prestashopToken: 'Clé API Webservice',
     webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
     webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
     webhookManualTitle: 'Configuration manuelle du webhook',
@@ -79,6 +81,8 @@ const translations = {
     webflowHelp: 'Enter your Webflow API token (Site Settings → Integrations → API Access).',
     wixHelp: 'Enter your Wix API key (Wix Dashboard → Dev Center → API Keys).',
     odooHelp: 'Enter your Odoo instance URL, database name, and API key or password.',
+    prestashopHelp: 'Enter your PrestaShop Webservice API key (Back Office → Advanced Parameters → Webservice).',
+    prestashopToken: 'Webservice API Key',
     webhookAutoSuccess: 'Order tracking webhook registered automatically ✓',
     webhookAutoFailed: 'Automatic webhook registration failed. See manual instructions below.',
     webhookManualTitle: 'Manual webhook setup',
@@ -113,6 +117,8 @@ const translations = {
     webflowHelp: 'Ingrese su token API de Webflow (Configuración del sitio → Integraciones → Acceso API).',
     wixHelp: 'Ingrese su clave API de Wix (Panel de Wix → Dev Center → API Keys).',
     odooHelp: 'Ingrese la URL de su instancia Odoo, el nombre de la base de datos y su clave API o contraseña.',
+    prestashopHelp: 'Ingrese su clave API del Webservice PrestaShop (Back Office → Parámetros avanzados → Webservice).',
+    prestashopToken: 'Clave API Webservice',
     webhookAutoSuccess: 'Webhook de seguimiento de pedidos registrado automáticamente ✓',
     webhookAutoFailed: 'Registro automático del webhook fallido. Vea las instrucciones manuales.',
     webhookManualTitle: 'Configuración manual del webhook',
