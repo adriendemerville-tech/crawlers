@@ -473,6 +473,13 @@ export function MyReportsTab() {
                               {new Date(report.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
                             </p>
                           </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleArchiveReport(report.id); }}
+                            className="p-1.5 rounded-md text-muted-foreground/0 group-hover:text-destructive hover:!bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
+                            title={tr.delete}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent>
