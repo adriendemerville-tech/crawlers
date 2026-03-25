@@ -165,8 +165,9 @@ export function FloatingChatBubble() {
     }
   };
 
-  // Hide on mobile and on /cocoon (cocoon has its own assistant)
-  if (isMobile || location.pathname.startsWith('/app/cocoon')) return null;
+  // Hide on mobile, /cocoon, /signup, /auth
+  const hiddenPaths = ['/app/cocoon', '/signup', '/auth'];
+  if (isMobile || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   return (
     <>
