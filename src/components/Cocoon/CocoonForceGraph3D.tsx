@@ -364,13 +364,13 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* Opaque border ring */}
+      {/* Opaque border ring — uses node color for all nodes */}
       <mesh ref={node.isHome ? glowRef : undefined}>
         <sphereGeometry args={[r * (node.isHome ? 1.18 : 1.12), 24, 24]} />
         <meshBasicMaterial
-          color={node.isHome ? color : "#d0d8e0"}
+          color={color}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.7}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.35}
         />
       </mesh>
 
