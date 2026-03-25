@@ -409,12 +409,14 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
 // DÉTECTION INTENTION DANS LE TITRE + PREMIÈRE PHRASE
 // ============================================================================
 
-function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphText: string, metaDescription?: string): {
+function analyzeDirectAnswer(titleText: string, h1Text: string, first150Words: string, metaDescription?: string): {
   found: boolean;
   inTitle: boolean;
   inH1: boolean;
-  inFirstSentence: boolean;
+  inFirst150Words: boolean;
+  keywordDensity: number;
   detectedKeywords: string[];
+  wordCount: number;
 } {
   // Extract likely intent keywords from the title (longest meaningful words)
   const combinedTitle = `${titleText} ${h1Text}`.toLowerCase();
@@ -424,27 +426,32 @@ function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphT
   const stopwords = new Set(['pour', 'dans', 'avec', 'plus', 'votre', 'notre', 'cette', 'comment', 'tout', 'what', 'your', 'this', 'that', 'with', 'from', 'about', 'como', 'para', 'todo', 'best', 'guide', 'complete']);
   const keywords = [...new Set(titleWords.filter(w => !stopwords.has(w)))].slice(0, 5);
   
+  const words150 = first150Words.toLowerCase();
+  const words150Count = first150Words.split(/\s+/).filter(w => w.length > 0).length;
+
   if (keywords.length === 0) {
-    return { found: false, inTitle: false, inH1: false, inFirstSentence: false, detectedKeywords: [] };
+    return { found: false, inTitle: false, inH1: false, inFirst150Words: false, keywordDensity: 0, detectedKeywords: [], wordCount: words150Count };
   }
 
-  const firstSentence = firstParagraphText.toLowerCase();
   const title = titleText.toLowerCase();
   const h1 = h1Text.toLowerCase();
 
-  // Check if at least 2 keywords from title appear in first paragraph
-  const matchesInFirst = keywords.filter(kw => firstSentence.includes(kw));
-  const inFirstSentence = matchesInFirst.length >= Math.min(2, keywords.length);
+  // Check how many keywords from title appear in the first 150 words
+  const matchesInFirst150 = keywords.filter(kw => words150.includes(kw));
+  const keywordDensity = matchesInFirst150.length / keywords.length;
+  const inFirst150Words = matchesInFirst150.length >= Math.min(2, keywords.length);
   
   const inTitle = keywords.some(kw => title.includes(kw));
   const inH1 = keywords.some(kw => h1.includes(kw));
 
   return {
-    found: (inTitle || inH1) && inFirstSentence,
+    found: (inTitle || inH1) && inFirst150Words,
     inTitle,
     inH1,
-    inFirstSentence,
-    detectedKeywords: matchesInFirst.length > 0 ? matchesInFirst : keywords.slice(0, 3),
+    inFirst150Words,
+    keywordDensity: Math.round(keywordDensity * 100),
+    detectedKeywords: matchesInFirst150.length > 0 ? matchesInFirst150 : keywords.slice(0, 3),
+    wordCount: words150Count,
   };
 }
 
