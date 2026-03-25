@@ -1,41 +1,22 @@
 /**
- * strategic-synthesis — Micro-function #4
- * Takes aggregated data from crawl/market/competitors/llm and runs Gemini Pro synthesis.
- * This is the only function that calls the LLM — no caching (always fresh analysis).
+ * strategic-synthesis — Micro-function #4 (v2: parallel split)
+ * Takes aggregated data from crawl/market/competitors/llm and runs 3 parallel LLM calls.
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
+import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-// ── System prompts (identical to audit-strategique-ia) ──
-// We import them inline to keep the function self-contained.
-// NOTE: These are the EXACT same prompts from the monolith — no changes.
-
-const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
-
-POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
-
-RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître comme son propre concurrent (leader, direct_competitor, challenger, inspiration_source). Ne cite JAMAIS le domaine analysé, son URL, ni son nom de marque dans competitive_landscape ni dans introduction.competitors[]. Tous les acteurs doivent être des entités DISTINCTES du site audité. Le direct_competitor ne peut PAS avoir la même URL ni le même nom que le site cible.
-
-RÈGLE CLASSIFICATION DES CONCURRENTS (scoring de similarité):
-- LEADER (Goliath): Premier dans la SERP. Score similarité entreprise = 1, Score similarité produit = 1.
-- CONCURRENT DIRECT: Même score similarité, position SERP égale ou supérieure. INTERDIT: médias, annuaires, marketplaces.
-- CHALLENGER: Même score similarité, position INFÉRIEURE dans la SERP.
-- SOURCE D'INSPIRATION: Score similarité min 0.5, première page SERP.
-
-RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste DOIT contenir au moins une requête liée au core business.
-
-DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS.
-
-13 MODULES D'ANALYSE:
-A. ÉCOSYSTÈME B. AUTORITÉ SOCIALE C. EXPERTISE D. MOTS CLÉS E. TECHNIQUE F. FRAÎCHEUR & IA G. E-E-A-T H. MONITORING I. CIBLES CLIENTS`;
-
+// Content mode system prompt (for editorial/product/deep pages — uses monolithic single call)
 const CONTENT_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO).
 MODE ÉDITORIAL/PRODUIT/DEEP: Analyse centrée sur la PAGE spécifique, pas l'entreprise.`;
+
+const CONTENT_FULL_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé GEO.
+Analyse centrée sur la PAGE spécifique. Génère JSON complet avec: introduction, brand_authority, social_signals, market_intelligence, competitive_landscape, geo_citability, llm_visibility, conversational_intent, zero_click_risk, priority_content, keyword_positioning, market_data_summary, executive_roadmap (MIN 6), client_targets, executive_summary, overallScore, quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team.`;
 
 function formatToolsDataToMarkdown(toolsData: any): string {
   const lines: string[] = [];
@@ -121,8 +102,7 @@ Deno.serve(async (req) => {
     const langMap: Record<string, string> = { fr: 'français', en: 'English', es: 'español' };
     const langLabel = langMap[lang] || langMap[businessContext?.languageCode] || 'français';
 
-    // ── Build prompt (same structure as monolith) ──
-    // Market section
+    // ── Build shared context ──
     let marketSection = '';
     if (mktData?.top_keywords) {
       const kwList = mktData.top_keywords.map((kw: any) => `"${kw.keyword}":${kw.volume}vol,diff${kw.difficulty},pos:${kw.current_rank}`).join('; ');
@@ -134,7 +114,6 @@ Deno.serve(async (req) => {
       marketSection += `\n📈 SEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
     }
 
-    // E-E-A-T section
     let eeatSection = '';
     if (eeatSignals) {
       const yn = (v: boolean) => v ? 'OUI' : 'NON';
@@ -143,7 +122,6 @@ Deno.serve(async (req) => {
       if (facebookPageInfo?.found) eeatSection += `\n📘 Facebook: ${facebookPageInfo.pageName} → ${facebookPageInfo.pageUrl}`;
     }
 
-    // Founder section
     let founderSection = '';
     if (!isContentMode && founderInfo?.name && !founderInfo.geoMismatch) {
       founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
@@ -153,100 +131,104 @@ Deno.serve(async (req) => {
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
 
-    // Full prompt (using homepage prompt — content mode variants handled by system prompt)
-    let userPrompt = `Analyse "${url}" (${domain}).\n${pageContentContext}\n${eeatSection}${founderSection}\n${marketSection}\n${toolsMarkdown}`;
-
-    // The full JSON schema prompt is identical to the monolith — we add language + entity name + competitors
-    userPrompt = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🏷️ ENTITÉ: "${resolvedEntityName}"\n` + userPrompt;
-
+    let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
     if (competitors?.length > 0) {
       const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
-      userPrompt = `🏙️ CONCURRENTS:\n${compLines}\n` + userPrompt;
+      baseContext += `🏙️ CONCURRENTS:\n${compLines}\n`;
     }
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
-      if (corrections) userPrompt = `⚠️ CORRECTIONS: ${corrections}\n` + userPrompt;
+      if (corrections) baseContext += `⚠️ CORRECTIONS: ${corrections}\n`;
     }
     if (competitorCorrections) {
       const parts: string[] = [];
       if (competitorCorrections.leader?.name) parts.push(`Leader:"${competitorCorrections.leader.name}"`);
       if (competitorCorrections.direct_competitor?.name) parts.push(`Concurrent:"${competitorCorrections.direct_competitor.name}"`);
-      if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
+      if (parts.length > 0) baseContext += `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n`;
     }
+    baseContext += `Analyse "${url}" (${domain}).\n${pageContentContext}\n${eeatSection}${founderSection}\n${marketSection}\n${toolsMarkdown}`;
 
-    // Add the full JSON generation instruction (same as monolith but abbreviated for synthesis)
-    userPrompt += `\n\nGÉNÈRE un JSON complet avec: introduction, brand_authority, social_signals, market_intelligence, competitive_landscape, geo_citability, llm_visibility, conversational_intent, zero_click_risk, priority_content, keyword_positioning (avec missing_terms, semantic_density, serp_recommendations, alternative_strategy), market_data_summary, executive_roadmap (MIN 6), client_targets (primary/secondary/untapped), executive_summary, overallScore, quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team.\nRÈGLES: main_keywords MIN 5, executive_roadmap MIN 6, pas d'auto-citation, JSON pur.`;
-
-    console.log(`🤖 [strategic-synthesis] LLM call starting (${isContentMode ? pageType : 'homepage'} mode)...`);
-
-    // ── LLM Call ──
-    const primaryModel = body.modelOverride || 'google/gemini-2.5-pro';
-    const fallbackModel = 'google/gemini-2.5-flash';
-    const llmMessages = [
-      { role: 'system', content: isContentMode ? CONTENT_SYSTEM_PROMPT : SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt },
-    ];
-
-    async function callLLM(model: string, timeoutMs: number): Promise<{ content: string; usage: any; model: string }> {
-      console.log(`🤖 [strategic-synthesis] Using model: ${model} (timeout: ${timeoutMs / 1000}s)`);
-      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages: llmMessages, temperature: 0.3, max_tokens: 16384 }),
-        signal: AbortSignal.timeout(timeoutMs),
-      });
-      if (!resp.ok) {
-        const errText = await resp.text();
-        throw new Error(`LLM error ${resp.status}: ${errText.substring(0, 200)}`);
-      }
-      const aiResp = await resp.json();
-      const c = aiResp.choices?.[0]?.message?.content;
-      if (!c) throw new Error('Empty LLM response');
-      return { content: c, usage: aiResp.usage, model };
-    }
-
-    let llmResult: { content: string; usage: any; model: string };
-    try {
-      llmResult = await callLLM(primaryModel, 150_000); // 2m30 for Pro
-    } catch (proError) {
-      console.warn(`⚠️ [strategic-synthesis] ${primaryModel} failed: ${proError instanceof Error ? proError.message : proError}`);
-      if (primaryModel === fallbackModel) {
-        return json({ success: false, error: `LLM error: ${proError instanceof Error ? proError.message : 'Unknown'}` }, 502);
-      }
-      console.log(`🔄 [strategic-synthesis] Retrying with ${fallbackModel}...`);
+    // ── LLM Call helper ──
+    async function callLLM(model: string, timeoutMs: number, systemPrompt: string, userPromptText: string, label: string): Promise<string | null> {
+      const logLabel = `[strategic-synthesis:${label}]`;
       try {
-        llmResult = await callLLM(fallbackModel, 120_000); // 2 min for Flash
-        console.log(`✅ [strategic-synthesis] Flash fallback succeeded`);
-      } catch (flashError) {
-        console.error(`❌ [strategic-synthesis] Flash also failed: ${flashError instanceof Error ? flashError.message : flashError}`);
-        return json({ success: false, error: `Both models failed` }, 502);
+        console.log(`🤖 ${logLabel} ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)`);
+        const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          console.error(`❌ ${logLabel} ${model} error: ${resp.status} ${errText.substring(0, 200)}`);
+          return null;
+        }
+        const aiResp = await resp.json();
+        const content = aiResp.choices?.[0]?.message?.content;
+        trackTokenUsage(`strategic-synthesis-${label}`, model, aiResp.usage, url);
+        return content || null;
+      } catch (e) {
+        console.warn(`⚠️ ${logLabel} ${model} failed: ${e instanceof Error ? e.message : e}`);
+        return null;
       }
     }
 
-    const content = llmResult.content;
-    trackTokenUsage('strategic-synthesis', llmResult.model, llmResult.usage, url);
+    async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
+      const model = label === 'A-identity' ? (body.modelOverride || 'google/gemini-2.5-pro') : (body.modelOverride || 'google/gemini-2.5-flash');
+      const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
+      let raw = await callLLM(model, callTimeout, systemPrompt, userPromptText, label);
+      if (!raw && model !== 'google/gemini-2.5-flash') {
+        console.log(`🔄 ${label}: Retrying with Flash...`);
+        raw = await callLLM('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
+      }
+      if (!raw) return null;
+      const parsed = parseLLMJson(raw);
+      if (!parsed) console.warn(`⚠️ ${label}: JSON parse failed`);
+      return parsed;
+    }
 
-    if (!content) return json({ success: false, error: 'Empty LLM response' }, 502);
-
-    // ── Parse JSON ──
     let parsedAnalysis: any = null;
-    try {
-      let jsonContent = content;
-      if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim();
-      else if (content.includes('```')) jsonContent = content.split('```')[1].split('```')[0].trim();
-      jsonContent = jsonContent.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-      parsedAnalysis = JSON.parse(jsonContent);
-    } catch {
-      try {
-        const fb = content.indexOf('{'); const lb = content.lastIndexOf('}');
-        if (fb !== -1 && lb > fb) parsedAnalysis = JSON.parse(content.substring(fb, lb + 1).replace(/,(\s*[\}\]])/g, '$1'));
-      } catch {
-        console.error('❌ JSON parse failed');
-        return json({ success: false, error: 'JSON parse failed' }, 502);
+
+    if (isContentMode) {
+      // ═══ CONTENT MODE: Single call (simpler JSON) ═══
+      console.log(`🤖 [strategic-synthesis] Content mode (${pageType}) — single LLM call`);
+      const userPrompt = baseContext + `\n\nGÉNÈRE un JSON complet avec: introduction, brand_authority, social_signals, market_intelligence, competitive_landscape, geo_citability, llm_visibility, conversational_intent, zero_click_risk, priority_content, keyword_positioning, market_data_summary, executive_roadmap (MIN 6), client_targets, executive_summary, overallScore, quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team.\nRÈGLES: main_keywords MIN 5, executive_roadmap MIN 6, pas d'auto-citation, JSON pur.`;
+      let raw = await callLLM(body.modelOverride || 'google/gemini-2.5-pro', 150_000, CONTENT_FULL_PROMPT, userPrompt, 'content');
+      if (!raw) {
+        raw = await callLLM('google/gemini-2.5-flash', 120_000, CONTENT_FULL_PROMPT, userPrompt, 'content-flash');
       }
+      if (raw) parsedAnalysis = parseLLMJson(raw);
+
+    } else {
+      // ═══ HOMEPAGE MODE: 3 parallel calls ═══
+      console.log('🚀 [strategic-synthesis] Parallel mode: 3 focused LLM calls...');
+
+      const userPromptA = buildUserPromptA(url, domain, baseContext);
+      const userPromptB = buildUserPromptB(url, domain, baseContext);
+      const userPromptC = buildUserPromptC(url, domain, baseContext);
+
+      const parallelTimeout = 150_000;
+
+      const [resultA, resultB, resultC] = await Promise.all([
+        callWithFallback(SYSTEM_PROMPT_A, userPromptA, 'A-identity', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_B, userPromptB, 'B-market', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_C, userPromptC, 'C-geo', parallelTimeout),
+      ]);
+
+      const successCount = [resultA, resultB, resultC].filter(Boolean).length;
+      console.log(`✅ Parallel results: ${successCount}/3 (A:${!!resultA} B:${!!resultB} C:${!!resultC})`);
+
+      if (successCount === 0) {
+        console.warn('⚠️ All 3 parallel calls failed');
+        return json({ success: true, data: { url, domain: domainWithoutWww, scannedAt: new Date().toISOString(), overallScore: 0, introduction: { presentation: 'Analyse interrompue.', strengths: '', improvement: '', competitors: [] }, executive_roadmap: [], executive_summary: 'Analyse interrompue.', _error: 'All LLM calls failed' } });
+      }
+
+      parsedAnalysis = mergeParallelResults(resultA, resultB, resultC);
+      console.log(`✅ Merged parallel results in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
-    if (!parsedAnalysis) return json({ success: false, error: 'No analysis produced' }, 502);
+    if (!parsedAnalysis) return json({ success: true, data: { url, domain: domainWithoutWww, scannedAt: new Date().toISOString(), overallScore: 0, introduction: { presentation: 'Analyse interrompue.', strengths: '', improvement: '', competitors: [] }, executive_roadmap: [], executive_summary: 'Analyse interrompue.', _error: 'No analysis produced' } });
 
     // ── Brand sanitization ──
     function sanitize(obj: any, slug: string, name: string): any {
@@ -272,7 +254,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Force-compute quotability & summary_resilience (same as monolith) ──
+    // ── Force-compute quotability & summary_resilience ──
     {
       const rawText = (pageContentContext || '').replace(/Titre="[^"]*"/g, '').replace(/H1="[^"]*"/g, '').replace(/Desc="[^"]*"/g, '');
       const sentences = rawText.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40 && s.length < 300);
@@ -298,7 +280,7 @@ Deno.serve(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
-    // ── Jargon distance (separate LLM call) ──
+    // ── Jargon distance (lightweight Flash call) ──
     let jargonDistance: any = null;
     if (parsedAnalysis.client_targets && pageContentContext) {
       try {
@@ -369,7 +351,6 @@ Deno.serve(async (req) => {
         if (user) {
           trackAnalyzedUrl(url).catch(() => { });
           saveRawAuditData({ userId: user.id, url, domain: domainWithoutWww, auditType: 'strategic', rawPayload: result.data, sourceFunctions: ['strategic-orchestrator'] }).catch(() => { });
-          // Save recommendations registry
           if (parsedAnalysis.executive_roadmap?.length) {
             const entries = parsedAnalysis.executive_roadmap.map((item: any, idx: number) => ({
               user_id: user.id, domain: domainWithoutWww, url, audit_type: 'strategic',
