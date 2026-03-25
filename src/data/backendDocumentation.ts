@@ -335,6 +335,35 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
 | \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
+### Architecture Modulaire — Strategic Orchestrator
+
+L'audit stratégique GEO utilise un **pipeline modulaire en 5 étapes** piloté par \`strategic-orchestrator\` :
+
+\`\`\`
+strategic-orchestrator
+├── strategic-crawl        (métadonnées + E-E-A-T)     ─┐
+├── strategic-market       (mots-clés, DataForSEO)      ├─ Parallèle (< 90s)
+├── strategic-competitors  (SERP + GMB concurrents)     ─┤
+├── check-llm              (visibilité IA)              ─┘
+└── strategic-synthesis    (Gemini Pro → Flash fallback)  ← Séquentiel
+\`\`\`
+
+- **Cache intelligent** : \`audit_cache\` avec TTL 24h sur les étapes de collecte
+- **Fallback LLM** : Si Gemini Pro dépasse 2m30, bascule automatique sur Gemini Flash
+- **Fallback pipeline** : Si le pipeline modulaire échoue, bascule sur \`audit-strategique-ia\` (monolithique)
+- \`audit-strategique-ia\` intègre aussi le fallback Pro→Flash (ajouté mars 2025)
+
+### Tests d'intégration backend (CI)
+
+12 tests couvrant 4 piliers :
+1. **Sécurité** : SSRF, Turnstile, ensure-profile, auth middleware unifié (\`_shared/auth.ts\`)
+2. **Facturation** : Calcul prix dynamique, create-checkout
+3. **Audit** : validate-url, robots.txt parser, cache déterministe, LLM fallback Pro→Flash
+4. **Tracking** : Résilience token tracker, headers CORS
+
+Exécution : Admin → Console → Tests CI → "Lancer les tests"
+Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
+
 ## Crawl Engine
 
 | Endpoint | Auth | Crédits | Description |
