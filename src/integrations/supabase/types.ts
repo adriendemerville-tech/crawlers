@@ -6322,6 +6322,62 @@ export type Database = {
           },
         ]
       }
+      site_taxonomy: {
+        Row: {
+          avg_depth: number | null
+          category: string | null
+          confidence: number | null
+          detected_at: string | null
+          domain: string
+          id: string
+          label: string
+          page_count: number | null
+          path_pattern: string
+          sample_urls: string[] | null
+          source: string | null
+          tracked_site_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avg_depth?: number | null
+          category?: string | null
+          confidence?: number | null
+          detected_at?: string | null
+          domain: string
+          id?: string
+          label: string
+          page_count?: number | null
+          path_pattern: string
+          sample_urls?: string[] | null
+          source?: string | null
+          tracked_site_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avg_depth?: number | null
+          category?: string | null
+          confidence?: number | null
+          detected_at?: string | null
+          domain?: string
+          id?: string
+          label?: string
+          page_count?: number | null
+          path_pattern?: string
+          sample_urls?: string[] | null
+          source?: string | null
+          tracked_site_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_taxonomy_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_library: {
         Row: {
           category: string | null
@@ -6803,6 +6859,36 @@ export type Database = {
           total_audits_processed?: number
           total_predictions_made?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      taxonomy_patterns: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          id: string
+          inferred_category: string
+          occurrence_count: number | null
+          path_segment: string
+          updated_at: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          inferred_category: string
+          occurrence_count?: number | null
+          path_segment: string
+          updated_at?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          inferred_category?: string
+          occurrence_count?: number | null
+          path_segment?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

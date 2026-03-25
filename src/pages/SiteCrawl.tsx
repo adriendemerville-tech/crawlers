@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2 } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -468,6 +468,10 @@ export default function SiteCrawl() {
   const [isDetectingPages, setIsDetectingPages] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
+  // Sitemap directory selector
+  const [sitemapTree, setSitemapTree] = useState<Array<{ path: string; label: string; count: number; category?: string }>>([]);
+  const [selectedDirectory, setSelectedDirectory] = useState<string>('');
+
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [maxDepth, setMaxDepth] = useState(0); // 0 = unlimited
@@ -635,6 +639,8 @@ export default function SiteCrawl() {
     setIndexedPagesCount(null);
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
+    setSitemapTree([]);
+    setSelectedDirectory('');
     if (!url || url.length < 5) return;
 
     let cancelled = false;
@@ -660,6 +666,16 @@ export default function SiteCrawl() {
 
         if (indexed != null) setIndexedPagesCount(indexed);
         if (sitemapTotal != null) setSitemapPagesCount(sitemapTotal);
+
+        // Extract top-level directories from sitemap tree
+        const tree = sitemapRes.data?.tree as Array<{ path: string; label: string; count: number; children?: any[] }> | undefined;
+        if (tree && tree.length > 0) {
+          const dirs = tree
+            .filter(n => n.path !== '/' && n.count > 1)
+            .slice(0, 15)
+            .map(n => ({ path: n.path, label: n.label, count: n.count }));
+          setSitemapTree(dirs);
+        }
 
         // Total = max of sitemap and indexed (they overlap, so we take the greater)
         const total = Math.max(indexed || 0, sitemapTotal || 0);
@@ -1220,6 +1236,60 @@ export default function SiteCrawl() {
                     </button>
                   )}
                 </div>
+
+                {/* Directory Selector — from sitemap */}
+                {sitemapTree.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground flex items-center gap-2">
+                      <FolderTree className="w-4 h-4 text-violet-400" />
+                      {language === 'fr' ? 'Cibler un répertoire' : language === 'es' ? 'Apuntar un directorio' : 'Target a directory'}
+                      <Badge variant="secondary" className="text-[9px] font-normal">
+                        {language === 'fr' ? 'Détecté via sitemap' : 'From sitemap'}
+                      </Badge>
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedDirectory(''); setUrlFilter(''); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                          !selectedDirectory
+                            ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
+                            : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        <Globe className="w-3 h-3" />
+                        {language === 'fr' ? 'Tout le site' : 'Entire site'}
+                      </button>
+                      {sitemapTree.map(dir => (
+                        <button
+                          key={dir.path}
+                          type="button"
+                          onClick={() => {
+                            const newDir = selectedDirectory === dir.path ? '' : dir.path;
+                            setSelectedDirectory(newDir);
+                            setUrlFilter(newDir ? `${dir.path}.*` : '');
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                            selectedDirectory === dir.path
+                              ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
+                              : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <Folder className="w-3 h-3" />
+                          /{dir.label}
+                          <span className="opacity-60">({dir.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedDirectory && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {language === 'fr' 
+                          ? `Le crawl sera limité aux pages sous ${selectedDirectory}/`
+                          : `Crawl will be limited to pages under ${selectedDirectory}/`}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Advanced Options */}
                 <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
