@@ -95,6 +95,29 @@ async function deletePost(apiKey: string, slug: string) {
   return callIktracker('DELETE', `/posts/${slug}`, apiKey)
 }
 
+// ── Autopilot: Events ──
+
+async function pushEvent(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('POST', '/autopilot/events', apiKey, body)
+}
+
+async function getAutopilotRegistry(apiKey: string, includeReverted = true, limit = 200) {
+  return callIktracker('GET', `/autopilot/registry?include_reverted=${includeReverted}&limit=${limit}`, apiKey)
+}
+
+async function getAutopilotHealth(apiKey: string) {
+  return callIktracker('GET', '/autopilot/health', apiKey)
+}
+
+async function getAutopilotEvents(apiKey: string, resolved?: boolean) {
+  const qs = resolved !== undefined ? `?resolved=${resolved}` : ''
+  return callIktracker('GET', `/autopilot/events${qs}`, apiKey)
+}
+
+async function getAutopilotSummary(apiKey: string) {
+  return callIktracker('GET', '/autopilot/summary', apiKey)
+}
+
 // ── Main handler ──
 
 Deno.serve(async (req) => {
