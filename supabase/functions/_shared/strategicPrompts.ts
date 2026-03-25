@@ -249,7 +249,7 @@ ${toolsMarkdown}
 CONCURRENCE SERP: Les concurrents sont les PAGES qui se positionnent dans les SERPs sur la même thématique que cet article. Chaque URL doit pointer vers la PAGE concurrente, pas la homepage.
 
 GÉNÈRE un JSON:
-{"introduction":{"presentation":"1-2ph courtes analysant LE CONTENU de la page","strengths":"1-2ph sur les forces du contenu","improvement":"1-2ph sur les axes d'amélioration du contenu","competitors":["Page Leader SERP","Page Concurrente","Page Challenger"]},
+{"introduction":{"presentation":"...","strengths":"...","improvement":"...","competitors":["Page Leader SERP","Page Concurrente","Page Challenger"]},
 "brand_authority":{"dna_analysis":"Analyse de l'expertise démontrée dans le contenu","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
 "competitive_landscape":{"leader":{"name":"Titre de la page #1 SERP","url":"URL de la page","authority_factor":"Pourquoi cette page domine","analysis":"2-3ph"},"direct_competitor":{"name":"Titre page concurrente","url":"URL de la page","authority_factor":"...","analysis":"2-3ph"},"challenger":{"name":"Titre page challenger","url":"URL","authority_factor":"...","analysis":"2-3ph"},"inspiration_source":{"name":"Titre page exemplaire","url":"URL","authority_factor":"...","analysis":"2-3ph"}},
 "geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
@@ -268,7 +268,7 @@ GÉNÈRE un JSON:
 "red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
 
 RÈGLES:
-- introduction.presentation: 1-2 phrases COURTES décrivant LE CONTENU de cette page, pas l'entreprise
+- introduction: présentation + strengths + improvement = 1400 caractères MAX au total (espaces compris). Nombre de phrases libre, répartition libre entre les 3 champs selon la pertinence de l'URL. Décris LE CONTENU de cette page, pas l'entreprise
 - competitive_landscape: 4 PAGES concurrentes dans les SERPs, pas des entreprises. URLs = pages spécifiques
 - NE génère PAS: social_signals, market_intelligence, priority_content
 - executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
@@ -287,7 +287,7 @@ ${marketSection}
 ${toolsMarkdown}
 
 GÉNÈRE un JSON:
-{"introduction":{"presentation":"2ph max","strengths":"2ph max","improvement":"2ph max","competitors":["Leader","Concurrent","Challenger"]},
+{"introduction":{"presentation":"...","strengths":"...","improvement":"...","competitors":["Leader","Concurrent","Challenger"]},
 "brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
 "social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram|facebook","presence_level":"strong|moderate|weak|absent","analysis":"max 450 car","profile_url":"URL exacte des E-E-A-T ou null","profile_name":"ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"Distingue signaux vérifiés vs inférés"},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
 "market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","priority_themes":["t1","t2","t3","t4"],"closing_strategy":"..."}},
