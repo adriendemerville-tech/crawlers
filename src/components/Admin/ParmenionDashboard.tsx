@@ -126,6 +126,21 @@ export function ParmenionDashboard() {
     setIkLoading(false);
   }, []);
 
+  const fetchModCounts = useCallback(async () => {
+    const { data } = await supabase
+      .from('autopilot_modification_log')
+      .select('cycle_number, status')
+      .eq('status', 'applied');
+    if (data) {
+      const counts: Record<number, number> = {};
+      for (const row of data) {
+        const cn = row.cycle_number ?? 0;
+        counts[cn] = (counts[cn] || 0) + 1;
+      }
+      setModCounts(counts);
+    }
+  }, []);
+
   useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
