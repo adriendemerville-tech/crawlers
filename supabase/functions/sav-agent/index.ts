@@ -647,6 +647,26 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           contextSnippet += `- ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}% (ajouté le ${s.created_at?.slice(0, 10)})\n`;
         }
 
+        // Read persistent memory for each site
+        for (const s of sites.slice(0, 3)) {
+          try {
+            const { promptSnippet: memSnippet } = await readSiteMemory(s.id);
+            if (memSnippet) {
+              contextSnippet += `\n### Mémoire ${s.display_name || s.domain}${memSnippet}`;
+            }
+            // Check pending identity suggestions
+            const pending = await getPendingSuggestions(s.id);
+            if (pending.length > 0) {
+              contextSnippet += `\n⚠ ${pending.length} suggestion(s) de carte d'identité en attente de validation pour ${s.domain}\n`;
+              for (const p of pending.slice(0, 3)) {
+                contextSnippet += `  - ${p.field_name}: "${p.current_value}" → "${p.suggested_value}" (${p.reason})\n`;
+              }
+            }
+          } catch (e) {
+            console.error(`[sav-agent] Memory read error for ${s.domain}:`, e);
+          }
+        }
+
         // For each site, fetch latest audit & crawl info
         for (const s of sites.slice(0, 5)) {
           // Latest audit
