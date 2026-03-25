@@ -110,6 +110,7 @@ interface HtmlAnalysis {
   hasSchemaOrg: boolean;
   schemaTypes: string[];
   isSchemaJsGenerated?: boolean;
+  isMetaJsGenerated?: boolean;
   isHttps: boolean;
   hasGTM?: boolean;
   hasGA4?: boolean;
@@ -369,6 +370,26 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       return false;
     })();
     if (isSchemaJsGenerated) console.log('[analyzeHtml] ⚠️ Schema/JSON-LD appears to be JS-generated');
+    
+    // Detect JS-generated title/meta/OG
+    const isMetaJsGenerated = (() => {
+      const scripts = html.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (const script of scripts) {
+        const c = script.replace(/<script[^>]*>|<\/script>/gi, '');
+        if (/document\.title\s*=/i.test(c)) return true;
+        if (/querySelector\s*\(\s*['"]meta\[name.*description/i.test(c)) return true;
+        if (/createElement\s*\(\s*['"]meta['"]\s*\)[\s\S]{0,200}description/i.test(c)) return true;
+        if (/property\s*=\s*['"]og:/i.test(c) && /createElement|setAttribute|innerHTML|appendChild/i.test(c)) return true;
+      }
+      // Client-only React with Helmet
+      const hasHelmet = /react-helmet|helmet-async/i.test(html);
+      const hasSSR = /__NEXT_DATA__|__NUXT__|data-server-rendered/i.test(html);
+      const hasEmptyRoot = /<div\s+id=["'](root|app)["'][^>]*>\s*<\/div>/i.test(html);
+      if (hasHelmet && !hasSSR && hasEmptyRoot) return true;
+      return false;
+    })();
+    if (isMetaJsGenerated) console.log('[analyzeHtml] ⚠️ Title/Meta/OG appears to be JS-generated');
+
     const hasGTM = /googletagmanager\.com\/gtm\.js/i.test(html) || /GTM-[A-Z0-9]+/i.test(html);
     const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
     
@@ -667,6 +688,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
       isSchemaJsGenerated,
+      isMetaJsGenerated,
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
@@ -2323,6 +2345,10 @@ Deno.serve(async (req) => {
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
       }
     }
+    if (htmlAnalysis.isMetaJsGenerated) {
+      aiReadyScore -= 4;
+      console.log('[Expert-Audit] ⚠️ Title/Meta/OG is JS-generated — AI Ready score penalized (-4)');
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // E. Security (20 pts) - Enhanced with HSTS
@@ -2373,6 +2399,7 @@ Deno.serve(async (req) => {
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
         isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
+        isMetaJsGenerated: htmlAnalysis.isMetaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
         allowsAIBots: crawlersResult?.allowsAIBots,

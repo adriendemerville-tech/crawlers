@@ -354,6 +354,17 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
               </div>
             )}
             
+            {(scores.aiReady as any).isMetaJsGenerated && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 mt-2">
+                <p className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                    Title, Meta Description ou Open Graph injectés par JavaScript — invisibles pour les crawlers IA (GPTBot, PerplexityBot, ClaudeBot). Pénalité GEO : -4 pts.
+                  </span>
+                </p>
+              </div>
+            )}
+            
             <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-3">
               <p className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
                 <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />

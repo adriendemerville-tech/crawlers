@@ -281,6 +281,84 @@ function detectJsGeneratedSchema(html: string): boolean {
   return false;
 }
 
+// ============================================================================
+// DÉTECTION META TAGS INJECTÉS PAR JAVASCRIPT
+// ============================================================================
+
+interface JsMetaDetection {
+  isTitleJsGenerated: boolean;
+  isMetaDescJsGenerated: boolean;
+  isOgJsGenerated: boolean;
+  hasAnyJsMeta: boolean;
+}
+
+/**
+ * Detect if title, meta description, or OG tags are injected via JavaScript
+ * rather than present as static HTML. GEO crawlers (GPTBot, PerplexityBot, ClaudeBot)
+ * do NOT execute JS — these tags would be invisible to them.
+ */
+function detectJsGeneratedMeta(rawHtml: string): JsMetaDetection {
+  const regularScripts = rawHtml.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  
+  let isTitleJsGenerated = false;
+  let isMetaDescJsGenerated = false;
+  let isOgJsGenerated = false;
+
+  for (const script of regularScripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+    
+    // Title JS injection patterns
+    if (
+      /document\.title\s*=/i.test(content) ||
+      /\.setAttribute\s*\(\s*['"]title['"]/i.test(content) ||
+      /useEffect[\s\S]*?document\.title/i.test(content)
+    ) {
+      isTitleJsGenerated = true;
+    }
+    
+    // Meta description JS injection patterns
+    if (
+      /meta\s*\[\s*name\s*=\s*['"]description['"]\s*\]/i.test(content) ||
+      /querySelector\s*\(\s*['"]meta\[name.*description/i.test(content) ||
+      /\.setAttribute\s*\(\s*['"]content['"]\s*,[\s\S]*?description/i.test(content) ||
+      /createElement\s*\(\s*['"]meta['"]\s*\)[\s\S]{0,200}description/i.test(content)
+    ) {
+      isMetaDescJsGenerated = true;
+    }
+    
+    // OG tags JS injection patterns
+    if (
+      /property\s*=\s*['"]og:/i.test(content) && /createElement|setAttribute|innerHTML|appendChild/i.test(content) ||
+      /querySelector\s*\(\s*['"]meta\[property.*og:/i.test(content)
+    ) {
+      isOgJsGenerated = true;
+    }
+  }
+  
+  // Also check for React Helmet patterns (bundled JS that manages <head>)
+  const hasHelmetPattern = /react-helmet|helmet-async|Helmet|useHelmet/i.test(rawHtml);
+  const isFrameworkSSR = /__NEXT_DATA__|__NUXT__|data-server-rendered/i.test(rawHtml);
+  
+  // If Helmet is used with SSR frameworks (Next.js, Nuxt), the meta is rendered server-side → OK
+  // If Helmet is used with client-only React (no SSR), the meta IS JS-generated
+  if (hasHelmetPattern && !isFrameworkSSR) {
+    // Check if there's an empty root (client-only SPA)
+    const hasEmptyRoot = /<div\s+id=["'](root|app)["'][^>]*>\s*<\/div>/i.test(rawHtml);
+    if (hasEmptyRoot) {
+      isTitleJsGenerated = true;
+      isMetaDescJsGenerated = true;
+      isOgJsGenerated = true;
+    }
+  }
+  
+  const hasAnyJsMeta = isTitleJsGenerated || isMetaDescJsGenerated || isOgJsGenerated;
+  if (hasAnyJsMeta) {
+    console.log(`[GEO-AUDIT] ⚠️ JS-generated meta detected — title:${isTitleJsGenerated} desc:${isMetaDescJsGenerated} og:${isOgJsGenerated}`);
+  }
+  
+  return { isTitleJsGenerated, isMetaDescJsGenerated, isOgJsGenerated, hasAnyJsMeta };
+}
+
 function analyzeStructuredData(doc: ReturnType<DOMParser['parseFromString']>, rawHtml: string): JsonLdValidation {
   const isJsGenerated = detectJsGeneratedSchema(rawHtml);
   
@@ -768,6 +846,7 @@ Deno.serve(async (req) => {
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
     const hasSitemap = checkSitemap(robotsTxt);
+    const jsMetaDetection = detectJsGeneratedMeta(pageHtml);
     const intentResult = analyzeDirectAnswer(contentResult.titleText, contentResult.h1Text, contentResult.first150Words, metaResult.description);
     const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
 
@@ -798,20 +877,33 @@ Deno.serve(async (req) => {
 
     // Factor 2: Meta Description (10 points)
     // For SPA without rendering, meta may be injected by JS — give neutral score
-    const metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
+    let metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
+    let metaDescRecommendation: string | undefined;
+    let metaDescDetails = metaResult.description 
+      ? `"${metaResult.description.substring(0, 60)}..."` 
+      : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription);
+    
+    // Penalize JS-generated meta description (invisible to GEO crawlers)
+    if (jsMetaDetection.isMetaDescJsGenerated && metaDescScore > 0) {
+      metaDescScore = Math.max(0, metaDescScore - 4);
+      metaDescRecommendation = 'Meta description injectée par JavaScript — invisible pour les crawlers IA (GPTBot, PerplexityBot, ClaudeBot). Utilisez du HTML statique ou le SSR.';
+      metaDescDetails += ' | ⚠️ JS-generated';
+    } else if (!metaResult.hasDescription) {
+      metaDescRecommendation = isSPAWithLimitedContent 
+        ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' 
+        : t.factors.metaDescription.recommendation;
+    }
+    
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
       maxScore: 10,
-      status: metaDescScore === 10 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
-      recommendation: !metaResult.hasDescription 
-        ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
-        : undefined,
-      details: metaResult.description 
-        ? `"${metaResult.description.substring(0, 60)}..."` 
-        : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription)
+      status: metaDescScore >= 8 ? 'good' : metaDescScore > 0 ? 'warning' : 'error',
+      recommendation: metaDescRecommendation,
+      details: metaDescDetails,
+      isJsGenerated: jsMetaDetection.isMetaDescJsGenerated || undefined
     });
 
     // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
@@ -948,8 +1040,15 @@ Deno.serve(async (req) => {
       ogScore = 5;
     }
     
+    // Penalize JS-generated OG tags
+    if (jsMetaDetection.isOgJsGenerated && ogScore > 0) {
+      ogScore = Math.max(0, ogScore - 3);
+    }
+    
     let ogRecommendation: string | undefined;
-    if (!ogResult.hasOg && !ogResult.hasTwitter) {
+    if (jsMetaDetection.isOgJsGenerated && ogResult.hasOg) {
+      ogRecommendation = 'Balises Open Graph injectées par JavaScript — invisibles pour les crawlers IA et les previews sociaux sans rendu JS. Utilisez du HTML statique.';
+    } else if (!ogResult.hasOg && !ogResult.hasTwitter) {
       ogRecommendation = isSPAWithLimitedContent 
         ? 'SPA détecté — les balises Open Graph peuvent être injectées par JavaScript. Vérifiez le rendu SSR.'
         : t.factors.socialMeta.addBoth;
