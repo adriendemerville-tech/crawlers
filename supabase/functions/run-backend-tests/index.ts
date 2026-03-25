@@ -1,6 +1,9 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
 /**
  * run-backend-tests — CI Test Runner pour Crawlers.fr
  *
@@ -448,10 +451,7 @@ Deno.serve(async (req) => {
     const supabase = getServiceClient()
     const token = authHeader.replace('Bearer ', '')
     if (token) {
-      const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-      const userClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      })
+      const userClient = getUserClient(authHeader)
       const { data: { user } } = await userClient.auth.getUser(token)
       if (user) {
         const { data: isAdmin } = await supabase.rpc('has_role', {
