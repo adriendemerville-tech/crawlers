@@ -269,6 +269,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return <ParmenionDashboard />;
+      case 'marina': return <MarinaDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
