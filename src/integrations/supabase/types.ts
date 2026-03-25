@@ -3693,6 +3693,56 @@ export type Database = {
           },
         ]
       }
+      identity_card_suggestions: {
+        Row: {
+          created_at: string
+          current_value: string | null
+          field_name: string
+          id: string
+          reason: string | null
+          reviewed_at: string | null
+          source: string
+          status: string
+          suggested_value: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: string | null
+          field_name: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          source?: string
+          status?: string
+          suggested_value: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: string | null
+          field_name?: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          source?: string
+          status?: string
+          suggested_value?: string
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_card_suggestions_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       injection_abuse_logs: {
         Row: {
           abuse_type: string
@@ -6097,6 +6147,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      site_memory: {
+        Row: {
+          category: string
+          confidence: number | null
+          created_at: string
+          id: string
+          memory_key: string
+          memory_value: string
+          source: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          memory_key: string
+          memory_value: string
+          source?: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          memory_key?: string
+          memory_value?: string
+          source?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_memory_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_script_rules: {
         Row: {
