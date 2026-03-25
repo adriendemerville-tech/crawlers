@@ -48,6 +48,7 @@ function getPriorityColor(priority: 'high' | 'medium' | 'low'): string {
 }
 
 function getBusinessValueColor(value: string): string {
+  if (!value) return 'text-muted-foreground border-muted bg-muted/10';
   switch (value) {
     case 'High': return 'text-success border-success/30 bg-success/10';
     case 'Medium': return 'text-warning border-warning/30 bg-warning/10';
@@ -57,10 +58,12 @@ function getBusinessValueColor(value: string): string {
 }
 
 function getIntentColor(intent: string): string {
-  if (intent.toLowerCase().includes('transaction')) return 'text-success border-success/30 bg-success/10';
-  if (intent.toLowerCase().includes('décision') || intent.toLowerCase().includes('decision')) return 'text-primary border-primary/30 bg-primary/10';
-  if (intent.toLowerCase().includes('informat')) return 'text-warning border-warning/30 bg-warning/10';
-  if (intent.toLowerCase().includes('navigat')) return 'text-muted-foreground border-muted bg-muted/10';
+  if (!intent) return 'text-muted-foreground border-muted bg-muted/10';
+  const lower = intent.toLowerCase();
+  if (lower.includes('transaction')) return 'text-success border-success/30 bg-success/10';
+  if (lower.includes('décision') || lower.includes('decision')) return 'text-primary border-primary/30 bg-primary/10';
+  if (lower.includes('informat')) return 'text-warning border-warning/30 bg-warning/10';
+  if (lower.includes('navigat')) return 'text-muted-foreground border-muted bg-muted/10';
   return 'text-muted-foreground border-muted bg-muted/10';
 }
 
