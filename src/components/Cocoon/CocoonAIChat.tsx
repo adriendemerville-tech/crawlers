@@ -1741,54 +1741,94 @@ Termina con un resumen ejecutivo y próximos pasos.`,
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            {/* Action buttons — only after maillage response */}
+            {/* Dynamic action buttons — adapt to last AI message content */}
             {(() => {
-              const hasOptimizeResponse = messages.some((m, i) => {
-                if (m.role !== 'assistant' || i === 0) return false;
-                const prev = messages[i - 1];
-                return prev?.role === 'user' && isOptimizePrompt(prev.content);
-              });
-              if (!hasOptimizeResponse) return null;
-              // Find last optimization response content for deploy
-              const lastOptContent = [...messages].reverse().find((m, _, arr) => {
-                const idx = messages.indexOf(m);
-                if (m.role !== 'assistant' || idx === 0) return false;
-                const prev = messages[idx - 1];
-                return prev?.role === 'user' && isOptimizePrompt(prev.content);
-              })?.content;
+              // Find last assistant message
+              const lastAiMsg = [...messages].reverse().find(m => m.role === 'assistant');
+              if (!lastAiMsg || messages.length < 2) return null;
+
+              const content = lastAiMsg.content.toLowerCase();
+
+              // Detect what the AI is recommending
+              const mentionsMaillage = /maillage|liens? internes?|auto[- ]?maillage|injection|seringue|link.*internal/i.test(content);
+              const mentionsArchitect = /architecte|contenu.*créer|page.*générer|nouvelle.*page|content.*architect|créer.*page/i.test(content);
+              const mentionsActionPlan = /plan d'action|action.*plan|prioris|quick.*win/i.test(content);
+              const mentionsStrategy = /stratégi|diagnostic|cannibali|orphelin|profondeur|cluster/i.test(content);
+
+              // Build dynamic buttons based on content
+              const buttons: JSX.Element[] = [];
+
+              if (mentionsActionPlan && trackedSiteId) {
+                const lastOptContent = lastAiMsg.content;
+                buttons.push(
+                  <button
+                    key="action-plan"
+                    onClick={() => handleAddToActionPlan(lastOptContent)}
+                    disabled={isDeploying || deploySuccess}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                      deploySuccess
+                        ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25)]'
+                        : isDeploying
+                          ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
+                          : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    <ClipboardList className="w-3 h-3" />
+                    {deploySuccess
+                      ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
+                      : isDeploying
+                        ? '…'
+                        : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
+                  </button>
+                );
+              }
+
+              if (mentionsMaillage && !mentionsArchitect) {
+                buttons.push(
+                  <button
+                    key="linking"
+                    onClick={handleOptimizeLinking}
+                    disabled={isLoading || nodes.length < 3}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-400/30 text-emerald-300 bg-transparent text-[11px] font-medium hover:bg-emerald-500/10 transition-all disabled:opacity-30"
+                  >
+                    <Syringe className="w-3 h-3" />
+                    {language === 'en' ? 'Optimize linking' : language === 'es' ? 'Optimizar enlaces' : 'Optimiser le maillage'}
+                  </button>
+                );
+              }
+
+              if (mentionsArchitect && !mentionsMaillage && isContentArchitectVisible) {
+                buttons.push(
+                  <button
+                    key="architect"
+                    onClick={() => setShowArchitectModal(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
+                  >
+                    <Hammer className="w-3 h-3" />
+                    {language === 'en' ? 'Content Architect' : language === 'es' ? 'Arquitecto contenido' : 'Architecte contenu'}
+                  </button>
+                );
+              }
+
+              if (mentionsStrategy && !mentionsMaillage && !mentionsArchitect) {
+                buttons.push(
+                  <button
+                    key="strategy"
+                    onClick={handleStrategy360}
+                    disabled={isLoading || !trackedSiteId}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 text-amber-300 bg-transparent text-[11px] font-medium hover:bg-amber-500/10 transition-all disabled:opacity-30"
+                  >
+                    <Compass className="w-3 h-3" />
+                    {t.strategyBtn}
+                  </button>
+                );
+              }
+
+              if (buttons.length === 0) return null;
+
               return (
                 <div className="mb-2 flex gap-2">
-                  {/* Add to action plan button */}
-                  {trackedSiteId && lastOptContent && (
-                    <button
-                      onClick={() => handleAddToActionPlan(lastOptContent)}
-                      disabled={isDeploying || deploySuccess}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
-                        deploySuccess
-                          ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25),0_0_24px_4px_rgba(16,185,129,0.12)] animate-[glow-pulse_2s_ease-in-out_infinite]'
-                          : isDeploying
-                            ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
-                            : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
-                      }`}
-                    >
-                      <ClipboardList className="w-3 h-3" />
-                      {deploySuccess 
-                        ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
-                        : isDeploying 
-                          ? '…' 
-                          : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
-                    </button>
-                  )}
-                  {/* Architect button - hidden when Content Architect is invisible */}
-                  {isContentArchitectVisible && (
-                    <button
-                      onClick={() => setShowArchitectModal(true)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
-                    >
-                      <Hammer className="w-3 h-3" />
-                      Architecte contenu
-                    </button>
-                  )}
+                  {buttons}
                 </div>
               );
             })()}
