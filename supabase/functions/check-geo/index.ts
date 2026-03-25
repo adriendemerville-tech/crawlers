@@ -352,10 +352,10 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   wordCount: number;
   h1Text: string;
   titleText: string;
-  firstParagraphText: string;
+  first150Words: string;
 } {
   if (!doc) {
-    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', firstParagraphText: '' };
+    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', first150Words: '' };
   }
 
   // H1 count
@@ -368,14 +368,16 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   const titleEl = doc.querySelector('title');
   const titleText = titleEl?.textContent?.trim() || '';
 
-  // First paragraph text
+  // Extract first 150 words of visible body text (excluding nav, header, footer, script, style)
   const body = doc.querySelector('body');
-  let firstParagraphText = '';
+  let first150Words = '';
   if (body) {
-    const firstP = body.querySelector('p');
-    if (firstP) {
-      firstParagraphText = firstP.textContent?.trim() || '';
-    }
+    const clone = body.cloneNode(true) as Element;
+    // Remove non-content elements
+    clone.querySelectorAll('script, style, noscript, nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]').forEach((el: Element) => el.remove());
+    const visibleText = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+    const words = visibleText.split(/\s+/).filter(w => w.length > 0);
+    first150Words = words.slice(0, 150).join(' ');
   }
 
   // All headings
@@ -400,19 +402,21 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
     wordCount = text.split(/\s+/).filter(w => w.length > 2).length;
   }
 
-  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, firstParagraphText };
+  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, first150Words };
 }
 
 // ============================================================================
 // DÉTECTION INTENTION DANS LE TITRE + PREMIÈRE PHRASE
 // ============================================================================
 
-function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphText: string, metaDescription?: string): {
+function analyzeDirectAnswer(titleText: string, h1Text: string, first150Words: string, metaDescription?: string): {
   found: boolean;
   inTitle: boolean;
   inH1: boolean;
-  inFirstSentence: boolean;
+  inFirst150Words: boolean;
+  keywordDensity: number;
   detectedKeywords: string[];
+  wordCount: number;
 } {
   // Extract likely intent keywords from the title (longest meaningful words)
   const combinedTitle = `${titleText} ${h1Text}`.toLowerCase();
@@ -422,27 +426,32 @@ function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphT
   const stopwords = new Set(['pour', 'dans', 'avec', 'plus', 'votre', 'notre', 'cette', 'comment', 'tout', 'what', 'your', 'this', 'that', 'with', 'from', 'about', 'como', 'para', 'todo', 'best', 'guide', 'complete']);
   const keywords = [...new Set(titleWords.filter(w => !stopwords.has(w)))].slice(0, 5);
   
+  const words150 = first150Words.toLowerCase();
+  const words150Count = first150Words.split(/\s+/).filter(w => w.length > 0).length;
+
   if (keywords.length === 0) {
-    return { found: false, inTitle: false, inH1: false, inFirstSentence: false, detectedKeywords: [] };
+    return { found: false, inTitle: false, inH1: false, inFirst150Words: false, keywordDensity: 0, detectedKeywords: [], wordCount: words150Count };
   }
 
-  const firstSentence = firstParagraphText.toLowerCase();
   const title = titleText.toLowerCase();
   const h1 = h1Text.toLowerCase();
 
-  // Check if at least 2 keywords from title appear in first paragraph
-  const matchesInFirst = keywords.filter(kw => firstSentence.includes(kw));
-  const inFirstSentence = matchesInFirst.length >= Math.min(2, keywords.length);
+  // Check how many keywords from title appear in the first 150 words
+  const matchesInFirst150 = keywords.filter(kw => words150.includes(kw));
+  const keywordDensity = matchesInFirst150.length / keywords.length;
+  const inFirst150Words = matchesInFirst150.length >= Math.min(2, keywords.length);
   
   const inTitle = keywords.some(kw => title.includes(kw));
   const inH1 = keywords.some(kw => h1.includes(kw));
 
   return {
-    found: (inTitle || inH1) && inFirstSentence,
+    found: (inTitle || inH1) && inFirst150Words,
     inTitle,
     inH1,
-    inFirstSentence,
-    detectedKeywords: matchesInFirst.length > 0 ? matchesInFirst : keywords.slice(0, 3),
+    inFirst150Words,
+    keywordDensity: Math.round(keywordDensity * 100),
+    detectedKeywords: matchesInFirst150.length > 0 ? matchesInFirst150 : keywords.slice(0, 3),
+    wordCount: words150Count,
   };
 }
 
@@ -759,7 +768,7 @@ Deno.serve(async (req) => {
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
     const hasSitemap = checkSitemap(robotsTxt);
-    const intentResult = analyzeIntentInTitle(contentResult.titleText, contentResult.h1Text, contentResult.firstParagraphText, metaResult.description);
+    const intentResult = analyzeDirectAnswer(contentResult.titleText, contentResult.h1Text, contentResult.first150Words, metaResult.description);
     const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
 
     // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
@@ -1000,7 +1009,7 @@ Deno.serve(async (req) => {
       details: canonicalDetails
     });
 
-    // Factor 9: Intent in Title & First Sentence (5 points)
+    // Factor 9: Direct Answer in First 150 Words (5 points)
     let intentScore = 0;
     let intentDetails = '';
     let intentStatus: 'good' | 'warning' | 'error' = 'error';
@@ -1012,15 +1021,19 @@ Deno.serve(async (req) => {
     } else {
       if (intentResult.found) {
         intentScore = 5;
-        intentDetails = `Intention détectée dans le titre et la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentDetails = `Réponse directe détectée dans les 150 premiers mots (${intentResult.wordCount} mots analysés, densité ${intentResult.keywordDensity}%) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
         intentStatus = 'good';
+      } else if (intentResult.inFirst150Words) {
+        intentScore = 4;
+        intentDetails = `Mots-clés présents dans les 150 premiers mots mais cohérence partielle (densité ${intentResult.keywordDensity}%) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'warning';
       } else if (intentResult.inTitle || intentResult.inH1) {
-        intentScore = 3;
-        intentDetails = `Intention dans le titre mais absente de la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentScore = 2;
+        intentDetails = `Intention dans le titre mais absente des 150 premiers mots (${intentResult.wordCount} mots analysés) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
         intentStatus = 'warning';
       } else {
         intentScore = 0;
-        intentDetails = 'Aucune cohérence d\'intention détectée entre le titre et le contenu';
+        intentDetails = `Aucune réponse directe dans les 150 premiers mots (${intentResult.wordCount} mots analysés)`;
         intentStatus = 'error';
       }
     }

@@ -143,9 +143,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Balise canonical trouvée',
       },
       intentInTitle: {
-        name: 'Intention dans le Titre',
-        description: 'Le mot-clé principal ou l\'intention est visible dans le titre et la première phrase',
-        recommendation: 'Placez votre mot-clé principal dans le titre (H1 ou <title>) et dans la première phrase du contenu pour maximiser la pertinence IA',
+        name: 'Réponse directe (150 mots)',
+        description: 'Les 150 premiers mots du contenu fournissent une réponse claire à l\'intention de la page — critère clé pour les IA',
+        recommendation: 'Placez une réponse directe et factuelle dans les 150 premiers mots de votre contenu. Les IA extraient en priorité le début du texte pour économiser du temps de crawl',
       },
       faqOrSummary: {
         name: 'FAQ ou Résumé en Début',
@@ -215,9 +215,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Canonical tag found',
       },
       intentInTitle: {
-        name: 'Intent in Title',
-        description: 'Main keyword or intent visible in title and first sentence',
-        recommendation: 'Place your main keyword in the title (H1 or <title>) and first sentence to maximize AI relevance',
+        name: 'Direct Answer (150 words)',
+        description: 'The first 150 words provide a clear, direct answer to the page intent — key criterion for AI engines',
+        recommendation: 'Place a direct, factual answer in the first 150 words of your content. AI engines prioritize the beginning of text to save crawl time',
       },
       faqOrSummary: {
         name: 'FAQ or Summary at Top',
@@ -287,9 +287,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Etiqueta canonical encontrada',
       },
       intentInTitle: {
-        name: 'Intención en el Título',
-        description: 'La palabra clave principal o intención visible en el título y primera frase',
-        recommendation: 'Coloque su palabra clave principal en el título (H1 o <title>) y en la primera frase del contenido para maximizar la relevancia IA',
+        name: 'Respuesta directa (150 palabras)',
+        description: 'Las primeras 150 palabras proporcionan una respuesta clara a la intención de la página — criterio clave para las IA',
+        recommendation: 'Coloque una respuesta directa y factual en las primeras 150 palabras de su contenido. Las IA priorizan el inicio del texto para ahorrar tiempo de rastreo',
       },
       faqOrSummary: {
         name: 'FAQ o Resumen al Inicio',

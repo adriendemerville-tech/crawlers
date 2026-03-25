@@ -77,6 +77,12 @@ const ROUTING_RULES: RoutingRule[] = [
     fn: 'check-geo', type: 'technical', cost: 0, confidence: 0.85,
   },
 
+  // Direct answer in first 150 words
+  {
+    patterns: [/r[eé]ponse.?directe/i, /direct.?answer/i, /150.?mot/i, /150.?word/i, /introduction/i, /premier.?mot/i, /first.?word/i, /accroche/i, /hook/i, /opening/i],
+    fn: 'check-direct-answer', type: 'technical', cost: 0, confidence: 0.9,
+  },
+
   // LLM-based — cheap
   {
     patterns: [/e.?e.?a.?t/i, /expertise/i, /experience/i, /authoritativeness/i, /trustworthiness/i, /confiance/i, /auteur/i, /cr[eé]dibilit[eé]/i],
