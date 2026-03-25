@@ -232,7 +232,7 @@ export function ParmenionDashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">État</CardTitle>
