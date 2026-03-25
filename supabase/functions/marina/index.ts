@@ -603,6 +603,13 @@ Deno.serve(async (req) => {
       return json({ success: true, jobs: jobs || [] });
     }
 
+    // ── Internal: run_job (called by self-invocation to actually execute the pipeline) ──
+    if (body.action === 'run_job' && body.job_id) {
+      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id}`);
+      await runPipeline(body.job_id, body.url, body.lang);
+      return json({ success: true, job_id: body.job_id });
+    }
+
     // ── Start new pipeline ──
     const { url: targetUrl, lang } = body;
     if (!targetUrl) return json({ error: 'url is required' }, 400);
@@ -623,9 +630,17 @@ Deno.serve(async (req) => {
       return json({ error: 'Failed to create job' }, 500);
     }
 
-    // Fire-and-forget: run pipeline in background
-    runPipeline(job.id, targetUrl, lang).catch(err => {
-      console.error('[Marina] Background pipeline error:', err);
+    // Self-invocation: trigger a separate HTTP call that will run the pipeline
+    // This ensures the pipeline runs as the main task of its own function instance
+    fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'run_job', job_id: job.id, url: targetUrl, lang: lang || null }),
+    }).catch(err => {
+      console.error('[Marina] Self-invocation failed:', err);
     });
 
     return json({ job_id: job.id, status: 'pending' }, 202);
