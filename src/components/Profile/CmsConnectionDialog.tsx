@@ -411,6 +411,16 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
                 ↗ {language === 'fr' ? 'Ouvrir les réglages Odoo' : language === 'es' ? 'Abrir configuración Odoo' : 'Open Odoo settings'}
               </a>
             )}
+            {cmsType === 'prestashop' && siteUrl && (
+              <a
+                href={`${siteUrl.replace(/\/$/, '')}/admin-dev/index.php?controller=AdminWebservice`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                ↗ {language === 'fr' ? 'Ouvrir les réglages Webservice PrestaShop' : language === 'es' ? 'Abrir configuración Webservice PrestaShop' : 'Open PrestaShop Webservice settings'}
+              </a>
+            )}
           </DialogDescription>
         </DialogHeader>
 
