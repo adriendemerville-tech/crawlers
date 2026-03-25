@@ -298,14 +298,6 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef, 
           >
             Connectez votre Spotify en paramètres
           </a>
-          <a
-            href="/app/profil?tab=settings"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] px-2 py-0.5 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-colors font-medium"
-          >
-            Connecter
-          </a>
         </div>
       </div>
 
