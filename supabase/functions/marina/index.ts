@@ -622,12 +622,8 @@ Deno.serve(async (req) => {
       return json({ success: true, jobs: jobs || [] });
     }
 
-    // ── Internal: run_job (called by self-invocation to actually execute the pipeline) ──
-    if (body.action === 'run_job' && body.job_id) {
-      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id}`);
-      await runPipeline(body.job_id, body.url, body.lang);
-      return json({ success: true, job_id: body.job_id });
-    }
+
+
 
     // ── Start new pipeline ──
     const { url: targetUrl, lang } = body;
