@@ -763,7 +763,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
     await updateProgress(65, 'cocoon');
 
-    // ─── Step 3: Cocoon (always run — create tracked_site if needed) ───
+    // ─── Step 3: Cocoon (always run — create tracked_site + crawl data if needed) ───
     let cocoonResult: any = null;
     try {
       // Check if domain has a tracked_site
@@ -774,7 +774,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
         .limit(1)
         .maybeSingle();
       
-      // Auto-create tracked_site for cocoon analysis (admin function)
+      // Auto-create tracked_site for cocoon analysis
       if (!trackedSite) {
         console.log(`[Marina] No tracked_site for ${domain}, creating one for cocoon analysis`);
         const { data: newSite, error: createErr } = await sb
@@ -797,11 +797,98 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
       }
 
       if (trackedSite) {
+        // Check if crawl data exists — if not, populate from expert audit internal links
+        const { data: existingCrawls } = await sb
+          .from('site_crawls' as any)
+          .select('id')
+          .eq('domain', domain)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (!existingCrawls?.length) {
+          console.log(`[Marina] No crawl data for ${domain}, creating from expert audit...`);
+          
+          // Create a site_crawls entry
+          const { data: newCrawl, error: crawlErr } = await sb
+            .from('site_crawls' as any)
+            .insert({
+              user_id: parentJob.user_id,
+              domain: domain,
+              url: url,
+              status: 'completed',
+              pages_found: 1,
+              pages_crawled: 1,
+            })
+            .select('id')
+            .single();
+          
+          if (newCrawl && !crawlErr) {
+            // Extract internal links from expert audit and build crawl_pages
+            const internalLinks: string[] = [];
+            const rawHtml = expertResult.data?.rawData?.htmlAnalysis || {};
+            
+            // Main page
+            const mainPageData = {
+              crawl_id: (newCrawl as any).id,
+              url: url,
+              title: rawHtml.title || '',
+              h1: rawHtml.h1 || '',
+              meta_description: rawHtml.metaDescription || '',
+              word_count: rawHtml.wordCount || 0,
+              http_status: 200,
+              seo_score: expertResult.data?.totalScore || 0,
+              internal_links: rawHtml.internalLinksCount || 0,
+              external_links: rawHtml.externalLinksCount || 0,
+              crawl_depth: 0,
+            };
+            
+            await sb.from('crawl_pages').insert(mainPageData);
+            
+            // Also insert discovered internal link URLs as depth-1 pages
+            const discoveredLinks = rawHtml.internalLinks || expertResult.data?.rawData?.internalLinks || [];
+            if (Array.isArray(discoveredLinks) && discoveredLinks.length > 0) {
+              const linkPages = discoveredLinks.slice(0, 50).map((link: any) => {
+                const linkUrl = typeof link === 'string' ? link : link.href || link.url || '';
+                return {
+                  crawl_id: (newCrawl as any).id,
+                  url: linkUrl,
+                  title: typeof link === 'object' ? (link.text || link.title || '') : '',
+                  h1: '',
+                  meta_description: '',
+                  word_count: 0,
+                  http_status: 200,
+                  seo_score: 0,
+                  internal_links: 0,
+                  external_links: 0,
+                  crawl_depth: 1,
+                };
+              }).filter((p: any) => p.url);
+              
+              if (linkPages.length > 0) {
+                await sb.from('crawl_pages').insert(linkPages);
+                // Update crawl count
+                await sb.from('site_crawls' as any)
+                  .update({ pages_found: linkPages.length + 1, pages_crawled: linkPages.length + 1 })
+                  .eq('id', (newCrawl as any).id);
+              }
+              
+              console.log(`[Marina] Created crawl with ${linkPages.length + 1} pages for cocoon`);
+            }
+          }
+        }
+
         console.log(`[Marina] Step 3: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
         cocoonResult = await callFunction('calculate-cocoon-logic', { 
-          tracked_site_id: trackedSite.id 
+          tracked_site_id: trackedSite.id,
+          _user_id: parentJob.user_id,
         });
-        console.log(`[Marina] Cocoon done: ${cocoonResult?.stats?.nodes_count || 0} nodes`);
+        
+        // If cocoon returned error about no crawl, log it
+        if (cocoonResult?.error) {
+          console.warn(`[Marina] Cocoon returned error: ${cocoonResult.error}`);
+        } else {
+          console.log(`[Marina] Cocoon done: ${cocoonResult?.stats?.nodes_count || 0} nodes`);
+        }
       }
     } catch (e) {
       console.warn(`[Marina] Cocoon failed (non-fatal):`, e);
