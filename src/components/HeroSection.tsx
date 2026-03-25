@@ -79,7 +79,7 @@ function HeroSectionComponent() {
                 </MotionSpan>
               </Suspense>
             ) : (
-              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-right">
+              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-center sm:text-right">
                 {animatedWords[0]}
               </span>
             )}
