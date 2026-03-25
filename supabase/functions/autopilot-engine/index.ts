@@ -204,6 +204,26 @@ Deno.serve(async (req: Request) => {
           status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
         });
 
+        // ═══ Push event to IKtracker for traceability ═══
+        try {
+          if (site.domain.includes('iktracker')) {
+            await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'push-event',
+                event_type: `autopilot_${pipelinePhase}`,
+                severity: executionSuccess ? 'info' : 'warning',
+                page_key: decision.tactic?.target_url || null,
+                message: `[Cycle #${cycleNumber}] ${decision.summary || decision.goal?.description || pipelinePhase}`,
+                details: { cycle_number: cycleNumber, phase: pipelinePhase, functions: decision.action?.functions, status: finalStatus },
+              }),
+            });
+          }
+        } catch (e) {
+          console.warn(`[AutopilotEngine] IKtracker event push failed (non-fatal):`, e);
+        }
+
         results.push({
           site_id: config.tracked_site_id,
           domain: site.domain,
