@@ -678,6 +678,68 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 6: Persist strategic insights to site memory
+    // ═══════════════════════════════════════════════════════════
+    try {
+      const memoryEntries = [];
+
+      // Save key diagnostic findings as insights
+      if (diagnosticsSummary.content?.critical_count > 0) {
+        memoryEntries.push({ memory_key: 'diag_content_critical', memory_value: `${diagnosticsSummary.content.critical_count} problèmes contenu critiques détectés`, category: 'insight', confidence: 0.9 });
+      }
+      if (diagnosticsSummary.semantic?.critical_count > 0) {
+        memoryEntries.push({ memory_key: 'diag_semantic_critical', memory_value: `${diagnosticsSummary.semantic.critical_count} problèmes sémantiques critiques détectés`, category: 'insight', confidence: 0.9 });
+      }
+      if (conflicts.length > 0) {
+        memoryEntries.push({ memory_key: 'strategy_conflicts', memory_value: `${conflicts.length} conflits résolus entre diagnostics`, category: 'insight', confidence: 0.8 });
+      }
+      if (matchingAxes.length > 0) {
+        memoryEntries.push({ memory_key: 'axes_strategiques', memory_value: matchingAxes.map(a => a.label[lang] || a.label.fr).join(', '), category: 'objective', confidence: 0.7 });
+      }
+      if (feedbackAnalysis.successful.length > 0) {
+        memoryEntries.push({ memory_key: 'recos_reussies', memory_value: `${feedbackAnalysis.successful.length} recommandations passées ont eu un impact positif`, category: 'insight', confidence: 1.0 });
+      }
+
+      if (memoryEntries.length > 0) {
+        await writeSiteMemory(tracked_site_id, auth.userId, memoryEntries, 'stratege');
+      }
+
+      // Auto-enrich identity card from diagnostic data if missing
+      const { data: siteData } = await supabase
+        .from('tracked_sites')
+        .select('market_sector, products_services, target_audience, company_size, commercial_area')
+        .eq('id', tracked_site_id)
+        .single();
+
+      if (siteData) {
+        const identityUpdates = [];
+        // If findings reveal specific business characteristics, suggest identity updates
+        const contentFindings = allFindings.filter(f => f.source_type === 'content');
+        const semanticFindings = allFindings.filter(f => f.source_type === 'semantic');
+
+        if (!siteData.target_audience && semanticFindings.length > 0) {
+          const keywords = semanticFindings
+            .flatMap((f: any) => f.data?.keywords || [])
+            .slice(0, 5)
+            .join(', ');
+          if (keywords) {
+            identityUpdates.push({
+              field_name: 'target_audience',
+              value: `Audience ciblant: ${keywords}`,
+              reason: 'Déduit de l\'analyse sémantique du site',
+            });
+          }
+        }
+
+        if (identityUpdates.length > 0) {
+          await applyIdentityUpdates(tracked_site_id, auth.userId, identityUpdates, 'stratege');
+        }
+      }
+    } catch (e) {
+      console.error('[strategist] Memory/identity update error:', e);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // RESPONSE
     // ═══════════════════════════════════════════════════════════
     return new Response(JSON.stringify({
@@ -687,6 +749,7 @@ Deno.serve(async (req) => {
       conflicts_resolved: conflicts,
       feedback: feedbackAnalysis,
       development_axes: matchingAxes,
+      site_memory_context: siteMemoryContext ? true : false,
       lang,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
