@@ -59,7 +59,7 @@ export function ParmenionDashboard() {
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [errorRate, setErrorRate] = useState<{ total: number; errors: number; error_rate: number; conservative_mode: boolean } | null>(null);
-  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number } | null>(null);
+  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number; tracked_site_id: string } | null>(null);
   const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
   const [ikLoading, setIkLoading] = useState(false);
 
@@ -84,7 +84,7 @@ export function ParmenionDashboard() {
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .select('tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -97,6 +97,7 @@ export function ParmenionDashboard() {
         last_cycle_at: data.last_cycle_at,
         domain: ts?.domain || '—',
         total_cycles_run: data.total_cycles_run ?? 0,
+        tracked_site_id: data.tracked_site_id,
       });
     }
   }, []);
@@ -150,13 +151,23 @@ export function ParmenionDashboard() {
   };
 
   const handleNewAction = async () => {
+    if (!autopilotConfig?.tracked_site_id || !autopilotConfig?.domain) {
+      toast({ title: 'Erreur', description: 'Aucun site autopilote actif trouvé.', variant: 'destructive' });
+      return;
+    }
     toast({ title: '🆕 Nouvelle action demandée', description: 'Le prochain cycle de Parménion démarrera avec un nouveau but.' });
-    // Trigger orchestrator
     const { error } = await supabase.functions.invoke('parmenion-orchestrator', {
-      body: { force_new: true },
+      body: {
+        force_new: true,
+        tracked_site_id: autopilotConfig.tracked_site_id,
+        domain: autopilotConfig.domain,
+        cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
+      },
     });
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      fetchLogs();
     }
   };
 
