@@ -276,7 +276,7 @@ export function MarinaDashboard() {
                             <Badge variant="outline" className={cn("text-xs", config.color)}>
                               {config.label}
                             </Badge>
-                            {job.progress != null && job.status === 'processing' && (
+                            {job.progress != null && (job.status === 'processing' || job.status === 'pending') && (
                               <span className="text-xs text-muted-foreground">{job.progress}%</span>
                             )}
                           </div>
