@@ -958,13 +958,25 @@ export default function SiteCrawl() {
     setCrawlResult(null);
 
     try {
+      // Compute effective URL filter from the 4 filter fields
+      let effectiveFilter = urlFilter.trim();
+      if (!effectiveFilter) {
+        if (includeDir) effectiveFilter = `${includeDir}/.*`;
+        else if (excludeDir) effectiveFilter = `(?!${excludeDir}/).*`;
+        if (includePage) effectiveFilter = effectiveFilter ? `${effectiveFilter}|.*${includePage}.*` : `.*${includePage}.*`;
+        else if (excludePage) {
+          const negPage = `(?!.*${excludePage})`;
+          effectiveFilter = effectiveFilter ? `${negPage}${effectiveFilter}` : `${negPage}.*`;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('crawl-site', {
         body: { 
           url, 
           maxPages, 
           userId: user.id,
           maxDepth: maxDepth || 0,
-          urlFilter: urlFilter.trim() || '',
+          urlFilter: effectiveFilter || '',
           customSelectors,
         },
       });
