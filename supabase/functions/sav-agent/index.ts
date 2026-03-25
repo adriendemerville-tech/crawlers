@@ -1012,7 +1012,13 @@ ${screen_context}
 - Tu peux utiliser jusqu'à 1500 caractères pour ces réponses (pas la limite habituelle de 800).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint;
+    // Add memory extraction prompt for paying users with tracked sites
+    let memoryPrompt = "";
+    if (!isGuest && user_id && contextSnippet.includes("SITES TRACKÉS")) {
+      memoryPrompt = getMemoryExtractionPrompt();
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
