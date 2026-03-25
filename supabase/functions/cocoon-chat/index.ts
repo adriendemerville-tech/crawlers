@@ -372,6 +372,7 @@ ${siteIdentityBlock}
 ${domainDataBlock}
 ${strategistBlock}
 ${subdomainBlock}
+${autonomyBlock}
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
