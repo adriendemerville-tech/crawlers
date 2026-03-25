@@ -16,6 +16,8 @@ import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
+import { AutonomyDiagnostic } from './AutonomyDiagnostic';
+import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
