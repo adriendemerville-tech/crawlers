@@ -127,14 +127,21 @@ export function ParmenionDashboard() {
   }, []);
 
   const fetchModCounts = useCallback(async () => {
+    // Count real IKtracker deployments from analytics_events
     const { data } = await supabase
-      .from('autopilot_modification_log')
-      .select('cycle_number, status')
-      .eq('status', 'applied');
+      .from('analytics_events')
+      .select('event_data')
+      .in('event_type', ['autopilot:iktracker_push', 'cms_action:iktracker']);
     if (data) {
       const counts: Record<number, number> = {};
       for (const row of data) {
-        const cn = row.cycle_number ?? 0;
+        const ed = row.event_data as any;
+        // autopilot:iktracker_push has cycle_number directly
+        // cms_action:iktracker with action push-event also counts
+        const cn = ed?.cycle_number ?? ed?.details?.cycle_number ?? 0;
+        const action = ed?.action;
+        // Skip test-connection / list-* actions, only count real pushes
+        if (action && !['push-event'].includes(action) && !ed?.cycle_number) continue;
         counts[cn] = (counts[cn] || 0) + 1;
       }
       setModCounts(counts);
