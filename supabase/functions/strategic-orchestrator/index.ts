@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // ── Fair use check ──
     const authHeader = req.headers.get('Authorization') || '';
     if (authHeader) {
-      const userCtx = await getUserContext(authHeader);
+      const userCtx = await getUserContext(req);
       if (userCtx) {
         const fairUse = await checkFairUse(userCtx.userId, 'strategic_audit', userCtx.planType);
         if (!fairUse.allowed) return json({ error: 'Limite d\'utilisation atteinte', fair_use: fairUse }, 429);
