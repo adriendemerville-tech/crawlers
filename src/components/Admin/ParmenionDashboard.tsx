@@ -317,6 +317,48 @@ export function ParmenionDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5 text-primary" />
+              Cooldown
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-1.5">
+              <Input
+                type="number"
+                min={1}
+                max={168}
+                value={cooldownInput}
+                onChange={(e) => setCooldownInput(e.target.value)}
+                className="w-16 h-8 text-center text-sm"
+              />
+              <span className="text-xs text-muted-foreground">heures</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                disabled={!autopilotConfig?.config_id || Number(cooldownInput) === autopilotConfig?.cooldown_hours}
+                onClick={async () => {
+                  const val = Math.max(1, Math.min(168, Number(cooldownInput)));
+                  const { error } = await supabase
+                    .from('autopilot_configs')
+                    .update({ cooldown_hours: val } as any)
+                    .eq('id', autopilotConfig!.config_id);
+                  if (!error) {
+                    toast({ title: '✅ Cooldown mis à jour', description: `${val}h entre chaque cycle` });
+                    fetchAutopilotConfig();
+                  }
+                }}
+              >
+                OK
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Actuel : {autopilotConfig?.cooldown_hours ?? '—'}h</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Live decision log */}
