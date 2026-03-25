@@ -139,6 +139,155 @@ function clusterUrls(urls: string[], domain: string): FolderNode[] {
   return toNodes(root, '');
 }
 
+/**
+ * Heuristic classifier: infer category from path segment.
+ * Uses known patterns first, then falls back to learned patterns from DB.
+ */
+const KNOWN_PATTERNS: Record<string, string> = {
+  blog: 'blog', articles: 'blog', actualites: 'blog', news: 'blog', actu: 'blog', magazine: 'blog',
+  produit: 'product', produits: 'product', product: 'product', products: 'product', shop: 'product', boutique: 'product',
+  categorie: 'category', categories: 'category', category: 'category', rubrique: 'category', rubriques: 'category',
+  page: 'page', pages: 'page', landing: 'page',
+  service: 'service', services: 'service', prestations: 'service',
+  contact: 'utility', mentions: 'utility', legal: 'utility', cgv: 'utility', cgu: 'utility', faq: 'utility', aide: 'utility', help: 'utility',
+  tag: 'tag', tags: 'tag', etiquette: 'tag',
+  auteur: 'author', author: 'author', authors: 'author',
+  docs: 'documentation', documentation: 'documentation', doc: 'documentation', guide: 'documentation', guides: 'documentation',
+  api: 'api', developers: 'api',
+  media: 'media', images: 'media', uploads: 'media', assets: 'media',
+  portfolio: 'portfolio', realisations: 'portfolio', projets: 'portfolio', projects: 'portfolio',
+  tarifs: 'pricing', pricing: 'pricing', plans: 'pricing',
+};
+
+function classifySegment(segment: string): { category: string; confidence: number } {
+  const lower = segment.toLowerCase().replace(/[-_]/g, '');
+  
+  // Exact match
+  if (KNOWN_PATTERNS[lower]) {
+    return { category: KNOWN_PATTERNS[lower], confidence: 0.95 };
+  }
+  
+  // Partial match (e.g. "blog-posts" contains "blog")
+  for (const [pattern, cat] of Object.entries(KNOWN_PATTERNS)) {
+    if (lower.includes(pattern) || pattern.includes(lower)) {
+      return { category: cat, confidence: 0.75 };
+    }
+  }
+  
+  // Numeric or hash-like segments are likely dynamic IDs
+  if (/^\d+$/.test(segment) || /^[a-f0-9]{8,}$/.test(segment)) {
+    return { category: 'dynamic', confidence: 0.6 };
+  }
+  
+  return { category: 'unknown', confidence: 0.3 };
+}
+
+/**
+ * Persist taxonomy entries for all tracked sites with this domain.
+ * Also update global taxonomy_patterns for cross-site learning.
+ */
+async function persistTaxonomy(
+  supabase: any,
+  domain: string,
+  tree: FolderNode[],
+  allUrls: string[]
+) {
+  // Find tracked sites for this domain
+  const { data: trackedSites } = await supabase
+    .from('tracked_sites')
+    .select('id')
+    .or(`domain.eq.${domain},domain.eq.www.${domain}`);
+
+  if (!trackedSites || trackedSites.length === 0) {
+    console.log(`[taxonomy] No tracked sites for ${domain}, skipping persistence`);
+    return;
+  }
+
+  // Flatten tree to taxonomy entries
+  const entries: Array<{
+    path_pattern: string;
+    label: string;
+    category: string;
+    page_count: number;
+    avg_depth: number;
+    sample_urls: string[];
+    confidence: number;
+    source: string;
+  }> = [];
+
+  function flattenNode(node: FolderNode, depth: number) {
+    if (node.path === '/') return; // Skip root
+    
+    const firstSegment = node.path.split('/').filter(Boolean)[0] || node.label;
+    const { category, confidence } = classifySegment(firstSegment);
+    
+    entries.push({
+      path_pattern: node.path.endsWith('/') ? `${node.path}*` : `${node.path}/*`,
+      label: node.label,
+      category,
+      page_count: node.count,
+      avg_depth: depth,
+      sample_urls: node.urls.slice(0, 5),
+      confidence,
+      source: 'heuristic',
+    });
+
+    // Only recurse one level deep for top-level directories
+    if (depth < 2) {
+      for (const child of node.children) {
+        flattenNode(child, depth + 1);
+      }
+    }
+  }
+
+  for (const node of tree) {
+    flattenNode(node, 1);
+  }
+
+  // Upsert taxonomy for each tracked site
+  for (const site of trackedSites) {
+    const rows = entries.map(e => ({
+      tracked_site_id: site.id,
+      domain,
+      ...e,
+    }));
+
+    if (rows.length > 0) {
+      const { error } = await supabase
+        .from('site_taxonomy')
+        .upsert(rows, { onConflict: 'tracked_site_id,path_pattern' });
+      if (error) {
+        console.warn(`[taxonomy] Upsert failed for site ${site.id}:`, error.message);
+      } else {
+        console.log(`[taxonomy] Persisted ${rows.length} entries for site ${site.id}`);
+      }
+    }
+  }
+
+  // Update global pattern learning table
+  const patternUpdates: Record<string, { category: string; count: number }> = {};
+  for (const entry of entries) {
+    if (entry.category !== 'unknown' && entry.confidence >= 0.7) {
+      const key = `${entry.label}::${entry.category}`;
+      if (!patternUpdates[key]) {
+        patternUpdates[key] = { category: entry.category, count: entry.page_count };
+      } else {
+        patternUpdates[key].count += entry.page_count;
+      }
+    }
+  }
+
+  for (const [key, val] of Object.entries(patternUpdates)) {
+    const segment = key.split('::')[0];
+    await supabase.from('taxonomy_patterns').upsert({
+      path_segment: segment,
+      inferred_category: val.category,
+      occurrence_count: val.count,
+      confidence: Math.min(0.99, 0.5 + val.count * 0.01),
+    }, { onConflict: 'path_segment,inferred_category' }).catch(() => {});
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
