@@ -123,19 +123,32 @@ Deno.serve(async (req) => {
 
     console.log(`[parse-matrix-geo] Starting GEO audit for ${normalizedUrl} with ${items.length} items`)
 
-    const promises = items.map(async (item): Promise<GeoResult> => {
-      const { score, raw } = await evaluateGeo(
-        item.prompt, normalizedUrl, item.llm_name || 'google/gemini-2.5-flash'
-      )
-      return {
-        id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-        detected_type: 'geo', crawlers_score: score, parsed_score: score,
-        raw_data: raw, parsed_raw: raw,
-        seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-      }
-    })
+    // Process in batches of 3 to avoid rate limiting and timeouts
+    const BATCH_SIZE = 3
+    const results: GeoResult[] = []
 
-    const results = await Promise.all(promises)
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const batch = items.slice(i, i + BATCH_SIZE)
+      console.log(`[parse-matrix-geo] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(items.length / BATCH_SIZE)} (${batch.length} items)`)
+
+      const batchResults = await Promise.all(
+        batch.map(async (item): Promise<GeoResult> => {
+          const { score, raw } = await evaluateGeo(
+            item.prompt, normalizedUrl, item.llm_name || 'google/gemini-2.5-flash'
+          )
+          return {
+            id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+            detected_type: 'geo', crawlers_score: score, parsed_score: score,
+            raw_data: raw, parsed_raw: raw,
+            seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+          }
+        })
+      )
+      results.push(...batchResults)
+
+      // Small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < items.length) await new Promise(r => setTimeout(r, 500))
+    }
 
     const orderedResults = items.map(item => results.find(r => r.id === item.id)!)
     const totalWeight = orderedResults.reduce((s, r) => s + r.poids, 0)
