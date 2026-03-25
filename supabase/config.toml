@@ -149,3 +149,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.gmb-places-autocomplete]
     verify_jwt = false
+  [functions.marina]
+    verify_jwt = false

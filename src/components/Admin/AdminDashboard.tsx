@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -27,6 +27,7 @@ import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
+import { MarinaDashboard } from './MarinaDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -233,9 +234,10 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         }]
       : []),
     {
-      label: 'Parménion',
+      label: 'Automatisation',
       items: [
-        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'parmenion' },
+        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
       ],
     },
   ];
@@ -267,6 +269,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return <ParmenionDashboard />;
+      case 'marina': return <MarinaDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
