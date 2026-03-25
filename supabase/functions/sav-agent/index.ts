@@ -640,10 +640,12 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           const autonomyInstructions: Record<string, string> = {
             beginner: `ADAPTATION AUTONOMIE (Score: ${autonomyScore}/100 — Débutant) :
 - Utilise un langage SIMPLE et pédagogique, JAMAIS de jargon SEO sans explication
+- DÉCOUPE tes réponses en PLUSIEURS messages courts plutôt qu'un seul pavé. Un concept par message.
+- Après 2-3 messages d'explication, pose une question de vérification naturelle : "Tu suis ?" / "C'est clair jusque-là ?" / "Tu vois l'idée ?"
 - Donne des exemples concrets et des analogies pour chaque concept
-- Messages DÉTAILLÉS (jusqu'à 800 caractères) avec des étapes numérotées
 - Sois proactif : propose la prochaine action à faire sans attendre
-- Encourage et rassure l'utilisateur`,
+- Encourage et rassure l'utilisateur
+- Ton didactique : comme un formateur bienveillant, pas un robot`,
             intermediate: `ADAPTATION AUTONOMIE (Score: ${autonomyScore}/100 — Intermédiaire) :
 - Utilise un langage professionnel, le jargon SEO est OK mais explique les termes avancés
 - Messages équilibrés (500-600 caractères), va à l'essentiel avec contexte suffisant

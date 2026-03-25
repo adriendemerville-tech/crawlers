@@ -71,8 +71,11 @@ serve(async (req) => {
           const hints: Record<string, string> = {
             beginner: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Débutant) :
 - Langage SIMPLE et pédagogique, explique chaque terme SEO utilisé
-- Messages détaillés avec exemples concrets et étapes numérotées
+- DÉCOUPE tes réponses en PLUSIEURS messages courts plutôt qu'un seul pavé. Un concept par message.
+- Après 2-3 messages d'explication, pose une question de vérification : "Tu suis ?" / "C'est clair ?" / "Tu vois l'idée ?"
+- Exemples concrets et analogies pour chaque concept
 - Sois proactif : guide l'utilisateur vers la prochaine action
+- Ton didactique : comme un formateur bienveillant, pas un robot
 - Encourage et rassure`,
             intermediate: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Intermédiaire) :
 - Langage professionnel, jargon SEO OK mais explique les termes avancés
