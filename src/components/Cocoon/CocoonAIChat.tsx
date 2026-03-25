@@ -1430,7 +1430,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
             <div className="flex items-center gap-2">
               <Bot className="w-3.5 h-3.5 text-[#fbbf24]" />
-              <p className="text-[10px] text-white/40">{t.subtitle}</p>
+              <p className="text-[11px] font-semibold text-[#fbbf24]">{t.title}</p>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setShowHistory(!showHistory)} className={`p-1 rounded-lg hover:bg-white/10 transition-colors ${showHistory ? 'bg-white/10' : ''}`} title={language === 'en' ? 'History' : language === 'es' ? 'Historial' : 'Historique'}>
@@ -1807,34 +1807,13 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
               />
-              {strategistCompleted ? (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
-                    className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
-                    title={language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action'}
-                  >
-                    <ClipboardList className="w-3.5 h-3.5" />
-                  </button>
-                  {isContentArchitectVisible && (
-                    <button
-                      onClick={() => openContentArchitectWithPlan()}
-                      className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
-                      title="Content Architect"
-                    >
-                      <PenTool className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <ChatMicButton
-                  onTranscript={(text) => {
-                    setInput(prev => prev ? prev + ' ' + text : text);
-                  }}
-                  disabled={isLoading}
-                  userDomains={domain ? [domain] : undefined}
-                />
-              )}
+              <ChatMicButton
+                onTranscript={(text) => {
+                  setInput(prev => prev ? prev + ' ' + text : text);
+                }}
+                disabled={isLoading}
+                userDomains={domain ? [domain] : undefined}
+              />
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
                 <Send className="w-3.5 h-3.5" />
