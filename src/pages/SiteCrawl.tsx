@@ -639,6 +639,8 @@ export default function SiteCrawl() {
     setIndexedPagesCount(null);
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
+    setSitemapTree([]);
+    setSelectedDirectory('');
     if (!url || url.length < 5) return;
 
     let cancelled = false;
@@ -664,6 +666,16 @@ export default function SiteCrawl() {
 
         if (indexed != null) setIndexedPagesCount(indexed);
         if (sitemapTotal != null) setSitemapPagesCount(sitemapTotal);
+
+        // Extract top-level directories from sitemap tree
+        const tree = sitemapRes.data?.tree as Array<{ path: string; label: string; count: number; children?: any[] }> | undefined;
+        if (tree && tree.length > 0) {
+          const dirs = tree
+            .filter(n => n.path !== '/' && n.count > 1)
+            .slice(0, 15)
+            .map(n => ({ path: n.path, label: n.label, count: n.count }));
+          setSitemapTree(dirs);
+        }
 
         // Total = max of sitemap and indexed (they overlap, so we take the greater)
         const total = Math.max(indexed || 0, sitemapTotal || 0);
