@@ -69,6 +69,7 @@ export function ParmenionDashboard() {
   const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
   const [cooldownInput, setCooldownInput] = useState<string>('1');
   const [ikLoading, setIkLoading] = useState(false);
+  const [modCounts, setModCounts] = useState<Record<number, number>>({});
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
