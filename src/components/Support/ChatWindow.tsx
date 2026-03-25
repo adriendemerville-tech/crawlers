@@ -545,7 +545,23 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                   </div>
                 ))}
 
-                {bugReportMode === 'prompt' && (
+                {showAutonomyDiag && user && (
+                  <AutonomyDiagnostic
+                    userId={user.id}
+                    persona={onboardingPersona}
+                    onComplete={(result: AutonomyResult) => {
+                      setShowAutonomyDiag(false);
+                      const levelLabels = { beginner: 'Débutant', intermediate: 'Intermédiaire', expert: 'Expert' };
+                      const confirmMsg: ChatMessage = {
+                        role: 'assistant',
+                        content: `✅ **Profil calibré !** Score d'autonomie : **${result.score}/100** (${levelLabels[result.level]})\n\nJ'adapterai mes réponses à ton niveau. C'est parti ! 🚀`,
+                        timestamp: new Date().toISOString(),
+                      };
+                      setMessages(prev => [...prev, confirmMsg]);
+                    }}
+                  />
+                )}
+
                   <div className="flex justify-start">
                     <button
                       onClick={activateBugReportMode}
