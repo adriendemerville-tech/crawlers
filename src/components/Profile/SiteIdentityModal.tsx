@@ -554,7 +554,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                       ))}
                     </div>
                   )}
-                  {site.client_targets.secondary?.length > 0 && (
+                  {Array.isArray(site.client_targets.secondary) && site.client_targets.secondary.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-amber-500 font-medium">Secondaires</p>
                       {site.client_targets.secondary.map((t: any, i: number) => (
@@ -562,7 +562,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                       ))}
                     </div>
                   )}
-                  {site.client_targets.untapped?.length > 0 && (
+                  {Array.isArray(site.client_targets.untapped) && site.client_targets.untapped.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-[10px] text-violet-500 font-medium">Potentielles</p>
                       {site.client_targets.untapped.map((t: any, i: number) => (
