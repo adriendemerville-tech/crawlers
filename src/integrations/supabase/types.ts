@@ -4383,6 +4383,7 @@ export type Database = {
           estimated_tokens: number | null
           execution_completed_at: string | null
           execution_error: string | null
+          execution_results: Json | null
           execution_started_at: string | null
           final_scope: Json
           functions_called: string[]
@@ -4397,6 +4398,7 @@ export type Database = {
           initial_scope: Json
           is_error: boolean
           measured_at: string | null
+          pipeline_phase: string | null
           risk_calibrated: number | null
           risk_iterations: number
           risk_predicted: number
@@ -4425,6 +4427,7 @@ export type Database = {
           estimated_tokens?: number | null
           execution_completed_at?: string | null
           execution_error?: string | null
+          execution_results?: Json | null
           execution_started_at?: string | null
           final_scope?: Json
           functions_called?: string[]
@@ -4439,6 +4442,7 @@ export type Database = {
           initial_scope?: Json
           is_error?: boolean
           measured_at?: string | null
+          pipeline_phase?: string | null
           risk_calibrated?: number | null
           risk_iterations?: number
           risk_predicted?: number
@@ -4467,6 +4471,7 @@ export type Database = {
           estimated_tokens?: number | null
           execution_completed_at?: string | null
           execution_error?: string | null
+          execution_results?: Json | null
           execution_started_at?: string | null
           final_scope?: Json
           functions_called?: string[]
@@ -4481,6 +4486,7 @@ export type Database = {
           initial_scope?: Json
           is_error?: boolean
           measured_at?: string | null
+          pipeline_phase?: string | null
           risk_calibrated?: number | null
           risk_iterations?: number
           risk_predicted?: number
