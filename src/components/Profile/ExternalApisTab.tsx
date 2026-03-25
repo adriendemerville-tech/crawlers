@@ -130,6 +130,10 @@ const services: ServiceButton[] = [
     id: 'odoo', name: 'Odoo', category: 'cms', available: true,
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#714B67" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`,
   },
+  {
+    id: 'prestashop', name: 'PrestaShop', category: 'cms', available: true,
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#DF0067" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 14.5h-7v-2h7v2zm1-4h-9v-2h9v2zm0-4h-9v-2h9v2z"/></svg>`,
+  },
 ];
 
 const RANK_MATH_LOGO = `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#E44B36" d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.18L18.82 7.5 12 10.82 5.18 7.5 12 4.18zM5 8.82l6 3.33v7.03l-6-3.33V8.82zm8 10.36v-7.03l6-3.33v7.03l-6 3.33z"/></svg>`;
@@ -139,7 +143,7 @@ export function ExternalApisTab() {
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
-  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo'>('wordpress');
+  const [cmsDialogType, setCmsDialogType] = useState<'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo' | 'prestashop'>('wordpress');
   const [rankMathDialogOpen, setRankMathDialogOpen] = useState(false);
   const [rankMathLoading, setRankMathLoading] = useState(false);
   const [wpConnection, setWpConnection] = useState<{ id: string; site_url: string } | null>(null);
@@ -251,8 +255,8 @@ export function ExternalApisTab() {
       return;
     }
 
-    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'odoo'].includes(service.id)) {
-      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo');
+    if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'odoo', 'prestashop'].includes(service.id)) {
+      setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo' | 'prestashop');
       setCmsDialogOpen(true);
     }
   };
