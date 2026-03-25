@@ -283,7 +283,7 @@ export function MarinaDashboard() {
                           <div className="text-sm font-medium truncate">
                             {payload?.url || result?.url || 'URL inconnue'}
                           </div>
-                          {phase && job.status === 'processing' && (
+                          {phase && (job.status === 'processing' || job.status === 'pending') && (
                             <div className="text-xs text-muted-foreground mt-1">
                               {phaseLabels[phase] || phase}
                             </div>
