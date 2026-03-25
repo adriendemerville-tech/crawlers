@@ -1,15 +1,25 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Link2, ExternalLink, AlertTriangle, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link2, ExternalLink, AlertTriangle, CheckCircle2, XCircle, Info, ShieldCheck } from 'lucide-react';
 import { BrokenLinksAnalysis } from '@/types/expertAudit';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface BrokenLinksCardProps {
-  brokenLinks: BrokenLinksAnalysis;
+  brokenLinks: BrokenLinksAnalysis & { skipped_social?: number };
 }
 
 export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [dismissedUrls, setDismissedUrls] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState<string | null>(null);
+
   const getVerdictColor = () => {
     switch (brokenLinks.verdict) {
       case 'optimal': return 'text-success';
@@ -34,6 +44,36 @@ export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
     }
   };
 
+  const handleMarkFalsePositive = async (linkUrl: string) => {
+    if (!user) {
+      toast({ title: 'Connectez-vous', description: 'Vous devez être connecté pour marquer un faux positif.', variant: 'destructive' });
+      return;
+    }
+    
+    try {
+      setSaving(linkUrl);
+      const domain = new URL(linkUrl).hostname;
+      
+      const { error } = await supabase
+        .from('false_positive_domains' as any)
+        .upsert(
+          { domain, user_id: user.id, source: 'user' } as any,
+          { onConflict: 'domain,user_id' }
+        );
+      
+      if (error) throw error;
+      
+      setDismissedUrls(prev => new Set(prev).add(linkUrl));
+      toast({ title: '✅ Faux positif enregistré', description: `${domain} sera ignoré dans les prochains audits.` });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const activeBroken = brokenLinks.broken.filter(l => !dismissedUrls.has(l.url));
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -46,7 +86,7 @@ export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
             </Link>
           </CardTitle>
           <Badge variant="outline" className={cn('text-sm font-medium', getVerdictColor())}>
-            {brokenLinks.broken.length}/{brokenLinks.checked}
+            {activeBroken.length}/{brokenLinks.checked}
           </Badge>
         </div>
         
@@ -70,9 +110,9 @@ export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
           <span className="text-sm text-muted-foreground">Liens cassés</span>
           <span className={cn(
             'text-sm font-medium',
-            brokenLinks.broken.length > 0 ? 'text-destructive' : 'text-success'
+            activeBroken.length > 0 ? 'text-destructive' : 'text-success'
           )}>
-            {brokenLinks.broken.length}
+            {activeBroken.length}
           </span>
         </div>
         
@@ -82,12 +122,32 @@ export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
             <span className="text-sm font-medium text-muted-foreground">{brokenLinks.corsBlocked}</span>
           </div>
         )}
+
+        {(brokenLinks as any).skipped_social > 0 && (
+          <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Réseaux sociaux ignorés
+            </span>
+            <span className="text-sm font-medium text-muted-foreground">{(brokenLinks as any).skipped_social}</span>
+          </div>
+        )}
+
+        {dismissedUrls.size > 0 && (
+          <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-success" />
+              Marqués faux positifs
+            </span>
+            <span className="text-sm font-medium text-success">{dismissedUrls.size}</span>
+          </div>
+        )}
         
         {/* Broken links list */}
-        {brokenLinks.broken.length > 0 && (
+        {activeBroken.length > 0 && (
           <div className="space-y-2 pt-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Liens à corriger</p>
-            {brokenLinks.broken.slice(0, 5).map((link, index) => (
+            {activeBroken.slice(0, 5).map((link, index) => (
               <div key={index} className="flex items-start gap-2 p-2 bg-destructive/5 rounded-md">
                 <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
@@ -109,11 +169,23 @@ export function BrokenLinksCard({ brokenLinks }: BrokenLinksCardProps) {
                     </Badge>
                   </div>
                 </div>
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 h-7 text-xs text-muted-foreground hover:text-success"
+                    onClick={() => handleMarkFalsePositive(link.url)}
+                    disabled={saving === link.url}
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                    {saving === link.url ? '…' : 'Faux positif'}
+                  </Button>
+                )}
               </div>
             ))}
-            {brokenLinks.broken.length > 5 && (
+            {activeBroken.length > 5 && (
               <p className="text-xs text-muted-foreground text-center">
-                +{brokenLinks.broken.length - 5} autres liens cassés
+                +{activeBroken.length - 5} autres liens cassés
               </p>
             )}
           </div>
