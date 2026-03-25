@@ -25,12 +25,6 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Hide on signup/auth pages
-  const hiddenPaths = ['/signup', '/auth'];
-  if (hiddenPaths.some(p => location.pathname.startsWith(p))) {
-    return null;
-  }
-
   // Ping-pong bounce animation on first home visit after 20s
   useEffect(() => {
     if (location.pathname !== '/') return;
@@ -171,8 +165,9 @@ export function FloatingChatBubble() {
     }
   };
 
-  // Hide on mobile and on /cocoon (cocoon has its own assistant)
-  if (isMobile || location.pathname.startsWith('/app/cocoon')) return null;
+  // Hide on mobile, /cocoon, /signup, /auth
+  const hiddenPaths = ['/app/cocoon', '/signup', '/auth'];
+  if (isMobile || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   return (
     <>
