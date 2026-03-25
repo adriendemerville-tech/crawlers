@@ -24,6 +24,7 @@ export function CrawlersLogo({ size = 20, className = '' }: { size?: number; cla
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
+        strokeOpacity="1"
       >
         <path d="M12 8V4H8" />
         <rect x="4" y="8" width="16" height="12" rx="2" />
