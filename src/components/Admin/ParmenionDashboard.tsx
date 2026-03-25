@@ -69,6 +69,7 @@ export function ParmenionDashboard() {
   const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
   const [cooldownInput, setCooldownInput] = useState<string>('1');
   const [ikLoading, setIkLoading] = useState(false);
+  const [modCounts, setModCounts] = useState<Record<number, number>>({});
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
@@ -125,7 +126,22 @@ export function ParmenionDashboard() {
     setIkLoading(false);
   }, []);
 
-  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory]);
+  const fetchModCounts = useCallback(async () => {
+    const { data } = await supabase
+      .from('autopilot_modification_log')
+      .select('cycle_number, status')
+      .eq('status', 'applied');
+    if (data) {
+      const counts: Record<number, number> = {};
+      for (const row of data) {
+        const cn = row.cycle_number ?? 0;
+        counts[cn] = (counts[cn] || 0) + 1;
+      }
+      setModCounts(counts);
+    }
+  }, []);
+
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); fetchModCounts(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory, fetchModCounts]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
@@ -433,7 +449,7 @@ export function ParmenionDashboard() {
                       </div>
 
                       {/* Details grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                         <div>
                           <span className="text-muted-foreground">Impact</span>
                           <p className="font-medium">{log.impact_level}</p>
@@ -449,6 +465,13 @@ export function ParmenionDashboard() {
                         <div>
                           <span className="text-muted-foreground">Tokens estimés</span>
                           <p className="font-medium">{log.estimated_tokens?.toLocaleString() ?? '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Actions IK déployées</span>
+                          <p className="font-medium flex items-center gap-1">
+                            <Globe className="h-3 w-3 text-primary" />
+                            {modCounts[log.cycle_number] ?? 0}
+                          </p>
                         </div>
                       </div>
 
