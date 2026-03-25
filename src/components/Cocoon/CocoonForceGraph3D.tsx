@@ -400,7 +400,7 @@ function NodeSphere({
           <meshBasicMaterial
             color="#ffffff"
             transparent
-            opacity={node.isHome ? 0.6 : 0.4}
+            opacity={node.isHome ? 0.5 : 0.2}
             depthWrite={false}
           />
         </mesh>
