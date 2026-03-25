@@ -497,25 +497,45 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
     await updateProgress(65, 'cocoon');
 
-    // ─── Step 3: Cocoon (optional, requires tracked_site) ───
+    // ─── Step 3: Cocoon (always run — create tracked_site if needed) ───
     let cocoonResult: any = null;
     try {
       // Check if domain has a tracked_site
-      const { data: trackedSite } = await sb
+      let { data: trackedSite } = await sb
         .from('tracked_sites')
         .select('id')
         .ilike('domain', `%${domain}%`)
         .limit(1)
-        .single();
+        .maybeSingle();
       
+      // Auto-create tracked_site for cocoon analysis (admin function)
+      if (!trackedSite) {
+        console.log(`[Marina] No tracked_site for ${domain}, creating one for cocoon analysis`);
+        const { data: newSite, error: createErr } = await sb
+          .from('tracked_sites')
+          .insert({
+            user_id: parentJob.user_id,
+            domain: domain,
+            url: url,
+            source: 'marina',
+          })
+          .select('id')
+          .single();
+        
+        if (createErr || !newSite) {
+          console.warn(`[Marina] Failed to create tracked_site: ${createErr?.message}`);
+        } else {
+          trackedSite = newSite;
+          console.log(`[Marina] Created tracked_site ${newSite.id} for ${domain}`);
+        }
+      }
+
       if (trackedSite) {
         console.log(`[Marina] Step 3: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
         cocoonResult = await callFunction('calculate-cocoon-logic', { 
           tracked_site_id: trackedSite.id 
         });
         console.log(`[Marina] Cocoon done: ${cocoonResult?.stats?.nodes_count || 0} nodes`);
-      } else {
-        console.log(`[Marina] No tracked_site for ${domain}, skipping cocoon`);
       }
     } catch (e) {
       console.warn(`[Marina] Cocoon failed (non-fatal):`, e);
