@@ -320,6 +320,13 @@ export function WorkflowCarousel({
                   placeholder={t.placeholder}
                   value={url}
                   onChange={(e) => onUrlChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && url.trim() && !isLoading && !isStrategicLoading) {
+                      e.preventDefault();
+                      if (activeStep === 1) onStartTechnical();
+                      else if (activeStep === 2) onStartStrategic();
+                    }
+                  }}
                   className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
                   disabled={isLoading || isStrategicLoading}
                 />
