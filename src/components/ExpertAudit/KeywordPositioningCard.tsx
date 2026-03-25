@@ -721,7 +721,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   Actions pour remonter dans la SERP
                 </h3>
                 <div className="space-y-3">
-                  {positioning.serp_recommendations.map((rec, idx) => (
+                  {Array.isArray(positioning.serp_recommendations) && positioning.serp_recommendations.map((rec, idx) => (
                     <div key={idx} className="flex items-start gap-3 p-3 rounded-md bg-background/50 border border-border/50">
                       <span className="text-primary font-bold text-sm shrink-0">{idx + 1}.</span>
                       <div className="flex-1 min-w-0">
