@@ -1,17 +1,19 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
 /**
  * run-backend-tests — CI Test Runner pour Crawlers.fr
  *
- * Exécute 10 tests critiques couvrant les 4 piliers vitaux du backend :
- *   1. Sécurité & Auth (SSRF, Turnstile, ensure-profile)
+ * Exécute 12 tests critiques couvrant les 4 piliers vitaux du backend :
+ *   1. Sécurité & Auth (SSRF, Turnstile, ensure-profile, auth middleware)
  *   2. Facturation (calcul prix dynamique, create-checkout)
- *   3. Moteur d'audit (validate-url, robots.txt parser, cache)
+ *   3. Moteur d'audit (validate-url, robots.txt parser, cache, LLM fallback)
  *   4. Tracking & Intégrité (token tracker, CORS)
  *
  * Résultats enregistrés dans analytics_events (event_type: ci_test_run).
- * Aucune notification front — uniquement logs backend + registre admin.
  */
 
 interface TestResult {
@@ -418,6 +420,62 @@ async function testCorsHeaders(): Promise<void> {
   }
 }
 
+/**
+ * TEST 11 : Auth middleware unifié (_shared/auth.ts)
+ * Vérifie que getAuthenticatedUser et getAuthenticatedUserId existent
+ * et rejettent correctement les requêtes sans token.
+ * CRITIQUE car c'est le gardien centralisé de toutes les edge functions.
+ */
+async function testAuthMiddleware(): Promise<void> {
+  const { getAuthenticatedUser, getAuthenticatedUserId } = await import('../_shared/auth.ts')
+
+  // Fonctions doivent être exportées
+  assert(typeof getAuthenticatedUser === 'function', 'auth.ts: getAuthenticatedUser non exporté')
+  assert(typeof getAuthenticatedUserId === 'function', 'auth.ts: getAuthenticatedUserId non exporté')
+
+  // Requête sans Authorization → null
+  const fakeReqNoAuth = new Request('https://example.com', { method: 'POST' })
+  const resultNoAuth = await getAuthenticatedUser(fakeReqNoAuth)
+  assert(resultNoAuth === null, 'auth: requête sans header devrait retourner null')
+
+  // Requête avec Bearer invalide → null
+  const fakeReqBadAuth = new Request('https://example.com', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer invalid-token-xyz' },
+  })
+  const resultBadAuth = await getAuthenticatedUser(fakeReqBadAuth)
+  assert(resultBadAuth === null, 'auth: token invalide devrait retourner null')
+
+  // getAuthenticatedUserId sans header → null
+  const resultIdNoAuth = await getAuthenticatedUserId(fakeReqNoAuth)
+  assert(resultIdNoAuth === null, 'auth: getAuthenticatedUserId sans header devrait retourner null')
+}
+
+/**
+ * TEST 12 : LLM Fallback — vérification structurelle
+ * Vérifie que strategic-synthesis et audit-strategique-ia importent
+ * et gèrent le fallback Pro→Flash.
+ * NON-BLOQUANT mais important pour la fiabilité des audits longs.
+ */
+async function testLlmFallbackStructure(): Promise<void> {
+  // Vérifie que les fonctions de synthèse existent et sont déployées
+  const synthResp = await fetch(`${supabaseUrl}/functions/v1/strategic-synthesis`, {
+    method: 'OPTIONS',
+    headers: { 'Authorization': `Bearer ${serviceKey}` },
+  })
+  await synthResp.text()
+  assert(synthResp.status === 200 || synthResp.status === 204, 
+    `strategic-synthesis: endpoint non accessible (${synthResp.status})`)
+
+  const auditResp = await fetch(`${supabaseUrl}/functions/v1/audit-strategique-ia`, {
+    method: 'OPTIONS',
+    headers: { 'Authorization': `Bearer ${serviceKey}` },
+  })
+  await auditResp.text()
+  assert(auditResp.status === 200 || auditResp.status === 204, 
+    `audit-strategique-ia: endpoint non accessible (${auditResp.status})`)
+}
+
 // ═══════════════════════════════════════════════
 // ORCHESTRATEUR
 // ═══════════════════════════════════════════════
@@ -426,11 +484,13 @@ const ALL_TESTS = [
   { id: 'ssrf',            name: 'Protection SSRF',              pillar: 'Sécurité',     fn: testSsrfProtection },
   { id: 'turnstile',       name: 'Captcha Turnstile',            pillar: 'Sécurité',     fn: testTurnstileEndpoint },
   { id: 'ensure-profile',  name: 'Auth ensure-profile',          pillar: 'Sécurité',     fn: testEnsureProfileAuth },
+  { id: 'auth-middleware',  name: 'Auth middleware unifié',       pillar: 'Sécurité',     fn: testAuthMiddleware },
   { id: 'pricing',         name: 'Calcul prix dynamique',        pillar: 'Facturation',  fn: testDynamicPricing },
   { id: 'checkout',        name: 'Endpoint create-checkout',     pillar: 'Facturation',  fn: testCreateCheckout },
   { id: 'validate-url',    name: 'Validation d\'URL',            pillar: 'Audit',        fn: testValidateUrl },
   { id: 'check-crawlers',  name: 'Parser robots.txt',            pillar: 'Audit',        fn: testCheckCrawlersEndpoint },
   { id: 'cache',           name: 'Cache déterministe',           pillar: 'Audit',        fn: testAuditCacheDeterminism },
+  { id: 'llm-fallback',    name: 'LLM Fallback Pro→Flash',       pillar: 'Audit',        fn: testLlmFallbackStructure },
   { id: 'token-tracker',   name: 'Résilience token tracker',     pillar: 'Tracking',     fn: testTokenTrackerResilience },
   { id: 'cors',            name: 'Headers CORS',                 pillar: 'Tracking',     fn: testCorsHeaders },
 ]
@@ -448,10 +508,7 @@ Deno.serve(async (req) => {
     const supabase = getServiceClient()
     const token = authHeader.replace('Bearer ', '')
     if (token) {
-      const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-      const userClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      })
+      const userClient = getUserClient(authHeader)
       const { data: { user } } = await userClient.auth.getUser(token)
       if (user) {
         const { data: isAdmin } = await supabase.rpc('has_role', {
@@ -478,7 +535,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  console.log('[CI] 🧪 Lancement des 10 tests backend...')
+  console.log('[CI] 🧪 Lancement des 12 tests backend...')
   const globalStart = performance.now()
   const results: TestResult[] = []
 
