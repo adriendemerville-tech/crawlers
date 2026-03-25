@@ -1272,56 +1272,127 @@ export default function SiteCrawl() {
                   )}
                 </div>
 
-                {/* Directory Selector — from sitemap */}
+                {/* Crawl Filters — from sitemap */}
                 {sitemapTree.length > 0 && (
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground flex items-center gap-2">
+                  <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                    <div className="flex items-center gap-2 mb-1">
                       <FolderTree className="w-4 h-4 text-violet-400" />
-                      {language === 'fr' ? 'Cibler un répertoire' : language === 'es' ? 'Apuntar un directorio' : 'Target a directory'}
+                      <span className="text-sm font-medium text-foreground">
+                        {language === 'fr' ? 'Filtrer le périmètre du crawl' : 'Filter crawl scope'}
+                      </span>
                       <Badge variant="secondary" className="text-[9px] font-normal">
-                        {language === 'fr' ? 'Détecté via sitemap' : 'From sitemap'}
+                        {language === 'fr' ? 'Auto-détecté via sitemap' : 'Auto-detected from sitemap'}
                       </Badge>
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedDirectory(''); setUrlFilter(''); }}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                          !selectedDirectory
-                            ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
-                            : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
-                        }`}
-                      >
-                        <Globe className="w-3 h-3" />
-                        {language === 'fr' ? 'Tout le site' : 'Entire site'}
-                      </button>
-                      {sitemapTree.map(dir => (
-                        <button
-                          key={dir.path}
-                          type="button"
-                          onClick={() => {
-                            const newDir = selectedDirectory === dir.path ? '' : dir.path;
-                            setSelectedDirectory(newDir);
-                            setUrlFilter(newDir ? `${dir.path}.*` : '');
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                            selectedDirectory === dir.path
-                              ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
-                              : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
-                          }`}
-                        >
-                          <Folder className="w-3 h-3" />
-                          /{dir.label}
-                          <span className="opacity-60">({dir.count})</span>
-                        </button>
-                      ))}
                     </div>
-                    {selectedDirectory && (
-                      <p className="text-[10px] text-muted-foreground">
-                        {language === 'fr' 
-                          ? `Le crawl sera limité aux pages sous ${selectedDirectory}/`
-                          : `Crawl will be limited to pages under ${selectedDirectory}/`}
-                      </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Uniquement les répertoires */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          {language === 'fr' ? 'Uniquement les répertoires' : 'Only directories'}
+                        </label>
+                        <Select value={includeDir} onValueChange={v => { setIncludeDir(v === '__none__' ? '' : v); if (v && v !== '__none__') setExcludeDir(''); }}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder={language === 'fr' ? 'Tous (aucun filtre)' : 'All (no filter)'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{language === 'fr' ? 'Tous (aucun filtre)' : 'All (no filter)'}</SelectItem>
+                            {sitemapTree.map(d => (
+                              <SelectItem key={d.path} value={d.path}>
+                                <span className="flex items-center gap-1.5">
+                                  <Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sauf les répertoires */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <XCircle className="w-3 h-3 text-red-500" />
+                          {language === 'fr' ? 'Sauf les répertoires' : 'Exclude directories'}
+                        </label>
+                        <Select value={excludeDir} onValueChange={v => { setExcludeDir(v === '__none__' ? '' : v); if (v && v !== '__none__') setIncludeDir(''); }}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder={language === 'fr' ? 'Aucun (aucun filtre)' : 'None (no filter)'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{language === 'fr' ? 'Aucun (aucun filtre)' : 'None (no filter)'}</SelectItem>
+                            {sitemapTree.map(d => (
+                              <SelectItem key={d.path} value={d.path}>
+                                <span className="flex items-center gap-1.5">
+                                  <Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Uniquement les pages */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          {language === 'fr' ? 'Uniquement les pages' : 'Only pages'}
+                        </label>
+                        <Select value={includePage} onValueChange={v => { setIncludePage(v === '__none__' ? '' : v); if (v && v !== '__none__') setExcludePage(''); }}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder={language === 'fr' ? 'Toutes (aucun filtre)' : 'All (no filter)'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{language === 'fr' ? 'Toutes (aucun filtre)' : 'All (no filter)'}</SelectItem>
+                            {sitemapPages.map(p => (
+                              <SelectItem key={p.path} value={p.path}>
+                                <span className="flex items-center gap-1.5">
+                                  <FileText className="w-3 h-3" /> {p.label}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sauf les pages */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <XCircle className="w-3 h-3 text-red-500" />
+                          {language === 'fr' ? 'Sauf les pages' : 'Exclude pages'}
+                        </label>
+                        <Select value={excludePage} onValueChange={v => { setExcludePage(v === '__none__' ? '' : v); if (v && v !== '__none__') setIncludePage(''); }}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder={language === 'fr' ? 'Aucune (aucun filtre)' : 'None (no filter)'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{language === 'fr' ? 'Aucune (aucun filtre)' : 'None (no filter)'}</SelectItem>
+                            {sitemapPages.map(p => (
+                              <SelectItem key={p.path} value={p.path}>
+                                <span className="flex items-center gap-1.5">
+                                  <FileText className="w-3 h-3" /> {p.label}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Active filter summary */}
+                    {(includeDir || excludeDir || includePage || excludePage) && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <Filter className="w-3 h-3 text-violet-400" />
+                        <p className="text-[10px] text-muted-foreground">
+                          {includeDir && (language === 'fr' ? `Crawl limité à ${includeDir}/` : `Crawl limited to ${includeDir}/`)}
+                          {excludeDir && (language === 'fr' ? `${excludeDir}/ sera ignoré` : `${excludeDir}/ will be excluded`)}
+                          {includePage && (language === 'fr' ? `Uniquement les pages contenant "${includePage}"` : `Only pages matching "${includePage}"`)}
+                          {excludePage && (language === 'fr' ? `Pages contenant "${excludePage}" exclues` : `Pages matching "${excludePage}" excluded`)}
+                        </p>
+                        <button type="button" onClick={() => { setIncludeDir(''); setExcludeDir(''); setIncludePage(''); setExcludePage(''); }} className="text-[10px] text-destructive hover:underline ml-auto">
+                          {language === 'fr' ? 'Réinitialiser' : 'Reset'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
