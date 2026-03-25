@@ -178,9 +178,9 @@ export function CiTestsDashboard() {
             <FlaskConical className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">Tests d'intégration backend</h3>
+           <h3 className="text-lg font-semibold">Tests d'intégration backend</h3>
             <p className="text-sm text-muted-foreground">
-              10 tests couvrant sécurité, facturation, audit et tracking
+              12 tests couvrant sécurité, facturation, audit et tracking
             </p>
           </div>
         </div>

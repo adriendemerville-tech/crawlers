@@ -7,14 +7,13 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 /**
  * run-backend-tests — CI Test Runner pour Crawlers.fr
  *
- * Exécute 10 tests critiques couvrant les 4 piliers vitaux du backend :
- *   1. Sécurité & Auth (SSRF, Turnstile, ensure-profile)
+ * Exécute 12 tests critiques couvrant les 4 piliers vitaux du backend :
+ *   1. Sécurité & Auth (SSRF, Turnstile, ensure-profile, auth middleware)
  *   2. Facturation (calcul prix dynamique, create-checkout)
- *   3. Moteur d'audit (validate-url, robots.txt parser, cache)
+ *   3. Moteur d'audit (validate-url, robots.txt parser, cache, LLM fallback)
  *   4. Tracking & Intégrité (token tracker, CORS)
  *
  * Résultats enregistrés dans analytics_events (event_type: ci_test_run).
- * Aucune notification front — uniquement logs backend + registre admin.
  */
 
 interface TestResult {
