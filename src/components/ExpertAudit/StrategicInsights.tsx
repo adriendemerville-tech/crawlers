@@ -139,7 +139,9 @@ export function StrategicInsights({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              {analysis.executive_summary || analysis.executiveSummary}
+              {typeof (analysis.executive_summary || analysis.executiveSummary) === 'string'
+                ? (analysis.executive_summary || analysis.executiveSummary)
+                : JSON.stringify(analysis.executive_summary || analysis.executiveSummary)}
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {analysis.overallScore !== undefined && (
