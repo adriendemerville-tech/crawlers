@@ -449,7 +449,7 @@ export function ParmenionDashboard() {
                       </div>
 
                       {/* Details grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                         <div>
                           <span className="text-muted-foreground">Impact</span>
                           <p className="font-medium">{log.impact_level}</p>
@@ -465,6 +465,13 @@ export function ParmenionDashboard() {
                         <div>
                           <span className="text-muted-foreground">Tokens estimés</span>
                           <p className="font-medium">{log.estimated_tokens?.toLocaleString() ?? '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Actions IK déployées</span>
+                          <p className="font-medium flex items-center gap-1">
+                            <Globe className="h-3 w-3 text-primary" />
+                            {modCounts[log.cycle_number] ?? 0}
+                          </p>
                         </div>
                       </div>
 
