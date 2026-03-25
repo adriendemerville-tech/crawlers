@@ -773,7 +773,8 @@ export function generateExpertReportHTML(
       const aeoLabel = language === 'fr' ? 'Score AEO (Answer Engine Optimization)' : language === 'es' ? 'Score AEO (Answer Engine Optimization)' : 'AEO Score (Answer Engine Optimization)';
       const html_analysis = result.rawData?.htmlAnalysis || {} as any;
       const relevantSchemaTypes = ['FAQPage', 'FAQ', 'Article', 'NewsArticle', 'BlogPosting', 'HowTo', 'QAPage', 'Organization', 'WebSite', 'WebPage', 'LocalBusiness'];
-      const hasRelevantSchema = result.scores.aiReady.hasSchemaOrg && result.scores.aiReady.schemaTypes.some((t: string) => relevantSchemaTypes.some(r => t.toLowerCase().includes(r.toLowerCase())));
+      const safeSchemaTypes = (result.scores.aiReady.schemaTypes || []).filter(Boolean) as string[];
+      const hasRelevantSchema = result.scores.aiReady.hasSchemaOrg && safeSchemaTypes.some((t: string) => relevantSchemaTypes.some(r => t.toLowerCase().includes(r.toLowerCase())));
       const h1Contents: string[] = (html_analysis as any).h1Contents || [];
       const hasInterrogativeHn = h1Contents.some((h: string) => /(\?|comment|quel|quelle|pourquoi|how|what|why|when|where|which|who)/i.test(h));
       const hasInvertedPyramid = (result.scores.semantic.wordCount || 0) >= 100;
