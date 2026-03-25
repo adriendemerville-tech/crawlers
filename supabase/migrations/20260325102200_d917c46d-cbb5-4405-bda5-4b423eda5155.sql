@@ -1,0 +1,1 @@
+UPDATE async_jobs SET status = 'failed', error_message = 'Timeout: pipeline bloqué en phase strategic_audit', completed_at = now() WHERE id = '0ccd74a7-f638-4c93-bd06-989950ceb33f' AND status = 'processing';
