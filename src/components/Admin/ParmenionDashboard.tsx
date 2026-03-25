@@ -40,9 +40,12 @@ interface DecisionLog {
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-muted text-muted-foreground', icon: Clock },
+  planned: { label: 'Planifié', color: 'bg-muted text-muted-foreground', icon: Clock },
   thinking: { label: 'Réflexion…', color: 'bg-amber-500/15 text-amber-600 border-amber-500/30', icon: Brain },
   executing: { label: 'Exécution', color: 'bg-blue-500/15 text-blue-600 border-blue-500/30', icon: Swords },
   completed: { label: 'Terminé', color: 'bg-green-500/15 text-green-600 border-green-500/30', icon: CheckCircle2 },
+  partial: { label: 'Partiel', color: 'bg-orange-500/15 text-orange-600 border-orange-500/30', icon: AlertTriangle },
+  dry_run: { label: 'Dry Run', color: 'bg-purple-500/15 text-purple-600 border-purple-500/30', icon: Eye },
   paused: { label: 'Pausé', color: 'bg-orange-500/15 text-orange-600 border-orange-500/30', icon: Pause },
   failed: { label: 'Échoué', color: 'bg-destructive/15 text-destructive border-destructive/30', icon: AlertTriangle },
   cancelled: { label: 'Annulé', color: 'bg-muted text-muted-foreground', icon: Pause },
