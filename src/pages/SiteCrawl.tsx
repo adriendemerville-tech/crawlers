@@ -646,7 +646,12 @@ export default function SiteCrawl() {
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
     setSitemapTree([]);
+    setSitemapPages([]);
     setSelectedDirectory('');
+    setIncludeDir('');
+    setExcludeDir('');
+    setIncludePage('');
+    setExcludePage('');
     if (!url || url.length < 5) return;
 
     let cancelled = false;
