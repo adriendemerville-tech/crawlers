@@ -46,6 +46,24 @@ export function MarinaDashboard() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
+  const [reportModal, setReportModal] = useState<{ html: string; domain: string } | null>(null);
+  const [loadingReport, setLoadingReport] = useState(false);
+
+  const handleOpenReport = async (reportUrl: string, domain: string) => {
+    setLoadingReport(true);
+    try {
+      const response = await fetch(reportUrl);
+      if (!response.ok) throw new Error('Failed to load report');
+      const html = await response.text();
+      const cleanDomain = (() => { try { return new URL(domain.startsWith('http') ? domain : `https://${domain}`).hostname; } catch { return domain; } })();
+      setReportModal({ html, domain: cleanDomain });
+    } catch (e) {
+      console.error('Error loading report:', e);
+      toast({ title: 'Erreur', description: 'Impossible de charger le rapport', variant: 'destructive' });
+    } finally {
+      setLoadingReport(false);
+    }
+  };
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
