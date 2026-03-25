@@ -180,32 +180,51 @@ Deno.serve(async (req) => {
     console.log(`🤖 [strategic-synthesis] LLM call starting (${isContentMode ? pageType : 'homepage'} mode)...`);
 
     // ── LLM Call ──
-    const selectedModel = body.modelOverride || 'google/gemini-2.5-pro';
-    console.log(`🤖 [strategic-synthesis] Using model: ${selectedModel}`);
+    const primaryModel = body.modelOverride || 'google/gemini-2.5-pro';
+    const fallbackModel = 'google/gemini-2.5-flash';
+    const llmMessages = [
+      { role: 'system', content: isContentMode ? CONTENT_SYSTEM_PROMPT : SYSTEM_PROMPT },
+      { role: 'user', content: userPrompt },
+    ];
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          { role: 'system', content: isContentMode ? CONTENT_SYSTEM_PROMPT : SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-      }),
-      signal: AbortSignal.timeout(180_000), // 3 min max
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('❌ LLM error:', response.status, errText.substring(0, 200));
-      return json({ success: false, error: `LLM error: ${response.status}` }, 502);
+    async function callLLM(model: string, timeoutMs: number): Promise<{ content: string; usage: any; model: string }> {
+      console.log(`🤖 [strategic-synthesis] Using model: ${model} (timeout: ${timeoutMs / 1000}s)`);
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: llmMessages, temperature: 0.3 }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`LLM error ${resp.status}: ${errText.substring(0, 200)}`);
+      }
+      const aiResp = await resp.json();
+      const c = aiResp.choices?.[0]?.message?.content;
+      if (!c) throw new Error('Empty LLM response');
+      return { content: c, usage: aiResp.usage, model };
     }
 
-    const aiResponse = await response.json();
-    const content = aiResponse.choices?.[0]?.message?.content;
-    trackTokenUsage('strategic-synthesis', selectedModel, aiResponse.usage, url);
+    let llmResult: { content: string; usage: any; model: string };
+    try {
+      llmResult = await callLLM(primaryModel, 150_000); // 2m30 for Pro
+    } catch (proError) {
+      console.warn(`⚠️ [strategic-synthesis] ${primaryModel} failed: ${proError instanceof Error ? proError.message : proError}`);
+      if (primaryModel === fallbackModel) {
+        return json({ success: false, error: `LLM error: ${proError instanceof Error ? proError.message : 'Unknown'}` }, 502);
+      }
+      console.log(`🔄 [strategic-synthesis] Retrying with ${fallbackModel}...`);
+      try {
+        llmResult = await callLLM(fallbackModel, 120_000); // 2 min for Flash
+        console.log(`✅ [strategic-synthesis] Flash fallback succeeded`);
+      } catch (flashError) {
+        console.error(`❌ [strategic-synthesis] Flash also failed: ${flashError instanceof Error ? flashError.message : flashError}`);
+        return json({ success: false, error: `Both models failed` }, 502);
+      }
+    }
+
+    const content = llmResult.content;
+    trackTokenUsage('strategic-synthesis', llmResult.model, llmResult.usage, url);
 
     if (!content) return json({ success: false, error: 'Empty LLM response' }, 502);
 
