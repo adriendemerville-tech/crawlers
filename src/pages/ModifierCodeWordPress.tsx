@@ -28,23 +28,6 @@ const SEO_META = {
   canonical: `${SITE_URL}/modifier-code-wordpress`,
 };
 
-function forceMetaTags() {
-  document.title = SEO_META.title;
-  const updates: Array<{ selector: string; attr: string; value: string; create?: () => HTMLElement }> = [
-    { selector: 'meta[name="description"]', attr: 'content', value: SEO_META.description },
-    { selector: 'link[rel="canonical"]', attr: 'href', value: SEO_META.canonical },
-    { selector: 'meta[property="og:title"]', attr: 'content', value: SEO_META.ogTitle },
-    { selector: 'meta[property="og:description"]', attr: 'content', value: SEO_META.description },
-    { selector: 'meta[property="og:url"]', attr: 'content', value: SEO_META.canonical },
-  ];
-  updates.forEach(({ selector, attr, value }) => {
-    let el = document.querySelector(selector) as HTMLElement;
-    if (el) {
-      el.setAttribute(attr, value);
-    }
-  });
-}
-
 const STEPS = [
   {
     icon: Search,
@@ -117,9 +100,6 @@ const FAQ_ITEMS = [
 const ModifierCodeWordPress = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/modifier-code-wordpress');
-  useEffect(() => {
-    forceMetaTags();
-  }, []);
 
   const articleSchema = {
     '@context': 'https://schema.org',
