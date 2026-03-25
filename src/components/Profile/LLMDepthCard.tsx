@@ -329,6 +329,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           .select('llm_name, brand_found, iteration_found, prompt_tested, response_text, created_at')
           .eq('tracked_site_id', trackedSiteId)
           .eq('user_id', userId)
+          .or('source_function.eq.check-llm-depth,source_function.is.null')
           .order('created_at', { ascending: false })
           .limit(100);
 

@@ -3922,6 +3922,7 @@ export type Database = {
           llm_name: string
           prompt_tested: string
           response_text: string | null
+          source_function: string | null
           tracked_site_id: string
           user_id: string
         }
@@ -3933,6 +3934,7 @@ export type Database = {
           llm_name: string
           prompt_tested: string
           response_text?: string | null
+          source_function?: string | null
           tracked_site_id: string
           user_id: string
         }
@@ -3944,6 +3946,7 @@ export type Database = {
           llm_name?: string
           prompt_tested?: string
           response_text?: string | null
+          source_function?: string | null
           tracked_site_id?: string
           user_id?: string
         }

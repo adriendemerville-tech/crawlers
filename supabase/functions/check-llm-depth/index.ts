@@ -586,6 +586,7 @@ async function persistResults(
     brand_found: r.found,
     iteration_found: r.found ? r.iterations : null,
     response_text: r.conversation_summary.slice(0, 500) || null,
+    source_function: 'check-llm-depth',
   }))
 
   const { error } = await supabase.from('llm_test_executions').insert(rows)
