@@ -188,7 +188,8 @@ export function FloatingChatBubble() {
       {/* Onboarding tooltip */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] right-5 z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          className="fixed bottom-[72px] z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
           onClick={handleOpen}
         >
           <button
