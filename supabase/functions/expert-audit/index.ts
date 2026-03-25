@@ -2450,11 +2450,11 @@ DONNÉES TECHNIQUES:
 - Titre: "${htmlAnalysis.titleContent}"
 - Meta description: "${htmlAnalysis.metaDescContent?.substring(0, 100) || 'absente'}"
 
-Réponds avec ce JSON exact:
+Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1400 caractères MAX au total, espaces compris. Nombre de phrases libre, répartition libre entre les 3 champs):
 {
-  "presentation": "Paragraphe 1 (2 phrases max): Présentation concise du site, core business, secteur et zone géographique.",
-  "strengths": "Paragraphe 2 (2 phrases max): Un atout technique ET un atout sémantique/référencement, expliqués brièvement.",
-  "improvement": "Paragraphe 3 (2 phrases max): Une donnée moins bonne et pourquoi c'est prioritaire à corriger."
+  "presentation": "Présentation concise du site, core business, secteur et zone géographique.",
+  "strengths": "Atouts techniques ET sémantiques/référencement.",
+  "improvement": "Données moins bonnes et pourquoi c'est prioritaire à corriger."
 }`
               }
             ],
