@@ -2452,9 +2452,9 @@ DONNÉES TECHNIQUES:
 
 Réponds avec ce JSON exact:
 {
-  "presentation": "Paragraphe 1 (4-5 phrases): Présentation du site, core business déduit du titre/contenu, secteur d'activité, zone géographique probable, ancienneté estimée, publics cibles.",
-  "strengths": "Paragraphe 2 (4-5 phrases): Un aspect technique positif ET un aspect sémantique/référencement positif. Expliquer pourquoi ce sont des atouts dans le contexte concurrentiel actuel.",
-  "improvement": "Paragraphe 3 (4-5 phrases): Une donnée moins bonne, sa conséquence technique/SEO, et pourquoi c'est prioritaire à corriger dans le contexte concurrentiel actuel."
+  "presentation": "Paragraphe 1 (2 phrases max): Présentation concise du site, core business, secteur et zone géographique.",
+  "strengths": "Paragraphe 2 (2 phrases max): Un atout technique ET un atout sémantique/référencement, expliqués brièvement.",
+  "improvement": "Paragraphe 3 (2 phrases max): Une donnée moins bonne et pourquoi c'est prioritaire à corriger."
 }`
               }
             ],
