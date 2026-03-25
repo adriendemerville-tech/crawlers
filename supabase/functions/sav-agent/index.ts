@@ -625,13 +625,37 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
       // Fetch profile (plan, credits, first name)
       const { data: profile } = await sb
         .from("profiles")
-        .select("plan_type, credits_balance, subscription_status, first_name, email")
+        .select("plan_type, credits_balance, subscription_status, first_name, email, autonomy_score, autonomy_level")
         .eq("user_id", user_id)
         .single();
 
       if (profile) {
-        userFirstName = profile.first_name || "";
-        contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${profile.first_name || 'inconnu'}\n- Plan: ${profile.plan_type || "free"}\n- Crédits: ${profile.credits_balance ?? 0}\n- Statut: ${profile.subscription_status || "aucun"}\n- Email: ${profile.email || 'inconnu'}\n`;
+        userFirstName = (profile as any).first_name || "";
+        contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${(profile as any).first_name || 'inconnu'}\n- Plan: ${(profile as any).plan_type || "free"}\n- Crédits: ${(profile as any).credits_balance ?? 0}\n- Statut: ${(profile as any).subscription_status || "aucun"}\n- Email: ${(profile as any).email || 'inconnu'}\n`;
+
+        // Inject autonomy-based behaviour adaptation
+        const autonomyLevel = (profile as any).autonomy_level;
+        const autonomyScore = (profile as any).autonomy_score;
+        if (autonomyLevel && autonomyScore != null) {
+          const autonomyInstructions: Record<string, string> = {
+            beginner: `ADAPTATION AUTONOMIE (Score: ${autonomyScore}/100 — Débutant) :
+- Utilise un langage SIMPLE et pédagogique, JAMAIS de jargon SEO sans explication
+- Donne des exemples concrets et des analogies pour chaque concept
+- Messages DÉTAILLÉS (jusqu'à 800 caractères) avec des étapes numérotées
+- Sois proactif : propose la prochaine action à faire sans attendre
+- Encourage et rassure l'utilisateur`,
+            intermediate: `ADAPTATION AUTONOMIE (Score: ${autonomyScore}/100 — Intermédiaire) :
+- Utilise un langage professionnel, le jargon SEO est OK mais explique les termes avancés
+- Messages équilibrés (500-600 caractères), va à l'essentiel avec contexte suffisant
+- Propose des suggestions mais laisse l'utilisateur décider`,
+            expert: `ADAPTATION AUTONOMIE (Score: ${autonomyScore}/100 — Expert) :
+- Sois CONCIS et technique, jargon SEO/GEO direct, pas de vulgarisation inutile
+- Messages courts et denses (300 caractères max), données brutes privilégiées
+- Ne propose des explications que si demandé explicitement
+- Traite l'utilisateur comme un pair professionnel`,
+          };
+          contextSnippet += `\n${autonomyInstructions[autonomyLevel] || ''}\n`;
+        }
       }
 
       // Fetch tracked sites with detailed scores
