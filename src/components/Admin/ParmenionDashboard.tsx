@@ -84,7 +84,7 @@ export function ParmenionDashboard() {
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .select('tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -97,6 +97,7 @@ export function ParmenionDashboard() {
         last_cycle_at: data.last_cycle_at,
         domain: ts?.domain || '—',
         total_cycles_run: data.total_cycles_run ?? 0,
+        tracked_site_id: data.tracked_site_id,
       });
     }
   }, []);
