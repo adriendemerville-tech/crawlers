@@ -344,7 +344,7 @@ export default function MatricePrompt() {
 
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase();
 
     if (ext === 'csv') {
