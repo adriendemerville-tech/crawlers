@@ -121,6 +121,20 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `process-script-queue` : File d'attente FIFO pour génération de scripts
 - `supervisor-actions` : Audit des agents + assistant SAV
 - `drop-detector` : Détection de chute réactive + prédictive
+- `strategic-orchestrator` : Pipeline modulaire audit GEO (5 micro-fonctions)
+- `strategic-crawl` / `strategic-market` / `strategic-competitors` / `strategic-synthesis` : Micro-fonctions du pipeline
+- `run-backend-tests` : 12 tests CI (sécurité, facturation, audit, tracking)
+
+### Fallback LLM (Gemini Pro → Flash)
+- `strategic-synthesis` et `audit-strategique-ia` intègrent un fallback automatique
+- Si Gemini 2.5 Pro dépasse 2m30, bascule sur Gemini 2.5 Flash (120s timeout)
+- Évite les blocages silencieux sur les audits stratégiques longs
+
+### Tests CI Backend (12 tests)
+- **Sécurité** : SSRF, Turnstile, ensure-profile, auth middleware unifié
+- **Facturation** : Calcul prix dynamique, create-checkout
+- **Audit** : validate-url, robots.txt parser, cache déterministe, LLM fallback endpoints
+- **Tracking** : Résilience token tracker, headers CORS
 
 
 ## Homepage — Section LLM & Lead Magnets

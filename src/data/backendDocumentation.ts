@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  121 fonctions serverless + 22 modules partagés         │
+│  130 fonctions serverless + 22 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -323,12 +323,46 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`check-pagespeed\` | ❌ | 0 | Métriques Core Web Vitals via Google PSI |
 | \`expert-audit\` | ✅ | 1 | Audit expert complet (score /200) |
 | \`audit-expert-seo\` | ✅ | 2 | Audit SEO technique approfondi |
-| \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA (Gemini) |
+| \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA monolithique (Gemini Pro → Flash fallback) |
+| \`strategic-orchestrator\` | ✅ | 3 | Orchestrateur modulaire audit GEO (pipeline 5 étapes) |
+| \`strategic-crawl\` | ✅ | 0 | Micro-fn : extraction métadonnées + signaux E-E-A-T |
+| \`strategic-market\` | ✅ | 0 | Micro-fn : mots-clés et volumes (DataForSEO) |
+| \`strategic-competitors\` | ✅ | 0 | Micro-fn : analyse SERP et GMB concurrents |
+| \`strategic-synthesis\` | ✅ | 0 | Micro-fn : synthèse finale LLM (Gemini Pro → Flash fallback) |
 | \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
 | \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
 | \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
+
+### Architecture Modulaire — Strategic Orchestrator
+
+L'audit stratégique GEO utilise un **pipeline modulaire en 5 étapes** piloté par \`strategic-orchestrator\` :
+
+\`\`\`
+strategic-orchestrator
+├── strategic-crawl        (métadonnées + E-E-A-T)     ─┐
+├── strategic-market       (mots-clés, DataForSEO)      ├─ Parallèle (< 90s)
+├── strategic-competitors  (SERP + GMB concurrents)     ─┤
+├── check-llm              (visibilité IA)              ─┘
+└── strategic-synthesis    (Gemini Pro → Flash fallback)  ← Séquentiel
+\`\`\`
+
+- **Cache intelligent** : \`audit_cache\` avec TTL 24h sur les étapes de collecte
+- **Fallback LLM** : Si Gemini Pro dépasse 2m30, bascule automatique sur Gemini Flash
+- **Fallback pipeline** : Si le pipeline modulaire échoue, bascule sur \`audit-strategique-ia\` (monolithique)
+- \`audit-strategique-ia\` intègre aussi le fallback Pro→Flash (ajouté mars 2025)
+
+### Tests d'intégration backend (CI)
+
+12 tests couvrant 4 piliers :
+1. **Sécurité** : SSRF, Turnstile, ensure-profile, auth middleware unifié (\`_shared/auth.ts\`)
+2. **Facturation** : Calcul prix dynamique, create-checkout
+3. **Audit** : validate-url, robots.txt parser, cache déterministe, LLM fallback Pro→Flash
+4. **Tracking** : Résilience token tracker, headers CORS
+
+Exécution : Admin → Console → Tests CI → "Lancer les tests"
+Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 
 ## Crawl Engine
 
@@ -485,7 +519,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
 | \`view-function-source\` | ✅ | Consultation source d'une edge function |
-| \`run-backend-tests\` | ✅ | Exécute les tests backend |
+| \`run-backend-tests\` | ✅ | Exécute 12 tests CI backend (sécurité, facturation, audit, tracking) |
 | \`health-check\` | ❌ | Vérification santé du système |
 | \`check-widget-health\` | ❌ | Vérification santé du widget |
 | \`sdk-status\` | ❌ | Statut du SDK widget |
@@ -1412,13 +1446,13 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.2.0',
-  lastUpdated: '2026-03-24',
+  version: '6.3.0',
+  lastUpdated: '2026-03-25',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 125,
+  totalEdgeFunctions: 130,
   totalSharedModules: 22,
   totalTables: '68+',
-  totalLinesOfCode: '187 000+',
+  totalLinesOfCode: '190 000+',
   totalMigrations: 199,
   totalPages: 41,
   totalComponents: 303,

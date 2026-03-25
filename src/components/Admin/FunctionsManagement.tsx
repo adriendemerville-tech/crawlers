@@ -18,6 +18,8 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
     'audit-expert-seo', 'audit-local-seo', 'audit-strategique-ia', 'audit-compare',
     'audit-matrice', 'expert-audit', 'save-audit', 'diagnose-hallucination',
     'snapshot-audit-impact', 'measure-audit-impact', 'generate-corrective-code',
+    'strategic-orchestrator', 'strategic-crawl', 'strategic-market',
+    'strategic-competitors', 'strategic-synthesis',
   ],
   'Cocoon & Maillage': [
     'calculate-cocoon-logic', 'cocoon-chat', 'calculate-internal-pagerank',
