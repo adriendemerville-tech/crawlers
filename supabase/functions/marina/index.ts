@@ -46,7 +46,53 @@ function detectLanguage(html: string): string {
   return 'en'; // default
 }
 
-// ─── Combined HTML Report Generator ───
+// ─── Helper: render any object/array as structured HTML ───
+function renderJsonSection(data: any, depth = 0): string {
+  if (data === null || data === undefined) return '';
+  if (typeof data === 'string') return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${data}</p>`;
+  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#3b82f6;">${data}</span>`;
+  if (Array.isArray(data)) {
+    if (data.length === 0) return '';
+    // If array of strings
+    if (typeof data[0] === 'string') {
+      return `<ul style="margin:8px 0;padding-left:20px;">${data.map(item => `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${item}</li>`).join('')}</ul>`;
+    }
+    // Array of objects
+    return data.map((item, i) => {
+      if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${item}</div>`;
+      const title = item.title || item.name || item.label || item.keyword || item.action || item.prescriptive_action || item.action_concrete || '';
+      const desc = item.description || item.detail || item.rationale || item.evidence || item.explanation || item.strategic_goal || '';
+      const score = item.score ?? item.confidence ?? item.priority ?? '';
+      return `<div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid ${item.priority === 'Prioritaire' || item.priority === 'critical' ? '#ef4444' : item.priority === 'Important' ? '#f59e0b' : '#3b82f6'};border-radius:4px;">
+        ${score ? `<span style="font-size:11px;color:#6b7280;font-weight:600;">${score}</span> ` : ''}
+        ${title ? `<div style="font-weight:500;margin-top:2px;">${title}</div>` : ''}
+        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
+        ${Object.entries(item).filter(([k]) => !['title','name','label','keyword','description','detail','rationale','evidence','explanation','score','confidence','priority','action','prescriptive_action','action_concrete','strategic_goal'].includes(k)).map(([k, v]) => {
+          if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return '';
+          if (typeof v === 'object') return '';
+          return `<div style="font-size:12px;color:#6b7280;margin-top:2px;"><strong>${k}:</strong> ${v}</div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+  if (typeof data === 'object') {
+    return Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).map(([key, val]) => {
+      if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+        return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px;">
+          <span style="color:#6b7280;">${key.replace(/_/g, ' ')}</span>
+          <span style="font-weight:500;color:#1e293b;">${val}</span>
+        </div>`;
+      }
+      if (depth < 2) {
+        return `<div style="margin-top:12px;"><h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:capitalize;">${key.replace(/_/g, ' ')}</h4>${renderJsonSection(val, depth + 1)}</div>`;
+      }
+      return '';
+    }).join('');
+  }
+  return '';
+}
+
+// ─── Combined HTML Report Generator (FULL — all data) ───
 function generateMarinaReport(
   url: string,
   domain: string,
@@ -60,137 +106,70 @@ function generateMarinaReport(
       title: 'Rapport SEO & GEO Complet',
       generatedFor: 'Rapport généré pour',
       generatedAt: 'Généré le',
-      crawlReport: 'Rapport de Crawl',
+      crawlReport: 'Rapport de Crawl Détaillé',
       techAudit: 'Audit Technique SEO',
       strategicAudit: 'Audit Stratégique GEO',
-      cocoonAnalysis: 'Analyse Cocon Sémantique',
+      cocoonAnalysis: 'Analyse du Cocon Sémantique & Maillage',
       score: 'Score',
-      outOf: 'sur',
       recommendations: 'Recommandations',
       strengths: 'Points forts',
       improvements: 'Axes d\'amélioration',
       executiveSummary: 'Synthèse exécutive',
       roadmap: 'Plan d\'action prioritaire',
-      priority: 'Priorité',
-      action: 'Action',
-      expectedRoi: 'ROI attendu',
-      cocoonStats: 'Statistiques du cocon',
-      nodes: 'Pages analysées',
-      clusters: 'Clusters thématiques',
-      edges: 'Liens sémantiques',
       noData: 'Données non disponibles',
       poweredBy: 'Propulsé par Crawlers AI',
-      critical: 'Prioritaire',
-      important: 'Important',
-      opportunity: 'Opportunité',
-      pagesFound: 'Pages trouvées',
-      avgScore: 'Score SEO moyen',
-      issues: 'Problèmes détectés',
-      responseTime: 'Temps de réponse moyen',
-      indexable: 'Pages indexables',
-      notIndexable: 'Pages non-indexables',
-      topPages: 'Top pages par score',
-      url: 'URL',
-      seoScore: 'Score SEO',
-      status: 'Statut',
-      wordCount: 'Mots',
-      cocoonPending: 'L\'analyse du cocon sémantique n\'a pas retourné de données pour ce site.',
+      cocoonPending: 'L\'analyse du cocon sémantique n\'a pas retourné de données pour ce site. Un crawl multi-pages est nécessaire.',
     },
     en: {
       title: 'Complete SEO & GEO Report',
       generatedFor: 'Report generated for',
       generatedAt: 'Generated on',
-      crawlReport: 'Crawl Report',
+      crawlReport: 'Detailed Crawl Report',
       techAudit: 'Technical SEO Audit',
       strategicAudit: 'Strategic GEO Audit',
-      cocoonAnalysis: 'Semantic Cocoon Analysis',
+      cocoonAnalysis: 'Semantic Cocoon & Internal Linking Analysis',
       score: 'Score',
-      outOf: 'out of',
       recommendations: 'Recommendations',
       strengths: 'Strengths',
       improvements: 'Areas for improvement',
       executiveSummary: 'Executive Summary',
       roadmap: 'Priority Action Plan',
-      priority: 'Priority',
-      action: 'Action',
-      expectedRoi: 'Expected ROI',
-      cocoonStats: 'Cocoon Statistics',
-      nodes: 'Pages analyzed',
-      clusters: 'Thematic clusters',
-      edges: 'Semantic links',
       noData: 'Data not available',
       poweredBy: 'Powered by Crawlers AI',
-      critical: 'Critical',
-      important: 'Important',
-      opportunity: 'Opportunity',
-      pagesFound: 'Pages found',
-      avgScore: 'Average SEO score',
-      issues: 'Issues detected',
-      responseTime: 'Avg response time',
-      indexable: 'Indexable pages',
-      notIndexable: 'Non-indexable pages',
-      topPages: 'Top pages by score',
-      url: 'URL',
-      seoScore: 'SEO Score',
-      status: 'Status',
-      wordCount: 'Words',
-      cocoonPending: 'Semantic cocoon analysis returned no data for this site.',
+      cocoonPending: 'Semantic cocoon analysis returned no data. A multi-page crawl is required.',
     },
     es: {
       title: 'Informe SEO y GEO Completo',
       generatedFor: 'Informe generado para',
       generatedAt: 'Generado el',
-      crawlReport: 'Informe de Rastreo',
+      crawlReport: 'Informe de Rastreo Detallado',
       techAudit: 'Auditoría Técnica SEO',
       strategicAudit: 'Auditoría Estratégica GEO',
-      cocoonAnalysis: 'Análisis de Capullo Semántico',
+      cocoonAnalysis: 'Análisis del Capullo Semántico y Enlaces',
       score: 'Puntuación',
-      outOf: 'de',
       recommendations: 'Recomendaciones',
       strengths: 'Fortalezas',
       improvements: 'Áreas de mejora',
       executiveSummary: 'Resumen ejecutivo',
       roadmap: 'Plan de acción prioritario',
-      priority: 'Prioridad',
-      action: 'Acción',
-      expectedRoi: 'ROI esperado',
-      cocoonStats: 'Estadísticas del capullo',
-      nodes: 'Páginas analizadas',
-      clusters: 'Clusters temáticos',
-      edges: 'Enlaces semánticos',
       noData: 'Datos no disponibles',
       poweredBy: 'Desarrollado por Crawlers AI',
-      critical: 'Crítico',
-      important: 'Importante',
-      opportunity: 'Oportunidad',
-      pagesFound: 'Páginas encontradas',
-      avgScore: 'Puntuación SEO media',
-      issues: 'Problemas detectados',
-      responseTime: 'Tiempo de respuesta medio',
-      indexable: 'Páginas indexables',
-      notIndexable: 'Páginas no indexables',
-      topPages: 'Mejores páginas por puntuación',
-      url: 'URL',
-      seoScore: 'Puntuación SEO',
-      status: 'Estado',
-      wordCount: 'Palabras',
-      cocoonPending: 'El análisis del capullo semántico no devolvió datos para este sitio.',
+      cocoonPending: 'El análisis del capullo semántico no devolvió datos.',
     },
   };
   
   const tr = t[lang as keyof typeof t] || t.en;
   const now = new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
 
-  // Extract expert SEO data
+  // ─── Extract all expert SEO data ───
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 200;
   const techRecommendations = expertSeoData?.recommendations || [];
   const techIntro = expertSeoData?.introduction || '';
   const scores = expertSeoData?.scores || {};
-
-  // Extract crawl data from expert SEO raw data
   const rawData = expertSeoData?.rawData || {};
   const htmlAnalysis = rawData?.htmlAnalysis || {};
+  
   const crawlMeta = {
     pagesFound: rawData?.internalLinks?.length || htmlAnalysis?.internalLinksCount || 1,
     avgResponseTime: htmlAnalysis?.responseTimeMs || rawData?.responseTimeMs || null,
@@ -209,23 +188,48 @@ function generateMarinaReport(
     performanceScore: scores?.performance?.psiPerformance || null,
     lcp: scores?.performance?.lcp || null,
     tbt: scores?.performance?.tbt || null,
+    cls: scores?.performance?.cls || null,
+    fcp: scores?.performance?.fcp || null,
+    title: htmlAnalysis?.title || '',
+    titleLength: htmlAnalysis?.titleLength || 0,
+    metaDesc: htmlAnalysis?.metaDescription || '',
+    metaDescLength: htmlAnalysis?.metaDescLength || 0,
+    h1Contents: htmlAnalysis?.h1Contents || [],
+    h2Contents: htmlAnalysis?.h2Contents || [],
+    h3Count: htmlAnalysis?.h3Count || 0,
+    schemaTypes: scores?.aiReady?.schemaTypes || [],
+    hasRobotsTxt: scores?.aiReady?.hasRobotsTxt || false,
+    robotsPermissive: scores?.aiReady?.robotsPermissive || false,
+    isHttps: scores?.technical?.isHttps || false,
+    httpStatus: scores?.technical?.httpStatus || 200,
   };
 
-  // Extract strategic data
+  // ─── Strategic data ───
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
-  const stratRoadmap = strategicData?.executive_roadmap || [];
+  const stratRoadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
   const stratSummary = strategicData?.executive_summary || '';
+  const brandAuth = strategicData?.brand_authority || strategicData?.brand_identity || null;
+  const socialSignals = strategicData?.social_signals || null;
+  const marketIntel = strategicData?.market_intelligence || strategicData?.market_positioning || null;
+  const competitive = strategicData?.competitive_landscape || null;
+  const geoReadiness = strategicData?.geo_readiness || strategicData?.geo_score || null;
+  const keywordPos = strategicData?.keyword_positioning || strategicData?.keywordPositioning || null;
+  const marketData = strategicData?.market_data_summary || strategicData?.marketDataSummary || null;
+  const llmVisibility = strategicData?.llm_visibility_raw || null;
+  const quotability = strategicData?.quotability || null;
+  const summaryResilience = strategicData?.summary_resilience || null;
+  const lexicalFootprint = strategicData?.lexical_footprint || null;
+  const expertiseSentiment = strategicData?.expertise_sentiment || null;
+  const redTeam = strategicData?.red_team || null;
+  const gmb = strategicData?.google_my_business || null;
+  const clientTargets = strategicData?.client_targets || null;
 
-  // Cocoon stats
+  // ─── Cocoon data ───
   const cocoonStats = cocoonData?.stats || null;
-  const cocoonClusters = cocoonData?.cluster_summary || null;
-
-  const priorityColors: Record<string, string> = {
-    'Prioritaire': '#ef4444', 'Critical': '#ef4444', 'Crítico': '#ef4444',
-    'Important': '#f59e0b', 'Importante': '#f59e0b',
-    'Opportunité': '#22c55e', 'Opportunity': '#22c55e', 'Oportunidad': '#22c55e',
-  };
+  const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
+  const cocoonNodes = cocoonData?.nodes || cocoonData?.nodes_snapshot || [];
+  const cocoonEdges = cocoonData?.edges || cocoonData?.edges_snapshot || [];
 
   function scoreColor(score: number, max: number): string {
     const pct = score / max * 100;
@@ -234,42 +238,17 @@ function generateMarinaReport(
     return '#ef4444';
   }
 
-  function renderRecommendations(recs: any[]): string {
-    if (!recs || recs.length === 0) return `<p style="color:#6b7280;">${tr.noData}</p>`;
-    return recs.map((r: any) => {
-      const title = typeof r === 'string' ? r : r.title || r.label || '';
-      const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
-      const priority = typeof r === 'string' ? '' : r.priority || '';
-      const color = priorityColors[priority] || '#6b7280';
-      return `<div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid ${color};border-radius:4px;">
-        ${priority ? `<span style="font-size:11px;color:${color};font-weight:600;text-transform:uppercase;">${priority}</span>` : ''}
-        <div style="font-weight:500;margin-top:2px;">${title}</div>
-        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
-      </div>`;
-    }).join('');
-  }
-
-  function renderRoadmap(items: any[]): string {
-    if (!items || items.length === 0) return '';
-    return `<table style="width:100%;border-collapse:collapse;margin-top:12px;">
-      <thead><tr style="background:#f3f4f6;">
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">${tr.priority}</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">${tr.action}</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">${tr.expectedRoi}</th>
-      </tr></thead>
-      <tbody>${items.map((item: any) => {
-        const color = priorityColors[item.priority] || '#6b7280';
-        return `<tr style="border-bottom:1px solid #e5e7eb;">
-          <td style="padding:8px 12px;"><span style="color:${color};font-weight:600;font-size:13px;">${item.priority || '-'}</span></td>
-          <td style="padding:8px 12px;font-size:13px;">${item.prescriptive_action || item.title || '-'}</td>
-          <td style="padding:8px 12px;font-size:13px;color:#6b7280;">${item.expected_roi || '-'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
-  }
-
   function checkMark(val: boolean): string {
     return val ? '✅' : '❌';
+  }
+
+  // ─── Build section helper ───
+  function buildModuleSection(title: string, emoji: string, data: any): string {
+    if (!data) return '';
+    return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">${emoji} ${title}</h3>
+      ${renderJsonSection(data)}
+    </div>`;
   }
 
   return `<!DOCTYPE html>
@@ -287,7 +266,7 @@ function generateMarinaReport(
     .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
     .header .subtitle { font-size: 14px; opacity: 0.85; }
     .header .date { font-size: 12px; opacity: 0.7; margin-top: 8px; }
-    .section { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .section { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); page-break-inside: avoid; }
     .section-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .section-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: white; font-size: 13px; font-weight: 700; }
     .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 18px; color: white; }
@@ -304,10 +283,11 @@ function generateMarinaReport(
     .toc { background: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .toc-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
     .toc-item:last-child { border-bottom: none; }
+    .reco-card { padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:4px; }
     @media print {
       body { padding: 0; }
       @page { margin: 15mm 10mm; }
-      .section { break-inside: avoid; }
+      .section { break-inside: auto; }
     }
   </style>
 </head>
@@ -328,124 +308,255 @@ function generateMarinaReport(
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
     </div>
 
-    <!-- 1. Crawl Report -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 1. RAPPORT DE CRAWL DÉTAILLÉ -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      
+      <!-- Meta overview -->
       <div class="stat-grid-4">
-        <div class="stat-card">
-          <div class="value">${crawlMeta.wordCount}</div>
-          <div class="label">${tr.wordCount}</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${crawlMeta.internalLinks}</div>
-          <div class="label">Liens internes</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${crawlMeta.externalLinks}</div>
-          <div class="label">Liens externes</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${crawlMeta.avgResponseTime ? crawlMeta.avgResponseTime + 'ms' : '-'}</div>
-          <div class="label">${tr.responseTime}</div>
-        </div>
+        <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.externalLinks}</div><div class="label">Liens externes</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.avgResponseTime ? crawlMeta.avgResponseTime + 'ms' : '-'}</div><div class="label">Temps de réponse</div></div>
       </div>
       <div class="stat-grid-4" style="margin-top:12px;">
-        <div class="stat-card">
-          <div class="value">${crawlMeta.imagesTotal}</div>
-          <div class="label">Images</div>
-        </div>
-        <div class="stat-card">
-          <div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div>
-          <div class="label">Sans alt</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${crawlMeta.h2Count}</div>
-          <div class="label">H2</div>
-        </div>
-        <div class="stat-card">
-          <div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div>
-          <div class="label">Liens cassés</div>
-        </div>
+        <div class="stat-card"><div class="value">${crawlMeta.imagesTotal}</div><div class="label">Images</div></div>
+        <div class="stat-card"><div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div><div class="label">Sans alt</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2</div></div>
+        <div class="stat-card"><div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div><div class="label">Liens cassés</div></div>
       </div>
-      ${crawlMeta.h1 ? `<div style="margin-top:16px;padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+
+      <!-- Title & Meta -->
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO</h3>
+        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+          <strong>Title (${crawlMeta.titleLength} car.):</strong> ${crawlMeta.title || '-'}
+        </div>
+        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+          <strong>Meta Description (${crawlMeta.metaDescLength} car.):</strong> ${crawlMeta.metaDesc || '-'}
+        </div>
+        ${crawlMeta.h1 ? `<div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+      </div>
+
+      <!-- Headings -->
+      ${crawlMeta.h2Contents.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Structure des titres (${crawlMeta.h2Contents.length} H2, ${crawlMeta.h3Count} H3)</h3>
+        <ul style="padding-left:20px;font-size:13px;color:#374151;">
+          ${crawlMeta.h2Contents.slice(0, 20).map((h: string) => `<li style="margin-bottom:4px;">${h}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <!-- Technical checklist -->
       <div class="checklist" style="margin-top:16px;">
         <div class="checklist-item">${checkMark(crawlMeta.indexable)} Indexable</div>
+        <div class="checklist-item">${checkMark(crawlMeta.isHttps)} HTTPS</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical</div>
-        <div class="checklist-item">${checkMark(crawlMeta.hasSchema)} Schema.org</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasOg)} Open Graph</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasSchema)} Schema.org ${crawlMeta.schemaTypes.length > 0 ? `(${crawlMeta.schemaTypes.join(', ')})` : ''}</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasRobotsTxt)} robots.txt ${crawlMeta.robotsPermissive ? '(permissif)' : ''}</div>
       </div>
+
+      <!-- Performance -->
       ${crawlMeta.performanceScore ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Performance (PageSpeed)</h3>
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div>
-            <div class="label">Performance /100</div>
-          </div>
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed)</h3>
+        <div class="stat-grid-4">
+          <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${crawlMeta.lcp}s</div><div class="label">LCP</div></div>` : ''}
           ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${crawlMeta.tbt}ms</div><div class="label">TBT</div></div>` : ''}
+          ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${crawlMeta.cls}</div><div class="label">CLS</div></div>` : ''}
+          ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${crawlMeta.fcp}s</div><div class="label">FCP</div></div>` : ''}
         </div>
       </div>` : ''}
+
+      <!-- Scores breakdown -->
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
+        <div class="stat-grid-4">
+          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.performance?.score || 0, scores?.performance?.maxScore || 40)}">${scores?.performance?.score || 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.technical?.score || 0, scores?.technical?.maxScore || 50)}">${scores?.technical?.score || 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.semantic?.score || 0, scores?.semantic?.maxScore || 60)}">${scores?.semantic?.score || 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.aiReady?.score || 0, scores?.aiReady?.maxScore || 30)}">${scores?.aiReady?.score || 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 2. Technical SEO Audit -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 2. AUDIT TECHNIQUE SEO COMPLET -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="section">
       <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-        <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">
-          ${techScore} / ${techMaxScore}
-        </div>
-        <span style="color:#6b7280;font-size:13px;">${tr.score}</span>
+        <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">${techScore} / ${techMaxScore}</div>
       </div>
       ${typeof techIntro === 'string' && techIntro ? `<div class="intro-text">${techIntro}</div>` : 
-        typeof techIntro === 'object' && techIntro.presentation ? `<div class="intro-text">${techIntro.presentation}</div>` : ''}
-      <h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.recommendations}</h3>
-      ${renderRecommendations(techRecommendations)}
+        typeof techIntro === 'object' && techIntro.presentation ? `
+          <div class="intro-text">${techIntro.presentation}</div>
+          ${techIntro.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${techIntro.strengths}</div>` : ''}
+          ${techIntro.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${techIntro.improvement}</div>` : ''}
+        ` : ''}
+      
+      <!-- All recommendations -->
+      ${techRecommendations.length > 0 ? `
+      <h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.recommendations} (${techRecommendations.length})</h3>
+      ${techRecommendations.map((r: any) => {
+        const title = typeof r === 'string' ? r : r.title || r.label || '';
+        const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
+        const priority = typeof r === 'string' ? '' : r.priority || '';
+        const category = typeof r === 'string' ? '' : r.category || '';
+        const color = priority === 'critical' ? '#ef4444' : priority === 'important' ? '#f59e0b' : '#3b82f6';
+        return `<div class="reco-card" style="border-left-color:${color}">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+            ${priority ? `<span style="font-size:11px;color:${color};font-weight:600;text-transform:uppercase;">${priority}</span>` : ''}
+            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${category}</span>` : ''}
+          </div>
+          <div style="font-weight:500;">${title}</div>
+          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
+        </div>`;
+      }).join('')}` : ''}
     </div>
 
-    <!-- 3. Strategic GEO Audit -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 3. AUDIT STRATÉGIQUE GEO COMPLET -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="section">
       <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-        <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">
-          ${stratScore} / 100
-        </div>
+        <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
       </div>
+
+      <!-- Introduction -->
       ${stratIntro?.presentation ? `<div class="intro-text">${stratIntro.presentation}</div>` : ''}
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
-      ${stratSummary ? `<h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div>` : ''}
-      ${stratRoadmap.length > 0 ? `<h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.roadmap}</h3>${renderRoadmap(stratRoadmap)}` : ''}
+
+      <!-- Executive Summary -->
+      ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
+
+      <!-- All strategic modules -->
+      ${buildModuleSection('Autorité de Marque', '🏛️', brandAuth)}
+      ${buildModuleSection('Signaux Sociaux', '📱', socialSignals)}
+      ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
+      ${buildModuleSection('Paysage Concurrentiel', '⚔️', competitive)}
+      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
+      ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
+      ${buildModuleSection('Données Marché', '📈', marketData)}
+      ${buildModuleSection('Visibilité LLM', '🤖', llmVisibility)}
+      ${buildModuleSection('Quotabilité', '💬', quotability)}
+      ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
+      ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
+      ${buildModuleSection('Sentiment d\'Expertise', '🎯', expertiseSentiment)}
+      ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
+      ${buildModuleSection('Google My Business', '📍', gmb)}
+      ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
+
+      <!-- Roadmap -->
+      ${stratRoadmap.length > 0 ? `
+      <div style="margin-top:20px;">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">🗺️ ${tr.roadmap}</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f3f4f6;">
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">Priorité</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">Action</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">Catégorie</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#6b7280;">ROI</th>
+          </tr></thead>
+          <tbody>${stratRoadmap.map((item: any) => {
+            const color = item.priority === 'Prioritaire' ? '#ef4444' : item.priority === 'Important' ? '#f59e0b' : '#22c55e';
+            return `<tr style="border-bottom:1px solid #e5e7eb;">
+              <td style="padding:8px 12px;"><span style="color:${color};font-weight:600;font-size:13px;">${item.priority || '-'}</span></td>
+              <td style="padding:8px 12px;font-size:13px;">${item.prescriptive_action || item.title || item.action_concrete || '-'}</td>
+              <td style="padding:8px 12px;font-size:13px;color:#6b7280;">${item.category || '-'}</td>
+              <td style="padding:8px 12px;font-size:13px;color:#6b7280;">${item.expected_roi || '-'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>` : ''}
     </div>
 
-    <!-- 4. Semantic Cocoon -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 4. COCON SÉMANTIQUE & MAILLAGE -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${cocoonStats ? `
       <div class="stat-grid">
-        <div class="stat-card">
-          <div class="value">${cocoonStats.nodes_count || 0}</div>
-          <div class="label">${tr.nodes}</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${cocoonStats.clusters_count || 0}</div>
-          <div class="label">${tr.clusters}</div>
-        </div>
-        <div class="stat-card">
-          <div class="value">${cocoonStats.edges_count || 0}</div>
-          <div class="label">${tr.edges}</div>
-        </div>
+        <div class="stat-card"><div class="value">${cocoonStats.nodes_count || 0}</div><div class="label">Pages analysées</div></div>
+        <div class="stat-card"><div class="value">${cocoonStats.clusters_count || 0}</div><div class="label">Clusters</div></div>
+        <div class="stat-card"><div class="value">${cocoonStats.edges_count || 0}</div><div class="label">Liens sémantiques</div></div>
       </div>
+      ${cocoonStats.avg_geo_score ? `
+      <div class="stat-grid" style="margin-top:12px;">
+        <div class="stat-card"><div class="value">${cocoonStats.avg_geo_score || '-'}</div><div class="label">Geo Score Moy.</div></div>
+        <div class="stat-card"><div class="value">${cocoonStats.avg_roi || '-'}</div><div class="label">ROI Moy.</div></div>
+        <div class="stat-card"><div class="value">${cocoonStats.links_density || '-'}%</div><div class="label">Densité liens</div></div>
+      </div>` : ''}
+
+      <!-- Clusters -->
       ${cocoonClusters && typeof cocoonClusters === 'object' ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
-        ${Object.entries(cocoonClusters).slice(0, 10).map(([key, val]: [string, any]) => `
-          <div style="padding:10px 12px;margin-bottom:6px;background:#f9fafb;border-radius:6px;font-size:13px;">
-            <strong>${val?.label || val?.name || key}</strong>
-            ${val?.pages_count ? ` — ${val.pages_count} pages` : ''}
-            ${val?.avg_score ? ` — Score moy: ${Math.round(val.avg_score)}` : ''}
+        ${Object.entries(cocoonClusters).map(([key, val]: [string, any]) => `
+          <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
+            <div style="font-weight:600;font-size:14px;">${val?.label || val?.name || key}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">
+              ${val?.count || val?.pages_count || ''} pages
+              ${val?.avg_geo ? ` · Geo: ${Math.round(val.avg_geo)}` : ''}
+              ${val?.avg_roi ? ` · ROI: ${Math.round(val.avg_roi)}` : ''}
+              ${val?.total_traffic ? ` · Trafic: ${val.total_traffic}` : ''}
+              ${val?.dominant_intent ? ` · Intent: ${val.dominant_intent}` : ''}
+            </div>
           </div>
         `).join('')}
+      </div>` : ''}
+
+      <!-- Nodes detail -->
+      ${cocoonNodes.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages du graphe (${cocoonNodes.length})</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#f3f4f6;">
+            <th style="padding:6px 8px;text-align:left;">URL</th>
+            <th style="padding:6px 8px;text-align:center;">Intent</th>
+            <th style="padding:6px 8px;text-align:center;">Autorité</th>
+            <th style="padding:6px 8px;text-align:center;">Liens In</th>
+            <th style="padding:6px 8px;text-align:center;">Liens Out</th>
+          </tr></thead>
+          <tbody>${cocoonNodes.slice(0, 50).map((nd: any) => `
+            <tr style="border-bottom:1px solid #f3f4f6;">
+              <td style="padding:6px 8px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nd.url || nd.title || '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${nd.intent || '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${nd.page_authority != null ? Math.round(nd.page_authority) : '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${nd.internal_links_in ?? '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${nd.internal_links_out ?? '-'}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      </div>` : ''}
+
+      <!-- Edges detail -->
+      ${cocoonEdges.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Liens sémantiques (${cocoonEdges.length} premiers)</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#f3f4f6;">
+            <th style="padding:6px 8px;text-align:left;">Source</th>
+            <th style="padding:6px 8px;text-align:left;">Cible</th>
+            <th style="padding:6px 8px;text-align:center;">Score</th>
+            <th style="padding:6px 8px;text-align:center;">Type</th>
+          </tr></thead>
+          <tbody>${cocoonEdges.slice(0, 30).map((e: any) => `
+            <tr style="border-bottom:1px solid #f3f4f6;">
+              <td style="padding:6px 8px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.source || '-'}</td>
+              <td style="padding:6px 8px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.target || e.target_url || '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${e.score != null ? Math.round(e.score * 100) / 100 : '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${e.type || '-'}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
       </div>` : ''}
       ` : `<p style="color:#6b7280;font-size:14px;">${tr.cocoonPending}</p>`}
     </div>
