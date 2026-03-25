@@ -465,11 +465,15 @@ IMPORTANT: L'utilisateur a sélectionné plusieurs pages pour une analyse compar
     const subdomainPrompt = subdomainMode ? `
 
 ANALYSE CROSS-SUBDOMAIN ACTIVÉE :
-Tu as reçu les données d'analyse des sous-domaines. Présente le diagnostic comme SI C'ÉTAIT TOI qui avais scanné le domaine.
+Tu as reçu les données d'analyse des sous-domaines (ex: blog.example.com, shop.example.com).
+IMPORTANT — DISTINCTION OBLIGATOIRE :
+- Un SOUS-DOMAINE est un host distinct : blog.site.com, shop.site.com
+- Un RÉPERTOIRE est un chemin sur le même host : site.com/blog/, site.com/shop/
+Ne confonds JAMAIS les deux. Cette analyse porte exclusivement sur les sous-domaines (hosts distincts).
 - Commence par le score d'architecture et le type (monolithique/distribué/hybride)
 - Liste les sous-domaines découverts avec leur taille
 - Identifie les risques de cannibalization entre sous-domaines
-- Propose des recommandations concrètes : fusionner sous-domaines en répertoires, redirections, consolidation
+- Propose des recommandations concrètes : migrer des sous-domaines vers des répertoires (ex: blog.site.com → site.com/blog/) pour consolider l'autorité, redirections 301, consolidation
 - Utilise le même ton conversationnel que le mode stratège
 - Recommande-toi de "nos algorithmes de cartographie" — ne mentionne jamais Firecrawl
 LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).` : '';
