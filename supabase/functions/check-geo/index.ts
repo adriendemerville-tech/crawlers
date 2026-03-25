@@ -877,20 +877,33 @@ Deno.serve(async (req) => {
 
     // Factor 2: Meta Description (10 points)
     // For SPA without rendering, meta may be injected by JS — give neutral score
-    const metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
+    let metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
+    let metaDescRecommendation: string | undefined;
+    let metaDescDetails = metaResult.description 
+      ? `"${metaResult.description.substring(0, 60)}..."` 
+      : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription);
+    
+    // Penalize JS-generated meta description (invisible to GEO crawlers)
+    if (jsMetaDetection.isMetaDescJsGenerated && metaDescScore > 0) {
+      metaDescScore = Math.max(0, metaDescScore - 4);
+      metaDescRecommendation = 'Meta description injectée par JavaScript — invisible pour les crawlers IA (GPTBot, PerplexityBot, ClaudeBot). Utilisez du HTML statique ou le SSR.';
+      metaDescDetails += ' | ⚠️ JS-generated';
+    } else if (!metaResult.hasDescription) {
+      metaDescRecommendation = isSPAWithLimitedContent 
+        ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' 
+        : t.factors.metaDescription.recommendation;
+    }
+    
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
       maxScore: 10,
-      status: metaDescScore === 10 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
-      recommendation: !metaResult.hasDescription 
-        ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
-        : undefined,
-      details: metaResult.description 
-        ? `"${metaResult.description.substring(0, 60)}..."` 
-        : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription)
+      status: metaDescScore >= 8 ? 'good' : metaDescScore > 0 ? 'warning' : 'error',
+      recommendation: metaDescRecommendation,
+      details: metaDescDetails,
+      isJsGenerated: jsMetaDetection.isMetaDescJsGenerated || undefined
     });
 
     // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
