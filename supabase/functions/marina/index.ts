@@ -325,6 +325,86 @@ async function callFunction(functionName: string, body: any, method = 'POST'): P
   }
 }
 
+async function startTrackedSubJob(
+  sb: ReturnType<typeof getServiceClient>,
+  functionName: string,
+  userId: string,
+  body: Record<string, unknown>,
+): Promise<string> {
+  const { data: job, error } = await sb
+    .from('async_jobs')
+    .insert({
+      user_id: userId,
+      function_name: functionName,
+      status: 'pending',
+      input_payload: body,
+    })
+    .select('id')
+    .single();
+
+  if (error || !job) {
+    throw new Error(`Failed to create ${functionName} job: ${error?.message || 'unknown error'}`);
+  }
+
+  fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...body, async: false, _job_id: job.id }),
+  }).catch((error) => {
+    console.error(`[Marina] ${functionName} self-invocation failed:`, error);
+  });
+
+  return job.id;
+}
+
+async function waitForTrackedJob(
+  sb: ReturnType<typeof getServiceClient>,
+  jobId: string,
+  options?: {
+    timeoutMs?: number;
+    pollMs?: number;
+    onProgress?: (job: {
+      status: string;
+      progress: number | null;
+      result_data: any;
+      error_message: string | null;
+      input_payload: any;
+    }) => Promise<void> | void;
+  },
+): Promise<any> {
+  const timeoutMs = options?.timeoutMs ?? 420_000;
+  const pollMs = options?.pollMs ?? 4_000;
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const { data: job, error } = await sb
+      .from('async_jobs')
+      .select('status, progress, result_data, error_message, input_payload')
+      .eq('id', jobId)
+      .single();
+
+    if (error || !job) {
+      throw new Error(`Unable to read sub-job ${jobId}: ${error?.message || 'not found'}`);
+    }
+
+    if (job.status === 'completed') return job.result_data;
+    if (job.status === 'failed') {
+      throw new Error(job.error_message || `Sub-job ${jobId} failed`);
+    }
+
+    if (options?.onProgress) {
+      await options.onProgress(job);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
+
+  throw new Error(`Sub-job ${jobId} timed out after ${Math.round(timeoutMs / 1000)}s`);
+}
+
 // ─── API Key management ───
 function generateApiKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -339,6 +419,15 @@ function generateApiKey(): string {
 // ─── Worker: runs the full pipeline ───
 async function runPipeline(jobId: string, url: string, lang?: string) {
   const sb = getServiceClient();
+  const { data: parentJob } = await sb
+    .from('async_jobs')
+    .select('user_id')
+    .eq('id', jobId)
+    .single();
+
+  if (!parentJob?.user_id) {
+    throw new Error('Parent Marina job missing user_id');
+  }
   
   const updateProgress = async (progress: number, phase?: string) => {
     try {
@@ -368,18 +457,43 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     await updateProgress(30, 'strategic_audit');
 
     // ─── Step 2: Strategic GEO Audit ───
-    console.log(`[Marina] Step 2: audit-strategique-ia for ${url}`);
+    console.log(`[Marina] Step 2: strategic-orchestrator for ${url}`);
     const toolsData = {
-      crawlResult: expertResult.data,
+      crawlers: { note: 'Non disponible dans Marina' },
+      geo: { note: 'Calcul stratégique en cours' },
+      llm: { note: 'À calculer via le pipeline stratégique' },
+      pagespeed: {
+        overallScore: expertResult.data?.scores?.performance?.psiPerformance || null,
+        lcp: expertResult.data?.scores?.performance?.lcp || null,
+      },
     };
-    
-    const strategicResult = await callFunction('audit-strategique-ia', { 
-      url, 
-      lang: detectedLang,
-      toolsData,
+
+    const strategicJobId = await startTrackedSubJob(
+      sb,
+      'strategic-orchestrator',
+      parentJob.user_id,
+      {
+        parent_job_id: jobId,
+        url,
+        lang: detectedLang,
+        toolsData,
+      },
+    );
+
+    let lastMirroredProgress = 30;
+    const strategicData = await waitForTrackedJob(sb, strategicJobId, {
+      timeoutMs: 420_000,
+      pollMs: 4_000,
+      onProgress: async (childJob) => {
+        const childProgress = Math.max(0, Math.min(100, childJob.progress || 0));
+        const mirroredProgress = Math.min(64, 30 + Math.round((childProgress / 100) * 35));
+        if (mirroredProgress > lastMirroredProgress) {
+          lastMirroredProgress = mirroredProgress;
+          await updateProgress(mirroredProgress, 'strategic_audit');
+        }
+      },
     });
-    
-    const strategicData = strategicResult?.data || strategicResult || {};
+
     console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
     await updateProgress(65, 'cocoon');
 
