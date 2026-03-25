@@ -525,7 +525,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
       if (deployError) throw deployError;
 
       // Invoke the audit function with the matrix session
-      const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
+      const { data, error } = await supabase.functions.invoke('strategic-orchestrator', {
         body: {
           url: normalizedUrl,
           toolsData: null,

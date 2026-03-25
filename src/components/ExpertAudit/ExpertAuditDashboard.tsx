@@ -960,7 +960,7 @@ export function ExpertAuditDashboard() {
 
       if (canUseAsync) {
         // Use async mode for authenticated users: submit job, then poll for completion
-        const launchResp = await invokeWithTimeout('audit-strategique-ia', { 
+        const launchResp = await invokeWithTimeout('strategic-orchestrator', { 
           url: normalizedUrl, 
           toolsData: null,
           hallucinationCorrections: hallucinationCorrections || null,
@@ -1002,7 +1002,7 @@ export function ExpertAuditDashboard() {
 
         if (!rawStrategicData) throw new Error('Audit timeout — le job n\'a pas terminé à temps');
       } else {
-        const syncResp = await invokeWithTimeout('audit-strategique-ia', {
+        const syncResp = await invokeWithTimeout('strategic-orchestrator', {
           url: normalizedUrl,
           toolsData: null,
           hallucinationCorrections: hallucinationCorrections || null,
@@ -1093,7 +1093,7 @@ export function ExpertAuditDashboard() {
         try {
           if (canUseAsync) {
             console.log('Strategic audit: auto-retrying (async mode)...');
-            const retryLaunch = await invokeWithTimeout('audit-strategique-ia', {
+            const retryLaunch = await invokeWithTimeout('strategic-orchestrator', {
               url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
               cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
               async: true,
@@ -1129,7 +1129,7 @@ export function ExpertAuditDashboard() {
             fetchStoredCorrections(retryDomain);
           } else {
             console.log('Strategic audit: auto-retrying (sync guest mode)...');
-            const retryResp = await invokeWithTimeout('audit-strategique-ia', {
+            const retryResp = await invokeWithTimeout('strategic-orchestrator', {
               url: normalizedUrl,
               toolsData: null,
               hallucinationCorrections: hallucinationCorrections || null,
