@@ -656,8 +656,9 @@ export function SmartConfigurator({
 
     for (const task of allDynamicTasks) {
       if (task.isCompleted) continue;
-      const titleLower = task.title.toLowerCase();
-      const descLower = ((task as any)._description || task.title).toLowerCase();
+      if (!task.title) continue;
+      const titleLower = (task.title || '').toLowerCase();
+      const descLower = ((task as any)._description || task.title || '').toLowerCase();
       const combined = `${titleLower} ${descLower}`;
       
       // ═══ FILTER: Skip tasks that can't be solved with code injection ═══
@@ -725,7 +726,7 @@ export function SmartConfigurator({
           ctaDescription = `Injecte un bloc d'appel à l'action vers ${platform}, renforçant la citabilité et la preuve sociale`;
         }
 
-        const fixId = `actionplan_cta_${platform.toLowerCase().replace(/[^a-z]/g, '')}_${task.id}`;
+        const fixId = `actionplan_cta_${(platform || '').toLowerCase().replace(/[^a-z]/g, '')}_${task.id}`;
         if (seenTitles.has(fixId)) continue;
         seenTitles.add(fixId);
 
