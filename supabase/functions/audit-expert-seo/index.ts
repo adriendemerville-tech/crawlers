@@ -1183,13 +1183,51 @@ function analyzeContentDensity(html: string, visibleText: string): ContentDensit
 
 // ==================== BROKEN LINKS CHECKER ====================
 
-async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string): Promise<BrokenLinksAnalysis> {
+// Social media & platforms that systematically block bots — auto-whitelist
+const SOCIAL_WHITELIST_DOMAINS = new Set([
+  'facebook.com', 'www.facebook.com', 'fb.com', 'm.facebook.com',
+  'instagram.com', 'www.instagram.com',
+  'twitter.com', 'x.com', 'www.twitter.com',
+  'linkedin.com', 'www.linkedin.com', 'fr.linkedin.com',
+  'tiktok.com', 'www.tiktok.com',
+  'pinterest.com', 'www.pinterest.com', 'pinterest.fr',
+  'youtube.com', 'www.youtube.com', 'youtu.be',
+  'snapchat.com', 'www.snapchat.com',
+  'threads.net', 'www.threads.net',
+  'wa.me', 'api.whatsapp.com', 'web.whatsapp.com',
+  'discord.gg', 'discord.com',
+  'reddit.com', 'www.reddit.com',
+  'tumblr.com', 'www.tumblr.com',
+  'vimeo.com', 'www.vimeo.com',
+  'dailymotion.com', 'www.dailymotion.com',
+  'play.google.com', 'apps.apple.com',
+]);
+
+function isSocialWhitelisted(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (SOCIAL_WHITELIST_DOMAINS.has(hostname)) return true;
+    // Check parent domain (e.g. m.facebook.com → facebook.com)
+    for (const domain of SOCIAL_WHITELIST_DOMAINS) {
+      if (hostname.endsWith('.' + domain)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePositiveDomains?: string[]): Promise<BrokenLinksAnalysis & { skipped_social: number }> {
   console.log('[BrokenLinks] Vérification des liens cassés...');
+  
+  // Build combined whitelist
+  const userWhitelist = new Set((userFalsePositiveDomains || []).map(d => d.toLowerCase()));
   
   const links = doc.querySelectorAll('a[href]');
   const baseDomain = extractDomain(baseUrl);
   const linksToCheck: { url: string; anchor: string; type: 'internal' | 'external' }[] = [];
   const checkedUrls = new Set<string>();
+  let skippedSocial = 0;
   
   // Collect unique links (limit to 30 for performance)
   for (let i = 0; i < links.length && linksToCheck.length < 30; i++) {
@@ -1209,6 +1247,19 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string): Promise<Bro
       // Skip if already checked
       if (checkedUrls.has(absoluteUrl)) continue;
       checkedUrls.add(absoluteUrl);
+      
+      // Skip social media domains (auto-whitelist)
+      if (isSocialWhitelisted(absoluteUrl)) {
+        skippedSocial++;
+        continue;
+      }
+      
+      // Skip user-defined false positive domains
+      const linkHostname = new URL(absoluteUrl).hostname.toLowerCase();
+      if (userWhitelist.has(linkHostname) || [...userWhitelist].some(d => linkHostname.endsWith('.' + d))) {
+        skippedSocial++;
+        continue;
+      }
       
       const linkDomain = new URL(absoluteUrl).hostname;
       const isInternal = linkDomain === baseDomain || linkDomain.endsWith('.' + baseDomain);
@@ -1280,13 +1331,14 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string): Promise<Bro
     verdict = 'critical';
   }
   
-  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} liens cassés trouvés sur ${linksToCheck.length} vérifiés`);
+  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} cassés, ${skippedSocial} réseaux sociaux ignorés, sur ${linksToCheck.length + skippedSocial} liens`);
   
   return {
     total: linksToCheck.length,
     broken: brokenLinks,
     checked: linksToCheck.length,
     corsBlocked,
+    skipped_social: skippedSocial,
     verdict
   };
 }

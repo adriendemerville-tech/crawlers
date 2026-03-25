@@ -2677,6 +2677,30 @@ export type Database = {
         }
         Relationships: []
       }
+      false_positive_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       firehose_events: {
         Row: {
           created_at: string
