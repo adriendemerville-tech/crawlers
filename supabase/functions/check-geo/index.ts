@@ -281,6 +281,84 @@ function detectJsGeneratedSchema(html: string): boolean {
   return false;
 }
 
+// ============================================================================
+// DÉTECTION META TAGS INJECTÉS PAR JAVASCRIPT
+// ============================================================================
+
+interface JsMetaDetection {
+  isTitleJsGenerated: boolean;
+  isMetaDescJsGenerated: boolean;
+  isOgJsGenerated: boolean;
+  hasAnyJsMeta: boolean;
+}
+
+/**
+ * Detect if title, meta description, or OG tags are injected via JavaScript
+ * rather than present as static HTML. GEO crawlers (GPTBot, PerplexityBot, ClaudeBot)
+ * do NOT execute JS — these tags would be invisible to them.
+ */
+function detectJsGeneratedMeta(rawHtml: string): JsMetaDetection {
+  const regularScripts = rawHtml.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  
+  let isTitleJsGenerated = false;
+  let isMetaDescJsGenerated = false;
+  let isOgJsGenerated = false;
+
+  for (const script of regularScripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+    
+    // Title JS injection patterns
+    if (
+      /document\.title\s*=/i.test(content) ||
+      /\.setAttribute\s*\(\s*['"]title['"]/i.test(content) ||
+      /useEffect[\s\S]*?document\.title/i.test(content)
+    ) {
+      isTitleJsGenerated = true;
+    }
+    
+    // Meta description JS injection patterns
+    if (
+      /meta\s*\[\s*name\s*=\s*['"]description['"]\s*\]/i.test(content) ||
+      /querySelector\s*\(\s*['"]meta\[name.*description/i.test(content) ||
+      /\.setAttribute\s*\(\s*['"]content['"]\s*,[\s\S]*?description/i.test(content) ||
+      /createElement\s*\(\s*['"]meta['"]\s*\)[\s\S]{0,200}description/i.test(content)
+    ) {
+      isMetaDescJsGenerated = true;
+    }
+    
+    // OG tags JS injection patterns
+    if (
+      /property\s*=\s*['"]og:/i.test(content) && /createElement|setAttribute|innerHTML|appendChild/i.test(content) ||
+      /querySelector\s*\(\s*['"]meta\[property.*og:/i.test(content)
+    ) {
+      isOgJsGenerated = true;
+    }
+  }
+  
+  // Also check for React Helmet patterns (bundled JS that manages <head>)
+  const hasHelmetPattern = /react-helmet|helmet-async|Helmet|useHelmet/i.test(rawHtml);
+  const isFrameworkSSR = /__NEXT_DATA__|__NUXT__|data-server-rendered/i.test(rawHtml);
+  
+  // If Helmet is used with SSR frameworks (Next.js, Nuxt), the meta is rendered server-side → OK
+  // If Helmet is used with client-only React (no SSR), the meta IS JS-generated
+  if (hasHelmetPattern && !isFrameworkSSR) {
+    // Check if there's an empty root (client-only SPA)
+    const hasEmptyRoot = /<div\s+id=["'](root|app)["'][^>]*>\s*<\/div>/i.test(rawHtml);
+    if (hasEmptyRoot) {
+      isTitleJsGenerated = true;
+      isMetaDescJsGenerated = true;
+      isOgJsGenerated = true;
+    }
+  }
+  
+  const hasAnyJsMeta = isTitleJsGenerated || isMetaDescJsGenerated || isOgJsGenerated;
+  if (hasAnyJsMeta) {
+    console.log(`[GEO-AUDIT] ⚠️ JS-generated meta detected — title:${isTitleJsGenerated} desc:${isMetaDescJsGenerated} og:${isOgJsGenerated}`);
+  }
+  
+  return { isTitleJsGenerated, isMetaDescJsGenerated, isOgJsGenerated, hasAnyJsMeta };
+}
+
 function analyzeStructuredData(doc: ReturnType<DOMParser['parseFromString']>, rawHtml: string): JsonLdValidation {
   const isJsGenerated = detectJsGeneratedSchema(rawHtml);
   
