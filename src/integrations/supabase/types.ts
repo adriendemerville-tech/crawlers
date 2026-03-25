@@ -3593,15 +3593,20 @@ export type Database = {
       ias_history: {
         Row: {
           actual_ratio: number
+          age_factor: number | null
           brand_clicks: number
           brand_penetration_rate: number | null
           business_type: string
+          composite_ias_score: number | null
           created_at: string
           domain: string
+          founding_year: number | null
           generic_clicks: number
           ias_score: number | null
           id: string
+          is_seasonal: boolean | null
           risk_score: number
+          seasonality_factor: number | null
           target_ratio: number
           total_clicks: number
           tracked_site_id: string
@@ -3610,15 +3615,20 @@ export type Database = {
         }
         Insert: {
           actual_ratio: number
+          age_factor?: number | null
           brand_clicks?: number
           brand_penetration_rate?: number | null
           business_type: string
+          composite_ias_score?: number | null
           created_at?: string
           domain: string
+          founding_year?: number | null
           generic_clicks?: number
           ias_score?: number | null
           id?: string
+          is_seasonal?: boolean | null
           risk_score: number
+          seasonality_factor?: number | null
           target_ratio: number
           total_clicks?: number
           tracked_site_id: string
@@ -3627,15 +3637,20 @@ export type Database = {
         }
         Update: {
           actual_ratio?: number
+          age_factor?: number | null
           brand_clicks?: number
           brand_penetration_rate?: number | null
           business_type?: string
+          composite_ias_score?: number | null
           created_at?: string
           domain?: string
+          founding_year?: number | null
           generic_clicks?: number
           ias_score?: number | null
           id?: string
+          is_seasonal?: boolean | null
           risk_score?: number
+          seasonality_factor?: number | null
           target_ratio?: number
           total_clicks?: number
           tracked_site_id?: string
@@ -3654,31 +3669,37 @@ export type Database = {
       }
       ias_settings: {
         Row: {
+          age_adjustment_enabled: boolean | null
           brand_name: string
           category_id: number
           created_at: string
           id: string
           is_manual: boolean
+          seasonality_enabled: boolean | null
           site_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          age_adjustment_enabled?: boolean | null
           brand_name?: string
           category_id?: number
           created_at?: string
           id?: string
           is_manual?: boolean
+          seasonality_enabled?: boolean | null
           site_id: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          age_adjustment_enabled?: boolean | null
           brand_name?: string
           category_id?: number
           created_at?: string
           id?: string
           is_manual?: boolean
+          seasonality_enabled?: boolean | null
           site_id?: string
           updated_at?: string
           user_id?: string
@@ -6950,6 +6971,7 @@ export type Database = {
           identity_confidence: number | null
           identity_enriched_at: string | null
           identity_source: string | null
+          is_seasonal: boolean | null
           jargon_distance: Json | null
           last_audit_at: string | null
           last_sov_update: string | null
@@ -6963,6 +6985,8 @@ export type Database = {
           previous_config: Json
           primary_language: string | null
           products_services: string | null
+          seasonality_detected_at: string | null
+          seasonality_profile: Json | null
           short_term_goal: string | null
           siren_siret: string | null
           site_name: string
@@ -6994,6 +7018,7 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
@@ -7007,6 +7032,8 @@ export type Database = {
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
+          seasonality_detected_at?: string | null
+          seasonality_profile?: Json | null
           short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string
@@ -7038,6 +7065,7 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
@@ -7051,6 +7079,8 @@ export type Database = {
           previous_config?: Json
           primary_language?: string | null
           products_services?: string | null
+          seasonality_detected_at?: string | null
+          seasonality_profile?: Json | null
           short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string

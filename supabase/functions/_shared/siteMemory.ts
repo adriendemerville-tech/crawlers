@@ -25,6 +25,7 @@ const CRITICAL_IDENTITY_FIELDS = new Set([
 const AUTO_UPDATE_FIELDS = new Set([
   'company_size', 'target_audience', 'commercial_area', 'products_services',
   'media_specialties', 'nonprofit_type', 'address',
+  'is_seasonal', 'seasonality_profile', 'founding_year',
 ])
 
 export interface MemoryEntry {
