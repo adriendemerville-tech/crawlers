@@ -151,13 +151,23 @@ export function ParmenionDashboard() {
   };
 
   const handleNewAction = async () => {
+    if (!autopilotConfig?.tracked_site_id || !autopilotConfig?.domain) {
+      toast({ title: 'Erreur', description: 'Aucun site autopilote actif trouvé.', variant: 'destructive' });
+      return;
+    }
     toast({ title: '🆕 Nouvelle action demandée', description: 'Le prochain cycle de Parménion démarrera avec un nouveau but.' });
-    // Trigger orchestrator
     const { error } = await supabase.functions.invoke('parmenion-orchestrator', {
-      body: { force_new: true },
+      body: {
+        force_new: true,
+        tracked_site_id: autopilotConfig.tracked_site_id,
+        domain: autopilotConfig.domain,
+        cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
+      },
     });
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      fetchLogs();
     }
   };
 
