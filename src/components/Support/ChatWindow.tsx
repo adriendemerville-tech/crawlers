@@ -83,6 +83,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSent, setPhoneSent] = useState(false);
+  const [showAutonomyDiag, setShowAutonomyDiag] = useState(false);
+  const [onboardingPersona, setOnboardingPersona] = useState<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
