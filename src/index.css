@@ -228,7 +228,25 @@
     animation: scan 1.5s ease-in-out infinite;
   }
 
-  @keyframes scan {
+  /* Felix ping-pong bounce animation */
+  @keyframes felix-pingpong {
+    0%   { transform: translateY(0); }
+    8%   { transform: translateY(-40px); }
+    16%  { transform: translateY(0); }
+    24%  { transform: translateY(-25px); }
+    32%  { transform: translateY(0); }
+    40%  { transform: translateY(-14px); }
+    48%  { transform: translateY(0); }
+    56%  { transform: translateY(-6px); }
+    64%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
+  }
+
+  .animate-felix-bounce {
+    animation: felix-pingpong 2s ease-in-out;
+  }
+
+
     0% {
       transform: translateY(-100%);
       opacity: 0;
