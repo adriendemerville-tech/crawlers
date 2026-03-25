@@ -288,6 +288,20 @@ Deno.serve(async (req) => {
     const supabase = getServiceClient();
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 0: Read persistent site memory for context
+    // ═══════════════════════════════════════════════════════════
+    let siteMemoryContext = '';
+    try {
+      const { promptSnippet, entries } = await readSiteMemory(tracked_site_id);
+      siteMemoryContext = promptSnippet;
+      if (entries.length > 0) {
+        console.log(`[strategist] Loaded ${entries.length} memory entries for ${domain}`);
+      }
+    } catch (e) {
+      console.error('[strategist] Memory read error:', e);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 1: Collecter les diagnostics (parallèle)
     // ═══════════════════════════════════════════════════════════
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
