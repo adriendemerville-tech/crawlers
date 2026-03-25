@@ -686,6 +686,29 @@ export default function SiteCrawl() {
             .slice(0, 15)
             .map(n => ({ path: n.path, label: n.label, count: n.count }));
           setSitemapTree(dirs);
+
+          // Extract individual page patterns from tree URLs
+          const pagePatterns: Array<{ path: string; label: string }> = [];
+          const seen = new Set<string>();
+          for (const node of tree) {
+            if (node.urls) {
+              for (const u of (node.urls as string[]).slice(0, 5)) {
+                try {
+                  const parsed = new URL(u);
+                  // Get filename-like pattern (last segment)
+                  const segments = parsed.pathname.split('/').filter(Boolean);
+                  if (segments.length >= 2) {
+                    const pattern = segments.slice(-1)[0];
+                    if (!seen.has(pattern) && pattern.length > 2 && !/^\d+$/.test(pattern)) {
+                      seen.add(pattern);
+                      pagePatterns.push({ path: parsed.pathname, label: pattern });
+                    }
+                  }
+                } catch {}
+              }
+            }
+          }
+          setSitemapPages(pagePatterns.slice(0, 20));
         }
 
         // Total = max of sitemap and indexed (they overlap, so we take the greater)
