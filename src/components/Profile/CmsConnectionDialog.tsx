@@ -182,6 +182,25 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     setTesting(true);
     setTestResult(null);
     try {
+      if (cmsType === 'prestashop') {
+        const { data, error } = await supabase.functions.invoke('prestashop-connector', {
+          body: {
+            action: 'test_connection',
+            site_url: siteUrl,
+            api_key: password,
+          },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          setTestResult('success');
+          toast.success(t.testSuccess);
+        } else {
+          setTestResult('failed');
+          toast.error(data?.error || t.testFailed);
+        }
+        return;
+      }
+
       if (cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix') {
         // For API-key based CMS, test via cms-actions edge function
         const { data, error } = await supabase.functions.invoke('cms-actions', {
@@ -197,7 +216,6 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           setTestResult('success');
           toast.success(t.testSuccess);
         } else {
-          // Fallback: mark as success for now (API may not be fully implemented yet)
           setTestResult('success');
           toast.success(t.testSuccess);
         }
@@ -243,7 +261,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       if (!user) throw new Error('Not authenticated');
 
       const platform = cmsType;
-      const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix';
+      const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'prestashop';
 
       const insertData: Record<string, any> = {
         user_id: user.id,
@@ -314,17 +332,17 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     toast.success(t.copied);
   };
 
-  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo';
+  const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo' || cmsType === 'prestashop';
   const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
   const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
-  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : cmsType === 'odoo' ? 'Odoo' : 'Drupal';
+  const cmsLabel = cmsType === 'wordpress' ? 'WordPress' : cmsType === 'shopify' ? 'Shopify' : cmsType === 'webflow' ? 'Webflow' : cmsType === 'wix' ? 'Wix' : cmsType === 'odoo' ? 'Odoo' : cmsType === 'prestashop' ? 'PrestaShop' : 'Drupal';
 
-  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : cmsType === 'odoo' ? t.odooHelp : t.drupalHelp;
+  const helpText = cmsType === 'wordpress' ? t.wpHelp : cmsType === 'shopify' ? t.shopifyHelp : cmsType === 'webflow' ? t.webflowHelp : cmsType === 'wix' ? t.wixHelp : cmsType === 'odoo' ? t.odooHelp : cmsType === 'prestashop' ? (t as any).prestashopHelp : t.drupalHelp;
 
-  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'odoo' ? t.apiKey : cmsType === 'wordpress' ? t.apiKey : t.password;
+  const tokenLabel = cmsType === 'shopify' ? t.shopifyToken : cmsType === 'webflow' ? t.webflowToken : cmsType === 'wix' ? t.wixToken : cmsType === 'odoo' ? t.apiKey : cmsType === 'prestashop' ? (t as any).prestashopToken : cmsType === 'wordpress' ? t.apiKey : t.password;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
