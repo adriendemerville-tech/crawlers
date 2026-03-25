@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2 } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -268,31 +268,28 @@ export function MarinaDashboard() {
                   const phase = payload?.phase;
                   
                   return (
-                    <div key={job.id} className="p-4 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className={cn("h-4 w-4 shrink-0", job.status === 'processing' && 'animate-spin')} />
-                            <Badge variant="outline" className={cn("text-xs", config.color)}>
-                              {config.label}
-                            </Badge>
-                            {job.progress != null && (job.status === 'processing' || job.status === 'pending') && (
-                              <span className="text-xs text-muted-foreground">{job.progress}%</span>
-                            )}
-                          </div>
-                          <div className="text-sm font-medium truncate">
+                    <div key={job.id} className="group relative px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Icon className={cn("h-3.5 w-3.5 shrink-0", job.status === 'processing' && 'animate-spin')} />
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", config.color)}>
+                            {config.label}
+                          </Badge>
+                          <span className="text-sm font-medium truncate">
                             {payload?.url || result?.url || 'URL inconnue'}
-                          </div>
+                          </span>
                           {phase && (job.status === 'processing' || job.status === 'pending') && (
-                            <div className="text-xs text-muted-foreground mt-1">
+                            <span className="text-[10px] text-muted-foreground hidden sm:inline">
                               {phaseLabels[phase] || phase}
-                            </div>
+                            </span>
                           )}
-                          {job.error_message && (
-                            <div className="text-xs text-destructive mt-1 truncate">{job.error_message}</div>
+                          {job.progress != null && (job.status === 'processing' || job.status === 'pending') && (
+                            <span className="text-[10px] text-muted-foreground">{job.progress}%</span>
                           )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
                           {result && (
-                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            <div className="hidden sm:flex items-center gap-2 text-[10px] text-muted-foreground">
                               {result.expert_seo_score != null && (
                                 <span>SEO: <strong className="text-foreground">{result.expert_seo_score}/{result.expert_seo_max}</strong></span>
                               )}
@@ -300,40 +297,40 @@ export function MarinaDashboard() {
                                 <span>GEO: <strong className="text-foreground">{result.strategic_score}/100</strong></span>
                               )}
                               {result.cocoon_nodes != null && (
-                                <span>Cocon: <strong className="text-foreground">{result.cocoon_nodes} pages</strong></span>
-                              )}
-                              {result.language && (
-                                <Badge variant="outline" className="text-[10px]">{result.language.toUpperCase()}</Badge>
+                                <span>Cocon: <strong className="text-foreground">{result.cocoon_nodes}p</strong></span>
                               )}
                             </div>
                           )}
-                        </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                          </span>
                           {result?.report_url && (
                             <button
                               onClick={() => handleOpenReport(result.report_url, payload?.url || result?.url || 'rapport')}
-                              className="text-xs text-primary flex items-center gap-1 hover:underline"
+                              className="text-[10px] text-primary flex items-center gap-1 hover:underline"
                             >
                               <FileText className="h-3 w-3" />
                               Rapport
                             </button>
                           )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <button
+                            onClick={() => setJobs(prev => prev.filter(j => j.id !== job.id))}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
+                      {job.error_message && (
+                        <div className="text-[10px] text-destructive mt-0.5 ml-5 truncate">{job.error_message}</div>
+                      )}
                       {(job.status === 'pending' || job.status === 'processing') && (
-                        <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="mt-1 ml-5 h-1 bg-muted rounded-full overflow-hidden max-w-xs">
                           {job.progress != null && job.progress > 0 ? (
-                            <div
-                              className="h-full bg-primary rounded-full transition-all duration-500"
-                              style={{ width: `${job.progress}%` }}
-                            />
+                            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${job.progress}%` }} />
                           ) : (
-                            <div className="h-full w-1/3 bg-primary/60 rounded-full animate-pulse" 
-                              style={{ animation: 'indeterminate 1.5s ease-in-out infinite' }}
-                            />
+                            <div className="h-full w-1/3 bg-primary/60 rounded-full animate-pulse" />
                           )}
                         </div>
                       )}
