@@ -352,10 +352,10 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   wordCount: number;
   h1Text: string;
   titleText: string;
-  firstParagraphText: string;
+  first150Words: string;
 } {
   if (!doc) {
-    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', firstParagraphText: '' };
+    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', first150Words: '' };
   }
 
   // H1 count
@@ -368,14 +368,16 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   const titleEl = doc.querySelector('title');
   const titleText = titleEl?.textContent?.trim() || '';
 
-  // First paragraph text
+  // Extract first 150 words of visible body text (excluding nav, header, footer, script, style)
   const body = doc.querySelector('body');
-  let firstParagraphText = '';
+  let first150Words = '';
   if (body) {
-    const firstP = body.querySelector('p');
-    if (firstP) {
-      firstParagraphText = firstP.textContent?.trim() || '';
-    }
+    const clone = body.cloneNode(true) as Element;
+    // Remove non-content elements
+    clone.querySelectorAll('script, style, noscript, nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]').forEach((el: Element) => el.remove());
+    const visibleText = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+    const words = visibleText.split(/\s+/).filter(w => w.length > 0);
+    first150Words = words.slice(0, 150).join(' ');
   }
 
   // All headings
@@ -400,7 +402,7 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
     wordCount = text.split(/\s+/).filter(w => w.length > 2).length;
   }
 
-  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, firstParagraphText };
+  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, first150Words };
 }
 
 // ============================================================================
