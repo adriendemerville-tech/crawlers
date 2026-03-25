@@ -141,7 +141,7 @@ export function ParmenionDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory]);
+  useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchIkHistory(); fetchModCounts(); }, [fetchLogs, fetchAutopilotConfig, fetchIkHistory, fetchModCounts]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
   // Realtime subscription
