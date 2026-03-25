@@ -287,9 +287,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Etiqueta canonical encontrada',
       },
       intentInTitle: {
-        name: 'Intención en el Título',
-        description: 'La palabra clave principal o intención visible en el título y primera frase',
-        recommendation: 'Coloque su palabra clave principal en el título (H1 o <title>) y en la primera frase del contenido para maximizar la relevancia IA',
+        name: 'Respuesta directa (150 palabras)',
+        description: 'Las primeras 150 palabras proporcionan una respuesta clara a la intención de la página — criterio clave para las IA',
+        recommendation: 'Coloque una respuesta directa y factual en las primeras 150 palabras de su contenido. Las IA priorizan el inicio del texto para ahorrar tiempo de rastreo',
       },
       faqOrSummary: {
         name: 'FAQ o Resumen al Inicio',
