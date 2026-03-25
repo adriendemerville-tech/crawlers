@@ -1,0 +1,1 @@
+ALTER TABLE public.llm_test_executions ADD COLUMN IF NOT EXISTS source_function text DEFAULT 'check-llm-depth';
