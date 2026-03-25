@@ -544,12 +544,33 @@ Deno.serve(async (req) => {
     // ═══ POST: Start pipeline or list jobs ═══
     const body = await req.json();
 
+    // ── Internal self-invocation with service role: skip auth ──
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+
+    if (isServiceCall && body.action === 'run_job' && body.job_id) {
+      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id}`);
+      await runPipeline(body.job_id, body.url, body.lang);
+      return json({ success: true, job_id: body.job_id });
+    }
+
     // ── Auth: either API key or admin JWT ──
     let isAuthorized = false;
     let userId: string | undefined;
 
+    if (isServiceCall) {
+      isAuthorized = true;
+      const { data: adminUser } = await sb
+        .from('user_roles' as any)
+        .select('user_id')
+        .eq('role', 'admin')
+        .limit(1)
+        .single();
+      userId = (adminUser as any)?.user_id;
+    }
+
     const apiKey = req.headers.get('x-marina-key') || body.api_key;
-    if (apiKey) {
+    if (!isAuthorized && apiKey) {
       const { data: configRow } = await sb
         .from('site_config' as any)
         .select('value')
@@ -558,7 +579,6 @@ Deno.serve(async (req) => {
       
       if (configRow && (configRow as any).value === apiKey) {
         isAuthorized = true;
-        // Use a system user ID for API key calls
         const { data: adminUser } = await sb
           .from('user_roles' as any)
           .select('user_id')
@@ -570,7 +590,6 @@ Deno.serve(async (req) => {
     }
 
     if (!isAuthorized) {
-      const authHeader = req.headers.get('Authorization') || '';
       if (authHeader) {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const userSb = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
