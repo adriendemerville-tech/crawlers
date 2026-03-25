@@ -823,7 +823,7 @@ Deno.serve(async (req) => {
         const authHeader = req.headers.get('Authorization') || '';
         if (!authHeader) return json({ error: 'Unauthorized' }, 401);
         
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const { createClient } = await import('npm:@supabase/supabase-js@2');
         const userSb = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
           global: { headers: { Authorization: authHeader } },
         });
@@ -924,7 +924,7 @@ Deno.serve(async (req) => {
 
     if (!isAuthorized) {
       if (authHeader) {
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const { createClient } = await import('npm:@supabase/supabase-js@2');
         const userSb = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
           global: { headers: { Authorization: authHeader } },
         });

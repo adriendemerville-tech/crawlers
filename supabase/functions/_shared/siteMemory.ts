@@ -14,7 +14,7 @@
  * - identity: identity card related data
  */
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
 // Critical fields that require user validation before update
 const CRITICAL_IDENTITY_FIELDS = new Set([

@@ -2,7 +2,7 @@
  * Singleton Supabase clients — avoids creating new instances on every call.
  * Reuses connections for better performance under high concurrency.
  */
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 let _serviceClient: SupabaseClient | null = null;
 let _anonClient: SupabaseClient | null = null;

@@ -1,4 +1,4 @@
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "npm:stripe@14.21.0";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 

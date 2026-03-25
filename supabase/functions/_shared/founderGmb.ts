@@ -3,7 +3,7 @@
  * Extracted from audit-strategique-ia to reduce monolith size.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 import { trackPaidApiCall } from './tokenTracker.ts';
 import { type FounderInfo, type GMBData, type FacebookPageInfo, KNOWN_LOCATIONS } from './textUtils.ts';
 
