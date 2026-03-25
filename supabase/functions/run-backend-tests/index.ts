@@ -535,7 +535,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  console.log('[CI] 🧪 Lancement des 10 tests backend...')
+  console.log('[CI] 🧪 Lancement des 12 tests backend...')
   const globalStart = performance.now()
   const results: TestResult[] = []
 
