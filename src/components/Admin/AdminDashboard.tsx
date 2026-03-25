@@ -234,9 +234,10 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         }]
       : []),
     {
-      label: 'Parménion',
+      label: 'Automatisation',
       items: [
-        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'parmenion' },
+        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
       ],
     },
   ];
