@@ -544,12 +544,33 @@ Deno.serve(async (req) => {
     // ═══ POST: Start pipeline or list jobs ═══
     const body = await req.json();
 
+    // ── Internal self-invocation with service role: skip auth ──
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+
+    if (isServiceCall && body.action === 'run_job' && body.job_id) {
+      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id}`);
+      await runPipeline(body.job_id, body.url, body.lang);
+      return json({ success: true, job_id: body.job_id });
+    }
+
     // ── Auth: either API key or admin JWT ──
     let isAuthorized = false;
     let userId: string | undefined;
 
+    if (isServiceCall) {
+      isAuthorized = true;
+      const { data: adminUser } = await sb
+        .from('user_roles' as any)
+        .select('user_id')
+        .eq('role', 'admin')
+        .limit(1)
+        .single();
+      userId = (adminUser as any)?.user_id;
+    }
+
     const apiKey = req.headers.get('x-marina-key') || body.api_key;
-    if (apiKey) {
+    if (!isAuthorized && apiKey) {
       const { data: configRow } = await sb
         .from('site_config' as any)
         .select('value')
@@ -558,7 +579,6 @@ Deno.serve(async (req) => {
       
       if (configRow && (configRow as any).value === apiKey) {
         isAuthorized = true;
-        // Use a system user ID for API key calls
         const { data: adminUser } = await sb
           .from('user_roles' as any)
           .select('user_id')
@@ -570,7 +590,6 @@ Deno.serve(async (req) => {
     }
 
     if (!isAuthorized) {
-      const authHeader = req.headers.get('Authorization') || '';
       if (authHeader) {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const userSb = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
@@ -603,6 +622,9 @@ Deno.serve(async (req) => {
       return json({ success: true, jobs: jobs || [] });
     }
 
+
+
+
     // ── Start new pipeline ──
     const { url: targetUrl, lang } = body;
     if (!targetUrl) return json({ error: 'url is required' }, 400);
@@ -623,9 +645,17 @@ Deno.serve(async (req) => {
       return json({ error: 'Failed to create job' }, 500);
     }
 
-    // Fire-and-forget: run pipeline in background
-    runPipeline(job.id, targetUrl, lang).catch(err => {
-      console.error('[Marina] Background pipeline error:', err);
+    // Self-invocation: trigger a separate HTTP call that will run the pipeline
+    // This ensures the pipeline runs as the main task of its own function instance
+    fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'run_job', job_id: job.id, url: targetUrl, lang: lang || null }),
+    }).catch(err => {
+      console.error('[Marina] Self-invocation failed:', err);
     });
 
     return json({ job_id: job.id, status: 'pending' }, 202);
