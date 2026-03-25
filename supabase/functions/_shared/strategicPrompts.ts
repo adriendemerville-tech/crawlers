@@ -309,6 +309,7 @@ GÉNÈRE un JSON:
 "red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
 RÈGLES:
+- introduction: présentation + strengths + improvement = 1400 caractères MAX au total (espaces compris). Nombre de phrases libre, répartition libre entre les 3 champs selon la pertinence de l'URL.
 - main_keywords: MIN 5 obligatoires avec strategic_analysis. Complète si <5 résultats DataForSEO. JAMAIS le nom de marque. 100% génériques.
 - executive_roadmap: MIN 6 recs narratives dont ≥1 category "Social"
 - direct_competitor: JAMAIS "${domain}". AUTRE domaine, même core business.
