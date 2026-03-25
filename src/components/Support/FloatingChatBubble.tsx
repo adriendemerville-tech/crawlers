@@ -25,6 +25,12 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
+  // Hide on signup/auth pages
+  const hiddenPaths = ['/signup', '/auth'];
+  if (hiddenPaths.some(p => location.pathname.startsWith(p))) {
+    return null;
+  }
+
   // Ping-pong bounce animation on first home visit after 20s
   useEffect(() => {
     if (location.pathname !== '/') return;
