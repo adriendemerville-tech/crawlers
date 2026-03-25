@@ -666,6 +666,17 @@ Deno.serve(async (req) => {
       return json({ success: true, jobs: jobs || [] });
     }
 
+    // ── Delete job ──
+    if (body.action === 'delete_job' && body.job_id) {
+      const { error: delErr } = await sb
+        .from('async_jobs')
+        .delete()
+        .eq('id', body.job_id)
+        .eq('function_name', 'marina');
+      if (delErr) return json({ error: delErr.message }, 500);
+      return json({ success: true });
+    }
+
 
 
 
