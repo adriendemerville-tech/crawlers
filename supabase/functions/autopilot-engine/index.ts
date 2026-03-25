@@ -327,30 +327,79 @@ Deno.serve(async (req: Request) => {
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
             try {
-              console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain} (phase: ${pipelinePhase})`);
-              const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/${funcName}`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  tracked_site_id: config.tracked_site_id,
-                  domain: site.domain,
-                  url: `https://${site.domain}`,
-                  user_id: config.user_id,
-                  ...decision.action.payload,
-                }),
-              });
-              
-              const funcResult = await funcResponse.json().catch(() => ({}));
-              executionResults.push({ 
-                function: funcName, 
-                status: funcResponse.ok ? 'success' : 'error', 
-                http_status: funcResponse.status,
-                result: funcResult,
-              });
-              if (!funcResponse.ok) executionSuccess = false;
+              // ── Special handling for iktracker-actions: iterate over cms_actions ──
+              if (funcName === 'iktracker-actions' && Array.isArray(decision.action.payload?.cms_actions)) {
+                console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions on IKtracker for ${site.domain}`);
+                
+                for (const cmsAction of decision.action.payload.cms_actions) {
+                  try {
+                    const actionBody = {
+                      action: cmsAction.action,
+                      ...(cmsAction.page_key ? { page_key: cmsAction.page_key } : {}),
+                      ...(cmsAction.slug ? { slug: cmsAction.slug } : {}),
+                      ...(cmsAction.updates ? { updates: cmsAction.updates } : {}),
+                      ...(cmsAction.body ? { body: cmsAction.body } : {}),
+                    };
+
+                    console.log(`[AutopilotEngine] IKtracker CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
+
+                    const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(actionBody),
+                    });
+
+                    const funcResult = await funcResponse.json().catch(() => ({}));
+                    executionResults.push({
+                      function: 'iktracker-actions',
+                      cms_action: cmsAction.action,
+                      target: cmsAction.slug || cmsAction.page_key || 'new',
+                      status: funcResponse.ok ? 'success' : 'error',
+                      http_status: funcResponse.status,
+                      result: funcResult,
+                    });
+                    if (!funcResponse.ok) executionSuccess = false;
+                  } catch (actionErr) {
+                    executionResults.push({
+                      function: 'iktracker-actions',
+                      cms_action: cmsAction.action,
+                      target: cmsAction.slug || cmsAction.page_key || 'new',
+                      status: 'error',
+                      error: actionErr instanceof Error ? actionErr.message : 'unknown',
+                    });
+                    executionSuccess = false;
+                  }
+                }
+              } else {
+                // ── Standard function execution ──
+                console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain} (phase: ${pipelinePhase})`);
+                const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/${funcName}`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    tracked_site_id: config.tracked_site_id,
+                    domain: site.domain,
+                    url: `https://${site.domain}`,
+                    user_id: config.user_id,
+                    ...decision.action.payload,
+                  }),
+                });
+                
+                const funcResult = await funcResponse.json().catch(() => ({}));
+                executionResults.push({ 
+                  function: funcName, 
+                  status: funcResponse.ok ? 'success' : 'error', 
+                  http_status: funcResponse.status,
+                  result: funcResult,
+                });
+                if (!funcResponse.ok) executionSuccess = false;
+              }
             } catch (e) {
               executionResults.push({ function: funcName, status: 'error', error: e instanceof Error ? e.message : 'unknown' });
               executionSuccess = false;
