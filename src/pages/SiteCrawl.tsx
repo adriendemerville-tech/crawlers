@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2 } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -467,6 +467,10 @@ export default function SiteCrawl() {
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+
+  // Sitemap directory selector
+  const [sitemapTree, setSitemapTree] = useState<Array<{ path: string; label: string; count: number; category?: string }>>([]);
+  const [selectedDirectory, setSelectedDirectory] = useState<string>('');
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
