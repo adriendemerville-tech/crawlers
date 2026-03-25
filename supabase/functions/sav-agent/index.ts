@@ -1056,7 +1056,41 @@ ${screen_context}
     }
 
     const data = await response.json();
-    let reply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
+    let rawReply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
+
+    // Extract and persist memory from LLM response
+    const { cleanResponse, memories, identityUpdates } = parseMemoryExtraction(rawReply);
+    let reply = cleanResponse;
+
+    // Persist extracted memory asynchronously (don't block response)
+    if (!isGuest && user_id && (memories.length > 0 || identityUpdates.length > 0)) {
+      // Find the first tracked site to associate memory with
+      const siteIdMatch = contextSnippet.match(/Site .+? \(id: ([a-f0-9-]+)\)/);
+      // Fallback: fetch first tracked site
+      let targetSiteId: string | null = null;
+      try {
+        const { data: firstSite } = await sb
+          .from("tracked_sites")
+          .select("id")
+          .eq("user_id", user_id)
+          .limit(1)
+          .single();
+        targetSiteId = firstSite?.id || null;
+      } catch {}
+
+      if (targetSiteId) {
+        if (memories.length > 0) {
+          writeSiteMemory(targetSiteId, user_id, memories, 'felix')
+            .then(r => console.log(`[sav-agent] Memory: ${r.written} written`))
+            .catch(e => console.error("[sav-agent] Memory write error:", e));
+        }
+        if (identityUpdates.length > 0) {
+          applyIdentityUpdates(targetSiteId, user_id, identityUpdates, 'felix')
+            .then(r => console.log(`[sav-agent] Identity: ${r.autoApplied.length} auto, ${r.pendingReview.length} pending`))
+            .catch(e => console.error("[sav-agent] Identity update error:", e));
+        }
+      }
+    }
 
     // Enforce char limit (3000 for creator, 1500 for screen context, 1000 for users)
     const charLimit = isCreator ? 3000 : screenHint ? 1500 : 1000;
