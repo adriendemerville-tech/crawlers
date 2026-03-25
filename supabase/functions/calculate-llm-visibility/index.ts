@@ -505,6 +505,7 @@ Deno.serve(async (req) => {
           response_text: response_text.slice(0, 2000),
           brand_found: iteration_found > 0,
           iteration_found,
+          source_function: 'calculate-llm-visibility',
         })
       }
 
