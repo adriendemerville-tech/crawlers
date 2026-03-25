@@ -644,8 +644,8 @@ export function WorkflowCarousel({
                                   {t.viewReport}
                                 </Badge>
                               )}
-                              {/* Re-run button */}
-                              {isActive && (step.id === 1 || step.id === 2) && (
+                               {/* Re-run button */}
+                              {(isActive || isCompleted) && (step.id === 1 || step.id === 2) && (
                                 <Badge 
                                   variant="outline" 
                                   className="gap-1.5 text-xs cursor-pointer border-muted-foreground/30 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
