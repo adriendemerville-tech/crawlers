@@ -261,7 +261,8 @@ Deno.serve(async (req) => {
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
 
   try {
-    const { tracked_site_id } = await req.json();
+    const body = await req.json();
+    const { tracked_site_id } = body;
     if (!tracked_site_id) {
       return new Response(JSON.stringify({ error: "tracked_site_id requis" }), {
         status: 400,
@@ -270,10 +271,23 @@ Deno.serve(async (req) => {
     }
     const supabase = getServiceClient();
 
-    // ─── Auth ───
+    // ─── Auth (allow SERVICE_KEY for internal calls like Marina) ───
     const authHeader = req.headers.get("Authorization");
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+    
     let userId: string | null = null;
-    if (authHeader) {
+    if (isServiceCall) {
+      // Internal call — resolve user from tracked_site owner or body
+      if (body._user_id) {
+        userId = body._user_id;
+      } else {
+        const { data: siteOwner } = await supabase
+          .from("tracked_sites").select("user_id")
+          .eq("id", tracked_site_id).maybeSingle();
+        userId = siteOwner?.user_id || null;
+      }
+    } else if (authHeader) {
       const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
       userId = user?.id || null;
     }
