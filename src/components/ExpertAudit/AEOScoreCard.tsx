@@ -116,8 +116,9 @@ function computeAEOCriteria(result: ExpertAuditResult, lang: string): AEOCriteri
 
   // 1. Schema.org — accept Organization/WebSite in addition to FAQ/Article
   const relevantSchemaTypes = ['FAQPage', 'FAQ', 'Article', 'NewsArticle', 'BlogPosting', 'HowTo', 'QAPage', 'Organization', 'WebSite', 'WebPage', 'LocalBusiness'];
+  const schemaTypes = (scores.aiReady.schemaTypes || []).filter(Boolean) as string[];
   const hasRelevantSchema = scores.aiReady.hasSchemaOrg && 
-    scores.aiReady.schemaTypes.some(t => relevantSchemaTypes.some(r => t.toLowerCase().includes(r.toLowerCase())));
+    schemaTypes.some(t => relevantSchemaTypes.some(r => t.toLowerCase().includes(r.toLowerCase())));
 
   // 2. Interrogative headings
   const interrogativePatterns = /(\?|comment|quel|quelle|pourquoi|how|what|why|when|where|which|who|cómo|qué|por qué|cuándo|dónde)/i;
@@ -148,7 +149,7 @@ function computeAEOCriteria(result: ExpertAuditResult, lang: string): AEOCriteri
   const hasExpertCitations = html.hasExpertCitations || false;
   const hasSameAsLinks = html.hasSameAsLinks || false;
   const hasOrgSchema = scores.aiReady.hasSchemaOrg && 
-    scores.aiReady.schemaTypes.some(t => ['Organization', 'LocalBusiness', 'Person'].some(r => t.toLowerCase().includes(r.toLowerCase())));
+    schemaTypes.some(t => ['Organization', 'LocalBusiness', 'Person'].some(r => t.toLowerCase().includes(r.toLowerCase())));
   const hasEEAT = hasAuthorBio || hasExpertCitations || hasSameAsLinks || hasOrgSchema;
 
   // 8. Semantic internal linking — relaxed threshold (>= 2 internal links)
