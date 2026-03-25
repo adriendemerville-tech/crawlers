@@ -1009,7 +1009,7 @@ Deno.serve(async (req) => {
       details: canonicalDetails
     });
 
-    // Factor 9: Intent in Title & First Sentence (5 points)
+    // Factor 9: Direct Answer in First 150 Words (5 points)
     let intentScore = 0;
     let intentDetails = '';
     let intentStatus: 'good' | 'warning' | 'error' = 'error';
@@ -1021,15 +1021,19 @@ Deno.serve(async (req) => {
     } else {
       if (intentResult.found) {
         intentScore = 5;
-        intentDetails = `Intention détectée dans le titre et la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentDetails = `Réponse directe détectée dans les 150 premiers mots (${intentResult.wordCount} mots analysés, densité ${intentResult.keywordDensity}%) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
         intentStatus = 'good';
+      } else if (intentResult.inFirst150Words) {
+        intentScore = 4;
+        intentDetails = `Mots-clés présents dans les 150 premiers mots mais cohérence partielle (densité ${intentResult.keywordDensity}%) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'warning';
       } else if (intentResult.inTitle || intentResult.inH1) {
-        intentScore = 3;
-        intentDetails = `Intention dans le titre mais absente de la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentScore = 2;
+        intentDetails = `Intention dans le titre mais absente des 150 premiers mots (${intentResult.wordCount} mots analysés) | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
         intentStatus = 'warning';
       } else {
         intentScore = 0;
-        intentDetails = 'Aucune cohérence d\'intention détectée entre le titre et le contenu';
+        intentDetails = `Aucune réponse directe dans les 150 premiers mots (${intentResult.wordCount} mots analysés)`;
         intentStatus = 'error';
       }
     }

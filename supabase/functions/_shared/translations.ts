@@ -143,9 +143,9 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         found: 'Balise canonical trouvée',
       },
       intentInTitle: {
-        name: 'Intention dans le Titre',
-        description: 'Le mot-clé principal ou l\'intention est visible dans le titre et la première phrase',
-        recommendation: 'Placez votre mot-clé principal dans le titre (H1 ou <title>) et dans la première phrase du contenu pour maximiser la pertinence IA',
+        name: 'Réponse directe (150 mots)',
+        description: 'Les 150 premiers mots du contenu fournissent une réponse claire à l\'intention de la page — critère clé pour les IA',
+        recommendation: 'Placez une réponse directe et factuelle dans les 150 premiers mots de votre contenu. Les IA extraient en priorité le début du texte pour économiser du temps de crawl',
       },
       faqOrSummary: {
         name: 'FAQ ou Résumé en Début',
