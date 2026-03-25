@@ -349,8 +349,18 @@ export function ParmenionDashboard() {
                     )}>
                       {/* Header */}
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-mono text-muted-foreground">#{log.cycle_number}</span>
+                          {log.pipeline_phase && (
+                            <Badge variant="outline" className={cn(
+                              'text-[10px] uppercase font-bold',
+                              log.pipeline_phase === 'diagnose' && 'text-blue-500 border-blue-500/40',
+                              log.pipeline_phase === 'prescribe' && 'text-amber-500 border-amber-500/40',
+                              log.pipeline_phase === 'execute' && 'text-green-500 border-green-500/40',
+                            )}>
+                              {log.pipeline_phase}
+                            </Badge>
+                          )}
                           <Badge className={config.color} variant="outline">
                             <StatusIcon className="h-3 w-3 mr-1" />
                             {config.label}
