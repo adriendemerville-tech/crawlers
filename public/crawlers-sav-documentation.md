@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.2"
-date: "2026-03-24"
+version: "3.3"
+date: "2026-03-25"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -263,6 +263,14 @@ Suivi hebdomadaire de vos positions Google :
 - Agent SEO : optimisation automatique du contenu (blog : libre, landing pages : max 10% de modification)
 - Agent CTO : maintenance algorithmique automatique, self-critique et proposition de patches
 
+### Marina — Pipeline de Prospection (Admin)
+Marina est un pipeline backend autonome de prospection automatisée réservé aux administrateurs.
+- Orchestre en une seule passe : Crawl, Cocon sémantique, Audit Expert SEO, Audit Stratégique GEO
+- Détecte automatiquement la langue du site (FR, EN, ES) pour adapter le rapport
+- Génère un rapport HTML consolidé stocké dans le bucket de rapports partagés, accessible via lien signé (7 jours)
+- Dashboard Admin : lancement de jobs, suivi de progression temps réel, suppression persistante
+- Collecte de données d'entraînement ML : scores structurés et signaux techniques bruts alimentent une table dédiée
+
 ---
 
 ## 4. Crédits & Abonnement
@@ -475,7 +483,7 @@ Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps ré
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 195 000 lignes de code, avec 14 algorithmes propriétaires, 141 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 203 000 lignes de code, avec 15 algorithmes propriétaires, 157 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).

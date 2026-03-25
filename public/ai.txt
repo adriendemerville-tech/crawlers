@@ -12,11 +12,11 @@
 # IDENTIFICATION
 Name: Crawlers.fr
 Type: Web Application (SaaS) - Audit & Diagnostic Platform
-Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture, Semantic Cocoon 3D, MCP Server
+Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture, Semantic Cocoon 3D, Marina Pipeline, MCP Server
 Mission: Aider les webmasters à optimiser leur visibilité SEO et leur citabilité IA
 URL: https://crawlers.fr
 Language: French (primary), English, Spanish
-Architecture: 124 Edge Functions, 14 proprietary algorithms, Three.js 3D engine, MCP Server (12 tools)
+Architecture: 157 Edge Functions, 15 proprietary algorithms, Three.js 3D engine, MCP Server (12 tools), Marina Pipeline
 
 # CE QUE NOUS SOMMES
 Crawlers.fr est une plateforme professionnelle d'audit et de diagnostic pour sites web.
@@ -162,6 +162,14 @@ Serveur MCP natif exposant 12 outils d'audit SEO/GEO :
 - Authentification : token Supabase Pro Agency
 - Rate limit : 30 appels/heure
 - Endpoint : POST /functions/v1/mcp-server
+
+## 12. MARINA — PIPELINE DE PROSPECTION AUTOMATISÉ (Admin)
+Pipeline backend autonome pour la prospection :
+- Orchestre en une passe : Crawl, Cocon sémantique, Audit Expert SEO, Audit Stratégique GEO
+- Détection automatique de la langue (FR, EN, ES)
+- Rapport HTML consolidé accessible via liens signés (7 jours)
+- Dashboard Admin : lancement de jobs, progression temps réel, suppression persistante
+- Collecte de données d'entraînement ML (scores structurés + signaux bruts)
 
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/

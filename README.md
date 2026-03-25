@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
-> **Dernière mise à jour** : 24 mars 2026  
-> **Version** : 2.11.0  
-> **Lignes de code** : ~195 000 (Backend: 59 648 · Frontend: 129 400 · SQL: 6 377)
+> **Dernière mise à jour** : 25 mars 2026  
+> **Version** : 2.12.0  
+> **Lignes de code** : ~203 000 (Backend: 63 966 · Frontend: 132 823 · SQL: 6 540)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (141 fonctions + 32 modules partagés)
+### 2.1 Edge Functions (157 fonctions + 32 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
@@ -43,6 +43,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
 | **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress, Shopify, Wix, PrestaShop, Drupal |
 | **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
+| **Prospection** | `marina` | Pipeline autonome : Crawl + Cocoon + Expert + Stratégique GEO, rapport HTML, données ML |
 
 ### 2.2 Modules partagés (`_shared/`)
 
@@ -50,9 +51,9 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.3 Base de données
 
-- **~60 tables** PostgreSQL avec RLS
-- **215+ migrations** versionnées
-- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`
+- **~120+ tables** PostgreSQL avec RLS
+- **223 migrations** versionnées
+- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`, `marina_training_data`
 - Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
 - File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
 
@@ -71,7 +72,7 @@ Organisées en **13 domaines fonctionnels** :
 
 ## 3. Architecture Frontend
 
-### 3.1 Pages (40 pages)
+### 3.1 Pages (41 pages)
 
 | Catégorie | Pages |
 |-----------|-------|
@@ -84,11 +85,11 @@ Organisées en **13 domaines fonctionnels** :
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (303+ fichiers, 12 modules)
+### 3.2 Composants (307+ fichiers, 13 modules)
 
 | Module | Rôle |
 |--------|------|
-| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor |
+| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor, Marina (pipeline prospection) |
 | **Cocoon/** | Graphe 3D (Three.js), assistant IA, rapport, recommandations, tâches |
 | **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif, lecteur Spotify (prev/next) |
 | **Profile/** | Mes sites, crawls, rapports, wallet, scripts, intégrations, GMB |
