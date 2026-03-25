@@ -688,6 +688,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
       isSchemaJsGenerated,
+      isMetaJsGenerated,
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
@@ -2344,6 +2345,10 @@ Deno.serve(async (req) => {
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
       }
     }
+    if (htmlAnalysis.isMetaJsGenerated) {
+      aiReadyScore -= 4;
+      console.log('[Expert-Audit] ⚠️ Title/Meta/OG is JS-generated — AI Ready score penalized (-4)');
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // E. Security (20 pts) - Enhanced with HSTS
@@ -2394,6 +2399,7 @@ Deno.serve(async (req) => {
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
         isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
+        isMetaJsGenerated: htmlAnalysis.isMetaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
         allowsAIBots: crawlersResult?.allowsAIBots,
