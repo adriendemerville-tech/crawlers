@@ -341,11 +341,13 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
   const sb = getServiceClient();
   
   const updateProgress = async (progress: number, phase?: string) => {
-    await sb.from('async_jobs').update({ 
-      progress, 
-      ...(phase ? { input_payload: { phase } } : {}),
-      started_at: progress === 5 ? new Date().toISOString() : undefined,
-    }).eq('id', jobId).catch(() => {});
+    try {
+      const updateData: any = { progress };
+      if (phase) updateData.input_payload = { phase, url };
+      if (progress === 5) updateData.started_at = new Date().toISOString();
+      updateData.status = 'processing';
+      await sb.from('async_jobs').update(updateData).eq('id', jobId);
+    } catch (_) { /* ignore */ }
   };
 
   try {
@@ -460,11 +462,13 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     console.error(`[Marina] ❌ Pipeline failed:`, error);
     await trackEdgeFunctionError('marina', error instanceof Error ? error.message : String(error)).catch(() => {});
     
-    await sb.from('async_jobs').update({
-      status: 'failed',
-      error_message: error instanceof Error ? error.message : 'Pipeline failed',
-      completed_at: new Date().toISOString(),
-    }).eq('id', jobId).catch(() => {});
+    try {
+      await sb.from('async_jobs').update({
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Pipeline failed',
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId);
+    } catch (_) { /* ignore */ }
   }
 }
 

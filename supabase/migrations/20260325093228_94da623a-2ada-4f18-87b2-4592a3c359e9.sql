@@ -1,0 +1,1 @@
+UPDATE async_jobs SET status = 'failed', error_message = 'Reset: bug .catch() on query builder fixed', completed_at = now() WHERE id = '3eb8a8c1-a96b-40bd-9785-f9c3db1b0dfb';
