@@ -95,6 +95,29 @@ async function deletePost(apiKey: string, slug: string) {
   return callIktracker('DELETE', `/posts/${slug}`, apiKey)
 }
 
+// ── Autopilot: Events ──
+
+async function pushEvent(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('POST', '/autopilot/events', apiKey, body)
+}
+
+async function getAutopilotRegistry(apiKey: string, includeReverted = true, limit = 200) {
+  return callIktracker('GET', `/autopilot/registry?include_reverted=${includeReverted}&limit=${limit}`, apiKey)
+}
+
+async function getAutopilotHealth(apiKey: string) {
+  return callIktracker('GET', '/autopilot/health', apiKey)
+}
+
+async function getAutopilotEvents(apiKey: string, resolved?: boolean) {
+  const qs = resolved !== undefined ? `?resolved=${resolved}` : ''
+  return callIktracker('GET', `/autopilot/events${qs}`, apiKey)
+}
+
+async function getAutopilotSummary(apiKey: string) {
+  return callIktracker('GET', '/autopilot/summary', apiKey)
+}
+
 // ── Main handler ──
 
 Deno.serve(async (req) => {
@@ -158,6 +181,31 @@ Deno.serve(async (req) => {
       case 'delete-post':
         if (!params.slug) throw new Error('slug required')
         result = await deletePost(apiKey, params.slug)
+        break
+
+      // ── Autopilot ──
+      case 'push-event':
+        if (!params.event_type) throw new Error('event_type required')
+        result = await pushEvent(apiKey, {
+          event_type: params.event_type,
+          severity: params.severity || 'info',
+          page_key: params.page_key || null,
+          message: params.message || '',
+          details: params.details || {},
+          audit_log_id: params.audit_log_id || null,
+        })
+        break
+      case 'autopilot-registry':
+        result = await getAutopilotRegistry(apiKey, params.include_reverted, params.limit)
+        break
+      case 'autopilot-health':
+        result = await getAutopilotHealth(apiKey)
+        break
+      case 'autopilot-events':
+        result = await getAutopilotEvents(apiKey, params.resolved)
+        break
+      case 'autopilot-summary':
+        result = await getAutopilotSummary(apiKey)
         break
 
       default:
