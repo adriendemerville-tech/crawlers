@@ -101,6 +101,14 @@ function FooterComponent() {
       gold: true,
       isRoute: true
     },
+    {
+      icon: Brain,
+      label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),
+      href: '/architecte-generatif',
+      description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
+      gold: true,
+      isRoute: true
+    },
   ];
 
   const resourcesLinks = [
@@ -133,7 +141,7 @@ function FooterComponent() {
       label: t3(language, 'Cocoon — Architecture Sémantique', 'Cocoon — Semantic Architecture', 'Cocoon — Arquitectura Semántica'),
       href: '/features/cocoon',
       description: t3(language, 'Découvrez le module Cocoon', 'Discover the Cocoon module', 'Descubra el módulo Cocoon'),
-      gold: true
+      gold: false
     },
     { 
       label: 'Pro Agency',
@@ -168,12 +176,6 @@ function FooterComponent() {
       label: t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio'),
       href: '/integration-gtm',
       description: t3(language, 'API, WordPress, GTM — toutes les méthodes', 'API, WordPress, GTM — all methods', 'API, WordPress, GTM — todos los métodos')
-    },
-    {
-      label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),
-      href: '/architecte-generatif',
-      description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
-      gold: true
     },
   ];
 
