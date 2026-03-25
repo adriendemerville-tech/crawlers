@@ -186,6 +186,30 @@ function generateMarinaReport(
   const techMaxScore = expertSeoData?.maxScore || 200;
   const techRecommendations = expertSeoData?.recommendations || [];
   const techIntro = expertSeoData?.introduction || '';
+  const scores = expertSeoData?.scores || {};
+
+  // Extract crawl data from expert SEO raw data
+  const rawData = expertSeoData?.rawData || {};
+  const htmlAnalysis = rawData?.htmlAnalysis || {};
+  const crawlMeta = {
+    pagesFound: rawData?.internalLinks?.length || htmlAnalysis?.internalLinksCount || 1,
+    avgResponseTime: htmlAnalysis?.responseTimeMs || rawData?.responseTimeMs || null,
+    wordCount: htmlAnalysis?.wordCount || 0,
+    imagesTotal: htmlAnalysis?.imagesTotal || 0,
+    imagesWithoutAlt: htmlAnalysis?.imagesWithoutAlt || 0,
+    h1: htmlAnalysis?.h1 || '',
+    h2Count: htmlAnalysis?.h2Count || 0,
+    hasSchema: htmlAnalysis?.hasSchemaOrg || false,
+    hasOg: htmlAnalysis?.hasOg || false,
+    hasCanonical: htmlAnalysis?.hasCanonical || false,
+    brokenLinks: rawData?.brokenLinks?.length || 0,
+    externalLinks: htmlAnalysis?.externalLinksCount || 0,
+    internalLinks: htmlAnalysis?.internalLinksCount || 0,
+    indexable: htmlAnalysis?.isIndexable !== false,
+    performanceScore: scores?.performance?.psiPerformance || null,
+    lcp: scores?.performance?.lcp || null,
+    tbt: scores?.performance?.tbt || null,
+  };
 
   // Extract strategic data
   const stratScore = strategicData?.overallScore || 0;
@@ -195,6 +219,7 @@ function generateMarinaReport(
 
   // Cocoon stats
   const cocoonStats = cocoonData?.stats || null;
+  const cocoonClusters = cocoonData?.cluster_summary || null;
 
   const priorityColors: Record<string, string> = {
     'Prioritaire': '#ef4444', 'Critical': '#ef4444', 'Crítico': '#ef4444',
@@ -243,6 +268,10 @@ function generateMarinaReport(
     </table>`;
   }
 
+  function checkMark(val: boolean): string {
+    return val ? '✅' : '❌';
+  }
+
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -260,14 +289,21 @@ function generateMarinaReport(
     .header .date { font-size: 12px; opacity: 0.7; margin-top: 8px; }
     .section { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .section-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: white; font-size: 13px; font-weight: 700; }
     .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 18px; color: white; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .stat-card { background: #f8fafc; padding: 16px; border-radius: 8px; text-align: center; }
     .stat-card .value { font-size: 24px; font-weight: 700; color: #3b82f6; }
     .stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
     .intro-text { font-size: 14px; color: #374151; line-height: 1.7; margin-bottom: 16px; }
+    .checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
+    .checklist-item { font-size: 13px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; }
     .footer { text-align: center; padding: 24px; color: #9ca3af; font-size: 12px; margin-top: 20px; }
     .footer a { color: #3b82f6; text-decoration: none; }
+    .toc { background: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .toc-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+    .toc-item:last-child { border-bottom: none; }
     @media print {
       body { padding: 0; }
       @page { margin: 15mm 10mm; }
@@ -284,9 +320,77 @@ function generateMarinaReport(
       <div class="date">${tr.generatedAt}: ${now}</div>
     </div>
 
-    <!-- 1. Technical SEO Audit -->
+    <!-- Table of Contents -->
+    <div class="toc">
+      <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+    </div>
+
+    <!-- 1. Crawl Report -->
     <div class="section">
-      <div class="section-title">🔍 ${tr.techAudit}</div>
+      <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      <div class="stat-grid-4">
+        <div class="stat-card">
+          <div class="value">${crawlMeta.wordCount}</div>
+          <div class="label">${tr.wordCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${crawlMeta.internalLinks}</div>
+          <div class="label">Liens internes</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${crawlMeta.externalLinks}</div>
+          <div class="label">Liens externes</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${crawlMeta.avgResponseTime ? crawlMeta.avgResponseTime + 'ms' : '-'}</div>
+          <div class="label">${tr.responseTime}</div>
+        </div>
+      </div>
+      <div class="stat-grid-4" style="margin-top:12px;">
+        <div class="stat-card">
+          <div class="value">${crawlMeta.imagesTotal}</div>
+          <div class="label">Images</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div>
+          <div class="label">Sans alt</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${crawlMeta.h2Count}</div>
+          <div class="label">H2</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div>
+          <div class="label">Liens cassés</div>
+        </div>
+      </div>
+      ${crawlMeta.h1 ? `<div style="margin-top:16px;padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+      <div class="checklist" style="margin-top:16px;">
+        <div class="checklist-item">${checkMark(crawlMeta.indexable)} Indexable</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasSchema)} Schema.org</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasOg)} Open Graph</div>
+      </div>
+      ${crawlMeta.performanceScore ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Performance (PageSpeed)</h3>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div>
+            <div class="label">Performance /100</div>
+          </div>
+          ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${crawlMeta.lcp}s</div><div class="label">LCP</div></div>` : ''}
+          ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${crawlMeta.tbt}ms</div><div class="label">TBT</div></div>` : ''}
+        </div>
+      </div>` : ''}
+    </div>
+
+    <!-- 2. Technical SEO Audit -->
+    <div class="section">
+      <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">
           ${techScore} / ${techMaxScore}
@@ -299,9 +403,9 @@ function generateMarinaReport(
       ${renderRecommendations(techRecommendations)}
     </div>
 
-    <!-- 2. Strategic GEO Audit -->
+    <!-- 3. Strategic GEO Audit -->
     <div class="section">
-      <div class="section-title">🎯 ${tr.strategicAudit}</div>
+      <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">
           ${stratScore} / 100
@@ -314,10 +418,10 @@ function generateMarinaReport(
       ${stratRoadmap.length > 0 ? `<h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.roadmap}</h3>${renderRoadmap(stratRoadmap)}` : ''}
     </div>
 
-    <!-- 3. Semantic Cocoon -->
-    ${cocoonStats ? `
+    <!-- 4. Semantic Cocoon -->
     <div class="section">
-      <div class="section-title">🕸️ ${tr.cocoonAnalysis}</div>
+      <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${cocoonStats ? `
       <div class="stat-grid">
         <div class="stat-card">
           <div class="value">${cocoonStats.nodes_count || 0}</div>
@@ -332,7 +436,19 @@ function generateMarinaReport(
           <div class="label">${tr.edges}</div>
         </div>
       </div>
-    </div>` : ''}
+      ${cocoonClusters && typeof cocoonClusters === 'object' ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
+        ${Object.entries(cocoonClusters).slice(0, 10).map(([key, val]: [string, any]) => `
+          <div style="padding:10px 12px;margin-bottom:6px;background:#f9fafb;border-radius:6px;font-size:13px;">
+            <strong>${val?.label || val?.name || key}</strong>
+            ${val?.pages_count ? ` — ${val.pages_count} pages` : ''}
+            ${val?.avg_score ? ` — Score moy: ${Math.round(val.avg_score)}` : ''}
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ` : `<p style="color:#6b7280;font-size:14px;">${tr.cocoonPending}</p>`}
+    </div>
 
     <div class="footer">
       <div>${tr.poweredBy}</div>
