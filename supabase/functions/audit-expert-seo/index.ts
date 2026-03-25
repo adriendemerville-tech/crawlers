@@ -1331,13 +1331,14 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
     verdict = 'critical';
   }
   
-  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} liens cassés trouvés sur ${linksToCheck.length} vérifiés`);
+  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} cassés, ${skippedSocial} réseaux sociaux ignorés, sur ${linksToCheck.length + skippedSocial} liens`);
   
   return {
     total: linksToCheck.length,
     broken: brokenLinks,
     checked: linksToCheck.length,
     corsBlocked,
+    skipped_social: skippedSocial,
     verdict
   };
 }
