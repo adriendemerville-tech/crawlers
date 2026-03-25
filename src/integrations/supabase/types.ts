@@ -4843,6 +4843,9 @@ export type Database = {
           agency_report_footer_text: string | null
           agency_report_header_text: string | null
           api_key: string
+          autonomy_level: string | null
+          autonomy_raw: Json | null
+          autonomy_score: number | null
           avatar_url: string | null
           crawl_month_reset: string
           crawl_pages_this_month: number
@@ -4885,6 +4888,9 @@ export type Database = {
           agency_report_footer_text?: string | null
           agency_report_header_text?: string | null
           api_key?: string
+          autonomy_level?: string | null
+          autonomy_raw?: Json | null
+          autonomy_score?: number | null
           avatar_url?: string | null
           crawl_month_reset?: string
           crawl_pages_this_month?: number
@@ -4927,6 +4933,9 @@ export type Database = {
           agency_report_footer_text?: string | null
           agency_report_header_text?: string | null
           api_key?: string
+          autonomy_level?: string | null
+          autonomy_raw?: Json | null
+          autonomy_score?: number | null
           avatar_url?: string | null
           crawl_month_reset?: string
           crawl_pages_this_month?: number
