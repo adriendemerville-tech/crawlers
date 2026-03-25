@@ -13,7 +13,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
  *   Check cooldown → Call parmenion-orchestrator → Execute decided functions → Update counters
  */
 
-const COOLDOWN_HOURS = 48;
+const COOLDOWN_HOURS = 2;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
