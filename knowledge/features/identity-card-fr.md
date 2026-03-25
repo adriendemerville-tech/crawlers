@@ -13,6 +13,22 @@
   - Avec qui Crawlers ne doit pas confondre votre entreprise ? Quelle activité ?
 - Le micro s'anime en rouge pendant l'enregistrement, visible même avec les instructions ouvertes.
 
+## Enrichissement autonome par les agents IA
+- **Félix** et **Stratège Cocoon** peuvent enrichir la carte d'identité automatiquement.
+- **Mode hybride** :
+  - Champs mineurs (company_size, target_audience, commercial_area, products_services, address, media_specialties, nonprofit_type) → mise à jour automatique + notification.
+  - Champs critiques (site_name, market_sector, entity_type, commercial_model) → suggestion en attente de validation dans `identity_card_suggestions`.
+- Les suggestions pendantes sont visibles par Félix qui peut rappeler à l'utilisateur de les valider.
+- Source identifiée : `felix` ou `stratege` selon l'agent qui a proposé la modification.
+
+## Mémoire persistante par site (`site_memory`)
+- Stockage clé-valeur structuré par site tracké.
+- Catégories : `preference`, `insight`, `objective`, `context`, `identity`.
+- Score de confiance (0.0–1.0) : 0.5 = déduit, 0.8 = confirmé, 1.0 = affirmé explicitement.
+- Félix extrait automatiquement les faits nouveaux via un bloc `<!--MEMORY_EXTRACT-->` invisible.
+- Le Stratège écrit des insights diagnostiques (problèmes critiques, axes stratégiques, recos réussies).
+- La mémoire est injectée dans le prompt système pour personnaliser chaque interaction.
+
 ## Crawl Multi-Pages
 - Scrape le sitemap.xml comme source de données croisées (pas affiché directement en front).
 - Front-end affiche uniquement les pages en ligne : index et non-index.
