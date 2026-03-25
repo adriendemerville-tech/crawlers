@@ -2709,12 +2709,14 @@ Deno.serve(async (req) => {
       if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
     }
 
-    // ── LLM call with remaining time budget ──
-    const remainingMs = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 15_000); // keep 15s buffer
+    // ── LLM call with remaining time budget + Flash fallback ──
+    const remainingMs = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 15_000);
     let parsedAnalysis: any = null;
+    const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
-    const llmResult = await withDeadline(
-      (async () => {
+    async function callLLMWithModel(model: string, timeoutMs: number): Promise<string | null> {
+      console.log(`🤖 [audit-strategique-ia] Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
+      try {
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -2722,34 +2724,46 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-pro',
+            model,
             messages: [
-              { role: 'system', content: pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT },
+              { role: 'system', content: systemPromptForPage },
               { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
           }),
-          signal: AbortSignal.timeout(remainingMs),
+          signal: AbortSignal.timeout(timeoutMs),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('AI error:', response.status, errorText.substring(0, 200));
+          console.error(`❌ [audit-strategique-ia] ${model} error:`, response.status, errorText.substring(0, 200));
           return null;
         }
 
         const aiResponse = await response.json();
         const content = aiResponse.choices?.[0]?.message?.content;
-        trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
+        trackTokenUsage('audit-strategique-ia', model, aiResponse.usage, url);
+        return content || null;
+      } catch (e) {
+        console.warn(`⚠️ [audit-strategique-ia] ${model} failed: ${e instanceof Error ? e.message : e}`);
+        return null;
+      }
+    }
 
-        if (!content) return null;
-        return content;
-      })(),
-      remainingMs + 5000, 'llm_call'
-    );
+    // Try Pro first, fallback to Flash on failure
+    const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
+    const proTimeout = Math.min(remainingMs, 150_000); // max 2m30 for Pro
+    let llmResult = await callLLMWithModel(primaryModel, proTimeout);
+
+    if (!llmResult && primaryModel !== 'google/gemini-2.5-flash') {
+      console.log('🔄 [audit-strategique-ia] Pro failed — retrying with Flash...');
+      const flashTimeout = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 10_000);
+      llmResult = await callLLMWithModel('google/gemini-2.5-flash', Math.min(flashTimeout, 120_000));
+      if (llmResult) console.log('✅ [audit-strategique-ia] Flash fallback succeeded');
+    }
 
     if (!llmResult) {
-      console.warn('⚠️ LLM call failed or timed out — returning fallback');
+      console.warn('⚠️ [audit-strategique-ia] All LLM calls failed — returning fallback');
       const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
       saveToCache(domain, url, fallback).catch(() => {});
       return json(fallback);
