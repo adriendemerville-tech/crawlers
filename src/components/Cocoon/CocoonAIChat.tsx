@@ -1430,7 +1430,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
             <div className="flex items-center gap-2">
               <Bot className="w-3.5 h-3.5 text-[#fbbf24]" />
-              <p className="text-[10px] text-white/40">{t.subtitle}</p>
+              <p className="text-[11px] font-semibold text-[#fbbf24]">{t.title}</p>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setShowHistory(!showHistory)} className={`p-1 rounded-lg hover:bg-white/10 transition-colors ${showHistory ? 'bg-white/10' : ''}`} title={language === 'en' ? 'History' : language === 'es' ? 'Historial' : 'Historique'}>
@@ -1741,54 +1741,94 @@ Termina con un resumen ejecutivo y próximos pasos.`,
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
-            {/* Action buttons — only after maillage response */}
+            {/* Dynamic action buttons — adapt to last AI message content */}
             {(() => {
-              const hasOptimizeResponse = messages.some((m, i) => {
-                if (m.role !== 'assistant' || i === 0) return false;
-                const prev = messages[i - 1];
-                return prev?.role === 'user' && isOptimizePrompt(prev.content);
-              });
-              if (!hasOptimizeResponse) return null;
-              // Find last optimization response content for deploy
-              const lastOptContent = [...messages].reverse().find((m, _, arr) => {
-                const idx = messages.indexOf(m);
-                if (m.role !== 'assistant' || idx === 0) return false;
-                const prev = messages[idx - 1];
-                return prev?.role === 'user' && isOptimizePrompt(prev.content);
-              })?.content;
+              // Find last assistant message
+              const lastAiMsg = [...messages].reverse().find(m => m.role === 'assistant');
+              if (!lastAiMsg || messages.length < 2) return null;
+
+              const content = lastAiMsg.content.toLowerCase();
+
+              // Detect what the AI is recommending
+              const mentionsMaillage = /maillage|liens? internes?|auto[- ]?maillage|injection|seringue|link.*internal/i.test(content);
+              const mentionsArchitect = /architecte|contenu.*créer|page.*générer|nouvelle.*page|content.*architect|créer.*page/i.test(content);
+              const mentionsActionPlan = /plan d'action|action.*plan|prioris|quick.*win/i.test(content);
+              const mentionsStrategy = /stratégi|diagnostic|cannibali|orphelin|profondeur|cluster/i.test(content);
+
+              // Build dynamic buttons based on content
+              const buttons: JSX.Element[] = [];
+
+              if (mentionsActionPlan && trackedSiteId) {
+                const lastOptContent = lastAiMsg.content;
+                buttons.push(
+                  <button
+                    key="action-plan"
+                    onClick={() => handleAddToActionPlan(lastOptContent)}
+                    disabled={isDeploying || deploySuccess}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                      deploySuccess
+                        ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25)]'
+                        : isDeploying
+                          ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
+                          : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    <ClipboardList className="w-3 h-3" />
+                    {deploySuccess
+                      ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
+                      : isDeploying
+                        ? '…'
+                        : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
+                  </button>
+                );
+              }
+
+              if (mentionsMaillage && !mentionsArchitect) {
+                buttons.push(
+                  <button
+                    key="linking"
+                    onClick={handleOptimizeLinking}
+                    disabled={isLoading || nodes.length < 3}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-400/30 text-emerald-300 bg-transparent text-[11px] font-medium hover:bg-emerald-500/10 transition-all disabled:opacity-30"
+                  >
+                    <Syringe className="w-3 h-3" />
+                    {language === 'en' ? 'Optimize linking' : language === 'es' ? 'Optimizar enlaces' : 'Optimiser le maillage'}
+                  </button>
+                );
+              }
+
+              if (mentionsArchitect && !mentionsMaillage && isContentArchitectVisible) {
+                buttons.push(
+                  <button
+                    key="architect"
+                    onClick={() => setShowArchitectModal(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
+                  >
+                    <Hammer className="w-3 h-3" />
+                    {language === 'en' ? 'Content Architect' : language === 'es' ? 'Arquitecto contenido' : 'Architecte contenu'}
+                  </button>
+                );
+              }
+
+              if (mentionsStrategy && !mentionsMaillage && !mentionsArchitect) {
+                buttons.push(
+                  <button
+                    key="strategy"
+                    onClick={handleStrategy360}
+                    disabled={isLoading || !trackedSiteId}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 text-amber-300 bg-transparent text-[11px] font-medium hover:bg-amber-500/10 transition-all disabled:opacity-30"
+                  >
+                    <Compass className="w-3 h-3" />
+                    {t.strategyBtn}
+                  </button>
+                );
+              }
+
+              if (buttons.length === 0) return null;
+
               return (
                 <div className="mb-2 flex gap-2">
-                  {/* Add to action plan button */}
-                  {trackedSiteId && lastOptContent && (
-                    <button
-                      onClick={() => handleAddToActionPlan(lastOptContent)}
-                      disabled={isDeploying || deploySuccess}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-[11px] font-medium transition-all ${
-                        deploySuccess
-                          ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25),0_0_24px_4px_rgba(16,185,129,0.12)] animate-[glow-pulse_2s_ease-in-out_infinite]'
-                          : isDeploying
-                            ? 'border border-white/15 text-white/40 bg-transparent animate-pulse'
-                            : 'border border-emerald-400/30 text-emerald-300 bg-transparent hover:bg-emerald-500/10'
-                      }`}
-                    >
-                      <ClipboardList className="w-3 h-3" />
-                      {deploySuccess 
-                        ? (language === 'en' ? '✓ Added' : language === 'es' ? '✓ Añadido' : '✓ Ajouté')
-                        : isDeploying 
-                          ? '…' 
-                          : (language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action')}
-                    </button>
-                  )}
-                  {/* Architect button - hidden when Content Architect is invisible */}
-                  {isContentArchitectVisible && (
-                    <button
-                      onClick={() => setShowArchitectModal(true)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-violet-500/30 text-violet-300 bg-transparent text-[11px] font-medium hover:bg-violet-500/10 transition-all"
-                    >
-                      <Hammer className="w-3 h-3" />
-                      Architecte contenu
-                    </button>
-                  )}
+                  {buttons}
                 </div>
               );
             })()}
@@ -1807,34 +1847,13 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 rows={1}
                 className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
               />
-              {strategistCompleted ? (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => { loadStrategyPlan(); handleOptimizeLinking(); }}
-                    className="h-9 w-9 rounded-xl border border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/15 transition-all flex items-center justify-center shrink-0"
-                    title={language === 'en' ? 'Add to action plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan d\'action'}
-                  >
-                    <ClipboardList className="w-3.5 h-3.5" />
-                  </button>
-                  {isContentArchitectVisible && (
-                    <button
-                      onClick={() => openContentArchitectWithPlan()}
-                      className="h-9 w-9 rounded-xl border border-violet-500/30 bg-transparent text-violet-400 hover:bg-violet-500/15 transition-all flex items-center justify-center shrink-0"
-                      title="Content Architect"
-                    >
-                      <PenTool className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <ChatMicButton
-                  onTranscript={(text) => {
-                    setInput(prev => prev ? prev + ' ' + text : text);
-                  }}
-                  disabled={isLoading}
-                  userDomains={domain ? [domain] : undefined}
-                />
-              )}
+              <ChatMicButton
+                onTranscript={(text) => {
+                  setInput(prev => prev ? prev + ' ' + text : text);
+                }}
+                disabled={isLoading}
+                userDomains={domain ? [domain] : undefined}
+              />
               <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
                 <Send className="w-3.5 h-3.5" />
