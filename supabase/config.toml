@@ -151,3 +151,13 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.marina]
     verify_jwt = false
+  [functions.strategic-crawl]
+    verify_jwt = false
+  [functions.strategic-market]
+    verify_jwt = false
+  [functions.strategic-competitors]
+    verify_jwt = false
+  [functions.strategic-synthesis]
+    verify_jwt = false
+  [functions.strategic-orchestrator]
+    verify_jwt = false
