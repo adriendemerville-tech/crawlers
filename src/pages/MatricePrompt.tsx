@@ -482,44 +482,46 @@ export default function MatricePrompt() {
       const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
       const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
 
-      // Persist audit session
-      const { data: session, error: sessErr } = await supabase
-        .from('matrix_audit_sessions')
-        .insert({
-          user_id: user.id,
-          url: url.trim(),
-          domain,
-          crawlers_global_score: crawlersGlobal,
-          csv_weighted_score: crawlersGlobal,
-          total_prompts: rows.length,
-          selected_prompts: selectedRows.length,
-        })
-        .select('id')
-        .single();
-
-      if (sessErr) console.error('Session save error:', sessErr);
-
-      // Persist per-KPI results
-      if (session) {
-        const resultRows = auditResults.map((r: any) => {
-          const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
-          return {
-            session_id: session.id,
-            prompt_item_id: r.dbId || null,
+      // Persist audit session (only if logged in)
+      if (user) {
+        const { data: session, error: sessErr } = await supabase
+          .from('matrix_audit_sessions')
+          .insert({
             user_id: user.id,
-            prompt: r.prompt,
-            axe: r.axe,
-            poids: r.poids,
-            crawlers_score: r.crawlers_score,
-            csv_weighted_score: r.crawlers_score,
-            seuil_bon: r.seuil_bon,
-            seuil_moyen: r.seuil_moyen,
-            seuil_mauvais: r.seuil_mauvais,
-            verdict,
-          };
-        });
-        const { error: resErr } = await supabase.from('matrix_audit_results').insert(resultRows);
-        if (resErr) console.error('Results save error:', resErr);
+            url: url.trim(),
+            domain,
+            crawlers_global_score: crawlersGlobal,
+            csv_weighted_score: crawlersGlobal,
+            total_prompts: rows.length,
+            selected_prompts: selectedRows.length,
+          })
+          .select('id')
+          .single();
+
+        if (sessErr) console.error('Session save error:', sessErr);
+
+        // Persist per-KPI results
+        if (session) {
+          const resultRows = auditResults.map((r: any) => {
+            const verdict = r.crawlers_score >= r.seuil_bon ? 'bon' : r.crawlers_score >= r.seuil_moyen ? 'moyen' : 'mauvais';
+            return {
+              session_id: session.id,
+              prompt_item_id: r.dbId || null,
+              user_id: user.id,
+              prompt: r.prompt,
+              axe: r.axe,
+              poids: r.poids,
+              crawlers_score: r.crawlers_score,
+              csv_weighted_score: r.crawlers_score,
+              seuil_bon: r.seuil_bon,
+              seuil_moyen: r.seuil_moyen,
+              seuil_mauvais: r.seuil_mauvais,
+              verdict,
+            };
+          });
+          const { error: resErr } = await supabase.from('matrix_audit_results').insert(resultRows);
+          if (resErr) console.error('Results save error:', resErr);
+        }
       }
 
       setResults(auditResults);
