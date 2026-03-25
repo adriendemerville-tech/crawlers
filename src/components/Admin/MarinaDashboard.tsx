@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, ExternalLink, FileText, Loader2 } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { MarinaReportPreviewModal } from './MarinaReportPreviewModal';
 
 interface MarinaJob {
   id: string;
@@ -45,6 +46,24 @@ export function MarinaDashboard() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
+  const [reportModal, setReportModal] = useState<{ html: string; domain: string } | null>(null);
+  const [loadingReport, setLoadingReport] = useState(false);
+
+  const handleOpenReport = async (reportUrl: string, domain: string) => {
+    setLoadingReport(true);
+    try {
+      const response = await fetch(reportUrl);
+      if (!response.ok) throw new Error('Failed to load report');
+      const html = await response.text();
+      const cleanDomain = (() => { try { return new URL(domain.startsWith('http') ? domain : `https://${domain}`).hostname; } catch { return domain; } })();
+      setReportModal({ html, domain: cleanDomain });
+    } catch (e) {
+      console.error('Error loading report:', e);
+      toast({ title: 'Erreur', description: 'Impossible de charger le rapport', variant: 'destructive' });
+    } finally {
+      setLoadingReport(false);
+    }
+  };
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -294,16 +313,13 @@ export function MarinaDashboard() {
                             {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {result?.report_url && (
-                            <a
-                              href={result.report_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => handleOpenReport(result.report_url, payload?.url || result?.url || 'rapport')}
                               className="text-xs text-primary flex items-center gap-1 hover:underline"
                             >
                               <FileText className="h-3 w-3" />
                               Rapport
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -323,6 +339,15 @@ export function MarinaDashboard() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {reportModal && (
+        <MarinaReportPreviewModal
+          isOpen={!!reportModal}
+          onClose={() => setReportModal(null)}
+          htmlContent={reportModal.html}
+          domain={reportModal.domain}
+        />
+      )}
     </div>
   );
 }
