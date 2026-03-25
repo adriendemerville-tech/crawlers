@@ -20,9 +20,23 @@ export function FloatingChatBubble() {
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
+  const [showBounce, setShowBounce] = useState(false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+
+  // Ping-pong bounce animation on first home visit after 20s
+  useEffect(() => {
+    if (location.pathname !== '/') return;
+    const key = 'felix_bounce_played';
+    if (sessionStorage.getItem(key)) return;
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(key, '1');
+      setShowBounce(true);
+      setTimeout(() => setShowBounce(false), 2000);
+    }, 20000);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
@@ -192,7 +206,7 @@ export function FloatingChatBubble() {
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className="fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden"
+        className={`fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
         <CrawlersLogo size={44} className="opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
