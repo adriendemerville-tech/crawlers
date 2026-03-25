@@ -67,12 +67,14 @@ export function getOnboardingMessages(persona: string | null): OnboardingMessage
     });
   }
 
-  // Closing
+  // Transition to diagnostic
   msgs.push({
     role: 'assistant',
-    content: `C'est tout pour le tour ! N'hésite pas à me poser des questions à tout moment 😊\n\nBonne exploration ! 🚀`,
+    content: `Avant de commencer, j'aimerais mieux te connaître pour adapter mon accompagnement 👇`,
     timestamp: now,
   });
+
+  return msgs;
 
   return msgs;
 }

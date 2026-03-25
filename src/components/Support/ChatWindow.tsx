@@ -16,6 +16,8 @@ import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
+import { AutonomyDiagnostic } from './AutonomyDiagnostic';
+import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -81,6 +83,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSent, setPhoneSent] = useState(false);
+  const [showAutonomyDiag, setShowAutonomyDiag] = useState(false);
+  const [onboardingPersona, setOnboardingPersona] = useState<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
@@ -109,18 +113,24 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     if (!triggerOnboarding || !user || isOnboardingDone()) return;
 
     const loadPersonaAndOnboard = async () => {
-      // Fetch persona_type from profile
+      // Fetch persona_type and autonomy_score from profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('persona_type')
-        .eq('id', user.id)
+        .select('persona_type, autonomy_score')
+        .eq('user_id', user.id)
         .maybeSingle();
 
-      const persona = profile?.persona_type || null;
+      const persona = (profile as any)?.persona_type || null;
       const onboardingMsgs = getOnboardingMessages(persona);
       setMessages(prev => [...onboardingMsgs, ...prev]);
       markOnboardingDone();
       onOnboardingConsumed?.();
+
+      // Show autonomy diagnostic if not already scored
+      if ((profile as any)?.autonomy_score == null) {
+        setOnboardingPersona(persona);
+        setShowAutonomyDiag(true);
+      }
     };
 
     loadPersonaAndOnboard();
@@ -534,6 +544,23 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                     </div>
                   </div>
                 ))}
+
+                {showAutonomyDiag && user && (
+                  <AutonomyDiagnostic
+                    userId={user.id}
+                    persona={onboardingPersona}
+                    onComplete={(result: AutonomyResult) => {
+                      setShowAutonomyDiag(false);
+                      const levelLabels = { beginner: 'Débutant', intermediate: 'Intermédiaire', expert: 'Expert' };
+                      const confirmMsg: ChatMessage = {
+                        role: 'assistant',
+                        content: `✅ **Profil calibré !** Score d'autonomie : **${result.score}/100** (${levelLabels[result.level]})\n\nJ'adapterai mes réponses à ton niveau. C'est parti ! 🚀`,
+                        timestamp: new Date().toISOString(),
+                      };
+                      setMessages(prev => [...prev, confirmMsg]);
+                    }}
+                  />
+                )}
 
                 {bugReportMode === 'prompt' && (
                   <div className="flex justify-start">
