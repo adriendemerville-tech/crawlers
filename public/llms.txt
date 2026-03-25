@@ -193,7 +193,6 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Tarifs** : https://crawlers.fr/tarifs (Packs de crédits et abonnement Pro Agency)
 - **Documentation Technique** : https://crawlers.fr/llms.txt
 - **Sitemap XML** : https://crawlers.fr/sitemap.xml
-- **Sitemap XML** : https://crawlers.fr/sitemap.xml
 
 # 🏗️ ARCHITECTURE TECHNIQUE
 
