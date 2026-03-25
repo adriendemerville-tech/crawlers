@@ -2672,8 +2672,8 @@ Deno.serve(async (req) => {
       return json(fallback);
     }
 
-    // ═══ ÉTAPE 2: LLM ANALYSIS ═══
-    console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
+    // ═══ ÉTAPE 2: PARALLEL LLM ANALYSIS (3 focused calls) ═══
+    console.log(`\n🤖 ÉTAPE 2: Analyse LLM parallèle (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo);
 
@@ -2710,13 +2710,16 @@ Deno.serve(async (req) => {
       if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
     }
 
-    // ── LLM call with remaining time budget + Flash fallback ──
+    // ── Parallel LLM calls (3 focused prompts) ──
     const remainingMs = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 15_000);
     let parsedAnalysis: any = null;
-    const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
-    async function callLLMWithModel(model: string, timeoutMs: number): Promise<string | null> {
-      console.log(`🤖 [audit-strategique-ia] Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
+    // For content/product/deep modes, fall back to monolithic call (simpler JSON)
+    const useParallelMode = !isContentMode;
+
+    async function callLLMWithModel(model: string, timeoutMs: number, systemPrompt: string, userPromptText: string, label: string = ''): Promise<string | null> {
+      const logLabel = label ? `[${label}]` : '';
+      console.log(`🤖 ${logLabel} Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
       try {
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -2727,8 +2730,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             model,
             messages: [
-              { role: 'system', content: systemPromptForPage },
-              { role: 'user', content: userPrompt },
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPromptText },
             ],
             temperature: 0.3,
           }),
@@ -2737,62 +2740,95 @@ Deno.serve(async (req) => {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ [audit-strategique-ia] ${model} error:`, response.status, errorText.substring(0, 200));
+          console.error(`❌ ${logLabel} ${model} error:`, response.status, errorText.substring(0, 200));
           return null;
         }
 
         const aiResponse = await response.json();
         const content = aiResponse.choices?.[0]?.message?.content;
-        trackTokenUsage('audit-strategique-ia', model, aiResponse.usage, url);
+        trackTokenUsage(`audit-strategique-ia${label ? `-${label}` : ''}`, model, aiResponse.usage, url);
         return content || null;
       } catch (e) {
-        console.warn(`⚠️ [audit-strategique-ia] ${model} failed: ${e instanceof Error ? e.message : e}`);
+        console.warn(`⚠️ ${logLabel} ${model} failed: ${e instanceof Error ? e.message : e}`);
         return null;
       }
     }
 
-    // Try Pro first, fallback to Flash on failure
-    const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
-    const proTimeout = Math.min(remainingMs, 150_000); // max 2m30 for Pro
-    let llmResult = await callLLMWithModel(primaryModel, proTimeout);
+    async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
+      const primaryModel = body._modelOverride || 'google/gemini-2.5-flash';
+      // Call A uses Pro for identity (more nuanced), B and C use Flash (data-driven)
+      const model = label === 'A-identity' ? (body._modelOverride || 'google/gemini-2.5-pro') : primaryModel;
+      const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
 
-    if (!llmResult && primaryModel !== 'google/gemini-2.5-flash') {
-      console.log('🔄 [audit-strategique-ia] Pro failed — retrying with Flash...');
-      const flashTimeout = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 10_000);
-      llmResult = await callLLMWithModel('google/gemini-2.5-flash', Math.min(flashTimeout, 120_000));
-      if (llmResult) console.log('✅ [audit-strategique-ia] Flash fallback succeeded');
+      let raw = await callLLMWithModel(model, callTimeout, systemPrompt, userPromptText, label);
+      if (!raw && model !== 'google/gemini-2.5-flash') {
+        console.log(`🔄 ${label}: Retrying with Flash...`);
+        raw = await callLLMWithModel('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
+      }
+      if (!raw) return null;
+      const parsed = parseLLMJson(raw);
+      if (!parsed) console.warn(`⚠️ ${label}: JSON parse failed`);
+      return parsed;
     }
 
-    if (!llmResult) {
-      console.warn('⚠️ [audit-strategique-ia] All LLM calls failed — returning fallback');
-      const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
-      saveToCache(domain, url, fallback).catch(() => {});
-      return json(fallback);
-    }
+    if (useParallelMode) {
+      // ═══ PARALLEL MODE: 3 focused calls ═══
+      console.log('🚀 Parallel mode: launching 3 focused LLM calls...');
 
-    // ═══ PARSE JSON ═══
-    console.log('\n📝 Parsing...');
-    try {
-      let jsonContent = llmResult;
-      if (llmResult.includes('```json')) jsonContent = llmResult.split('```json')[1].split('```')[0].trim();
-      else if (llmResult.includes('```')) jsonContent = llmResult.split('```')[1].split('```')[0].trim();
-      jsonContent = jsonContent.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-      parsedAnalysis = JSON.parse(jsonContent);
-    } catch {
-      try {
-        const firstBrace = llmResult.indexOf('{');
-        const lastBrace = llmResult.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace > firstBrace) {
-          let jsonContent = llmResult.substring(firstBrace, lastBrace + 1);
-          jsonContent = jsonContent.replace(/,(\s*[\}\]])/g, '$1');
-          parsedAnalysis = JSON.parse(jsonContent);
+      // Build the shared context that all 3 calls need
+      const sharedContext = userPrompt; // Already contains all data (market, E-E-A-T, tools, etc.)
+
+      const userPromptA_full = buildUserPromptA(url, domain, sharedContext);
+      const userPromptB_full = buildUserPromptB(url, domain, sharedContext);
+      const userPromptC_full = buildUserPromptC(url, domain, sharedContext);
+
+      const parallelTimeout = Math.min(remainingMs, 150_000);
+
+      const [resultA, resultB, resultC] = await Promise.all([
+        callWithFallback(SYSTEM_PROMPT_A, userPromptA_full, 'A-identity', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_B, userPromptB_full, 'B-market', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_C, userPromptC_full, 'C-geo', parallelTimeout),
+      ]);
+
+      const successCount = [resultA, resultB, resultC].filter(Boolean).length;
+      console.log(`✅ Parallel results: ${successCount}/3 succeeded (A:${!!resultA} B:${!!resultB} C:${!!resultC})`);
+
+      if (successCount === 0) {
+        console.warn('⚠️ All 3 parallel calls failed — returning fallback');
+        const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
+        saveToCache(domain, url, fallback).catch(() => {});
+        if (jobSb && jobId) {
+          await jobSb.from('async_jobs').update({ status: 'completed', result_data: fallback.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
         }
-      } catch {
-        console.error('❌ JSON parse failed — returning fallback');
+        return json(fallback);
+      }
+
+      parsedAnalysis = mergeParallelResults(resultA, resultB, resultC);
+      console.log(`✅ Merged parallel results in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+    } else {
+      // ═══ MONOLITHIC MODE: Content/Product/Deep pages (simpler JSON) ═══
+      const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+
+      const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
+      const proTimeout = Math.min(remainingMs, 150_000);
+      let llmResult = await callLLMWithModel(primaryModel, proTimeout, systemPromptForPage, userPrompt, 'monolithic');
+
+      if (!llmResult && primaryModel !== 'google/gemini-2.5-flash') {
+        console.log('🔄 Pro failed — retrying with Flash...');
+        const flashTimeout = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 10_000);
+        llmResult = await callLLMWithModel('google/gemini-2.5-flash', Math.min(flashTimeout, 120_000), systemPromptForPage, userPrompt, 'monolithic-flash');
+        if (llmResult) console.log('✅ Flash fallback succeeded');
+      }
+
+      if (!llmResult) {
+        console.warn('⚠️ All LLM calls failed — returning fallback');
         const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
         saveToCache(domain, url, fallback).catch(() => {});
         return json(fallback);
       }
+
+      parsedAnalysis = parseLLMJson(llmResult);
     }
 
     if (!parsedAnalysis) {
