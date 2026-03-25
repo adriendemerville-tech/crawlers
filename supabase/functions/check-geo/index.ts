@@ -768,7 +768,7 @@ Deno.serve(async (req) => {
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
     const hasSitemap = checkSitemap(robotsTxt);
-    const intentResult = analyzeIntentInTitle(contentResult.titleText, contentResult.h1Text, contentResult.firstParagraphText, metaResult.description);
+    const intentResult = analyzeDirectAnswer(contentResult.titleText, contentResult.h1Text, contentResult.first150Words, metaResult.description);
     const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
 
     // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
