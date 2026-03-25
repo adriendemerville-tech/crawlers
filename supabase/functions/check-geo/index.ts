@@ -1040,8 +1040,15 @@ Deno.serve(async (req) => {
       ogScore = 5;
     }
     
+    // Penalize JS-generated OG tags
+    if (jsMetaDetection.isOgJsGenerated && ogScore > 0) {
+      ogScore = Math.max(0, ogScore - 3);
+    }
+    
     let ogRecommendation: string | undefined;
-    if (!ogResult.hasOg && !ogResult.hasTwitter) {
+    if (jsMetaDetection.isOgJsGenerated && ogResult.hasOg) {
+      ogRecommendation = 'Balises Open Graph injectées par JavaScript — invisibles pour les crawlers IA et les previews sociaux sans rendu JS. Utilisez du HTML statique.';
+    } else if (!ogResult.hasOg && !ogResult.hasTwitter) {
       ogRecommendation = isSPAWithLimitedContent 
         ? 'SPA détecté — les balises Open Graph peuvent être injectées par JavaScript. Vérifiez le rendu SSR.'
         : t.factors.socialMeta.addBoth;
