@@ -65,8 +65,9 @@ export function ParmenionDashboard() {
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [errorRate, setErrorRate] = useState<{ total: number; errors: number; error_rate: number; conservative_mode: boolean } | null>(null);
-  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number; tracked_site_id: string } | null>(null);
+  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number; tracked_site_id: string; cooldown_hours: number; config_id: string } | null>(null);
   const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
+  const [cooldownInput, setCooldownInput] = useState<string>('1');
   const [ikLoading, setIkLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
