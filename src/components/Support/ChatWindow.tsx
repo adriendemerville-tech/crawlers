@@ -113,18 +113,24 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     if (!triggerOnboarding || !user || isOnboardingDone()) return;
 
     const loadPersonaAndOnboard = async () => {
-      // Fetch persona_type from profile
+      // Fetch persona_type and autonomy_score from profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('persona_type')
-        .eq('id', user.id)
+        .select('persona_type, autonomy_score')
+        .eq('user_id', user.id)
         .maybeSingle();
 
-      const persona = profile?.persona_type || null;
+      const persona = (profile as any)?.persona_type || null;
       const onboardingMsgs = getOnboardingMessages(persona);
       setMessages(prev => [...onboardingMsgs, ...prev]);
       markOnboardingDone();
       onOnboardingConsumed?.();
+
+      // Show autonomy diagnostic if not already scored
+      if ((profile as any)?.autonomy_score == null) {
+        setOnboardingPersona(persona);
+        setShowAutonomyDiag(true);
+      }
     };
 
     loadPersonaAndOnboard();
