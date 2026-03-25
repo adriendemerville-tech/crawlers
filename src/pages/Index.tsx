@@ -572,6 +572,7 @@ const Index = () => {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
+        <link rel="canonical" href="https://crawlers.fr/" />
         <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
