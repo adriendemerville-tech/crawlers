@@ -691,8 +691,9 @@ export default function SiteCrawl() {
           const pagePatterns: Array<{ path: string; label: string }> = [];
           const seen = new Set<string>();
           for (const node of tree) {
-            if (node.urls) {
-              for (const u of (node.urls as string[]).slice(0, 5)) {
+            const nodeUrls = (node as any).urls;
+            if (Array.isArray(nodeUrls)) {
+              for (const u of nodeUrls.slice(0, 5)) {
                 try {
                   const parsed = new URL(u);
                   // Get filename-like pattern (last segment)
