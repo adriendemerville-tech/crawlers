@@ -431,7 +431,6 @@ export default function MatricePrompt() {
   const handleAnalyze = async () => {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
-    if (!user) return;
     setAnalyzing(true);
     try {
       // Build items payload for the edge function
