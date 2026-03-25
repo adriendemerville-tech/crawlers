@@ -3,14 +3,12 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 /**
- * Autopilot Engine — Moteur d'exécution des cycles
+ * Autopilot Engine — Moteur d'exécution autonome des cycles
  * 
- * Deux modes d'invocation:
- * 1. POST { tracked_site_id } → exécution manuelle d'un site spécifique
- * 2. POST {} (vide / cron) → scan de toutes les configs actives
+ * Pipeline: Check cooldown → Call parmenion-orchestrator → Execute decided functions → Store results → Update counters
  * 
- * Pipeline: 
- *   Check cooldown → Call parmenion-orchestrator → Execute decided functions → Update counters
+ * Key improvement: Execution results are stored in parmenion_decision_log.execution_results
+ * so the next cycle's orchestrator can use them as input for the next pipeline phase.
  */
 
 const COOLDOWN_HOURS = 2;
@@ -23,9 +21,7 @@ Deno.serve(async (req: Request) => {
   try {
     const supabase = getServiceClient();
     let targetSiteId: string | null = null;
-    let userId: string | null = null;
 
-    // Check if service-role call (cron) or user call
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(SERVICE_ROLE_KEY);
     
@@ -35,12 +31,9 @@ Deno.serve(async (req: Request) => {
     if (!isServiceRole) {
       const auth = await getAuthenticatedUser(req);
       if (!auth) {
-        console.log('[AutopilotEngine] Auth failed, trying as cron...');
-        // Allow anon key calls (from cron via pg_net) - just proceed without userId
+        // Allow anon key calls (from cron via pg_net)
       } else if (!auth.isAdmin) {
         return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      } else {
-        userId = auth.userId;
       }
     }
 
@@ -60,7 +53,7 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ message: 'No active autopilot configs', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const results: Array<{ site_id: string; domain: string; status: string; decision_id?: string; error?: string }> = [];
+    const results: Array<{ site_id: string; domain: string; status: string; decision_id?: string; pipeline_phase?: string; error?: string }> = [];
 
     for (const config of configs) {
       try {
@@ -118,7 +111,6 @@ Deno.serve(async (req: Request) => {
           await supabase.from('autopilot_configs').update({ status: 'error', updated_at: new Date().toISOString() }).eq('id', config.id);
           results.push({ site_id: config.tracked_site_id, domain: site.domain, status: 'error', error: orchestratorResult.error || 'Orchestrator failed' });
           
-          // Log in modification registry
           await supabase.from('autopilot_modification_log').insert({
             tracked_site_id: config.tracked_site_id,
             config_id: config.id,
@@ -133,15 +125,16 @@ Deno.serve(async (req: Request) => {
         }
 
         const decision = orchestratorResult.decision;
+        const pipelinePhase = orchestratorResult.pipeline_phase || 'diagnose';
 
-        // ═══ Execute decided functions ═══
+        // ═══ Execute decided functions & capture results ═══
         let executionSuccess = true;
         const executionResults: any[] = [];
 
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
             try {
-              console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain}`);
+              console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain} (phase: ${pipelinePhase})`);
               const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/${funcName}`, {
                 method: 'POST',
                 headers: {
@@ -152,11 +145,18 @@ Deno.serve(async (req: Request) => {
                   tracked_site_id: config.tracked_site_id,
                   domain: site.domain,
                   url: `https://${site.domain}`,
+                  user_id: config.user_id,
                   ...decision.action.payload,
                 }),
               });
+              
               const funcResult = await funcResponse.json().catch(() => ({}));
-              executionResults.push({ function: funcName, status: funcResponse.ok ? 'success' : 'error', result: funcResult });
+              executionResults.push({ 
+                function: funcName, 
+                status: funcResponse.ok ? 'success' : 'error', 
+                http_status: funcResponse.status,
+                result: funcResult,
+              });
               if (!funcResponse.ok) executionSuccess = false;
             } catch (e) {
               executionResults.push({ function: funcName, status: 'error', error: e instanceof Error ? e.message : 'unknown' });
@@ -165,13 +165,16 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // ═══ Update decision status ═══
+        // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
+        const finalStatus = config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial';
+        
         await supabase
           .from('parmenion_decision_log')
           .update({
-            status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial',
+            status: finalStatus,
             execution_started_at: new Date().toISOString(),
             execution_completed_at: new Date().toISOString(),
+            execution_results: executionResults, // ← KEY: stored for next cycle's context
             execution_error: executionSuccess ? null : JSON.stringify(executionResults.filter(r => r.status === 'error')),
           })
           .eq('id', orchestratorResult.decision_id);
@@ -192,10 +195,10 @@ Deno.serve(async (req: Request) => {
           tracked_site_id: config.tracked_site_id,
           config_id: config.id,
           user_id: config.user_id,
-          phase: decision.action?.type || 'diagnostic',
+          phase: pipelinePhase,
           action_type: decision.goal?.type || 'auto',
           cycle_number: cycleNumber,
-          description: decision.summary || `Cycle #${cycleNumber}: ${decision.goal?.description || 'auto'}`,
+          description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
           diff_before: decision.tactic?.initial_scope || {},
           diff_after: { execution: executionResults, decision: decision.prudence },
           status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
@@ -204,8 +207,9 @@ Deno.serve(async (req: Request) => {
         results.push({
           site_id: config.tracked_site_id,
           domain: site.domain,
-          status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial',
+          status: finalStatus,
           decision_id: orchestratorResult.decision_id,
+          pipeline_phase: pipelinePhase,
         });
 
       } catch (siteError) {

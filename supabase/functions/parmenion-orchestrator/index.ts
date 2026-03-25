@@ -3,29 +3,36 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 /**
- * Parménion — Orchestrateur stratégique pour Autopilot
+ * Parménion — Orchestrateur stratégique autonome pour Autopilot
  * 
- * 3 piliers de décision:
- * 1. BUT: objectif précis au niveau cluster max
- * 2. TACTIQUE: réduction de scope si trop complexe (tokens)
- * 3. PRUDENCE: scoring impact/risque, max risque 3, itérations si 4+
+ * Pipeline obligatoire en 3 phases:
+ *   1. DIAGNOSE: audit-expert-seo, cocoon-diag-*
+ *   2. PRESCRIBE: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
+ *   3. EXECUTE: wpsync (déploiement réel sur le CMS)
  * 
- * Apprentissage: few-shot des erreurs passées injectées dans le prompt.
- * Mode conservateur si taux d'erreur > 20% sur les 10 dernières décisions.
+ * Chaque cycle avance d'une phase. Parménion ne recule jamais.
+ * Les résultats de chaque phase alimentent la suivante.
  */
 
-const CONSERVATIVE_THRESHOLD = 20; // % — triggers conservative mode
+const CONSERVATIVE_THRESHOLD = 20;
 const MAX_RISK_NORMAL = 3;
 const MAX_RISK_CONSERVATIVE = 2;
-const MAX_RISK_ITERATIONS = 3;
-const MAX_TOKEN_BUDGET = 8000; // tokens max per cycle action
-const IMPACT_LEVELS = ['faible', 'modéré', 'neutre', 'avancé', 'très_avancé'] as const;
+const MAX_TOKEN_BUDGET = 8000;
+
+// Pipeline phases in strict order
+const PIPELINE_PHASES = ['diagnose', 'prescribe', 'execute'] as const;
+type PipelinePhase = typeof PIPELINE_PHASES[number];
+
+const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
+  diagnose: ['audit-expert-seo', 'cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
+  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
+  execute: ['wpsync'],
+};
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    // Accept service-role calls (from autopilot-engine) or admin users
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
     
@@ -44,15 +51,49 @@ serve(async (req: Request) => {
 
     const supabase = getServiceClient();
 
-    // ═══ PHASE 0: Check error rate → conservative mode? ═══
+    // ═══ PHASE 0: Determine current pipeline phase ═══
+    const { data: lastCompletedDecisions } = await supabase
+      .from('parmenion_decision_log')
+      .select('pipeline_phase, status, execution_results, goal_type, goal_description, action_type, functions_called, execution_error, created_at')
+      .eq('domain', domain)
+      .in('status', ['completed', 'dry_run'])
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const completedPhases = (lastCompletedDecisions || [])
+      .map(d => d.pipeline_phase)
+      .filter(Boolean);
+
+    // Determine next phase: advance through pipeline
+    let currentPhase: PipelinePhase = 'diagnose';
+    const lastPhase = completedPhases[0] as PipelinePhase | undefined;
+    
+    if (lastPhase === 'diagnose') {
+      // Check if we have diagnostic results to work with
+      const lastDiagnostic = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'diagnose' && d.execution_results);
+      if (lastDiagnostic) {
+        currentPhase = 'prescribe';
+      }
+      // If diagnostic completed but no results, re-diagnose
+    } else if (lastPhase === 'prescribe') {
+      const lastPrescription = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'prescribe' && d.execution_results);
+      if (lastPrescription) {
+        currentPhase = 'execute';
+      }
+    } else if (lastPhase === 'execute') {
+      // Full cycle done — restart pipeline with fresh diagnostic
+      currentPhase = 'diagnose';
+    }
+
+    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}`);
+
+    // ═══ PHASE 1: Check error rate → conservative mode? ═══
     const { data: errorRateData } = await supabase.rpc('parmenion_error_rate', { p_domain: domain });
     const conservativeMode = errorRateData?.conservative_mode === true;
     const maxRisk = conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL;
-    
-    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Conservative: ${conservativeMode}, MaxRisk: ${maxRisk}`);
 
-    // ═══ PHASE 1: Gather context ═══
-    const [diagnosticsRes, cocoonRes, errorsRes, lastDecisionsRes] = await Promise.all([
+    // ═══ PHASE 2: Gather context ═══
+    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes] = await Promise.all([
       // Latest diagnostics
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
@@ -68,41 +109,76 @@ serve(async (req: Request) => {
         .maybeSingle(),
       // Past errors for few-shot learning
       supabase.rpc('parmenion_recent_errors', { p_domain: domain }),
-      // Last 5 decisions for continuity
-      supabase.from('parmenion_decision_log')
-        .select('goal_type, goal_description, action_type, status, impact_level, risk_predicted, is_error, created_at')
+      // Recommendation registry (existing prescriptions)
+      supabase.from('audit_recommendations_registry')
+        .select('title, category, priority, fix_type, fix_data, is_resolved')
+        .eq('domain', domain)
+        .eq('is_resolved', false)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      // Raw audit data (diagnostic results)
+      supabase.from('audit_raw_data')
+        .select('audit_type, raw_payload, source_functions, created_at')
         .eq('domain', domain)
         .order('created_at', { ascending: false })
-        .limit(5),
+        .limit(3),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
     const cocoon = cocoonRes.data;
     const pastErrors = errorsRes.data || [];
-    const lastDecisions = lastDecisionsRes.data || [];
+    const pendingRecommendations = recoRegistryRes.data || [];
+    const rawAuditData = auditRawRes.data || [];
 
-    // ═══ PHASE 2: LLM Decision — BUT + TACTIQUE + PRUDENCE ═══
+    // Collect execution results from previous phases in this pipeline run
+    const previousPhaseResults = (lastCompletedDecisions || [])
+      .filter(d => d.execution_results)
+      .slice(0, 5)
+      .map(d => ({
+        phase: d.pipeline_phase,
+        goal: d.goal_description,
+        functions: d.functions_called,
+        results: d.execution_results,
+      }));
+
+    // ═══ PHASE 3: LLM Decision ═══
     const decision = await askParmenionLLM({
       domain,
       cycle_number,
+      currentPhase,
       conservativeMode,
       maxRisk,
       diagnostics,
       cocoon,
       pastErrors,
-      lastDecisions,
+      previousPhaseResults,
+      pendingRecommendations,
+      rawAuditData,
     });
 
     if (!decision) {
       return new Response(JSON.stringify({ error: 'Parménion could not produce a decision' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ═══ PHASE 3: Persist decision ═══
+    // ═══ PHASE 4: Validate functions against phase ═══
+    const allowedFunctions = PHASE_FUNCTIONS[currentPhase];
+    const validatedFunctions = decision.action.functions.filter((f: string) => allowedFunctions.includes(f));
+    if (validatedFunctions.length === 0) {
+      // LLM chose wrong functions — force a sensible default for this phase
+      console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
+      if (currentPhase === 'diagnose') validatedFunctions.push('audit-expert-seo');
+      else if (currentPhase === 'prescribe') validatedFunctions.push('generate-corrective-code');
+      else if (currentPhase === 'execute') validatedFunctions.push('wpsync');
+    }
+    decision.action.functions = validatedFunctions;
+
+    // ═══ PHASE 5: Persist decision ═══
     const logEntry = {
       tracked_site_id,
       user_id: authUserId || bodyUserId || tracked_site_id,
       domain,
       cycle_number,
+      pipeline_phase: currentPhase,
       goal_type: decision.goal.type,
       goal_cluster_id: decision.goal.cluster_id || null,
       goal_description: decision.goal.description,
@@ -135,6 +211,7 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({
       decision_id: logData.id,
       decision,
+      pipeline_phase: currentPhase,
       conservative_mode: conservativeMode,
       error_rate: errorRateData,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -160,12 +237,15 @@ interface ParmenionDecision {
 async function askParmenionLLM(context: {
   domain: string;
   cycle_number: number;
+  currentPhase: PipelinePhase;
   conservativeMode: boolean;
   maxRisk: number;
   diagnostics: any[];
   cocoon: any;
   pastErrors: any[];
-  lastDecisions: any[];
+  previousPhaseResults: any[];
+  pendingRecommendations: any[];
+  rawAuditData: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -174,53 +254,73 @@ async function askParmenionLLM(context: {
   }
 
   const errorHistory = context.pastErrors.length > 0
-    ? `\n\nHISTORIQUE D'ERREURS SUR CE DOMAINE (à prendre en compte pour calibrer le risque):\n${context.pastErrors.map((e: any, i: number) => 
-        `- Cycle #${e.cycle_number}: risque estimé ${e.risk_predicted} → réel ${e.risk_calibrated}. Impact prévu "${e.impact_predicted}" → réel "${e.impact_actual}". Cause: ${e.calibration_note || e.error_category || 'inconnue'}.`
+    ? `\n\nHISTORIQUE D'ERREURS (calibre ton risque en conséquence):\n${context.pastErrors.map((e: any) => 
+        `- Cycle #${e.cycle_number}: risque estimé ${e.risk_predicted} → réel ${e.risk_calibrated}. Cause: ${e.calibration_note || 'inconnue'}.`
       ).join('\n')}`
     : '';
 
-  const recentDecisions = context.lastDecisions.length > 0
-    ? `\n\nDERNIÈRES DÉCISIONS (pour éviter les redondances):\n${context.lastDecisions.map((d: any) => 
-        `- ${d.goal_description} [${d.action_type}] → ${d.status}${d.is_error ? ' ⚠️ ERREUR' : ''}`
+  const previousResults = context.previousPhaseResults.length > 0
+    ? `\n\nRÉSULTATS DES PHASES PRÉCÉDENTES (utilise ces données pour ta décision):\n${context.previousPhaseResults.map(r => 
+        `- Phase "${r.phase}" — ${r.goal}\n  Fonctions: ${r.functions?.join(', ')}\n  Résultats: ${JSON.stringify(r.results).slice(0, 2000)}`
+      ).join('\n\n')}`
+    : '';
+
+  const pendingRecos = context.pendingRecommendations.length > 0
+    ? `\n\nRECOMMANDATIONS EN ATTENTE D'APPLICATION (${context.pendingRecommendations.length}):\n${context.pendingRecommendations.slice(0, 10).map(r =>
+        `- [${r.priority}] ${r.title} (${r.category}) — fix_type: ${r.fix_type || 'none'}${r.fix_data ? ' ✓ code disponible' : ''}`
       ).join('\n')}`
     : '';
 
-  const systemPrompt = `Tu es Parménion, stratège SEO de l'autopilote Crawlers.fr. Tu prends une SEULE décision par cycle, ciblée et prudente.
+  const rawData = context.rawAuditData.length > 0
+    ? `\n\nDONNÉES D'AUDIT BRUTES DISPONIBLES:\n${context.rawAuditData.map(d =>
+        `- ${d.audit_type} (${d.source_functions?.join(', ')}) — ${JSON.stringify(d.raw_payload).slice(0, 1000)}`
+      ).join('\n')}`
+    : '';
 
-## TES 3 PILIERS DE DÉCISION
+  const phaseInstructions: Record<PipelinePhase, string> = {
+    diagnose: `## PHASE ACTUELLE: DIAGNOSE
+Tu dois lancer UN diagnostic pour identifier les problèmes concrets du site.
+Fonctions autorisées: audit-expert-seo, cocoon-diag-content, cocoon-diag-semantic, cocoon-diag-structure, cocoon-diag-authority
+Choisis la fonction la plus pertinente selon le contexte. Si aucun diagnostic n'a été fait, commence par audit-expert-seo.
+Le résultat de ce diagnostic sera utilisé à la phase suivante pour générer des correctifs.`,
 
-### 1. BUT
-- Choisis UN objectif précis, jamais global
-- Échelle maximum: le cluster (pas le domaine entier)
-- Types possibles: cluster_optimization, content_gap, linking, technical_fix
-- Ne répète pas un but récent (voir historique)
+    prescribe: `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+Les diagnostics sont terminés. Tu as les résultats ci-dessous.
+Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
+Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
+- Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
+- Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
+Le payload doit contenir les URLs et les correctifs précis à appliquer.
+IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`,
 
-### 2. TACTIQUE  
-- Estime les tokens nécessaires pour l'action
-- Si > ${MAX_TOKEN_BUDGET} tokens → réduis le scope (moins de pages)
-- Note combien de fois tu as réduit le scope
+    execute: `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR LE SITE)
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER via le CMS.
+Fonction autorisée: wpsync
+Le payload doit contenir:
+- Les pages à modifier (URLs)
+- Le code correctif à injecter (meta tags, schema, contenu, liens internes)
+- Le mode de déploiement (update_post, update_meta, inject_schema)
+IMPORTANT: C'est l'étape finale. Tu dois déployer, pas diagnostiquer ni prescrire.`,
+  };
 
-### 3. PRUDENCE
+  const systemPrompt = `Tu es Parménion, moteur d'exécution AUTONOME de l'autopilote Crawlers.fr. Tu NE RECOMMANDES PAS, tu AGIS.
+
+${phaseInstructions[context.currentPhase]}
+
+## RÈGLES ABSOLUES
+1. Tu ne peux utiliser QUE les fonctions de la phase actuelle
+2. Tu ne reviens JAMAIS en arrière dans le pipeline (diagnose → prescribe → execute)
+3. Tu ne répètes JAMAIS une action déjà complétée avec succès
+4. Tu utilises les résultats des phases précédentes comme INPUT, pas comme prétexte pour re-diagnostiquer
+5. INTERDICTIONS: supprimer des pages, modifier la charte graphique
+
+## PRUDENCE
 - Impact: faible | modéré | neutre | avancé | très_avancé
-- Risque: 1 à ${context.maxRisk} MAXIMUM${context.conservativeMode ? ' (MODE CONSERVATEUR ACTIF — taux d\'erreur > 20%)' : ''}
-- Si ton évaluation donne risque 4 ou 5, reprends à TACTIQUE et réduis
-- Si après 3 itérations le risque ne baisse pas → change de BUT
-- INTERDICTIONS ABSOLUES: supprimer des pages, modifier la charte graphique
+- Risque: 1 à ${context.maxRisk} MAXIMUM${context.conservativeMode ? ' (MODE CONSERVATEUR — erreurs > 20%)' : ''}
+- Si risque ≥ 4 → réduis le scope
+${errorHistory}${previousResults}${pendingRecos}${rawData}
 
-## FONCTIONS DISPONIBLES
-- cocoon-diag-content: diagnostic contenu
-- cocoon-diag-semantic: diagnostic sémantique  
-- cocoon-diag-structure: diagnostic structure
-- cocoon-diag-authority: diagnostic autorité
-- cocoon-strategist: plan stratégique
-- calculate-cocoon-logic: calcul cocon sémantique
-- generate-corrective-code: génération de code correctif
-- audit-expert-seo: audit SEO complet
-- wpsync: déploiement WordPress
-${errorHistory}${recentDecisions}
-
-## FORMAT DE RÉPONSE (JSON strict)
-Tu dois retourner un JSON avec cette structure exacte, sans texte autour:
+## FORMAT DE RÉPONSE (JSON strict, sans texte autour)
 {
   "goal": { "type": "...", "cluster_id": "...", "description": "..." },
   "tactic": { "initial_scope": {...}, "final_scope": {...}, "scope_reductions": 0, "estimated_tokens": 0 },
@@ -231,7 +331,8 @@ Tu dois retourner un JSON avec cette structure exacte, sans texte autour:
 
   const userPrompt = `Domaine: ${context.domain}
 Cycle: ${context.cycle_number}
-Mode conservateur: ${context.conservativeMode ? 'OUI (risque max: 2)' : 'NON (risque max: 3)'}
+Phase pipeline: ${context.currentPhase.toUpperCase()}
+Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
@@ -247,7 +348,7 @@ ${context.cocoon ? JSON.stringify({
   cluster_summary: context.cocoon.cluster_summary,
 }, null, 2) : 'Aucun cocon calculé'}
 
-Quelle est ta décision pour ce cycle ?`;
+Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUpperCase()} ?`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -267,14 +368,14 @@ Quelle est ta décision pour ce cycle ?`;
           type: 'function',
           function: {
             name: 'parmenion_decide',
-            description: 'Submit Parménion decision for this autopilot cycle',
+            description: 'Submit Parménion autonomous action for this autopilot cycle',
             parameters: {
               type: 'object',
               properties: {
                 goal: {
                   type: 'object',
                   properties: {
-                    type: { type: 'string', enum: ['cluster_optimization', 'content_gap', 'linking', 'technical_fix'] },
+                    type: { type: 'string', enum: ['cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment'] },
                     cluster_id: { type: 'string' },
                     description: { type: 'string' },
                   },
@@ -336,9 +437,8 @@ Quelle est ta décision pour ce cycle ?`;
 
     const decision = JSON.parse(toolCall.function.arguments) as ParmenionDecision;
 
-    // ═══ PRUDENCE GUARD: enforce risk ceiling ═══
+    // Enforce risk ceiling
     if (decision.prudence.risk_score > context.maxRisk) {
-      console.warn(`[Parménion] Risk ${decision.prudence.risk_score} exceeds max ${context.maxRisk}, clamping`);
       decision.prudence.risk_score = context.maxRisk;
     }
 
