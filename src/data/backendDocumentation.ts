@@ -323,7 +323,12 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`check-pagespeed\` | ❌ | 0 | Métriques Core Web Vitals via Google PSI |
 | \`expert-audit\` | ✅ | 1 | Audit expert complet (score /200) |
 | \`audit-expert-seo\` | ✅ | 2 | Audit SEO technique approfondi |
-| \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA (Gemini) |
+| \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA monolithique (Gemini Pro → Flash fallback) |
+| \`strategic-orchestrator\` | ✅ | 3 | Orchestrateur modulaire audit GEO (pipeline 5 étapes) |
+| \`strategic-crawl\` | ✅ | 0 | Micro-fn : extraction métadonnées + signaux E-E-A-T |
+| \`strategic-market\` | ✅ | 0 | Micro-fn : mots-clés et volumes (DataForSEO) |
+| \`strategic-competitors\` | ✅ | 0 | Micro-fn : analyse SERP et GMB concurrents |
+| \`strategic-synthesis\` | ✅ | 0 | Micro-fn : synthèse finale LLM (Gemini Pro → Flash fallback) |
 | \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
 | \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle |
@@ -485,7 +490,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
 | \`view-function-source\` | ✅ | Consultation source d'une edge function |
-| \`run-backend-tests\` | ✅ | Exécute les tests backend |
+| \`run-backend-tests\` | ✅ | Exécute 12 tests CI backend (sécurité, facturation, audit, tracking) |
 | \`health-check\` | ❌ | Vérification santé du système |
 | \`check-widget-health\` | ❌ | Vérification santé du widget |
 | \`sdk-status\` | ❌ | Statut du SDK widget |
@@ -1412,13 +1417,13 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.2.0',
-  lastUpdated: '2026-03-24',
+  version: '6.3.0',
+  lastUpdated: '2026-03-25',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 125,
+  totalEdgeFunctions: 130,
   totalSharedModules: 22,
   totalTables: '68+',
-  totalLinesOfCode: '187 000+',
+  totalLinesOfCode: '190 000+',
   totalMigrations: 199,
   totalPages: 41,
   totalComponents: 303,
