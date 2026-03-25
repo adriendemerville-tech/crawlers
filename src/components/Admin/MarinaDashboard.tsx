@@ -276,14 +276,14 @@ export function MarinaDashboard() {
                             <Badge variant="outline" className={cn("text-xs", config.color)}>
                               {config.label}
                             </Badge>
-                            {job.progress != null && job.status === 'processing' && (
+                            {job.progress != null && (job.status === 'processing' || job.status === 'pending') && (
                               <span className="text-xs text-muted-foreground">{job.progress}%</span>
                             )}
                           </div>
                           <div className="text-sm font-medium truncate">
                             {payload?.url || result?.url || 'URL inconnue'}
                           </div>
-                          {phase && job.status === 'processing' && (
+                          {phase && (job.status === 'processing' || job.status === 'pending') && (
                             <div className="text-xs text-muted-foreground mt-1">
                               {phaseLabels[phase] || phase}
                             </div>
@@ -323,12 +323,18 @@ export function MarinaDashboard() {
                           )}
                         </div>
                       </div>
-                      {job.progress != null && job.status === 'processing' && (
+                      {(job.status === 'pending' || job.status === 'processing') && (
                         <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all duration-500"
-                            style={{ width: `${job.progress}%` }}
-                          />
+                          {job.progress != null && job.progress > 0 ? (
+                            <div
+                              className="h-full bg-primary rounded-full transition-all duration-500"
+                              style={{ width: `${job.progress}%` }}
+                            />
+                          ) : (
+                            <div className="h-full w-1/3 bg-primary/60 rounded-full animate-pulse" 
+                              style={{ animation: 'indeterminate 1.5s ease-in-out infinite' }}
+                            />
+                          )}
                         </div>
                       )}
                     </div>
