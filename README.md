@@ -43,6 +43,7 @@ Organisées en **13 domaines fonctionnels** :
 | **Partage** | `share-actions`, `share-report`, `resolve-share`, `track-share-click`, `summarize-report` | Rapports partageables, white-label |
 | **Intégrations** | `gsc-auth`, `fetch-ga4-data`, `gmb-actions`, `gtm-actions`, `wpsync`, `scan-wp`, `download-plugin` | Google, GMB, GTM, WordPress, Shopify, Wix, PrestaShop, Drupal |
 | **Admin & Utilitaires** | `admin-update-plan`, `view-function-source`, `kill-all-viewers`, `run-backend-tests`, `manage-team`, `aggregate-observatory`, `update-market-trends` | Administration, observatoire, tests |
+| **Prospection** | `marina` | Pipeline autonome : Crawl + Cocoon + Expert + Stratégique GEO, rapport HTML, données ML |
 
 ### 2.2 Modules partagés (`_shared/`)
 
@@ -50,9 +51,9 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.3 Base de données
 
-- **~60 tables** PostgreSQL avec RLS
-- **215+ migrations** versionnées
-- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`
+- **~120+ tables** PostgreSQL avec RLS
+- **223 migrations** versionnées
+- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_error_log`, `marina_training_data`
 - Fonctions DB : `check_fair_use_v2`, `use_credit`, `has_role`, `upsert_analyzed_url`, etc.
 - File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
 
