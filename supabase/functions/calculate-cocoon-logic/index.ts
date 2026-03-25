@@ -297,25 +297,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── Plan check ───
-    const [{ data: profile }, { data: isAdmin }] = await Promise.all([
-      supabase.from("profiles").select("plan_type").eq("user_id", userId).maybeSingle(),
-      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
-    ]);
+    // ─── Plan check (skip for service role calls) ───
+    if (!isServiceCall) {
+      const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+        supabase.from("profiles").select("plan_type").eq("user_id", userId).maybeSingle(),
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      ]);
 
-    if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
-      return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
+        return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-    // ── Fair use check ──
-    const planType = ["agency_pro", "agency_premium"].includes(profile?.plan_type || "") ? 'agency_pro' : 'free';
-    const fairUse = await checkFairUse(userId, 'cocoon_logic', planType);
-    if (!fairUse.allowed) {
-      return new Response(JSON.stringify({ error: fairUse.reason }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // ── Fair use check ──
+      const planType = ["agency_pro", "agency_premium"].includes(profile?.plan_type || "") ? 'agency_pro' : 'free';
+      const fairUse = await checkFairUse(userId, 'cocoon_logic', planType);
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // ─── Verify site ownership ───
