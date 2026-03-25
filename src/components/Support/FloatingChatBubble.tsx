@@ -215,7 +215,7 @@ export function FloatingChatBubble() {
       </button>
       {/* Notification Badge — outside button to avoid overflow clipping */}
       {(unreadCount > 0 || showOnboardingPulse) && !isOpen && (
-        <span className="fixed bottom-[54px] right-[14px] z-[51] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none">
+        <span className="fixed bottom-[54px] z-[51] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
           {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}
