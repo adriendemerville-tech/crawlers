@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye } from 'lucide-react';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -64,8 +65,9 @@ export function ParmenionDashboard() {
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [errorRate, setErrorRate] = useState<{ total: number; errors: number; error_rate: number; conservative_mode: boolean } | null>(null);
-  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number; tracked_site_id: string } | null>(null);
+  const [autopilotConfig, setAutopilotConfig] = useState<{ is_active: boolean; status: string; last_cycle_at: string | null; domain: string; total_cycles_run: number; tracked_site_id: string; cooldown_hours: number; config_id: string } | null>(null);
   const [ikHistory, setIkHistory] = useState<Array<{ id: string; created_at: string; event_data: Record<string, unknown> }>>([]);
+  const [cooldownInput, setCooldownInput] = useState<string>('1');
   const [ikLoading, setIkLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
@@ -89,13 +91,14 @@ export function ParmenionDashboard() {
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, tracked_sites!inner(domain)')
+      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (data) {
       const ts = data.tracked_sites as unknown as { domain: string };
+      const cd = data.cooldown_hours ?? 2;
       setAutopilotConfig({
         is_active: data.is_active ?? false,
         status: data.status ?? 'idle',
@@ -103,7 +106,10 @@ export function ParmenionDashboard() {
         domain: ts?.domain || '—',
         total_cycles_run: data.total_cycles_run ?? 0,
         tracked_site_id: data.tracked_site_id,
+        cooldown_hours: cd,
+        config_id: data.id,
       });
+      setCooldownInput(String(cd));
     }
   }, []);
 
@@ -226,7 +232,7 @@ export function ParmenionDashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">État</CardTitle>
@@ -309,6 +315,48 @@ export function ParmenionDashboard() {
             <p className="text-xs text-muted-foreground">
               {llmCostStats.totalTokens.toLocaleString('fr-FR')} tokens consommés
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5 text-primary" />
+              Cooldown
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-1.5">
+              <Input
+                type="number"
+                min={1}
+                max={168}
+                value={cooldownInput}
+                onChange={(e) => setCooldownInput(e.target.value)}
+                className="w-16 h-8 text-center text-sm"
+              />
+              <span className="text-xs text-muted-foreground">heures</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                disabled={!autopilotConfig?.config_id || Number(cooldownInput) === autopilotConfig?.cooldown_hours}
+                onClick={async () => {
+                  const val = Math.max(1, Math.min(168, Number(cooldownInput)));
+                  const { error } = await supabase
+                    .from('autopilot_configs')
+                    .update({ cooldown_hours: val } as any)
+                    .eq('id', autopilotConfig!.config_id);
+                  if (!error) {
+                    toast({ title: '✅ Cooldown mis à jour', description: `${val}h entre chaque cycle` });
+                    fetchAutopilotConfig();
+                  }
+                }}
+              >
+                OK
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Actuel : {autopilotConfig?.cooldown_hours ?? '—'}h</p>
           </CardContent>
         </Card>
       </div>
