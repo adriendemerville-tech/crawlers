@@ -1237,6 +1237,60 @@ export default function SiteCrawl() {
                   )}
                 </div>
 
+                {/* Directory Selector — from sitemap */}
+                {sitemapTree.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground flex items-center gap-2">
+                      <FolderTree className="w-4 h-4 text-violet-400" />
+                      {language === 'fr' ? 'Cibler un répertoire' : language === 'es' ? 'Apuntar un directorio' : 'Target a directory'}
+                      <Badge variant="secondary" className="text-[9px] font-normal">
+                        {language === 'fr' ? 'Détecté via sitemap' : 'From sitemap'}
+                      </Badge>
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedDirectory(''); setUrlFilter(''); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                          !selectedDirectory
+                            ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
+                            : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        <Globe className="w-3 h-3" />
+                        {language === 'fr' ? 'Tout le site' : 'Entire site'}
+                      </button>
+                      {sitemapTree.map(dir => (
+                        <button
+                          key={dir.path}
+                          type="button"
+                          onClick={() => {
+                            const newDir = selectedDirectory === dir.path ? '' : dir.path;
+                            setSelectedDirectory(newDir);
+                            setUrlFilter(newDir ? `${dir.path}.*` : '');
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                            selectedDirectory === dir.path
+                              ? 'bg-violet-500/15 border-violet-500/40 text-violet-600 dark:text-violet-300'
+                              : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <Folder className="w-3 h-3" />
+                          /{dir.label}
+                          <span className="opacity-60">({dir.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedDirectory && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {language === 'fr' 
+                          ? `Le crawl sera limité aux pages sous ${selectedDirectory}/`
+                          : `Crawl will be limited to pages under ${selectedDirectory}/`}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Advanced Options */}
                 <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
                   <CollapsibleTrigger asChild>
