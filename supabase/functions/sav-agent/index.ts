@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient } from "../_shared/supabaseClient.ts";
+import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -646,6 +647,26 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           contextSnippet += `- ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}% (ajouté le ${s.created_at?.slice(0, 10)})\n`;
         }
 
+        // Read persistent memory for each site
+        for (const s of sites.slice(0, 3)) {
+          try {
+            const { promptSnippet: memSnippet } = await readSiteMemory(s.id);
+            if (memSnippet) {
+              contextSnippet += `\n### Mémoire ${s.display_name || s.domain}${memSnippet}`;
+            }
+            // Check pending identity suggestions
+            const pending = await getPendingSuggestions(s.id);
+            if (pending.length > 0) {
+              contextSnippet += `\n⚠ ${pending.length} suggestion(s) de carte d'identité en attente de validation pour ${s.domain}\n`;
+              for (const p of pending.slice(0, 3)) {
+                contextSnippet += `  - ${p.field_name}: "${p.current_value}" → "${p.suggested_value}" (${p.reason})\n`;
+              }
+            }
+          } catch (e) {
+            console.error(`[sav-agent] Memory read error for ${s.domain}:`, e);
+          }
+        }
+
         // For each site, fetch latest audit & crawl info
         for (const s of sites.slice(0, 5)) {
           // Latest audit
@@ -991,7 +1012,13 @@ ${screen_context}
 - Tu peux utiliser jusqu'à 1500 caractères pour ces réponses (pas la limite habituelle de 800).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint;
+    // Add memory extraction prompt for paying users with tracked sites
+    let memoryPrompt = "";
+    if (!isGuest && user_id && contextSnippet.includes("SITES TRACKÉS")) {
+      memoryPrompt = getMemoryExtractionPrompt();
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
@@ -1029,7 +1056,41 @@ ${screen_context}
     }
 
     const data = await response.json();
-    let reply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
+    let rawReply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
+
+    // Extract and persist memory from LLM response
+    const { cleanResponse, memories, identityUpdates } = parseMemoryExtraction(rawReply);
+    let reply = cleanResponse;
+
+    // Persist extracted memory asynchronously (don't block response)
+    if (!isGuest && user_id && (memories.length > 0 || identityUpdates.length > 0)) {
+      // Find the first tracked site to associate memory with
+      const siteIdMatch = contextSnippet.match(/Site .+? \(id: ([a-f0-9-]+)\)/);
+      // Fallback: fetch first tracked site
+      let targetSiteId: string | null = null;
+      try {
+        const { data: firstSite } = await sb
+          .from("tracked_sites")
+          .select("id")
+          .eq("user_id", user_id)
+          .limit(1)
+          .single();
+        targetSiteId = firstSite?.id || null;
+      } catch {}
+
+      if (targetSiteId) {
+        if (memories.length > 0) {
+          writeSiteMemory(targetSiteId, user_id, memories, 'felix')
+            .then(r => console.log(`[sav-agent] Memory: ${r.written} written`))
+            .catch(e => console.error("[sav-agent] Memory write error:", e));
+        }
+        if (identityUpdates.length > 0) {
+          applyIdentityUpdates(targetSiteId, user_id, identityUpdates, 'felix')
+            .then(r => console.log(`[sav-agent] Identity: ${r.autoApplied.length} auto, ${r.pendingReview.length} pending`))
+            .catch(e => console.error("[sav-agent] Identity update error:", e));
+        }
+      }
+    }
 
     // Enforce char limit (3000 for creator, 1500 for screen context, 1000 for users)
     const charLimit = isCreator ? 3000 : screenHint ? 1500 : 1000;

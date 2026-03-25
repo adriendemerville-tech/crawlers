@@ -5,7 +5,9 @@ Updated: now
 - Modèle : Gemini Flash via Lovable AI Gateway (`LOVABLE_API_KEY`)
 - Limite stricte : 800 caractères par message (1500 en mode compréhension d'audit, 3000 en mode créateur)
 - Base de connaissance : documentation /aide + taxonomie front-end complète (routes, onglets, positions des composants)
-- Accès aux données backend : `tracked_sites`, `crawl_pages`, `site_crawls`, `cocoon_sessions`, `profiles`
+- Accès aux données backend : `tracked_sites`, `crawl_pages`, `site_crawls`, `cocoon_sessions`, `profiles`, `site_memory`, `identity_card_suggestions`
+- **Mémoire persistante** : lit et écrit des insights structurés par site tracké via `site_memory` (catégories : preference, insight, objective, context, identity)
+- **Enrichissement carte d'identité** : peut auto-compléter les champs mineurs et proposer des modifications sur les champs critiques (mode hybride)
 - Consigne : ne produit pas (pas d'audits, crawls, génération de code) — explique et conseille uniquement
 - Détection automatique de la langue de l'utilisateur (FR/EN/ES)
 - Utilise le prénom si disponible dans `profiles`
