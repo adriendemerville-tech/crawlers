@@ -416,7 +416,10 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
   };
 
 
-  const hasTargets = site.client_targets && (site.client_targets.primary?.length > 0 || site.client_targets.secondary?.length > 0 || site.client_targets.untapped?.length > 0);
+  const safePrimary = Array.isArray(site.client_targets?.primary) ? site.client_targets.primary : [];
+  const safeSecondary = Array.isArray(site.client_targets?.secondary) ? site.client_targets.secondary : [];
+  const safeUntapped = Array.isArray(site.client_targets?.untapped) ? site.client_targets.untapped : [];
+  const hasTargets = safePrimary.length > 0 || safeSecondary.length > 0 || safeUntapped.length > 0;
   const filledCount = Object.values(dynamicFields).filter(v => v && v !== 'null' && v !== 'undefined').length;
 
   const toggleView = () => setActiveView(prev => prev === 'attributes' ? 'instructions' : 'attributes');
