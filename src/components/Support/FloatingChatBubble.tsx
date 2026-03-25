@@ -173,7 +173,7 @@ export function FloatingChatBubble() {
       {/* Chat Window - lazy loaded */}
       {isOpen && (
         <Suspense fallback={
-          <div className="fixed bottom-20 right-4 z-50 w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center">
+          <div className="fixed bottom-20 z-50 w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
