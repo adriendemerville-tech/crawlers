@@ -243,6 +243,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Persist taxonomy for tracked sites ──────────────────
+    if (tree.length > 0) {
+      try {
+        await persistTaxonomy(supabase, cleanDomain, tree, allUrls);
+      } catch (e) {
+        console.warn('[fetch-sitemap-tree] Taxonomy persistence failed:', e);
+      }
+    }
+
     return new Response(JSON.stringify({ ...result, cached: false }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
