@@ -8,7 +8,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
  * Pipeline obligatoire en 3 phases:
  *   1. DIAGNOSE: audit-expert-seo, cocoon-diag-*
  *   2. PRESCRIBE: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
- *   3. EXECUTE: wpsync (déploiement réel sur le CMS)
+ *   3. EXECUTE: wpsync (WordPress) OU iktracker-actions (IKtracker)
  * 
  * Chaque cycle avance d'une phase. Parménion ne recule jamais.
  * Les résultats de chaque phase alimentent la suivante.
@@ -26,8 +26,12 @@ type PipelinePhase = typeof PIPELINE_PHASES[number];
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   diagnose: ['audit-expert-seo', 'cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
-  execute: ['wpsync'],
+  execute: ['wpsync', 'iktracker-actions'],
 };
+
+function isIktrackerDomain(domain: string): boolean {
+  return domain.toLowerCase().includes('iktracker');
+}
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -50,6 +54,7 @@ serve(async (req: Request) => {
     }
 
     const supabase = getServiceClient();
+    const isIktracker = isIktrackerDomain(domain);
 
     // ═══ PHASE 0: Determine current pipeline phase ═══
     const { data: lastCompletedDecisions } = await supabase
@@ -69,12 +74,10 @@ serve(async (req: Request) => {
     const lastPhase = completedPhases[0] as PipelinePhase | undefined;
     
     if (lastPhase === 'diagnose') {
-      // Check if we have diagnostic results to work with
       const lastDiagnostic = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'diagnose' && d.execution_results);
       if (lastDiagnostic) {
         currentPhase = 'prescribe';
       }
-      // If diagnostic completed but no results, re-diagnose
     } else if (lastPhase === 'prescribe') {
       const lastPrescription = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'prescribe' && d.execution_results);
       if (lastPrescription) {
@@ -85,7 +88,7 @@ serve(async (req: Request) => {
       currentPhase = 'diagnose';
     }
 
-    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}`);
+    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
     // ═══ PHASE 1: Check error rate → conservative mode? ═══
     const { data: errorRateData } = await supabase.rpc('parmenion_error_rate', { p_domain: domain });
@@ -94,29 +97,24 @@ serve(async (req: Request) => {
 
     // ═══ PHASE 2: Gather context ═══
     const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes] = await Promise.all([
-      // Latest diagnostics
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
         .eq('tracked_site_id', tracked_site_id)
         .order('created_at', { ascending: false })
         .limit(4),
-      // Latest cocoon session
       supabase.from('cocoon_sessions')
         .select('cluster_summary, nodes_count, clusters_count, intent_distribution, avg_geo_score, avg_eeat_score, avg_content_gap, avg_cannibalization_risk')
         .eq('tracked_site_id', tracked_site_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      // Past errors for few-shot learning
       supabase.rpc('parmenion_recent_errors', { p_domain: domain }),
-      // Recommendation registry (existing prescriptions)
       supabase.from('audit_recommendations_registry')
         .select('title, category, priority, fix_type, fix_data, is_resolved')
         .eq('domain', domain)
         .eq('is_resolved', false)
         .order('created_at', { ascending: false })
         .limit(20),
-      // Raw audit data (diagnostic results)
       supabase.from('audit_raw_data')
         .select('audit_type, raw_payload, source_functions, created_at')
         .eq('domain', domain)
@@ -154,6 +152,7 @@ serve(async (req: Request) => {
       previousPhaseResults,
       pendingRecommendations,
       rawAuditData,
+      isIktracker,
     });
 
     if (!decision) {
@@ -161,14 +160,13 @@ serve(async (req: Request) => {
     }
 
     // ═══ PHASE 4: Validate functions against phase ═══
-    const allowedFunctions = PHASE_FUNCTIONS[currentPhase];
+    const allowedFunctions = [...PHASE_FUNCTIONS[currentPhase]];
     const validatedFunctions = decision.action.functions.filter((f: string) => allowedFunctions.includes(f));
     if (validatedFunctions.length === 0) {
-      // LLM chose wrong functions — force a sensible default for this phase
       console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
       if (currentPhase === 'diagnose') validatedFunctions.push('audit-expert-seo');
       else if (currentPhase === 'prescribe') validatedFunctions.push('generate-corrective-code');
-      else if (currentPhase === 'execute') validatedFunctions.push('wpsync');
+      else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
     }
     decision.action.functions = validatedFunctions;
 
@@ -228,7 +226,7 @@ serve(async (req: Request) => {
 
 interface ParmenionDecision {
   goal: { type: string; cluster_id?: string; description: string };
-  tactic: { initial_scope: any; final_scope: any; scope_reductions: number; estimated_tokens: number };
+  tactic: { initial_scope: any; final_scope: any; scope_reductions: number; estimated_tokens: number; target_url?: string };
   prudence: { impact_level: string; risk_score: number; iterations: number; goal_changed: boolean; reasoning: string };
   action: { type: string; payload: any; functions: string[] };
   summary: string;
@@ -246,6 +244,7 @@ async function askParmenionLLM(context: {
   previousPhaseResults: any[];
   pendingRecommendations: any[];
   rawAuditData: any[];
+  isIktracker: boolean;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -277,6 +276,59 @@ async function askParmenionLLM(context: {
       ).join('\n')}`
     : '';
 
+  // ═══ IKtracker-specific execute instructions ═══
+  const iktrackerExecuteInstructions = `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement sur iktracker.fr via l'API CMS.
+Fonction autorisée: iktracker-actions
+
+## ACTIONS CMS CONCRÈTES DISPONIBLES
+Tu DOIS choisir UNE ou PLUSIEURS de ces actions dans le payload:
+
+### Modifier une page existante
+action.payload = {
+  "cms_actions": [
+    { "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
+  ]
+}
+
+### Modifier un article existant (title, meta_description, content, excerpt)
+action.payload = {
+  "cms_actions": [
+    { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
+  ]
+}
+
+### Créer un nouvel article de blog
+action.payload = {
+  "cms_actions": [
+    { "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
+  ]
+}
+
+### Créer une nouvelle page
+action.payload = {
+  "cms_actions": [
+    { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
+  ]
+}
+
+## RÈGLES SPÉCIFIQUES IKTRACKER
+- Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
+- Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
+- Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
+- Tu peux combiner plusieurs cms_actions dans un seul payload
+- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
+- Le champ "functions" doit contenir ["iktracker-actions"]`;
+
+  const wpsyncExecuteInstructions = `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR LE SITE)
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER via le CMS.
+Fonction autorisée: wpsync
+Le payload doit contenir:
+- Les pages à modifier (URLs)
+- Le code correctif à injecter (meta tags, schema, contenu, liens internes)
+- Le mode de déploiement (update_post, update_meta, inject_schema)
+IMPORTANT: C'est l'étape finale. Tu dois déployer, pas diagnostiquer ni prescrire.`;
+
   const phaseInstructions: Record<PipelinePhase, string> = {
     diagnose: `## PHASE ACTUELLE: DIAGNOSE
 Tu dois lancer UN diagnostic pour identifier les problèmes concrets du site.
@@ -293,14 +345,7 @@ Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corre
 Le payload doit contenir les URLs et les correctifs précis à appliquer.
 IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`,
 
-    execute: `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR LE SITE)
-Les correctifs sont générés. Tu dois maintenant les APPLIQUER via le CMS.
-Fonction autorisée: wpsync
-Le payload doit contenir:
-- Les pages à modifier (URLs)
-- Le code correctif à injecter (meta tags, schema, contenu, liens internes)
-- Le mode de déploiement (update_post, update_meta, inject_schema)
-IMPORTANT: C'est l'étape finale. Tu dois déployer, pas diagnostiquer ni prescrire.`,
+    execute: context.isIktracker ? iktrackerExecuteInstructions : wpsyncExecuteInstructions,
   };
 
   const systemPrompt = `Tu es Parménion, moteur d'exécution AUTONOME de l'autopilote Crawlers.fr. Tu NE RECOMMANDES PAS, tu AGIS.
@@ -323,7 +368,7 @@ ${errorHistory}${previousResults}${pendingRecos}${rawData}
 ## FORMAT DE RÉPONSE (JSON strict, sans texte autour)
 {
   "goal": { "type": "...", "cluster_id": "...", "description": "..." },
-  "tactic": { "initial_scope": {...}, "final_scope": {...}, "scope_reductions": 0, "estimated_tokens": 0 },
+  "tactic": { "initial_scope": {...}, "final_scope": {...}, "scope_reductions": 0, "estimated_tokens": 0, "target_url": "..." },
   "prudence": { "impact_level": "...", "risk_score": 1, "iterations": 0, "goal_changed": false, "reasoning": "..." },
   "action": { "type": "...", "payload": {...}, "functions": ["..."] },
   "summary": "..."
@@ -333,6 +378,7 @@ ${errorHistory}${previousResults}${pendingRecos}${rawData}
 Cycle: ${context.cycle_number}
 Phase pipeline: ${context.currentPhase.toUpperCase()}
 Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
+CMS cible: ${context.isIktracker ? 'IKtracker (API Supabase)' : 'WordPress (wpsync)'}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
@@ -375,7 +421,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
                 goal: {
                   type: 'object',
                   properties: {
-                    type: { type: 'string', enum: ['cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment'] },
+                    type: { type: 'string', enum: ['cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment', 'meta_optimization'] },
                     cluster_id: { type: 'string' },
                     description: { type: 'string' },
                   },
@@ -388,6 +434,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
                     final_scope: { type: 'object' },
                     scope_reductions: { type: 'integer' },
                     estimated_tokens: { type: 'integer' },
+                    target_url: { type: 'string' },
                   },
                   required: ['initial_scope', 'final_scope', 'scope_reductions', 'estimated_tokens'],
                 },
