@@ -132,6 +132,7 @@ export function MarinaDashboard() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [totalCostEur, setTotalCostEur] = useState<number | null>(null);
   const [costBreakdown, setCostBreakdown] = useState<{ llm: number; api: number; jobs: number }>({ llm: 0, api: 0, jobs: 0 });
+  const [jobStats, setJobStats] = useState<{ total: number; failed: number }>({ total: 0, failed: 0 });
 
   // Fetch Marina costs from analytics_events (LLM tokens + paid API calls linked to marina functions)
   const fetchCosts = useCallback(async () => {
