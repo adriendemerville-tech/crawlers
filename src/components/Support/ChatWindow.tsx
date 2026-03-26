@@ -689,6 +689,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                   </div>
                 )}
 
+                {sending && (
                   <div className="flex justify-start">
                     <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
                       <div className="flex items-center gap-1.5 mb-0.5">
