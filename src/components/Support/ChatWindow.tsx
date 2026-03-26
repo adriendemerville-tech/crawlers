@@ -793,6 +793,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                   </div>
                 )}
 
+                {showAutonomyDiag && user && (
                   <AutonomyDiagnostic
                     userId={user.id}
                     persona={onboardingPersona}
