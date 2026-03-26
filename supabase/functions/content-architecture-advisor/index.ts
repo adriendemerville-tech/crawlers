@@ -365,9 +365,13 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
   },
   "internal_linking": {
     "recommended_internal_links": number,
-    "anchor_strategy": [{"anchor_text":"...","target_intent":"..."}],
-    "cluster_opportunities": ["..."]
+    "anchor_strategy": [{"anchor_text":"...","target_url":"https://...","target_intent":"...","placement_section":"Nom de la section"}],
+    "cluster_opportunities": ["..."],
+    "silo_reinforcement": "Comment ce contenu renforce le silo"
   },
+  "strategic_objectives_addressed": [
+    {"objective_type":"content_gap|eeat_improvement|new_keyword|internal_linking|silo_rebalance|cannibalization_fix|topical_authority|geo_visibility","addressed":true,"how":"Explication concrète","sections_involved":["Section 1","Section 3"]}
+  ],
   "geo_criteria_applied": [
     {"criterion": 1, "name": "Questions clés", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
     {"criterion": 2, "name": "Structure compréhension", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
