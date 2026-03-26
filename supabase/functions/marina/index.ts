@@ -1352,6 +1352,8 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
       console.warn(`[Marina] Cocoon failed (non-fatal):`, e);
     }
     
+    // Wait for LLM visibility if still running
+    await llmVisibilityPromise;
     await updateProgress(85, 'generating_report');
 
     // ─── Step 4: Generate individual HTML reports & store temporarily ───
