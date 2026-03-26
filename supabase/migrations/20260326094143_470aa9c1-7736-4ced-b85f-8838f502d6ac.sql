@@ -1,0 +1,2 @@
+ALTER TABLE quiz_questions DROP CONSTRAINT quiz_questions_quiz_type_check;
+ALTER TABLE quiz_questions ADD CONSTRAINT quiz_questions_quiz_type_check CHECK (quiz_type = ANY (ARRAY['seo_geo_llm'::text, 'crawlers'::text, 'stratege_cocoon'::text]));
