@@ -210,8 +210,8 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
 
       document.body.removeChild(iframe);
 
-      const urlForFilename = effectiveResult.url || result.url || '';
-      const domain = (() => { try { return new URL(urlForFilename.startsWith('http') ? urlForFilename : `https://${urlForFilename}`).hostname; } catch { return 'report'; } })();
+      const urlForFilename = effectiveResult.url || result.url || effectiveResult.domain || result.domain || '';
+      const domain = (() => { try { const u = urlForFilename.includes('.') ? urlForFilename : 'report'; return new URL(u.startsWith('http') ? u : `https://${u}`).hostname.replace(/^www\./, ''); } catch { return urlForFilename.replace(/^www\./, '').replace(/[^a-zA-Z0-9.-]/g, '_') || 'report'; } })();
       const { getReportFilename } = await import('@/utils/reportFilename');
       const auditType = auditMode === 'technical' ? 'audittechnique' as const : 'auditstrategique' as const;
       doc.save(getReportFilename(domain, auditType, 'pdf'));
