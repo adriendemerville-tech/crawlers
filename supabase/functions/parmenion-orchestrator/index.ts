@@ -556,19 +556,49 @@ Pour: scripts techniques (lazy loading, CLS fixes, schema JSON-LD, optimisations
 - NE METS JAMAIS iktracker-actions dans functions si tu n'as pas de cms_actions concrètes
 - Tu peux utiliser LES DEUX canaux en parallèle si tu as les deux types de correctifs
 
+## CHAMPS DISPONIBLES SUR IKTRACKER
+
+### Champs PAGES (create-page / update-page)
+| Champ | Type | Description |
+|-------|------|-------------|
+| title | string | Titre affiché de la page |
+| meta_title | string | Balise <title> SEO (si différent du title) |
+| meta_description | string | Meta description SEO |
+| content | object/string | Contenu HTML de la page |
+| canonical_url | string | URL canonique (si cross-posting ou duplicate) |
+| schema_org | object | Données structurées JSON-LD (FAQPage, HowTo, etc.) |
+| page_key | string | Identifiant unique / slug de la page |
+
+### Champs POSTS (create-post / update-post)
+| Champ | Type | Description |
+|-------|------|-------------|
+| title | string | Titre de l'article |
+| slug | string | URL slug en kebab-case sans accents |
+| content | string | Contenu HTML complet et riche |
+| excerpt | string | Résumé court affiché en listing/cards (2-3 phrases) |
+| meta_description | string | Meta description SEO (max 160 chars) |
+| meta_title | string | Balise <title> SEO si différent du title |
+| status | string | TOUJOURS "draft" — JAMAIS "published" |
+| author_name | string | Nom de l'auteur affiché (ex: "Équipe IKtracker") |
+| image_url | string | URL de l'image à la une (hero image) |
+| category | string | Catégorie de l'article (ex: "Guides", "Actualités", "Conseils fiscaux") |
+| tags | string[] | Tags/mots-clés associés |
+| canonical_url | string | URL canonique si republication |
+| schema_org | object | Données structurées JSON-LD (Article, BlogPosting, FAQPage) |
+
 ## ACTIONS CMS CONCRÈTES (CANAL 1 uniquement)
 
 ### Modifier une page existante
-{ "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
+{ "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_title": "...", "meta_description": "...", "content": "...", "canonical_url": "...", "schema_org": {...} } }
 
 ### Modifier un article existant
-{ "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
+{ "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_title": "...", "meta_description": "...", "content": "...", "excerpt": "...", "author_name": "...", "image_url": "...", "category": "...", "tags": [...], "schema_org": {...} } }
 
 ### Créer un nouvel article de blog (TOUJOURS EN BROUILLON)
-{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "draft", "meta_description": "..." } }
+{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "draft", "meta_description": "...", "meta_title": "...", "author_name": "Équipe IKtracker", "category": "...", "tags": ["...", "..."], "schema_org": { "@context": "https://schema.org", "@type": "BlogPosting", "headline": "...", "description": "...", "author": { "@type": "Organization", "name": "IKtracker" } } } }
 
 ### Créer une nouvelle page
-{ "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
+{ "action": "create-page", "body": { "title": "...", "page_key": "...", "content": "...", "meta_title": "...", "meta_description": "...", "schema_org": {...} } }
 
 ## RÈGLES POUR LA CRÉATION DE CONTENU (create-post)
 Quand tu crées un article pour combler un gap de contenu:
@@ -582,18 +612,25 @@ Quand tu crées un article pour combler un gap de contenu:
    - Vise 3 à 5 liens internes par article, vers les pages stratégiquement liées
    - Les ancres doivent être naturelles et descriptives (pas "cliquez ici")
 3. Inclus 1-2 liens EXTERNES vers des sources de référence si pertinent (documentation officielle, études)
-4. Rédige un excerpt/meta_description optimisé pour le SEO
+4. Rédige un excerpt ET une meta_description — ce sont DEUX champs distincts:
+   - excerpt: résumé affiché en listing (2-3 phrases, engageant)
+   - meta_description: optimisé SEO (max 160 chars, avec mot-clé principal)
 5. Le status DOIT être "draft" — JAMAIS "published". L'utilisateur validera manuellement.
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
+8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
+9. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
+10. author_name par défaut: "Équipe IKtracker"
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
-- Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
+- Le contenu DOIT être pertinent pour IKtracker (indemnités kilométriques, frais réels, gestion de trajets, fiscalité auto-entrepreneur)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
-- INTERDIT: publier directement un article (toujours draft)`;
+- INTERDIT: publier directement un article (toujours draft)
+- Catégories suggérées: "Guides", "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels"
+- Tags pertinents: "indemnités kilométriques", "frais réels", "barème IK", "déclaration impôts", "auto-entrepreneur", "trajets professionnels"`;
 }
 
 function buildWpsyncExecuteInstructions(): string {
