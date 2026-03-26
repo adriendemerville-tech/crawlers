@@ -373,6 +373,15 @@ Deno.serve(async (req: Request) => {
                     executionSuccess = false;
                   }
                 }
+              } else if (funcName === 'iktracker-actions') {
+                // iktracker-actions called without cms_actions → nothing to do, skip
+                console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions for ${site.domain}, skipping`);
+                executionResults.push({
+                  function: funcName,
+                  status: 'skipped',
+                  detail: 'No cms_actions in payload – nothing to execute on CMS',
+                });
+                continue;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
                 let funcBody: Record<string, unknown> = {
