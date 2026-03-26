@@ -206,7 +206,7 @@ export function FloatingChatBubble() {
       {/* Onboarding tooltip */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] z-50 max-w-[220px] rounded-xl bg-primary text-primary-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          className="fixed bottom-[72px] z-50 max-w-[220px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
           style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
           onClick={handleOpen}
         >
@@ -218,14 +218,14 @@ export function FloatingChatBubble() {
             ✕
           </button>
           👋 Bonjour, moi c'est Félix ! Veux-tu que je t'explique comment fonctionne Crawlers ?
-          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
+          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-violet-800 rotate-45" />
         </div>
       )}
 
       {/* Guest quiz suggestion tooltip */}
       {showGuestQuizSuggestion && !isOpen && !showOnboardingPulse && (
         <div
-          className="fixed bottom-[72px] z-50 max-w-[240px] rounded-xl bg-primary text-primary-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
+          className="fixed bottom-[72px] z-50 max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
           style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
         >
           <button
