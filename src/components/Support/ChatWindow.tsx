@@ -262,6 +262,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
       }
     };
     checkQuizInvite();
+  }, [user, isAdmin]);
 
   // Track post-chat navigation for quality scoring
   const trackPostChatRoute = useCallback(async (route: string) => {
