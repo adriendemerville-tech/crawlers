@@ -165,6 +165,8 @@ serve(async (req: Request) => {
       pendingRecommendations,
       rawAuditData,
       isIktracker,
+      siteKeywords,
+      siteInfo,
     });
 
     if (!decision) {
