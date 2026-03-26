@@ -5,6 +5,7 @@ import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 
@@ -1226,8 +1227,15 @@ Deno.serve(async (req) => {
       result.blockingError = selfAudit.reason;
     }
 
-    // Fire-and-forget URL tracking
+    // Fire-and-forget URL tracking + raw data capture
     trackAnalyzedUrl(normalizedUrl).catch(() => {});
+    saveRawAuditData({
+      url: normalizedUrl,
+      domain: new URL(normalizedUrl).hostname.replace(/^www\./, ''),
+      auditType: 'lead_magnet_geo',
+      rawPayload: { totalScore: rawTotalScore, factors: factors.map(f => ({ id: f.id, score: f.score, status: f.status })), reliabilityScore: selfAudit.reliabilityScore },
+      sourceFunctions: ['check-geo'],
+    }).catch(() => {});
 
     return new Response(
       JSON.stringify(result),
