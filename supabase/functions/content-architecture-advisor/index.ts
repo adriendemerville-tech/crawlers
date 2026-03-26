@@ -400,6 +400,40 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
 **Type de page:** ${page_type}
 **Langue:** ${language_code}
 
+${strategic_objectives?.length ? `
+── OBJECTIFS STRATÉGIQUES MULTIPLES ──
+Ce contenu doit servir SIMULTANÉMENT les objectifs suivants. Chaque objectif doit se refléter dans la structure, les liens et le contenu produit.
+
+${strategic_objectives.map((o, i) => `${i + 1}. [${o.type.toUpperCase()}] (Priorité: ${o.priority}) ${o.description}${o.related_urls?.length ? `\n   URLs liées: ${o.related_urls.join(', ')}` : ''}${o.related_keywords?.length ? `\n   Mots-clés associés: ${o.related_keywords.join(', ')}` : ''}`).join('\n\n')}
+
+RÈGLE: Chaque objectif doit être adressé concrètement dans le contenu. Un contenu qui ne sert qu'un seul objectif est un échec.
+` : ''}
+
+${target_internal_links?.length ? `
+── LIENS INTERNES OBLIGATOIRES ──
+Les URLs suivantes DOIVENT être liées depuis ce contenu avec des ancres contextuelles naturelles :
+${target_internal_links.map(l => `- ${l.url}${l.anchor_text ? ` (ancre suggérée: "${l.anchor_text}")` : ''}${l.reason ? ` — Raison: ${l.reason}` : ''}`).join('\n')}
+
+RÈGLE: Intègre ces liens dans le corps du texte de manière naturelle, pas dans une liste de liens en bas de page.
+` : ''}
+
+${cannibalization_data?.length ? `
+── DONNÉES DE CANNIBALISATION ──
+Les problèmes de cannibalisation suivants doivent être pris en compte dans l'architecture de ce contenu :
+${cannibalization_data.map(c => `- Mot-clé "${c.keyword}" : cannibalisé par ${c.competing_urls.join(', ')} (sévérité: ${c.severity})`).join('\n')}
+
+RÈGLE: Le contenu doit DIFFÉRENCIER clairement son angle éditorial de ces pages concurrentes internes. Utilise un intent différent, un angle complémentaire, et lie vers ces pages au lieu de les concurrencer.
+` : ''}
+
+${silo_context ? `
+── CONTEXTE DU SILO ──
+Cluster: ${silo_context.cluster_name}
+Pages existantes dans ce silo: ${silo_context.existing_pages.join(', ')}
+${silo_context.gap_description ? `Gap identifié: ${silo_context.gap_description}` : ''}
+
+RÈGLE: Le contenu doit renforcer ce silo thématique. Il doit lier vers les pages existantes du silo ET être conçu pour recevoir des liens depuis ces pages.
+` : ''}
+
 **Identité du site:**
 ${siteIdentity ? JSON.stringify(siteIdentity, null, 2) : 'Non disponible — recommandations génériques'}
 
