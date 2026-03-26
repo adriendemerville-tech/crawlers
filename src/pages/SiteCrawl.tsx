@@ -428,7 +428,7 @@ function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit, onClos
 
 export default function SiteCrawl() {
   const { user, loading } = useAuth();
-  const { balance: credits, isAgencyPro } = useCredits();
+  const { balance: credits, isAgencyPro, planType } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -445,7 +445,9 @@ export default function SiteCrawl() {
       return localStorage.getItem('crawl_last_url') || '';
     } catch { return ''; }
   });
-  const [maxPages, setMaxPages] = useState(isAdmin ? 50 : 20);
+  const isAgencyPlus = planType === 'agency_premium';
+  const maxSliderCap = isAdmin ? 50 : (isAgencyPlus ? 50 : 20);
+  const [maxPages, setMaxPages] = useState(maxSliderCap);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [pages, setPages] = useState<CrawlPage[]>([]);
@@ -497,7 +499,7 @@ export default function SiteCrawl() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [isButtonShaking, setIsButtonShaking] = useState(false);
   const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
-  const FAIR_USE_LIMIT = 5000;
+  const FAIR_USE_LIMIT = isAgencyPlus ? 50000 : 5000;
   const historySectionRef = useRef<HTMLDivElement | null>(null);
 
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
