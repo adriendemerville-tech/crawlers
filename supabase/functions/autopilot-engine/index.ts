@@ -441,6 +441,11 @@ Deno.serve(async (req: Request) => {
                   tracked_site_id: config.tracked_site_id,
                   language_code: payload.language_code || 'fr',
                   location_code: payload.location_code || 2250,
+                  // Multi-objective fields
+                  ...(payload.strategic_objectives && { strategic_objectives: payload.strategic_objectives }),
+                  ...(payload.target_internal_links && { target_internal_links: payload.target_internal_links }),
+                  ...(payload.cannibalization_data && { cannibalization_data: payload.cannibalization_data }),
+                  ...(payload.silo_context && { silo_context: payload.silo_context }),
                 };
 
                 console.log(`[AutopilotEngine] Calling content-architecture-advisor for ${site.domain}, keyword: ${funcBody.keyword}`);

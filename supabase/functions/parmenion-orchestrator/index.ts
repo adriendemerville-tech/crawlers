@@ -454,15 +454,40 @@ Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corre
 → Utilise generate-corrective-code
 → Payload: tableau "fixes" avec id, label, category, prompt, enabled, target_url
 
-### TYPE B: Création de contenu (combler des gaps thématiques)
+### TYPE B: Création de contenu (multi-objectifs)
 → Utilise content-architecture-advisor pour générer l'architecture du contenu
-→ Payload: { "url": "https://domain.tld", "keyword": "mot-clé-cible", "page_type": "article", "tracked_site_id": "..." }
-→ Le résultat sera utilisé en phase EXECUTE pour créer l'article sur le CMS
+→ Payload ENRICHI:
+{
+  "url": "https://domain.tld",
+  "keyword": "mot-clé-cible",
+  "page_type": "article",
+  "tracked_site_id": "...",
+  "strategic_objectives": [
+    { "type": "content_gap", "description": "Combler le gap sur X", "priority": "high", "related_keywords": ["kw1", "kw2"] },
+    { "type": "internal_linking", "description": "Renforcer le maillage vers /page-A et /page-B", "priority": "high", "related_urls": ["https://domain.tld/page-A"] },
+    { "type": "eeat_improvement", "description": "Démontrer l'expertise sur le sujet Y", "priority": "medium" },
+    { "type": "silo_rebalance", "description": "Rééquilibrer le cluster Z", "priority": "medium" },
+    { "type": "cannibalization_fix", "description": "Différencier de /page-C qui cannibalise le mot-clé W", "priority": "high" }
+  ],
+  "target_internal_links": [
+    { "url": "https://domain.tld/page-cible", "anchor_text": "texte d'ancre suggéré", "reason": "page pilier du silo" }
+  ],
+  "cannibalization_data": [
+    { "keyword": "mot-clé cannibalisé", "competing_urls": ["https://domain.tld/page-A", "https://domain.tld/page-B"], "severity": "high" }
+  ],
+  "silo_context": {
+    "cluster_name": "Nom du cluster",
+    "existing_pages": ["https://domain.tld/p1", "https://domain.tld/p2"],
+    "gap_description": "Description du trou dans le silo"
+  }
+}
 
-Si les diagnostics révèlent des CONTENT GAPS (avg_content_gap élevé, clusters orphelins, thématiques non couvertes):
-- Prescris un appel à content-architecture-advisor avec le mot-clé cible du gap
-- Le cocon sémantique fournit les clusters et intents à couvrir — utilise-les pour identifier le meilleur gap à combler
-- Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
+RÈGLES POUR CONSTRUIRE LE PAYLOAD:
+1. Un contenu doit TOUJOURS servir AU MOINS 2 objectifs stratégiques (ex: gap + maillage, ou nouveau mot-clé + E-E-A-T)
+2. Utilise les données du cocon sémantique pour remplir target_internal_links avec les URLs concrètes des pages du cluster
+3. Si le diagnostic révèle une cannibalisation, INCLUS les données dans cannibalization_data
+4. Si le contenu s'inscrit dans un silo, INCLUS le silo_context avec les pages existantes
+5. Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
 
 ## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
 Le payload DOIT contenir un tableau "fixes" avec ce format exact:
