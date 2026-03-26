@@ -31,6 +31,24 @@ export async function getAuthenticatedUser(req: Request): Promise<AuthContext | 
   const authHeader = req.headers.get('Authorization') || '';
   if (!authHeader.startsWith('Bearer ')) return null;
 
+  const token = authHeader.replace('Bearer ', '');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  // Service role bypass: internal calls from autopilot-engine etc.
+  if (serviceRoleKey && token === serviceRoleKey) {
+    const supabase = getServiceClient();
+    const userClient = getUserClient(authHeader);
+    return {
+      userId: 'service-role',
+      email: 'system@crawlers.fr',
+      isAdmin: true,
+      planType: 'agency_pro',
+      subscriptionStatus: 'active',
+      supabase,
+      userClient,
+    };
+  }
+
   const userClient = getUserClient(authHeader);
   const { data: { user }, error } = await userClient.auth.getUser();
   if (error || !user) return null;
