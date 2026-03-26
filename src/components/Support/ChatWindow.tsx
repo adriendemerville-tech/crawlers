@@ -722,6 +722,24 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                   </div>
                 )}
 
+                {/* Quiz validation for admin creators */}
+                {showQuizValidation && isAdmin && (
+                  <div className="flex justify-start w-full">
+                    <div className="max-w-[95%] w-full">
+                      <QuizValidationNotif
+                        onDone={(msg) => {
+                          setShowQuizValidation(false);
+                          setMessages(prev => [...prev, {
+                            role: 'assistant',
+                            content: msg,
+                            timestamp: new Date().toISOString(),
+                          }]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {sending && (
                   <div className="flex justify-start">
                     <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2">
