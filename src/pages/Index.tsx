@@ -611,6 +611,7 @@ const Index = () => {
               </p>
               <div className="flex flex-col items-center gap-4 mb-6">
                 <div className="flex items-baseline gap-1">
+                  <span className="text-sm text-muted-foreground mr-1">{language === 'fr' ? 'à partir de' : language === 'es' ? 'desde' : 'from'}</span>
                   <span className="text-4xl font-extrabold text-foreground">59€</span>
                   <span className="text-lg text-muted-foreground">/mois</span>
                 </div>
