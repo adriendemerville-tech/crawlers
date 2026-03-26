@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2 } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { MarinaReportPreviewModal } from './MarinaReportPreviewModal';
+import { toast as sonnerToast } from 'sonner';
 
 interface MarinaJob {
   id: string;
@@ -37,6 +38,70 @@ const phaseLabels: Record<string, string> = {
   generating_report: '📄 Génération du rapport…',
   initializing: '⏳ Initialisation…',
 };
+
+function CopyTemporaryLinkButton({ reportUrl, domain }: { reportUrl: string; domain: string }) {
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [cachedLink, setCachedLink] = useState<string | null>(null);
+
+  const handleCopy = async () => {
+    if (cachedLink) {
+      await navigator.clipboard.writeText(cachedLink);
+      setCopied(true);
+      sonnerToast.success('Lien temporaire copié !');
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Fetch the HTML content from the report URL to create a share
+      const res = await fetch(reportUrl);
+      if (!res.ok) throw new Error('Failed to fetch report');
+      const html = await res.text();
+
+      const { data, error } = await supabase.functions.invoke('share-actions', {
+        body: {
+          action: 'create',
+          type: 'marina',
+          url: domain,
+          data: {},
+          language: 'fr',
+          preRenderedHtml: html,
+        },
+      });
+      if (error) throw error;
+
+      const shareId = data?.shareId || data?.shareUrl?.split('/').pop();
+      if (!shareId) throw new Error('No share ID');
+
+      const link = `https://crawlers.fr/temporarylink/${shareId}`;
+      setCachedLink(link);
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      sonnerToast.success('Lien temporaire copié !');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy link error:', err);
+      // Fallback: copy the raw report URL
+      await navigator.clipboard.writeText(reportUrl);
+      sonnerToast.info('Lien direct copié (fallback)');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      disabled={loading}
+      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+      title="Copier le lien temporaire du rapport"
+    >
+      {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+    </button>
+  );
+}
 
 export function MarinaDashboard() {
   const { toast } = useToast();
@@ -304,16 +369,7 @@ export function MarinaDashboard() {
                           )}
                           {result?.report_url && (
                             <>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(result.report_url);
-                                  toast({ title: '📋 Lien copié', description: 'Lien du rapport copié dans le presse-papier' });
-                                }}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                title="Copier le lien du rapport"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
+                              <CopyTemporaryLinkButton reportUrl={result.report_url} domain={payload?.url || result?.url || result?.domain || ''} />
                               <button
                                 onClick={() => handleOpenReport(result.report_url, payload?.url || result?.url || 'rapport')}
                                 className="text-[10px] text-primary flex items-center gap-1 hover:underline"
