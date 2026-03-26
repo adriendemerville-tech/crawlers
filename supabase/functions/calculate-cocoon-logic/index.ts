@@ -275,6 +275,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+    let isAdmin = isServiceCall;
     
     let userId: string | null = null;
     if (isServiceCall) {
@@ -299,10 +300,12 @@ Deno.serve(async (req) => {
 
     // ─── Plan check (skip for service role calls) ───
     if (!isServiceCall) {
-      const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+      const [{ data: profile }, { data: isAdminUser }] = await Promise.all([
         supabase.from("profiles").select("plan_type").eq("user_id", userId).maybeSingle(),
         supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
       ]);
+
+      isAdmin = !!isAdminUser;
 
       if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
         return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
