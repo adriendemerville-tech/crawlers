@@ -1271,20 +1271,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // Ensure tracked_site exists
       let trackedSiteId: string | null = null;
       {
+        // Use .limit(1).single() to avoid maybeSingle() error when multiple rows match
         const { data: ts } = await sb
           .from('tracked_sites')
           .select('id')
           .eq('domain', domain)
+          .limit(1)
           .maybeSingle();
         if (ts) {
           trackedSiteId = ts.id;
+          console.log(`[Marina] Found tracked_site ${ts.id} for ${domain}`);
         } else {
-          const { data: newTs } = await sb
+          console.log(`[Marina] No tracked_site for ${domain}, creating one...`);
+          const { data: newTs, error: insertErr } = await sb
             .from('tracked_sites')
             .insert({ user_id: parentJob.user_id, domain, site_name: `Marina: ${domain}` })
             .select('id')
             .single();
-          trackedSiteId = newTs?.id || null;
+          if (insertErr) {
+            console.warn(`[Marina] Failed to create tracked_site: ${insertErr.message}`);
+            // Retry lookup — might have been created concurrently
+            const { data: retryTs } = await sb
+              .from('tracked_sites')
+              .select('id')
+              .eq('domain', domain)
+              .limit(1)
+              .maybeSingle();
+            trackedSiteId = retryTs?.id || null;
+          } else {
+            trackedSiteId = newTs?.id || null;
+          }
         }
       }
 
@@ -1409,8 +1425,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .from('tracked_sites')
           .select('id')
           .eq('domain', domain)
+          .limit(1)
           .maybeSingle();
         trackedSiteId = ts?.id || null;
+        console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
 
       const llmVisibilityPromise = (async () => {
