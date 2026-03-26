@@ -1177,13 +1177,36 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
 
     // ─── Step 2b: Real LLM Visibility benchmark (parallel with cocoon) ───
     let llmVisibilityData: any = null;
+    // We need tracked_site_id for LLM visibility — fetch or create it first
+    let trackedSiteForLlm: { id: string } | null = null;
+    {
+      const { data: ts } = await sb
+        .from('tracked_sites')
+        .select('id')
+        .eq('domain', domain)
+        .maybeSingle();
+      if (ts) {
+        trackedSiteForLlm = ts;
+      } else {
+        const { data: newTs } = await sb
+          .from('tracked_sites')
+          .insert({ user_id: parentJob.user_id, domain, site_name: `Marina: ${domain}` })
+          .select('id')
+          .single();
+        trackedSiteForLlm = newTs;
+      }
+    }
+
     const llmVisibilityPromise = (async () => {
+      if (!trackedSiteForLlm) {
+        console.warn(`[Marina] Skipping LLM visibility: no tracked_site`);
+        return;
+      }
       try {
         console.log(`[Marina] Step 2b: calculate-llm-visibility for ${domain}`);
         const result = await callFunction('calculate-llm-visibility', {
-          url,
-          domain,
-          _marina: true,
+          tracked_site_id: trackedSiteForLlm.id,
+          user_id: parentJob.user_id,
         });
         if (result && !result.error && result.scores) {
           llmVisibilityData = result;
@@ -1217,8 +1240,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
           .insert({
             user_id: parentJob.user_id,
             domain: domain,
-            url: url,
-            source: 'marina',
+            site_name: `Marina: ${domain}`,
           })
           .select('id')
           .single();
