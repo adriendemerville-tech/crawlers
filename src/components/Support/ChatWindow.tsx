@@ -700,7 +700,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
               window.dispatchEvent(new Event('felix_mute_changed'));
               setFelixMuted(!current);
             }}
-            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+            className={`h-6 px-1.5 flex items-center justify-center gap-1 rounded-md text-[10px] font-medium transition-all ${felixMuted ? 'bg-muted text-muted-foreground' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-muted-foreground'}`}
             title={felixMuted ? 'Réactiver les notifications' : 'Couper les notifications'}
           >
             {felixMuted ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3" />}
