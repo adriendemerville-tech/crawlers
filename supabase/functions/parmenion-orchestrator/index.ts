@@ -130,6 +130,16 @@ serve(async (req: Request) => {
     const pendingRecommendations = recoRegistryRes.data || [];
     const rawAuditData = auditRawRes.data || [];
 
+    // Extract the site's keyword universe
+    const siteKeywords: string[] = [];
+    const serpKpis = (siteKeywordsRes as any)?.data?.result_data;
+    if (serpKpis?.sample_keywords) {
+      for (const kw of serpKpis.sample_keywords) {
+        if (kw.keyword) siteKeywords.push(kw.keyword);
+      }
+    }
+    const siteInfo = (siteInfoRes as any)?.data || null;
+
     // Collect execution results from previous phases in this pipeline run
     const previousPhaseResults = (lastCompletedDecisions || [])
       .filter(d => d.execution_results)
