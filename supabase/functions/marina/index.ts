@@ -1284,7 +1284,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
             // Call crawl-site to create the crawl job (bypasses auth for service calls)
             const crawlLaunchRes = await callFunction('crawl-site', {
               url: url,
-              maxPages: 50,
+              maxPages: 20,
               userId: parentJob.user_id,
             });
             
@@ -1292,10 +1292,10 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
               const crawlId = crawlLaunchRes.crawlId;
               console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages (${crawlLaunchRes.newPages || '?'} new, ${crawlLaunchRes.reusedPages || 0} reused)`);
               
-              // Poll until crawl completes (max 5 minutes)
+              // Poll until crawl completes (max 3 minutes — Edge Function has ~6 min total)
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 300_000; // 5 min
-              const CRAWL_POLL_MS = 5_000;
+              const CRAWL_TIMEOUT_MS = 180_000; // 3 min
+              const CRAWL_POLL_MS = 4_000;
               let crawlDone = false;
               
               while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
