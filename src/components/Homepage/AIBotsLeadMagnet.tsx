@@ -426,7 +426,7 @@ export function AIBotsLeadMagnet() {
                     : "border-destructive/30 bg-destructive/5"
                 )}
               >
-                <div className="text-lg">{LLM_ICONS[r.llm_name] || '🤖'}</div>
+                
                 <div className="text-xs font-semibold text-foreground">{r.llm_name}</div>
                 <div className={cn(
                   "text-[10px] font-bold uppercase tracking-wider",
