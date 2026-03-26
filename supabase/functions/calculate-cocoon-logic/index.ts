@@ -656,7 +656,7 @@ Deno.serve(async (req) => {
 
     // Cannibalization detection: nodes sharing >60% keywords within a cluster
     const cannibalizationRisks: Array<{ urls: string[]; shared_keywords: string[]; cluster: string }> = [];
-    for (const [cid, nodes] of clusterMap.entries()) {
+    for (const [cid, nodes] of clusterDetailMap.entries()) {
       if (nodes.length < 2) continue;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
