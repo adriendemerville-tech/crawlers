@@ -5229,11 +5229,17 @@ export type Database = {
           created_at: string
           difficulty: number
           explanation: string
+          explanation_en: string | null
+          explanation_es: string | null
           feature_link: string | null
           id: string
           is_active: boolean
           options: Json
+          options_en: Json | null
+          options_es: Json | null
           question: string
+          question_en: string | null
+          question_es: string | null
           quiz_type: string
           updated_at: string
         }
@@ -5244,11 +5250,17 @@ export type Database = {
           created_at?: string
           difficulty: number
           explanation: string
+          explanation_en?: string | null
+          explanation_es?: string | null
           feature_link?: string | null
           id?: string
           is_active?: boolean
           options?: Json
+          options_en?: Json | null
+          options_es?: Json | null
           question: string
+          question_en?: string | null
+          question_es?: string | null
           quiz_type: string
           updated_at?: string
         }
@@ -5259,11 +5271,17 @@ export type Database = {
           created_at?: string
           difficulty?: number
           explanation?: string
+          explanation_en?: string | null
+          explanation_es?: string | null
           feature_link?: string | null
           id?: string
           is_active?: boolean
           options?: Json
+          options_en?: Json | null
+          options_es?: Json | null
           question?: string
+          question_en?: string | null
+          question_es?: string | null
           quiz_type?: string
           updated_at?: string
         }
