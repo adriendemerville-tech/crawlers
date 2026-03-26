@@ -4,6 +4,7 @@ import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 
 const AI_BOTS = [
   { name: 'GPTBot', userAgent: 'GPTBot', company: 'OpenAI' },
@@ -264,8 +265,15 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Fire-and-forget URL tracking
+    // Fire-and-forget URL tracking + raw data capture
     trackAnalyzedUrl(normalizedUrl).catch(() => {});
+    saveRawAuditData({
+      url: normalizedUrl,
+      domain: urlObj.hostname.replace(/^www\./, ''),
+      auditType: 'lead_magnet_bots',
+      rawPayload: { bots, httpStatus, hasRobotsTxt: !!robotsTxt },
+      sourceFunctions: ['check-crawlers'],
+    }).catch(() => {});
 
     return new Response(
       JSON.stringify(result),
