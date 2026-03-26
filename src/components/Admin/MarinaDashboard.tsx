@@ -39,6 +39,70 @@ const phaseLabels: Record<string, string> = {
   initializing: '⏳ Initialisation…',
 };
 
+function CopyTemporaryLinkButton({ reportUrl, domain }: { reportUrl: string; domain: string }) {
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [cachedLink, setCachedLink] = useState<string | null>(null);
+
+  const handleCopy = async () => {
+    if (cachedLink) {
+      await navigator.clipboard.writeText(cachedLink);
+      setCopied(true);
+      sonnerToast.success('Lien temporaire copié !');
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Fetch the HTML content from the report URL to create a share
+      const res = await fetch(reportUrl);
+      if (!res.ok) throw new Error('Failed to fetch report');
+      const html = await res.text();
+
+      const { data, error } = await supabase.functions.invoke('share-actions', {
+        body: {
+          action: 'create',
+          type: 'marina',
+          url: domain,
+          data: {},
+          language: 'fr',
+          preRenderedHtml: html,
+        },
+      });
+      if (error) throw error;
+
+      const shareId = data?.shareId || data?.shareUrl?.split('/').pop();
+      if (!shareId) throw new Error('No share ID');
+
+      const link = `https://crawlers.fr/temporarylink/${shareId}`;
+      setCachedLink(link);
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      sonnerToast.success('Lien temporaire copié !');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy link error:', err);
+      // Fallback: copy the raw report URL
+      await navigator.clipboard.writeText(reportUrl);
+      sonnerToast.info('Lien direct copié (fallback)');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      disabled={loading}
+      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+      title="Copier le lien temporaire du rapport"
+    >
+      {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+    </button>
+  );
+}
+
 export function MarinaDashboard() {
   const { toast } = useToast();
   const [jobs, setJobs] = useState<MarinaJob[]>([]);
