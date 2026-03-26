@@ -542,7 +542,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string): string {
+function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any): string {
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
@@ -555,7 +555,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const geoReadiness = strategicData?.geo_readiness || strategicData?.geo_score || null;
   const keywordPos = strategicData?.keyword_positioning || strategicData?.keywordPositioning || null;
   const marketData = strategicData?.market_data_summary || strategicData?.marketDataSummary || null;
-  const llmVisibility = strategicData?.llm_visibility_raw || null;
+  const llmVisibility = llmRealData || strategicData?.llm_visibility_raw || null;
   const llmVisibilityStrategic = strategicData?.llm_visibility || null;
   const quotability = strategicData?.quotability || null;
   const summaryResilience = strategicData?.summary_resilience || null;
