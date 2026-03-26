@@ -5,6 +5,10 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { getDomainContext } from '../_shared/getDomainContext.ts';
+import { STRATEGIST_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from '../_shared/agentPersonas.ts';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
+import { getDomainContext } from '../_shared/getDomainContext.ts';
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -68,25 +72,7 @@ serve(async (req) => {
         const aLevel = (prof as any)?.autonomy_level;
         const aScore = (prof as any)?.autonomy_score;
         if (aLevel && aScore != null) {
-          const hints: Record<string, string> = {
-            beginner: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Débutant) :
-- Langage SIMPLE et pédagogique, explique chaque terme SEO utilisé
-- DÉCOUPE tes réponses en PLUSIEURS messages courts plutôt qu'un seul pavé. Un concept par message.
-- Après 2-3 messages d'explication, pose une question de vérification : "Tu suis ?" / "C'est clair ?" / "Tu vois l'idée ?"
-- Exemples concrets et analogies pour chaque concept
-- Sois proactif : guide l'utilisateur vers la prochaine action
-- Ton didactique : comme un formateur bienveillant, pas un robot
-- Encourage et rassure`,
-            intermediate: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Intermédiaire) :
-- Langage professionnel, jargon SEO OK mais explique les termes avancés
-- Messages équilibrés, va à l'essentiel avec contexte suffisant
-- Propose des options, laisse l'utilisateur décider`,
-            expert: `\n\nADAPTATION AUTONOMIE (Score: ${aScore}/100 — Expert) :
-- CONCIS et technique, jargon SEO/GEO direct, pas de vulgarisation
-- Messages courts et denses, données brutes privilégiées
-- Traite l'utilisateur comme un pair professionnel`,
-          };
-          autonomyBlock = hints[aLevel] || '';
+          autonomyBlock = '\n\n' + getAutonomyBlock(aLevel, aScore);
         }
       } catch (e) {
         console.warn('[cocoon-chat] Could not fetch autonomy:', e);
