@@ -237,12 +237,12 @@ export function FloatingChatBubble() {
           </button>
           🧠 Ça te dit de tester tes connaissances SEO en 2 min ?
           <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => { setShowGuestQuizSuggestion(false); setAutoStartCrawlersQuiz(true); setIsOpen(true); }}
-              className="px-2.5 py-1 rounded-md bg-primary-foreground text-primary text-[11px] font-semibold hover:opacity-90 transition-opacity"
-            >
-              D'accord !
-            </button>
+              <button
+                onClick={() => { setShowGuestQuizSuggestion(false); setAutoStartCrawlersQuiz(true); setIsOpen(true); }}
+                className="px-2.5 py-1 rounded-md bg-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity text-[#8121e8]"
+              >
+                D'accord !
+              </button>
             <button
               onClick={() => setShowGuestQuizSuggestion(false)}
               className="px-2.5 py-1 rounded-md border border-primary-foreground/30 text-primary-foreground text-[11px] font-medium hover:bg-primary-foreground/10 transition-colors"
