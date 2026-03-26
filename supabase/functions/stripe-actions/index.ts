@@ -174,7 +174,7 @@ async function handleSubscriptionPremium(req: Request) {
     .single();
 
   if (profile?.subscription_status === "active" && profile?.plan_type === "agency_premium") {
-    return json({ error: "Vous avez déjà un abonnement Pro Agency Premium actif." }, 400);
+    return json({ error: "Vous avez déjà un abonnement Pro Agency + actif." }, 400);
   }
 
   const customers = await stripe.customers.list({ email: auth.user.email, limit: 1 });
