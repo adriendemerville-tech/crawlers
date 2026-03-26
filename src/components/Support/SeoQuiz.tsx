@@ -18,6 +18,7 @@ interface SeoQuizProps {
   questions: QuizQuestion[];
   answerKey: AnswerKey;
   quizTitle?: string;
+  theme?: 'violet' | 'gold';
   onComplete: (score: number, total: number, wrongAnswers: { question: string; correct: string; explanation: string; feature_link?: string }[]) => void;
   onRequestCrawlersQuiz?: () => void;
 }
