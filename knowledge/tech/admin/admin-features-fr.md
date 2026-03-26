@@ -124,9 +124,10 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `strategic-orchestrator` : Pipeline modulaire audit GEO (5 micro-fonctions)
 - `strategic-crawl` / `strategic-market` / `strategic-competitors` / `strategic-synthesis` : Micro-fonctions du pipeline
 - `run-backend-tests` : 12 tests CI (sécurité, facturation, audit, tracking)
-- `felix-seo-quiz` : Quiz adaptatif SEO/GEO/LLM + Quiz Crawlers (tire depuis `quiz_questions`)
+- `felix-seo-quiz` : Quiz adaptatif SEO/GEO/LLM + Quiz Crawlers + Quiz Stratège Cocoon. Mélange aléatoire de la position des bonnes réponses (`shuffleOptions`) à chaque requête. Actions : `get_questions`, `get_crawlers_quiz`, `get_stratege_cocoon_quiz`, `get_last_score`.
 - `sync-quiz-crawlers` : Cron mensuel (1er du mois, 3h) — régénère 10 questions Crawlers via LLM + doc SAV, sauvées `is_active=false` en attente de validation admin dans Félix
 - `felix-weekly-quiz-notif` : Cron hebdomadaire (lundi 10h) — insère `felix:quiz_invite` dans `analytics_events` pour les users actifs n'ayant pas fait de quiz depuis 7 jours. Félix détecte et affiche la notification d'invitation.
+- **Quiz visiteurs non connectés** : Sur la home, 5s après la 1ère visite, Félix propose le quiz Crawlers via tooltip avec boutons "D'accord !" / "Plus tard." (sessionStorage `felix_guest_quiz_suggested`). Le quiz se lance directement dans le chat via `autoStartCrawlersQuiz` prop.
 
 ### Fallback LLM (Gemini Pro → Flash)
 - `strategic-synthesis` et `audit-strategique-ia` intègrent un fallback automatique

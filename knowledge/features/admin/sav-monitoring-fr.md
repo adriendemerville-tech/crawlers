@@ -28,15 +28,19 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
   - Distribution pondérée : débutant (score ≤3) → majorité faciles ; expert (score ≥8) → majorité difficiles
   - 10 questions par session, 3 réponses par question
   - Score final + corrections détaillées + conseil personnalisé
+  - **Mélange aléatoire des réponses** : la position de la bonne réponse est randomisée côté serveur (jamais toujours en A)
 - **Quiz Crawlers** : 50 questions produit en base, difficulté 1-3
   - Déclenchement : détection NLP ("quiz crawlers", "quiz produit", "quiz plateforme", "quiz outils", etc.)
-  - Proposé automatiquement après le quiz SEO ("Tape quiz crawlers pour lancer")
+  - Proposé automatiquement après le quiz SEO via boutons "D'accord !" / "Plus tard."
+  - **Suggestion proactive visiteurs** : sur la home, 5s après la 1ère visite d'un utilisateur non connecté, bulle tooltip avec boutons "D'accord !" / "Plus tard." pour lancer le quiz directement
+  - **Suggestion proactive session** : après 3+ questions how-to sur les outils Crawlers dans une session, Félix propose le quiz avec boutons interactifs (pas de commande à taper)
   - Couvre toutes les fonctionnalités : audit, crawl, cocon, Marina, scripts, tracking, etc.
+  - **Mélange aléatoire des réponses** : idem SEO quiz
   - **Sync automatique** : cron mensuel `sync-quiz-crawlers` (1er du mois, 3h) régénère 10 questions via LLM à partir de la doc SAV et des questions existantes. Insertion en `is_active=false, auto_generated=true` (validation admin requise).
 - **Notification hebdomadaire quiz** : cron backend `felix-weekly-quiz-notif` (lundi 10h) insère un événement `felix:quiz_invite` pour les users actifs n'ayant pas fait de quiz depuis 7 jours. Félix détecte l'événement à l'ouverture et affiche : "Ça te dit de tester tes connaissances en SEO GEO ? 3 minutes max."
 - Table : `quiz_questions` (quiz_type, category, difficulty, question, options, correct_index, explanation, feature_link, is_active, auto_generated)
 - Edge Functions :
-  - `felix-seo-quiz` (actions: get_questions, get_crawlers_quiz, get_last_score)
+  - `felix-seo-quiz` (actions: get_questions, get_crawlers_quiz, get_stratege_cocoon_quiz, get_last_score) — mélange aléatoire des options à chaque requête
   - `sync-quiz-crawlers` (cron mensuel, génération IA de questions Crawlers)
   - `felix-weekly-quiz-notif` (cron hebdomadaire, notification quiz pour users actifs)
 
