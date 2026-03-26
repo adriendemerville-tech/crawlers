@@ -208,6 +208,147 @@ function buildModuleSection(title: string, emoji: string, data: any): string {
   </div>`;
 }
 
+function normalizeUrl(value: string | null | undefined, base?: string): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value, base).href.replace(/\/+$/, '').toLowerCase();
+  } catch {
+    return value.replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoData: any, domain: string) {
+  const scores = expertSeoData?.scores || {};
+  const rawData = expertSeoData?.rawData || {};
+  const htmlAnalysis = rawData?.htmlAnalysis || {};
+  const linkProfile = htmlAnalysis?.insights?.linkProfile || {};
+  const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
+  const normalizedHome = normalizeUrl(`https://${domain}`);
+
+  const primaryPage = crawlPages.find((page) => {
+    const normalizedPage = normalizeUrl(page?.url);
+    return normalizedPage === normalizedHome || normalizedPage === `${normalizedHome}/index`;
+  }) || crawlPages[0] || null;
+
+  const totalWordCount = crawlPages.reduce((sum, page) => sum + Number(page?.word_count || 0), 0);
+  const totalInternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.internal_links || 0), 0);
+  const totalExternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.external_links || 0), 0);
+  const brokenPages = crawlPages.filter((page) => Number(page?.http_status || 200) >= 400).length;
+
+  const title = primaryPage?.title || htmlAnalysis?.titleContent || '';
+  const metaDesc = primaryPage?.meta_description || htmlAnalysis?.metaDescContent || '';
+  const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
+
+  return {
+    pagesFound: Number(crawl?.crawled_pages || crawlPages.length || 1),
+    avgSeoScore: crawl?.avg_score ? Math.round(Number(crawl.avg_score)) : null,
+    avgResponseTime: rawData?.responseTimeMs || null,
+    wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
+    imagesTotal: primaryPage?.images_total ?? htmlAnalysis?.imagesTotal ?? 0,
+    imagesWithoutAlt: primaryPage?.images_missing_alt ?? htmlAnalysis?.imagesMissingAlt ?? 0,
+    h1,
+    h2Count: primaryPage?.h2_count ?? htmlAnalysis?.h2Count ?? 0,
+    hasSchema: htmlAnalysis?.hasSchemaOrg || false,
+    hasOg: htmlAnalysis?.hasOg || false,
+    hasCanonical: htmlAnalysis?.hasCanonical || false,
+    brokenLinks: brokenPages || rawData?.brokenLinks?.length || brokenLinksInsight?.broken?.length || 0,
+    externalLinks: totalExternalLinks || linkProfile?.external || 0,
+    internalLinks: totalInternalLinks || linkProfile?.internal || 0,
+    indexable: htmlAnalysis?.isIndexable !== false,
+    performanceScore: scores?.performance?.psiPerformance || null,
+    lcp: scores?.performance?.lcp || null,
+    tbt: scores?.performance?.tbt || null,
+    cls: scores?.performance?.cls || null,
+    fcp: scores?.performance?.fcp || null,
+    title,
+    titleLength: title.length,
+    metaDesc,
+    metaDescLength: metaDesc.length,
+    h1Contents: h1 ? [h1] : (htmlAnalysis?.h1Contents || []),
+    h2Contents: primaryPage?.h2_contents || htmlAnalysis?.h2Contents || [],
+    h3Count: primaryPage?.h3_count ?? htmlAnalysis?.h3Count ?? 0,
+    schemaTypes: scores?.aiReady?.schemaTypes || [],
+    hasRobotsTxt: scores?.aiReady?.hasRobotsTxt || false,
+    robotsPermissive: scores?.aiReady?.robotsPermissive || false,
+    isHttps: scores?.technical?.isHttps || false,
+    httpStatus: scores?.technical?.httpStatus || 200,
+  };
+}
+
+function hydrateCocoonReportData(cocoonResult: any, semanticNodes: any[]) {
+  if (!cocoonResult || !semanticNodes?.length) return cocoonResult;
+
+  const nodes = semanticNodes.map((node) => ({
+    url: node.url,
+    title: node.title,
+    intent: node.intent,
+    page_authority: node.page_authority,
+    internal_links_in: node.internal_links_in,
+    internal_links_out: node.internal_links_out,
+    cluster_id: node.cluster_id,
+    word_count: node.word_count,
+    eeat_score: node.eeat_score,
+    traffic_estimate: node.traffic_estimate,
+    roi_predictive: node.roi_predictive,
+  }));
+
+  const cluster_summary = nodes.reduce((acc: Record<string, any>, node: any) => {
+    const clusterId = node.cluster_id || 'cluster_unknown';
+    if (!acc[clusterId]) {
+      acc[clusterId] = {
+        label: clusterId,
+        count: 0,
+        total_roi: 0,
+        total_traffic: 0,
+        intents: [] as string[],
+      };
+    }
+
+    acc[clusterId].count += 1;
+    acc[clusterId].total_roi += Number(node.roi_predictive || 0);
+    acc[clusterId].total_traffic += Number(node.traffic_estimate || 0);
+    if (node.intent) acc[clusterId].intents.push(node.intent);
+    return acc;
+  }, {});
+
+  Object.values(cluster_summary).forEach((cluster: any) => {
+    const dominantIntentCounts = cluster.intents.reduce((acc: Record<string, number>, intent: string) => {
+      acc[intent] = (acc[intent] || 0) + 1;
+      return acc;
+    }, {});
+    cluster.avg_roi = cluster.count ? Math.round(cluster.total_roi / cluster.count) : 0;
+    cluster.dominant_intent = Object.entries(dominantIntentCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    delete cluster.total_roi;
+    delete cluster.intents;
+  });
+
+  const seenEdges = new Set<string>();
+  const edges = semanticNodes.flatMap((node) => {
+    const source = node.url;
+    const similarityEdges = Array.isArray(node.similarity_edges) ? node.similarity_edges : [];
+    return similarityEdges.map((edge: any) => {
+      const target = edge?.target_url || edge?.target;
+      const key = `${source}=>${target}`;
+      if (!target || seenEdges.has(key)) return null;
+      seenEdges.add(key);
+      return {
+        source,
+        target,
+        target_url: target,
+        score: edge?.score ?? null,
+        type: edge?.type || null,
+      };
+    }).filter(Boolean);
+  });
+
+  return {
+    ...cocoonResult,
+    nodes,
+    edges,
+    cluster_summary,
+  };
+}
+
 // ─── Dedicated renderer for Social Signals with platform names & colors ───
 function buildSocialSignalsSection(data: any): string {
   if (!data) return '';
@@ -424,17 +565,17 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
-function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string): string {
+function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any): string {
   const tr = getTranslations(lang);
-  const now = new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
   const htmlAnalysis = rawData?.htmlAnalysis || {};
   const linkProfile = htmlAnalysis?.insights?.linkProfile || {};
   const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
 
-  const crawlMeta = {
+  const crawlMeta = crawlSnapshot || {
     pagesFound: rawData?.internalLinks?.length || linkProfile?.internal || 1,
+    avgSeoScore: null,
     avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: htmlAnalysis?.wordCount || 0,
     imagesTotal: htmlAnalysis?.imagesTotal || 0,
@@ -470,6 +611,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
       <div class="stat-grid-4">
         <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots</div></div>
         <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes</div></div>
@@ -656,6 +798,11 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
   const cocoonNodes = cocoonData?.nodes || cocoonData?.nodes_snapshot || [];
   const cocoonEdges = cocoonData?.edges || cocoonData?.edges_snapshot || [];
+  const cocoonGraphDetails = cocoonData?.graph_details || {};
+  const orphanPages = cocoonGraphDetails?.orphan_pages || [];
+  const clusterDetails = cocoonGraphDetails?.cluster_details || [];
+  const cannibalizationRisks = cocoonGraphDetails?.cannibalization_risks || [];
+  const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
   const content = `
@@ -688,6 +835,40 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
             </div>
           </div>
         `).join('')}
+      </div>` : ''}
+      ${!cocoonClusters && clusterDetails.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
+        ${clusterDetails.map((cluster: any) => `
+          <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
+            <div style="font-weight:600;font-size:14px;">${cluster?.top_keywords?.join(', ') || cluster?.cluster_id || 'Cluster'}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${cluster?.size || 0} pages · SEO moyen ${cluster?.avg_seo_score || '-'} · ${cluster?.avg_word_count || '-'} mots</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ${orphanPages.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages orphelines (${orphanPages.length})</h3>
+        <ul style="padding-left:20px;font-size:13px;color:#374151;">
+          ${orphanPages.slice(0, 10).map((page: any) => `<li style="margin-bottom:4px;">${page.url} ${page.word_count ? `(${page.word_count} mots)` : ''}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      ${cannibalizationRisks.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Risques de cannibalisation (${cannibalizationRisks.length})</h3>
+        ${cannibalizationRisks.slice(0, 5).map((risk: any) => `
+          <div style="padding:12px;margin-bottom:8px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:6px;">
+            <div style="font-weight:600;font-size:13px;">${(risk?.urls || []).join(' ↔ ')}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">Mots-clés partagés : ${(risk?.shared_keywords || []).join(', ') || '-'}</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ${thinContentPages.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages à contenu faible (${thinContentPages.length})</h3>
+        <ul style="padding-left:20px;font-size:13px;color:#374151;">
+          ${thinContentPages.slice(0, 10).map((page: any) => `<li style="margin-bottom:4px;">${page.url} (${page.word_count || 0} mots)</li>`).join('')}
+        </ul>
       </div>` : ''}
       ${cocoonNodes.length > 0 ? `
       <div style="margin-top:16px;">
@@ -771,7 +952,9 @@ function wrapStandaloneHTML(bodyContent: string, title: string, lang: string): s
       <h1>${title}</h1>
       <div class="date">${now}</div>
     </div>
+    <!-- MARINA_SECTION_BODY_START -->
     ${bodyContent}
+    <!-- MARINA_SECTION_BODY_END -->
     <div class="footer">
       <div>Propulsé par Crawlers AI</div>
       <div style="margin-top:4px;"><a href="https://crawlers.fr">crawlers.fr</a></div>
@@ -783,6 +966,9 @@ function wrapStandaloneHTML(bodyContent: string, title: string, lang: string): s
 
 // ─── Extract body content from standalone HTML (strip header/footer/html wrapper) ───
 function extractBodyContent(html: string, options: { stripHeader?: boolean; stripFooter?: boolean } = {}): string {
+  const markerMatch = html.match(/<!-- MARINA_SECTION_BODY_START -->([\s\S]*?)<!-- MARINA_SECTION_BODY_END -->/);
+  if (markerMatch) return markerMatch[1].trim();
+
   // Extract content between <div class="container"> ... </div> (last)
   const containerMatch = html.match(/<div class="container">([\s\S]*)<\/div>\s*<\/body>/);
   if (!containerMatch) return html;
@@ -1313,13 +1499,18 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.warn(`[Marina] No tracked_site for ${domain} — skipping crawl, going to phase 3`);
       } else {
         // Check if we have a recent crawl
-        const { data: existingCrawls } = await sb
+        const { data: existingCrawls, error: existingCrawlError } = await sb
           .from('site_crawls' as any)
           .select('id, crawled_pages, total_pages, status')
-          .eq('tracked_site_id', trackedSiteId)
+          .eq('domain', domain)
+          .eq('user_id', parentJob.user_id)
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
           .limit(1);
+
+        if (existingCrawlError) {
+          console.warn(`[Marina] Existing crawl lookup failed for ${domain}: ${existingCrawlError.message}`);
+        }
 
         const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
 
@@ -1507,6 +1698,59 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // Wait for LLM visibility if still running
       await llmVisibilityPromise;
+
+      let crawlSnapshot: any = null;
+      try {
+        const { data: recentCrawls, error: crawlLookupError } = await sb
+          .from('site_crawls' as any)
+          .select('id, crawled_pages, total_pages, avg_score, created_at')
+          .eq('domain', domain)
+          .eq('user_id', parentJob.user_id)
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (crawlLookupError) {
+          console.warn(`[Marina] Crawl snapshot lookup failed for ${domain}: ${crawlLookupError.message}`);
+        }
+
+        const latestCrawl = recentCrawls?.[0];
+        if (latestCrawl?.id) {
+          const { data: crawlPages, error: crawlPagesError } = await sb
+            .from('crawl_pages')
+            .select('*')
+            .eq('crawl_id', latestCrawl.id)
+            .order('created_at', { ascending: true });
+
+          if (crawlPagesError) {
+            console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
+          } else if (crawlPages?.length) {
+            crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+          }
+        }
+      } catch (crawlSnapshotError) {
+        console.warn(`[Marina] Crawl snapshot build failed (non-fatal):`, crawlSnapshotError);
+      }
+
+      if (trackedSiteId && cocoonResult) {
+        try {
+          const { data: semanticNodes, error: semanticNodesError } = await sb
+            .from('semantic_nodes' as any)
+            .select('url, title, intent, page_authority, internal_links_in, internal_links_out, cluster_id, similarity_edges, word_count, eeat_score, traffic_estimate, roi_predictive')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+          if (semanticNodesError) {
+            console.warn(`[Marina] semantic_nodes lookup failed for ${domain}: ${semanticNodesError.message}`);
+          } else if (semanticNodes?.length) {
+            cocoonResult = hydrateCocoonReportData(cocoonResult, semanticNodes);
+          }
+        } catch (semanticHydrationError) {
+          console.warn(`[Marina] Cocoon hydration failed (non-fatal):`, semanticHydrationError);
+        }
+      }
+
       await updateProgress(85, 'generating_report');
 
       // ─── Step 4: Generate HTML reports ───
@@ -1515,7 +1759,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
-        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url);
+        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot);
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
