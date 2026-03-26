@@ -5221,6 +5221,54 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_questions: {
+        Row: {
+          auto_generated: boolean
+          category: string
+          correct_index: number
+          created_at: string
+          difficulty: number
+          explanation: string
+          feature_link: string | null
+          id: string
+          is_active: boolean
+          options: Json
+          question: string
+          quiz_type: string
+          updated_at: string
+        }
+        Insert: {
+          auto_generated?: boolean
+          category: string
+          correct_index: number
+          created_at?: string
+          difficulty: number
+          explanation: string
+          feature_link?: string | null
+          id?: string
+          is_active?: boolean
+          options?: Json
+          question: string
+          quiz_type: string
+          updated_at?: string
+        }
+        Update: {
+          auto_generated?: boolean
+          category?: string
+          correct_index?: number
+          created_at?: string
+          difficulty?: number
+          explanation?: string
+          feature_link?: string | null
+          id?: string
+          is_active?: boolean
+          options?: Json
+          question?: string
+          quiz_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referral_rewards: {
         Row: {
           created_at: string

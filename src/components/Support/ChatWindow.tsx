@@ -107,7 +107,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const conversationIdRef = useRef<string | null>(null);
 
   // Quiz state
-  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
+  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
 
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
@@ -298,7 +298,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
       setQuizLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
-          body: { action: 'get_questions' },
+          body: { action: 'get_questions', user_id: user?.id },
         });
         if (error) throw error;
         setQuizData({ questions: data.questions, answerKey: data.answerKey });
@@ -648,18 +648,22 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                       <SeoQuiz
                         questions={quizData.questions}
                         answerKey={quizData.answerKey}
+                        quizTitle={quizData.title}
                         onComplete={(score, total, wrongAnswers) => {
+                          const isCrawlers = quizData.isCrawlersQuiz;
                           setQuizData(null);
 
                           const level = score <= 3 ? 'Débutant' : score <= 6 ? 'Intermédiaire' : score <= 9 ? 'Avancé' : 'Expert';
                           const emoji = score <= 3 ? '🟥' : score <= 6 ? '🟧' : score <= 9 ? '🟩' : '🏆';
-                          const advice = score <= 3
-                            ? "Pas de souci, tu es au bon endroit pour apprendre ! Explore nos articles de blog et lance un audit gratuit pour progresser."
-                            : score <= 6
-                            ? "Tu as de bonnes bases ! Active le suivi de sites pour monitorer tes progrès en temps réel."
-                            : score <= 9
-                            ? "Impressionnant ! Tu maîtrises le sujet. L'Autopilot et le Stratège Cocoon sont faits pour toi."
-                            : "Score parfait ! Tu es un expert SEO/GEO/LLM. Le plan Agency Pro t'attend pour passer à l'échelle.";
+                          const advice = isCrawlers
+                            ? (score <= 5 ? "Tu découvres Crawlers ! Explore les outils un par un, Félix est là pour t'aider." : "Tu connais bien la plateforme, bravo !")
+                            : (score <= 3
+                              ? "Pas de souci, tu es au bon endroit pour apprendre ! Explore nos articles de blog et lance un audit gratuit pour progresser."
+                              : score <= 6
+                              ? "Tu as de bonnes bases ! Active le suivi de sites pour monitorer tes progrès en temps réel."
+                              : score <= 9
+                              ? "Impressionnant ! Tu maîtrises le sujet. L'Autopilot et le Stratège Cocoon sont faits pour toi."
+                              : "Score parfait ! Tu es un expert SEO/GEO/LLM. Le plan Agency Pro t'attend pour passer à l'échelle.");
 
                           let wrongSection = '';
                           if (wrongAnswers.length > 0) {
@@ -675,13 +679,25 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                           };
                           setMessages(prev => [...prev, resultMsg]);
 
-                          // Persist score in analytics
+                          // Persist score
                           if (user) {
                             supabase.from('analytics_events').insert({
                               user_id: user.id,
-                              event_type: 'quiz:seo_score',
+                              event_type: isCrawlers ? 'quiz:crawlers_score' : 'quiz:seo_score',
                               event_data: { score, total, level, wrong_count: wrongAnswers.length },
                             }).then(() => {});
+                          }
+
+                          // After SEO quiz, propose Crawlers quiz
+                          if (!isCrawlers) {
+                            setTimeout(() => {
+                              const proposalMsg: ChatMessage = {
+                                role: 'assistant',
+                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme ! Tape **\"quiz crawlers\"** pour lancer.",
+                                timestamp: new Date().toISOString(),
+                              };
+                              setMessages(prev => [...prev, proposalMsg]);
+                            }, 1500);
                           }
                         }}
                       />
