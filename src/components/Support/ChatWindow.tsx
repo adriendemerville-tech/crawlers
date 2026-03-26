@@ -165,7 +165,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
       };
       setMessages(prev => [...prev, launchMsg]);
       setQuizLoading(true);
-      supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz' } })
+      supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz', language } })
         .then(({ data, error }) => {
           if (error) throw error;
           setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
@@ -418,7 +418,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
       setQuizLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
-          body: { action: 'get_crawlers_quiz' },
+          body: { action: 'get_crawlers_quiz', language },
         });
         if (error) throw error;
         setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
@@ -456,7 +456,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
       setQuizLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
-          body: { action: 'get_questions', user_id: user?.id },
+          body: { action: 'get_questions', user_id: user?.id, language },
         });
         if (error) throw error;
         setQuizData({ questions: data.questions, answerKey: data.answerKey });
@@ -793,7 +793,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                           setMessages(prev => [...prev, launchMsg]);
                           setQuizLoading(true);
                           try {
-                            const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz' } });
+                            const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz', language } });
                             if (error) throw error;
                             setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
                           } catch (e) {
