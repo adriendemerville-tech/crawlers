@@ -323,11 +323,30 @@ ${errorHistory}${previousResults}${pendingRecos}${rawData}
   "summary": "..."
 }`;
 
+  const siteIdentityBlock = context.siteInfo
+    ? `\nIDENTITÉ DU SITE:
+Nom: ${context.siteInfo.site_name || context.domain}
+Secteur: ${context.siteInfo.market_sector || 'Non défini'}
+Type: ${context.siteInfo.business_type || 'Non défini'}
+Cibles: ${context.siteInfo.client_targets || 'Non définies'}
+Contexte: ${context.siteInfo.site_context || 'Non disponible'}`
+    : '';
+
+  const keywordsBlock = context.siteKeywords.length > 0
+    ? `\nUNIVERS MOTS-CLÉS DU SITE (mots-clés sur lesquels le site se positionne réellement):
+${context.siteKeywords.slice(0, 50).join(', ')}
+
+⚠️ RÈGLE CRITIQUE: Tout contenu créé DOIT cibler un mot-clé pertinent pour cet univers sémantique. 
+INTERDIT de créer du contenu sur un sujet hors de l'activité du site (ex: ne pas écrire sur le SEO pour un site de comptabilité).
+Le mot-clé choisi dans le payload content-architecture-advisor DOIT être en rapport direct avec le secteur d'activité ci-dessus.`
+    : '';
+
   const userPrompt = `Domaine: ${context.domain}
 Cycle: ${context.cycle_number}
 Phase pipeline: ${context.currentPhase.toUpperCase()}
 Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
 CMS cible: ${context.isIktracker ? 'IKtracker (API Supabase)' : 'WordPress (wpsync)'}
+${siteIdentityBlock}${keywordsBlock}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
