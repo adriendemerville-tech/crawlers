@@ -46,6 +46,11 @@ function getCrawlersDifficultyWeights(): Record<number, number> {
   return { 1: 3, 2: 4, 3: 3 };
 }
 
+// For Stratège Cocoon quiz (difficulty 1-3, 10 questions)
+function getStrategeCocoonWeights(): Record<number, number> {
+  return { 1: 3, 2: 4, 3: 3 };
+}
+
 async function pickQuestionsFromDB(
   quizType: string,
   weights: Record<number, number>,
@@ -161,6 +166,28 @@ Deno.serve(async (req) => {
       }
       const score = await getLastUserScore(user_id);
       return new Response(JSON.stringify({ score }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'get_stratege_cocoon_quiz') {
+      const weights = getStrategeCocoonWeights();
+      const questions = await pickQuestionsFromDB('stratege_cocoon', weights, 10);
+
+      const clientQuestions = questions.map(q => ({
+        id: q.id,
+        category: q.category,
+        difficulty: q.difficulty,
+        question: q.question,
+        options: q.options,
+      }));
+
+      const answerKey: Record<string, { correct: number; explanation: string; feature_link?: string }> = {};
+      for (const q of questions) {
+        answerKey[q.id] = { correct: q.correct_index, explanation: q.explanation, feature_link: q.feature_link };
+      }
+
+      return new Response(JSON.stringify({ questions: clientQuestions, answerKey }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
