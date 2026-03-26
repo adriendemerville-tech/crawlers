@@ -343,7 +343,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
                 goal: {
                   type: 'object',
                   properties: {
-                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
+                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
                     cluster_id: { type: 'string' },
                     description: { type: 'string' },
                   },
