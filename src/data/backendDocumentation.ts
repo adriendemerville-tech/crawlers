@@ -514,7 +514,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation, monitoring diagnostics + stratège) |
 | \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, persistance recommandations) |
-| \`sav-agent\` | ✅ | Agent SAV IA (Gemini, doc enrichie, scoring précision) |
+| \`sav-agent\` | ✅ | Assistant Félix (Gemini, alertes proactives, scoring précision, mémoire de site) |
 | \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
@@ -529,6 +529,35 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
 | \`process-email-queue\` | ✅ | Worker file d'attente emails |
+
+## Pipeline & Automation
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`marina\` | ✅ | Pipeline de rapports automatisés (async job) |
+| \`autopilot-engine\` | ✅ | Moteur d'autopilote SEO (cron quotidien 3h UTC) |
+| \`parmenion-orchestrator\` | ✅ | Intelligence décisionnelle Parménion (Gemini Flash/Pro) |
+| \`parmenion-feedback\` | ✅ | Boucle rétroaction T+30 Parménion |
+| \`mcp-server\` | ❌/✅ | Serveur MCP (Model Context Protocol) — 2 tiers d'accès |
+| \`api-balances\` | ✅ | Soldes API en temps réel (SerpAPI, OpenRouter, Firecrawl) |
+| \`seasonality-detector\` | ✅ | Détection de saisonnalité (tendances cycliques) |
+| \`content-freshness\` | ✅ | Détection de contenu obsolète |
+| \`content-pruning\` | ✅ | Analyse de contenu à élaguer |
+| \`link-intersection\` | ✅ | Intersection de backlinks concurrents |
+| \`broken-link-building\` | ✅ | Opportunités de link building sur liens cassés |
+| \`brand-mentions\` | ✅ | Détection de mentions de marque non liées |
+| \`url-structure-analyzer\` | ✅ | Analyse de structure d'URLs |
+| \`robots-generator\` | ✅ | Générateur de robots.txt optimisé |
+
+## E-commerce
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
+| \`webhook-woo-orders\` | ❌ | Webhook WooCommerce (commandes) |
+| \`prestashop-connector\` | ✅ | Bridge PrestaShop |
+| \`odoo-connector\` | ✅ | Bridge Odoo ERP |
+| \`matomo-connector\` | ✅ | Bridge analytics Matomo |
 `,
   },
 
