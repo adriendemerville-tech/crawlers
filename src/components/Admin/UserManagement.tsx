@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
 import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
+import { PayingUsersTab } from './PayingUsersTab';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
 /** Actionable event types to expose in the filter (label → event_type(s)) */
