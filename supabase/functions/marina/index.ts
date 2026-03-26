@@ -966,13 +966,58 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     
     await updateProgress(85, 'generating_report');
 
-    // ─── Step 4: Generate combined HTML report ───
-    const html = generateMarinaReport(
-      url, domain, detectedLang,
-      expertResult.data,
-      strategicData,
-      cocoonResult,
-    );
+    // ─── Step 4: Generate individual HTML reports & store temporarily ───
+    let html: string;
+    
+    try {
+      console.log(`[Marina] Step 4: Generating individual section HTMLs...`);
+      
+      // Generate each section as standalone HTML
+      const crawlHTML = generateCrawlSectionHTML(expertResult.data, detectedLang, domain, url);
+      const techHTML = generateTechSectionHTML(expertResult.data, detectedLang, domain);
+      const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain);
+      const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+
+      // Store each section temporarily in storage (fire-and-forget, non-blocking)
+      const tempPrefix = `marina/tmp/${jobId}`;
+      const storageUploads = [
+        { path: `${tempPrefix}/1-crawl.html`, content: crawlHTML },
+        { path: `${tempPrefix}/2-tech.html`, content: techHTML },
+        { path: `${tempPrefix}/3-strategic.html`, content: strategicHTML },
+        { path: `${tempPrefix}/4-cocoon.html`, content: cocoonHTML },
+      ];
+
+      // Upload all temp sections in parallel
+      await Promise.allSettled(
+        storageUploads.map(({ path, content }) =>
+          sb.storage.from('shared-reports').upload(path, new Blob([content], { type: 'text/html' }), {
+            contentType: 'text/html',
+            upsert: true,
+          })
+        )
+      );
+      console.log(`[Marina] 📦 4 section HTMLs stored temporarily`);
+
+      await updateProgress(90, 'generating_report');
+
+      // Compile all sections into final report
+      html = compileMarinaReport(
+        { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
+        detectedLang, domain, url,
+      );
+
+      console.log(`[Marina] ✅ Compiled report from 4 sections`);
+
+      // Cleanup temp files (fire-and-forget)
+      Promise.allSettled(
+        storageUploads.map(({ path }) => sb.storage.from('shared-reports').remove([path]))
+      ).catch(() => {});
+
+    } catch (compileError) {
+      // ─── FALLBACK: use legacy monolithic generator ───
+      console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
+      html = generateLegacyMarinaReport(url, domain, detectedLang, expertResult.data, strategicData, cocoonResult);
+    }
 
     // ─── Step 5: Store in shared-reports bucket ───
     const fileName = `marina/${jobId}.html`;
