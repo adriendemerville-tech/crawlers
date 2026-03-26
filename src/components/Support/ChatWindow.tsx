@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -195,6 +195,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [felixMuted, setFelixMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
 
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
@@ -692,6 +693,18 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
               Nouveau
             </button>
           )}
+          <button
+            onClick={() => {
+              const current = localStorage.getItem('felix_muted') === '1';
+              localStorage.setItem('felix_muted', current ? '0' : '1');
+              window.dispatchEvent(new Event('felix_mute_changed'));
+              setFelixMuted(!current);
+            }}
+            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+            title={felixMuted ? 'Réactiver les notifications' : 'Couper les notifications'}
+          >
+            {felixMuted ? <BellOff className="h-3 w-3" /> : <Bell className="h-3 w-3" />}
+          </button>
           <button onClick={handleClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-3 w-3" />
           </button>
