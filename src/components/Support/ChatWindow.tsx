@@ -883,10 +883,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                             setTimeout(() => {
                               const proposalMsg: ChatMessage = {
                                 role: 'assistant',
-                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme ! Tape **\"quiz crawlers\"** pour lancer.",
+                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme !",
                                 timestamp: new Date().toISOString(),
                               };
                               setMessages(prev => [...prev, proposalMsg]);
+                              setQuizSuggestionPending(true);
                             }, 1500);
                           }
                         }}
