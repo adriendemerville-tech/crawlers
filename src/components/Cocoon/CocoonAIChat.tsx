@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
-import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -321,6 +321,7 @@ interface CocoonAIChatProps {
   onCancelPick?: () => void;
   trackedSiteId?: string;
   domain?: string;
+  onGenerateGraph?: () => void;
 }
 
 function getSlug(url: string): string {
@@ -344,7 +345,7 @@ function getSessionHash(): string {
   return hash;
 }
 
-export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
+export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain, onGenerateGraph }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -380,6 +381,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
   const [quizSuggested, setQuizSuggested] = useState(false);
+  const [showGenerateButton, setShowGenerateButton] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
@@ -895,6 +897,23 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         openArchitectWithPlan();
         return;
       }
+    }
+
+    // If no graph is generated, intercept and show generate prompt
+    if (nodes.length === 0 && !overrideContext) {
+      const userMsg: Msg = { role: 'user', content: text };
+      const noGraphMsg: Msg = { 
+        role: 'assistant', 
+        content: language === 'en' 
+          ? "Sure! I need a graph to start my analysis." 
+          : language === 'es' 
+            ? "¡De acuerdo! Necesito un gráfico para iniciar mi análisis."
+            : "D'accord ! Il me faut un graph pour démarrer mon analyse."
+      };
+      setMessages(prev => [...prev, userMsg, noGraphMsg]);
+      setInput('');
+      setShowGenerateButton(true);
+      return;
     }
 
     const userMsg: Msg = { role: 'user', content: text };
@@ -1727,6 +1746,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 >
                   <Bug className="h-3.5 w-3.5" />
                   Signaler un problème / bug
+                </button>
+              </div>
+            )}
+
+            {/* Generate graph button when no cocoon exists */}
+            {showGenerateButton && nodes.length === 0 && onGenerateGraph && (
+              <div className="flex justify-start">
+                <button
+                  onClick={() => { setShowGenerateButton(false); onGenerateGraph(); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[hsl(263,70%,50%)] hover:bg-[hsl(263,70%,45%)] text-white text-xs font-semibold transition-colors"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {language === 'en' ? 'Generate the graph' : language === 'es' ? 'Generar el gráfico' : 'Générer le graph'}
                 </button>
               </div>
             )}
