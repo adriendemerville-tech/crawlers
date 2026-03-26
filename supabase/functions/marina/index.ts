@@ -1250,8 +1250,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await selfInvokePhase(jobId, url, detectedLang, 'phase2', { domain });
 
     } else if (currentPhase === 'phase2') {
-      // ═══ PHASE 2: Crawl + Cocoon + LLM Visibility + Report ═══
-      console.log(`[Marina] Phase 2 starting for job ${jobId}`);
+      // ═══ PHASE 2: Crawl multi-pages only ═══
+      console.log(`[Marina] Phase 2 starting for job ${jobId} — crawl`);
 
       // Load intermediate data from phase 1
       const { data: cached } = await sb
@@ -1264,16 +1264,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error('Phase 2: intermediate data not found — phase 1 may have failed');
       }
 
-      const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
-
-      // Cleanup intermediate cache (fire-and-forget)
-      sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
+      const { domain, detectedLang } = cached.result_data as any;
 
       await updateProgress(66, 'multi_crawl');
 
-      // ─── Step 2b: Real LLM Visibility benchmark (parallel with crawl) ───
-      let llmVisibilityData: any = null;
-      let trackedSiteForLlm: { id: string } | null = null;
+      // Ensure tracked_site exists
+      let trackedSiteId: string | null = null;
       {
         const { data: ts } = await sb
           .from('tracked_sites')
@@ -1281,26 +1277,148 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .eq('domain', domain)
           .maybeSingle();
         if (ts) {
-          trackedSiteForLlm = ts;
+          trackedSiteId = ts.id;
         } else {
           const { data: newTs } = await sb
             .from('tracked_sites')
             .insert({ user_id: parentJob.user_id, domain, site_name: `Marina: ${domain}` })
             .select('id')
             .single();
-          trackedSiteForLlm = newTs;
+          trackedSiteId = newTs?.id || null;
         }
       }
 
-      const llmVisibilityPromise = (async () => {
-        if (!trackedSiteForLlm) {
-          console.warn(`[Marina] Skipping LLM visibility: no tracked_site`);
-          return;
+      if (!trackedSiteId) {
+        console.warn(`[Marina] No tracked_site for ${domain} — skipping crawl, going to phase 3`);
+      } else {
+        // Check if we have a recent crawl
+        const { data: existingCrawls } = await sb
+          .from('site_crawls' as any)
+          .select('id, crawled_pages, total_pages, status')
+          .eq('tracked_site_id', trackedSiteId)
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
+
+        if (!hasRecentCrawl) {
+          console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 20 pages)...`);
+          await updateProgress(67, 'multi_crawl');
+
+          try {
+            const crawlLaunchRes = await callFunction('crawl-site', {
+              url: url,
+              maxPages: 20,
+              userId: parentJob.user_id,
+            });
+
+            if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
+              const crawlId = crawlLaunchRes.crawlId;
+              console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
+
+              // Poll until crawl completes — max 100s to stay within wall-clock
+              const crawlStartTime = Date.now();
+              const CRAWL_TIMEOUT_MS = 100_000;
+              const CRAWL_POLL_MS = 5_000;
+              let crawlDone = false;
+
+              while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
+                await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
+
+                const { data: crawlStatus } = await sb
+                  .from('site_crawls' as any)
+                  .select('status, crawled_pages, total_pages')
+                  .eq('id', crawlId)
+                  .single();
+
+                if (!crawlStatus) break;
+
+                const status = (crawlStatus as any).status;
+                const crawledPages = (crawlStatus as any).crawled_pages || 0;
+                const totalPages = (crawlStatus as any).total_pages || 1;
+
+                const crawlProgress = Math.min(78, 67 + Math.round((crawledPages / totalPages) * 11));
+                await updateProgress(crawlProgress, 'multi_crawl');
+
+                if (status === 'completed' || status === 'error' || status === 'analyzing') {
+                  crawlDone = true;
+                  console.log(`[Marina] Crawl ${crawlId} finished: ${status}, ${crawledPages}/${totalPages} pages`);
+                  if (status === 'analyzing') {
+                    await new Promise(r => setTimeout(r, 5_000));
+                  }
+                } else if ((Date.now() - crawlStartTime) > 60_000 && (Date.now() - crawlStartTime) % 30_000 < CRAWL_POLL_MS) {
+                  fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ trigger: 'marina-retry' }),
+                  }).catch(() => {});
+                }
+              }
+
+              if (!crawlDone) {
+                console.warn(`[Marina] Crawl ${crawlId} timed out after 100s — proceeding with partial data`);
+              }
+            } else {
+              console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
+            }
+          } catch (crawlErr) {
+            console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
+          }
+        } else {
+          console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
         }
+      }
+
+      await updateProgress(79, 'phase2_complete');
+      console.log(`[Marina] ✅ Phase 2 complete — crawl done, launching Phase 3`);
+
+      // Self-invoke phase 3
+      await selfInvokePhase(jobId, url, detectedLang, 'phase3', { domain });
+
+    } else if (currentPhase === 'phase3') {
+      // ═══ PHASE 3: Cocoon + LLM Visibility + Report ═══
+      console.log(`[Marina] Phase 3 starting for job ${jobId}`);
+
+      // Load intermediate data from phase 1
+      const { data: cached } = await sb
+        .from('audit_cache')
+        .select('result_data')
+        .eq('cache_key', `marina_intermediate_${jobId}`)
+        .single();
+
+      if (!cached?.result_data) {
+        throw new Error('Phase 3: intermediate data not found — phase 1 may have failed');
+      }
+
+      const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
+
+      // Cleanup intermediate cache (fire-and-forget)
+      sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
+
+      await updateProgress(80, 'cocoon_analysis');
+
+      // ─── LLM Visibility (parallel with cocoon) ───
+      let llmVisibilityData: any = null;
+      let trackedSiteId: string | null = null;
+      {
+        const { data: ts } = await sb
+          .from('tracked_sites')
+          .select('id')
+          .eq('domain', domain)
+          .maybeSingle();
+        trackedSiteId = ts?.id || null;
+      }
+
+      const llmVisibilityPromise = (async () => {
+        if (!trackedSiteId) return;
         try {
-          console.log(`[Marina] Phase 2: calculate-llm-visibility for ${domain}`);
+          console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
           const result = await callFunction('calculate-llm-visibility', {
-            tracked_site_id: trackedSiteForLlm.id,
+            tracked_site_id: trackedSiteId,
             user_id: parentJob.user_id,
           });
           if (result && !result.error && (result.scores || result.data?.scores)) {
@@ -1314,130 +1432,33 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         }
       })();
 
-      // ─── Step 3: Cocoon (crawl + compute) ───
+      // ─── Cocoon computation ───
       let cocoonResult: any = null;
-      const COCOON_TIMEOUT_MS = 240_000; // 4 min — phase 2 has its own wall-clock budget
+      const COCOON_TIMEOUT_MS = 90_000; // 90s — safe within wall-clock
       try {
         cocoonResult = await Promise.race([
           (async () => {
-            let trackedSite = trackedSiteForLlm;
-            
-            if (!trackedSite) {
-              const { data: ts } = await sb
-                .from('tracked_sites')
-                .select('id')
-                .ilike('domain', `%${domain}%`)
-                .limit(1)
-                .maybeSingle();
-              trackedSite = ts;
-            }
-
-            if (!trackedSite) {
+            if (!trackedSiteId) {
               console.warn(`[Marina] No tracked_site for ${domain} — skipping cocoon`);
               return null;
             }
 
-            // Check if we have a recent crawl for this site
-            const { data: existingCrawls } = await sb
-              .from('site_crawls' as any)
-              .select('id, crawled_pages, total_pages, status')
-              .eq('tracked_site_id', trackedSite.id)
-              .eq('status', 'completed')
-              .order('created_at', { ascending: false })
-              .limit(1);
-            
-            const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
-            
-            if (!hasRecentCrawl) {
-              console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 20 pages)...`);
-              await updateProgress(67, 'multi_crawl');
-              
-              try {
-                const crawlLaunchRes = await callFunction('crawl-site', {
-                  url: url,
-                  maxPages: 20,
-                  userId: parentJob.user_id,
-                });
-                
-                if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
-                  const crawlId = crawlLaunchRes.crawlId;
-                  console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
-                  
-                  // Poll until crawl completes — now we have a generous budget (up to 180s)
-                  const crawlStartTime = Date.now();
-                  const CRAWL_TIMEOUT_MS = 180_000; // 3 min for crawl polling
-                  const CRAWL_POLL_MS = 5_000;
-                  let crawlDone = false;
-                  
-                  while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
-                    await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
-                    
-                    const { data: crawlStatus } = await sb
-                      .from('site_crawls' as any)
-                      .select('status, crawled_pages, total_pages')
-                      .eq('id', crawlId)
-                      .single();
-                    
-                    if (!crawlStatus) break;
-                    
-                    const status = (crawlStatus as any).status;
-                    const crawledPages = (crawlStatus as any).crawled_pages || 0;
-                    const totalPages = (crawlStatus as any).total_pages || 1;
-                    
-                    const crawlProgress = Math.min(80, 67 + Math.round((crawledPages / totalPages) * 13));
-                    await updateProgress(crawlProgress, 'multi_crawl');
-                    
-                    if (status === 'completed' || status === 'error' || status === 'analyzing') {
-                      crawlDone = true;
-                      console.log(`[Marina] Crawl ${crawlId} finished: ${status}, ${crawledPages}/${totalPages} pages`);
-                      
-                      if (status === 'analyzing') {
-                        await new Promise(r => setTimeout(r, 10_000));
-                      }
-                    } else if (status === 'crawling' || status === 'queued' || status === 'mapping') {
-                      // Re-trigger worker in case it died
-                      if ((Date.now() - crawlStartTime) > 60_000 && (Date.now() - crawlStartTime) % 30_000 < CRAWL_POLL_MS) {
-                        fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ trigger: 'marina-retry' }),
-                        }).catch(() => {});
-                      }
-                    }
-                  }
-                  
-                  if (!crawlDone) {
-                    console.warn(`[Marina] Crawl ${crawlId} timed out after 180s — proceeding with partial data`);
-                  }
-                } else {
-                  console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
-                }
-              } catch (crawlErr) {
-                console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
-              }
-            } else {
-              console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
-            }
-
-            console.log(`[Marina] Phase 2: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
-            const result = await callFunction('calculate-cocoon-logic', { 
-              tracked_site_id: trackedSite.id,
+            console.log(`[Marina] Phase 3: calculate-cocoon-logic for tracked_site ${trackedSiteId}`);
+            const result = await callFunction('calculate-cocoon-logic', {
+              tracked_site_id: trackedSiteId,
               _user_id: parentJob.user_id,
             });
-            
+
             if (result?.error) {
               console.warn(`[Marina] Cocoon returned error: ${result.error}`);
               return null;
             }
-            
+
             console.log(`[Marina] Cocoon done: ${result?.stats?.nodes_count || 0} nodes`);
-            
-            // ─── Lite Stratège — top 3 recommendations via LLM ───
+
+            // Lite Stratège
             try {
-              console.log(`[Marina] Phase 2: Lite Stratège for cocoon recommendations`);
+              console.log(`[Marina] Phase 3: Lite Stratège for cocoon recommendations`);
               const cocoonRecommendations = await generateLiteStrategeRecommendations(
                 domain, result, expertData, strategicData, detectedLang,
               );
@@ -1448,7 +1469,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             } catch (stratErr) {
               console.warn(`[Marina] Lite Stratège failed (non-fatal):`, stratErr);
             }
-            
+
             return result;
           })(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Cocoon timeout')), COCOON_TIMEOUT_MS)),
@@ -1457,7 +1478,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const msg = e instanceof Error ? e.message : String(e);
         console.warn(`[Marina] Cocoon failed (non-fatal, ${msg.includes('timeout') ? 'TIMEOUT' : 'error'}):`, msg);
       }
-      
+
       // Wait for LLM visibility if still running
       await llmVisibilityPromise;
       await updateProgress(85, 'generating_report');
