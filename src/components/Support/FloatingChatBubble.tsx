@@ -252,7 +252,9 @@ export function FloatingChatBubble() {
           </div>
           <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
         </div>
-      )
+      )}
+
+      {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
         className={`fixed bottom-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
