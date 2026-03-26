@@ -249,6 +249,15 @@ function extractKeywords(title: string, h1: string, description: string): string
     .map(([w]) => w);
 }
 
+function normalizeAbsoluteUrl(value: string | null | undefined, base?: string): string | null {
+  if (!value) return null;
+  try {
+    return new URL(value, base).href.replace(/\/+$/, '').toLowerCase();
+  } catch {
+    return value.replace(/\/+$/, '').toLowerCase();
+  }
+}
+
 // ─── Main Handler ───
 
 Deno.serve(async (req) => {
@@ -587,19 +596,21 @@ Deno.serve(async (req) => {
     // ─── 6b. Compute internal_links_in from real crawl anchor_texts ───
     const urlToNodeIdx = new Map<string, number>();
     for (let i = 0; i < nodeData.length; i++) {
-      urlToNodeIdx.set(nodeData[i].url, i);
-      urlToNodeIdx.set(nodeData[i].url.replace(/\/+$/, ""), i);
+      const normalized = normalizeAbsoluteUrl(nodeData[i].url);
+      if (normalized) urlToNodeIdx.set(normalized, i);
     }
     // Count inbound links from anchor_texts (real crawl links)
     for (const page of validPages) {
       const anchors = page.anchor_texts || [];
       const seen = new Set<number>();
+      const pageUrl = normalizeAbsoluteUrl(page.url);
       for (const anchor of anchors) {
         if ((anchor as any).type !== "internal") continue;
         const href = (anchor as any).href || "";
-        const targetIdx = urlToNodeIdx.get(href) ?? urlToNodeIdx.get(href.replace(/\/+$/, ""));
+        const targetUrl = normalizeAbsoluteUrl(href, page.url);
+        const targetIdx = targetUrl ? urlToNodeIdx.get(targetUrl) : undefined;
         if (targetIdx !== undefined && !seen.has(targetIdx)) {
-          const srcIdx = urlToNodeIdx.get(page.url) ?? urlToNodeIdx.get(page.url.replace(/\/+$/, ""));
+          const srcIdx = pageUrl ? urlToNodeIdx.get(pageUrl) : undefined;
           if (srcIdx !== targetIdx) {
             nodeData[targetIdx].internal_links_in = (nodeData[targetIdx].internal_links_in || 0) + 1;
             seen.add(targetIdx);
