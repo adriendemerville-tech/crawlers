@@ -374,13 +374,62 @@ Deno.serve(async (req: Request) => {
                   }
                 }
               } else if (funcName === 'iktracker-actions') {
-                // iktracker-actions called without cms_actions → nothing to do, skip
-                console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions for ${site.domain}, skipping`);
-                executionResults.push({
-                  function: funcName,
-                  status: 'skipped',
-                  detail: 'No cms_actions in payload – nothing to execute on CMS',
-                });
+                // iktracker-actions called without cms_actions → check if we have JS fixes to reroute
+                const payload = decision.action.payload || {};
+                const hasFixes = Array.isArray(payload.fixes) && payload.fixes.length > 0;
+                const hasRecommendations = Array.isArray(payload.recommendations) && payload.recommendations.length > 0;
+
+                if (hasFixes || hasRecommendations) {
+                  // ── Reroute: JS corrections should go to generate-corrective-code, not iktracker ──
+                  console.log(`[AutopilotEngine] Rerouting iktracker-actions → generate-corrective-code for ${site.domain} (JS fixes detected)`);
+                  
+                  const fixes = hasFixes ? payload.fixes : payload.recommendations;
+                  const normalizedFixes = fixes.map((f: any, i: number) => ({
+                    id: f.id || `rerouted-fix-${i}`,
+                    label: f.label || f.title || f.description || `Fix ${i + 1}`,
+                    enabled: f.enabled !== false,
+                    category: f.category || 'strategic',
+                    prompt: f.prompt || f.prompt_summary || f.description || f.label || '',
+                    ...(f.target_url ? { targetUrl: f.target_url } : {}),
+                  }));
+
+                  const rerouteBody = {
+                    siteName: site.domain,
+                    siteUrl: `https://${site.domain}`,
+                    fixes: normalizedFixes,
+                    technologyContext: payload.technologyContext || null,
+                    tracked_site_id: config.tracked_site_id,
+                    user_id: config.user_id,
+                  };
+
+                  const rerouteResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-corrective-code`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(rerouteBody),
+                  });
+
+                  const rerouteResult = await rerouteResponse.json().catch(() => ({}));
+                  executionResults.push({
+                    function: 'generate-corrective-code',
+                    rerouted_from: 'iktracker-actions',
+                    status: rerouteResponse.ok ? 'success' : 'error',
+                    http_status: rerouteResponse.status,
+                    fixes_count: normalizedFixes.length,
+                    result: rerouteResult,
+                  });
+                  if (!rerouteResponse.ok) executionSuccess = false;
+                } else {
+                  // No cms_actions AND no JS fixes → truly nothing to do
+                  console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions or fixes for ${site.domain}, skipping`);
+                  executionResults.push({
+                    function: funcName,
+                    status: 'skipped',
+                    detail: 'No cms_actions and no JS fixes in payload – nothing to execute',
+                  });
+                }
                 continue;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
