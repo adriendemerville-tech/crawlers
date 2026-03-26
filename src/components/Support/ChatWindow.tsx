@@ -17,6 +17,7 @@ import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
 import { AutonomyDiagnostic } from './AutonomyDiagnostic';
+import { SeoQuiz } from './SeoQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
