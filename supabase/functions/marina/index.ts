@@ -438,6 +438,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
   const cocoonNodes = cocoonData?.nodes || cocoonData?.nodes_snapshot || [];
   const cocoonEdges = cocoonData?.edges || cocoonData?.edges_snapshot || [];
+  const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
   const content = `
     <div class="section">
@@ -513,6 +514,22 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
         </table>
       </div>` : ''}
       ` : `<p style="color:#6b7280;font-size:14px;">${tr.cocoonPending}</p>`}
+      ${strategeRecos.length > 0 ? `
+      <div style="margin-top:24px;padding:20px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:10px;border:1px solid #bfdbfe;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          🎯 ${lang === 'fr' ? 'Recommandations Stratège' : lang === 'es' ? 'Recomendaciones Estratégicas' : 'Strategic Recommendations'}
+        </h3>
+        ${strategeRecos.map((r, i) => {
+          const prioColor = r.priority === 'critique' || r.priority === 'critical' ? '#ef4444' : r.priority === 'important' ? '#f59e0b' : '#22c55e';
+          return `<div style="padding:12px;margin-bottom:8px;background:white;border-left:3px solid ${prioColor};border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:11px;color:${prioColor};font-weight:700;text-transform:uppercase;">${r.priority}</span>
+            </div>
+            <div style="font-weight:600;font-size:14px;">${r.title}</div>
+            <div style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.6;">${r.description}</div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
     </div>`;
 
   return wrapStandaloneHTML(content, `${tr.cocoonAnalysis} - ${domain}`, lang);
@@ -651,6 +668,85 @@ function generateLegacyMarinaReport(
   const strategicHTML = generateStrategicSectionHTML(strategicData, lang, domain);
   const cocoonHTML = generateCocoonSectionHTML(cocoonData, lang, domain);
   return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url);
+}
+
+// ─── Lite Stratège: quick LLM call for top 3 cocoon recommendations ───
+async function generateLiteStrategeRecommendations(
+  domain: string,
+  cocoonResult: any,
+  expertData: any,
+  strategicData: any,
+  lang: string,
+): Promise<Array<{ title: string; description: string; priority: string }>> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.warn('[Marina] No LOVABLE_API_KEY, skipping lite stratège');
+    return [];
+  }
+
+  const stats = cocoonResult?.stats || {};
+  const seoScore = expertData?.totalScore || 0;
+  const geoScore = strategicData?.overallScore || 0;
+
+  const prompt = lang === 'fr'
+    ? `Tu es un stratège SEO/GEO senior. Analyse ce résumé de cocon sémantique et donne exactement 3 recommandations prioritaires, courtes et actionnables.
+
+Domaine: ${domain}
+Score SEO technique: ${seoScore}/200
+Score GEO stratégique: ${geoScore}/100
+Pages analysées: ${stats.nodes_count || 0}
+Clusters: ${stats.clusters_count || 0}
+Liens sémantiques: ${stats.edges_count || 0}
+Densité liens: ${stats.links_density || 'N/A'}%
+
+Réponds en JSON strict: [{"title":"...","description":"...","priority":"critique|important|recommandé"}]`
+    : `You are a senior SEO/GEO strategist. Analyze this semantic cocoon summary and give exactly 3 priority, short, actionable recommendations.
+
+Domain: ${domain}
+Technical SEO Score: ${seoScore}/200
+Strategic GEO Score: ${geoScore}/100
+Pages analyzed: ${stats.nodes_count || 0}
+Clusters: ${stats.clusters_count || 0}
+Semantic links: ${stats.edges_count || 0}
+Link density: ${stats.links_density || 'N/A'}%
+
+Respond in strict JSON: [{"title":"...","description":"...","priority":"critical|important|recommended"}]`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [
+        { role: 'system', content: 'You are a concise SEO strategist. Always respond with valid JSON arrays only.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 1024,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  if (!response.ok) {
+    console.warn(`[Marina] Lite Stratège API error: ${response.status}`);
+    return [];
+  }
+
+  const result = await response.json();
+  const content = result?.choices?.[0]?.message?.content || '';
+  
+  // Extract JSON array from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) return [];
+  
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Internal function call helper ───
@@ -971,6 +1067,20 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
           console.warn(`[Marina] Cocoon returned error: ${cocoonResult.error}`);
         } else {
           console.log(`[Marina] Cocoon done: ${cocoonResult?.stats?.nodes_count || 0} nodes`);
+          
+          // ─── Step 3b: Lite Stratège — top 3 recommendations via LLM ───
+          try {
+            console.log(`[Marina] Step 3b: Lite Stratège for cocoon recommendations`);
+            const cocoonRecommendations = await generateLiteStrategeRecommendations(
+              domain, cocoonResult, expertResult.data, strategicData, detectedLang,
+            );
+            if (cocoonRecommendations?.length) {
+              cocoonResult._stratege_recommendations = cocoonRecommendations;
+              console.log(`[Marina] Lite Stratège: ${cocoonRecommendations.length} recommendations`);
+            }
+          } catch (stratErr) {
+            console.warn(`[Marina] Lite Stratège failed (non-fatal):`, stratErr);
+          }
         }
       }
     } catch (e) {
