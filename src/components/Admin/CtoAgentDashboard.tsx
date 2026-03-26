@@ -44,37 +44,61 @@ const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] 
   { key: 'audit-compare', label: 'Audit Comparatif', category: 'Audits' },
   { key: 'audit-local-seo', label: 'Audit SEO Local', category: 'Audits' },
   { key: 'audit-matrice', label: 'Matrice d\'audit', category: 'Audits' },
+  { key: 'strategic-orchestrator', label: 'Orchestrateur Stratégique', category: 'Audits' },
   // Crawl & Cocoon
   { key: 'crawl-site', label: 'Crawl multi-pages', category: 'Crawl & Cocoon' },
+  { key: 'process-crawl-queue', label: 'Worker Crawl Queue', category: 'Crawl & Cocoon' },
   { key: 'calculate-cocoon-logic', label: 'Cocoon Logic', category: 'Crawl & Cocoon' },
   { key: 'calculate-internal-pagerank', label: 'PageRank interne', category: 'Crawl & Cocoon' },
   { key: 'cocoon-chat', label: 'Stratège Cocoon', category: 'Crawl & Cocoon' },
   { key: 'persist-cocoon-session', label: 'Session Cocoon', category: 'Crawl & Cocoon' },
+  { key: 'cocoon-auto-linking', label: 'Auto-Maillage IA', category: 'Crawl & Cocoon' },
+  { key: 'cocoon-deploy-links', label: 'Déploiement Liens', category: 'Crawl & Cocoon' },
   // Diagnostics
   { key: 'cocoon-diag-content', label: 'Diag. Contenu', category: 'Diagnostics' },
   { key: 'cocoon-diag-semantic', label: 'Diag. Sémantique', category: 'Diagnostics' },
   { key: 'cocoon-diag-structure', label: 'Diag. Structure', category: 'Diagnostics' },
   { key: 'cocoon-diag-authority', label: 'Diag. Autorité', category: 'Diagnostics' },
+  { key: 'cocoon-diag-subdomains', label: 'Diag. Sous-domaines', category: 'Diagnostics' },
   // Strategy
   { key: 'cocoon-strategist', label: 'Stratège', category: 'Stratégie' },
   { key: 'content-architecture-advisor', label: 'Content Architect', category: 'Stratégie' },
   { key: 'detect-anomalies', label: 'Détection anomalies', category: 'Stratégie' },
+  { key: 'drop-detector', label: 'Détection de chute', category: 'Stratégie' },
+  { key: 'seasonality-detector', label: 'Détection saisonnalité', category: 'Stratégie' },
   // Visibility
   { key: 'check-llm', label: 'Visibilité LLM', category: 'Visibilité' },
   { key: 'check-llm-depth', label: 'Profondeur LLM', category: 'Visibilité' },
   { key: 'diagnose-hallucination', label: 'Hallucination', category: 'Visibilité' },
   { key: 'calculate-llm-volumes', label: 'Volumes LLM', category: 'Visibilité' },
+  { key: 'calculate-llm-visibility', label: 'Score Visibilité LLM', category: 'Visibilité' },
   // Connectors
-  { key: 'rankmath-connector', label: 'RankMath', category: 'Connecteurs' },
-  { key: 'gtmetrix-connector', label: 'GTmetrix', category: 'Connecteurs' },
-  { key: 'linkwhisper-connector', label: 'LinkWhisper', category: 'Connecteurs' },
+  { key: 'rankmath-actions', label: 'RankMath', category: 'Connecteurs' },
+  { key: 'gtmetrix-actions', label: 'GTmetrix', category: 'Connecteurs' },
+  { key: 'linkwhisper-actions', label: 'LinkWhisper', category: 'Connecteurs' },
   { key: 'google-ads-connector', label: 'Google Ads', category: 'Connecteurs' },
+  { key: 'gmb-actions', label: 'Google My Business', category: 'Connecteurs' },
+  { key: 'wpsync', label: 'WordPress Sync', category: 'Connecteurs' },
+  { key: 'drupal-actions', label: 'Drupal', category: 'Connecteurs' },
   // Code
   { key: 'generate-corrective-code', label: 'Code correctif', category: 'Code' },
+  { key: 'process-script-queue', label: 'File Scribe', category: 'Code' },
+  // Pipeline
+  { key: 'marina', label: 'Marina (Pipeline Rapports)', category: 'Pipeline' },
+  { key: 'autopilot-engine', label: 'Autopilote Engine', category: 'Pipeline' },
+  { key: 'parmenion-orchestrator', label: 'Parménion', category: 'Pipeline' },
+  // Agents
+  { key: 'sav-agent', label: 'Félix (SAV)', category: 'Agents' },
+  { key: 'agent-cto', label: 'Agent CTO', category: 'Agents' },
+  { key: 'agent-seo', label: 'Agent SEO', category: 'Agents' },
+  { key: 'supervisor-actions', label: 'Superviseur', category: 'Agents' },
   // Quiz & Learning
   { key: 'felix-seo-quiz', label: 'Quiz SEO/GEO/LLM', category: 'Learning' },
   { key: 'sync-quiz-crawlers', label: 'Sync Quiz Crawlers (mensuel)', category: 'Learning' },
   { key: 'felix-weekly-quiz-notif', label: 'Notif Quiz Hebdo', category: 'Learning' },
+  // MCP & API
+  { key: 'mcp-server', label: 'Serveur MCP', category: 'API' },
+  { key: 'health-check', label: 'Health Check', category: 'API' },
 ];
 
 export function CtoAgentDashboard() {
