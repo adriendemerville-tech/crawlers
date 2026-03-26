@@ -1298,9 +1298,9 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
               const crawlId = crawlLaunchRes.crawlId;
               console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages (${crawlLaunchRes.newPages || '?'} new, ${crawlLaunchRes.reusedPages || 0} reused)`);
               
-              // Poll until crawl completes (max 3 minutes — Edge Function has ~6 min total)
+              // Poll until crawl completes (max 90s — Marina needs budget for cocoon + report)
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 180_000; // 3 min
+              const CRAWL_TIMEOUT_MS = 90_000; // 90s max for crawl polling
               const CRAWL_POLL_MS = 4_000;
               let crawlDone = false;
               
@@ -1347,7 +1347,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
               }
               
               if (!crawlDone) {
-                console.warn(`[Marina] Crawl ${crawlId} timed out after 5 min — proceeding with partial data`);
+                console.warn(`[Marina] Crawl ${crawlId} timed out after 90s — proceeding with partial data`);
               }
             } else {
               console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
