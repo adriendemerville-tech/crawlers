@@ -432,7 +432,10 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        {showPendingTab ? (
+        {showPayingTab ? (
+          /* ====== Paying Users Tab ====== */
+          <PayingUsersTab />
+        ) : showPendingTab ? (
           /* ====== Pending Users Tab ====== */
           <div className="space-y-3">
             <div className="flex items-center justify-between">
