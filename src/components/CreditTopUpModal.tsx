@@ -236,7 +236,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-5 pt-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 pt-3 grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
@@ -247,40 +247,40 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative rounded-xl border-2 p-5 ${pkg.borderColor} ${
+                  className={`relative rounded-lg border-2 p-3 ${pkg.borderColor} ${
                     pkg.popular ? 'ring-2 ring-emerald-500/50' : ''
                   } bg-card hover:border-primary/50 transition-all duration-300`}
                 >
                   {pkg.popular && (
                     <Badge 
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0"
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 text-[10px] px-2 py-0.5"
                     >
                       {language === 'fr' ? 'Populaire' : language === 'es' ? 'Popular' : 'Popular'}
                     </Badge>
                   )}
 
                   <div className="flex flex-col items-center text-center h-full justify-between">
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <div>
-                        <h3 className="font-semibold text-lg">{pkg.name}</h3>
-                        <p className="text-3xl font-bold mt-2 flex items-center justify-center gap-2">
+                        <h3 className="font-semibold text-sm">{pkg.name}</h3>
+                        <p className="text-xl font-bold mt-1 flex items-center justify-center gap-1.5">
                           {pkg.credits}
-                          <CreditCoin size="md" />
+                          <CreditCoin size="sm" />
                         </p>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <p className="text-2xl font-bold">{pkg.price}€</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="space-y-0.5">
+                        <p className="text-lg font-bold">{pkg.price}€</p>
+                        <p className="text-[10px] text-muted-foreground">
                           {pkg.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
                         </p>
                         {pkg.savings ? (
-                          <Badge variant="secondary" className="text-xs text-emerald-600 dark:text-emerald-400">
-                            <Check className="h-3 w-3 mr-1" />
+                          <Badge variant="secondary" className="text-[10px] text-emerald-600 dark:text-emerald-400 px-1.5 py-0">
+                            <Check className="h-2.5 w-2.5 mr-0.5" />
                             {pkg.savings} {t.savings}
                           </Badge>
                         ) : (
-                          <div className="h-5" />
+                          <div className="h-4" />
                         )}
                       </div>
                     </div>
@@ -288,17 +288,17 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     <Button
                       onClick={() => handlePurchase(pkg.id)}
                       disabled={loadingPackage !== null}
-                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-4`}
-                      size="default"
+                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-2 h-8 text-xs`}
+                      size="sm"
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
                           {t.processing}
                         </>
                       ) : (
                         <>
-                          <Check className="h-4 w-4 mr-1" />
+                          <Check className="h-3 w-3 mr-1" />
                           {t.buy}
                         </>
                       )}
