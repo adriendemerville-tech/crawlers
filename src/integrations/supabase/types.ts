@@ -796,7 +796,7 @@ export type Database = {
           raw_payload: Json
           source_functions: string[]
           url: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           audit_type: string
@@ -806,7 +806,7 @@ export type Database = {
           raw_payload?: Json
           source_functions?: string[]
           url: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           audit_type?: string
@@ -816,7 +816,7 @@ export type Database = {
           raw_payload?: Json
           source_functions?: string[]
           url?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
