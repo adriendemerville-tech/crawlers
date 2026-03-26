@@ -195,6 +195,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [felixMuted, setFelixMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
 
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
