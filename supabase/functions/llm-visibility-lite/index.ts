@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 
 /**
  * llm-visibility-lite — Lead magnet version
@@ -144,6 +145,15 @@ Deno.serve(async (req) => {
     const citedCount = results.filter(r => r.cited).length
 
     console.log(`[llm-lite] ${domain} (${brand}): ${citedCount}/${results.length} cited`)
+
+    // Fire-and-forget raw data capture
+    saveRawAuditData({
+      url,
+      domain,
+      auditType: 'lead_magnet_llm',
+      rawPayload: { brand, results, citedCount, totalLlms: results.length },
+      sourceFunctions: ['llm-visibility-lite'],
+    }).catch(() => {})
 
     return new Response(JSON.stringify({
       success: true,
