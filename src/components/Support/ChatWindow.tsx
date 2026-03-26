@@ -298,7 +298,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
       setQuizLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
-          body: { action: 'get_questions' },
+          body: { action: 'get_questions', user_id: user?.id },
         });
         if (error) throw error;
         setQuizData({ questions: data.questions, answerKey: data.answerKey });
