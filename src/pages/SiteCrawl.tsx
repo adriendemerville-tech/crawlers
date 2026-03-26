@@ -2170,9 +2170,11 @@ export default function SiteCrawl() {
                           {c.avg_score && (
                             <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
                           )}
-                          <Badge variant={c.status === 'completed' ? 'default' : c.status === 'error' ? 'destructive' : 'secondary'}>
-                            {c.status}
-                          </Badge>
+                          {c.status === 'error' && (
+                            <Badge variant="destructive">
+                              {c.status}
+                            </Badge>
+                          )}
                           <ArrowRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                       </button>
