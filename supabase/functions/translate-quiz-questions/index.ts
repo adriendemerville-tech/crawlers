@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       .select('id, question, options, explanation')
       .eq('is_active', true)
       .is('question_en', null)
-      .limit(50); // Process in batches of 50
+      .limit(15); // Process in batches of 15
 
     if (error) throw error;
     if (!questions || questions.length === 0) {
