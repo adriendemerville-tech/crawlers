@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const isAdmin = !!adminRole;
-    const isAgencyPro = profile?.plan_type === "agency_pro";
+    const isAgencyPro = profile?.plan_type === "agency_pro" || profile?.plan_type === "agency_premium";
+    const isAgencyPremium = profile?.plan_type === "agency_premium";
 
     if (!isAdmin && !isAgencyPro) {
       return new Response(
@@ -84,11 +85,11 @@ Deno.serve(async (req) => {
 
         const totalSlots =
           (members?.length || 0) + (pendingInvites?.length || 0);
-        if (totalSlots >= 2) {
-          // max 2 additional (3 total with owner)
+        const maxSlots = isAgencyPremium ? 4 : 2; // 5 total for Premium, 3 for Pro
+        if (totalSlots >= maxSlots) {
           return new Response(
             JSON.stringify({
-              error: "Maximum team size reached (3 accounts)",
+              error: `Maximum team size reached (${maxSlots + 1} accounts)`,
             }),
             {
               status: 400,
