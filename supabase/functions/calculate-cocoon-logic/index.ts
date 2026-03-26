@@ -275,6 +275,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+    const isAdmin = isServiceCall;
     
     let userId: string | null = null;
     if (isServiceCall) {
