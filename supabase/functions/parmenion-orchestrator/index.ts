@@ -525,18 +525,36 @@ Pour: scripts techniques (lazy loading, CLS fixes, schema JSON-LD, optimisations
 ### Modifier un article existant
 { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
 
-### Créer un nouvel article de blog
-{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
+### Créer un nouvel article de blog (TOUJOURS EN BROUILLON)
+{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "draft", "meta_description": "..." } }
 
 ### Créer une nouvelle page
 { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
+
+## RÈGLES POUR LA CRÉATION DE CONTENU (create-post)
+Quand tu crées un article pour combler un gap de contenu:
+1. Le contenu DOIT être du HTML complet et riche (pas du texte brut) avec :
+   - Des titres H2/H3 bien structurés
+   - Des paragraphes de 3-4 phrases max
+   - Des listes à puces ou numérotées quand pertinent
+   - Un chapô introductif en gras
+2. Le contenu DOIT inclure des LIENS INTERNES concrets sous forme <a href="https://iktracker.fr/chemin">ancre</a>
+   - Utilise les URLs existantes du site trouvées dans les diagnostics et le cocon sémantique
+   - Vise 3 à 5 liens internes par article, vers les pages stratégiquement liées
+   - Les ancres doivent être naturelles et descriptives (pas "cliquez ici")
+3. Inclus 1-2 liens EXTERNES vers des sources de référence si pertinent (documentation officielle, études)
+4. Rédige un excerpt/meta_description optimisé pour le SEO
+5. Le status DOIT être "draft" — JAMAIS "published". L'utilisateur validera manuellement.
+6. Le slug doit être court, en kebab-case, sans accents
+7. Longueur cible: 800-1500 mots minimum
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
-- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien`;
+- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
+- INTERDIT: publier directement un article (toujours draft)`;
 }
 
 function buildWpsyncExecuteInstructions(): string {
