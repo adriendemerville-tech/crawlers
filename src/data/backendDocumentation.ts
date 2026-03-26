@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés et détection d'anomalies :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion, pipeline Marina, serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  130 fonctions serverless + 22 modules partagés         │
+│  172 fonctions serverless + 36 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -65,7 +65,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  60+ tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  142 tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +77,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 121 fonctions serverless + 22 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 172 fonctions serverless + 36 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -1446,14 +1446,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.3.0',
-  lastUpdated: '2026-03-25',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 130,
-  totalSharedModules: 22,
-  totalTables: '68+',
-  totalLinesOfCode: '190 000+',
-  totalMigrations: 199,
+  version: '7.0.0',
+  lastUpdated: '2026-03-26',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N',
+  totalEdgeFunctions: 172,
+  totalSharedModules: 36,
+  totalTables: '142',
+  totalLinesOfCode: '205 000+',
+  totalMigrations: 235,
   totalPages: 41,
-  totalComponents: 303,
+  totalComponents: 311,
 };
