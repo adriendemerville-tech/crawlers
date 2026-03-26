@@ -21,6 +21,8 @@ export function FloatingChatBubble() {
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
   const [showBounce, setShowBounce] = useState(false);
+  const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
+  const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
