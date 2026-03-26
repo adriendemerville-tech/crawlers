@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
     ]);
 
     // ── Fair Use check (single call with real plan type) ──
-    const isProAgencyPlan = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
+    const isProAgencyPlan = ['agency_pro', 'agency_premium'].includes(profile?.plan_type || '') && profile?.subscription_status === 'active';
     if (!isAdmin) {
       const fairUse = await checkFairUse(userId, 'crawl_site', isProAgencyPlan ? 'agency_pro' : 'free');
       if (!fairUse.allowed) {
@@ -232,7 +232,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
+    const isProAgency = ['agency_pro', 'agency_premium'].includes(profile?.plan_type || '') && profile?.subscription_status === 'active';
+    const isAgencyPlus = profile?.plan_type === 'agency_premium' && profile?.subscription_status === 'active';
     const isUnlimited = isAdmin === true;
 
     // Admins: no page cap
@@ -243,7 +244,7 @@ Deno.serve(async (req) => {
     // ── Fair Use Policy ──────────────────────────────────────
     // Pro Agency: 5 000 pages/month included, then pay-as-you-go
     // Free users: always pay credits
-    const FAIR_USE_LIMIT = 5000;
+    const FAIR_USE_LIMIT = isAgencyPlus ? 50000 : 5000;
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
     // Reset monthly counter if new month
