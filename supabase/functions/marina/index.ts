@@ -1568,7 +1568,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
 
-      console.log(`[Marina] ✅ Phase 2 complete — pipeline finished for ${domain}`);
+      console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
       // ─── Step 6: Persist structured training data for ML ───
       try {
