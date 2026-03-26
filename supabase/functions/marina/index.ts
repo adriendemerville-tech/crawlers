@@ -430,30 +430,32 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
   const htmlAnalysis = rawData?.htmlAnalysis || {};
+  const linkProfile = htmlAnalysis?.insights?.linkProfile || {};
+  const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
 
   const crawlMeta = {
-    pagesFound: rawData?.internalLinks?.length || htmlAnalysis?.internalLinksCount || 1,
-    avgResponseTime: htmlAnalysis?.responseTimeMs || rawData?.responseTimeMs || null,
+    pagesFound: rawData?.internalLinks?.length || linkProfile?.internal || 1,
+    avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: htmlAnalysis?.wordCount || 0,
     imagesTotal: htmlAnalysis?.imagesTotal || 0,
-    imagesWithoutAlt: htmlAnalysis?.imagesWithoutAlt || 0,
-    h1: htmlAnalysis?.h1 || '',
+    imagesWithoutAlt: htmlAnalysis?.imagesMissingAlt || 0,
+    h1: htmlAnalysis?.h1Contents?.[0] || '',
     h2Count: htmlAnalysis?.h2Count || 0,
     hasSchema: htmlAnalysis?.hasSchemaOrg || false,
     hasOg: htmlAnalysis?.hasOg || false,
     hasCanonical: htmlAnalysis?.hasCanonical || false,
-    brokenLinks: rawData?.brokenLinks?.length || 0,
-    externalLinks: htmlAnalysis?.externalLinksCount || 0,
-    internalLinks: htmlAnalysis?.internalLinksCount || 0,
+    brokenLinks: rawData?.brokenLinks?.length || brokenLinksInsight?.broken?.length || 0,
+    externalLinks: linkProfile?.external || 0,
+    internalLinks: linkProfile?.internal || 0,
     indexable: htmlAnalysis?.isIndexable !== false,
     performanceScore: scores?.performance?.psiPerformance || null,
     lcp: scores?.performance?.lcp || null,
     tbt: scores?.performance?.tbt || null,
     cls: scores?.performance?.cls || null,
     fcp: scores?.performance?.fcp || null,
-    title: htmlAnalysis?.title || '',
+    title: htmlAnalysis?.titleContent || '',
     titleLength: htmlAnalysis?.titleLength || 0,
-    metaDesc: htmlAnalysis?.metaDescription || '',
+    metaDesc: htmlAnalysis?.metaDescContent || '',
     metaDescLength: htmlAnalysis?.metaDescLength || 0,
     h1Contents: htmlAnalysis?.h1Contents || [],
     h2Contents: htmlAnalysis?.h2Contents || [],
@@ -1271,16 +1273,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // Ensure tracked_site exists
       let trackedSiteId: string | null = null;
       {
-        // Use .limit(1).single() to avoid maybeSingle() error when multiple rows match
-        const { data: ts } = await sb
+        const { data: trackedSites, error: trackedSiteLookupError } = await sb
           .from('tracked_sites')
           .select('id')
+          .eq('user_id', parentJob.user_id)
           .eq('domain', domain)
-          .limit(1)
-          .maybeSingle();
+          .limit(1);
+        const ts = trackedSites?.[0];
         if (ts) {
           trackedSiteId = ts.id;
-          console.log(`[Marina] Found tracked_site ${ts.id} for ${domain}`);
+          console.log(`[Marina] Found tracked_site ${ts.id} for ${domain} (user ${parentJob.user_id})`);
         } else {
           console.log(`[Marina] No tracked_site for ${domain}, creating one...`);
           const { data: newTs, error: insertErr } = await sb
@@ -1291,16 +1293,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           if (insertErr) {
             console.warn(`[Marina] Failed to create tracked_site: ${insertErr.message}`);
             // Retry lookup — might have been created concurrently
-            const { data: retryTs } = await sb
+            const { data: retryTsRows } = await sb
               .from('tracked_sites')
               .select('id')
+              .eq('user_id', parentJob.user_id)
               .eq('domain', domain)
-              .limit(1)
-              .maybeSingle();
-            trackedSiteId = retryTs?.id || null;
+              .limit(1);
+            trackedSiteId = retryTsRows?.[0]?.id || null;
           } else {
             trackedSiteId = newTs?.id || null;
           }
+        }
+        if (trackedSiteLookupError) {
+          console.warn(`[Marina] tracked_site lookup warning for ${domain}: ${trackedSiteLookupError.message}`);
         }
       }
 
@@ -1421,13 +1426,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       let llmVisibilityData: any = null;
       let trackedSiteId: string | null = null;
       {
-        const { data: ts } = await sb
+        const { data: trackedSites, error: trackedSiteLookupError } = await sb
           .from('tracked_sites')
           .select('id')
+          .eq('user_id', parentJob.user_id)
           .eq('domain', domain)
-          .limit(1)
-          .maybeSingle();
-        trackedSiteId = ts?.id || null;
+          .limit(1);
+        trackedSiteId = trackedSites?.[0]?.id || null;
+        if (trackedSiteLookupError) {
+          console.warn(`[Marina] Phase 3 tracked_site lookup warning for ${domain}: ${trackedSiteLookupError.message}`);
+        }
         console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
 
