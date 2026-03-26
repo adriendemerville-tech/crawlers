@@ -223,7 +223,7 @@ const translations = {
       '100 tracked URLs included',
       'Priority crawl queue',
     ],
-    agencyPremiumCta: 'Contact us',
+    agencyPremiumCta: 'Subscribe · €89/mo',
     or: 'or',
   },
   es: {
@@ -326,7 +326,7 @@ const translations = {
       '100 URL seguidos incluidos',
       'Prioridad en cola de crawl',
     ],
-    agencyPremiumCta: 'Contáctenos',
+    agencyPremiumCta: 'Suscribirse · 89€/mes',
     or: 'o',
   },
 };
