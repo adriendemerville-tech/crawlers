@@ -90,6 +90,11 @@ export function FinancesDashboard() {
     openrouter?: { usage?: number; limit?: number; balance?: number; is_free_tier?: boolean; error?: string };
     firecrawl?: { remaining_credits?: number; total_credits?: number; plan?: string; error?: string };
   } | null>(null);
+  const [browserlessMetrics, setBrowserlessMetrics] = useState<{
+    units: number; unitsRemaining: number; planUnitsPerMonth: number;
+    running: number; concurrencyLimit: number; maxConcurrent: number;
+    successful: number; error: number; timedout: number; rejected: number;
+  } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0, promptTokens: 0, completionTokens: 0, callCount: 0,
     byFunction: {}, byModel: {},
