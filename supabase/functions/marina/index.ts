@@ -208,6 +208,43 @@ function buildModuleSection(title: string, emoji: string, data: any): string {
   </div>`;
 }
 
+// ─── Dedicated renderer for Competitive Landscape with colored cards ───
+function buildCompetitiveLandscapeSection(data: any): string {
+  if (!data) return '';
+
+  const competitors = [
+    { key: 'leader', label: '👑 Leader (Goliath)', color: '#f59e0b', borderColor: '#f59e0b' },
+    { key: 'direct_competitor', label: '🎯 Concurrent Direct', color: '#3b82f6', borderColor: '#3b82f6' },
+    { key: 'challenger', label: '🚀 Challenger', color: '#8b5cf6', borderColor: '#8b5cf6' },
+    { key: 'inspiration_source', label: '✨ Source d\'Inspiration', color: '#10b981', borderColor: '#10b981' },
+  ];
+
+  const cards = competitors.map(({ key, label, color, borderColor }) => {
+    const actor = data[key];
+    if (!actor) return '';
+    const name = actor.name || '';
+    const analysis = actor.analysis || '';
+    const authority = actor.authority_factor || '';
+    const url = actor.url || '';
+    
+    return `<div style="padding:16px;border-radius:8px;border-left:4px solid ${borderColor};background:${color}08;margin-bottom:12px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;padding:2px 8px;background:${color}15;border-radius:4px;">${label}</span>
+      </div>
+      <div style="font-weight:600;font-size:15px;color:#1e293b;margin-bottom:4px;">${name}</div>
+      ${url ? `<div style="font-size:12px;color:${color};margin-bottom:6px;">${url}</div>` : ''}
+      ${authority ? `<div style="font-size:12px;color:#6b7280;margin-bottom:8px;">🛡️ ${authority}</div>` : ''}
+      ${analysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;">${analysis.length > 400 ? analysis.slice(0, 397) + '…' : analysis}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">⚔️ Paysage Concurrentiel</h3>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      ${cards}
+    </div>
+  </div>`;
+
 // ─── Section 1: Crawl Report (standalone HTML) ───
 function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string): string {
   const tr = getTranslations(lang);
