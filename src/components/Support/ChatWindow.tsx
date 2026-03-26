@@ -79,9 +79,23 @@ const QUIZ_KEYWORDS = [
   'auto evaluation', 'quel est mon niveau', 'qcm seo',
 ];
 
+const CRAWLERS_QUIZ_KEYWORDS = [
+  'quiz crawlers', 'quizz crawlers', 'quiz produit', 'quiz plateforme',
+  'test crawlers', 'connaitre crawlers', 'fonctionnalites crawlers',
+  'fonctionnalités crawlers', 'quiz outil', 'quiz outils',
+];
+
 function detectQuizIntent(message: string): boolean {
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   return QUIZ_KEYWORDS.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
+function detectCrawlersQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return CRAWLERS_QUIZ_KEYWORDS.some(kw => {
     const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return lower.includes(normalizedKw);
   });
@@ -213,6 +227,43 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     checkResolvedBugs();
   }, [user]);
 
+  // Weekly quiz invitation notification
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    const checkQuizInvite = async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('id, event_data')
+        .eq('user_id', user.id)
+        .eq('event_type', 'felix:quiz_invite')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        // Check if user already dismissed or took quiz this week
+        const { data: recentQuiz } = await supabase
+          .from('analytics_events')
+          .select('id')
+          .eq('user_id', user.id)
+          .in('event_type', ['quiz:seo_score', 'quiz:crawlers_score', 'felix:quiz_invite_dismissed'])
+          .gte('created_at', sevenDaysAgo)
+          .limit(1);
+
+        if (!recentQuiz || recentQuiz.length === 0) {
+          const inviteMsg: ChatMessage = {
+            role: 'assistant',
+            content: "🎓 **Ça te dit de tester tes connaissances en SEO GEO ?** 3 minutes max.\n\nTape **\"quiz\"** pour lancer le test !",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [inviteMsg, ...prev]);
+        }
+      }
+    };
+    checkQuizInvite();
+  }, [user, isAdmin]);
+
   // Track post-chat navigation for quality scoring
   const trackPostChatRoute = useCallback(async (route: string) => {
     const convId = conversationIdRef.current;
@@ -293,6 +344,44 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     // Check if user is expressing a bug intent
     if (bugReportMode === 'idle' && detectBugIntent(messageText)) {
       setBugReportMode('prompt');
+    }
+
+    // Crawlers quiz detection — check BEFORE generic quiz
+    if (!quizData && detectCrawlersQuizIntent(messageText)) {
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: messageText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setNewMessage('');
+
+      const launchMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🛠️ **Quiz Crawlers**\n\n10 questions sur la plateforme et ses outils. 2 minutes chrono !",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, launchMsg]);
+
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
+          body: { action: 'get_crawlers_quiz' },
+        });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
+      } catch (e) {
+        console.error('Crawlers quiz load error:', e);
+        const errorMsg: ChatMessage = {
+          role: 'assistant',
+          content: "Désolé, le quiz Crawlers n'a pas pu être chargé. Réessaie !",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      } finally {
+        setQuizLoading(false);
+      }
+      return;
     }
 
     // Quiz intent detection — intercept before sending to SAV agent
