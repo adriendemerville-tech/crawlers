@@ -1174,6 +1174,28 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     });
 
     console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
+
+    // ─── Step 2b: Real LLM Visibility benchmark (parallel with cocoon) ───
+    let llmVisibilityData: any = null;
+    const llmVisibilityPromise = (async () => {
+      try {
+        console.log(`[Marina] Step 2b: calculate-llm-visibility for ${domain}`);
+        const result = await callFunction('calculate-llm-visibility', {
+          url,
+          domain,
+          _marina: true,
+        });
+        if (result && !result.error && result.scores) {
+          llmVisibilityData = result;
+          console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
+        } else {
+          console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
+        }
+      } catch (e) {
+        console.warn(`[Marina] LLM visibility failed (non-fatal):`, e);
+      }
+    })();
+
     await updateProgress(65, 'cocoon');
 
     // ─── Step 3: Cocoon (always run — create tracked_site + crawl data if needed) ───
