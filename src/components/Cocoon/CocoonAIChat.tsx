@@ -321,6 +321,7 @@ interface CocoonAIChatProps {
   onCancelPick?: () => void;
   trackedSiteId?: string;
   domain?: string;
+  onGenerateGraph?: () => void;
 }
 
 function getSlug(url: string): string {
@@ -344,7 +345,7 @@ function getSessionHash(): string {
   return hash;
 }
 
-export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
+export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain, onGenerateGraph }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
