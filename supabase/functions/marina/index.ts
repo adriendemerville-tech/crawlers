@@ -788,32 +788,81 @@ async function generateLiteStrategeRecommendations(
   }
 
   const stats = cocoonResult?.stats || {};
+  const graphDetails = cocoonResult?.graph_details || {};
   const seoScore = expertData?.totalScore || 0;
   const geoScore = strategicData?.overallScore || 0;
 
+  // Build detailed graph context for the strategist
+  const orphans = (graphDetails.orphan_pages || []).slice(0, 5);
+  const cannib = (graphDetails.cannibalization_risks || []).slice(0, 3);
+  const thinPages = (graphDetails.thin_content_pages || []).slice(0, 5);
+  const clusters = (graphDetails.cluster_details || []).slice(0, 5);
+
+  const orphanBlock = orphans.length > 0
+    ? `Pages orphelines (${stats.orphan_count || orphans.length} total):\n${orphans.map((o: any) => `  - ${o.url} (${o.word_count || 0} mots) "${o.title}"`).join('\n')}`
+    : 'Aucune page orpheline détectée.';
+
+  const cannibBlock = cannib.length > 0
+    ? `Risques de cannibalisation (${stats.cannibalization_count || cannib.length} total):\n${cannib.map((c: any) => `  - ${c.urls.join(' vs ')} — mots-clés partagés: ${c.shared_keywords.join(', ')}`).join('\n')}`
+    : 'Aucune cannibalisation détectée.';
+
+  const thinBlock = thinPages.length > 0
+    ? `Pages contenu faible (${stats.thin_content_count || thinPages.length} total, <300 mots):\n${thinPages.map((t: any) => `  - ${t.url} (${t.word_count} mots) "${t.title}"`).join('\n')}`
+    : 'Aucune page à contenu faible.';
+
+  const clusterBlock = clusters.length > 0
+    ? `Clusters thématiques (${stats.clusters_count || clusters.length}):\n${clusters.map((c: any) => `  - Cluster "${c.top_keywords?.join(', ') || '?'}" : ${c.size} pages, score SEO moy: ${c.avg_seo_score}, mots moy: ${c.avg_word_count}`).join('\n')}`
+    : '';
+
   const prompt = lang === 'fr'
-    ? `Tu es un stratège SEO/GEO senior. Analyse ce résumé de cocon sémantique et donne exactement 3 recommandations prioritaires, courtes et actionnables.
+    ? `Tu es un stratège SEO/GEO senior. Analyse ce diagnostic détaillé du cocon sémantique et donne exactement 3 recommandations classées par priorité (Priorité 1 = critique, Priorité 2 = important, Priorité 3 = recommandé).
+
+Chaque recommandation doit être SPÉCIFIQUE au site, citer des URLs ou clusters précis, et proposer une action concrète.
 
 Domaine: ${domain}
 Score SEO technique: ${seoScore}/200
 Score GEO stratégique: ${geoScore}/100
+
+=== GRAPHE SÉMANTIQUE ===
 Pages analysées: ${stats.nodes_count || 0}
 Clusters: ${stats.clusters_count || 0}
 Liens sémantiques: ${stats.edges_count || 0}
-Densité liens: ${stats.links_density || 'N/A'}%
+Densité de maillage: ${stats.links_density || 'N/A'}%
 
-Réponds en JSON strict: [{"title":"...","description":"...","priority":"critique|important|recommandé"}]`
-    : `You are a senior SEO/GEO strategist. Analyze this semantic cocoon summary and give exactly 3 priority, short, actionable recommendations.
+${clusterBlock}
+
+=== PROBLÈMES DÉTECTÉS ===
+${orphanBlock}
+
+${cannibBlock}
+
+${thinBlock}
+
+Réponds en JSON strict: [{"title":"...","description":"...","priority":"Priorité 1"},{"title":"...","description":"...","priority":"Priorité 2"},{"title":"...","description":"...","priority":"Priorité 3"}]`
+    : `You are a senior SEO/GEO strategist. Analyze this detailed semantic cocoon diagnostic and give exactly 3 recommendations ranked by priority (Priority 1 = critical, Priority 2 = important, Priority 3 = recommended).
+
+Each recommendation must be SPECIFIC to the site, cite precise URLs or clusters, and propose a concrete action.
 
 Domain: ${domain}
 Technical SEO Score: ${seoScore}/200
 Strategic GEO Score: ${geoScore}/100
+
+=== SEMANTIC GRAPH ===
 Pages analyzed: ${stats.nodes_count || 0}
 Clusters: ${stats.clusters_count || 0}
 Semantic links: ${stats.edges_count || 0}
 Link density: ${stats.links_density || 'N/A'}%
 
-Respond in strict JSON: [{"title":"...","description":"...","priority":"critical|important|recommended"}]`;
+${clusterBlock}
+
+=== DETECTED ISSUES ===
+${orphanBlock}
+
+${cannibBlock}
+
+${thinBlock}
+
+Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority 1"},{"title":"...","description":"...","priority":"Priority 2"},{"title":"...","description":"...","priority":"Priority 3"}]`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -822,14 +871,14 @@ Respond in strict JSON: [{"title":"...","description":"...","priority":"critical
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are a concise SEO strategist. Always respond with valid JSON arrays only.' },
+        { role: 'system', content: 'You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.' },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 1024,
+      max_tokens: 2048,
     }),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!response.ok) {
