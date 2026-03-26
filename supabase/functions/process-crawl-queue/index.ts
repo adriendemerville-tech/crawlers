@@ -792,7 +792,21 @@ Deno.serve(async (req) => {
       const customSelectors: CustomSelector[] = (job.custom_selectors as CustomSelector[]) || [];
       const maxDepth: number = job.max_depth || 0;
       const urlFilter: string | null = job.url_filter || null;
-      const alreadyProcessed = job.processed_count || 0;
+      let alreadyProcessed = job.processed_count || 0;
+
+      const { count: persistedPageCount } = await supabase
+        .from('crawl_pages')
+        .select('id', { count: 'exact', head: true })
+        .eq('crawl_id', job.crawl_id);
+
+      const reconciledProcessedCount = Math.max(alreadyProcessed, persistedPageCount || 0);
+      if (reconciledProcessedCount !== alreadyProcessed) {
+        console.log(`[Worker] Job ${job.id}: checkpoint recovered ${alreadyProcessed} → ${reconciledProcessedCount}`);
+        alreadyProcessed = reconciledProcessedCount;
+        await supabase.from('crawl_jobs').update({ processed_count: reconciledProcessedCount }).eq('id', job.id);
+        await supabase.from('site_crawls').update({ crawled_pages: reconciledProcessedCount }).eq('id', job.crawl_id);
+      }
+
       let remaining = urlsToProcess.slice(alreadyProcessed);
 
       // Apply URL regex filter if set
@@ -811,7 +825,7 @@ Deno.serve(async (req) => {
       }
 
       if (remaining.length === 0) {
-        await finalizeJob(supabase, job, firecrawlKey);
+        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey);
         continue;
       }
 
@@ -854,8 +868,8 @@ Deno.serve(async (req) => {
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
       
       // Dynamic batch size based on average HTML weight from first page probe
-      const probeSize = firstPageResult?.html_size_bytes || 0;
-      const dynamicMax = probeSize > 250_000 ? 3 : probeSize > 100_000 ? 5 : 8;
+       const probeSize = firstPageResult?.html_size_bytes || 0;
+       const dynamicMax = probeSize > 250_000 ? 1 : probeSize > 150_000 ? 2 : probeSize > 100_000 ? 4 : 8;
       const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), dynamicMax);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
       
@@ -890,8 +904,13 @@ Deno.serve(async (req) => {
         await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
       }
 
-      const pagesInThisCycle = (firstPageResult ? 1 : 0) + batch.length;
-      const newProcessedCount = alreadyProcessed + pagesInThisCycle;
+      const { count: persistedAfterBatch } = await supabase
+        .from('crawl_pages')
+        .select('id', { count: 'exact', head: true })
+        .eq('crawl_id', job.crawl_id);
+
+      const newProcessedCount = Math.max(alreadyProcessed, persistedAfterBatch || 0);
+      const pagesInThisCycle = Math.max(0, newProcessedCount - alreadyProcessed);
       globalPagesProcessed += pagesInThisCycle;
 
       await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
