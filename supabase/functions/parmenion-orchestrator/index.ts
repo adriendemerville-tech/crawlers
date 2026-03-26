@@ -26,7 +26,7 @@ type PipelinePhase = typeof PIPELINE_PHASES[number];
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   audit: ['audit-expert-seo'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
-  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
+  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
   execute: ['wpsync', 'iktracker-actions', 'generate-corrective-code'],
   validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
@@ -343,7 +343,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
                 goal: {
                   type: 'object',
                   properties: {
-                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
+                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
                     cluster_id: { type: 'string' },
                     description: { type: 'string' },
                   },
@@ -446,9 +446,23 @@ IMPORTANT: Ne refais PAS d'audit technique. Les données sont là, utilise-les p
       return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
 Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
 Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
-Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
-- Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
-- Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
+Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
+
+## DEUX TYPES DE PRESCRIPTIONS
+
+### TYPE A: Correctifs techniques (meta, performance, schema)
+→ Utilise generate-corrective-code
+→ Payload: tableau "fixes" avec id, label, category, prompt, enabled, target_url
+
+### TYPE B: Création de contenu (combler des gaps thématiques)
+→ Utilise content-architecture-advisor pour générer l'architecture du contenu
+→ Payload: { "url": "https://domain.tld", "keyword": "mot-clé-cible", "page_type": "article", "tracked_site_id": "..." }
+→ Le résultat sera utilisé en phase EXECUTE pour créer l'article sur le CMS
+
+Si les diagnostics révèlent des CONTENT GAPS (avg_content_gap élevé, clusters orphelins, thématiques non couvertes):
+- Prescris un appel à content-architecture-advisor avec le mot-clé cible du gap
+- Le cocon sémantique fournit les clusters et intents à couvrir — utilise-les pour identifier le meilleur gap à combler
+- Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
 
 ## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
 Le payload DOIT contenir un tableau "fixes" avec ce format exact:
@@ -525,18 +539,36 @@ Pour: scripts techniques (lazy loading, CLS fixes, schema JSON-LD, optimisations
 ### Modifier un article existant
 { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
 
-### Créer un nouvel article de blog
-{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
+### Créer un nouvel article de blog (TOUJOURS EN BROUILLON)
+{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "draft", "meta_description": "..." } }
 
 ### Créer une nouvelle page
 { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
+
+## RÈGLES POUR LA CRÉATION DE CONTENU (create-post)
+Quand tu crées un article pour combler un gap de contenu:
+1. Le contenu DOIT être du HTML complet et riche (pas du texte brut) avec :
+   - Des titres H2/H3 bien structurés
+   - Des paragraphes de 3-4 phrases max
+   - Des listes à puces ou numérotées quand pertinent
+   - Un chapô introductif en gras
+2. Le contenu DOIT inclure des LIENS INTERNES concrets sous forme <a href="https://iktracker.fr/chemin">ancre</a>
+   - Utilise les URLs existantes du site trouvées dans les diagnostics et le cocon sémantique
+   - Vise 3 à 5 liens internes par article, vers les pages stratégiquement liées
+   - Les ancres doivent être naturelles et descriptives (pas "cliquez ici")
+3. Inclus 1-2 liens EXTERNES vers des sources de référence si pertinent (documentation officielle, études)
+4. Rédige un excerpt/meta_description optimisé pour le SEO
+5. Le status DOIT être "draft" — JAMAIS "published". L'utilisateur validera manuellement.
+6. Le slug doit être court, en kebab-case, sans accents
+7. Longueur cible: 800-1500 mots minimum
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
-- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien`;
+- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
+- INTERDIT: publier directement un article (toujours draft)`;
 }
 
 function buildWpsyncExecuteInstructions(): string {
