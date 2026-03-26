@@ -1487,7 +1487,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       let html: string;
       
       try {
-        console.log(`[Marina] Phase 2 Step 4: Generating section HTMLs...`);
+        console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
         const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url);
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
