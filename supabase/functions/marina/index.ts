@@ -1425,8 +1425,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .from('tracked_sites')
           .select('id')
           .eq('domain', domain)
+          .limit(1)
           .maybeSingle();
         trackedSiteId = ts?.id || null;
+        console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
 
       const llmVisibilityPromise = (async () => {
