@@ -386,7 +386,35 @@ Deno.serve(async (req: Request) => {
                 if (funcName === 'generate-corrective-code') {
                   // Map autopilot payload to generate-corrective-code expected format
                   const payload = decision.action.payload || {};
-                  const fixes = payload.fixes || payload.recommendations || [];
+                  let fixes = payload.fixes || payload.recommendations || [];
+                  
+                  // ── Fallback: build fixes from audit_recommendations_registry if LLM didn't provide them ──
+                  if (!Array.isArray(fixes) || fixes.length === 0) {
+                    console.log(`[AutopilotEngine] No fixes in payload for ${site.domain}, attempting fallback from recommendations registry`);
+                    try {
+                      const { data: recos } = await supabase
+                        .from('audit_recommendations_registry')
+                        .select('id, recommendation_id, title, description, category, priority, fix_type, fix_data, prompt_summary, audit_type')
+                        .eq('domain', site.domain)
+                        .eq('is_resolved', false)
+                        .order('priority', { ascending: true })
+                        .limit(10);
+                      
+                      if (recos && recos.length > 0) {
+                        fixes = recos.map((r: any, i: number) => ({
+                          id: r.recommendation_id || `registry-fix-${i}`,
+                          label: r.title,
+                          category: r.category || 'strategic',
+                          prompt: r.prompt_summary || r.description,
+                          enabled: true,
+                          target_url: r.fix_data?.target_url || null,
+                        }));
+                        console.log(`[AutopilotEngine] Fallback: built ${fixes.length} fixes from recommendations registry for ${site.domain}`);
+                      }
+                    } catch (fallbackErr) {
+                      console.error('[AutopilotEngine] Fallback registry lookup failed:', fallbackErr);
+                    }
+                  }
                   
                   // Convert recommendations to fixes format if needed
                   const normalizedFixes = Array.isArray(fixes) ? fixes.map((f: any, i: number) => ({
@@ -403,7 +431,7 @@ Deno.serve(async (req: Request) => {
                     executionResults.push({
                       function: funcName,
                       status: 'skipped',
-                      error: 'No fixes available in payload',
+                      error: 'No fixes available in payload or registry',
                     });
                     continue;
                   }

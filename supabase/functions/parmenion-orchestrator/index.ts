@@ -342,7 +342,23 @@ Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
 Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
 - Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
 - Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
-Le payload doit contenir les URLs et les correctifs précis à appliquer.
+
+## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
+Le payload DOIT contenir un tableau "fixes" avec ce format exact:
+{
+  "fixes": [
+    {
+      "id": "fix-unique-id",
+      "label": "Description courte du correctif",
+      "category": "seo|performance|strategic|accessibility",
+      "prompt": "Instructions détaillées pour le LLM générateur: ce qu'il doit corriger, où, et comment",
+      "enabled": true,
+      "target_url": "https://domain.tld/page-cible (optionnel)"
+    }
+  ]
+}
+SANS ce tableau "fixes", l'appel ÉCHOUERA. Génère au moins 1 fix basé sur les diagnostics.
+
 IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`,
 
     execute: context.isIktracker ? iktrackerExecuteInstructions : wpsyncExecuteInstructions,
