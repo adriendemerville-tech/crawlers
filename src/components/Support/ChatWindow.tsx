@@ -127,6 +127,7 @@ function detectCrawlersHowTo(message: string): boolean {
 
 export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz }: ChatWindowProps) {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
