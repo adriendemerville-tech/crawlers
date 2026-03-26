@@ -78,6 +78,19 @@ function detectBugIntentCocoon(message: string): boolean {
   });
 }
 
+const COCOON_QUIZ_KEYWORDS = ['quiz', 'quizz', 'quiz cocoon', 'quiz maillage', 'quiz stratège', 'quiz stratege', 'tester mes connaissances', 'test maillage'];
+const COCOON_HOWTO_KEYWORDS = ['comment faire', 'comment utiliser', 'c\'est quoi', 'à quoi sert', 'a quoi sert', 'je ne comprends pas', 'je comprends pas', 'qu\'est-ce que', 'comment ça marche', 'comment ca marche', 'orpheline', 'cannibalisation', 'juice', 'pruning', 'silo', 'cluster', 'pagerank', 'maillage', 'backlink'];
+
+function detectCocoonQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return COCOON_QUIZ_KEYWORDS.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
+}
+
+function detectCocoonHowTo(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return COCOON_HOWTO_KEYWORDS.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
+}
+
 /**
  * Detect quick-reply options from an assistant message.
  */
