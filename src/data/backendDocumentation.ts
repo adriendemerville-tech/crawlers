@@ -1227,16 +1227,16 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA (sav-chat) — "Crawler"
+## Agent SAV IA — "Félix"
 
 ### Architecture
 
 - **Modèle** : Gemini 2.5 Flash via Lovable AI
-- **Nom** : "Crawler" — assistant SAV officiel (logo robot)
-- **Limite** : 1000 caractères max par réponse
-- **Ton** : Professionnel, vouvoiement systématique
+- **Nom** : "Félix" — assistant SAV principal (icône robot violet #7C3AED)
+- **Limite** : 600 caractères max par défaut (3000 en mode narratif Parménion)
+- **Ton** : Collègue sympa expert SEO/GEO, vouvoiement par défaut (tutoiement si l'utilisateur tutoie)
 - **Détection langue** : FR/EN/ES dès le premier message
-- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`)
+- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`), adaptation par niveau d'autonomie
 
 ### Sources de données
 
@@ -1248,11 +1248,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ### Fonctionnalités avancées
 
-- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
+- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES) avec vocabulaire phonétique STT
 - **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
-- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
-- **Signalement de bugs** : Détection NLP ("bug", "problème", "erreur") → bouton signaler → message capturé, pré-traduit pour le CTO, stocké dans \\\`user_bug_reports\\\`
+- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon, mémoire de site persistante
+- **Alertes proactives** : Alerte crédits bas (<3), alerte crawl proche du plafond (>80%), suggestion upgrade Pro Agency / Pro Agency+
+- **Signalement de bugs** : Détection NLP → bouton signaler → message pré-traduit pour le CTO → \\\`user_bug_reports\\\`
 - **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
+- **Mémoire de site** : Injecte les faits saillants des 3 sites les plus actifs via \\\`siteMemory.ts\\\`
+- **Animation d'invitation** : Ping-pong 20s après l'arrivée sur la home
 
 ### Mode Créateur (admin uniquement)
 
