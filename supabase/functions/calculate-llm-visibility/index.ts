@@ -536,6 +536,10 @@ Deno.serve(async (req) => {
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
       score_percentage: r.score,
+      response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
+      overall_sentiment: r.promptDetails.length > 0
+        ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
+        : 'neutral',
       details: r.promptDetails.map((ps, i) => ({
         prompt: prompts[i],
         iteration_found: ps.iterationFound,
@@ -543,6 +547,7 @@ Deno.serve(async (req) => {
         sentiment: ps.sentiment,
         richness_bonus: ps.richnessBonus,
         composite_score: ps.compositeScore,
+        response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
       })),
     }))
 
