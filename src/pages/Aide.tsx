@@ -231,9 +231,12 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Crawl Multi-Pages',
         content: `Analyse récursive de votre site :
 <ul class="list-disc pl-6 mt-1 space-y-1">
-<li>Jusqu'à 5000 pages par crawl</li>
+<li><strong>Pro Agency</strong> : jusqu'à 5 000 pages/mois, slider jusqu'à 20 pages par crawl</li>
+<li><strong>Pro Agency +</strong> : jusqu'à 50 000 pages/mois, slider jusqu'à 50 pages par crawl</li>
 <li>Détection d'erreurs techniques page par page</li>
 <li>Analyse du maillage interne</li>
+<li>Graphique circulaire des codes HTTP</li>
+<li>Quota dynamique vérifié avant chaque crawl</li>
 <li>Rapport exportable</li>
 </ul>
 <p class="mt-2 text-sm text-muted-foreground">Disponible en Pro Agency (inclus dans l'abonnement).</p>`,
