@@ -457,6 +457,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     setNewMessage('');
     setSending(true);
 
+    // Track how-to questions about Crawlers tools
+    if (detectCrawlersHowTo(messageText)) {
+      setHowToCount(prev => prev + 1);
+    }
+
     try {
       // Capture visible screen context for audit comprehension
       const screenContext = captureScreenContext(location.pathname);
@@ -483,6 +488,20 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
 
       if (data.conversation_id && !conversationId) {
         setConversationId(data.conversation_id);
+      }
+
+      // After 3+ how-to questions about Crawlers, suggest the quiz
+      const newHowToCount = howToCount + (detectCrawlersHowTo(messageText) ? 1 : 0);
+      if (newHowToCount >= 3 && !quizSuggested && !quizData) {
+        setQuizSuggested(true);
+        setTimeout(() => {
+          const suggestionMsg: ChatMessage = {
+            role: 'assistant',
+            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** Et si tu testais tes connaissances avec un quiz rapide ? 2 minutes chrono.\n\nTape **\"quiz crawlers\"** pour essayer !",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, suggestionMsg]);
+        }, 1200);
       }
 
       // Check if escalation should show phone prompt (after 8+ user messages) — skip for admins and guests
