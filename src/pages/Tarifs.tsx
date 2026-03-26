@@ -111,6 +111,16 @@ const translations = {
     agencyBadge: 'Illimité',
     agencyLoading: 'Redirection...',
     agencyLoginRequired: 'Connectez-vous pour vous abonner',
+    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumSubtitle: 'Crawl intensif pour sites à fort volume',
+    agencyPremiumPrice: '89€',
+    agencyPremiumFeatures: [
+      'Tout Pro Agency inclus',
+      'Crawl : 50 000 pages/mois',
+      '100 URL suivis inclus',
+      'Priorité file de crawl',
+    ],
+    agencyPremiumCta: 'Nous contacter',
     or: 'ou',
   },
   en: {

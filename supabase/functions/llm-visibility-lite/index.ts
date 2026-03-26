@@ -84,8 +84,8 @@ Deno.serve(async (req) => {
     const brand = extractBrandFromDomain(domain)
     const patterns = buildPatterns(brand, domain)
 
-    // Single generic prompt
-    const prompt = `Je cherche un bon prestataire ou service pour ce que propose ${brand} (${domain}). Tu connais ? Tu recommanderais quoi ?`
+    // Single natural prompt — no brand mention, just a genuine user need
+    const prompt = `Je cherche ${brand.toLowerCase().includes('consult') ? 'un bon consultant' : 'un bon prestataire'} dans le domaine de ce que fait ${domain}. Tu connais des noms ? Tu me recommanderais quoi ?`
 
     // Query all 6 LLMs in parallel
     const results = await Promise.all(
