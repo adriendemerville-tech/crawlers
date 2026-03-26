@@ -296,6 +296,33 @@ export function MarinaDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Cost Counter */}
+      <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10">
+          <Euro className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <div className="text-xs text-muted-foreground font-medium">Coût total Marina</div>
+          <div className="text-2xl font-bold tabular-nums">
+            {totalCostEur !== null ? `${totalCostEur.toFixed(2)} €` : '—'}
+          </div>
+        </div>
+        <div className="flex gap-6 text-xs text-muted-foreground">
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.llm.toFixed(2)} €</div>
+            <div>LLM</div>
+          </div>
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.api.toFixed(2)} €</div>
+            <div>APIs</div>
+          </div>
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.jobs}</div>
+            <div>Appels</div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
