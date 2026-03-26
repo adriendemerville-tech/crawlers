@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec agent SAV IA intégré, Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés et détection d'anomalies :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion, pipeline Marina, serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  130 fonctions serverless + 22 modules partagés         │
+│  172 fonctions serverless + 36 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -65,7 +65,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  60+ tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  142 tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +77,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 121 fonctions serverless + 22 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 172 fonctions serverless + 36 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -308,7 +308,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (121 fonctions)
+# API — Edge Functions (172 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -514,7 +514,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation, monitoring diagnostics + stratège) |
 | \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, persistance recommandations) |
-| \`sav-agent\` | ✅ | Agent SAV IA (Gemini, doc enrichie, scoring précision) |
+| \`sav-agent\` | ✅ | Assistant Félix (Gemini, alertes proactives, scoring précision, mémoire de site) |
 | \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
@@ -529,6 +529,35 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
 | \`process-email-queue\` | ✅ | Worker file d'attente emails |
+
+## Pipeline & Automation
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`marina\` | ✅ | Pipeline de rapports automatisés (async job) |
+| \`autopilot-engine\` | ✅ | Moteur d'autopilote SEO (cron quotidien 3h UTC) |
+| \`parmenion-orchestrator\` | ✅ | Intelligence décisionnelle Parménion (Gemini Flash/Pro) |
+| \`parmenion-feedback\` | ✅ | Boucle rétroaction T+30 Parménion |
+| \`mcp-server\` | ❌/✅ | Serveur MCP (Model Context Protocol) — 2 tiers d'accès |
+| \`api-balances\` | ✅ | Soldes API en temps réel (SerpAPI, OpenRouter, Firecrawl) |
+| \`seasonality-detector\` | ✅ | Détection de saisonnalité (tendances cycliques) |
+| \`content-freshness\` | ✅ | Détection de contenu obsolète |
+| \`content-pruning\` | ✅ | Analyse de contenu à élaguer |
+| \`link-intersection\` | ✅ | Intersection de backlinks concurrents |
+| \`broken-link-building\` | ✅ | Opportunités de link building sur liens cassés |
+| \`brand-mentions\` | ✅ | Détection de mentions de marque non liées |
+| \`url-structure-analyzer\` | ✅ | Analyse de structure d'URLs |
+| \`robots-generator\` | ✅ | Générateur de robots.txt optimisé |
+
+## E-commerce
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
+| \`webhook-woo-orders\` | ❌ | Webhook WooCommerce (commandes) |
+| \`prestashop-connector\` | ✅ | Bridge PrestaShop |
+| \`odoo-connector\` | ✅ | Bridge Odoo ERP |
+| \`matomo-connector\` | ✅ | Bridge analytics Matomo |
 `,
   },
 
@@ -716,7 +745,7 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 22 modules
+# Modules Partagés (_shared/) — 36 modules
 
 Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
@@ -790,6 +819,39 @@ Upsert dans \`analyzed_urls\` (compteur d'analyses).
 
 ### \`translations.ts\`
 Traductions pour le contenu généré côté serveur (emails, rapports).
+
+### \`agentPersonas.ts\` *(nouveau v7)*
+Personas centralisés des agents Félix et Stratège Cocoon : ton, longueur max, formulations interdites, pattern d'intentionnalité (métrique → impact → action), adaptation par niveau d'autonomie.
+
+### \`siteMemory.ts\`
+Mémoire persistante par site tracké : stocke et restitue les faits saillants (secteur, identité, résultats d'audit) pour enrichir le contexte LLM.
+
+### \`ownershipCheck.ts\`
+Vérification de propriété du domaine avant injection de code ou modification CMS.
+
+### \`apiBillingAlert.ts\`
+Alertes proactives de facturation API (SerpAPI, OpenRouter, Firecrawl) quand les crédits approchent de zéro.
+
+### \`founderGmb.ts\`
+Utilitaires GMB spécifiques au fondateur (accès multi-fiches).
+
+### \`strategicPrompts.ts\` + \`strategicSplitPrompts.ts\`
+Prompts LLM pour l'audit stratégique (monolithique et pipeline modulaire).
+
+### \`dataForSeoStrategic.ts\`
+Utilitaires DataForSEO pour les fonctions stratégiques (SERP, volumes, KD).
+
+### \`matriceHtmlAnalysis.ts\` + \`matriceScoring.ts\` + \`matriceTypeDetector.ts\`
+Pipeline d'analyse HTML, scoring et détection de type pour la Matrice d'audit.
+
+### \`pageMetadata.ts\`
+Extraction et normalisation des métadonnées de page (title, meta, OG, etc.).
+
+### \`textUtils.ts\`
+Utilitaires de manipulation de texte (troncature, nettoyage HTML, extraction).
+
+### \`browserlessConfig.ts\`
+Configuration du rendu headless (Browserless/Fly.io).
 
 ### \`email-templates/\`
 Templates HTML d'emails transactionnels (bienvenue, vérification, rapports).
@@ -1194,16 +1256,16 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA (sav-chat) — "Crawler"
+## Agent SAV IA — "Félix"
 
 ### Architecture
 
 - **Modèle** : Gemini 2.5 Flash via Lovable AI
-- **Nom** : "Crawler" — assistant SAV officiel (logo robot)
-- **Limite** : 1000 caractères max par réponse
-- **Ton** : Professionnel, vouvoiement systématique
+- **Nom** : "Félix" — assistant SAV principal (icône robot violet #7C3AED)
+- **Limite** : 600 caractères max par défaut (3000 en mode narratif Parménion)
+- **Ton** : Collègue sympa expert SEO/GEO, vouvoiement par défaut (tutoiement si l'utilisateur tutoie)
 - **Détection langue** : FR/EN/ES dès le premier message
-- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`)
+- **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`), adaptation par niveau d'autonomie
 
 ### Sources de données
 
@@ -1215,11 +1277,14 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ### Fonctionnalités avancées
 
-- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES)
+- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES) avec vocabulaire phonétique STT
 - **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
-- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon
-- **Signalement de bugs** : Détection NLP ("bug", "problème", "erreur") → bouton signaler → message capturé, pré-traduit pour le CTO, stocké dans \\\`user_bug_reports\\\`
+- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon, mémoire de site persistante
+- **Alertes proactives** : Alerte crédits bas (<3), alerte crawl proche du plafond (>80%), suggestion upgrade Pro Agency / Pro Agency+
+- **Signalement de bugs** : Détection NLP → bouton signaler → message pré-traduit pour le CTO → \\\`user_bug_reports\\\`
 - **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
+- **Mémoire de site** : Injecte les faits saillants des 3 sites les plus actifs via \\\`siteMemory.ts\\\`
+- **Animation d'invitation** : Ping-pong 20s après l'arrivée sur la home
 
 ### Mode Créateur (admin uniquement)
 
@@ -1446,14 +1511,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '6.3.0',
-  lastUpdated: '2026-03-25',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV IA + Autopilote + Parménion',
-  totalEdgeFunctions: 130,
-  totalSharedModules: 22,
-  totalTables: '68+',
-  totalLinesOfCode: '190 000+',
-  totalMigrations: 199,
+  version: '7.0.0',
+  lastUpdated: '2026-03-26',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N',
+  totalEdgeFunctions: 172,
+  totalSharedModules: 36,
+  totalTables: '142',
+  totalLinesOfCode: '205 000+',
+  totalMigrations: 235,
   totalPages: 41,
-  totalComponents: 303,
+  totalComponents: 311,
 };
