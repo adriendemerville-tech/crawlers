@@ -842,7 +842,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                       const levelLabels = { beginner: 'Débutant', intermediate: 'Intermédiaire', expert: 'Expert' };
                       const confirmMsg: ChatMessage = {
                         role: 'assistant',
-                        content: `✅ **Profil calibré !** Score d'autonomie : **${result.score}/100** (${levelLabels[result.level]})\n\nJ'adapterai mes réponses à ton niveau. C'est parti ! ✨`,
+                        content: `✅ **Profil calibré !** Score d'autonomie : **${result.score}/100** (${levelLabels[result.level]})\n\nJ'adapterai mes réponses à ton niveau. C'est parti !`,
                         timestamp: new Date().toISOString(),
                       };
                       setMessages(prev => [...prev, confirmMsg]);
@@ -923,7 +923,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                             setTimeout(() => {
                               const proposalMsg: ChatMessage = {
                                 role: 'assistant',
-                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme !",
+                                content: "📋 **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme.",
                                 timestamp: new Date().toISOString(),
                               };
                               setMessages(prev => [...prev, proposalMsg]);
