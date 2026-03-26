@@ -309,6 +309,44 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
       setBugReportMode('prompt');
     }
 
+    // Crawlers quiz detection — check BEFORE generic quiz
+    if (!quizData && detectCrawlersQuizIntent(messageText)) {
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: messageText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setNewMessage('');
+
+      const launchMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🛠️ **Quiz Crawlers**\n\n10 questions sur la plateforme et ses outils. 2 minutes chrono !",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, launchMsg]);
+
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
+          body: { action: 'get_crawlers_quiz' },
+        });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
+      } catch (e) {
+        console.error('Crawlers quiz load error:', e);
+        const errorMsg: ChatMessage = {
+          role: 'assistant',
+          content: "Désolé, le quiz Crawlers n'a pas pu être chargé. Réessaie !",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      } finally {
+        setQuizLoading(false);
+      }
+      return;
+    }
+
     // Quiz intent detection — intercept before sending to SAV agent
     if (!quizData && detectQuizIntent(messageText)) {
       const userMsg: ChatMessage = {
