@@ -185,9 +185,9 @@ export function FloatingChatBubble() {
     }
   };
 
-  // Hide on mobile, /cocoon, /signup, /auth
+  // Hide on mobile, /cocoon, /signup, /auth, and report preview pages
   const hiddenPaths = ['/app/cocoon', '/signup', '/auth'];
-  if (isMobile || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
+  if (isMobile || isReportPage || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   return (
     <>
