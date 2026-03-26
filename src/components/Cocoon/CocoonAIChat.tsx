@@ -853,6 +853,35 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       setBugReportMode('prompt');
     }
 
+    // Quiz intent detection
+    if (!overrideContext && !quizData && detectCocoonQuizIntent(text)) {
+      setInput('');
+      const launchMsg: Msg = { role: 'assistant', content: '🎓 **Quiz Stratège Cocoon** — 10 questions sur le maillage, la cannibalisation, le juice et les outils Cocoon. C\'est parti !' };
+      setMessages(prev => [...prev, { role: 'user', content: text }, launchMsg]);
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_stratege_cocoon_quiz' } });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey });
+      } catch (e) {
+        console.error('Cocoon quiz error:', e);
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, le quiz n\'a pas pu être chargé. Réessaie !' }]);
+      } finally { setQuizLoading(false); }
+      return;
+    }
+
+    // Track how-to questions for quiz suggestion
+    if (!overrideContext && detectCocoonHowTo(text)) {
+      const newCount = howToCount + 1;
+      setHowToCount(newCount);
+      if (newCount >= 3 && !quizSuggested && !quizData) {
+        setQuizSuggested(true);
+        setTimeout(() => {
+          setMessages(prev => [...prev, { role: 'assistant', content: '💡 **Tu poses beaucoup de questions sur le maillage !** Teste tes connaissances avec un quiz rapide ?\n\nTape **"quiz"** pour lancer.' }]);
+        }, 1500);
+      }
+    }
+
     // Check for tool commands
     if (!overrideContext) {
       const cmd = detectCommand(text);
