@@ -20,6 +20,21 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - **Mode Créateur** (admin + is_creator) : accès lecture complète backend (tables, functions, logs), interrogation croisée multi-tables, consultation code source edge functions. Modification logique interdite.
 - **Notification résolution** : badge sur bouton assistant quand un `user_bug_reports` passe à `resolved`
 
+## Agent Félix (Onboarding & Support)
+- **Quiz SEO/GEO/LLM** : 100 questions en base (`quiz_questions`), classées par difficulté 1-5, catégories seo/geo/llm
+  - Déclenchement : détection d'intention NLP ("teste mes connaissances", "quiz SEO", etc.)
+  - Difficulté adaptative : basée sur le dernier score de l'utilisateur (`analytics_events.quiz:seo_score`)
+  - Distribution pondérée : débutant (score ≤3) → majorité faciles ; expert (score ≥8) → majorité difficiles
+  - 10 questions par session, 3 réponses par question
+  - Score final + corrections détaillées + conseil personnalisé
+- **Quiz Crawlers** : 50 questions produit en base, difficulté 1-3
+  - Proposé automatiquement après le quiz SEO ("Tape quiz crawlers pour lancer")
+  - Couvre toutes les fonctionnalités : audit, crawl, cocon, Marina, scripts, tracking, etc.
+  - **Sync automatique** : cron mensuel régénère les questions via LLM à partir de la doc SAV (validation admin)
+- **Notification hebdomadaire quiz** : cron backend écrit un flag en DB, Félix détecte au login et propose "Ça te dit de tester tes connaissances en SEO GEO ? 3 minutes max."
+- Table : `quiz_questions` (quiz_type, category, difficulty, question, options, correct_index, explanation, feature_link, is_active, auto_generated)
+- Edge Function : `felix-seo-quiz` (actions: get_questions, get_crawlers_quiz, get_last_score)
+
 ## Scoring de précision (`sav_quality_scores`)
 - precision_score (0-100), route_match, repeated_intent_count, escalated_to_phone
 - Monitoring dans Admin → Intelligence → Supervisor → AssistantPrecisionCard

@@ -71,6 +71,9 @@ const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] 
   { key: 'google-ads-connector', label: 'Google Ads', category: 'Connecteurs' },
   // Code
   { key: 'generate-corrective-code', label: 'Code correctif', category: 'Code' },
+  // Quiz & Learning
+  { key: 'felix-seo-quiz', label: 'Quiz SEO/GEO/LLM', category: 'Learning' },
+  { key: 'sync-quiz-crawlers', label: 'Sync Quiz Crawlers', category: 'Learning' },
 ];
 
 export function CtoAgentDashboard() {
