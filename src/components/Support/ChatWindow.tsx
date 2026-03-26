@@ -17,6 +17,7 @@ import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
 import { AutonomyDiagnostic } from './AutonomyDiagnostic';
+import { SeoQuiz } from './SeoQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
@@ -69,6 +70,22 @@ function detectBugIntent(message: string): boolean {
   });
 }
 
+const QUIZ_KEYWORDS = [
+  'quiz', 'quizz', 'test seo', 'tester mes connaissances', 'mon niveau seo',
+  'niveau seo', 'connaissance seo', 'connaissances seo', 'évaluer mon niveau',
+  'evaluer mon niveau', 'je suis débutant', 'je suis debutant', 'suis-je bon en seo',
+  'test geo', 'quiz geo', 'quiz llm', 'test de connaissances', 'auto-évaluation',
+  'auto evaluation', 'quel est mon niveau', 'qcm seo',
+];
+
+function detectQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return QUIZ_KEYWORDS.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
 export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -88,6 +105,10 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
+
+  // Quiz state
+  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
 
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
@@ -255,7 +276,44 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     // Check if user is expressing a bug intent
     if (bugReportMode === 'idle' && detectBugIntent(messageText)) {
       setBugReportMode('prompt');
-      // Still send the message normally to the SAV agent
+    }
+
+    // Quiz intent detection — intercept before sending to SAV agent
+    if (!quizData && detectQuizIntent(messageText)) {
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: messageText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setNewMessage('');
+
+      const launchMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🎯 **Quiz SEO / GEO / LLM**\n\n10 questions pour évaluer tes connaissances. 3 réponses possibles par question. C'est parti !",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, launchMsg]);
+
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
+          body: { action: 'get_questions' },
+        });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey });
+      } catch (e) {
+        console.error('Quiz load error:', e);
+        const errorMsg: ChatMessage = {
+          role: 'assistant',
+          content: "Désolé, le quiz n'a pas pu être chargé. Réessaie dans un instant !",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      } finally {
+        setQuizLoading(false);
+      }
+      return;
     }
 
     const userMsg: ChatMessage = {
@@ -571,6 +629,63 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                       <Bug className="h-3.5 w-3.5" />
                       Signaler un problème / bug
                     </button>
+                  </div>
+                )}
+
+                {/* SEO Quiz */}
+                {quizLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2 flex items-center gap-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                      <span className="text-xs text-muted-foreground">Préparation du quiz…</span>
+                    </div>
+                  </div>
+                )}
+
+                {quizData && (
+                  <div className="flex justify-start w-full">
+                    <div className="max-w-[95%] w-full">
+                      <SeoQuiz
+                        questions={quizData.questions}
+                        answerKey={quizData.answerKey}
+                        onComplete={(score, total, wrongAnswers) => {
+                          setQuizData(null);
+
+                          const level = score <= 3 ? 'Débutant' : score <= 6 ? 'Intermédiaire' : score <= 9 ? 'Avancé' : 'Expert';
+                          const emoji = score <= 3 ? '🟥' : score <= 6 ? '🟧' : score <= 9 ? '🟩' : '🏆';
+                          const advice = score <= 3
+                            ? "Pas de souci, tu es au bon endroit pour apprendre ! Explore nos articles de blog et lance un audit gratuit pour progresser."
+                            : score <= 6
+                            ? "Tu as de bonnes bases ! Active le suivi de sites pour monitorer tes progrès en temps réel."
+                            : score <= 9
+                            ? "Impressionnant ! Tu maîtrises le sujet. L'Autopilot et le Stratège Cocoon sont faits pour toi."
+                            : "Score parfait ! Tu es un expert SEO/GEO/LLM. Le plan Agency Pro t'attend pour passer à l'échelle.";
+
+                          let wrongSection = '';
+                          if (wrongAnswers.length > 0) {
+                            wrongSection = '\n\n**Corrections :**\n' + wrongAnswers.map((w, i) =>
+                              `\n${i + 1}. **${w.question}**\n   ✅ Bonne réponse : ${w.correct}\n   💡 ${w.explanation}`
+                            ).join('');
+                          }
+
+                          const resultMsg: ChatMessage = {
+                            role: 'assistant',
+                            content: `${emoji} **Score : ${score}/${total}** — Niveau : **${level}**\n\n${advice}${wrongSection}`,
+                            timestamp: new Date().toISOString(),
+                          };
+                          setMessages(prev => [...prev, resultMsg]);
+
+                          // Persist score in analytics
+                          if (user) {
+                            supabase.from('analytics_events').insert({
+                              user_id: user.id,
+                              event_type: 'quiz:seo_score',
+                              event_data: { score, total, level, wrong_count: wrongAnswers.length },
+                            }).then(() => {});
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 
