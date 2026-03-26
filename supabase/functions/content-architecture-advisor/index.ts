@@ -215,32 +215,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4: Existing audit data + GEO score + LLM visibility + Backlinks ──
-    console.log(`[content-advisor] Step 4: Fetching existing audit/GEO/LLM/backlink data`)
+    // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks ──
+    console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink data`)
     let existingAuditData: any = null
+    let strategicAuditSerpData: any = null
     let cocoonData: any = null
     let geoScoreData: any = null
     let llmVisibilityData: any = null
     let backlinkData: any = null
 
-    const [auditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
+    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // Strategic audit SERP recommendations (content_gaps, missing_terms, keyword_positioning, priority_content)
+      serviceClient.from('audit_raw_data').select('raw_payload')
+        .eq('domain', domain)
+        .in('audit_type', ['strategic', 'strategic_parallel'])
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
       tracked_site_id
         ? serviceClient.from('cocoon_sessions').select('cluster_summary, nodes_count, intent_distribution, internal_links_density')
             .eq('tracked_site_id', tracked_site_id)
             .order('created_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
-      // GEO score from audit cache or domain_data_cache
       serviceClient.from('domain_data_cache').select('result_data')
         .eq('domain', domain).eq('data_type', 'geo_score')
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      // LLM visibility/depth data
       serviceClient.from('domain_data_cache').select('result_data')
         .eq('domain', domain).eq('data_type', 'llm_visibility')
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      // Backlink snapshot
       tracked_site_id
         ? serviceClient.from('backlink_snapshots').select('referring_domains, backlinks_total, domain_rank, anchor_distribution')
             .eq('tracked_site_id', tracked_site_id)
@@ -250,6 +253,26 @@ Deno.serve(async (req) => {
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
       existingAuditData = { type: auditRes.value.data.audit_type, payload: auditRes.value.data.raw_payload }
+    }
+    // Extract strategic audit SERP recommendations
+    if (strategicAuditRes.status === 'fulfilled' && (strategicAuditRes.value as any)?.data?.raw_payload) {
+      const sp = (strategicAuditRes.value as any).data.raw_payload
+      const kp = sp?.keyword_positioning
+      const pc = sp?.priority_content
+      if (kp || pc) {
+        strategicAuditSerpData = {
+          content_gaps: kp?.content_gaps || [],
+          missing_terms: kp?.missing_terms || [],
+          main_keywords: (kp?.main_keywords || []).slice(0, 10),
+          quick_wins: kp?.quick_wins || [],
+          opportunities: kp?.opportunities || [],
+          competitive_gaps: kp?.competitive_gaps || [],
+          serp_recommendations: kp?.serp_recommendations || [],
+          missing_pages: pc?.missing_pages || [],
+          content_upgrades: pc?.content_upgrades || [],
+        }
+        console.log(`[content-advisor] Loaded strategic audit: ${strategicAuditSerpData.content_gaps.length} gaps, ${strategicAuditSerpData.missing_terms.length} missing terms, ${strategicAuditSerpData.main_keywords.length} keywords`)
+      }
     }
     if (cocoonRes.status === 'fulfilled' && (cocoonRes.value as any)?.data) {
       cocoonData = (cocoonRes.value as any).data
@@ -452,6 +475,34 @@ ${competitorInsights.length > 0 ? JSON.stringify(competitorInsights, null, 2) : 
 
 **Données audit existant:**
 ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
+
+${strategicAuditSerpData ? `
+── RECOMMANDATIONS SERP DE L'AUDIT STRATÉGIQUE IA ──
+⚠️ CRITIQUE : Ces données proviennent de l'audit stratégique du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique. Tout contenu hors-sujet est interdit.
+
+**Mots-clés principaux du site (identifiés par l'audit):**
+${strategicAuditSerpData.main_keywords.map((k: any) => `- "${k.keyword}" (vol: ${k.volume || '?'}, diff: ${k.difficulty || '?'}, position: ${k.current_rank || '?'})`).join('\n')}
+
+**Termes manquants à intégrer prioritairement:**
+${strategicAuditSerpData.missing_terms.map((t: any) => `- "${t.term}" (importance: ${t.importance || '?'}, placement suggéré: ${t.suggested_placement || '?'})`).join('\n') || 'Aucun'}
+
+**Gaps de contenu identifiés (pages à créer):**
+${strategicAuditSerpData.content_gaps.map((g: any) => `- "${g.keyword || g.title}" (priorité: ${g.priority || '?'}, action: ${g.action || '?'})`).join('\n') || 'Aucun'}
+
+**Pages manquantes recommandées:**
+${strategicAuditSerpData.missing_pages.map((p: any) => `- "${p.title}" → ${p.rationale} (impact: ${p.expected_impact || '?'})`).join('\n') || 'Aucune'}
+
+**Quick Wins (positions 11-20):**
+${strategicAuditSerpData.quick_wins.map((q: any) => `- "${q.keyword}" (position: ${q.current_rank || '?'}, action: ${q.action || '?'})`).join('\n') || 'Aucun'}
+
+**Opportunités:**
+${(strategicAuditSerpData.opportunities || []).join('\n- ') || 'Aucune'}
+
+**Écarts concurrentiels:**
+${(strategicAuditSerpData.competitive_gaps || []).join('\n- ') || 'Aucun'}
+
+RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers sémantique ci-dessus. Le contenu doit couvrir les termes manquants et les gaps identifiés quand c'est pertinent.
+` : ''}
 
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}

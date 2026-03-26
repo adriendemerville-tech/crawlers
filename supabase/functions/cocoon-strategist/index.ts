@@ -302,22 +302,69 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // PHASE 1: Collecter les diagnostics (parallèle)
+    // PHASE 1: Collecter les diagnostics + audit stratégique (parallèle)
     // ═══════════════════════════════════════════════════════════
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics
-    const { data: existingDiags } = await supabase
-      .from('cocoon_diagnostic_results')
-      .select('*')
-      .eq('tracked_site_id', tracked_site_id)
-      .gte('created_at', cutoff)
-      .in('diagnostic_type', diagTypes);
+    // Fetch recent diagnostics + strategic audit data in parallel
+    const [diagsResult, strategicAuditResult, siteIdentityResult] = await Promise.all([
+      supabase
+        .from('cocoon_diagnostic_results')
+        .select('*')
+        .eq('tracked_site_id', tracked_site_id)
+        .gte('created_at', cutoff)
+        .in('diagnostic_type', diagTypes),
+      // Load strategic audit SERP recommendations (content_gaps, missing_terms, keyword_positioning)
+      supabase
+        .from('audit_raw_data')
+        .select('raw_payload, audit_type')
+        .eq('domain', domain)
+        .in('audit_type', ['strategic', 'strategic_parallel'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Load site identity card for semantic anchoring
+      supabase
+        .from('tracked_sites')
+        .select('site_name, market_sector, business_type, client_targets, identity_card, jargon_distance')
+        .eq('id', tracked_site_id)
+        .single(),
+    ]);
+
+    // Extract strategic audit SERP data
+    let strategicSerpData: {
+      content_gaps: any[];
+      missing_terms: any[];
+      keyword_positioning: any;
+      priority_content: any;
+      market_sector: string;
+    } | null = null;
+
+    if (strategicAuditResult.data?.raw_payload) {
+      const payload = strategicAuditResult.data.raw_payload as any;
+      const kp = payload?.keyword_positioning;
+      const pc = payload?.priority_content;
+      if (kp || pc) {
+        strategicSerpData = {
+          content_gaps: kp?.content_gaps || [],
+          missing_terms: kp?.missing_terms || [],
+          keyword_positioning: kp ? {
+            main_keywords: (kp.main_keywords || []).slice(0, 10),
+            quick_wins: kp.quick_wins || [],
+            opportunities: kp.opportunities || [],
+            competitive_gaps: kp.competitive_gaps || [],
+            serp_recommendations: kp.serp_recommendations || [],
+          } : null,
+          priority_content: pc || null,
+          market_sector: siteIdentityResult.data?.market_sector || '',
+        };
+        console.log(`[strategist] Loaded strategic audit SERP data: ${strategicSerpData.content_gaps.length} gaps, ${strategicSerpData.missing_terms.length} missing terms, ${strategicSerpData.keyword_positioning?.main_keywords?.length || 0} keywords`);
+      }
+    }
 
     const existingByType: Record<string, any> = {};
-    (existingDiags || []).forEach((d: any) => {
-      // Keep the most recent per type
+    (diagsResult.data || []).forEach((d: any) => {
       if (!existingByType[d.diagnostic_type] || d.created_at > existingByType[d.diagnostic_type].created_at) {
         existingByType[d.diagnostic_type] = d;
       }
@@ -425,6 +472,51 @@ Deno.serve(async (req) => {
           resolution: 'Résoudre la cannibalisation avant de créer du nouveau contenu',
           chosen_action: 'fix_cannibalization_first',
         });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 2b: Inject strategic audit SERP data into content findings
+    // ═══════════════════════════════════════════════════════════
+    if (strategicSerpData) {
+      // Enrich keyword_gaps findings with strategic audit context
+      for (const f of allFindings) {
+        if (f.category === 'keyword_gaps' && f.data) {
+          f.data.strategic_serp_context = {
+            strategic_content_gaps: strategicSerpData.content_gaps,
+            strategic_missing_terms: strategicSerpData.missing_terms,
+            strategic_priorities: strategicSerpData.priority_content,
+          };
+        }
+        // Enrich thin_content / content_decay with relevant keywords
+        if (['thin_content', 'content_decay', 'duplicate_content'].includes(f.category) && f.data) {
+          f.data.strategic_serp_context = {
+            market_sector: strategicSerpData.market_sector,
+            recommended_keywords: strategicSerpData.keyword_positioning?.main_keywords?.map((k: any) => k.keyword).filter(Boolean) || [],
+            missing_terms: strategicSerpData.missing_terms?.map((t: any) => t.term).filter(Boolean) || [],
+          };
+        }
+      }
+
+      // If strategic audit has content_gaps but no keyword_gaps finding exists, create one
+      const hasKeywordGapFinding = allFindings.some(f => f.category === 'keyword_gaps');
+      if (!hasKeywordGapFinding && strategicSerpData.content_gaps.length > 0) {
+        allFindings.push({
+          category: 'keyword_gaps',
+          severity: 'warning',
+          description: `Gaps de contenu identifiés par l'audit stratégique: ${strategicSerpData.content_gaps.map((g: any) => g.keyword || g.title).join(', ')}`,
+          affected_urls: [],
+          source_type: 'strategic_audit',
+          data: {
+            top_gaps: strategicSerpData.content_gaps.map((g: any) => g.keyword || g.title).filter(Boolean),
+            strategic_serp_context: {
+              strategic_content_gaps: strategicSerpData.content_gaps,
+              strategic_missing_terms: strategicSerpData.missing_terms,
+              strategic_priorities: strategicSerpData.priority_content,
+            },
+          },
+        });
+        console.log(`[strategist] Added ${strategicSerpData.content_gaps.length} content gaps from strategic audit`);
       }
     }
 
@@ -909,7 +1001,11 @@ function findingToTasks(finding: any, lang: string, counter: number): StrategicT
           is_destructive: false,
           depends_on: [],
           estimated_impact: 'high',
-          metadata: { target_keywords: gaps.slice(0, 5) },
+          metadata: {
+            target_keywords: gaps.slice(0, 5),
+            // Inject strategic audit SERP context if available
+            ...(finding.data?.strategic_serp_context || {}),
+          },
         });
       }
       break;
