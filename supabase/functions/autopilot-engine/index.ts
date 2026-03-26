@@ -333,8 +333,19 @@ Deno.serve(async (req: Request) => {
                 
                 for (const cmsAction of decision.action.payload.cms_actions) {
                   try {
+                    // Infer action from available fields if LLM omitted it
+                    const inferredAction = cmsAction.action
+                      || (cmsAction.body ? 'create-post' : null)
+                      || (cmsAction.updates && cmsAction.slug ? 'update-post' : null)
+                      || (cmsAction.updates && cmsAction.page_key ? 'update-page' : null)
+                      || 'list-posts';
+
+                    if (!cmsAction.action) {
+                      console.warn(`[AutopilotEngine] CMS action missing 'action' field, inferred: ${inferredAction}`);
+                    }
+
                     const actionBody = {
-                      action: cmsAction.action,
+                      action: inferredAction,
                       ...(cmsAction.page_key ? { page_key: cmsAction.page_key } : {}),
                       ...(cmsAction.slug ? { slug: cmsAction.slug } : {}),
                       ...(cmsAction.updates ? { updates: cmsAction.updates } : {}),
