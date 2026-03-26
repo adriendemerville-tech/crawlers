@@ -401,7 +401,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Quotabilité', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
-      ${buildModuleSection('Sentiment d\\'Expertise', '🎯', expertiseSentiment)}
+      ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
