@@ -279,7 +279,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           ] as const).map(cms => (
             <button
               key={cms.key}
-              className={`flex flex-col items-center justify-center gap-1.5 aspect-square rounded-xl text-[11px] font-semibold transition-all border-2 p-2 ${
+              className={`flex flex-col items-center justify-center gap-1.5 rounded-xl text-[11px] font-semibold transition-all border-2 p-2 aspect-[1/0.78] ${
                 connectMethod === cms.key
                   ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
                   : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
