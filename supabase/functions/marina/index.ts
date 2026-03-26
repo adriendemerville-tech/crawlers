@@ -1079,84 +1079,93 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
       }
 
       if (trackedSite) {
-        // Check if crawl data exists — if not, populate from expert audit internal links
+        // ─── Real multi-page crawl via crawl-site (max 50 pages) ───
+        // Check if a recent completed crawl exists (< 24h)
         const { data: existingCrawls } = await sb
           .from('site_crawls' as any)
-          .select('id')
+          .select('id, crawled_pages, status')
           .eq('domain', domain)
+          .eq('status', 'completed')
           .order('created_at', { ascending: false })
           .limit(1);
         
-        if (!existingCrawls?.length) {
-          console.log(`[Marina] No crawl data for ${domain}, creating from expert audit...`);
+        const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
+        
+        if (!hasRecentCrawl) {
+          console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 50 pages)...`);
+          await updateProgress(66, 'multi_crawl');
           
-          // Create a site_crawls entry
-          const { data: newCrawl, error: crawlErr } = await sb
-            .from('site_crawls' as any)
-            .insert({
-              user_id: parentJob.user_id,
-              domain: domain,
+          try {
+            // Call crawl-site to create the crawl job (bypasses auth for service calls)
+            const crawlLaunchRes = await callFunction('crawl-site', {
               url: url,
-              status: 'completed',
-              pages_found: 1,
-              pages_crawled: 1,
-            })
-            .select('id')
-            .single();
-          
-          if (newCrawl && !crawlErr) {
-            // Extract internal links from expert audit and build crawl_pages
-            const internalLinks: string[] = [];
-            const rawHtml = expertResult.data?.rawData?.htmlAnalysis || {};
+              maxPages: 50,
+              userId: parentJob.user_id,
+            });
             
-            // Main page
-            const mainPageData = {
-              crawl_id: (newCrawl as any).id,
-              url: url,
-              title: rawHtml.title || '',
-              h1: rawHtml.h1 || '',
-              meta_description: rawHtml.metaDescription || '',
-              word_count: rawHtml.wordCount || 0,
-              http_status: 200,
-              seo_score: expertResult.data?.totalScore || 0,
-              internal_links: rawHtml.internalLinksCount || 0,
-              external_links: rawHtml.externalLinksCount || 0,
-              crawl_depth: 0,
-            };
-            
-            await sb.from('crawl_pages').insert(mainPageData);
-            
-            // Also insert discovered internal link URLs as depth-1 pages
-            const discoveredLinks = rawHtml.internalLinks || expertResult.data?.rawData?.internalLinks || [];
-            if (Array.isArray(discoveredLinks) && discoveredLinks.length > 0) {
-              const linkPages = discoveredLinks.slice(0, 50).map((link: any) => {
-                const linkUrl = typeof link === 'string' ? link : link.href || link.url || '';
-                return {
-                  crawl_id: (newCrawl as any).id,
-                  url: linkUrl,
-                  title: typeof link === 'object' ? (link.text || link.title || '') : '',
-                  h1: '',
-                  meta_description: '',
-                  word_count: 0,
-                  http_status: 200,
-                  seo_score: 0,
-                  internal_links: 0,
-                  external_links: 0,
-                  crawl_depth: 1,
-                };
-              }).filter((p: any) => p.url);
+            if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
+              const crawlId = crawlLaunchRes.crawlId;
+              console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages (${crawlLaunchRes.newPages || '?'} new, ${crawlLaunchRes.reusedPages || 0} reused)`);
               
-              if (linkPages.length > 0) {
-                await sb.from('crawl_pages').insert(linkPages);
-                // Update crawl count
-                await sb.from('site_crawls' as any)
-                  .update({ pages_found: linkPages.length + 1, pages_crawled: linkPages.length + 1 })
-                  .eq('id', (newCrawl as any).id);
+              // Poll until crawl completes (max 5 minutes)
+              const crawlStartTime = Date.now();
+              const CRAWL_TIMEOUT_MS = 300_000; // 5 min
+              const CRAWL_POLL_MS = 5_000;
+              let crawlDone = false;
+              
+              while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
+                await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
+                
+                const { data: crawlStatus } = await sb
+                  .from('site_crawls' as any)
+                  .select('status, crawled_pages, total_pages')
+                  .eq('id', crawlId)
+                  .single();
+                
+                if (!crawlStatus) break;
+                
+                const status = (crawlStatus as any).status;
+                const crawledPages = (crawlStatus as any).crawled_pages || 0;
+                const totalPages = (crawlStatus as any).total_pages || 1;
+                
+                // Update Marina progress (66-80 range for crawl)
+                const crawlProgress = Math.min(80, 66 + Math.round((crawledPages / totalPages) * 14));
+                await updateProgress(crawlProgress, 'multi_crawl');
+                
+                if (status === 'completed' || status === 'error' || status === 'analyzing') {
+                  crawlDone = true;
+                  console.log(`[Marina] Crawl ${crawlId} finished: ${status}, ${crawledPages}/${totalPages} pages`);
+                  
+                  // If status is 'analyzing', wait a bit more for finalization
+                  if (status === 'analyzing') {
+                    await new Promise(r => setTimeout(r, 10_000));
+                  }
+                } else if (status === 'crawling' || status === 'queued' || status === 'mapping') {
+                  // Re-trigger worker in case it died (fire-and-forget)
+                  if ((Date.now() - crawlStartTime) > 60_000 && (Date.now() - crawlStartTime) % 30_000 < CRAWL_POLL_MS) {
+                    fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ trigger: 'marina-retry' }),
+                    }).catch(() => {});
+                  }
+                }
               }
               
-              console.log(`[Marina] Created crawl with ${linkPages.length + 1} pages for cocoon`);
+              if (!crawlDone) {
+                console.warn(`[Marina] Crawl ${crawlId} timed out after 5 min — proceeding with partial data`);
+              }
+            } else {
+              console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
             }
+          } catch (crawlErr) {
+            console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
           }
+        } else {
+          console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
         }
 
         console.log(`[Marina] Step 3: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
