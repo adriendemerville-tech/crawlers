@@ -580,7 +580,7 @@ export function MarinaDashboard() {
                                 console.error('Failed to delete job:', e);
                               }
                             }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                            className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                             title="Supprimer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
