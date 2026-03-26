@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check, Euro } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check, Euro, StopCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -521,6 +521,24 @@ export function MarinaDashboard() {
                           <span className="text-[10px] text-muted-foreground">
                             {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </span>
+                          {(job.status === 'processing' || job.status === 'pending') && (
+                            <button
+                              onClick={async () => {
+                                setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status: 'failed', error_message: 'Interrompu manuellement' } : j));
+                                try {
+                                  await supabase.functions.invoke('marina', {
+                                    body: { action: 'cancel_job', job_id: job.id },
+                                  });
+                                } catch (e) {
+                                  console.error('Failed to cancel job:', e);
+                                }
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500"
+                              title="Interrompre"
+                            >
+                              <StopCircle className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           <button
                             onClick={async () => {
                               setJobs(prev => prev.filter(j => j.id !== job.id));
