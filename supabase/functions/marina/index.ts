@@ -1597,7 +1597,7 @@ Deno.serve(async (req) => {
       console.error('[Marina] Self-invocation failed:', err);
     });
 
-    return json({ job_id: job.id, status: 'pending' }, 202);
+    return json({ job_id: job.id, status: 'pending' });
 
   } catch (error) {
     console.error('[Marina] Error:', error);

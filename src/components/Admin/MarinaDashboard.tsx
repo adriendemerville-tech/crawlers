@@ -31,6 +31,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 
 const phaseLabels: Record<string, string> = {
   crawling: '🔍 Crawl technique…',
+  multi_crawl: '🔍 Crawl multi-pages…',
   strategic_audit: '🎯 Audit stratégique GEO…',
   cocoon: '🕸️ Cocon sémantique…',
   generating_report: '📄 Génération du rapport…',
