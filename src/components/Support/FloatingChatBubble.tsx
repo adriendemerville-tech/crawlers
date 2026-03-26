@@ -30,7 +30,6 @@ export function FloatingChatBubble() {
   // Hide Félix on report preview/viewer pages
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
   const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
-  if (isReportPage) return null;
 
   // Ping-pong bounce animation on first home visit after 20s
   useEffect(() => {
