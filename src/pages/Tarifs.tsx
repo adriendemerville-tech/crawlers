@@ -339,6 +339,7 @@ export default function Tarifs() {
   const navigate = useNavigate();
   const t = translations[language];
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [premiumLoading, setPremiumLoading] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -359,6 +360,28 @@ export default function Tarifs() {
       toast.error('Erreur lors de la création de la session');
     } finally {
       setSubscribeLoading(false);
+    }
+  };
+
+  const handleSubscribePremium = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setPremiumLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_premium' } });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank', 'noopener');
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la création de la session');
+    } finally {
+      setPremiumLoading(false);
     }
   };
 
