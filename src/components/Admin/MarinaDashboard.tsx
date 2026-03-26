@@ -320,6 +320,15 @@ export function MarinaDashboard() {
             <div className="font-mono font-semibold text-foreground">{costBreakdown.jobs}</div>
             <div>Appels</div>
           </div>
+          <div className="h-8 w-px bg-border" />
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{jobs.length}</div>
+            <div>Jobs total</div>
+          </div>
+          <div className="text-center">
+            <div className="font-mono font-semibold text-destructive">{jobs.filter(j => j.status === 'failed').length}</div>
+            <div>Échoués</div>
+          </div>
         </div>
       </div>
 
