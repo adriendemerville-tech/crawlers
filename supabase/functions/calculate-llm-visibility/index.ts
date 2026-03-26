@@ -43,6 +43,8 @@ const LLM_TARGETS = [
   { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
   { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku' },
+  { id: 'mistral',    name: 'Mistral',     model: 'mistralai/mistral-small-latest' },
+  { id: 'llama',      name: 'Meta Llama',  model: 'meta-llama/llama-3.1-8b-instruct' },
 ]
 
 const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
