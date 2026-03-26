@@ -106,6 +106,10 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
 
+  // Quiz state
+  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
