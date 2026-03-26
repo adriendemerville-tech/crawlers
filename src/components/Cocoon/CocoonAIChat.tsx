@@ -898,6 +898,23 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       }
     }
 
+    // If no graph is generated, intercept and show generate prompt
+    if (nodes.length === 0 && !overrideContext) {
+      const userMsg: Msg = { role: 'user', content: text };
+      const noGraphMsg: Msg = { 
+        role: 'assistant', 
+        content: language === 'en' 
+          ? "Sure! I need a graph to start my analysis." 
+          : language === 'es' 
+            ? "¡De acuerdo! Necesito un gráfico para iniciar mi análisis."
+            : "D'accord ! Il me faut un graph pour démarrer mon analyse."
+      };
+      setMessages(prev => [...prev, userMsg, noGraphMsg]);
+      setInput('');
+      setShowGenerateButton(true);
+      return;
+    }
+
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
