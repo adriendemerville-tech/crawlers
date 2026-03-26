@@ -120,7 +120,7 @@ const translations = {
       '100 URL suivis inclus',
       'Priorité file de crawl',
     ],
-    agencyPremiumCta: 'Nous contacter',
+    agencyPremiumCta: "S'abonner · 89€/mois",
     or: 'ou',
   },
   en: {
@@ -223,7 +223,7 @@ const translations = {
       '100 tracked URLs included',
       'Priority crawl queue',
     ],
-    agencyPremiumCta: 'Contact us',
+    agencyPremiumCta: 'Subscribe · €89/mo',
     or: 'or',
   },
   es: {
@@ -326,7 +326,7 @@ const translations = {
       '100 URL seguidos incluidos',
       'Prioridad en cola de crawl',
     ],
-    agencyPremiumCta: 'Contáctenos',
+    agencyPremiumCta: 'Suscribirse · 89€/mes',
     or: 'o',
   },
 };
@@ -339,6 +339,7 @@ export default function Tarifs() {
   const navigate = useNavigate();
   const t = translations[language];
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [premiumLoading, setPremiumLoading] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -359,6 +360,28 @@ export default function Tarifs() {
       toast.error('Erreur lors de la création de la session');
     } finally {
       setSubscribeLoading(false);
+    }
+  };
+
+  const handleSubscribePremium = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setPremiumLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_premium' } });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank', 'noopener');
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la création de la session');
+    } finally {
+      setPremiumLoading(false);
     }
   };
 
@@ -913,12 +936,13 @@ export default function Tarifs() {
                       ))}
                     </ul>
                     <Button
-                      variant="outline"
                       size="lg"
-                      className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
-                      onClick={() => window.open('mailto:contact@crawlers.fr?subject=Pro Agency Premium 50K', '_blank')}
+                      className="w-full gap-2 font-bold bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25"
+                      onClick={handleSubscribePremium}
+                      disabled={premiumLoading}
                     >
-                      {(t as any).agencyPremiumCta}
+                      <Crown className="h-4 w-4" />
+                      {premiumLoading ? t.agencyLoading : (t as any).agencyPremiumCta}
                     </Button>
                   </CardContent>
                 </Card>
