@@ -2008,7 +2008,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
       const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
       if (RENDERING_KEY) {
         try {
-          const renderResponse = await fetch(`https://chrome.browserless.io/content?token=${RENDERING_KEY}`, {
+          const renderResponse = await fetch(`https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
