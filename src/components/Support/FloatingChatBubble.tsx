@@ -27,6 +27,10 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
+  // Hide Félix on report preview/viewer pages
+  const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
+  const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
+
   // Ping-pong bounce animation on first home visit after 20s
   useEffect(() => {
     if (location.pathname !== '/') return;
@@ -181,9 +185,9 @@ export function FloatingChatBubble() {
     }
   };
 
-  // Hide on mobile, /cocoon, /signup, /auth
+  // Hide on mobile, /cocoon, /signup, /auth, and report preview pages
   const hiddenPaths = ['/app/cocoon', '/signup', '/auth'];
-  if (isMobile || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
+  if (isMobile || isReportPage || hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   return (
     <>
