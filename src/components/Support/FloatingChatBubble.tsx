@@ -263,7 +263,7 @@ export function FloatingChatBubble() {
               Plus tard.
             </button>
           </div>
-          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
+          
         </div>
       )}
 
