@@ -1126,8 +1126,25 @@ function generateApiKey(): string {
   return key;
 }
 
-// ─── Worker: runs the full pipeline ───
-async function runPipeline(jobId: string, url: string, lang?: string) {
+// ─── Self-invoke helper for phase chaining ───
+async function selfInvokePhase(jobId: string, url: string, lang: string, phase: string, intermediateData: any) {
+  console.log(`[Marina] 🔗 Self-invoking phase "${phase}" for job ${jobId}`);
+  fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'run_job', job_id: jobId, url, lang, _phase: phase, _intermediate: intermediateData }),
+  }).catch(err => {
+    console.error(`[Marina] Phase "${phase}" self-invocation failed:`, err);
+  });
+}
+
+// ─── Worker: runs the full pipeline in phases ───
+// Phase 1 (default): audit + strategic → saves intermediate → self-invokes phase 2
+// Phase 2: crawl + cocoon + LLM visibility + report generation
+async function runPipeline(jobId: string, url: string, lang?: string, phase?: string, intermediateData?: any) {
   const sb = getServiceClient();
   const { data: parentJob } = await sb
     .from('async_jobs')
@@ -1139,410 +1156,442 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     throw new Error('Parent Marina job missing user_id');
   }
   
-  const updateProgress = async (progress: number, phase?: string) => {
+  const updateProgress = async (progress: number, phaseName?: string) => {
     try {
       const updateData: any = { progress };
-      if (phase) updateData.input_payload = { phase, url };
+      if (phaseName) updateData.input_payload = { phase: phaseName, url };
       if (progress === 5) updateData.started_at = new Date().toISOString();
       updateData.status = 'processing';
       await sb.from('async_jobs').update(updateData).eq('id', jobId);
     } catch (_) { /* ignore */ }
   };
 
+  const currentPhase = phase || 'phase1';
+
   try {
-    await updateProgress(5, 'crawling');
-    
-    // ─── Step 1: Technical SEO Audit (includes crawl) ───
-    console.log(`[Marina] Step 1: audit-expert-seo for ${url}`);
-    const expertResult = await callFunction('audit-expert-seo', { url, lang: lang || 'fr' });
-    
-    if (!expertResult?.success || !expertResult?.data) {
-      throw new Error(`Expert SEO audit failed: ${expertResult?.error || 'No data returned'}`);
-    }
-    
-    const domain = expertResult.data.domain;
-    const detectedLang = lang || detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.html || '');
-    
-    console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
-    await updateProgress(30, 'strategic_audit');
-
-    // ─── Step 2: Strategic GEO Audit ───
-    console.log(`[Marina] Step 2: strategic-orchestrator for ${url}`);
-    const toolsData = {
-      crawlers: { note: 'Non disponible dans Marina' },
-      geo: { note: 'Calcul stratégique en cours' },
-      llm: { note: 'À calculer via le pipeline stratégique' },
-      pagespeed: {
-        overallScore: expertResult.data?.scores?.performance?.psiPerformance || null,
-        lcp: expertResult.data?.scores?.performance?.lcp || null,
-      },
-    };
-
-    const strategicJobId = await startTrackedSubJob(
-      sb,
-      'strategic-orchestrator',
-      parentJob.user_id,
-      {
-        parent_job_id: jobId,
-        url,
-        lang: detectedLang,
-        toolsData,
-      },
-    );
-
-    let lastMirroredProgress = 30;
-    const strategicData = await waitForTrackedJob(sb, strategicJobId, {
-      timeoutMs: 420_000,
-      pollMs: 4_000,
-      onProgress: async (childJob) => {
-        const childProgress = Math.max(0, Math.min(100, childJob.progress || 0));
-        const mirroredProgress = Math.min(64, 30 + Math.round((childProgress / 100) * 35));
-        if (mirroredProgress > lastMirroredProgress) {
-          lastMirroredProgress = mirroredProgress;
-          await updateProgress(mirroredProgress, 'strategic_audit');
-        }
-      },
-    });
-
-    console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
-
-    // ─── Step 2b: Real LLM Visibility benchmark (parallel with cocoon) ───
-    let llmVisibilityData: any = null;
-    // We need tracked_site_id for LLM visibility — fetch or create it first
-    let trackedSiteForLlm: { id: string } | null = null;
-    {
-      const { data: ts } = await sb
-        .from('tracked_sites')
-        .select('id')
-        .eq('domain', domain)
-        .maybeSingle();
-      if (ts) {
-        trackedSiteForLlm = ts;
-      } else {
-        const { data: newTs } = await sb
-          .from('tracked_sites')
-          .insert({ user_id: parentJob.user_id, domain, site_name: `Marina: ${domain}` })
-          .select('id')
-          .single();
-        trackedSiteForLlm = newTs;
-      }
-    }
-
-    const llmVisibilityPromise = (async () => {
-      if (!trackedSiteForLlm) {
-        console.warn(`[Marina] Skipping LLM visibility: no tracked_site`);
-        return;
-      }
-      try {
-        console.log(`[Marina] Step 2b: calculate-llm-visibility for ${domain}`);
-        const result = await callFunction('calculate-llm-visibility', {
-          tracked_site_id: trackedSiteForLlm.id,
-          user_id: parentJob.user_id,
-        });
-        if (result && !result.error && (result.scores || result.data?.scores)) {
-          llmVisibilityData = result;
-          console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
-        } else {
-          console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
-        }
-      } catch (e) {
-        console.warn(`[Marina] LLM visibility failed (non-fatal):`, e);
-      }
-    })();
-
-    await updateProgress(65, 'cocoon');
-
-    // ─── Step 3: Cocoon (always run — create tracked_site + crawl data if needed) ───
-    // Wrap in a 90s timeout to prevent pipeline stall
-    let cocoonResult: any = null;
-    const COCOON_TIMEOUT_MS = 90_000;
-    try {
-      cocoonResult = await Promise.race([
-        (async () => {
-          // Reuse tracked_site created earlier for LLM visibility
-          let trackedSite = trackedSiteForLlm;
-          
-          if (!trackedSite) {
-            // Fallback: check again
-            const { data: ts } = await sb
-              .from('tracked_sites')
-              .select('id')
-              .ilike('domain', `%${domain}%`)
-              .limit(1)
-              .maybeSingle();
-            trackedSite = ts;
-          }
-
-          if (!trackedSite) {
-            console.warn(`[Marina] No tracked_site for ${domain} — skipping cocoon`);
-            return null;
-          }
-
-          // Check if we have a recent crawl for this site
-          const { data: existingCrawls } = await sb
-            .from('site_crawls' as any)
-            .select('id, crawled_pages, total_pages, status')
-            .eq('tracked_site_id', trackedSite.id)
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-            .limit(1);
-          
-          const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
-          
-          if (!hasRecentCrawl) {
-            console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 20 pages)...`);
-            await updateProgress(66, 'multi_crawl');
-            
-            try {
-              // Call crawl-site to create the crawl job (bypasses auth for service calls)
-              const crawlLaunchRes = await callFunction('crawl-site', {
-                url: url,
-                maxPages: 20,
-                userId: parentJob.user_id,
-              });
-              
-              if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
-                const crawlId = crawlLaunchRes.crawlId;
-                console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages (${crawlLaunchRes.newPages || '?'} new, ${crawlLaunchRes.reusedPages || 0} reused)`);
-                
-                // Poll until crawl completes (max 90s — Marina needs budget for cocoon + report)
-                const crawlStartTime = Date.now();
-                const CRAWL_TIMEOUT_MS = 90_000; // 90s max for crawl polling
-                const CRAWL_POLL_MS = 4_000;
-                let crawlDone = false;
-                
-                while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
-                  await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
-                  
-                  const { data: crawlStatus } = await sb
-                    .from('site_crawls' as any)
-                    .select('status, crawled_pages, total_pages')
-                    .eq('id', crawlId)
-                    .single();
-                  
-                  if (!crawlStatus) break;
-                  
-                  const status = (crawlStatus as any).status;
-                  const crawledPages = (crawlStatus as any).crawled_pages || 0;
-                  const totalPages = (crawlStatus as any).total_pages || 1;
-                  
-                  // Update Marina progress (66-80 range for crawl)
-                  const crawlProgress = Math.min(80, 66 + Math.round((crawledPages / totalPages) * 14));
-                  await updateProgress(crawlProgress, 'multi_crawl');
-                  
-                  if (status === 'completed' || status === 'error' || status === 'analyzing') {
-                    crawlDone = true;
-                    console.log(`[Marina] Crawl ${crawlId} finished: ${status}, ${crawledPages}/${totalPages} pages`);
-                    
-                    // If status is 'analyzing', wait a bit more for finalization
-                    if (status === 'analyzing') {
-                      await new Promise(r => setTimeout(r, 10_000));
-                    }
-                  } else if (status === 'crawling' || status === 'queued' || status === 'mapping') {
-                    // Re-trigger worker in case it died (fire-and-forget)
-                    if ((Date.now() - crawlStartTime) > 60_000 && (Date.now() - crawlStartTime) % 30_000 < CRAWL_POLL_MS) {
-                      fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
-                        method: 'POST',
-                        headers: {
-                          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ trigger: 'marina-retry' }),
-                      }).catch(() => {});
-                    }
-                  }
-                }
-                
-                if (!crawlDone) {
-                  console.warn(`[Marina] Crawl ${crawlId} timed out after 90s — proceeding with partial data`);
-                }
-              } else {
-                console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
-              }
-            } catch (crawlErr) {
-              console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
-            }
-          } else {
-            console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
-          }
-
-          console.log(`[Marina] Step 3: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
-          const result = await callFunction('calculate-cocoon-logic', { 
-            tracked_site_id: trackedSite.id,
-            _user_id: parentJob.user_id,
-          });
-          
-          // If cocoon returned error about no crawl, log it
-          if (result?.error) {
-            console.warn(`[Marina] Cocoon returned error: ${result.error}`);
-            return null;
-          }
-          
-          console.log(`[Marina] Cocoon done: ${result?.stats?.nodes_count || 0} nodes`);
-          
-          // ─── Step 3b: Lite Stratège — top 3 recommendations via LLM ───
-          try {
-            console.log(`[Marina] Step 3b: Lite Stratège for cocoon recommendations`);
-            const cocoonRecommendations = await generateLiteStrategeRecommendations(
-              domain, result, expertResult.data, strategicData, detectedLang,
-            );
-            if (cocoonRecommendations?.length) {
-              result._stratege_recommendations = cocoonRecommendations;
-              console.log(`[Marina] Lite Stratège: ${cocoonRecommendations.length} recommendations`);
-            }
-          } catch (stratErr) {
-            console.warn(`[Marina] Lite Stratège failed (non-fatal):`, stratErr);
-          }
-          
-          return result;
-        })(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Cocoon timeout')), COCOON_TIMEOUT_MS)),
-      ]);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.warn(`[Marina] Cocoon failed (non-fatal, ${msg.includes('timeout') ? 'TIMEOUT' : 'error'}):`, msg);
-    }
-    
-    // Wait for LLM visibility if still running
-    await llmVisibilityPromise;
-    await updateProgress(85, 'generating_report');
-
-    // ─── Step 4: Generate individual HTML reports & store temporarily ───
-    let html: string;
-    
-    try {
-      console.log(`[Marina] Step 4: Generating individual section HTMLs...`);
+    if (currentPhase === 'phase1') {
+      // ═══ PHASE 1: Audit + Strategic ═══
+      await updateProgress(5, 'crawling');
       
-      // Generate each section as standalone HTML
-      const crawlHTML = generateCrawlSectionHTML(expertResult.data, detectedLang, domain, url);
-      const techHTML = generateTechSectionHTML(expertResult.data, detectedLang, domain);
-      const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
-      const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+      // ─── Step 1: Technical SEO Audit (includes crawl) ───
+      console.log(`[Marina] Phase 1 Step 1: audit-expert-seo for ${url}`);
+      const expertResult = await callFunction('audit-expert-seo', { url, lang: lang || 'fr' });
+      
+      if (!expertResult?.success || !expertResult?.data) {
+        throw new Error(`Expert SEO audit failed: ${expertResult?.error || 'No data returned'}`);
+      }
+      
+      const domain = expertResult.data.domain;
+      const detectedLang = lang || detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.html || '');
+      
+      console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
+      await updateProgress(30, 'strategic_audit');
 
-      // Store each section temporarily in storage (fire-and-forget, non-blocking)
-      const tempPrefix = `marina/tmp/${jobId}`;
-      const storageUploads = [
-        { path: `${tempPrefix}/1-crawl.html`, content: crawlHTML },
-        { path: `${tempPrefix}/2-tech.html`, content: techHTML },
-        { path: `${tempPrefix}/3-strategic.html`, content: strategicHTML },
-        { path: `${tempPrefix}/4-cocoon.html`, content: cocoonHTML },
-      ];
+      // ─── Step 2: Strategic GEO Audit ───
+      console.log(`[Marina] Phase 1 Step 2: strategic-orchestrator for ${url}`);
+      const toolsData = {
+        crawlers: { note: 'Non disponible dans Marina' },
+        geo: { note: 'Calcul stratégique en cours' },
+        llm: { note: 'À calculer via le pipeline stratégique' },
+        pagespeed: {
+          overallScore: expertResult.data?.scores?.performance?.psiPerformance || null,
+          lcp: expertResult.data?.scores?.performance?.lcp || null,
+        },
+      };
 
-      // Upload all temp sections in parallel
-      await Promise.allSettled(
-        storageUploads.map(({ path, content }) =>
-          sb.storage.from('shared-reports').upload(path, new Blob([content], { type: 'text/html' }), {
-            contentType: 'text/html',
-            upsert: true,
-          })
-        )
+      const strategicJobId = await startTrackedSubJob(
+        sb,
+        'strategic-orchestrator',
+        parentJob.user_id,
+        {
+          parent_job_id: jobId,
+          url,
+          lang: detectedLang,
+          toolsData,
+        },
       );
-      console.log(`[Marina] 📦 4 section HTMLs stored temporarily`);
 
-      await updateProgress(90, 'generating_report');
-
-      // Compile all sections into final report
-      html = compileMarinaReport(
-        { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
-        detectedLang, domain, url,
-      );
-
-      console.log(`[Marina] ✅ Compiled report from 4 sections`);
-
-      // Cleanup temp files (fire-and-forget)
-      Promise.allSettled(
-        storageUploads.map(({ path }) => sb.storage.from('shared-reports').remove([path]))
-      ).catch(() => {});
-
-    } catch (compileError) {
-      // ─── FALLBACK: use legacy monolithic generator ───
-      console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
-      html = generateLegacyMarinaReport(url, domain, detectedLang, expertResult.data, strategicData, cocoonResult);
-    }
-
-    // ─── Step 5: Store in shared-reports bucket ───
-    const fileName = `marina/${jobId}.html`;
-    const { error: uploadError } = await sb.storage
-      .from('shared-reports')
-      .upload(fileName, new Blob([html], { type: 'text/html' }), {
-        contentType: 'text/html',
-        upsert: true,
+      let lastMirroredProgress = 30;
+      const strategicData = await waitForTrackedJob(sb, strategicJobId, {
+        timeoutMs: 420_000,
+        pollMs: 4_000,
+        onProgress: async (childJob) => {
+          const childProgress = Math.max(0, Math.min(100, childJob.progress || 0));
+          const mirroredProgress = Math.min(64, 30 + Math.round((childProgress / 100) * 35));
+          if (mirroredProgress > lastMirroredProgress) {
+            lastMirroredProgress = mirroredProgress;
+            await updateProgress(mirroredProgress, 'strategic_audit');
+          }
+        },
       });
 
-    if (uploadError) {
-      console.error(`[Marina] Upload error:`, uploadError);
-    }
+      console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
+      await updateProgress(65, 'phase1_complete');
 
-    // Generate signed URL (valid 7 days)
-    const { data: signedUrlData } = await sb.storage
-      .from('shared-reports')
-      .createSignedUrl(fileName, 7 * 24 * 60 * 60);
-
-    const resultData = {
-      url,
-      domain,
-      language: detectedLang,
-      report_url: signedUrlData?.signedUrl || null,
-      report_path: fileName,
-      expert_seo_score: expertResult.data.totalScore,
-      expert_seo_max: expertResult.data.maxScore,
-      strategic_score: strategicData?.overallScore || null,
-      cocoon_nodes: cocoonResult?.stats?.nodes_count || null,
-      cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
-      generated_at: new Date().toISOString(),
-    };
-
-    await sb.from('async_jobs').update({
-      status: 'completed',
-      result_data: resultData,
-      progress: 100,
-      completed_at: new Date().toISOString(),
-    }).eq('id', jobId);
-
-    console.log(`[Marina] ✅ Pipeline completed for ${domain}`);
-
-    // ─── Step 6: Persist structured training data for ML ───
-    try {
-      const scores = expertResult.data?.scores || {};
-      await sb.from('marina_training_data').upsert({
-        job_id: jobId,
+      // ─── Save intermediate data and self-invoke phase 2 ───
+      // Store intermediate results in audit_cache for phase 2 to pick up
+      const intermediatePayload = {
+        expertData: expertResult.data,
+        strategicData,
         domain,
+        detectedLang,
+      };
+
+      await sb.from('audit_cache').upsert({
+        cache_key: `marina_intermediate_${jobId}`,
+        function_name: 'marina',
+        result_data: intermediatePayload,
+        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min TTL
+      }, { onConflict: 'cache_key' });
+
+      console.log(`[Marina] ✅ Phase 1 complete — intermediate data saved, launching Phase 2`);
+
+      // Self-invoke phase 2 with a fresh wall-clock budget
+      await selfInvokePhase(jobId, url, detectedLang, 'phase2', { domain });
+
+    } else if (currentPhase === 'phase2') {
+      // ═══ PHASE 2: Crawl + Cocoon + LLM Visibility + Report ═══
+      console.log(`[Marina] Phase 2 starting for job ${jobId}`);
+
+      // Load intermediate data from phase 1
+      const { data: cached } = await sb
+        .from('audit_cache')
+        .select('result_data')
+        .eq('cache_key', `marina_intermediate_${jobId}`)
+        .single();
+
+      if (!cached?.result_data) {
+        throw new Error('Phase 2: intermediate data not found — phase 1 may have failed');
+      }
+
+      const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
+
+      // Cleanup intermediate cache (fire-and-forget)
+      sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
+
+      await updateProgress(66, 'multi_crawl');
+
+      // ─── Step 2b: Real LLM Visibility benchmark (parallel with crawl) ───
+      let llmVisibilityData: any = null;
+      let trackedSiteForLlm: { id: string } | null = null;
+      {
+        const { data: ts } = await sb
+          .from('tracked_sites')
+          .select('id')
+          .eq('domain', domain)
+          .maybeSingle();
+        if (ts) {
+          trackedSiteForLlm = ts;
+        } else {
+          const { data: newTs } = await sb
+            .from('tracked_sites')
+            .insert({ user_id: parentJob.user_id, domain, site_name: `Marina: ${domain}` })
+            .select('id')
+            .single();
+          trackedSiteForLlm = newTs;
+        }
+      }
+
+      const llmVisibilityPromise = (async () => {
+        if (!trackedSiteForLlm) {
+          console.warn(`[Marina] Skipping LLM visibility: no tracked_site`);
+          return;
+        }
+        try {
+          console.log(`[Marina] Phase 2: calculate-llm-visibility for ${domain}`);
+          const result = await callFunction('calculate-llm-visibility', {
+            tracked_site_id: trackedSiteForLlm.id,
+            user_id: parentJob.user_id,
+          });
+          if (result && !result.error && (result.scores || result.data?.scores)) {
+            llmVisibilityData = result;
+            console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
+          } else {
+            console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
+          }
+        } catch (e) {
+          console.warn(`[Marina] LLM visibility failed (non-fatal):`, e);
+        }
+      })();
+
+      // ─── Step 3: Cocoon (crawl + compute) ───
+      let cocoonResult: any = null;
+      const COCOON_TIMEOUT_MS = 240_000; // 4 min — phase 2 has its own wall-clock budget
+      try {
+        cocoonResult = await Promise.race([
+          (async () => {
+            let trackedSite = trackedSiteForLlm;
+            
+            if (!trackedSite) {
+              const { data: ts } = await sb
+                .from('tracked_sites')
+                .select('id')
+                .ilike('domain', `%${domain}%`)
+                .limit(1)
+                .maybeSingle();
+              trackedSite = ts;
+            }
+
+            if (!trackedSite) {
+              console.warn(`[Marina] No tracked_site for ${domain} — skipping cocoon`);
+              return null;
+            }
+
+            // Check if we have a recent crawl for this site
+            const { data: existingCrawls } = await sb
+              .from('site_crawls' as any)
+              .select('id, crawled_pages, total_pages, status')
+              .eq('tracked_site_id', trackedSite.id)
+              .eq('status', 'completed')
+              .order('created_at', { ascending: false })
+              .limit(1);
+            
+            const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
+            
+            if (!hasRecentCrawl) {
+              console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 20 pages)...`);
+              await updateProgress(67, 'multi_crawl');
+              
+              try {
+                const crawlLaunchRes = await callFunction('crawl-site', {
+                  url: url,
+                  maxPages: 20,
+                  userId: parentJob.user_id,
+                });
+                
+                if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
+                  const crawlId = crawlLaunchRes.crawlId;
+                  console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
+                  
+                  // Poll until crawl completes — now we have a generous budget (up to 180s)
+                  const crawlStartTime = Date.now();
+                  const CRAWL_TIMEOUT_MS = 180_000; // 3 min for crawl polling
+                  const CRAWL_POLL_MS = 5_000;
+                  let crawlDone = false;
+                  
+                  while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
+                    await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
+                    
+                    const { data: crawlStatus } = await sb
+                      .from('site_crawls' as any)
+                      .select('status, crawled_pages, total_pages')
+                      .eq('id', crawlId)
+                      .single();
+                    
+                    if (!crawlStatus) break;
+                    
+                    const status = (crawlStatus as any).status;
+                    const crawledPages = (crawlStatus as any).crawled_pages || 0;
+                    const totalPages = (crawlStatus as any).total_pages || 1;
+                    
+                    const crawlProgress = Math.min(80, 67 + Math.round((crawledPages / totalPages) * 13));
+                    await updateProgress(crawlProgress, 'multi_crawl');
+                    
+                    if (status === 'completed' || status === 'error' || status === 'analyzing') {
+                      crawlDone = true;
+                      console.log(`[Marina] Crawl ${crawlId} finished: ${status}, ${crawledPages}/${totalPages} pages`);
+                      
+                      if (status === 'analyzing') {
+                        await new Promise(r => setTimeout(r, 10_000));
+                      }
+                    } else if (status === 'crawling' || status === 'queued' || status === 'mapping') {
+                      // Re-trigger worker in case it died
+                      if ((Date.now() - crawlStartTime) > 60_000 && (Date.now() - crawlStartTime) % 30_000 < CRAWL_POLL_MS) {
+                        fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ trigger: 'marina-retry' }),
+                        }).catch(() => {});
+                      }
+                    }
+                  }
+                  
+                  if (!crawlDone) {
+                    console.warn(`[Marina] Crawl ${crawlId} timed out after 180s — proceeding with partial data`);
+                  }
+                } else {
+                  console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
+                }
+              } catch (crawlErr) {
+                console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
+              }
+            } else {
+              console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
+            }
+
+            console.log(`[Marina] Phase 2: calculate-cocoon-logic for tracked_site ${trackedSite.id}`);
+            const result = await callFunction('calculate-cocoon-logic', { 
+              tracked_site_id: trackedSite.id,
+              _user_id: parentJob.user_id,
+            });
+            
+            if (result?.error) {
+              console.warn(`[Marina] Cocoon returned error: ${result.error}`);
+              return null;
+            }
+            
+            console.log(`[Marina] Cocoon done: ${result?.stats?.nodes_count || 0} nodes`);
+            
+            // ─── Lite Stratège — top 3 recommendations via LLM ───
+            try {
+              console.log(`[Marina] Phase 2: Lite Stratège for cocoon recommendations`);
+              const cocoonRecommendations = await generateLiteStrategeRecommendations(
+                domain, result, expertData, strategicData, detectedLang,
+              );
+              if (cocoonRecommendations?.length) {
+                result._stratege_recommendations = cocoonRecommendations;
+                console.log(`[Marina] Lite Stratège: ${cocoonRecommendations.length} recommendations`);
+              }
+            } catch (stratErr) {
+              console.warn(`[Marina] Lite Stratège failed (non-fatal):`, stratErr);
+            }
+            
+            return result;
+          })(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Cocoon timeout')), COCOON_TIMEOUT_MS)),
+        ]);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn(`[Marina] Cocoon failed (non-fatal, ${msg.includes('timeout') ? 'TIMEOUT' : 'error'}):`, msg);
+      }
+      
+      // Wait for LLM visibility if still running
+      await llmVisibilityPromise;
+      await updateProgress(85, 'generating_report');
+
+      // ─── Step 4: Generate HTML reports ───
+      let html: string;
+      
+      try {
+        console.log(`[Marina] Phase 2 Step 4: Generating section HTMLs...`);
+        
+        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url);
+        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
+        const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+
+        const tempPrefix = `marina/tmp/${jobId}`;
+        const storageUploads = [
+          { path: `${tempPrefix}/1-crawl.html`, content: crawlHTML },
+          { path: `${tempPrefix}/2-tech.html`, content: techHTML },
+          { path: `${tempPrefix}/3-strategic.html`, content: strategicHTML },
+          { path: `${tempPrefix}/4-cocoon.html`, content: cocoonHTML },
+        ];
+
+        await Promise.allSettled(
+          storageUploads.map(({ path, content }) =>
+            sb.storage.from('shared-reports').upload(path, new Blob([content], { type: 'text/html' }), {
+              contentType: 'text/html',
+              upsert: true,
+            })
+          )
+        );
+        console.log(`[Marina] 📦 4 section HTMLs stored`);
+
+        await updateProgress(90, 'generating_report');
+
+        html = compileMarinaReport(
+          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
+          detectedLang, domain, url,
+        );
+
+        console.log(`[Marina] ✅ Compiled report from 4 sections`);
+
+        Promise.allSettled(
+          storageUploads.map(({ path }) => sb.storage.from('shared-reports').remove([path]))
+        ).catch(() => {});
+
+      } catch (compileError) {
+        console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
+        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult);
+      }
+
+      // ─── Step 5: Store in shared-reports bucket ───
+      const fileName = `marina/${jobId}.html`;
+      const { error: uploadError } = await sb.storage
+        .from('shared-reports')
+        .upload(fileName, new Blob([html], { type: 'text/html' }), {
+          contentType: 'text/html',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error(`[Marina] Upload error:`, uploadError);
+      }
+
+      const { data: signedUrlData } = await sb.storage
+        .from('shared-reports')
+        .createSignedUrl(fileName, 7 * 24 * 60 * 60);
+
+      const resultData = {
         url,
+        domain,
         language: detectedLang,
-        seo_total_score: expertResult.data.totalScore || null,
-        seo_max_score: expertResult.data.maxScore || null,
-        seo_performance_score: scores.performance?.score || null,
-        seo_technical_score: scores.technical?.score || null,
-        seo_semantic_score: scores.semantic?.score || null,
-        seo_ai_ready_score: scores.aiReady?.score || null,
-        seo_security_score: scores.security?.score || null,
-        geo_overall_score: strategicData?.overallScore || null,
-        geo_scores: strategicData?.scores || {},
-        cocoon_nodes_count: cocoonResult?.stats?.nodes_count || null,
-        cocoon_clusters_count: cocoonResult?.stats?.clusters_count || null,
-        has_schema_org: scores.aiReady?.hasSchemaOrg || null,
-        has_robots_txt: scores.aiReady?.hasRobotsTxt || null,
-        is_https: scores.technical?.isHttps === true || scores.technical?.isHttps === 'Oui' || null,
-        word_count: scores.semantic?.wordCount || null,
-        broken_links_count: scores.technical?.brokenLinksCount || null,
-        psi_performance: scores.performance?.psiPerformance || null,
-        psi_seo: scores.technical?.psiSeo || null,
-        lcp_ms: scores.performance?.lcp || null,
-        cls: scores.performance?.cls || null,
-        tbt_ms: scores.performance?.tbt || null,
-        is_spa: expertResult.data.isSPA || null,
         report_url: signedUrlData?.signedUrl || null,
-        raw_seo_data: { recommendations: expertResult.data.recommendations || [], insights: expertResult.data.insights || {} },
-        raw_geo_data: { executive_roadmap: strategicData?.executive_roadmap || [], scores: strategicData?.scores || {} },
-        raw_cocoon_data: cocoonResult ? { stats: cocoonResult.stats || {}, cluster_summary: cocoonResult.cluster_summary || {} } : {},
-      }, { onConflict: 'job_id' });
-      console.log(`[Marina] 📊 Training data saved for ${domain}`);
-    } catch (trainErr) {
-      console.warn(`[Marina] ⚠️ Training data save failed (non-fatal):`, trainErr);
+        report_path: fileName,
+        expert_seo_score: expertData.totalScore,
+        expert_seo_max: expertData.maxScore,
+        strategic_score: strategicData?.overallScore || null,
+        cocoon_nodes: cocoonResult?.stats?.nodes_count || null,
+        cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
+        generated_at: new Date().toISOString(),
+      };
+
+      await sb.from('async_jobs').update({
+        status: 'completed',
+        result_data: resultData,
+        progress: 100,
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId);
+
+      console.log(`[Marina] ✅ Phase 2 complete — pipeline finished for ${domain}`);
+
+      // ─── Step 6: Persist structured training data for ML ───
+      try {
+        const scores = expertData?.scores || {};
+        await sb.from('marina_training_data').upsert({
+          job_id: jobId,
+          domain,
+          url,
+          language: detectedLang,
+          seo_total_score: expertData.totalScore || null,
+          seo_max_score: expertData.maxScore || null,
+          seo_performance_score: scores.performance?.score || null,
+          seo_technical_score: scores.technical?.score || null,
+          seo_semantic_score: scores.semantic?.score || null,
+          seo_ai_ready_score: scores.aiReady?.score || null,
+          seo_security_score: scores.security?.score || null,
+          geo_overall_score: strategicData?.overallScore || null,
+          geo_scores: strategicData?.scores || {},
+          cocoon_nodes_count: cocoonResult?.stats?.nodes_count || null,
+          cocoon_clusters_count: cocoonResult?.stats?.clusters_count || null,
+          has_schema_org: scores.aiReady?.hasSchemaOrg || null,
+          has_robots_txt: scores.aiReady?.hasRobotsTxt || null,
+          is_https: scores.technical?.isHttps === true || scores.technical?.isHttps === 'Oui' || null,
+          word_count: scores.semantic?.wordCount || null,
+          broken_links_count: scores.technical?.brokenLinksCount || null,
+          psi_performance: scores.performance?.psiPerformance || null,
+          psi_seo: scores.technical?.psiSeo || null,
+          lcp_ms: scores.performance?.lcp || null,
+          cls: scores.performance?.cls || null,
+          tbt_ms: scores.performance?.tbt || null,
+          is_spa: expertData.isSPA || null,
+          report_url: signedUrlData?.signedUrl || null,
+          raw_seo_data: { recommendations: expertData.recommendations || [], insights: expertData.insights || {} },
+          raw_geo_data: { executive_roadmap: strategicData?.executive_roadmap || [], scores: strategicData?.scores || {} },
+          raw_cocoon_data: cocoonResult ? { stats: cocoonResult.stats || {}, cluster_summary: cocoonResult.cluster_summary || {} } : {},
+        }, { onConflict: 'job_id' });
+        console.log(`[Marina] 📊 Training data saved for ${domain}`);
+      } catch (trainErr) {
+        console.warn(`[Marina] ⚠️ Training data save failed (non-fatal):`, trainErr);
+      }
     }
 
   } catch (error) {
-    console.error(`[Marina] ❌ Pipeline failed:`, error);
+    console.error(`[Marina] ❌ Pipeline failed (${currentPhase}):`, error);
     await trackEdgeFunctionError('marina', error instanceof Error ? error.message : String(error)).catch(() => {});
     
     try {
