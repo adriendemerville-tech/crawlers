@@ -166,9 +166,9 @@ export function MarinaDashboard() {
       });
 
       let apiCostUsd = 0;
-      (apiRes.data || []).forEach(e => {
-        const d = e.event_data as any;
-        if (!d) return;
+      (apiRes.data || []).forEach((e: any) => {
+        const d = e.event_data;
+        if (!d || !marinaFns.has(d.function_name)) return;
         const service = d.api_service || 'unknown';
         apiCostUsd += API_COST_PER_CALL[service] || 0.005;
       });
