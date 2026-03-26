@@ -219,10 +219,10 @@ export function MarinaDashboard() {
 
   useEffect(() => {
     fetchJobs();
-    // Poll every 10s for active jobs
+    fetchCosts();
     const interval = setInterval(fetchJobs, 10_000);
     return () => clearInterval(interval);
-  }, [fetchJobs]);
+  }, [fetchJobs, fetchCosts]);
 
   // Fetch existing API key
   useEffect(() => {
