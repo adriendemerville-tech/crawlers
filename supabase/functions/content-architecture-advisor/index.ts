@@ -22,6 +22,14 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 const PAGE_TYPES = ['homepage', 'product', 'article', 'faq', 'landing', 'category'] as const
 
+interface StrategicObjective {
+  type: 'content_gap' | 'eeat_improvement' | 'new_keyword' | 'internal_linking' | 'silo_rebalance' | 'cannibalization_fix' | 'topical_authority' | 'geo_visibility'
+  description: string
+  priority: 'high' | 'medium' | 'low'
+  related_urls?: string[]
+  related_keywords?: string[]
+}
+
 interface AdvisorInput {
   url: string
   keyword: string
@@ -29,6 +37,11 @@ interface AdvisorInput {
   tracked_site_id?: string
   language_code?: string
   location_code?: number
+  // Multi-objective strategic context
+  strategic_objectives?: StrategicObjective[]
+  target_internal_links?: { url: string; anchor_text?: string; reason?: string }[]
+  cannibalization_data?: { keyword: string; competing_urls: string[]; severity: string }[]
+  silo_context?: { cluster_name: string; existing_pages: string[]; gap_description?: string }
 }
 
 Deno.serve(async (req) => {
@@ -55,7 +68,7 @@ Deno.serve(async (req) => {
     }
 
     const body: AdvisorInput = await req.json()
-    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250 } = body
+    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context } = body
 
     if (!url || !keyword || !page_type) {
       return new Response(JSON.stringify({ error: 'Missing url, keyword, or page_type' }), {
