@@ -497,10 +497,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
         setTimeout(() => {
           const suggestionMsg: ChatMessage = {
             role: 'assistant',
-            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** Et si tu testais tes connaissances avec un quiz rapide ? 2 minutes chrono.\n\nTape **\"quiz crawlers\"** pour essayer !",
+            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** On peut faire un quiz en 2 min si tu veux 😊",
             timestamp: new Date().toISOString(),
           };
           setMessages(prev => [...prev, suggestionMsg]);
+          setQuizSuggestionPending(true);
         }, 1200);
       }
 
