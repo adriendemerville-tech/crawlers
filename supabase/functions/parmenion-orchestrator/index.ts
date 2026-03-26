@@ -27,7 +27,7 @@ const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   audit: ['audit-expert-seo'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
-  execute: ['wpsync', 'iktracker-actions'],
+  execute: ['wpsync', 'iktracker-actions', 'generate-corrective-code'],
   validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
 
@@ -494,47 +494,49 @@ Si la validation échoue (correctifs non appliqués), signale-le dans le reasoni
 
 function buildIktrackerExecuteInstructions(): string {
   return `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
-Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement sur iktracker.fr via l'API CMS.
-Fonction autorisée: iktracker-actions
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement.
 
-## ACTIONS CMS CONCRÈTES DISPONIBLES
-Tu DOIS choisir UNE ou PLUSIEURS de ces actions dans le payload:
+## IMPORTANT: CHOISIS LE BON CANAL DE DÉPLOIEMENT
+
+Tu as DEUX canaux possibles. Choisis selon le TYPE de correctif:
+
+### CANAL 1: CMS CRUD (iktracker-actions)
+Pour: modifier title, meta_description, contenu de page/article, créer des articles/pages.
+→ functions: ["iktracker-actions"]
+→ payload DOIT contenir "cms_actions": [...]
+
+### CANAL 2: JS Injectable (generate-corrective-code)
+Pour: scripts techniques (lazy loading, CLS fixes, schema JSON-LD, optimisations performance, etc.)
+→ functions: ["generate-corrective-code"]
+→ payload DOIT contenir "fixes": [{ "id": "...", "label": "...", "category": "...", "prompt": "...", "enabled": true }]
+→ Le code généré sera injecté via site_script_rules, PAS via le CMS
+
+## RÈGLE CRITIQUE
+- Si tes correctifs sont du contenu (texte, méta, articles) → CANAL 1 (iktracker-actions + cms_actions)
+- Si tes correctifs sont du code technique (JS, performance, schema) → CANAL 2 (generate-corrective-code + fixes)
+- NE METS JAMAIS iktracker-actions dans functions si tu n'as pas de cms_actions concrètes
+- Tu peux utiliser LES DEUX canaux en parallèle si tu as les deux types de correctifs
+
+## ACTIONS CMS CONCRÈTES (CANAL 1 uniquement)
 
 ### Modifier une page existante
-action.payload = {
-  "cms_actions": [
-    { "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
-  ]
-}
+{ "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
 
-### Modifier un article existant (title, meta_description, content, excerpt)
-action.payload = {
-  "cms_actions": [
-    { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
-  ]
-}
+### Modifier un article existant
+{ "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
 
 ### Créer un nouvel article de blog
-action.payload = {
-  "cms_actions": [
-    { "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
-  ]
-}
+{ "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
 
 ### Créer une nouvelle page
-action.payload = {
-  "cms_actions": [
-    { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
-  ]
-}
+{ "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
-- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
-- Le champ "functions" doit contenir ["iktracker-actions"]`;
+- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien`;
 }
 
 function buildWpsyncExecuteInstructions(): string {
