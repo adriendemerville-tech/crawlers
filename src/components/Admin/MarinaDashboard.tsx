@@ -404,6 +404,26 @@ export function MarinaDashboard() {
               Tout stopper
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            onClick={async () => {
+              if (!confirm('Supprimer TOUS les jobs (terminés, échoués, interrompus, en cours) ?')) return;
+              try {
+                const { error } = await supabase.from('async_jobs').delete().eq('function_name', 'marina');
+                if (error) throw error;
+                sonnerToast.success('Tous les jobs Marina supprimés');
+                fetchJobs();
+              } catch (e) {
+                console.error('Failed to delete all jobs:', e);
+                sonnerToast.error('Erreur lors de la suppression');
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Tout supprimer
+          </Button>
           <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
             Actualiser
