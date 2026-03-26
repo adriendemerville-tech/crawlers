@@ -628,12 +628,64 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 8. Summary stats ───
+    // ─── 8. Summary stats + detailed graph data for downstream consumers ───
     const clusters = new Set(nodeData.map((n) => n.cluster_id)).size;
     const avgIab = nodeData.reduce((s, n) => s + (n.iab_score || 0), 0) / nodeData.length;
     const totalEdges = nodeData.reduce((s, n) => s + (n.similarity_edges?.length || 0), 0);
 
-    console.log(`[Cocoon] Done: ${insertedCount} nodes, ${clusters} clusters, ${totalEdges} edges`);
+    // Orphan pages: no inbound links and no semantic edges
+    const orphanPages = nodeData
+      .filter(n => (n.internal_links_in || 0) === 0 && (!n.similarity_edges || n.similarity_edges.length === 0))
+      .map(n => ({ url: n.url, title: n.title, word_count: n.word_count }));
+
+    // Cluster details: group nodes by cluster_id
+    const clusterMap = new Map<string, any[]>();
+    for (const node of nodeData) {
+      const cid = node.cluster_id || 'unclustered';
+      if (!clusterMap.has(cid)) clusterMap.set(cid, []);
+      clusterMap.get(cid)!.push(node);
+    }
+    const clusterDetails = Array.from(clusterMap.entries()).map(([cid, nodes]) => ({
+      cluster_id: cid,
+      size: nodes.length,
+      avg_word_count: Math.round(nodes.reduce((s, n) => s + (n.word_count || 0), 0) / nodes.length),
+      avg_seo_score: Math.round(nodes.reduce((s, n) => s + (n.eeat_score || 0), 0) / nodes.length),
+      top_keywords: nodes.flatMap(n => n.keywords || []).slice(0, 5),
+      pages: nodes.slice(0, 5).map(n => ({ url: n.url, title: n.title })),
+    }));
+
+    // Cannibalization detection: nodes sharing >60% keywords within a cluster
+    const cannibalizationRisks: Array<{ urls: string[]; shared_keywords: string[]; cluster: string }> = [];
+    for (const [cid, nodes] of clusterMap.entries()) {
+      if (nodes.length < 2) continue;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const kwA = new Set(nodes[i].keywords || []);
+          const kwB = new Set(nodes[j].keywords || []);
+          const shared = [...kwA].filter(k => kwB.has(k));
+          const overlap = kwA.size > 0 ? shared.length / kwA.size : 0;
+          if (overlap >= 0.6 && shared.length >= 2) {
+            cannibalizationRisks.push({
+              urls: [nodes[i].url, nodes[j].url],
+              shared_keywords: shared.slice(0, 5),
+              cluster: cid,
+            });
+          }
+        }
+      }
+    }
+
+    // Thin content pages: low word count
+    const thinContentPages = nodeData
+      .filter(n => (n.word_count || 0) < 300 && (n.word_count || 0) > 0)
+      .map(n => ({ url: n.url, title: n.title, word_count: n.word_count }))
+      .slice(0, 10);
+
+    // Links density
+    const totalPossibleEdges = nodeData.length * (nodeData.length - 1) / 2;
+    const linksDensity = totalPossibleEdges > 0 ? Math.round((totalEdges / totalPossibleEdges) * 100 * 10) / 10 : 0;
+
+    console.log(`[Cocoon] Done: ${insertedCount} nodes, ${clusters} clusters, ${totalEdges} edges, ${orphanPages.length} orphans, ${cannibalizationRisks.length} cannib risks`);
 
     return new Response(
       JSON.stringify({
@@ -643,10 +695,20 @@ Deno.serve(async (req) => {
           clusters_count: clusters,
           edges_count: totalEdges,
           avg_iab_score: Math.round(avgIab),
+          links_density: linksDensity,
           domain: site.domain,
           total_crawl_pages: totalCrawlPages || insertedCount,
           max_pages: MAX_COCOON_PAGES,
           truncated: (totalCrawlPages || 0) > MAX_COCOON_PAGES,
+          orphan_count: orphanPages.length,
+          cannibalization_count: cannibalizationRisks.length,
+          thin_content_count: thinContentPages.length,
+        },
+        graph_details: {
+          orphan_pages: orphanPages.slice(0, 10),
+          cluster_details: clusterDetails.slice(0, 10),
+          cannibalization_risks: cannibalizationRisks.slice(0, 5),
+          thin_content_pages: thinContentPages,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
