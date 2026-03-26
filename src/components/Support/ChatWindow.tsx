@@ -148,6 +148,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
   const [quizSuggested, setQuizSuggested] = useState(false);
+  const [quizSuggestionPending, setQuizSuggestionPending] = useState(false);
 
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
