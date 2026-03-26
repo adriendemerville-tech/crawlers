@@ -637,29 +637,11 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         userFirstName = (profile as any).first_name || "";
         contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${(profile as any).first_name || 'inconnu'}\n- Plan: ${(profile as any).plan_type || "free"}\n- Crédits: ${(profile as any).credits_balance ?? 0}\n- Statut: ${(profile as any).subscription_status || "aucun"}\n- Email: ${(profile as any).email || 'inconnu'}\n`;
 
-        // Inject autonomy-based behaviour adaptation
+        // Inject autonomy-based behaviour adaptation (from shared personas)
         const autonomyLevel = (profile as any).autonomy_level;
         const autonomyScore = (profile as any).autonomy_score;
         if (autonomyLevel && autonomyScore != null) {
-          const autonomyInstructions: Record<string, string> = {
-            beginner: `ADAPTATION (Score: ${autonomyScore}/100 — Débutant) :
-- Langage simple, explique chaque terme SEO avec un exemple concret
-- Découpe en messages courts. Un concept = un message.
-- Après 2-3 échanges, vérifie : "C'est clair ?" / "Tu vois l'idée ?"
-- Ton : collègue patient qui prend le temps, jamais condescendant
-- Max 500 caractères par message
-- Proactif : propose la prochaine étape sans attendre`,
-            intermediate: `ADAPTATION (Score: ${autonomyScore}/100 — Intermédiaire) :
-- Jargon SEO OK, explique uniquement les termes avancés (GEO, E-E-A-T, TF-IDF)
-- Messages de 400-500 caractères, droit au but
-- Ton : collègue qui échange entre pairs, propose des options`,
-            expert: `ADAPTATION (Score: ${autonomyScore}/100 — Expert) :
-- Concis et technique. Jargon direct. Données brutes.
-- Messages de 200-300 caractères max
-- Ton : échange entre spécialistes, pas de vulgarisation
-- Ne détaille que si demandé`,
-          };
-          contextSnippet += `\n${autonomyInstructions[autonomyLevel] || ''}\n`;
+          contextSnippet += `\n${getAutonomyBlock(autonomyLevel, autonomyScore)}\n`;
         }
       }
 
