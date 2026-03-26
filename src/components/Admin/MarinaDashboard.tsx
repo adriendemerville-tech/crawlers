@@ -130,6 +130,61 @@ export function MarinaDashboard() {
   const [generatingKey, setGeneratingKey] = useState(false);
   const [reportModal, setReportModal] = useState<{ html: string; domain: string } | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [totalCostEur, setTotalCostEur] = useState<number | null>(null);
+  const [costBreakdown, setCostBreakdown] = useState<{ llm: number; api: number; jobs: number }>({ llm: 0, api: 0, jobs: 0 });
+
+  // Fetch Marina costs from analytics_events (LLM tokens + paid API calls linked to marina functions)
+  const fetchCosts = useCallback(async () => {
+    try {
+      const marinaFunctions = ['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site'];
+
+      const [tokenRes, apiRes] = await Promise.all([
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'ai_token_usage')
+          .in('event_data->>function_name' as any, marinaFunctions)
+          .limit(1000),
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'paid_api_call')
+          .in('event_data->>function_name' as any, marinaFunctions)
+          .limit(1000),
+      ]);
+
+      let llmCostUsd = 0;
+      (tokenRes.data || []).forEach(e => {
+        const d = e.event_data as any;
+        if (!d) return;
+        const model = d.model || 'unknown';
+        const pricing = MODEL_PRICING[model];
+        if (pricing) {
+          llmCostUsd += ((d.prompt_tokens || 0) / 1_000_000) * pricing.input;
+          llmCostUsd += ((d.completion_tokens || 0) / 1_000_000) * pricing.output;
+        }
+      });
+
+      let apiCostUsd = 0;
+      (apiRes.data || []).forEach(e => {
+        const d = e.event_data as any;
+        if (!d) return;
+        const service = d.api_service || 'unknown';
+        apiCostUsd += API_COST_PER_CALL[service] || 0.005;
+      });
+
+      const totalUsd = llmCostUsd + apiCostUsd;
+      const totalEur = totalUsd * USD_TO_EUR;
+      setTotalCostEur(totalEur);
+      setCostBreakdown({
+        llm: llmCostUsd * USD_TO_EUR,
+        api: apiCostUsd * USD_TO_EUR,
+        jobs: (tokenRes.data?.length || 0) + (apiRes.data?.length || 0),
+      });
+    } catch (err) {
+      console.error('Failed to fetch Marina costs:', err);
+    }
+  }, []);
 
   const handleOpenReport = async (reportUrl: string, domain: string) => {
     setLoadingReport(true);
