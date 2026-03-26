@@ -481,6 +481,7 @@ Deno.serve(async (req) => {
     // ── Run ALL LLMs in parallel ──
     const llmPromises = LLM_TARGETS.map(async (llm) => {
       const promptScores: PromptScore[] = []
+      const responseTexts: string[] = []
 
       const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
@@ -497,6 +498,7 @@ Deno.serve(async (req) => {
 
         const ps = scorePromptResult(iteration_found, response_text, patterns)
         promptScores.push(ps)
+        responseTexts.push(response_text.slice(0, 500))
 
         // Store raw execution
         await supabase.from('llm_test_executions').insert({
@@ -526,7 +528,7 @@ Deno.serve(async (req) => {
       ).join(' | ')
       console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score}% [${breakdown}]`)
 
-      return { llm_name: llm.name, score, promptDetails: promptScores }
+      return { llm_name: llm.name, score, promptDetails: promptScores, responseTexts }
     })
 
     const llmResults = await Promise.all(llmPromises)
