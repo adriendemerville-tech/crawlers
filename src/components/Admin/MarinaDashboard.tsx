@@ -1,16 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check, Euro } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { MarinaReportPreviewModal } from './MarinaReportPreviewModal';
 import { toast as sonnerToast } from 'sonner';
+
+// Model pricing per million tokens (USD)
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  'google/gemini-2.5-pro': { input: 1.25, output: 10.0 },
+  'google/gemini-2.5-flash': { input: 0.15, output: 0.60 },
+  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
+  'google/gemini-3-pro-preview': { input: 1.25, output: 10.0 },
+  'openai/gpt-5': { input: 10.0, output: 30.0 },
+  'openai/gpt-5-mini': { input: 1.10, output: 4.40 },
+  'openai/gpt-5-nano': { input: 0.10, output: 0.40 },
+};
+const API_COST_PER_CALL: Record<string, number> = {
+  browserless: 0.008, spider: 0.001, firecrawl: 0.005, dataforseo: 0.01, 'fly-playwright': 0.0001,
+};
+const USD_TO_EUR = 0.92;
 
 interface MarinaJob {
   id: string;
