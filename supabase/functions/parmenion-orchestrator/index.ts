@@ -85,7 +85,7 @@ serve(async (req: Request) => {
     const maxRisk = conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL;
 
     // ═══ PHASE 2: Gather context ═══
-    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes] = await Promise.all([
+    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes] = await Promise.all([
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
         .eq('tracked_site_id', tracked_site_id)
@@ -109,6 +109,19 @@ serve(async (req: Request) => {
         .eq('domain', domain)
         .order('created_at', { ascending: false })
         .limit(3),
+      // Fetch the site's actual keyword universe from domain_data_cache
+      supabase.from('domain_data_cache')
+        .select('result_data')
+        .eq('domain', domain)
+        .eq('data_type', 'serp_kpis')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Fetch site identity (market sector, business type)
+      supabase.from('tracked_sites')
+        .select('site_name, market_sector, business_type, client_targets, site_context')
+        .eq('id', tracked_site_id)
+        .maybeSingle(),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
