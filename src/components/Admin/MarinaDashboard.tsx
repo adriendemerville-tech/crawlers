@@ -154,9 +154,9 @@ export function MarinaDashboard() {
       const marinaFns = new Set(['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site']);
 
       let llmCostUsd = 0;
-      (tokenRes.data || []).forEach(e => {
-        const d = e.event_data as any;
-        if (!d) return;
+      (tokenRes.data || []).forEach((e: any) => {
+        const d = e.event_data;
+        if (!d || !marinaFns.has(d.function_name)) return;
         const model = d.model || 'unknown';
         const pricing = MODEL_PRICING[model];
         if (pricing) {
