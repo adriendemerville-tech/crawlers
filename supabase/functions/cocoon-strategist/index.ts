@@ -476,6 +476,51 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 2b: Inject strategic audit SERP data into content findings
+    // ═══════════════════════════════════════════════════════════
+    if (strategicSerpData) {
+      // Enrich keyword_gaps findings with strategic audit context
+      for (const f of allFindings) {
+        if (f.category === 'keyword_gaps' && f.data) {
+          f.data.strategic_serp_context = {
+            strategic_content_gaps: strategicSerpData.content_gaps,
+            strategic_missing_terms: strategicSerpData.missing_terms,
+            strategic_priorities: strategicSerpData.priority_content,
+          };
+        }
+        // Enrich thin_content / content_decay with relevant keywords
+        if (['thin_content', 'content_decay', 'duplicate_content'].includes(f.category) && f.data) {
+          f.data.strategic_serp_context = {
+            market_sector: strategicSerpData.market_sector,
+            recommended_keywords: strategicSerpData.keyword_positioning?.main_keywords?.map((k: any) => k.keyword).filter(Boolean) || [],
+            missing_terms: strategicSerpData.missing_terms?.map((t: any) => t.term).filter(Boolean) || [],
+          };
+        }
+      }
+
+      // If strategic audit has content_gaps but no keyword_gaps finding exists, create one
+      const hasKeywordGapFinding = allFindings.some(f => f.category === 'keyword_gaps');
+      if (!hasKeywordGapFinding && strategicSerpData.content_gaps.length > 0) {
+        allFindings.push({
+          category: 'keyword_gaps',
+          severity: 'warning',
+          description: `Gaps de contenu identifiés par l'audit stratégique: ${strategicSerpData.content_gaps.map((g: any) => g.keyword || g.title).join(', ')}`,
+          affected_urls: [],
+          source_type: 'strategic_audit',
+          data: {
+            top_gaps: strategicSerpData.content_gaps.map((g: any) => g.keyword || g.title).filter(Boolean),
+            strategic_serp_context: {
+              strategic_content_gaps: strategicSerpData.content_gaps,
+              strategic_missing_terms: strategicSerpData.missing_terms,
+              strategic_priorities: strategicSerpData.priority_content,
+            },
+          },
+        });
+        console.log(`[strategist] Added ${strategicSerpData.content_gaps.length} content gaps from strategic audit`);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 3: Transformer findings en tâches stratégiques
     // ═══════════════════════════════════════════════════════════
     const rawTasks: StrategicTask[] = [];
