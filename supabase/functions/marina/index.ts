@@ -244,6 +244,7 @@ function buildCompetitiveLandscapeSection(data: any): string {
       ${cards}
     </div>
   </div>`;
+}
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
 function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string): string {
