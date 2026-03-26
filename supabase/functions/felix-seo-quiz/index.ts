@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, user_id } = body;
+    const { action, user_id, language } = body;
+    const lang = ['fr', 'en', 'es'].includes(language) ? language : 'fr';
 
     if (action === 'get_questions') {
       // Adaptive difficulty based on last score
