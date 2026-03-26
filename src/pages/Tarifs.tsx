@@ -214,6 +214,16 @@ const translations = {
     agencyBadge: 'Unlimited',
     agencyLoading: 'Redirecting...',
     agencyLoginRequired: 'Log in to subscribe',
+    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumSubtitle: 'Intensive crawling for high-volume sites',
+    agencyPremiumPrice: '€89',
+    agencyPremiumFeatures: [
+      'Everything in Pro Agency',
+      'Crawl: 50,000 pages/month',
+      '100 tracked URLs included',
+      'Priority crawl queue',
+    ],
+    agencyPremiumCta: 'Contact us',
     or: 'or',
   },
   es: {
@@ -307,6 +317,16 @@ const translations = {
     agencyBadge: 'Ilimitado',
     agencyLoading: 'Redirigiendo...',
     agencyLoginRequired: 'Inicia sesión para suscribirte',
+    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumSubtitle: 'Crawl intensivo para sitios de gran volumen',
+    agencyPremiumPrice: '89€',
+    agencyPremiumFeatures: [
+      'Todo lo de Pro Agency',
+      'Crawl: 50 000 páginas/mes',
+      '100 URL seguidos incluidos',
+      'Prioridad en cola de crawl',
+    ],
+    agencyPremiumCta: 'Contáctenos',
     or: 'o',
   },
 };
