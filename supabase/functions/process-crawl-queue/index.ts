@@ -759,7 +759,7 @@ Deno.serve(async (req) => {
 
   const supabase = getServiceClient();
 
-  const WATCHDOG_MS = 120_000;
+  const WATCHDOG_MS = 360_000;
   const startTime = Date.now();
   const isTimeUp = () => Date.now() - startTime > WATCHDOG_MS;
 
