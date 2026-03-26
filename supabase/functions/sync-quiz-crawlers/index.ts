@@ -12,7 +12,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
  * Admin validates in Félix (Creator mode) → toggles is_active=true
  */
 
-const LOVABLE_API_URL = 'https://api.lovable.dev/v1/chat/completions';
+const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
