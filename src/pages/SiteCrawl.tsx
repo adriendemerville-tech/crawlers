@@ -1208,12 +1208,12 @@ export default function SiteCrawl() {
           
           {/* Hero */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#722F37]/10 text-[#722F37] dark:text-[#c97a82] text-sm font-medium mb-4">
               <Bug className="w-4 h-4" />
               {t.badge}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
-              {t.h1_1} <span className="text-primary">{t.h1_2}</span>
+              {t.h1_1} <span className="text-[#722F37] dark:text-[#c97a82]">{t.h1_2}</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">{t.subtitle}</p>
           </div>
