@@ -936,12 +936,13 @@ export default function Tarifs() {
                       ))}
                     </ul>
                     <Button
-                      variant="outline"
                       size="lg"
-                      className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
-                      onClick={() => window.open('mailto:contact@crawlers.fr?subject=Pro Agency Premium 50K', '_blank')}
+                      className="w-full gap-2 font-bold bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25"
+                      onClick={handleSubscribePremium}
+                      disabled={premiumLoading}
                     >
-                      {(t as any).agencyPremiumCta}
+                      <Crown className="h-4 w-4" />
+                      {premiumLoading ? t.agencyLoading : (t as any).agencyPremiumCta}
                     </Button>
                   </CardContent>
                 </Card>
