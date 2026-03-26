@@ -148,6 +148,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
   const [quizSuggested, setQuizSuggested] = useState(false);
+  const [quizSuggestionPending, setQuizSuggestionPending] = useState(false);
 
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
@@ -497,10 +498,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
         setTimeout(() => {
           const suggestionMsg: ChatMessage = {
             role: 'assistant',
-            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** Et si tu testais tes connaissances avec un quiz rapide ? 2 minutes chrono.\n\nTape **\"quiz crawlers\"** pour essayer !",
+            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** On peut faire un quiz en 2 min si tu veux 😊",
             timestamp: new Date().toISOString(),
           };
           setMessages(prev => [...prev, suggestionMsg]);
+          setQuizSuggestionPending(true);
         }, 1200);
       }
 
@@ -752,6 +754,45 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                   </div>
                 ))}
 
+                {quizSuggestionPending && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={async () => {
+                          setQuizSuggestionPending(false);
+                          const userMsg: ChatMessage = { role: 'user', content: "D'accord !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg]);
+                          const launchMsg: ChatMessage = { role: 'assistant', content: "🛠️ **Quiz Crawlers**\n\n10 questions sur la plateforme et ses outils. 2 minutes chrono !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, launchMsg]);
+                          setQuizLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz' } });
+                            if (error) throw error;
+                            setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
+                          } catch (e) {
+                            console.error('Crawlers quiz load error:', e);
+                            setMessages(prev => [...prev, { role: 'assistant', content: "Désolé, le quiz n'a pas pu être chargé. Réessaie !", timestamp: new Date().toISOString() }]);
+                          } finally { setQuizLoading(false); }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        D'accord !
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQuizSuggestionPending(false);
+                          const userMsg: ChatMessage = { role: 'user', content: "Plus tard.", timestamp: new Date().toISOString() };
+                          const replyMsg: ChatMessage = { role: 'assistant', content: "Entendu ! En quoi puis-je t'aider ?", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, replyMsg]);
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Plus tard.
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {showAutonomyDiag && user && (
                   <AutonomyDiagnostic
                     userId={user.id}
@@ -842,10 +883,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                             setTimeout(() => {
                               const proposalMsg: ChatMessage = {
                                 role: 'assistant',
-                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme ! Tape **\"quiz crawlers\"** pour lancer.",
+                                content: "✨ **Bonus : Quiz Crawlers** — 2 minutes pour tester ta connaissance de la plateforme !",
                                 timestamp: new Date().toISOString(),
                               };
                               setMessages(prev => [...prev, proposalMsg]);
+                              setQuizSuggestionPending(true);
                             }, 1500);
                           }
                         }}
