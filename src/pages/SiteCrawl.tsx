@@ -74,6 +74,7 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs sans alt:',
     weight: 'Poids:',
     previousCrawls: 'Crawls précédents',
+    runningCrawls: 'Crawl en cours',
     errorCrawl: 'Erreur lors du crawl',
     advancedOptions: 'Options avancées',
     crawlDepth: 'Profondeur max',
@@ -144,6 +145,7 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs no alt:',
     weight: 'Weight:',
     previousCrawls: 'Previous crawls',
+    runningCrawls: 'Crawl in progress',
     errorCrawl: 'Crawl error',
     advancedOptions: 'Advanced options',
     crawlDepth: 'Max depth',
@@ -214,6 +216,7 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs sin alt:',
     weight: 'Peso:',
     previousCrawls: 'Crawls anteriores',
+    runningCrawls: 'Crawl en curso',
     errorCrawl: 'Error de crawl',
     advancedOptions: 'Opciones avanzadas',
     crawlDepth: 'Profundidad máx',
@@ -2076,8 +2079,40 @@ export default function SiteCrawl() {
               )}
 
 
-          {/* Past crawls */}
-          {pastCrawls.length > 0 && (
+          {/* Running crawls section */}
+          {pastCrawls.filter(c => c.status === 'running' || c.status === 'pending').length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  {t.runningCrawls}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {pastCrawls.filter(c => c.status === 'running' || c.status === 'pending').map(c => (
+                    <div
+                      key={c.id}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/5 cursor-default"
+                    >
+                      <div>
+                        <div className="text-sm font-medium text-foreground">{c.domain}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="animate-pulse">
+                        {c.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Past crawls (completed/error only) */}
+          {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').length > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
@@ -2087,14 +2122,14 @@ export default function SiteCrawl() {
                   className="text-xs text-muted-foreground hover:text-destructive"
                   onClick={async () => {
                     if (!user) return;
-                    // Keep only the latest crawl per domain
+                    const finishedCrawls = pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending');
                     const latestByDomain = new Map<string, string>();
-                    for (const c of pastCrawls) {
+                    for (const c of finishedCrawls) {
                       if (!latestByDomain.has(c.domain)) {
                         latestByDomain.set(c.domain, c.id);
                       }
                     }
-                    const idsToDelete = pastCrawls
+                    const idsToDelete = finishedCrawls
                       .filter(c => latestByDomain.get(c.domain) !== c.id)
                       .map(c => c.id);
 
@@ -2105,8 +2140,7 @@ export default function SiteCrawl() {
                         .in('id', idsToDelete);
                     }
 
-                    // Keep only latest per domain in front
-                    const kept = pastCrawls.filter(c => latestByDomain.get(c.domain) === c.id);
+                    const kept = pastCrawls.filter(c => (c.status === 'running' || c.status === 'pending') || latestByDomain.get(c.domain) === c.id);
                     setPastCrawls(kept);
                     setViewingCrawlId(null);
                   }}
@@ -2117,7 +2151,7 @@ export default function SiteCrawl() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {pastCrawls.map(c => {
+                  {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').map(c => {
                     const isActive = viewingCrawlId === c.id;
                     return (
                       <button
