@@ -2,7 +2,7 @@
  * Centralized Browserless.io configuration.
  * All edge functions MUST use this constant instead of hardcoding URLs.
  * 
- * Current plan: Cloud Free (1000 units/month, concurrency 2)
+ * Current plan: Cloud (1000 units/month, concurrency 10)
  * URL: production-sfo.browserless.io (v2 cloud)
  */
 export const BROWSERLESS_BASE_URL = 'https://production-sfo.browserless.io';
