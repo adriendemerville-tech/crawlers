@@ -308,7 +308,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (121 fonctions)
+# API — Edge Functions (172 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -716,7 +716,7 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 22 modules
+# Modules Partagés (_shared/) — 36 modules
 
 Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
@@ -790,6 +790,39 @@ Upsert dans \`analyzed_urls\` (compteur d'analyses).
 
 ### \`translations.ts\`
 Traductions pour le contenu généré côté serveur (emails, rapports).
+
+### \`agentPersonas.ts\` *(nouveau v7)*
+Personas centralisés des agents Félix et Stratège Cocoon : ton, longueur max, formulations interdites, pattern d'intentionnalité (métrique → impact → action), adaptation par niveau d'autonomie.
+
+### \`siteMemory.ts\`
+Mémoire persistante par site tracké : stocke et restitue les faits saillants (secteur, identité, résultats d'audit) pour enrichir le contexte LLM.
+
+### \`ownershipCheck.ts\`
+Vérification de propriété du domaine avant injection de code ou modification CMS.
+
+### \`apiBillingAlert.ts\`
+Alertes proactives de facturation API (SerpAPI, OpenRouter, Firecrawl) quand les crédits approchent de zéro.
+
+### \`founderGmb.ts\`
+Utilitaires GMB spécifiques au fondateur (accès multi-fiches).
+
+### \`strategicPrompts.ts\` + \`strategicSplitPrompts.ts\`
+Prompts LLM pour l'audit stratégique (monolithique et pipeline modulaire).
+
+### \`dataForSeoStrategic.ts\`
+Utilitaires DataForSEO pour les fonctions stratégiques (SERP, volumes, KD).
+
+### \`matriceHtmlAnalysis.ts\` + \`matriceScoring.ts\` + \`matriceTypeDetector.ts\`
+Pipeline d'analyse HTML, scoring et détection de type pour la Matrice d'audit.
+
+### \`pageMetadata.ts\`
+Extraction et normalisation des métadonnées de page (title, meta, OG, etc.).
+
+### \`textUtils.ts\`
+Utilitaires de manipulation de texte (troncature, nettoyage HTML, extraction).
+
+### \`browserlessConfig.ts\`
+Configuration du rendu headless (Browserless/Fly.io).
 
 ### \`email-templates/\`
 Templates HTML d'emails transactionnels (bienvenue, vérification, rapports).
