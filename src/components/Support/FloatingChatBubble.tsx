@@ -32,8 +32,16 @@ export function FloatingChatBubble() {
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
   const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
 
+  // Sync mute state from ChatWindow toggle
+  useEffect(() => {
+    const handler = () => setIsMuted(localStorage.getItem('felix_muted') === '1');
+    window.addEventListener('felix_mute_changed', handler);
+    return () => window.removeEventListener('felix_mute_changed', handler);
+  }, []);
+
   // Ping-pong bounce animation on first home visit after 20s
   useEffect(() => {
+    if (isMuted) return;
     if (location.pathname !== '/') return;
     const key = 'felix_bounce_played';
     if (sessionStorage.getItem(key)) return;
@@ -43,10 +51,11 @@ export function FloatingChatBubble() {
       setTimeout(() => setShowBounce(false), 2000);
     }, 20000);
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, [location.pathname, isMuted]);
 
   // Suggest Crawlers quiz to non-logged users on home after 5s
   useEffect(() => {
+    if (isMuted) return;
     if (user) return;
     if (location.pathname !== '/') return;
     const key = 'felix_guest_quiz_suggested';
@@ -57,11 +66,11 @@ export function FloatingChatBubble() {
       playNotificationSound();
     }, 5000);
     return () => clearTimeout(timer);
-  }, [user, location.pathname]);
+  }, [user, location.pathname, isMuted]);
 
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
-    if (!user || isOnboardingDone() || notifDismissedThisSession) {
+    if (isMuted || !user || isOnboardingDone() || notifDismissedThisSession) {
       setShowOnboardingPulse(false);
       return;
     }
@@ -82,7 +91,7 @@ export function FloatingChatBubble() {
       }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [user, notifDismissedThisSession]);
+  }, [user, notifDismissedThisSession, isMuted]);
 
   // Fetch unread messages count + resolved bug notifications
   useEffect(() => {
