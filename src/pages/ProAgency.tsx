@@ -417,7 +417,8 @@ export default function ProAgency() {
               </p>
 
               {/* Price */}
-              <div className="mb-8 flex items-baseline justify-center gap-1">
+              <div className="mb-8 flex items-baseline justify-center gap-2">
+                <span className="text-lg text-muted-foreground">{t.fromLabel}</span>
                 <span className="text-5xl font-extrabold text-foreground">{t.price}</span>
                 <span className="text-xl text-muted-foreground">{t.period}</span>
               </div>
@@ -481,20 +482,106 @@ export default function ProAgency() {
           </div>
         </section>
 
-        {/* Comparison Table */}
+        {/* Side-by-side Plans + Comparison Table */}
         <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
-          <div className="mx-auto max-w-4xl px-4">
-            <div className="text-center mb-10">
+          <div className="mx-auto max-w-5xl px-4">
+            <div className="text-center mb-12">
               <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{t.comparisonTitle}</h2>
               <p className="mt-3 text-muted-foreground">{t.comparisonSubtitle}</p>
             </div>
+
+            {/* Side-by-side plan cards */}
+            <div className="grid gap-6 md:grid-cols-2 mb-12">
+              {/* Pro Agency Card */}
+              <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <Crown className="h-7 w-7 text-violet-500" />
+                  <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl font-extrabold text-foreground">59€</span>
+                  <span className="text-lg text-muted-foreground">{t.period}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">{t.compTargetPro}</p>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '5 000 pages crawlées/mois' : language === 'es' ? '5 000 páginas/mes' : '5,000 pages/month'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '10 pages par scan' : language === 'es' ? '10 páginas por escaneo' : '10 pages per scan'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? 'Audits & codes correctifs illimités' : language === 'es' ? 'Auditorías y código ilimitados' : 'Unlimited audits & corrective code'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? 'Marque blanche + 3 comptes' : language === 'es' ? 'Marca blanca + 3 cuentas' : 'White label + 3 accounts'}</li>
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={handleSubscribe}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold"
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
+                  {t.ctaSubscribe}
+                </Button>
+              </div>
+
+              {/* Pro Agency + Card — Gold theme */}
+              <div className="relative rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-950/20 via-card to-card p-8 flex flex-col shadow-lg shadow-amber-500/5">
+                <div className="absolute -top-3 right-6">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-xs px-3 py-1 border-0">
+                    ⚡ {language === 'fr' ? 'Volume' : language === 'es' ? 'Volumen' : 'Volume'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Pro Agency +</h3>
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl font-extrabold text-foreground">89€</span>
+                  <span className="text-lg text-muted-foreground">{t.period}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">{t.compTargetPlus}</p>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '50 000 pages crawlées/mois' : language === 'es' ? '50 000 páginas/mes' : '50,000 pages/month'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '50 pages par scan' : language === 'es' ? '50 páginas por escaneo' : '50 pages per scan'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? 'Audits & codes correctifs illimités' : language === 'es' ? 'Auditorías y código ilimitados' : 'Unlimited audits & corrective code'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? 'Marque blanche + 3 comptes' : language === 'es' ? 'Marca blanca + 3 cuentas' : 'White label + 3 accounts'}</li>
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={async () => {
+                    if (!user) {
+                      sessionStorage.setItem('download_pending', 'pro_agency_plus_subscribe');
+                      sessionStorage.setItem('download_return_path', '/pro-agency');
+                      setShowAuthModal(true);
+                      return;
+                    }
+                    setLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_plus' } });
+                      if (error) throw error;
+                      if (data?.url) window.open(data.url, '_blank', 'noopener');
+                    } catch (err: any) {
+                      toast.error(err.message || 'Erreur');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold shadow-lg shadow-amber-500/20"
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
+                  {t.ctaSubscribe}
+                </Button>
+              </div>
+            </div>
+
+            {/* Detailed comparison table */}
             <div className="overflow-x-auto rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     {t.compHeader.map((h, i) => (
-                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 2 ? 'text-violet-500' : ''}`}>
-                        {i === 2 && <Crown className="inline h-4 w-4 mr-1 text-yellow-500" />}
+                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 1 ? 'text-violet-500' : ''} ${i === 2 ? 'text-amber-500' : ''}`}>
+                        {i === 1 && <Crown className="inline h-4 w-4 mr-1 text-violet-500" />}
+                        {i === 2 && <Crown className="inline h-4 w-4 mr-1 text-amber-500" />}
                         {h}
                       </th>
                     ))}
@@ -504,10 +591,16 @@ export default function ProAgency() {
                   {t.compRows.map((row, i) => (
                     <tr key={i} className="border-b border-border/50 last:border-0">
                       <td className="px-4 py-3 font-medium text-foreground">{row[0]}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{row[1]}</td>
-                      <td className="px-4 py-3 font-semibold text-violet-500">{row[2]}</td>
+                      <td className="px-4 py-3 text-violet-400">{row[1]}</td>
+                      <td className="px-4 py-3 font-semibold text-amber-400">{row[2]}</td>
                     </tr>
                   ))}
+                  {/* Target profile row */}
+                  <tr className="border-t border-border bg-muted/10">
+                    <td className="px-4 py-3 font-semibold text-foreground">{t.compTargetLabel}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{t.compTargetPro}</td>
+                    <td className="px-4 py-3 text-sm text-amber-400/80">{t.compTargetPlus}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
