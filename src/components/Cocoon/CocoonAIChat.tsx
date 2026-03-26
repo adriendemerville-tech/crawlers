@@ -1749,6 +1749,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                 </button>
               </div>
             )}
+
+            {/* Generate graph button when no cocoon exists */}
+            {showGenerateButton && nodes.length === 0 && onGenerateGraph && (
+              <div className="flex justify-start">
+                <button
+                  onClick={() => { setShowGenerateButton(false); onGenerateGraph(); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[hsl(263,70%,50%)] hover:bg-[hsl(263,70%,45%)] text-white text-xs font-semibold transition-colors"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {language === 'en' ? 'Generate the graph' : language === 'es' ? 'Generar el gráfico' : 'Générer le graph'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bug report mode indicator */}
