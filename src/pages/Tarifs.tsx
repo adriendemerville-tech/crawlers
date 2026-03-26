@@ -915,7 +915,7 @@ export default function Tarifs() {
                   </div>
                   <CardHeader className="pb-3 pt-8">
                     <CardTitle className="text-xl flex items-center gap-2">
-                      <Crown className="h-5 w-5 text-amber-500" />
+                      <img src={proAgencyPlusLogo} alt="Pro Agency +" width={24} height={24} className="rounded" />
                       {(t as any).agencyPremiumTitle}
                     </CardTitle>
                     <CardDescription>{(t as any).agencyPremiumSubtitle}</CardDescription>
