@@ -51,6 +51,15 @@ function getStrategeCocoonWeights(): Record<number, number> {
   return { 1: 3, 2: 4, 3: 3 };
 }
 
+// Shuffle answer positions so correct answer isn't always A
+function shuffleOptions(question: any): { options: string[]; correct_index: number } {
+  const indices = question.options.map((_: any, i: number) => i);
+  const shuffledIndices = shuffle(indices);
+  const newOptions = shuffledIndices.map((i: number) => question.options[i]);
+  const newCorrectIndex = shuffledIndices.indexOf(question.correct_index);
+  return { options: newOptions, correct_index: newCorrectIndex };
+}
+
 async function pickQuestionsFromDB(
   quizType: string,
   weights: Record<number, number>,
@@ -73,7 +82,12 @@ async function pickQuestionsFromDB(
 
     if (data && data.length > 0) {
       const shuffled = shuffle(data);
-      picked.push(...shuffled.slice(0, count));
+      // Shuffle options for each question so correct answer position varies
+      const withShuffledOptions = shuffled.map(q => {
+        const { options, correct_index } = shuffleOptions(q);
+        return { ...q, options, correct_index };
+      });
+      picked.push(...withShuffledOptions.slice(0, count));
     }
   }
 

@@ -50,6 +50,7 @@ interface ChatWindowProps {
   onClose: () => void;
   triggerOnboarding?: boolean;
   onOnboardingConsumed?: () => void;
+  autoStartCrawlersQuiz?: boolean;
 }
 
 // NLP detection for bug/problem intent
@@ -123,7 +124,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
@@ -150,7 +151,31 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   const [quizSuggested, setQuizSuggested] = useState(false);
   const [quizSuggestionPending, setQuizSuggestionPending] = useState(false);
 
-  // Fetch user's tracked sites for STT vocabulary auto-enrichment
+  // Auto-start Crawlers quiz when triggered from bubble suggestion
+  const autoQuizTriggered = useRef(false);
+  useEffect(() => {
+    if (autoStartCrawlersQuiz && !autoQuizTriggered.current && !quizData) {
+      autoQuizTriggered.current = true;
+      const launchMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🛠️ **Quiz Crawlers**\n\n10 questions sur la plateforme et ses outils. 2 minutes chrono !",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, launchMsg]);
+      setQuizLoading(true);
+      supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_crawlers_quiz' } })
+        .then(({ data, error }) => {
+          if (error) throw error;
+          setQuizData({ questions: data.questions, answerKey: data.answerKey, title: 'Quiz Crawlers', isCrawlersQuiz: true });
+        })
+        .catch(e => {
+          console.error('Auto crawlers quiz error:', e);
+          setMessages(prev => [...prev, { role: 'assistant', content: "Désolé, le quiz n'a pas pu être chargé.", timestamp: new Date().toISOString() }]);
+        })
+        .finally(() => setQuizLoading(false));
+    }
+  }, [autoStartCrawlersQuiz]);
+
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
   useEffect(() => {
