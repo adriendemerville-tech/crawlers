@@ -303,13 +303,25 @@ export function MarinaDashboard() {
                             </div>
                           )}
                           {result?.report_url && (
-                            <button
-                              onClick={() => handleOpenReport(result.report_url, payload?.url || result?.url || 'rapport')}
-                              className="text-[10px] text-primary flex items-center gap-1 hover:underline"
-                            >
-                              <FileText className="h-3 w-3" />
-                              Rapport
-                            </button>
+                            <>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(result.report_url);
+                                  toast({ title: '📋 Lien copié', description: 'Lien du rapport copié dans le presse-papier' });
+                                }}
+                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                title="Copier le lien du rapport"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => handleOpenReport(result.report_url, payload?.url || result?.url || 'rapport')}
+                                className="text-[10px] text-primary flex items-center gap-1 hover:underline"
+                              >
+                                <FileText className="h-3 w-3" />
+                                Rapport
+                              </button>
+                            </>
                           )}
                           <span className="text-[10px] text-muted-foreground">
                             {new Date(job.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
