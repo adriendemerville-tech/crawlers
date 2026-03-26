@@ -300,10 +300,11 @@ export function FinancesDashboard() {
 
       // DB size + DataForSEO balance
       try {
-        const [sizeRes, balanceRes, apiBalancesRes] = await Promise.all([
+        const [sizeRes, balanceRes, apiBalancesRes, browserlessRes] = await Promise.all([
           supabase.rpc('get_database_size' as any),
           supabase.functions.invoke('dataforseo-balance'),
           supabase.functions.invoke('api-balances'),
+          supabase.functions.invoke('browserless-metrics'),
         ]);
         if (sizeRes.data) setDbSize(sizeRes.data as any);
         if (balanceRes.data && !balanceRes.error) {
@@ -311,6 +312,9 @@ export function FinancesDashboard() {
         }
         if (apiBalancesRes.data && !apiBalancesRes.error) {
           setApiBalances(apiBalancesRes.data as any);
+        }
+        if (browserlessRes.data && !browserlessRes.error) {
+          setBrowserlessMetrics(browserlessRes.data as any);
         }
       } catch {}
 
