@@ -55,12 +55,19 @@ Deno.serve(async (req) => {
     const systemPrompt = `Tu es un expert de la plateforme Crawlers.fr (audit SEO, GEO, visibilité IA).
 Génère exactement 10 nouvelles questions quiz sur les fonctionnalités de Crawlers.fr.
 
-Règles :
+Règles STRICTES :
 - Difficulté 1 (facile), 2 (intermédiaire) ou 3 (avancé) — répartis 3/4/3
 - 3 réponses possibles par question, 1 seule correcte
 - Explication courte et pédagogique
 - NE PAS dupliquer les questions existantes ci-dessous
 - Couvrir des fonctionnalités variées : audit, crawl, cocon, scripts, tracking, Marina, LLM, GEO, backlinks, GMB, invitations, bundles, autopilot, etc.
+
+RÈGLE CRITIQUE SUR LES RÉPONSES :
+- Les 3 options DOIVENT avoir une longueur SIMILAIRE (même nombre de mots ±3 mots max).
+- Les mauvaises réponses doivent être PLAUSIBLES et techniquement crédibles. Pas de réponse absurde ou évidemment fausse.
+- Utilise un vocabulaire technique cohérent dans les 3 options.
+- Si la bonne réponse fait 15 mots, les mauvaises doivent faire 12-18 mots.
+- INTERDIT : une bonne réponse longue et détaillée avec des mauvaises réponses courtes et vagues.
 
 Questions existantes à NE PAS répéter :
 ${existingList}
