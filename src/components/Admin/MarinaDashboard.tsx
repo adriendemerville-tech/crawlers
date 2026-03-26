@@ -354,11 +354,11 @@ export function MarinaDashboard() {
           </div>
           <div className="h-8 w-px bg-border" />
           <div className="text-center">
-            <div className="font-mono font-semibold text-foreground">{jobs.length}</div>
+            <div className="font-mono font-semibold text-foreground">{jobStats.total}</div>
             <div>Jobs total</div>
           </div>
           <div className="text-center">
-            <div className="font-mono font-semibold text-destructive">{jobs.filter(j => j.status === 'failed').length}</div>
+            <div className="font-mono font-semibold text-destructive">{jobStats.failed}</div>
             <div>Échoués</div>
           </div>
         </div>
