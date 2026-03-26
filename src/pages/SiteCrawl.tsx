@@ -719,7 +719,7 @@ export default function SiteCrawl() {
         if (total > 0) {
           setTotalEstimatedPages(total);
           // Auto-cap slider
-          const capMax = isAdmin ? 50 : 20;
+          const capMax = maxSliderCap;
           if (maxPages > Math.min(capMax, total)) {
             setMaxPages(Math.min(capMax, total));
           }
