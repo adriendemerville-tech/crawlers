@@ -388,9 +388,18 @@ export function UserManagement() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant={showPayingTab ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); }}
+              className="gap-1.5"
+            >
+              <Crown className="h-4 w-4" />
+              Payants
+            </Button>
+            <Button
               variant={showPendingTab ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowPendingTab(!showPendingTab); if (!showPendingTab) fetchPendingUsers(); }}
+              onClick={() => { setShowPendingTab(!showPendingTab); setShowPayingTab(false); if (!showPendingTab) fetchPendingUsers(); }}
               className="gap-1.5 relative"
             >
               <MailWarning className="h-4 w-4" />
