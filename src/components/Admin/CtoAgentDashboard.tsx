@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X, Plug, PlugZap } from 'lucide-react';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse, RefreshCw, Trash2, AlertTriangle, X, Plug, PlugZap, Anchor } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
@@ -83,6 +83,7 @@ export function CtoAgentDashboard() {
   const [checkingCache, setCheckingCache] = useState(false);
   const [refreshingJournal, setRefreshingJournal] = useState(false);
   const [diagnosingCrashes, setDiagnosingCrashes] = useState(false);
+  const [diagnosingMarina, setDiagnosingMarina] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [functionToggles, setFunctionToggles] = useState<Record<string, boolean>>({});
   const [savingToggles, setSavingToggles] = useState(false);
@@ -612,6 +613,34 @@ export function CtoAgentDashboard() {
             >
               {diagnosingCrashes ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <HeartPulse className="h-3.5 w-3.5" />}
               Diagnostiquer crashs
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={diagnosingMarina}
+              onClick={async () => {
+                setDiagnosingMarina(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('agent-cto', {
+                    body: { action: 'diagnose_marina_errors' },
+                  });
+                  if (error) throw error;
+                  toast({
+                    title: '⚓ Diagnostic Marina terminé',
+                    description: `${data?.failed_jobs || 0} job(s) échoué(s), ${data?.silent_errors || 0} erreur(s) silencieuse(s)`,
+                  });
+                  fetchData();
+                } catch (e) {
+                  console.error(e);
+                  toast({ title: 'Erreur', description: 'Impossible de diagnostiquer Marina.', variant: 'destructive' });
+                } finally {
+                  setDiagnosingMarina(false);
+                }
+              }}
+            >
+              {diagnosingMarina ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Anchor className="h-3.5 w-3.5" />}
+              Diagnostiquer Marina
             </Button>
             <Button
               variant="outline"

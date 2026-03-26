@@ -427,6 +427,110 @@ Deno.serve(async (req) => {
       })
     }
 
+    // ─── Mode: Diagnose Marina errors ───────────────────────────
+    if (body.action === 'diagnose_marina_errors') {
+      const supabase = getServiceClient()
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+      const { data: failedJobs } = await supabase
+        .from('async_jobs')
+        .select('*')
+        .eq('function_name', 'marina')
+        .eq('status', 'failed')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      // Also check marina-related silent errors
+      const { data: silentErrors } = await supabase
+        .from('analytics_events')
+        .select('*')
+        .eq('event_type', 'silent_error')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      const marinaErrors = (silentErrors || []).filter((e: any) => {
+        const fn = e.event_data?.function_name || ''
+        return ['marina', 'fetch-external-site', 'crawl-site', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility'].includes(fn)
+      })
+
+      if ((!failedJobs || failedJobs.length === 0) && marinaErrors.length === 0) {
+        return new Response(JSON.stringify({ success: true, message: 'Aucune erreur Marina à diagnostiquer.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Summarize for LLM
+      const jobsSummary = (failedJobs || []).map((j: any) => ({
+        id: j.id,
+        url: j.input_payload?.url,
+        error: j.error_message,
+        created_at: j.created_at,
+        progress: j.progress,
+      }))
+
+      const errorsSummary = marinaErrors.slice(0, 20).map((e: any) => ({
+        function: e.event_data?.function_name,
+        error: e.event_data?.error_message,
+        operation: e.event_data?.operation,
+        created_at: e.created_at,
+      }))
+
+      const { content, tokens } = await callLLM(
+        'Tu es un agent CTO spécialisé dans le diagnostic de pipelines. Sois précis et factuel.',
+        `Diagnostique les erreurs du pipeline Marina (prospection automatisée : Crawl → Audit SEO → Audit GEO → Cocon → Rapport HTML).
+
+JOBS EN ÉCHEC (7 derniers jours) :
+${JSON.stringify(jobsSummary, null, 2)}
+
+ERREURS SILENCIEUSES liées à Marina :
+${JSON.stringify(errorsSummary, null, 2)}
+
+Réponds en JSON :
+{
+  "root_causes": ["Cause principale 1", ...],
+  "pattern": "Pattern récurrent identifié ou null",
+  "severity": "low|medium|high|critical",
+  "recommendations": ["Recommandation 1", ...],
+  "auto_fixable": false,
+  "summary": "Résumé en une phrase"
+}`,
+      )
+
+      trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
+        prompt_tokens: tokens.input,
+        completion_tokens: tokens.output,
+        total_tokens: tokens.input + tokens.output,
+      }).catch(() => {})
+
+      let diagnosis: any = null
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (jsonMatch) diagnosis = JSON.parse(jsonMatch[0])
+      } catch { /* ignore */ }
+
+      // Log in CTO agent logs
+      await supabase.from('cto_agent_logs').insert({
+        audit_id: `marina_diag_${Date.now()}`,
+        function_analyzed: 'marina',
+        analysis_summary: diagnosis?.summary || 'Diagnostic Marina effectué',
+        self_critique: `${(failedJobs || []).length} jobs échoués, ${marinaErrors.length} erreurs silencieuses`,
+        confidence_score: 75,
+        decision: 'needs_review',
+        metadata: { diagnosis, failed_jobs_count: (failedJobs || []).length, silent_errors_count: marinaErrors.length, tokens },
+      })
+
+      return new Response(JSON.stringify({
+        success: true,
+        failed_jobs: (failedJobs || []).length,
+        silent_errors: marinaErrors.length,
+        diagnosis,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // ─── Mode: Diagnose frontend crashes ──────────────────────────
     if (body.action === 'diagnose_frontend_crashes') {
       const supabase = getServiceClient()
@@ -681,6 +785,9 @@ Réponds UNIQUEMENT en JSON :
       'strategist': 'cocoon-strategist',
       // Content Architect
       'content-architect': 'content-architecture-advisor',
+      // Marina pipeline
+      'marina': 'marina',
+      'marina-report': 'marina',
       // Anomaly detection
       'anomaly-detection': 'detect-anomalies',
       // Frontend crashes

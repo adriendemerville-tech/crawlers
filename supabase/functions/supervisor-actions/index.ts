@@ -389,6 +389,136 @@ Deno.serve(async (req) => {
       })
     }
 
+    // ─── Action: Audit Parménion (Autopilot) errors ──────────────
+    if (action === 'audit_parmenion') {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+      // Fetch recent Parménion decision logs
+      const [decisionsRes, errorRateRes] = await Promise.all([
+        supabase
+          .from('parmenion_decision_log')
+          .select('*')
+          .gte('created_at', thirtyDaysAgo)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase.rpc('parmenion_error_rate', { p_domain: body.domain || '%', p_last_n: 20 }),
+      ])
+
+      const decisions = decisionsRes.data || []
+      const errorRate = errorRateRes.data || { total: 0, errors: 0, error_rate: 0, conservative_mode: false }
+      
+      const errors = decisions.filter((d: any) => d.is_error === true)
+      const completedCycles = decisions.filter((d: any) => d.status === 'completed')
+      const highRiskActions = decisions.filter((d: any) => (d.risk_predicted || 0) >= 4)
+
+      // Build LLM audit prompt
+      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
+      const parmenionPrompt = `Tu es le SUPERVISOR. Tu audites les décisions de l'intelligence Parménion (pilote automatique SEO).
+
+STATISTIQUES :
+- Décisions analysées : ${decisions.length} (30 derniers jours)
+- Erreurs d'appréciation : ${errors.length} (${errorRate.error_rate}%)
+- Mode conservateur actif : ${errorRate.conservative_mode ? 'OUI' : 'NON'}
+- Actions à haut risque (≥4) : ${highRiskActions.length}
+- Cycles complétés : ${completedCycles.length}
+
+ERREURS RÉCENTES :
+${JSON.stringify(errors.slice(0, 10).map((e: any) => ({
+  cycle: e.cycle_number,
+  goal: e.goal_description,
+  action: e.action_type,
+  risk_predicted: e.risk_predicted,
+  risk_calibrated: e.risk_calibrated,
+  impact_predicted: e.impact_predicted,
+  impact_actual: e.impact_actual,
+  calibration_note: e.calibration_note,
+  error_category: e.error_category,
+})), null, 2)}
+
+DÉCISIONS HAUTE RISQUE :
+${JSON.stringify(highRiskActions.slice(0, 10).map((d: any) => ({
+  cycle: d.cycle_number,
+  goal: d.goal_description,
+  action: d.action_type,
+  risk: d.risk_predicted,
+  status: d.status,
+  is_error: d.is_error,
+})), null, 2)}
+
+Audite la qualité des décisions Parménion. Identifie les patterns d'erreur, les biais, et les recommandations stratégiques.
+
+Réponds en JSON :
+{
+  "summary": "Vue d'ensemble de la qualité décisionnelle Parménion",
+  "error_patterns": ["Pattern 1", ...],
+  "risk_calibration_quality": "Score 0-100 sur la qualité de calibration du risque",
+  "conservative_mode_justified": true/false,
+  "strategic_recommendations": ["Reco 1", ...],
+  "overall_score": 0-100,
+  "severity": "healthy|needs_attention|critical"
+}`
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://crawlers.fr',
+          'X-Title': 'Crawlers Supervisor',
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3.5-sonnet',
+          messages: [
+            { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites la qualité des décisions de l\'intelligence Parménion.' },
+            { role: 'user', content: parmenionPrompt },
+          ],
+          temperature: 0.15,
+          max_tokens: 4000,
+        }),
+      })
+
+      const llmData = await response.json()
+      const content = llmData.choices?.[0]?.message?.content || ''
+
+      let analysis: any = null
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (jsonMatch) analysis = JSON.parse(jsonMatch[0])
+      } catch { /* ignore */ }
+
+      // Log into supervisor_logs
+      await supabase.from('supervisor_logs').insert({
+        audit_id: `supervisor_parmenion_${Date.now()}`,
+        analysis_summary: analysis?.summary || `Audit Parménion — ${errors.length} erreurs sur ${decisions.length} décisions`,
+        self_critique: `Score: ${analysis?.overall_score || 'N/A'}/100, Taux d'erreur: ${errorRate.error_rate}%`,
+        confidence_score: 0,
+        decision: analysis?.severity === 'critical' ? 'needs_review' : 'approved',
+        cto_score: analysis?.overall_score || 0,
+        correction_count: decisions.length,
+        functions_audited: ['parmenion', 'autopilot-engine'],
+        post_deploy_errors: errors.length,
+        metadata: {
+          type: 'parmenion_audit',
+          error_rate: errorRate,
+          analysis,
+          high_risk_count: highRiskActions.length,
+        },
+      })
+
+      return new Response(JSON.stringify({
+        success: true,
+        parmenion_report: {
+          total_decisions: decisions.length,
+          errors: errors.length,
+          error_rate: errorRate,
+          high_risk_actions: highRiskActions.length,
+          analysis,
+        },
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // ─── Action: Toggle kill switches ────────────────────────────
     if (action === 'toggle_killswitch') {
       const { target, enabled: newState } = body
