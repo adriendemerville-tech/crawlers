@@ -136,7 +136,9 @@ function KillSwitchesPanel() {
 // ─── Supervisor Analysis Panel ────────────────────────────────────────
 function SupervisorAnalysisPanel() {
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingParmenion, setAnalyzingParmenion] = useState(false);
   const [analysis, setAnalysis] = useState<SupervisorAnalysis | null>(null);
+  const [parmenionReport, setParmenionReport] = useState<any>(null);
   const [correctionCount, setCorrectionCount] = useState(0);
   const [functionsAudited, setFunctionsAudited] = useState<string[]>([]);
   const [postDeployErrors, setPostDeployErrors] = useState(0);
@@ -162,6 +164,23 @@ function SupervisorAnalysisPanel() {
     }
   };
 
+  const runParmenionAudit = async () => {
+    setAnalyzingParmenion(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('supervisor-actions', {
+        body: { action: 'audit_parmenion' },
+      });
+      if (error) throw error;
+      setParmenionReport(data.parmenion_report);
+      toast.success(`Audit Parménion terminé — ${data.parmenion_report?.errors || 0} erreurs détectées`);
+    } catch (err: any) {
+      console.error('Parmenion audit error:', err);
+      toast.error('Erreur lors de l\'audit Parménion');
+    } finally {
+      setAnalyzingParmenion(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Action bar */}
@@ -170,7 +189,67 @@ function SupervisorAnalysisPanel() {
           {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
           {analyzing ? 'Audit en cours...' : 'Auditer les corrections CTO'}
         </Button>
+        <Button onClick={runParmenionAudit} disabled={analyzingParmenion} variant="outline" className="gap-2" size="sm">
+          {analyzingParmenion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+          {analyzingParmenion ? 'Audit Parménion...' : 'Auditer Parménion'}
+        </Button>
       </div>
+
+      {/* Parménion report */}
+      {parmenionReport && (
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Audit Parménion
+              <Badge variant="outline" className="text-xs ml-auto">{parmenionReport.total_decisions} décisions</Badge>
+              {parmenionReport.errors > 0 && (
+                <Badge className="text-[10px] bg-orange-500/15 text-orange-400 border-orange-500/30">{parmenionReport.errors} erreurs</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground leading-relaxed">{parmenionReport.analysis?.summary || 'Aucune donnée'}</p>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-medium text-muted-foreground">Score :</span>
+              <Badge className={cn(
+                "text-xs",
+                Number(parmenionReport.analysis?.overall_score) >= 80
+                  ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
+                  : Number(parmenionReport.analysis?.overall_score) >= 50
+                  ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                  : "bg-destructive/15 text-destructive border-destructive/30"
+              )}>{parmenionReport.analysis?.overall_score || 'N/A'}/100</Badge>
+              <span className="text-[11px] text-muted-foreground">
+                Taux d'erreur : {parmenionReport.error_rate?.error_rate || 0}%
+              </span>
+              {parmenionReport.error_rate?.conservative_mode && (
+                <Badge className="text-[10px] bg-orange-500/15 text-orange-400 border-orange-500/30">Mode conservateur</Badge>
+              )}
+            </div>
+            {parmenionReport.analysis?.error_patterns?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground">Patterns d'erreur :</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {parmenionReport.analysis.error_patterns.map((p: string, i: number) => (
+                    <Badge key={i} variant="outline" className="text-[10px]">{p}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {parmenionReport.analysis?.strategic_recommendations?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground">Recommandations :</p>
+                <ul className="text-xs text-muted-foreground space-y-0.5">
+                  {parmenionReport.analysis.strategic_recommendations.map((r: string, i: number) => (
+                    <li key={i}>• {r}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Audit results */}
       {analysis && (
