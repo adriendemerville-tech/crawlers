@@ -1052,6 +1052,7 @@ export default function Cocoon() {
                 onCancelPick={() => setNodePickerCallback(null)}
                 trackedSiteId={selectedSiteId}
                 domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                onGenerateGraph={handleCompute}
               />
             </div>
           )}
