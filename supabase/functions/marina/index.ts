@@ -415,7 +415,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
     <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;text-align:left;">Visibilité LLM — Benchmark en temps réel</h3>
-    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">${citedCount}/${scores.length} LLMs vous citent</p>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">${citedCount}/${effectiveScores.length} LLMs vous citent</p>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
       ${cardsHtml}
     </div>
