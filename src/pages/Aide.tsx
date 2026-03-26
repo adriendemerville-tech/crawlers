@@ -285,15 +285,16 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Freemium vs Pro Agency',
         content: `<div class="overflow-x-auto mt-2">
 <table class="w-full text-sm border border-border rounded-lg">
-<thead><tr class="bg-muted/50"><th class="p-2 text-left">Feature</th><th class="p-2 text-center">Freemium</th><th class="p-2 text-center">Pro Agency</th></tr></thead>
+<thead><tr class="bg-muted/50"><th class="p-2 text-left">Feature</th><th class="p-2 text-center">Freemium</th><th class="p-2 text-center">Pro Agency</th><th class="p-2 text-center">Pro Agency +</th></tr></thead>
 <tbody>
-<tr class="border-t border-border"><td class="p-2">Bots IA, GEO Score, LLM, PageSpeed</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
-<tr class="border-t border-border"><td class="p-2">Audit Expert SEO</td><td class="p-2 text-center">1/jour</td><td class="p-2 text-center">Illimité</td></tr>
-<tr class="border-t border-border"><td class="p-2">Cocon Sémantique 3D</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td></tr>
-<tr class="border-t border-border"><td class="p-2">Crawl multi-pages</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td></tr>
-<tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td></tr>
-<tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td></tr>
-<tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">59€/mois*</td></tr>
+<tr class="border-t border-border"><td class="p-2">Bots IA, GEO Score, LLM, PageSpeed</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Audit Expert SEO</td><td class="p-2 text-center">1/jour</td><td class="p-2 text-center">Illimité</td><td class="p-2 text-center">Illimité</td></tr>
+<tr class="border-t border-border"><td class="p-2">Cocon Sémantique 3D</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Crawl multi-pages</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">5 000 p/mois</td><td class="p-2 text-center">50 000 p/mois</td></tr>
+<tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Quiz IA intégrés</td><td class="p-2 text-center">Crawlers</td><td class="p-2 text-center">Tous</td><td class="p-2 text-center">Tous</td></tr>
+<tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
+<tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 59€/mois*</td><td class="p-2 text-center font-semibold">89€/mois</td></tr>
 </tbody>
 </table>
 </div>
