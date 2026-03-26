@@ -85,7 +85,7 @@ serve(async (req: Request) => {
     const maxRisk = conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL;
 
     // ═══ PHASE 2: Gather context ═══
-    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes] = await Promise.all([
+    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes] = await Promise.all([
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
         .eq('tracked_site_id', tracked_site_id)
@@ -109,6 +109,19 @@ serve(async (req: Request) => {
         .eq('domain', domain)
         .order('created_at', { ascending: false })
         .limit(3),
+      // Fetch the site's actual keyword universe from domain_data_cache
+      supabase.from('domain_data_cache')
+        .select('result_data')
+        .eq('domain', domain)
+        .eq('data_type', 'serp_kpis')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Fetch site identity (market sector, business type)
+      supabase.from('tracked_sites')
+        .select('site_name, market_sector, business_type, client_targets, site_context')
+        .eq('id', tracked_site_id)
+        .maybeSingle(),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
@@ -116,6 +129,16 @@ serve(async (req: Request) => {
     const pastErrors = errorsRes.data || [];
     const pendingRecommendations = recoRegistryRes.data || [];
     const rawAuditData = auditRawRes.data || [];
+
+    // Extract the site's keyword universe
+    const siteKeywords: string[] = [];
+    const serpKpis = (siteKeywordsRes as any)?.data?.result_data;
+    if (serpKpis?.sample_keywords) {
+      for (const kw of serpKpis.sample_keywords) {
+        if (kw.keyword) siteKeywords.push(kw.keyword);
+      }
+    }
+    const siteInfo = (siteInfoRes as any)?.data || null;
 
     // Collect execution results from previous phases in this pipeline run
     const previousPhaseResults = (lastCompletedDecisions || [])
@@ -142,6 +165,8 @@ serve(async (req: Request) => {
       pendingRecommendations,
       rawAuditData,
       isIktracker,
+      siteKeywords,
+      siteInfo,
     });
 
     if (!decision) {
@@ -237,6 +262,8 @@ async function askParmenionLLM(context: {
   pendingRecommendations: any[];
   rawAuditData: any[];
   isIktracker: boolean;
+  siteKeywords: string[];
+  siteInfo: any;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -296,11 +323,30 @@ ${errorHistory}${previousResults}${pendingRecos}${rawData}
   "summary": "..."
 }`;
 
+  const siteIdentityBlock = context.siteInfo
+    ? `\nIDENTITÉ DU SITE:
+Nom: ${context.siteInfo.site_name || context.domain}
+Secteur: ${context.siteInfo.market_sector || 'Non défini'}
+Type: ${context.siteInfo.business_type || 'Non défini'}
+Cibles: ${context.siteInfo.client_targets || 'Non définies'}
+Contexte: ${context.siteInfo.site_context || 'Non disponible'}`
+    : '';
+
+  const keywordsBlock = context.siteKeywords.length > 0
+    ? `\nUNIVERS MOTS-CLÉS DU SITE (mots-clés sur lesquels le site se positionne réellement):
+${context.siteKeywords.slice(0, 50).join(', ')}
+
+⚠️ RÈGLE CRITIQUE: Tout contenu créé DOIT cibler un mot-clé pertinent pour cet univers sémantique. 
+INTERDIT de créer du contenu sur un sujet hors de l'activité du site (ex: ne pas écrire sur le SEO pour un site de comptabilité).
+Le mot-clé choisi dans le payload content-architecture-advisor DOIT être en rapport direct avec le secteur d'activité ci-dessus.`
+    : '';
+
   const userPrompt = `Domaine: ${context.domain}
 Cycle: ${context.cycle_number}
 Phase pipeline: ${context.currentPhase.toUpperCase()}
 Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
 CMS cible: ${context.isIktracker ? 'IKtracker (API Supabase)' : 'WordPress (wpsync)'}
+${siteIdentityBlock}${keywordsBlock}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
@@ -448,6 +494,13 @@ Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
 Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
 Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
 
+## RÈGLE CRITIQUE DE PERTINENCE THÉMATIQUE
+⚠️ Le mot-clé ("keyword") choisi pour content-architecture-advisor DOIT être en rapport DIRECT avec l'activité du site.
+- Consulte l'UNIVERS MOTS-CLÉS DU SITE ci-dessus pour choisir un mot-clé pertinent
+- Si le site est sur les "indemnités kilométriques", le keyword doit concerner les frais de déplacement, la fiscalité auto, etc. — PAS le SEO, le marketing, ou tout autre sujet hors secteur
+- Le contenu créé doit répondre aux questions que les CLIENTS du site se posent, pas aux questions techniques du webmaster
+- En cas de doute, utilise un mot-clé issu directement de la liste de mots-clés fournie dans le contexte
+
 ## DEUX TYPES DE PRESCRIPTIONS
 
 ### TYPE A: Correctifs techniques (meta, performance, schema)
@@ -459,7 +512,9 @@ Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corre
 → Payload ENRICHI:
 {
   "url": "https://domain.tld",
-  "keyword": "mot-clé-cible",
+  "keyword": "mot-clé-cible PERTINENT pour le secteur du site",
+  "page_type": "article",
+  "tracked_site_id": "...",
   "page_type": "article",
   "tracked_site_id": "...",
   "strategic_objectives": [
@@ -623,7 +678,9 @@ Quand tu crées un article pour combler un gap de contenu:
 10. author_name par défaut: "Équipe IKtracker"
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
-- Le contenu DOIT être pertinent pour IKtracker (indemnités kilométriques, frais réels, gestion de trajets, fiscalité auto-entrepreneur)
+- Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
+- Pour IKtracker spécifiquement: indemnités kilométriques, frais réels, gestion de trajets, fiscalité auto-entrepreneur
+- INTERDIT de créer du contenu hors-sujet (ex: article sur le SEO, le marketing digital, ou tout autre sujet non lié à l'activité du site)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
