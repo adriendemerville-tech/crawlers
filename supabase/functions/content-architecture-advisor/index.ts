@@ -547,9 +547,15 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
                   type: 'object',
                   properties: {
                     recommended_internal_links: { type: 'number' },
-                    anchor_strategy: { type: 'array', items: { type: 'object' } },
+                    anchor_strategy: { type: 'array', items: { type: 'object', properties: { anchor_text: { type: 'string' }, target_url: { type: 'string', description: 'Concrete URL to link to' }, target_intent: { type: 'string' }, placement_section: { type: 'string', description: 'Which section this link should appear in' } }, required: ['anchor_text', 'target_url', 'target_intent'] } },
                     cluster_opportunities: { type: 'array', items: { type: 'string' } },
+                    silo_reinforcement: { type: 'string', description: 'How this content strengthens the silo structure' },
                   },
+                },
+                strategic_objectives_addressed: {
+                  type: 'array',
+                  description: 'How each strategic objective is concretely addressed in the content',
+                  items: { type: 'object', properties: { objective_type: { type: 'string' }, addressed: { type: 'boolean' }, how: { type: 'string' }, sections_involved: { type: 'array', items: { type: 'string' } } }, required: ['objective_type', 'addressed', 'how'] },
                 },
                 coherence_check: {
                   type: 'object',
