@@ -375,10 +375,40 @@ export function MarinaDashboard() {
             Pipeline automatisé de prospection : Crawl → Audit SEO → Audit GEO → Cocon → Rapport HTML
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
-          <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-2">
+          {jobs.some(j => j.status === 'processing' || j.status === 'pending') && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={async () => {
+                const activeJobs = jobs.filter(j => j.status === 'processing' || j.status === 'pending');
+                setJobs(prev => prev.map(j =>
+                  (j.status === 'processing' || j.status === 'pending')
+                    ? { ...j, status: 'failed', error_message: 'Interrompu manuellement' }
+                    : j
+                ));
+                for (const job of activeJobs) {
+                  try {
+                    await supabase.functions.invoke('marina', {
+                      body: { action: 'cancel_job', job_id: job.id },
+                    });
+                  } catch (e) {
+                    console.error('Failed to cancel job:', e);
+                  }
+                }
+                sonnerToast.success(`${activeJobs.length} job(s) interrompu(s)`);
+              }}
+            >
+              <StopCircle className="h-4 w-4 mr-1" />
+              Tout stopper
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
+            <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       {/* API Key Management */}
@@ -533,7 +563,7 @@ export function MarinaDashboard() {
                                   console.error('Failed to cancel job:', e);
                                 }
                               }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500"
+                              className="p-1 rounded hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition-colors"
                               title="Interrompre"
                             >
                               <StopCircle className="h-3.5 w-3.5" />
