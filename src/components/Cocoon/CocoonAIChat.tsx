@@ -860,7 +860,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       setMessages(prev => [...prev, { role: 'user', content: text }, launchMsg]);
       setQuizLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_stratege_cocoon_quiz' } });
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_stratege_cocoon_quiz', language } });
         if (error) throw error;
         setQuizData({ questions: data.questions, answerKey: data.answerKey });
       } catch (e) {
