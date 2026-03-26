@@ -1709,6 +1709,22 @@ Deno.serve(async (req) => {
       return json({ success: true, jobs: jobs || [] });
     }
 
+    // ── Cancel job (interrupt a running job) ──
+    if (body.action === 'cancel_job' && body.job_id) {
+      const { error: cancelErr } = await sb
+        .from('async_jobs')
+        .update({ 
+          status: 'failed', 
+          error_message: 'Interrompu manuellement',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', body.job_id)
+        .eq('function_name', 'marina')
+        .in('status', ['pending', 'processing']);
+      if (cancelErr) return json({ error: cancelErr.message }, 500);
+      return json({ success: true, cancelled: true });
+    }
+
     // ── Delete job ──
     if (body.action === 'delete_job' && body.job_id) {
       const { error: delErr } = await sb
@@ -1718,6 +1734,23 @@ Deno.serve(async (req) => {
         .eq('function_name', 'marina');
       if (delErr) return json({ error: delErr.message }, 500);
       return json({ success: true });
+    }
+
+    // ── Auto-cleanup: mark jobs stuck > 10 min as failed ──
+    try {
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      await sb
+        .from('async_jobs')
+        .update({ 
+          status: 'failed', 
+          error_message: 'Timeout: job bloqué depuis plus de 10 minutes',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('function_name', 'marina')
+        .in('status', ['pending', 'processing'])
+        .lt('created_at', tenMinAgo);
+    } catch (e) {
+      console.warn('[Marina] Auto-cleanup failed:', e);
     }
 
 
