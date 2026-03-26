@@ -1365,7 +1365,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
       // Generate each section as standalone HTML
       const crawlHTML = generateCrawlSectionHTML(expertResult.data, detectedLang, domain, url);
       const techHTML = generateTechSectionHTML(expertResult.data, detectedLang, domain);
-      const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain);
+      const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
       const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
 
       // Store each section temporarily in storage (fire-and-forget, non-blocking)
