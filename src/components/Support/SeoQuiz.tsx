@@ -142,7 +142,7 @@ export function SeoQuiz({ questions, answerKey, onComplete }: SeoQuizProps) {
       {isRevealed && (
         <button
           onClick={handleNext}
-          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+          className="mx-auto flex items-center justify-center gap-1.5 px-6 py-2 rounded-lg bg-[#7C3AED] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
         >
           {isLast ? 'Voir mon score' : 'Question suivante'}
           <ArrowRight className="h-3 w-3" />
