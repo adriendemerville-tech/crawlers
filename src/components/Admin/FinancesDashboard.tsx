@@ -604,17 +604,91 @@ export function FinancesDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Browserless */}
-            <ApiQuotaGauge
-              name="Browserless.io"
-              icon={<Globe className="h-4 w-4" />}
-              calls={tokenUsage.browserlessCalls}
-              quota={1000}
-              costPerCall={0.008}
-              color="teal"
-              status={tokenUsage.browserlessCalls >= 1000 ? 'exhausted' : tokenUsage.browserlessCalls >= 800 ? 'warning' : 'ok'}
-              statusLabel={tokenUsage.browserlessCalls >= 1000 ? '⛔ Quota épuisé → Fly.io actif' : tokenUsage.browserlessCalls >= 800 ? '⚠️ Approche limite' : '✅ OK'}
-            />
+            {/* Browserless — Real-time metrics */}
+            <div className="rounded-xl border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Browserless.io</span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  browserlessMetrics
+                    ? browserlessMetrics.unitsRemaining <= 0
+                      ? 'bg-destructive/10 text-destructive'
+                      : browserlessMetrics.unitsRemaining < 200
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {browserlessMetrics
+                    ? browserlessMetrics.unitsRemaining <= 0
+                      ? '⛔ Quota épuisé'
+                      : browserlessMetrics.unitsRemaining < 200
+                      ? `⚠️ ${browserlessMetrics.unitsRemaining} unités restantes`
+                      : `✅ ${browserlessMetrics.unitsRemaining} unités restantes`
+                    : '⏳ Chargement...'}
+                </span>
+              </div>
+
+              {browserlessMetrics ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Quota mensuel</span>
+                    <span className="font-mono font-semibold text-foreground">
+                      {browserlessMetrics.units} / {browserlessMetrics.planUnitsPerMonth} unités
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        browserlessMetrics.units / browserlessMetrics.planUnitsPerMonth > 0.9
+                          ? 'bg-destructive'
+                          : browserlessMetrics.units / browserlessMetrics.planUnitsPerMonth > 0.7
+                          ? 'bg-amber-500'
+                          : 'bg-emerald-500'
+                      }`}
+                      style={{ width: `${Math.min(100, (browserlessMetrics.units / browserlessMetrics.planUnitsPerMonth) * 100)}%` }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Concurrent</span>
+                      <div className="font-mono font-semibold text-foreground">
+                        {browserlessMetrics.running} / {browserlessMetrics.concurrencyLimit}
+                      </div>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Succès</span>
+                      <div className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                        {browserlessMetrics.successful}
+                      </div>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Erreurs</span>
+                      <div className="font-mono font-semibold text-destructive">
+                        {browserlessMetrics.error}
+                      </div>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Rejetés</span>
+                      <div className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                        {browserlessMetrics.rejected}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground pt-1 border-t border-border">
+                    Coût estimé : <span className="font-mono font-semibold text-foreground">${(tokenUsage.browserlessCalls * 0.008).toFixed(2)}</span>
+                    <span className="ml-2">• Plan : 269€/an</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  <span>{tokenUsage.browserlessCalls} appels trackés • ${(tokenUsage.browserlessCalls * 0.008).toFixed(2)} estimé</span>
+                </div>
+              )}
+            </div>
 
             {/* Fly.io Playwright */}
             <ApiQuotaGauge
