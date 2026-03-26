@@ -400,13 +400,15 @@ Deno.serve(async (req) => {
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
       const pageType = classifyPageType(page.url, page.title || "", page.h1 || "", page.page_type_override);
       
-      // Enrich tokenization: title + h1 + meta + keywords + URL path segments + anchor texts
+      // Enrich tokenization: title + h1 + meta + keywords + URL path + anchors + BODY TEXT
       const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");
       const anchorTexts = (page.anchor_texts || [])
         .filter((a: any) => a.type === "internal")
         .map((a: any) => a.text || "")
         .join(" ");
-      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts}`;
+      // Include body_text_truncated for much richer semantic analysis
+      const bodyText = (page.body_text_truncated || "").substring(0, 3000);
+      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
       tokenizedDocs.push(tokenize(fullText));
 
       // Try to enrich from audit data
