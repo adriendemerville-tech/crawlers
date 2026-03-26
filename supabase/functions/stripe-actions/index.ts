@@ -162,6 +162,47 @@ async function handleSubscription(req: Request) {
   return json({ url: session.url, session_id: session.id });
 }
 
+async function handleSubscriptionPremium(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return json({ error: "Unauthorized" }, 401);
+
+  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const { data: profile } = await auth.supabase
+    .from("profiles")
+    .select("plan_type, subscription_status, stripe_subscription_id")
+    .eq("user_id", auth.user.id)
+    .single();
+
+  if (profile?.subscription_status === "active" && profile?.plan_type === "agency_premium") {
+    return json({ error: "Vous avez déjà un abonnement Pro Agency Premium actif." }, 400);
+  }
+
+  const customers = await stripe.customers.list({ email: auth.user.email, limit: 1 });
+  let customerId: string;
+  if (customers.data.length > 0) {
+    customerId = customers.data[0].id;
+  } else {
+    const customer = await stripe.customers.create({ email: auth.user.email || undefined, metadata: { supabase_user_id: auth.user.id } });
+    customerId = customer.id;
+  }
+
+  const prices = await stripe.prices.list({ product: "prod_UDcQ9avN4kHNFF", active: true, type: "recurring", limit: 1 });
+  if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit Premium." }, 500);
+
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    payment_method_types: ["card"],
+    line_items: [{ price: prices.data[0].id, quantity: 1 }],
+    mode: "subscription",
+    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium" },
+    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium" } },
+    success_url: `${origin}/tarifs?subscription_success=true`,
+    cancel_url: `${origin}/tarifs?subscription_canceled=true`,
+  });
+
+  return json({ url: session.url, session_id: session.id });
+}
+
 async function handlePortal(req: Request) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
