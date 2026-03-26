@@ -374,6 +374,52 @@ Deno.serve(async (req: Request) => {
                   }
                 }
               } else {
+                // ── Special handling for generate-corrective-code: ensure fixes array ──
+                let funcBody: Record<string, unknown> = {
+                  tracked_site_id: config.tracked_site_id,
+                  domain: site.domain,
+                  url: `https://${site.domain}`,
+                  user_id: config.user_id,
+                  ...decision.action.payload,
+                };
+
+                if (funcName === 'generate-corrective-code') {
+                  // Map autopilot payload to generate-corrective-code expected format
+                  const payload = decision.action.payload || {};
+                  const fixes = payload.fixes || payload.recommendations || [];
+                  
+                  // Convert recommendations to fixes format if needed
+                  const normalizedFixes = Array.isArray(fixes) ? fixes.map((f: any, i: number) => ({
+                    id: f.id || f.fix_id || `autopilot-fix-${i}`,
+                    label: f.label || f.title || f.description || `Fix ${i + 1}`,
+                    enabled: f.enabled !== false,
+                    category: f.category || 'strategic',
+                    prompt: f.prompt || f.prompt_summary || f.description || f.label || '',
+                    ...(f.target_url ? { targetUrl: f.target_url } : {}),
+                  })) : [];
+
+                  if (normalizedFixes.length === 0) {
+                    console.warn(`[AutopilotEngine] generate-corrective-code called with no fixes for ${site.domain}, skipping`);
+                    executionResults.push({
+                      function: funcName,
+                      status: 'skipped',
+                      error: 'No fixes available in payload',
+                    });
+                    continue;
+                  }
+
+                  funcBody = {
+                    siteName: site.domain,
+                    siteUrl: `https://${site.domain}`,
+                    fixes: normalizedFixes,
+                    technologyContext: payload.technologyContext || payload.technology || null,
+                    auditContext: payload.auditContext || null,
+                    tracked_site_id: config.tracked_site_id,
+                    user_id: config.user_id,
+                  };
+                  console.log(`[AutopilotEngine] Mapped ${normalizedFixes.length} fixes for generate-corrective-code on ${site.domain}`);
+                }
+
                 // ── Standard function execution ──
                 console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain} (phase: ${pipelinePhase})`);
                 const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/${funcName}`, {
@@ -382,13 +428,7 @@ Deno.serve(async (req: Request) => {
                     'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
                     'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify({
-                    tracked_site_id: config.tracked_site_id,
-                    domain: site.domain,
-                    url: `https://${site.domain}`,
-                    user_id: config.user_id,
-                    ...decision.action.payload,
-                  }),
+                  body: JSON.stringify(funcBody),
                 });
                 
                 const funcResult = await funcResponse.json().catch(() => ({}));
