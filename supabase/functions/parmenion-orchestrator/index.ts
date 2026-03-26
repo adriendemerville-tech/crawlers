@@ -494,6 +494,13 @@ Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
 Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
 Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
 
+## RÈGLE CRITIQUE DE PERTINENCE THÉMATIQUE
+⚠️ Le mot-clé ("keyword") choisi pour content-architecture-advisor DOIT être en rapport DIRECT avec l'activité du site.
+- Consulte l'UNIVERS MOTS-CLÉS DU SITE ci-dessus pour choisir un mot-clé pertinent
+- Si le site est sur les "indemnités kilométriques", le keyword doit concerner les frais de déplacement, la fiscalité auto, etc. — PAS le SEO, le marketing, ou tout autre sujet hors secteur
+- Le contenu créé doit répondre aux questions que les CLIENTS du site se posent, pas aux questions techniques du webmaster
+- En cas de doute, utilise un mot-clé issu directement de la liste de mots-clés fournie dans le contexte
+
 ## DEUX TYPES DE PRESCRIPTIONS
 
 ### TYPE A: Correctifs techniques (meta, performance, schema)
@@ -505,7 +512,9 @@ Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corre
 → Payload ENRICHI:
 {
   "url": "https://domain.tld",
-  "keyword": "mot-clé-cible",
+  "keyword": "mot-clé-cible PERTINENT pour le secteur du site",
+  "page_type": "article",
+  "tracked_site_id": "...",
   "page_type": "article",
   "tracked_site_id": "...",
   "strategic_objectives": [
