@@ -40,6 +40,20 @@ export function FloatingChatBubble() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Suggest Crawlers quiz to non-logged users on home after 5s
+  useEffect(() => {
+    if (user) return;
+    if (location.pathname !== '/') return;
+    const key = 'felix_guest_quiz_suggested';
+    if (sessionStorage.getItem(key)) return;
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(key, '1');
+      setShowGuestQuizSuggestion(true);
+      playNotificationSound();
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [user, location.pathname]);
+
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
     if (!user || isOnboardingDone() || notifDismissedThisSession) {
