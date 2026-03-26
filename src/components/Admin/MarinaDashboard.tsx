@@ -137,9 +137,7 @@ export function MarinaDashboard() {
   // Fetch Marina costs from analytics_events (LLM tokens + paid API calls linked to marina functions)
   const fetchCosts = useCallback(async () => {
     try {
-      const marinaFunctions = ['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site'];
-
-      const [tokenRes, apiRes] = await Promise.all([
+      const [tokenRes, apiRes, jobCountRes, failedCountRes] = await Promise.all([
         supabase
           .from('analytics_events')
           .select('event_data')
@@ -150,14 +148,26 @@ export function MarinaDashboard() {
           .select('event_data')
           .eq('event_type', 'paid_api_call')
           .limit(1000) as any,
+        // Count ALL marina jobs ever (including deleted ones won't work, but count current)
+        supabase
+          .from('async_jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('function_name', 'marina') as any,
+        supabase
+          .from('async_jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('function_name', 'marina')
+          .eq('status', 'failed') as any,
       ]);
 
       const marinaFns = new Set(['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site']);
 
       let llmCostUsd = 0;
+      let marinaLlmCallCount = 0;
       (tokenRes.data || []).forEach((e: any) => {
         const d = e.event_data;
         if (!d || !marinaFns.has(d.function_name)) return;
+        marinaLlmCallCount++;
         const model = d.model || 'unknown';
         const pricing = MODEL_PRICING[model];
         if (pricing) {
@@ -167,9 +177,11 @@ export function MarinaDashboard() {
       });
 
       let apiCostUsd = 0;
+      let marinaApiCallCount = 0;
       (apiRes.data || []).forEach((e: any) => {
         const d = e.event_data;
         if (!d || !marinaFns.has(d.function_name)) return;
+        marinaApiCallCount++;
         const service = d.api_service || 'unknown';
         apiCostUsd += API_COST_PER_CALL[service] || 0.005;
       });
@@ -180,8 +192,27 @@ export function MarinaDashboard() {
       setCostBreakdown({
         llm: llmCostUsd * USD_TO_EUR,
         api: apiCostUsd * USD_TO_EUR,
-        jobs: (tokenRes.data?.length || 0) + (apiRes.data?.length || 0),
+        jobs: marinaLlmCallCount + marinaApiCallCount,
       });
+
+      // Count marina errors from analytics_events (more reliable than async_jobs which can be deleted)
+      const dbJobTotal = jobCountRes?.count || 0;
+      const dbJobFailed = failedCountRes?.count || 0;
+
+      // Also count marina errors from analytics_events
+      const { count: errorCount } = await supabase
+        .from('analytics_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_type', 'edge_function_error')
+        .filter('event_data->>function_name', 'in', '("marina","audit-expert-seo","audit-strategique-ia","calculate-cocoon-logic","calculate-llm-visibility")') as any;
+
+      // Use whichever source has more data — DB jobs or inferred from cost events
+      // Estimate unique job runs: each marina run triggers ~5 audit-expert-seo calls + others
+      // A rough estimate: count unique date windows of marina function calls
+      const inferredJobCount = Math.max(dbJobTotal, Math.ceil(marinaLlmCallCount / 50)); // ~50 LLM calls per marina run
+      const inferredFailedCount = Math.max(dbJobFailed, errorCount || 0);
+
+      setJobStats({ total: inferredJobCount, failed: inferredFailedCount });
     } catch (err) {
       console.error('Failed to fetch Marina costs:', err);
     }
