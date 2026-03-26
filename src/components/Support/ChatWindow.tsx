@@ -70,6 +70,22 @@ function detectBugIntent(message: string): boolean {
   });
 }
 
+const QUIZ_KEYWORDS = [
+  'quiz', 'quizz', 'test seo', 'tester mes connaissances', 'mon niveau seo',
+  'niveau seo', 'connaissance seo', 'connaissances seo', 'évaluer mon niveau',
+  'evaluer mon niveau', 'je suis débutant', 'je suis debutant', 'suis-je bon en seo',
+  'test geo', 'quiz geo', 'quiz llm', 'test de connaissances', 'auto-évaluation',
+  'auto evaluation', 'quel est mon niveau', 'qcm seo',
+];
+
+function detectQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return QUIZ_KEYWORDS.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
 export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
