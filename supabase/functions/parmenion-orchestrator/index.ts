@@ -262,6 +262,8 @@ async function askParmenionLLM(context: {
   pendingRecommendations: any[];
   rawAuditData: any[];
   isIktracker: boolean;
+  siteKeywords: string[];
+  siteInfo: any;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
