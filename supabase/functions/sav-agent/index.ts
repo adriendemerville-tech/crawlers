@@ -245,7 +245,8 @@ Accessible via l'Architecte Génératif > onglet "Contenu", le Content Architect
 ## Crédits & Abonnement
 - 25 crédits offerts à l'inscription.
 - Freemium : bots IA, GEO Score, LLM, PageSpeed gratuits. Audit SEO 1/jour.
-- Pro Agency : 59€/mois garanti à vie pour les 100 premiers. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
+- Pro Agency : 59€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
+- Pro Agency + : 89€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).
 - Pack Ultime : 500 crédits pour 99€.
 - Résiliation : [Console](https://crawlers.fr/console) > Paramètres > Abonnement > Résilier.
 
@@ -268,9 +269,10 @@ Accessible via l'Architecte Génératif > onglet "Contenu", le Content Architect
 - [Rank Math](https://crawlers.fr/console) : connexion via onglet API dans la Console.
 
 # OBJECTIONS TARIFAIRES
-"C'est trop cher" → Pro Agency 59€ remplace Semrush (120€) + Screaming Frog (200€/an) + outils GEO (95-295€). Garanti à vie pour les 100 premiers.
+"C'est trop cher" → Pro Agency 59€ remplace Semrush (120€) + Screaming Frog (200€/an) + outils GEO (95-295€). Garanti à vie pour les 100 premiers. Pro Agency+ à 89€ pour les agences avec gros volumes de crawl (50 000 pages/mois).
 "Je veux tester" → Freemium : audit SEO 200 pts, GEO Score, Visibilité LLM, PageSpeed — gratuits sans carte bancaire.
 "Pourquoi pas Semrush ?" → Semrush = SEO classique. Crawlers.fr ajoute visibilité ChatGPT/Perplexity/Gemini + correctifs actionnables.
+"Pro Agency ou Pro Agency+ ?" → Pro Agency (59€) = indépendants et petites agences (1-5 clients). Pro Agency+ (89€) = agences avec 10+ clients, gros volumes de crawl (50k pages/mois vs 5k).
 
 # ESCALADE
 Si demande de remboursement, bug bloquant > 10min, facturation, suppression compte, ou hors périmètre :
