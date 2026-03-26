@@ -867,22 +867,27 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (isTimeUp()) {
-        console.log(`[Worker] ⏱️ Watchdog triggered after SPA probe — saving progress`);
+      // For very heavy pages (>200KB): save probe result immediately and stop this cycle
+      // This prevents CPU timeout from SPA probe + batch in same invocation
+      const isHeavyPage = probeSize > 200_000;
+
+      if (isTimeUp() || (firstPageResult && isHeavyPage)) {
         if (firstPageResult) {
-          await supabase.from('crawl_pages').insert([{ crawl_id: job.crawl_id, ...firstPageResult }]);
+          console.log(`[Worker] Job ${job.id}: ${isHeavyPage ? '🏋️ Heavy page — saving probe only' : '⏱️ Watchdog'} (${Math.round(probeSize/1024)}KB)`);
+          await supabase.from('crawl_pages').upsert([{ crawl_id: job.crawl_id, ...firstPageResult }], { onConflict: 'crawl_id,url', ignoreDuplicates: true });
           await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed + 1 }).eq('id', job.id);
           await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed + 1 }).eq('id', job.crawl_id);
           globalPagesProcessed += 1;
         }
-        break;
+        if (isTimeUp()) break;
+        continue; // next job or next invocation will pick up remaining pages
       }
 
       const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
       
-      // Dynamic batch size based on HTML weight — conservative default max of 3
-      const dynamicMax = probeSize > 250_000 ? 1 : probeSize > 150_000 ? 2 : probeSize > 100_000 ? 3 : 4;
+      // Dynamic batch size based on HTML weight — conservative
+      const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
       const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), dynamicMax);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
       
