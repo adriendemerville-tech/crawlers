@@ -28,10 +28,17 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
     </div>
   `).join('');
 
+  // Format CLS: unitless score, max 3 decimals
+  const formattedCls = (() => {
+    const raw = parseFloat(scores.cls);
+    if (isNaN(raw)) return scores.cls;
+    return raw.toFixed(3);
+  })();
+
   const vitals = [
     { label: 'First Contentful Paint', value: scores.fcp, desc: t.fcpDesc },
     { label: 'Largest Contentful Paint', value: scores.lcp, desc: t.lcpDesc },
-    { label: 'Cumulative Layout Shift', value: scores.cls, desc: t.clsDesc },
+    { label: 'Cumulative Layout Shift', value: `${formattedCls} (score)`, desc: t.clsDesc },
     { label: 'Total Blocking Time', value: scores.tbt, desc: t.tbtDesc },
     { label: 'Speed Index', value: scores.speedIndex, desc: t.speedIndexDesc },
     { label: 'Time to Interactive', value: scores.tti, desc: t.ttiDesc },
