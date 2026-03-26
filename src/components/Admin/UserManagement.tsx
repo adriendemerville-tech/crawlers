@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
 import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
+import { PayingUsersTab } from './PayingUsersTab';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
 /** Actionable event types to expose in the filter (label → event_type(s)) */
@@ -65,6 +66,7 @@ export function UserManagement() {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
   const [showPendingTab, setShowPendingTab] = useState(false);
+  const [showPayingTab, setShowPayingTab] = useState(false);
 
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
@@ -386,9 +388,18 @@ export function UserManagement() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant={showPayingTab ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); }}
+              className="gap-1.5"
+            >
+              <Crown className="h-4 w-4" />
+              Payants
+            </Button>
+            <Button
               variant={showPendingTab ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowPendingTab(!showPendingTab); if (!showPendingTab) fetchPendingUsers(); }}
+              onClick={() => { setShowPendingTab(!showPendingTab); setShowPayingTab(false); if (!showPendingTab) fetchPendingUsers(); }}
               className="gap-1.5 relative"
             >
               <MailWarning className="h-4 w-4" />
@@ -421,7 +432,10 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        {showPendingTab ? (
+        {showPayingTab ? (
+          /* ====== Paying Users Tab ====== */
+          <PayingUsersTab />
+        ) : showPendingTab ? (
           /* ====== Pending Users Tab ====== */
           <div className="space-y-3">
             <div className="flex items-center justify-between">
