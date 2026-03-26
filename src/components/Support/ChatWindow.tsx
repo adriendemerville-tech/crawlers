@@ -101,6 +101,28 @@ function detectCrawlersQuizIntent(message: string): boolean {
   });
 }
 
+const CRAWLERS_HOWTO_KEYWORDS = [
+  'comment faire', 'comment utiliser', 'comment lancer', 'comment fonctionne',
+  'c\'est quoi', 'à quoi sert', 'a quoi sert', 'où trouver', 'ou trouver',
+  'comment accéder', 'comment acceder', 'quel outil', 'quel bouton',
+  'où est', 'ou est', 'je ne trouve pas', 'je trouve pas',
+  'comment ça marche', 'comment ca marche', 'tutoriel', 'tuto',
+  'mode d\'emploi', 'aide', 'help', 'how to', 'how do i',
+  'autopilot', 'marina', 'cocoon', 'crawl', 'audit', 'script',
+  'tracking', 'console', 'stratège', 'stratege', 'architecte',
+  'bundle', 'matrice', 'rapport', 'cocon',
+];
+
+function detectCrawlersHowTo(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let matchCount = 0;
+  for (const kw of CRAWLERS_HOWTO_KEYWORDS) {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (lower.includes(normalizedKw)) matchCount++;
+  }
+  return matchCount >= 1;
+}
+
 export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -124,6 +146,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
   // Quiz state
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
+  const [howToCount, setHowToCount] = useState(0);
+  const [quizSuggested, setQuizSuggested] = useState(false);
 
   // Fetch user's tracked sites for STT vocabulary auto-enrichment
   const [userDomains, setUserDomains] = useState<string[]>([]);
@@ -433,6 +457,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     setNewMessage('');
     setSending(true);
 
+    // Track how-to questions about Crawlers tools
+    if (detectCrawlersHowTo(messageText)) {
+      setHowToCount(prev => prev + 1);
+    }
+
     try {
       // Capture visible screen context for audit comprehension
       const screenContext = captureScreenContext(location.pathname);
@@ -459,6 +488,20 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
 
       if (data.conversation_id && !conversationId) {
         setConversationId(data.conversation_id);
+      }
+
+      // After 3+ how-to questions about Crawlers, suggest the quiz
+      const newHowToCount = howToCount + (detectCrawlersHowTo(messageText) ? 1 : 0);
+      if (newHowToCount >= 3 && !quizSuggested && !quizData) {
+        setQuizSuggested(true);
+        setTimeout(() => {
+          const suggestionMsg: ChatMessage = {
+            role: 'assistant',
+            content: "💡 **Tu as beaucoup de questions sur les outils Crawlers !** Et si tu testais tes connaissances avec un quiz rapide ? 2 minutes chrono.\n\nTape **\"quiz crawlers\"** pour essayer !",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, suggestionMsg]);
+        }, 1200);
       }
 
       // Check if escalation should show phone prompt (after 8+ user messages) — skip for admins and guests
