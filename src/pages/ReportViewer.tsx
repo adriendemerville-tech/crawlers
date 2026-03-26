@@ -138,7 +138,7 @@ export default function ReportViewer() {
       if (report.report_type === 'seo_technical' || report.report_type === 'seo_strategic') {
         const auditMode = report.report_type === 'seo_technical' ? 'technical' : 'strategic';
         const et = expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
-        generateExpertPDF(report.report_data, auditMode, et, branding, language);
+        await generateExpertPDF(report.report_data, auditMode, et, branding, language);
       } else {
         await generatePDF(report.report_type as any, report.report_data, report.url, language);
       }
