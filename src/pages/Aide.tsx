@@ -496,9 +496,54 @@ const DOC_SECTIONS: DocSection[] = [
     ],
   },
   {
+    id: 'agents-ia',
+    icon: <Wrench className="h-4 w-4" />,
+    title: '9. Assistants IA intégrés',
+    subsections: [
+      {
+        id: 'felix',
+        title: 'Félix — Assistant personnel',
+        content: `Félix est l'assistant IA intégré, disponible sur toutes les pages via la bulle violette en bas à droite. Accessible à tous, même non inscrits.
+<p class="mt-2"><strong>Personnalité :</strong> collègue sympa et spécialiste. Ton décontracté mais précis, réponses courtes. S'adapte au profil et au score de connaissances de l'utilisateur.</p>
+<ul class="list-disc pl-6 mt-2 space-y-1">
+<li>Lecture contextuelle de l'écran en temps réel</li>
+<li>Explication des scores SEO, GEO et E-E-A-T</li>
+<li>Recherche Google en temps réel (SERP, positions, avis)</li>
+<li>Guide interactif : demande de scroller pour analyser davantage</li>
+</ul>
+<p class="mt-2"><strong>Quiz intégrés :</strong></p>
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><strong>Quiz SEO/GEO</strong> (20 questions) et <strong>Quiz Crawlers</strong> (20 questions)</li>
+<li>Quiz Crawlers suggéré automatiquement sur la homepage 5s après la première visite</li>
+<li>Suggestion après 3+ questions sur les outils : « On peut faire un quiz en 2 min si tu veux »</li>
+<li>Disponibles en français, anglais et espagnol</li>
+</ul>`,
+      },
+      {
+        id: 'stratege-cocoon',
+        title: 'Stratège Cocoon — Consultant SEO senior',
+        content: `Le Stratège Cocoon est l'IA du module Cocon Sémantique, réservé aux abonnés Pro Agency.
+<p class="mt-2"><strong>Personnalité :</strong> consultant externe senior, cordial et pédagogue. Recommandations précises et actionnables tout en restant respectueux — l'utilisateur est son client. S'adapte au persona et au score de connaissances.</p>
+<ul class="list-disc pl-6 mt-2 space-y-1">
+<li>Diagnostic du maillage interne et pages orphelines</li>
+<li>Prescriptions concrètes : contenus, liens, architecture</li>
+<li>Mémoire persistante entre sessions</li>
+<li>Suivi d'impact T+30/60/90 via GSC & GA4</li>
+</ul>
+<p class="mt-2"><strong>Quiz Cocoon</strong> (50 questions) :</p>
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li>30 questions maillage, cannibalisation, juice, pruning, backlinks</li>
+<li>20 questions sur Cocoon, Stratège et Content Architect</li>
+<li>Suggéré si l'utilisateur est novice ou pose beaucoup de questions</li>
+<li>Bouton « Question suivante » sur fond jaune d'or</li>
+</ul>`,
+      },
+    ],
+  },
+  {
     id: 'a-propos',
     icon: <Info className="h-4 w-4" />,
-    title: '9. À propos de Crawlers.fr',
+    title: '10. À propos de Crawlers.fr',
     subsections: [
       {
         id: 'quest-ce-que-crawlers',
@@ -508,7 +553,7 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'wrapper-gpt',
         title: 'Crawlers.fr est-il un wrapper GPT ?',
-        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 176 000 lignes de code, avec 14 algorithmes propriétaires, 124 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
+        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 203 000 lignes de code, avec 15 algorithmes propriétaires, 157 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
       },
       {
         id: 'llms-interroges',
