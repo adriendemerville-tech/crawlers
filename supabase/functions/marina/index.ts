@@ -576,7 +576,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
       ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
       ${buildModuleSection('Autorité de Marque', '🏛️', brandAuth)}
-      ${buildModuleSection('Signaux Sociaux', '📱', socialSignals)}
+      ${buildSocialSignalsSection(socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
