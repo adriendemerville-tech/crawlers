@@ -360,7 +360,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   const analysis = strategicData?.analysis || strategicData?.llm_analysis || null;
 
   // Build 6 cards — cited (green) or not cited (red), with sentiment if cited
-  const cardsHtml = scores.map((s: any) => {
+  const cardsHtml = effectiveScores.map((s: any) => {
     const name = s.llm_name || 'Unknown';
     const score = s.score_percentage ?? s.score ?? 0;
     const cited = score > 0;
@@ -404,14 +404,14 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   let strategicHtml = '';
   if (strategicData) {
     const citProb = strategicData.citation_probability;
-    const analysis = strategicData.analysis;
+    const stratAnalysis = strategicData.analysis || strategicData.llm_analysis;
     strategicHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-top:16px;text-align:left;">
       ${citProb != null ? `<div style="font-size:13px;margin-bottom:6px;"><strong>Probabilité de citation IA :</strong> <span style="font-weight:700;color:${citProb >= 60 ? '#22c55e' : citProb >= 30 ? '#f59e0b' : '#ef4444'};">${citProb}%</span></div>` : ''}
-      ${analysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;margin-top:8px;">${analysis}</div>` : ''}
+      ${stratAnalysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;margin-top:8px;">${stratAnalysis}</div>` : ''}
     </div>`;
   }
 
-  const citedCount = scores.filter((s: any) => (s.score_percentage ?? s.score ?? 0) > 0).length;
+  const citedCount = effectiveScores.filter((s: any) => (s.score_percentage ?? s.score ?? 0) > 0).length;
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
     <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;text-align:left;">Visibilité LLM — Benchmark en temps réel</h3>
