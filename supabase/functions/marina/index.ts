@@ -208,6 +208,88 @@ function buildModuleSection(title: string, emoji: string, data: any): string {
   </div>`;
 }
 
+// ─── Dedicated renderer for Social Signals with platform names & colors ───
+function buildSocialSignalsSection(data: any): string {
+  if (!data) return '';
+
+  const PLATFORM_COLORS: Record<string, { color: string; bg: string; icon: string }> = {
+    linkedin:  { color: '#0a66c2', bg: '#0a66c212', icon: '💼' },
+    x:         { color: '#000000', bg: '#00000008', icon: '𝕏' },
+    twitter:   { color: '#1da1f2', bg: '#1da1f212', icon: '🐦' },
+    reddit:    { color: '#ff4500', bg: '#ff450012', icon: '🔴' },
+    youtube:   { color: '#ff0000', bg: '#ff000012', icon: '▶️' },
+    instagram: { color: '#e1306c', bg: '#e1306c12', icon: '📷' },
+    facebook:  { color: '#1877f2', bg: '#1877f212', icon: '📘' },
+    tiktok:    { color: '#000000', bg: '#00000008', icon: '🎵' },
+  };
+
+  const PRESENCE_COLORS: Record<string, string> = {
+    strong: '#22c55e', moderate: '#f59e0b', weak: '#f97316', absent: '#ef4444',
+  };
+
+  // Proof sources — one card per platform
+  let sourcesHtml = '';
+  const proofSources = data?.proof_sources || [];
+  if (Array.isArray(proofSources) && proofSources.length > 0) {
+    sourcesHtml = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
+      ${proofSources.map((s: any) => {
+        const platform = (s.platform || 'unknown').toLowerCase();
+        const pc = PLATFORM_COLORS[platform] || { color: '#6b7280', bg: '#6b728012', icon: '🌐' };
+        const level = (s.presence_level || 'unknown').toLowerCase();
+        const levelColor = PRESENCE_COLORS[level] || '#6b7280';
+        const profileName = s.profile_name || '';
+        const profileUrl = s.profile_url || '';
+        const analysis = s.analysis || '';
+        
+        return `<div style="padding:14px;border-radius:8px;border-left:4px solid ${pc.color};background:${pc.bg};text-align:left;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-weight:700;font-size:14px;color:${pc.color};">${pc.icon} ${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+            <span style="font-size:11px;font-weight:600;color:${levelColor};padding:2px 8px;background:${levelColor}15;border-radius:4px;">${level}</span>
+          </div>
+          ${profileName ? `<div style="font-size:12px;color:#374151;font-weight:500;margin-bottom:4px;">${profileName}</div>` : ''}
+          ${profileUrl && profileUrl !== 'null' ? `<div style="font-size:11px;color:${pc.color};margin-bottom:6px;word-break:break-all;">${profileUrl}</div>` : ''}
+          ${analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;">${analysis}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Thought leadership
+  let leadershipHtml = '';
+  const tl = data?.thought_leadership;
+  if (tl) {
+    const eeat = tl.eeat_score ?? null;
+    leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
+      ${tl.founder_authority ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Autorité fondateur:</strong> ${tl.founder_authority}</div>` : ''}
+      ${tl.entity_recognition ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Reconnaissance entité:</strong> ${tl.entity_recognition}</div>` : ''}
+      ${eeat != null ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Score E-E-A-T:</strong> <span style="font-weight:700;color:${eeat >= 7 ? '#22c55e' : eeat >= 4 ? '#f59e0b' : '#ef4444'};">${eeat}/10</span></div>` : ''}
+      ${tl.analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:4px;">${tl.analysis}</div>` : ''}
+    </div>`;
+  }
+
+  // Sentiment
+  let sentimentHtml = '';
+  const sent = data?.sentiment;
+  if (sent) {
+    const polarity = sent.overall_polarity || 'neutral';
+    const polarityColor = polarity.includes('positive') ? '#22c55e' : polarity.includes('negative') ? '#ef4444' : '#6b7280';
+    sentimentHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;text-align:left;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;">💬 Sentiment</div>
+      <div style="font-size:12px;margin-bottom:4px;"><strong>Polarité:</strong> <span style="font-weight:600;color:${polarityColor};">${polarity}</span></div>
+      ${sent.hallucination_risk ? `<div style="font-size:12px;margin-bottom:4px;"><strong>Risque hallucination:</strong> ${sent.hallucination_risk}</div>` : ''}
+      ${sent.reputation_vibration ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;">${sent.reputation_vibration}</div>` : ''}
+    </div>`;
+  }
+
+  return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">📱 Signaux Sociaux</h3>
+    ${sourcesHtml}
+    ${leadershipHtml}
+    ${sentimentHtml}
+  </div>`;
+}
+
 // ─── Dedicated renderer for Competitive Landscape with colored cards ───
 function buildCompetitiveLandscapeSection(data: any): string {
   if (!data) return '';
