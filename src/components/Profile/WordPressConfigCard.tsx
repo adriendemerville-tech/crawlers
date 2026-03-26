@@ -289,10 +289,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <img
                 src={cms.logo}
                 alt={cms.label}
-                className={`h-8 w-8 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
+                className={`h-28 w-28 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
                 loading="lazy"
-                width={32}
-                height={32}
               />
               {cms.label}
             </button>
