@@ -192,9 +192,9 @@ export function PayingUsersTab() {
                       </div>
                     </TableCell>
                     <TableCell className="py-2">
-                      <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${plan.color}`}>
+                      <span className={`text-[10px] font-medium ${user.plan_type === 'agency_premium' ? 'text-amber-500' : 'text-violet-500'}`}>
                         {plan.label}
-                      </Badge>
+                      </span>
                     </TableCell>
                     <TableCell className="py-2 text-right">
                       <span className="text-xs font-mono font-semibold">
