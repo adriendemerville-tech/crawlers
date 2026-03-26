@@ -276,7 +276,44 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     // Check if user is expressing a bug intent
     if (bugReportMode === 'idle' && detectBugIntent(messageText)) {
       setBugReportMode('prompt');
-      // Still send the message normally to the SAV agent
+    }
+
+    // Quiz intent detection — intercept before sending to SAV agent
+    if (!quizData && detectQuizIntent(messageText)) {
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: messageText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setNewMessage('');
+
+      const launchMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🎯 **Quiz SEO / GEO / LLM**\n\n10 questions pour évaluer tes connaissances. 3 réponses possibles par question. C'est parti !",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, launchMsg]);
+
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
+          body: { action: 'get_questions' },
+        });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey });
+      } catch (e) {
+        console.error('Quiz load error:', e);
+        const errorMsg: ChatMessage = {
+          role: 'assistant',
+          content: "Désolé, le quiz n'a pas pu être chargé. Réessaie dans un instant !",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      } finally {
+        setQuizLoading(false);
+      }
+      return;
     }
 
     const userMsg: ChatMessage = {
