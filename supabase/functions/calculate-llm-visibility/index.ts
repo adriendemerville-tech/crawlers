@@ -43,6 +43,8 @@ const LLM_TARGETS = [
   { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
   { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku' },
+  { id: 'mistral',    name: 'Mistral',     model: 'mistralai/mistral-small-latest' },
+  { id: 'llama',      name: 'Meta Llama',  model: 'meta-llama/llama-3.1-8b-instruct' },
 ]
 
 const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
@@ -479,6 +481,7 @@ Deno.serve(async (req) => {
     // ── Run ALL LLMs in parallel ──
     const llmPromises = LLM_TARGETS.map(async (llm) => {
       const promptScores: PromptScore[] = []
+      const responseTexts: string[] = []
 
       const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
@@ -495,6 +498,7 @@ Deno.serve(async (req) => {
 
         const ps = scorePromptResult(iteration_found, response_text, patterns)
         promptScores.push(ps)
+        responseTexts.push(response_text.slice(0, 500))
 
         // Store raw execution
         await supabase.from('llm_test_executions').insert({
@@ -524,7 +528,7 @@ Deno.serve(async (req) => {
       ).join(' | ')
       console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score}% [${breakdown}]`)
 
-      return { llm_name: llm.name, score, promptDetails: promptScores }
+      return { llm_name: llm.name, score, promptDetails: promptScores, responseTexts }
     })
 
     const llmResults = await Promise.all(llmPromises)
@@ -532,6 +536,10 @@ Deno.serve(async (req) => {
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
       score_percentage: r.score,
+      response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
+      overall_sentiment: r.promptDetails.length > 0
+        ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
+        : 'neutral',
       details: r.promptDetails.map((ps, i) => ({
         prompt: prompts[i],
         iteration_found: ps.iterationFound,
@@ -539,6 +547,7 @@ Deno.serve(async (req) => {
         sentiment: ps.sentiment,
         richness_bonus: ps.richnessBonus,
         composite_score: ps.compositeScore,
+        response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
       })),
     }))
 
