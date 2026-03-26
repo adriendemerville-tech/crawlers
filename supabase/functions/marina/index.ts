@@ -438,6 +438,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
   const cocoonNodes = cocoonData?.nodes || cocoonData?.nodes_snapshot || [];
   const cocoonEdges = cocoonData?.edges || cocoonData?.edges_snapshot || [];
+  const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
   const content = `
     <div class="section">
