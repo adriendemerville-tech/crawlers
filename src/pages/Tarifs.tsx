@@ -120,7 +120,7 @@ const translations = {
       '100 URL suivis inclus',
       'Priorité file de crawl',
     ],
-    agencyPremiumCta: 'Nous contacter',
+    agencyPremiumCta: "S'abonner · 89€/mois",
     or: 'ou',
   },
   en: {
