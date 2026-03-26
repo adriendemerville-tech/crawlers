@@ -78,13 +78,13 @@ function renderJsonSection(data: any, depth = 0): string {
   if (typeof data === 'object') {
     return Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).map(([key, val]) => {
       if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
-        return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px;">
-          <span style="color:#6b7280;">${key.replace(/_/g, ' ')}</span>
+        return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px;text-align:left;">
+          <span style="color:#6b7280;margin-right:8px;">${key.replace(/_/g, ' ')}:</span>
           <span style="font-weight:500;color:#1e293b;">${val}</span>
         </div>`;
       }
       if (depth < 2) {
-        return `<div style="margin-top:12px;"><h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:capitalize;">${key.replace(/_/g, ' ')}</h4>${renderJsonSection(val, depth + 1)}</div>`;
+        return `<div style="margin-top:12px;text-align:left;"><h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:capitalize;">${key.replace(/_/g, ' ')}</h4>${renderJsonSection(val, depth + 1)}</div>`;
       }
       return '';
     }).join('');
@@ -393,7 +393,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Autorité de Marque', '🏛️', brandAuth)}
       ${buildModuleSection('Signaux Sociaux', '📱', socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
-      ${buildModuleSection('Paysage Concurrentiel', '⚔️', competitive)}
+      ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
       ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
       ${buildModuleSection('Données Marché', '📈', marketData)}
