@@ -18,6 +18,7 @@ interface SeoQuizProps {
   questions: QuizQuestion[];
   answerKey: AnswerKey;
   quizTitle?: string;
+  theme?: 'violet' | 'gold';
   onComplete: (score: number, total: number, wrongAnswers: { question: string; correct: string; explanation: string; feature_link?: string }[]) => void;
   onRequestCrawlersQuiz?: () => void;
 }
@@ -27,9 +28,10 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   geo: { label: 'GEO', color: 'bg-emerald-500/15 text-emerald-500' },
   llm: { label: 'LLM', color: 'bg-purple-500/15 text-purple-500' },
   product: { label: 'Crawlers', color: 'bg-amber-500/15 text-amber-500' },
+  maillage: { label: 'Maillage', color: 'bg-amber-500/15 text-amber-500' },
 };
 
-export function SeoQuiz({ questions, answerKey, quizTitle, onComplete, onRequestCrawlersQuiz }: SeoQuizProps) {
+export function SeoQuiz({ questions, answerKey, quizTitle, theme = 'violet', onComplete, onRequestCrawlersQuiz }: SeoQuizProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -97,7 +99,7 @@ export function SeoQuiz({ questions, answerKey, quizTitle, onComplete, onRequest
       {/* Progress bar */}
       <div className="h-1 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-300"
+          className={cn("h-full transition-all duration-300", theme === 'gold' ? "bg-[#fbbf24]" : "bg-primary")}
           style={{ width: `${((currentIndex + (isRevealed ? 1 : 0)) / questions.length) * 100}%` }}
         />
       </div>
@@ -148,7 +150,12 @@ export function SeoQuiz({ questions, answerKey, quizTitle, onComplete, onRequest
       {isRevealed && (
         <button
           onClick={handleNext}
-          className="mx-auto flex items-center justify-center gap-1.5 px-6 py-2 rounded-lg bg-[#7C3AED] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+          className={cn(
+            "mx-auto flex items-center justify-center gap-1.5 px-6 py-2 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity",
+            theme === 'gold'
+              ? "bg-[#fbbf24] text-[#0f0a1e]"
+              : "bg-[#7C3AED] text-white"
+          )}
         >
           {isLast ? 'Voir mon score' : 'Question suivante'}
           <ArrowRight className="h-3 w-3" />

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft, Bug, ClipboardList } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
 import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
 import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
+import { SeoQuiz } from '@/components/Support/SeoQuiz';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
@@ -75,6 +76,19 @@ function detectBugIntentCocoon(message: string): boolean {
     const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return lower.includes(normalizedKw);
   });
+}
+
+const COCOON_QUIZ_KEYWORDS = ['quiz', 'quizz', 'quiz cocoon', 'quiz maillage', 'quiz stratège', 'quiz stratege', 'tester mes connaissances', 'test maillage'];
+const COCOON_HOWTO_KEYWORDS = ['comment faire', 'comment utiliser', 'c\'est quoi', 'à quoi sert', 'a quoi sert', 'je ne comprends pas', 'je comprends pas', 'qu\'est-ce que', 'comment ça marche', 'comment ca marche', 'orpheline', 'cannibalisation', 'juice', 'pruning', 'silo', 'cluster', 'pagerank', 'maillage', 'backlink'];
+
+function detectCocoonQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return COCOON_QUIZ_KEYWORDS.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
+}
+
+function detectCocoonHowTo(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return COCOON_HOWTO_KEYWORDS.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
 }
 
 /**
@@ -362,6 +376,10 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
+  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [howToCount, setHowToCount] = useState(0);
+  const [quizSuggested, setQuizSuggested] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
@@ -833,6 +851,35 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     // Check for bug intent
     if (bugReportMode === 'idle' && !overrideContext && detectBugIntentCocoon(text)) {
       setBugReportMode('prompt');
+    }
+
+    // Quiz intent detection
+    if (!overrideContext && !quizData && detectCocoonQuizIntent(text)) {
+      setInput('');
+      const launchMsg: Msg = { role: 'assistant', content: '🎓 **Quiz Stratège Cocoon** — 10 questions sur le maillage, la cannibalisation, le juice et les outils Cocoon. C\'est parti !' };
+      setMessages(prev => [...prev, { role: 'user', content: text }, launchMsg]);
+      setQuizLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('felix-seo-quiz', { body: { action: 'get_stratege_cocoon_quiz' } });
+        if (error) throw error;
+        setQuizData({ questions: data.questions, answerKey: data.answerKey });
+      } catch (e) {
+        console.error('Cocoon quiz error:', e);
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Désolé, le quiz n\'a pas pu être chargé. Réessaie !' }]);
+      } finally { setQuizLoading(false); }
+      return;
+    }
+
+    // Track how-to questions for quiz suggestion
+    if (!overrideContext && detectCocoonHowTo(text)) {
+      const newCount = howToCount + 1;
+      setHowToCount(newCount);
+      if (newCount >= 3 && !quizSuggested && !quizData) {
+        setQuizSuggested(true);
+        setTimeout(() => {
+          setMessages(prev => [...prev, { role: 'assistant', content: '💡 **Tu poses beaucoup de questions sur le maillage !** Teste tes connaissances avec un quiz rapide ?\n\nTape **"quiz"** pour lancer.' }]);
+        }, 1500);
+      }
     }
 
     // Check for tool commands
