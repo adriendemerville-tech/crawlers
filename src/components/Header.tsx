@@ -44,6 +44,7 @@ const translations = {
   fr: {
     console: 'Console',
     profile: 'Mon profil',
+    account: 'Compte',
     dashboard: 'Dashboard',
     identity: 'Identité',
     settings: 'Paramètres',
@@ -61,6 +62,7 @@ const translations = {
   en: {
     console: 'Console',
     profile: 'My profile',
+    account: 'Account',
     dashboard: 'Dashboard',
     identity: 'Identity',
     settings: 'Settings',
@@ -78,6 +80,7 @@ const translations = {
   es: {
     console: 'Consola',
     profile: 'Mi perfil',
+    account: 'Cuenta',
     dashboard: 'Dashboard',
     identity: 'Identidad',
     settings: 'Configuración',
@@ -126,6 +129,11 @@ export function Header() {
     setIsProfileOpen(false);
     await signOut();
     navigate('/');
+  };
+
+  const navigateFromMenu = (path: string) => {
+    setIsProfileOpen(false);
+    navigate(path);
   };
 
   const getInitials = () => {
@@ -371,7 +379,6 @@ export function Header() {
                       variant="ghost" 
                       className="relative h-9 w-9 rounded-full" 
                       aria-label={t.profile}
-                      onClick={() => navigate('/app/console')}
                     >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
@@ -399,10 +406,10 @@ export function Header() {
                   >
                     {/* Console subtitle */}
                     <div className="px-3 py-2">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.console}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.account}</p>
                     </div>
-                    <DropdownMenuItem asChild className="p-0">
-                      <Link to="/app/console" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
+                    <DropdownMenuItem className="p-0" onSelect={() => navigateFromMenu('/app/console')}>
+                      <button type="button" className="flex w-full items-center justify-start gap-3 p-3 text-left cursor-pointer">
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
@@ -415,15 +422,13 @@ export function Header() {
                           )}
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
-                      </Link>
+                      </button>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Console shortcut */}
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/console?tab=tracking" className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=tracking')}>
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
-                      </Link>
                     </DropdownMenuItem>
                     {!isAgencyPro && (
                       <DropdownMenuItem asChild className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
@@ -438,30 +443,22 @@ export function Header() {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/console?tab=settings" className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=settings')}>
                         <Settings className="h-4 w-4" />
                         {t.settings}
-                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/console?tab=reports" className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=reports')}>
                         <FileText className="h-4 w-4" />
                         {t.myReports}
-                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/console?tab=action-plans" className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=action-plans')}>
                         <ClipboardList className="h-4 w-4" />
                         {t.actionPlans}
-                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/console?tab=corrective-codes" className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=corrective-codes')}>
                         <Code2 className="h-4 w-4" />
                         {t.correctiveCodes}
-                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
