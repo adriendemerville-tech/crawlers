@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft, Bug, ClipboardList } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import type { Components } from 'react-markdown';
 import { ChatMicButton } from '@/components/Support/ChatMicButton';
 import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
 import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
+import { SeoQuiz } from '@/components/Support/SeoQuiz';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
@@ -362,6 +363,10 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
+  const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [howToCount, setHowToCount] = useState(0);
+  const [quizSuggested, setQuizSuggested] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
