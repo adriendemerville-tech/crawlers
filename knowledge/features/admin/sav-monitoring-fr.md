@@ -29,12 +29,16 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
   - 10 questions par session, 3 réponses par question
   - Score final + corrections détaillées + conseil personnalisé
 - **Quiz Crawlers** : 50 questions produit en base, difficulté 1-3
+  - Déclenchement : détection NLP ("quiz crawlers", "quiz produit", "quiz plateforme", "quiz outils", etc.)
   - Proposé automatiquement après le quiz SEO ("Tape quiz crawlers pour lancer")
   - Couvre toutes les fonctionnalités : audit, crawl, cocon, Marina, scripts, tracking, etc.
-  - **Sync automatique** : cron mensuel régénère les questions via LLM à partir de la doc SAV (validation admin)
-- **Notification hebdomadaire quiz** : cron backend écrit un flag en DB, Félix détecte au login et propose "Ça te dit de tester tes connaissances en SEO GEO ? 3 minutes max."
+  - **Sync automatique** : cron mensuel `sync-quiz-crawlers` (1er du mois, 3h) régénère 10 questions via LLM à partir de la doc SAV et des questions existantes. Insertion en `is_active=false, auto_generated=true` (validation admin requise).
+- **Notification hebdomadaire quiz** : cron backend `felix-weekly-quiz-notif` (lundi 10h) insère un événement `felix:quiz_invite` pour les users actifs n'ayant pas fait de quiz depuis 7 jours. Félix détecte l'événement à l'ouverture et affiche : "Ça te dit de tester tes connaissances en SEO GEO ? 3 minutes max."
 - Table : `quiz_questions` (quiz_type, category, difficulty, question, options, correct_index, explanation, feature_link, is_active, auto_generated)
-- Edge Function : `felix-seo-quiz` (actions: get_questions, get_crawlers_quiz, get_last_score)
+- Edge Functions :
+  - `felix-seo-quiz` (actions: get_questions, get_crawlers_quiz, get_last_score)
+  - `sync-quiz-crawlers` (cron mensuel, génération IA de questions Crawlers)
+  - `felix-weekly-quiz-notif` (cron hebdomadaire, notification quiz pour users actifs)
 
 ## Scoring de précision (`sav_quality_scores`)
 - precision_score (0-100), route_match, repeated_intent_count, escalated_to_phone
