@@ -1441,6 +1441,70 @@ Deno.serve(async (req) => {
       return json({ success: true });
     }
 
+// ─── Dedicated renderer for LLM Visibility with model names ───
+function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
+  if (!rawData && !strategicData) return '';
+
+  const LLM_COLORS: Record<string, { color: string; bg: string }> = {
+    'ChatGPT': { color: '#10a37f', bg: '#10a37f12' },
+    'Gemini': { color: '#4285f4', bg: '#4285f412' },
+    'Perplexity': { color: '#20808d', bg: '#20808d12' },
+    'Claude': { color: '#d97706', bg: '#d9770612' },
+  };
+
+  let scoresHtml = '';
+  const scores = rawData?.scores || rawData?.data?.scores || [];
+  
+  if (Array.isArray(scores) && scores.length > 0) {
+    scoresHtml = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
+      ${scores.map((s: any) => {
+        const name = s.llm_name || 'Unknown';
+        const score = s.score_percentage ?? s.score ?? 0;
+        const colors = LLM_COLORS[name] || { color: '#6b7280', bg: '#6b728012' };
+        const sc = score >= 60 ? '#22c55e' : score >= 30 ? '#f59e0b' : '#ef4444';
+        
+        const detailLines = Array.isArray(s.details) ? s.details.map((d: any, i: number) => {
+          const prompt = d.prompt || `Prompt ${i + 1}`;
+          const promptText = typeof prompt === 'string' ? prompt : prompt.prompt || prompt.query || `Prompt ${i + 1}`;
+          const truncated = promptText.length > 80 ? promptText.slice(0, 77) + '…' : promptText;
+          const found = d.iteration_found > 0;
+          return `<div style="font-size:11px;color:#6b7280;padding:4px 0;border-bottom:1px solid #f3f4f6;">
+            ${found ? '✅' : '❌'} <span style="color:#374151;">${truncated}</span>
+            ${d.sentiment ? `<span style="margin-left:4px;font-size:10px;color:${d.sentiment === 'recommended' || d.sentiment === 'positive' ? '#22c55e' : d.sentiment === 'negative' ? '#ef4444' : '#6b7280'};">${d.sentiment}</span>` : ''}
+          </div>`;
+        }).join('') : '';
+
+        return `<div style="padding:14px;border-radius:8px;border-left:4px solid ${colors.color};background:${colors.bg};text-align:left;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-weight:700;font-size:14px;color:${colors.color};">${name}</span>
+            <span style="font-weight:800;font-size:20px;color:${sc};">${score}%</span>
+          </div>
+          ${detailLines}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  let strategicHtml = '';
+  if (strategicData) {
+    const citProb = strategicData.citation_probability;
+    const kgPresence = strategicData.knowledge_graph_presence;
+    const analysis = strategicData.analysis;
+
+    strategicHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-top:12px;text-align:left;">
+      ${citProb != null ? `<div style="font-size:13px;margin-bottom:6px;"><strong>Probabilité de citation IA :</strong> <span style="font-weight:700;color:${citProb >= 60 ? '#22c55e' : citProb >= 30 ? '#f59e0b' : '#ef4444'};">${citProb}%</span></div>` : ''}
+      ${kgPresence ? `<div style="font-size:13px;margin-bottom:6px;"><strong>Knowledge Graph :</strong> ${kgPresence}</div>` : ''}
+      ${analysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;margin-top:8px;">${analysis}</div>` : ''}
+    </div>`;
+  }
+
+  return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">🤖 Visibilité LLM</h3>
+    ${scoresHtml}
+    ${strategicHtml}
+  </div>`;
+}
+
 
     // ── Start new pipeline ──
     const { url: targetUrl, lang } = body;
