@@ -854,8 +854,7 @@ Deno.serve(async (req) => {
           console.log(`[Worker] Job ${job.id}: 🌐 SPA mode enabled`);
         }
       } else {
-        // After checkpoint recovery: lightweight HEAD/size probe on first remaining page
-        // to calibrate batch size — avoids defaulting to 8 for heavy pages
+        // Resume probe to calibrate batch size
         try {
           const probeResp = await fetch(remaining[0], { method: 'GET', redirect: 'follow', signal: AbortSignal.timeout(10_000) });
           const probeBody = await probeResp.text();
@@ -863,79 +862,77 @@ Deno.serve(async (req) => {
           console.log(`[Worker] Job ${job.id}: resume probe ${Math.round(probeSize/1024)}KB on ${remaining[0]}`);
         } catch (e) {
           console.warn(`[Worker] Job ${job.id}: resume probe failed, using conservative batch`);
-          probeSize = 200_000; // assume heavy → conservative
+          probeSize = 200_000;
         }
       }
 
-      // For very heavy pages (>200KB): save probe result immediately and stop this cycle
-      // This prevents CPU timeout from SPA probe + batch in same invocation
-      const isHeavyPage = probeSize > 200_000;
-
-      if (isTimeUp() || (firstPageResult && isHeavyPage)) {
-        if (firstPageResult) {
-          console.log(`[Worker] Job ${job.id}: ${isHeavyPage ? '🏋️ Heavy page — saving probe only' : '⏱️ Watchdog'} (${Math.round(probeSize/1024)}KB)`);
-          await supabase.from('crawl_pages').upsert([{ crawl_id: job.crawl_id, ...firstPageResult }], { onConflict: 'crawl_id,url', ignoreDuplicates: true });
-          await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed + 1 }).eq('id', job.id);
-          await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed + 1 }).eq('id', job.crawl_id);
-          globalPagesProcessed += 1;
-        }
-        if (isTimeUp()) break;
-        continue; // next job or next invocation will pick up remaining pages
-      }
-
-      const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
-      const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
-      
-      // Dynamic batch size based on HTML weight — conservative
-      const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
-      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), dynamicMax);
-      const batch = remaining.slice(batchStart, batchStart + batchSize);
-      
-      console.log(`[Worker] Job ${job.id}: dynamic batch=${dynamicMax} (probe ${Math.round(probeSize/1024)}KB, processed=${alreadyProcessed})`);
-
-      console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
-
-      const scrapePromises = batch.map(pageUrl =>
-        scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
-      );
-
-      // Use Promise.allSettled to prevent one failed page from crashing the batch
-      const settled = await Promise.allSettled(scrapePromises);
-      const validResults = settled
-        .filter((r): r is PromiseFulfilledResult<PageAnalysis | null> => r.status === 'fulfilled')
-        .map(r => r.value)
-        .filter(Boolean) as PageAnalysis[];
-      
-      const failedCount = settled.filter(r => r.status === 'rejected').length;
-      if (failedCount > 0) console.warn(`[Worker] ${failedCount} pages failed in batch (allSettled)`);
-
-
+      // Save probe result if we have one
       if (firstPageResult) {
-        validResults.unshift(firstPageResult);
-      }
-
-      // Use upsert with ON CONFLICT to prevent duplicates on CPU timeout retries
-      if (validResults.length > 0) {
-        const rows = validResults.map(p => ({ crawl_id: job.crawl_id, ...p }));
+        const rows = [{ crawl_id: job.crawl_id, ...firstPageResult }];
         await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
+        alreadyProcessed += 1;
+        globalPagesProcessed += 1;
+        await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed }).eq('id', job.id);
+        await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed }).eq('id', job.crawl_id);
+        remaining = remaining.slice(1);
+        console.log(`[Worker] Job ${job.id}: probe saved, ${alreadyProcessed}/${job.total_count}`);
       }
 
-      const { count: persistedAfterBatch } = await supabase
-        .from('crawl_pages')
-        .select('id', { count: 'exact', head: true })
-        .eq('crawl_id', job.crawl_id);
+      // ── INNER LOOP: keep processing pages while time allows ──
+      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < MAX_GLOBAL_CONCURRENT) {
+        // Re-calibrate batch size based on page weight
+        const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
+        const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
+        const batchSize = Math.min(remaining.length, availableSlots, dynamicMax);
+        const batch = remaining.slice(0, batchSize);
 
-      const newProcessedCount = Math.max(alreadyProcessed, persistedAfterBatch || 0);
-      const pagesInThisCycle = Math.max(0, newProcessedCount - alreadyProcessed);
-      globalPagesProcessed += pagesInThisCycle;
+        console.log(`[Worker] Job ${job.id}: batch=${batchSize} (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
 
-      await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
-      await supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id);
+        const scrapePromises = batch.map(pageUrl =>
+          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
+        );
 
-      console.log(`[Worker] Job ${job.id}: ${newProcessedCount}/${job.total_count} pages done`);
+        const settled = await Promise.allSettled(scrapePromises);
+        const validResults = settled
+          .filter((r): r is PromiseFulfilledResult<PageAnalysis | null> => r.status === 'fulfilled')
+          .map(r => r.value)
+          .filter(Boolean) as PageAnalysis[];
 
-      if (newProcessedCount >= job.total_count) {
-        await finalizeJob(supabase, { ...job, processed_count: newProcessedCount }, firecrawlKey);
+        const failedCount = settled.filter(r => r.status === 'rejected').length;
+        if (failedCount > 0) console.warn(`[Worker] ${failedCount} pages failed in batch`);
+
+        if (validResults.length > 0) {
+          const rows = validResults.map(p => ({ crawl_id: job.crawl_id, ...p }));
+          await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
+        }
+
+        // Reconcile from DB for accuracy
+        const { count: persistedAfterBatch } = await supabase
+          .from('crawl_pages')
+          .select('id', { count: 'exact', head: true })
+          .eq('crawl_id', job.crawl_id);
+
+        const newProcessedCount = Math.max(alreadyProcessed, persistedAfterBatch || 0);
+        const pagesInThisCycle = Math.max(0, newProcessedCount - alreadyProcessed);
+        globalPagesProcessed += pagesInThisCycle;
+        alreadyProcessed = newProcessedCount;
+
+        await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
+        await supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id);
+
+        console.log(`[Worker] Job ${job.id}: ${newProcessedCount}/${job.total_count} pages done`);
+
+        remaining = remaining.slice(batchSize);
+
+        // Update probeSize from last result for next iteration
+        if (validResults.length > 0) {
+          const lastResult = validResults[validResults.length - 1];
+          probeSize = lastResult.html_size_bytes || probeSize;
+        }
+      }
+
+      if (alreadyProcessed >= job.total_count) {
+        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey);
       }
     }
 
