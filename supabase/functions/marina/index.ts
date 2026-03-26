@@ -1225,7 +1225,7 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
           tracked_site_id: trackedSiteForLlm.id,
           user_id: parentJob.user_id,
         });
-        if (result && !result.error && result.scores) {
+        if (result && !result.error && (result.scores || result.data?.scores)) {
           llmVisibilityData = result;
           console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
         } else {
