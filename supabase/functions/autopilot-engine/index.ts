@@ -431,6 +431,38 @@ Deno.serve(async (req: Request) => {
                   });
                 }
                 continue;
+              } else if (funcName === 'content-architecture-advisor') {
+                // ── Special handling for content-architecture-advisor: needs auth header ──
+                const payload = decision.action.payload || {};
+                const funcBody = {
+                  url: payload.url || `https://${site.domain}`,
+                  keyword: payload.keyword || payload.target_keyword || 'SEO',
+                  page_type: payload.page_type || 'article',
+                  tracked_site_id: config.tracked_site_id,
+                  language_code: payload.language_code || 'fr',
+                  location_code: payload.location_code || 2250,
+                };
+
+                console.log(`[AutopilotEngine] Calling content-architecture-advisor for ${site.domain}, keyword: ${funcBody.keyword}`);
+
+                const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(funcBody),
+                });
+
+                const funcResult = await funcResponse.json().catch(() => ({}));
+                executionResults.push({
+                  function: funcName,
+                  status: funcResponse.ok ? 'success' : 'error',
+                  http_status: funcResponse.status,
+                  keyword: funcBody.keyword,
+                  result: funcResult,
+                });
+                if (!funcResponse.ok) executionSuccess = false;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
                 let funcBody: Record<string, unknown> = {
