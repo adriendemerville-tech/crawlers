@@ -43,7 +43,7 @@ function detectLanguage(html: string): string {
   
   if (frScore > esScore && frScore >= 3) return 'fr';
   if (esScore > frScore && esScore >= 3) return 'es';
-  return 'en'; // default
+  return 'fr'; // default to French
 }
 
 // ─── Helper: render any object/array as structured HTML ───
@@ -158,7 +158,7 @@ function generateMarinaReport(
     },
   };
   
-  const tr = t[lang as keyof typeof t] || t.en;
+  const tr = t[lang as keyof typeof t] || t.fr;
   const now = new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
 
   // ─── Extract all expert SEO data ───
