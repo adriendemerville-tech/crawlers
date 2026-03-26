@@ -60,10 +60,25 @@ function shuffleOptions(question: any): { options: string[]; correct_index: numb
   return { options: newOptions, correct_index: newCorrectIndex };
 }
 
+// Localize a question based on language (fallback to FR)
+function localizeQuestion(q: any, lang: string) {
+  const question = (lang === 'en' && q.question_en) ? q.question_en
+    : (lang === 'es' && q.question_es) ? q.question_es
+    : q.question;
+  const options = (lang === 'en' && q.options_en) ? q.options_en
+    : (lang === 'es' && q.options_es) ? q.options_es
+    : q.options;
+  const explanation = (lang === 'en' && q.explanation_en) ? q.explanation_en
+    : (lang === 'es' && q.explanation_es) ? q.explanation_es
+    : q.explanation;
+  return { ...q, question, options, explanation };
+}
+
 async function pickQuestionsFromDB(
   quizType: string,
   weights: Record<number, number>,
   total: number,
+  lang: string = 'fr',
 ): Promise<any[]> {
   const supabase = getServiceClient();
   const picked: any[] = [];
@@ -74,7 +89,7 @@ async function pickQuestionsFromDB(
 
     const { data } = await supabase
       .from('quiz_questions')
-      .select('id, category, difficulty, question, options, correct_index, explanation, feature_link')
+      .select('id, category, difficulty, question, question_en, question_es, options, options_en, options_es, correct_index, explanation, explanation_en, explanation_es, feature_link')
       .eq('quiz_type', quizType)
       .eq('difficulty', diff)
       .eq('is_active', true)
@@ -82,10 +97,10 @@ async function pickQuestionsFromDB(
 
     if (data && data.length > 0) {
       const shuffled = shuffle(data);
-      // Shuffle options for each question so correct answer position varies
       const withShuffledOptions = shuffled.map(q => {
-        const { options, correct_index } = shuffleOptions(q);
-        return { ...q, options, correct_index };
+        const localized = localizeQuestion(q, lang);
+        const { options, correct_index } = shuffleOptions(localized);
+        return { ...localized, options, correct_index };
       });
       picked.push(...withShuffledOptions.slice(0, count));
     }
