@@ -476,6 +476,34 @@ ${competitorInsights.length > 0 ? JSON.stringify(competitorInsights, null, 2) : 
 **Données audit existant:**
 ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
 
+${strategicAuditSerpData ? `
+── RECOMMANDATIONS SERP DE L'AUDIT STRATÉGIQUE IA ──
+⚠️ CRITIQUE : Ces données proviennent de l'audit stratégique du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique. Tout contenu hors-sujet est interdit.
+
+**Mots-clés principaux du site (identifiés par l'audit):**
+${strategicAuditSerpData.main_keywords.map((k: any) => `- "${k.keyword}" (vol: ${k.volume || '?'}, diff: ${k.difficulty || '?'}, position: ${k.current_rank || '?'})`).join('\n')}
+
+**Termes manquants à intégrer prioritairement:**
+${strategicAuditSerpData.missing_terms.map((t: any) => `- "${t.term}" (importance: ${t.importance || '?'}, placement suggéré: ${t.suggested_placement || '?'})`).join('\n') || 'Aucun'}
+
+**Gaps de contenu identifiés (pages à créer):**
+${strategicAuditSerpData.content_gaps.map((g: any) => `- "${g.keyword || g.title}" (priorité: ${g.priority || '?'}, action: ${g.action || '?'})`).join('\n') || 'Aucun'}
+
+**Pages manquantes recommandées:**
+${strategicAuditSerpData.missing_pages.map((p: any) => `- "${p.title}" → ${p.rationale} (impact: ${p.expected_impact || '?'})`).join('\n') || 'Aucune'}
+
+**Quick Wins (positions 11-20):**
+${strategicAuditSerpData.quick_wins.map((q: any) => `- "${q.keyword}" (position: ${q.current_rank || '?'}, action: ${q.action || '?'})`).join('\n') || 'Aucun'}
+
+**Opportunités:**
+${(strategicAuditSerpData.opportunities || []).join('\n- ') || 'Aucune'}
+
+**Écarts concurrentiels:**
+${(strategicAuditSerpData.competitive_gaps || []).join('\n- ') || 'Aucun'}
+
+RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers sémantique ci-dessus. Le contenu doit couvrir les termes manquants et les gaps identifiés quand c'est pertinent.
+` : ''}
+
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
