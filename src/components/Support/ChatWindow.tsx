@@ -50,6 +50,7 @@ interface ChatWindowProps {
   onClose: () => void;
   triggerOnboarding?: boolean;
   onOnboardingConsumed?: () => void;
+  autoStartCrawlersQuiz?: boolean;
 }
 
 // NLP detection for bug/problem intent
@@ -123,7 +124,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
