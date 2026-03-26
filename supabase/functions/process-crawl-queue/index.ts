@@ -840,16 +840,30 @@ Deno.serve(async (req) => {
       // SPA Probe on first batch
       let useBrowserless = false;
       let firstPageResult: PageAnalysis | null = null;
+      let probeSize = 0;
 
       if (alreadyProcessed === 0) {
         const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
         useBrowserless = probe.isSPA;
         firstPageResult = probe.firstPageResult;
+        probeSize = firstPageResult?.html_size_bytes || 0;
         if (firstPageResult) {
           firstPageResult.crawl_depth = computeDepth(remaining[0], job.url);
         }
         if (useBrowserless) {
           console.log(`[Worker] Job ${job.id}: 🌐 SPA mode enabled`);
+        }
+      } else {
+        // After checkpoint recovery: lightweight HEAD/size probe on first remaining page
+        // to calibrate batch size — avoids defaulting to 8 for heavy pages
+        try {
+          const probeResp = await fetch(remaining[0], { method: 'GET', redirect: 'follow', signal: AbortSignal.timeout(10_000) });
+          const probeBody = await probeResp.text();
+          probeSize = new TextEncoder().encode(probeBody).length;
+          console.log(`[Worker] Job ${job.id}: resume probe ${Math.round(probeSize/1024)}KB on ${remaining[0]}`);
+        } catch (e) {
+          console.warn(`[Worker] Job ${job.id}: resume probe failed, using conservative batch`);
+          probeSize = 200_000; // assume heavy → conservative
         }
       }
 
@@ -867,15 +881,12 @@ Deno.serve(async (req) => {
       const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
       
-      // Dynamic batch size based on average HTML weight from first page probe
-       const probeSize = firstPageResult?.html_size_bytes || 0;
-       const dynamicMax = probeSize > 250_000 ? 1 : probeSize > 150_000 ? 2 : probeSize > 100_000 ? 4 : 8;
+      // Dynamic batch size based on HTML weight — conservative default max of 3
+      const dynamicMax = probeSize > 250_000 ? 1 : probeSize > 150_000 ? 2 : probeSize > 100_000 ? 3 : 4;
       const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), dynamicMax);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
       
-      if (alreadyProcessed === 0) {
-        console.log(`[Worker] Job ${job.id}: dynamic batch=${dynamicMax} (probe ${Math.round(probeSize/1024)}KB)`);
-      }
+      console.log(`[Worker] Job ${job.id}: dynamic batch=${dynamicMax} (probe ${Math.round(probeSize/1024)}KB, processed=${alreadyProcessed})`);
 
       console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
 
