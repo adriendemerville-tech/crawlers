@@ -640,6 +640,19 @@ function compileMarinaReport(
 </html>`;
 }
 
+// ─── LEGACY fallback: monolithic report generator (kept for resilience) ───
+function generateLegacyMarinaReport(
+  url: string, domain: string, lang: string,
+  expertSeoData: any, strategicData: any, cocoonData: any | null,
+): string {
+  // Generate each section individually then compile — same logic but inline
+  const crawlHTML = generateCrawlSectionHTML(expertSeoData, lang, domain, url);
+  const techHTML = generateTechSectionHTML(expertSeoData, lang, domain);
+  const strategicHTML = generateStrategicSectionHTML(strategicData, lang, domain);
+  const cocoonHTML = generateCocoonSectionHTML(cocoonData, lang, domain);
+  return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url);
+}
+
 // ─── Internal function call helper ───
 async function callFunction(functionName: string, body: any, method = 'POST'): Promise<any> {
   const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
