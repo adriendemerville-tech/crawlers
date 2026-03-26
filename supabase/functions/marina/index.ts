@@ -971,6 +971,20 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
           console.warn(`[Marina] Cocoon returned error: ${cocoonResult.error}`);
         } else {
           console.log(`[Marina] Cocoon done: ${cocoonResult?.stats?.nodes_count || 0} nodes`);
+          
+          // ─── Step 3b: Lite Stratège — top 3 recommendations via LLM ───
+          try {
+            console.log(`[Marina] Step 3b: Lite Stratège for cocoon recommendations`);
+            const cocoonRecommendations = await generateLiteStrategeRecommendations(
+              domain, cocoonResult, expertResult.data, strategicData, detectedLang,
+            );
+            if (cocoonRecommendations?.length) {
+              cocoonResult._stratege_recommendations = cocoonRecommendations;
+              console.log(`[Marina] Lite Stratège: ${cocoonRecommendations.length} recommendations`);
+            }
+          } catch (stratErr) {
+            console.warn(`[Marina] Lite Stratège failed (non-fatal):`, stratErr);
+          }
         }
       }
     } catch (e) {
