@@ -26,7 +26,7 @@ type PipelinePhase = typeof PIPELINE_PHASES[number];
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   audit: ['audit-expert-seo'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
-  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
+  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
   execute: ['wpsync', 'iktracker-actions', 'generate-corrective-code'],
   validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
@@ -446,9 +446,23 @@ IMPORTANT: Ne refais PAS d'audit technique. Les données sont là, utilise-les p
       return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
 Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
 Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
-Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
-- Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
-- Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
+Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
+
+## DEUX TYPES DE PRESCRIPTIONS
+
+### TYPE A: Correctifs techniques (meta, performance, schema)
+→ Utilise generate-corrective-code
+→ Payload: tableau "fixes" avec id, label, category, prompt, enabled, target_url
+
+### TYPE B: Création de contenu (combler des gaps thématiques)
+→ Utilise content-architecture-advisor pour générer l'architecture du contenu
+→ Payload: { "url": "https://domain.tld", "keyword": "mot-clé-cible", "page_type": "article", "tracked_site_id": "..." }
+→ Le résultat sera utilisé en phase EXECUTE pour créer l'article sur le CMS
+
+Si les diagnostics révèlent des CONTENT GAPS (avg_content_gap élevé, clusters orphelins, thématiques non couvertes):
+- Prescris un appel à content-architecture-advisor avec le mot-clé cible du gap
+- Le cocon sémantique fournit les clusters et intents à couvrir — utilise-les pour identifier le meilleur gap à combler
+- Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
 
 ## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
 Le payload DOIT contenir un tableau "fixes" avec ce format exact:
