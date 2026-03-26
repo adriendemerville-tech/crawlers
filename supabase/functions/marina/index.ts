@@ -1685,8 +1685,9 @@ Deno.serve(async (req) => {
     const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
 
     if (isServiceCall && body.action === 'run_job' && body.job_id) {
-      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id}`);
-      await runPipeline(body.job_id, body.url, body.lang);
+      const phase = body._phase || undefined;
+      console.log(`[Marina] Worker: executing pipeline for job ${body.job_id} (phase: ${phase || 'phase1'})`);
+      await runPipeline(body.job_id, body.url, body.lang, phase, body._intermediate);
       return json({ success: true, job_id: body.job_id });
     }
 
