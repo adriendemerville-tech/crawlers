@@ -101,6 +101,28 @@ function detectCrawlersQuizIntent(message: string): boolean {
   });
 }
 
+const CRAWLERS_HOWTO_KEYWORDS = [
+  'comment faire', 'comment utiliser', 'comment lancer', 'comment fonctionne',
+  'c\'est quoi', 'à quoi sert', 'a quoi sert', 'où trouver', 'ou trouver',
+  'comment accéder', 'comment acceder', 'quel outil', 'quel bouton',
+  'où est', 'ou est', 'je ne trouve pas', 'je trouve pas',
+  'comment ça marche', 'comment ca marche', 'tutoriel', 'tuto',
+  'mode d\'emploi', 'aide', 'help', 'how to', 'how do i',
+  'autopilot', 'marina', 'cocoon', 'crawl', 'audit', 'script',
+  'tracking', 'console', 'stratège', 'stratege', 'architecte',
+  'bundle', 'matrice', 'rapport', 'cocon',
+];
+
+function detectCrawlersHowTo(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let matchCount = 0;
+  for (const kw of CRAWLERS_HOWTO_KEYWORDS) {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (lower.includes(normalizedKw)) matchCount++;
+  }
+  return matchCount >= 1;
+}
+
 export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }: ChatWindowProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
