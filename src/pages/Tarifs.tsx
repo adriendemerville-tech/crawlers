@@ -111,7 +111,7 @@ const translations = {
     agencyBadge: 'Illimité',
     agencyLoading: 'Redirection...',
     agencyLoginRequired: 'Connectez-vous pour vous abonner',
-    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Crawl intensif pour sites à fort volume',
     agencyPremiumPrice: '89€',
     agencyPremiumFeatures: [
@@ -214,7 +214,7 @@ const translations = {
     agencyBadge: 'Unlimited',
     agencyLoading: 'Redirecting...',
     agencyLoginRequired: 'Log in to subscribe',
-    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Intensive crawling for high-volume sites',
     agencyPremiumPrice: '€89',
     agencyPremiumFeatures: [
@@ -317,7 +317,7 @@ const translations = {
     agencyBadge: 'Ilimitado',
     agencyLoading: 'Redirigiendo...',
     agencyLoginRequired: 'Inicia sesión para suscribirte',
-    agencyPremiumTitle: 'Pro Agency Premium',
+    agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Crawl intensivo para sitios de gran volumen',
     agencyPremiumPrice: '89€',
     agencyPremiumFeatures: [
@@ -901,7 +901,7 @@ export default function Tarifs() {
                 </Card>
               </motion.div>
 
-              {/* Pro Agency Premium — 50K pages */}
+              {/* Pro Agency + — 50K pages */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
