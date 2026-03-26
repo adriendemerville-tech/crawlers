@@ -19,6 +19,7 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - **Signalement bugs** : Détection NLP → bouton "Signaler" → pré-traduction CTO → `user_bug_reports`
 - **Mode Créateur** (admin + is_creator) : accès lecture complète backend (tables, functions, logs), interrogation croisée multi-tables, consultation code source edge functions. Modification logique interdite.
 - **Notification résolution** : badge sur bouton assistant quand un `user_bug_reports` passe à `resolved`
+- **Validation Quiz Crawlers** : notification inline pour admin créateur quand des questions auto-générées sont en attente (`is_active=false, auto_generated=true`). Boutons Valider/Rejeter par question.
 
 ## Agent Félix (Onboarding & Support)
 - **Quiz SEO/GEO/LLM** : 100 questions en base (`quiz_questions`), classées par difficulté 1-5, catégories seo/geo/llm

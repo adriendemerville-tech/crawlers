@@ -18,6 +18,7 @@ import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/u
 import { captureScreenContext } from '@/utils/screenContext';
 import { AutonomyDiagnostic } from './AutonomyDiagnostic';
 import { SeoQuiz } from './SeoQuiz';
+import { QuizValidationNotif } from './QuizValidationNotif';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
@@ -159,6 +160,22 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
 
   // Resolved bug notifications
   const [resolvedBugs, setResolvedBugs] = useState<{ id: string; cto_response: string }[]>([]);
+
+  // Quiz validation state (admin creator only)
+  const [showQuizValidation, setShowQuizValidation] = useState(false);
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+    // Check if there are pending auto-generated questions
+    supabase
+      .from('quiz_questions')
+      .select('id', { count: 'exact', head: true })
+      .eq('quiz_type', 'crawlers')
+      .eq('is_active', false)
+      .eq('auto_generated', true)
+      .then(({ count }) => {
+        if (count && count > 0) setShowQuizValidation(true);
+      });
+  }, [isAdmin, user]);
 
   // Keep ref in sync
   useEffect(() => {
@@ -699,6 +716,24 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
                               setMessages(prev => [...prev, proposalMsg]);
                             }, 1500);
                           }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Quiz validation for admin creators */}
+                {showQuizValidation && isAdmin && (
+                  <div className="flex justify-start w-full">
+                    <div className="max-w-[95%] w-full">
+                      <QuizValidationNotif
+                        onDone={(msg) => {
+                          setShowQuizValidation(false);
+                          setMessages(prev => [...prev, {
+                            role: 'assistant',
+                            content: msg,
+                            timestamp: new Date().toISOString(),
+                          }]);
                         }}
                       />
                     </div>

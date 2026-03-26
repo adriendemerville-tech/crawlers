@@ -124,6 +124,8 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `strategic-orchestrator` : Pipeline modulaire audit GEO (5 micro-fonctions)
 - `strategic-crawl` / `strategic-market` / `strategic-competitors` / `strategic-synthesis` : Micro-fonctions du pipeline
 - `run-backend-tests` : 12 tests CI (sécurité, facturation, audit, tracking)
+- `felix-seo-quiz` : Quiz adaptatif SEO/GEO/LLM + Quiz Crawlers (tire depuis `quiz_questions`)
+- `sync-quiz-crawlers` : Cron mensuel — régénère les questions Crawlers via LLM + doc SAV, sauvées `is_active=false` en attente de validation admin dans Félix
 
 ### Fallback LLM (Gemini Pro → Flash)
 - `strategic-synthesis` et `audit-strategique-ia` intègrent un fallback automatique
