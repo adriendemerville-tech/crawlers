@@ -639,13 +639,13 @@ Deno.serve(async (req) => {
       .map(n => ({ url: n.url, title: n.title, word_count: n.word_count }));
 
     // Cluster details: group nodes by cluster_id
-    const clusterMap = new Map<string, any[]>();
+    const clusterDetailMap = new Map<string, any[]>();
     for (const node of nodeData) {
       const cid = node.cluster_id || 'unclustered';
-      if (!clusterMap.has(cid)) clusterMap.set(cid, []);
-      clusterMap.get(cid)!.push(node);
+      if (!clusterDetailMap.has(cid)) clusterDetailMap.set(cid, []);
+      clusterDetailMap.get(cid)!.push(node);
     }
-    const clusterDetails = Array.from(clusterMap.entries()).map(([cid, nodes]) => ({
+    const clusterDetails = Array.from(clusterDetailMap.entries()).map(([cid, nodes]) => ({
       cluster_id: cid,
       size: nodes.length,
       avg_word_count: Math.round(nodes.reduce((s, n) => s + (n.word_count || 0), 0) / nodes.length),
@@ -656,7 +656,7 @@ Deno.serve(async (req) => {
 
     // Cannibalization detection: nodes sharing >60% keywords within a cluster
     const cannibalizationRisks: Array<{ urls: string[]; shared_keywords: string[]; cluster: string }> = [];
-    for (const [cid, nodes] of clusterMap.entries()) {
+    for (const [cid, nodes] of clusterDetailMap.entries()) {
       if (nodes.length < 2) continue;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
