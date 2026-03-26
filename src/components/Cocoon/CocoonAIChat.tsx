@@ -381,6 +381,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
   const [quizSuggested, setQuizSuggested] = useState(false);
+  const [showGenerateButton, setShowGenerateButton] = useState(false);
   const FONT_MIN = 10;
   const FONT_MAX = 18;
 
