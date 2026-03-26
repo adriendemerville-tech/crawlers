@@ -1224,33 +1224,18 @@ async function runPipeline(jobId: string, url: string, lang?: string) {
     // ─── Step 3: Cocoon (always run — create tracked_site + crawl data if needed) ───
     let cocoonResult: any = null;
     try {
-      // Check if domain has a tracked_site
-      let { data: trackedSite } = await sb
-        .from('tracked_sites')
-        .select('id')
-        .ilike('domain', `%${domain}%`)
-        .limit(1)
-        .maybeSingle();
+      // Reuse tracked_site created earlier for LLM visibility
+      let trackedSite = trackedSiteForLlm;
       
-      // Auto-create tracked_site for cocoon analysis
       if (!trackedSite) {
-        console.log(`[Marina] No tracked_site for ${domain}, creating one for cocoon analysis`);
-        const { data: newSite, error: createErr } = await sb
+        // Fallback: check again
+        const { data: ts } = await sb
           .from('tracked_sites')
-          .insert({
-            user_id: parentJob.user_id,
-            domain: domain,
-            site_name: `Marina: ${domain}`,
-          })
           .select('id')
-          .single();
-        
-        if (createErr || !newSite) {
-          console.warn(`[Marina] Failed to create tracked_site: ${createErr?.message}`);
-        } else {
-          trackedSite = newSite;
-          console.log(`[Marina] Created tracked_site ${newSite.id} for ${domain}`);
-        }
+          .ilike('domain', `%${domain}%`)
+          .limit(1)
+          .maybeSingle();
+        trackedSite = ts;
       }
 
       if (trackedSite) {
