@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       // Adaptive difficulty based on last score
       const lastScore = user_id ? await getLastUserScore(user_id) : null;
       const weights = getDifficultyWeights(lastScore);
-      const questions = await pickQuestionsFromDB('seo_geo_llm', weights, 10);
+      const questions = await pickQuestionsFromDB('seo_geo_llm', weights, 10, lang);
 
       if (questions.length === 0) {
         return new Response(JSON.stringify({ error: 'No questions available' }), {
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
 
     if (action === 'get_crawlers_quiz') {
       const weights = getCrawlersDifficultyWeights();
-      const questions = await pickQuestionsFromDB('crawlers', weights, 10);
+      const questions = await pickQuestionsFromDB('crawlers', weights, 10, lang);
 
       const clientQuestions = questions.map(q => ({
         id: q.id,
@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
 
     if (action === 'get_stratege_cocoon_quiz') {
       const weights = getStrategeCocoonWeights();
-      const questions = await pickQuestionsFromDB('stratege_cocoon', weights, 10);
+      const questions = await pickQuestionsFromDB('stratege_cocoon', weights, 10, lang);
 
       const clientQuestions = questions.map(q => ({
         id: q.id,
