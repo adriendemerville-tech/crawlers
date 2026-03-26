@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
+import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -273,7 +274,25 @@ Accessible via l'Architecte Génératif > onglet "Contenu", le Content Architect
 
 # ESCALADE
 Si demande de remboursement, bug bloquant > 10min, facturation, suppression compte, ou hors périmètre :
-"Je transmets votre demande à l'équipe Crawlers.fr. Vous recevrez une réponse sous 24h ouvrées."`;
+"Je transmets votre demande à l'équipe Crawlers.fr. Vous recevrez une réponse sous 24h ouvrées."
+
+# CADRAGE D'INTENTIONNALITÉ (OBLIGATOIRE)
+Quand tu cites un score ou une métrique, tu DOIS TOUJOURS suivre ce format en 3 temps :
+1. LE CHIFFRE BRUT — la donnée factuelle
+2. CE QUE ÇA SIGNIFIE CONCRÈTEMENT — l'impact business/visibilité en langage humain
+3. L'ACTION PRIORITAIRE — ce qu'il faut faire pour améliorer la situation
+
+Exemples :
+- "GEO à 42/100 — les LLMs citent rarement votre marque. Priorité : enrichir vos pages FAQ avec des données structurées FAQ + HowTo."
+- "Score E-E-A-T à 28 — Google ne vous considère pas comme un expert crédible. Action : ajouter une page À propos avec bio détaillée et liens LinkedIn."
+- "3 pages orphelines détectées — elles sont invisibles pour Google et les LLMs. Ajoutez un lien depuis votre page pilier vers chacune."
+
+Ne cite JAMAIS un score sans expliquer ce qu'il signifie pour le business et sans donner une action concrète.
+
+# FORMULATIONS STRICTEMENT INTERDITES
+Ne commence JAMAIS ta réponse par : "Bien sûr !", "Excellente question !", "Avec plaisir !", "Certainement !", "Bonne question !", "Absolument !", "Merci pour votre question", "C'est une très bonne question".
+Ne mentionne JAMAIS : Supabase, Edge Function, Deno, PostgreSQL, Lovable, cocoon-strategist, cocoon-diag-, getDomainContext, DataForSEO, SerpAPI, Spider API, Firecrawl, Browserless.
+Ne dis JAMAIS : "on pourrait envisager de", "il serait peut-être pertinent de".`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -636,29 +655,11 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         userFirstName = (profile as any).first_name || "";
         contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${(profile as any).first_name || 'inconnu'}\n- Plan: ${(profile as any).plan_type || "free"}\n- Crédits: ${(profile as any).credits_balance ?? 0}\n- Statut: ${(profile as any).subscription_status || "aucun"}\n- Email: ${(profile as any).email || 'inconnu'}\n`;
 
-        // Inject autonomy-based behaviour adaptation
+        // Inject autonomy-based behaviour adaptation (from shared personas)
         const autonomyLevel = (profile as any).autonomy_level;
         const autonomyScore = (profile as any).autonomy_score;
         if (autonomyLevel && autonomyScore != null) {
-          const autonomyInstructions: Record<string, string> = {
-            beginner: `ADAPTATION (Score: ${autonomyScore}/100 — Débutant) :
-- Langage simple, explique chaque terme SEO avec un exemple concret
-- Découpe en messages courts. Un concept = un message.
-- Après 2-3 échanges, vérifie : "C'est clair ?" / "Tu vois l'idée ?"
-- Ton : collègue patient qui prend le temps, jamais condescendant
-- Max 500 caractères par message
-- Proactif : propose la prochaine étape sans attendre`,
-            intermediate: `ADAPTATION (Score: ${autonomyScore}/100 — Intermédiaire) :
-- Jargon SEO OK, explique uniquement les termes avancés (GEO, E-E-A-T, TF-IDF)
-- Messages de 400-500 caractères, droit au but
-- Ton : collègue qui échange entre pairs, propose des options`,
-            expert: `ADAPTATION (Score: ${autonomyScore}/100 — Expert) :
-- Concis et technique. Jargon direct. Données brutes.
-- Messages de 200-300 caractères max
-- Ton : échange entre spécialistes, pas de vulgarisation
-- Ne détaille que si demandé`,
-          };
-          contextSnippet += `\n${autonomyInstructions[autonomyLevel] || ''}\n`;
+          contextSnippet += `\n${getAutonomyBlock(autonomyLevel, autonomyScore)}\n`;
         }
       }
 
