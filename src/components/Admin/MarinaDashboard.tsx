@@ -143,15 +143,15 @@ export function MarinaDashboard() {
           .from('analytics_events')
           .select('event_data')
           .eq('event_type', 'ai_token_usage')
-          .in('event_data->>function_name' as any, marinaFunctions)
-          .limit(1000),
+          .limit(1000) as any,
         supabase
           .from('analytics_events')
           .select('event_data')
           .eq('event_type', 'paid_api_call')
-          .in('event_data->>function_name' as any, marinaFunctions)
-          .limit(1000),
+          .limit(1000) as any,
       ]);
+
+      const marinaFns = new Set(['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site']);
 
       let llmCostUsd = 0;
       (tokenRes.data || []).forEach(e => {
