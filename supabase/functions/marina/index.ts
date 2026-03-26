@@ -653,6 +653,85 @@ function generateLegacyMarinaReport(
   return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url);
 }
 
+// ─── Lite Stratège: quick LLM call for top 3 cocoon recommendations ───
+async function generateLiteStrategeRecommendations(
+  domain: string,
+  cocoonResult: any,
+  expertData: any,
+  strategicData: any,
+  lang: string,
+): Promise<Array<{ title: string; description: string; priority: string }>> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.warn('[Marina] No LOVABLE_API_KEY, skipping lite stratège');
+    return [];
+  }
+
+  const stats = cocoonResult?.stats || {};
+  const seoScore = expertData?.totalScore || 0;
+  const geoScore = strategicData?.overallScore || 0;
+
+  const prompt = lang === 'fr'
+    ? `Tu es un stratège SEO/GEO senior. Analyse ce résumé de cocon sémantique et donne exactement 3 recommandations prioritaires, courtes et actionnables.
+
+Domaine: ${domain}
+Score SEO technique: ${seoScore}/200
+Score GEO stratégique: ${geoScore}/100
+Pages analysées: ${stats.nodes_count || 0}
+Clusters: ${stats.clusters_count || 0}
+Liens sémantiques: ${stats.edges_count || 0}
+Densité liens: ${stats.links_density || 'N/A'}%
+
+Réponds en JSON strict: [{"title":"...","description":"...","priority":"critique|important|recommandé"}]`
+    : `You are a senior SEO/GEO strategist. Analyze this semantic cocoon summary and give exactly 3 priority, short, actionable recommendations.
+
+Domain: ${domain}
+Technical SEO Score: ${seoScore}/200
+Strategic GEO Score: ${geoScore}/100
+Pages analyzed: ${stats.nodes_count || 0}
+Clusters: ${stats.clusters_count || 0}
+Semantic links: ${stats.edges_count || 0}
+Link density: ${stats.links_density || 'N/A'}%
+
+Respond in strict JSON: [{"title":"...","description":"...","priority":"critical|important|recommended"}]`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [
+        { role: 'system', content: 'You are a concise SEO strategist. Always respond with valid JSON arrays only.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 1024,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  if (!response.ok) {
+    console.warn(`[Marina] Lite Stratège API error: ${response.status}`);
+    return [];
+  }
+
+  const result = await response.json();
+  const content = result?.choices?.[0]?.message?.content || '';
+  
+  // Extract JSON array from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) return [];
+  
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Internal function call helper ───
 async function callFunction(functionName: string, body: any, method = 'POST'): Promise<any> {
   const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
