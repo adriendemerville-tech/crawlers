@@ -425,9 +425,11 @@ export function ParmenionDashboard() {
                           {log.pipeline_phase && (
                             <Badge variant="outline" className={cn(
                               'text-[10px] uppercase font-bold',
+                              log.pipeline_phase === 'audit' && 'text-purple-500 border-purple-500/40',
                               log.pipeline_phase === 'diagnose' && 'text-blue-500 border-blue-500/40',
                               log.pipeline_phase === 'prescribe' && 'text-amber-500 border-amber-500/40',
                               log.pipeline_phase === 'execute' && 'text-green-500 border-green-500/40',
+                              log.pipeline_phase === 'validate' && 'text-emerald-500 border-emerald-500/40',
                             )}>
                               {log.pipeline_phase}
                             </Badge>

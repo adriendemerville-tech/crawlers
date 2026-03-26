@@ -5,32 +5,41 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
  * 
- * Pipeline obligatoire en 3 phases:
- *   1. DIAGNOSE: audit-expert-seo, cocoon-diag-*
- *   2. PRESCRIBE: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
- *   3. EXECUTE: wpsync (WordPress) OU iktracker-actions (IKtracker)
+ * Pipeline obligatoire en 5 phases:
+ *   1. AUDIT: audit-expert-seo (audit technique pur)
+ *   2. DIAGNOSE: cocoon-diag-* (diagnostic stratégique sémantique)
+ *   3. PRESCRIBE: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
+ *   4. EXECUTE: wpsync (WordPress) OU iktracker-actions (IKtracker)
+ *   5. VALIDATE: re-crawl ciblé, comparaison avant/après
  * 
  * Chaque cycle avance d'une phase. Parménion ne recule jamais.
  * Les résultats de chaque phase alimentent la suivante.
  */
 
-const CONSERVATIVE_THRESHOLD = 20;
 const MAX_RISK_NORMAL = 3;
 const MAX_RISK_CONSERVATIVE = 2;
-const MAX_TOKEN_BUDGET = 8000;
 
 // Pipeline phases in strict order
-const PIPELINE_PHASES = ['diagnose', 'prescribe', 'execute'] as const;
+const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
 type PipelinePhase = typeof PIPELINE_PHASES[number];
 
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
-  diagnose: ['audit-expert-seo', 'cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
+  audit: ['audit-expert-seo'],
+  diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code'],
   execute: ['wpsync', 'iktracker-actions'],
+  validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
 
 function isIktrackerDomain(domain: string): boolean {
   return domain.toLowerCase().includes('iktracker');
+}
+
+function getNextPhase(lastPhase: PipelinePhase | undefined): PipelinePhase {
+  if (!lastPhase) return 'audit';
+  const idx = PIPELINE_PHASES.indexOf(lastPhase);
+  if (idx === -1 || idx >= PIPELINE_PHASES.length - 1) return 'audit'; // cycle complete → restart
+  return PIPELINE_PHASES[idx + 1];
 }
 
 serve(async (req: Request) => {
@@ -65,28 +74,8 @@ serve(async (req: Request) => {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    const completedPhases = (lastCompletedDecisions || [])
-      .map(d => d.pipeline_phase)
-      .filter(Boolean);
-
-    // Determine next phase: advance through pipeline
-    let currentPhase: PipelinePhase = 'diagnose';
-    const lastPhase = completedPhases[0] as PipelinePhase | undefined;
-    
-    if (lastPhase === 'diagnose') {
-      const lastDiagnostic = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'diagnose' && d.execution_results);
-      if (lastDiagnostic) {
-        currentPhase = 'prescribe';
-      }
-    } else if (lastPhase === 'prescribe') {
-      const lastPrescription = (lastCompletedDecisions || []).find(d => d.pipeline_phase === 'prescribe' && d.execution_results);
-      if (lastPrescription) {
-        currentPhase = 'execute';
-      }
-    } else if (lastPhase === 'execute') {
-      // Full cycle done — restart pipeline with fresh diagnostic
-      currentPhase = 'diagnose';
-    }
+    const lastPhase = (lastCompletedDecisions || [])[0]?.pipeline_phase as PipelinePhase | undefined;
+    const currentPhase = getNextPhase(lastPhase);
 
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
@@ -164,9 +153,12 @@ serve(async (req: Request) => {
     const validatedFunctions = decision.action.functions.filter((f: string) => allowedFunctions.includes(f));
     if (validatedFunctions.length === 0) {
       console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
-      if (currentPhase === 'diagnose') validatedFunctions.push('audit-expert-seo');
+      // Fallback to first function of the phase
+      if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
+      else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
       else if (currentPhase === 'prescribe') validatedFunctions.push('generate-corrective-code');
       else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
+      else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
     decision.action.functions = validatedFunctions;
 
@@ -276,101 +268,15 @@ async function askParmenionLLM(context: {
       ).join('\n')}`
     : '';
 
-  // ═══ IKtracker-specific execute instructions ═══
-  const iktrackerExecuteInstructions = `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
-Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement sur iktracker.fr via l'API CMS.
-Fonction autorisée: iktracker-actions
-
-## ACTIONS CMS CONCRÈTES DISPONIBLES
-Tu DOIS choisir UNE ou PLUSIEURS de ces actions dans le payload:
-
-### Modifier une page existante
-action.payload = {
-  "cms_actions": [
-    { "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
-  ]
-}
-
-### Modifier un article existant (title, meta_description, content, excerpt)
-action.payload = {
-  "cms_actions": [
-    { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
-  ]
-}
-
-### Créer un nouvel article de blog
-action.payload = {
-  "cms_actions": [
-    { "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
-  ]
-}
-
-### Créer une nouvelle page
-action.payload = {
-  "cms_actions": [
-    { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
-  ]
-}
-
-## RÈGLES SPÉCIFIQUES IKTRACKER
-- Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
-- Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
-- Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
-- Tu peux combiner plusieurs cms_actions dans un seul payload
-- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
-- Le champ "functions" doit contenir ["iktracker-actions"]`;
-
-  const wpsyncExecuteInstructions = `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR LE SITE)
-Les correctifs sont générés. Tu dois maintenant les APPLIQUER via le CMS.
-Fonction autorisée: wpsync
-Le payload doit contenir:
-- Les pages à modifier (URLs)
-- Le code correctif à injecter (meta tags, schema, contenu, liens internes)
-- Le mode de déploiement (update_post, update_meta, inject_schema)
-IMPORTANT: C'est l'étape finale. Tu dois déployer, pas diagnostiquer ni prescrire.`;
-
-  const phaseInstructions: Record<PipelinePhase, string> = {
-    diagnose: `## PHASE ACTUELLE: DIAGNOSE
-Tu dois lancer UN diagnostic pour identifier les problèmes concrets du site.
-Fonctions autorisées: audit-expert-seo, cocoon-diag-content, cocoon-diag-semantic, cocoon-diag-structure, cocoon-diag-authority
-Choisis la fonction la plus pertinente selon le contexte. Si aucun diagnostic n'a été fait, commence par audit-expert-seo.
-Le résultat de ce diagnostic sera utilisé à la phase suivante pour générer des correctifs.`,
-
-    prescribe: `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
-Les diagnostics sont terminés. Tu as les résultats ci-dessous.
-Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
-Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
-- Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
-- Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
-
-## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
-Le payload DOIT contenir un tableau "fixes" avec ce format exact:
-{
-  "fixes": [
-    {
-      "id": "fix-unique-id",
-      "label": "Description courte du correctif",
-      "category": "seo|performance|strategic|accessibility",
-      "prompt": "Instructions détaillées pour le LLM générateur: ce qu'il doit corriger, où, et comment",
-      "enabled": true,
-      "target_url": "https://domain.tld/page-cible (optionnel)"
-    }
-  ]
-}
-SANS ce tableau "fixes", l'appel ÉCHOUERA. Génère au moins 1 fix basé sur les diagnostics.
-
-IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`,
-
-    execute: context.isIktracker ? iktrackerExecuteInstructions : wpsyncExecuteInstructions,
-  };
+  const phaseInstructions = buildPhaseInstructions(context);
 
   const systemPrompt = `Tu es Parménion, moteur d'exécution AUTONOME de l'autopilote Crawlers.fr. Tu NE RECOMMANDES PAS, tu AGIS.
 
-${phaseInstructions[context.currentPhase]}
+${phaseInstructions}
 
 ## RÈGLES ABSOLUES
 1. Tu ne peux utiliser QUE les fonctions de la phase actuelle
-2. Tu ne reviens JAMAIS en arrière dans le pipeline (diagnose → prescribe → execute)
+2. Tu ne reviens JAMAIS en arrière dans le pipeline (audit → diagnose → prescribe → execute → validate)
 3. Tu ne répètes JAMAIS une action déjà complétée avec succès
 4. Tu utilises les résultats des phases précédentes comme INPUT, pas comme prétexte pour re-diagnostiquer
 5. INTERDICTIONS: supprimer des pages, modifier la charte graphique
@@ -437,7 +343,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
                 goal: {
                   type: 'object',
                   properties: {
-                    type: { type: 'string', enum: ['cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment', 'meta_optimization'] },
+                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
                     cluster_id: { type: 'string' },
                     description: { type: 'string' },
                   },
@@ -510,6 +416,136 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
     console.error('[Parménion] LLM call failed:', e);
     return null;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE INSTRUCTION BUILDER
+// ═══════════════════════════════════════════════════════════════
+
+function buildPhaseInstructions(context: {
+  currentPhase: PipelinePhase;
+  isIktracker: boolean;
+}): string {
+  switch (context.currentPhase) {
+    case 'audit':
+      return `## PHASE ACTUELLE: AUDIT (AUDIT TECHNIQUE)
+Tu dois lancer un audit technique complet du site pour identifier les problèmes SEO techniques (performance, indexabilité, erreurs HTTP, structure).
+Fonction autorisée: audit-expert-seo
+Cet audit fournira les données brutes nécessaires aux diagnostics stratégiques de la phase suivante.
+IMPORTANT: C'est un scan technique pur. Ne fais PAS de recommandations stratégiques ici.`;
+
+    case 'diagnose':
+      return `## PHASE ACTUELLE: DIAGNOSE (DIAGNOSTIC STRATÉGIQUE)
+L'audit technique est terminé. Tu as les résultats ci-dessous.
+Tu dois maintenant lancer UN diagnostic stratégique pour analyser la sémantique, le contenu, la structure ou l'autorité du site.
+Fonctions autorisées: cocoon-diag-content, cocoon-diag-semantic, cocoon-diag-structure, cocoon-diag-authority
+Choisis la fonction la plus pertinente selon les problèmes révélés par l'audit technique.
+IMPORTANT: Ne refais PAS d'audit technique. Les données sont là, utilise-les pour choisir le bon diagnostic.`;
+
+    case 'prescribe':
+      return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
+Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
+Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code
+- Si des recommandations avec fix_data existent déjà → passe directement à generate-corrective-code
+- Sinon → utilise cocoon-strategist pour produire un plan, puis generate-corrective-code
+
+## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
+Le payload DOIT contenir un tableau "fixes" avec ce format exact:
+{
+  "fixes": [
+    {
+      "id": "fix-unique-id",
+      "label": "Description courte du correctif",
+      "category": "seo|performance|strategic|accessibility",
+      "prompt": "Instructions détaillées pour le LLM générateur: ce qu'il doit corriger, où, et comment",
+      "enabled": true,
+      "target_url": "https://domain.tld/page-cible (optionnel)"
+    }
+  ]
+}
+SANS ce tableau "fixes", l'appel ÉCHOUERA. Génère au moins 1 fix basé sur les diagnostics.
+
+IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`;
+
+    case 'execute':
+      return context.isIktracker ? buildIktrackerExecuteInstructions() : buildWpsyncExecuteInstructions();
+
+    case 'validate':
+      return `## PHASE ACTUELLE: VALIDATE (VÉRIFICATION POST-DÉPLOIEMENT)
+Les correctifs ont été déployés sur le CMS. Tu dois maintenant VÉRIFIER que les changements sont bien appliqués et mesurer l'impact initial.
+Fonctions autorisées: audit-expert-seo, cocoon-diag-content
+
+Tu dois:
+1. Lancer un audit-expert-seo ciblé sur les URLs modifiées pour vérifier que les correctifs sont en place
+2. OU lancer un cocoon-diag-content pour mesurer l'amélioration du score de contenu
+
+Le payload doit inclure:
+- Les URLs ciblées par l'exécution précédente (disponibles dans les résultats des phases précédentes)
+- Le type de vérification: "post_deploy_check"
+
+Dans ton goal, utilise le type "validation_post_deploy".
+Dans ton summary, compare les métriques avant/après si disponibles.
+
+IMPORTANT: C'est une vérification READ-ONLY. Tu ne modifies RIEN. Tu constates et tu mesures.
+Si la validation échoue (correctifs non appliqués), signale-le dans le reasoning avec un risk_score élevé.`;
+  }
+}
+
+function buildIktrackerExecuteInstructions(): string {
+  return `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement sur iktracker.fr via l'API CMS.
+Fonction autorisée: iktracker-actions
+
+## ACTIONS CMS CONCRÈTES DISPONIBLES
+Tu DOIS choisir UNE ou PLUSIEURS de ces actions dans le payload:
+
+### Modifier une page existante
+action.payload = {
+  "cms_actions": [
+    { "action": "update-page", "page_key": "slug-de-la-page", "updates": { "title": "...", "meta_description": "...", "content": "..." } }
+  ]
+}
+
+### Modifier un article existant (title, meta_description, content, excerpt)
+action.payload = {
+  "cms_actions": [
+    { "action": "update-post", "slug": "slug-de-larticle", "updates": { "title": "...", "meta_description": "...", "content": "...", "excerpt": "..." } }
+  ]
+}
+
+### Créer un nouvel article de blog
+action.payload = {
+  "cms_actions": [
+    { "action": "create-post", "body": { "title": "...", "slug": "...", "content": "...", "excerpt": "...", "status": "published" } }
+  ]
+}
+
+### Créer une nouvelle page
+action.payload = {
+  "cms_actions": [
+    { "action": "create-page", "body": { "title": "...", "slug": "...", "content": "...", "meta_description": "..." } }
+  ]
+}
+
+## RÈGLES SPÉCIFIQUES IKTRACKER
+- Le contenu DOIT être pertinent pour le SEO et le domaine iktracker.fr (outils SEO, tracking, analytics)
+- Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
+- Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
+- Tu peux combiner plusieurs cms_actions dans un seul payload
+- INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
+- Le champ "functions" doit contenir ["iktracker-actions"]`;
+}
+
+function buildWpsyncExecuteInstructions(): string {
+  return `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR LE SITE)
+Les correctifs sont générés. Tu dois maintenant les APPLIQUER via le CMS.
+Fonction autorisée: wpsync
+Le payload doit contenir:
+- Les pages à modifier (URLs)
+- Le code correctif à injecter (meta tags, schema, contenu, liens internes)
+- Le mode de déploiement (update_post, update_meta, inject_schema)
+IMPORTANT: C'est l'étape finale de déploiement. Tu dois déployer, pas diagnostiquer ni prescrire.`;
 }
 
 function serve(handler: (req: Request) => Promise<Response>) {
