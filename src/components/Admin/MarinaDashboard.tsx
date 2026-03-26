@@ -1,16 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check } from 'lucide-react';
+import { Anchor, Play, RefreshCw, Key, Copy, CheckCircle2, Clock, AlertTriangle, FileText, Loader2, Trash2, Check, Euro } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { MarinaReportPreviewModal } from './MarinaReportPreviewModal';
 import { toast as sonnerToast } from 'sonner';
+
+// Model pricing per million tokens (USD)
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  'google/gemini-2.5-pro': { input: 1.25, output: 10.0 },
+  'google/gemini-2.5-flash': { input: 0.15, output: 0.60 },
+  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
+  'google/gemini-3-pro-preview': { input: 1.25, output: 10.0 },
+  'openai/gpt-5': { input: 10.0, output: 30.0 },
+  'openai/gpt-5-mini': { input: 1.10, output: 4.40 },
+  'openai/gpt-5-nano': { input: 0.10, output: 0.40 },
+};
+const API_COST_PER_CALL: Record<string, number> = {
+  browserless: 0.008, spider: 0.001, firecrawl: 0.005, dataforseo: 0.01, 'fly-playwright': 0.0001,
+};
+const USD_TO_EUR = 0.92;
 
 interface MarinaJob {
   id: string;
@@ -114,6 +130,61 @@ export function MarinaDashboard() {
   const [generatingKey, setGeneratingKey] = useState(false);
   const [reportModal, setReportModal] = useState<{ html: string; domain: string } | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [totalCostEur, setTotalCostEur] = useState<number | null>(null);
+  const [costBreakdown, setCostBreakdown] = useState<{ llm: number; api: number; jobs: number }>({ llm: 0, api: 0, jobs: 0 });
+
+  // Fetch Marina costs from analytics_events (LLM tokens + paid API calls linked to marina functions)
+  const fetchCosts = useCallback(async () => {
+    try {
+      const marinaFunctions = ['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site'];
+
+      const [tokenRes, apiRes] = await Promise.all([
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'ai_token_usage')
+          .limit(1000) as any,
+        supabase
+          .from('analytics_events')
+          .select('event_data')
+          .eq('event_type', 'paid_api_call')
+          .limit(1000) as any,
+      ]);
+
+      const marinaFns = new Set(['marina', 'audit-expert-seo', 'audit-strategique-ia', 'calculate-cocoon-logic', 'calculate-llm-visibility', 'process-crawl-queue', 'crawl-site', 'fetch-external-site']);
+
+      let llmCostUsd = 0;
+      (tokenRes.data || []).forEach((e: any) => {
+        const d = e.event_data;
+        if (!d || !marinaFns.has(d.function_name)) return;
+        const model = d.model || 'unknown';
+        const pricing = MODEL_PRICING[model];
+        if (pricing) {
+          llmCostUsd += ((d.prompt_tokens || 0) / 1_000_000) * pricing.input;
+          llmCostUsd += ((d.completion_tokens || 0) / 1_000_000) * pricing.output;
+        }
+      });
+
+      let apiCostUsd = 0;
+      (apiRes.data || []).forEach((e: any) => {
+        const d = e.event_data;
+        if (!d || !marinaFns.has(d.function_name)) return;
+        const service = d.api_service || 'unknown';
+        apiCostUsd += API_COST_PER_CALL[service] || 0.005;
+      });
+
+      const totalUsd = llmCostUsd + apiCostUsd;
+      const totalEur = totalUsd * USD_TO_EUR;
+      setTotalCostEur(totalEur);
+      setCostBreakdown({
+        llm: llmCostUsd * USD_TO_EUR,
+        api: apiCostUsd * USD_TO_EUR,
+        jobs: (tokenRes.data?.length || 0) + (apiRes.data?.length || 0),
+      });
+    } catch (err) {
+      console.error('Failed to fetch Marina costs:', err);
+    }
+  }, []);
 
   const handleOpenReport = async (reportUrl: string, domain: string) => {
     setLoadingReport(true);
@@ -148,10 +219,10 @@ export function MarinaDashboard() {
 
   useEffect(() => {
     fetchJobs();
-    // Poll every 10s for active jobs
+    fetchCosts();
     const interval = setInterval(fetchJobs, 10_000);
     return () => clearInterval(interval);
-  }, [fetchJobs]);
+  }, [fetchJobs, fetchCosts]);
 
   // Fetch existing API key
   useEffect(() => {
@@ -225,6 +296,33 @@ export function MarinaDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Cost Counter */}
+      <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10">
+          <Euro className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <div className="text-xs text-muted-foreground font-medium">Coût total Marina</div>
+          <div className="text-2xl font-bold tabular-nums">
+            {totalCostEur !== null ? `${totalCostEur.toFixed(2)} €` : '—'}
+          </div>
+        </div>
+        <div className="flex gap-6 text-xs text-muted-foreground">
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.llm.toFixed(2)} €</div>
+            <div>LLM</div>
+          </div>
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.api.toFixed(2)} €</div>
+            <div>APIs</div>
+          </div>
+          <div className="text-center">
+            <div className="font-mono font-semibold text-foreground">{costBreakdown.jobs}</div>
+            <div>Appels</div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
