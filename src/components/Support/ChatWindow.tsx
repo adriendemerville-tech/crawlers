@@ -227,6 +227,42 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed }:
     checkResolvedBugs();
   }, [user]);
 
+  // Weekly quiz invitation notification
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    const checkQuizInvite = async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('id, event_data')
+        .eq('user_id', user.id)
+        .eq('event_type', 'felix:quiz_invite')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        // Check if user already dismissed or took quiz this week
+        const { data: recentQuiz } = await supabase
+          .from('analytics_events')
+          .select('id')
+          .eq('user_id', user.id)
+          .in('event_type', ['quiz:seo_score', 'quiz:crawlers_score', 'felix:quiz_invite_dismissed'])
+          .gte('created_at', sevenDaysAgo)
+          .limit(1);
+
+        if (!recentQuiz || recentQuiz.length === 0) {
+          const inviteMsg: ChatMessage = {
+            role: 'assistant',
+            content: "🎓 **Ça te dit de tester tes connaissances en SEO GEO ?** 3 minutes max.\n\nTape **\"quiz\"** pour lancer le test !",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [inviteMsg, ...prev]);
+        }
+      }
+    };
+    checkQuizInvite();
+
   // Track post-chat navigation for quality scoring
   const trackPostChatRoute = useCallback(async (route: string) => {
     const convId = conversationIdRef.current;
