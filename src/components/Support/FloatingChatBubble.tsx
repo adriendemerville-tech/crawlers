@@ -195,9 +195,10 @@ export function FloatingChatBubble() {
           </div>
         }>
           <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); }}
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
+            autoStartCrawlersQuiz={autoStartCrawlersQuiz}
           />
         </Suspense>
       )}
@@ -221,7 +222,37 @@ export function FloatingChatBubble() {
         </div>
       )}
 
-      {/* Floating Button — Crawlers robot logo */}
+      {/* Guest quiz suggestion tooltip */}
+      {showGuestQuizSuggestion && !isOpen && !showOnboardingPulse && (
+        <div
+          className="fixed bottom-[72px] z-50 max-w-[240px] rounded-xl bg-primary text-primary-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
+          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowGuestQuizSuggestion(false); }}
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+          🧠 Ça te dit de tester tes connaissances SEO en 2 min ?
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => { setShowGuestQuizSuggestion(false); setAutoStartCrawlersQuiz(true); setIsOpen(true); }}
+              className="px-2.5 py-1 rounded-md bg-primary-foreground text-primary text-[11px] font-semibold hover:opacity-90 transition-opacity"
+            >
+              D'accord !
+            </button>
+            <button
+              onClick={() => setShowGuestQuizSuggestion(false)}
+              className="px-2.5 py-1 rounded-md border border-primary-foreground/30 text-primary-foreground text-[11px] font-medium hover:bg-primary-foreground/10 transition-colors"
+            >
+              Plus tard.
+            </button>
+          </div>
+          <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary rotate-45" />
+        </div>
+      )
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
         className={`fixed bottom-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
