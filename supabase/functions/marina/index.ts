@@ -410,6 +410,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const keywordPos = strategicData?.keyword_positioning || strategicData?.keywordPositioning || null;
   const marketData = strategicData?.market_data_summary || strategicData?.marketDataSummary || null;
   const llmVisibility = strategicData?.llm_visibility_raw || null;
+  const llmVisibilityStrategic = strategicData?.llm_visibility || null;
   const quotability = strategicData?.quotability || null;
   const summaryResilience = strategicData?.summary_resilience || null;
   const lexicalFootprint = strategicData?.lexical_footprint || null;
@@ -435,7 +436,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
       ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
       ${buildModuleSection('Données Marché', '📈', marketData)}
-      ${buildModuleSection('Visibilité LLM', '🤖', llmVisibility)}
+      ${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}
       ${buildModuleSection('Quotabilité', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
