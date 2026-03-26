@@ -678,7 +678,9 @@ Quand tu crées un article pour combler un gap de contenu:
 10. author_name par défaut: "Équipe IKtracker"
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
-- Le contenu DOIT être pertinent pour IKtracker (indemnités kilométriques, frais réels, gestion de trajets, fiscalité auto-entrepreneur)
+- Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
+- Pour IKtracker spécifiquement: indemnités kilométriques, frais réels, gestion de trajets, fiscalité auto-entrepreneur
+- INTERDIT de créer du contenu hors-sujet (ex: article sur le SEO, le marketing digital, ou tout autre sujet non lié à l'activité du site)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
 - Tu peux combiner plusieurs cms_actions dans un seul payload
