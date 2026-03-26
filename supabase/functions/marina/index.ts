@@ -231,8 +231,23 @@ function buildSocialSignalsSection(data: any): string {
   let sourcesHtml = '';
   const proofSources = data?.proof_sources || [];
   if (Array.isArray(proofSources) && proofSources.length > 0) {
-    sourcesHtml = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
-      ${proofSources.map((s: any) => {
+    const filteredSources = proofSources.filter((s: any) => {
+      const platform = (s.platform || '').toLowerCase();
+      const url = (s.profile_url || '').toLowerCase();
+      // Filter out Facebook if it links to anti-scraping documentation
+      if (platform === 'facebook' && (
+        url.includes('facebook.com/help') ||
+        url.includes('facebook.com/policies') ||
+        url.includes('developers.facebook.com') ||
+        url.includes('automated_data_collection') ||
+        url.includes('robots.txt') ||
+        !url.includes('facebook.com/')
+      )) return false;
+      return true;
+    });
+    if (filteredSources.length > 0) {
+      sourcesHtml = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">
+      ${filteredSources.map((s: any) => {
         const platform = (s.platform || 'unknown').toLowerCase();
         const pc = PLATFORM_COLORS[platform] || { color: '#6b7280', bg: '#6b728012', icon: '🌐' };
         const level = (s.presence_level || 'unknown').toLowerCase();
@@ -251,7 +266,8 @@ function buildSocialSignalsSection(data: any): string {
           ${analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;">${analysis}</div>` : ''}
         </div>`;
       }).join('')}
-    </div>`;
+      </div>`;
+    }
   }
 
   // Thought leadership
@@ -330,20 +346,18 @@ function buildCompetitiveLandscapeSection(data: any): string {
 
 // ─── Dedicated renderer for LLM Visibility with 6 individual model cards ───
 function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
-  if (!rawData && !strategicData) return '';
-
+  // ALWAYS render this section — LLM visibility cards must appear in every report
   const LLM_NAMES = ['ChatGPT', 'Gemini', 'Perplexity', 'Claude', 'Mistral', 'Meta Llama'];
 
   const scores = rawData?.scores || rawData?.data?.scores || [];
   
-  if (!Array.isArray(scores) || scores.length === 0) {
-    if (!strategicData) return '';
-    const analysis = strategicData.analysis || strategicData.llm_analysis;
-    return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
-      <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;text-align:left;">Visibilité LLM</h3>
-      ${analysis ? `<p style="font-size:13px;color:#374151;line-height:1.6;">${analysis}</p>` : '<p style="color:#9ca3af;font-size:13px;">Données non disponibles</p>'}
-    </div>`;
-  }
+  // If no real scores, generate 6 placeholder "not cited" cards so the section ALWAYS appears
+  const effectiveScores = (Array.isArray(scores) && scores.length > 0) 
+    ? scores 
+    : LLM_NAMES.map(name => ({ llm_name: name, score_percentage: 0, score: 0 }));
+  
+  // If we only have strategic text and no scores at all, still show 6 cards + analysis
+  const analysis = strategicData?.analysis || strategicData?.llm_analysis || null;
 
   // Build 6 cards — cited (green) or not cited (red), with sentiment if cited
   const cardsHtml = scores.map((s: any) => {
@@ -498,7 +512,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
           <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
           ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${crawlMeta.tbt}ms</div><div class="label">TBT</div></div>` : ''}
-          ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${crawlMeta.cls}</div><div class="label">CLS</div></div>` : ''}
+          ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
           ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.fcp) > 60 ? (Number(crawlMeta.fcp) / 1000).toFixed(2) : Number(crawlMeta.fcp).toFixed(2)}s</div><div class="label">FCP</div></div>` : ''}
         </div>
       </div>` : ''}
