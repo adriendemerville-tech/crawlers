@@ -653,13 +653,76 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
 
       if (profile) {
         userFirstName = (profile as any).first_name || "";
-        contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${(profile as any).first_name || 'inconnu'}\n- Plan: ${(profile as any).plan_type || "free"}\n- Crédits: ${(profile as any).credits_balance ?? 0}\n- Statut: ${(profile as any).subscription_status || "aucun"}\n- Email: ${(profile as any).email || 'inconnu'}\n`;
+        const userPlan = (profile as any).plan_type || "free";
+        const userCredits = (profile as any).credits_balance ?? 0;
+        const userSubStatus = (profile as any).subscription_status || "aucun";
+        contextSnippet += `\n\n# PROFIL UTILISATEUR\n- Prénom: ${(profile as any).first_name || 'inconnu'}\n- Plan: ${userPlan}\n- Crédits: ${userCredits}\n- Statut: ${userSubStatus}\n- Email: ${(profile as any).email || 'inconnu'}\n`;
 
         // Inject autonomy-based behaviour adaptation (from shared personas)
         const autonomyLevel = (profile as any).autonomy_level;
         const autonomyScore = (profile as any).autonomy_score;
         if (autonomyLevel && autonomyScore != null) {
           contextSnippet += `\n${getAutonomyBlock(autonomyLevel, autonomyScore)}\n`;
+        }
+
+        // ── ALERTES PROACTIVES : crédits + crawl ──
+        // Fetch crawl pages used this month
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const { data: monthCrawls } = await sb
+          .from("site_crawls")
+          .select("crawled_pages")
+          .eq("user_id", user_id)
+          .gte("created_at", monthStart.toISOString());
+
+        const totalCrawledPages = (monthCrawls || []).reduce((sum: number, c: any) => sum + (c.crawled_pages || 0), 0);
+
+        // Plan crawl limits
+        const crawlLimits: Record<string, number> = { free: 500, agency_pro: 5000, agency_premium: 50000 };
+        const maxCrawlPages = crawlLimits[userPlan] || crawlLimits.free;
+        const crawlUsagePercent = Math.round((totalCrawledPages / maxCrawlPages) * 100);
+
+        let alertBlock = "";
+
+        // Credit alerts
+        if (userCredits <= 0) {
+          alertBlock += `\n⚠️ ALERTE CRÉDITS ÉPUISÉS : L'utilisateur n'a plus de crédits (solde: ${userCredits}). `;
+          if (userPlan === 'free') {
+            alertBlock += `Suggère de passer au plan Pro Agency (59€/mois) pour bénéficier de l'Audit Expert et du Code Correctif illimités + 5000 pages de crawl. Lien : [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+          } else {
+            alertBlock += `Suggère d'acheter le Pack Ultime (500 crédits à 99€) ou de recharger depuis [Mon Portefeuille](https://crawlers.fr/console) > onglet Pro Agency.`;
+          }
+        } else if (userCredits <= 3) {
+          alertBlock += `\n⚠️ ALERTE CRÉDITS BAS : Il ne reste que ${userCredits} crédit(s). `;
+          if (userPlan === 'free') {
+            alertBlock += `Mentionne que le plan Pro Agency (59€/mois) offre l'Audit Expert et le Code Correctif illimités. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+          } else {
+            alertBlock += `Propose de recharger avec le Pack Ultime (500 crédits à 99€) depuis l'onglet Pro Agency dans la Console.`;
+          }
+        }
+
+        // Crawl alerts
+        if (crawlUsagePercent >= 100) {
+          alertBlock += `\n⚠️ ALERTE CRAWL PLAFOND ATTEINT : ${totalCrawledPages}/${maxCrawlPages} pages crawlées ce mois (${crawlUsagePercent}%). `;
+          if (userPlan === 'agency_pro') {
+            alertBlock += `Suggère de passer à Pro Agency + (89€/mois) pour 50 000 pages/mois et 50 pages/scan. [Voir Pro Agency +](https://crawlers.fr/pro-agency)`;
+          } else if (userPlan === 'free') {
+            alertBlock += `Suggère Pro Agency (59€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+          }
+        } else if (crawlUsagePercent >= 80) {
+          alertBlock += `\n⚠️ ALERTE CRAWL PROCHE DU PLAFOND : ${totalCrawledPages}/${maxCrawlPages} pages crawlées ce mois (${crawlUsagePercent}%). `;
+          if (userPlan === 'agency_pro') {
+            alertBlock += `Informe que Pro Agency + (89€/mois) offre 50 000 pages/mois si besoin. [Voir Pro Agency +](https://crawlers.fr/pro-agency)`;
+          } else if (userPlan === 'free') {
+            alertBlock += `Suggère Pro Agency (59€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+          }
+        }
+
+        if (alertBlock) {
+          contextSnippet += `\n# ALERTES PROACTIVES — MENTIONNER NATURELLEMENT DANS LA RÉPONSE
+Ces alertes doivent être intégrées naturellement dans ta réponse. Ne les ignore pas. Intègre l'information de façon fluide, pas comme un bandeau publicitaire.
+${alertBlock}\n`;
         }
       }
 
