@@ -177,7 +177,7 @@ async function runViaBrowserless(
   `;
 
   try {
-    const response = await fetch(`https://chrome.browserless.io/function?token=${apiKey}`, {
+    const response = await fetch(`https://production-sfo.browserless.io/function?token=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: testScript,
