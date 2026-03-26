@@ -363,7 +363,7 @@ export function Header() {
                     }
                     setIsProfileOpen(true);
                   } else {
-                    // Only close via our timeout logic, not Radix's internal close
+                    setIsProfileOpen(false);
                   }
                 }}>
                   <DropdownMenuTrigger asChild>
