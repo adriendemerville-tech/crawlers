@@ -79,9 +79,23 @@ const QUIZ_KEYWORDS = [
   'auto evaluation', 'quel est mon niveau', 'qcm seo',
 ];
 
+const CRAWLERS_QUIZ_KEYWORDS = [
+  'quiz crawlers', 'quizz crawlers', 'quiz produit', 'quiz plateforme',
+  'test crawlers', 'connaitre crawlers', 'fonctionnalites crawlers',
+  'fonctionnalités crawlers', 'quiz outil', 'quiz outils',
+];
+
 function detectQuizIntent(message: string): boolean {
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   return QUIZ_KEYWORDS.some(kw => {
+    const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return lower.includes(normalizedKw);
+  });
+}
+
+function detectCrawlersQuizIntent(message: string): boolean {
+  const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return CRAWLERS_QUIZ_KEYWORDS.some(kw => {
     const normalizedKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return lower.includes(normalizedKw);
   });
