@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, XCircle, ArrowRight, Trophy, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, Trophy, Loader2, Sparkles } from 'lucide-react';
 
 interface QuizQuestion {
   id: string;
-  category: 'seo' | 'geo' | 'llm';
-  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  difficulty: number;
   question: string;
   options: string[];
 }
@@ -17,18 +17,19 @@ interface AnswerKey {
 interface SeoQuizProps {
   questions: QuizQuestion[];
   answerKey: AnswerKey;
+  quizTitle?: string;
   onComplete: (score: number, total: number, wrongAnswers: { question: string; correct: string; explanation: string; feature_link?: string }[]) => void;
+  onRequestCrawlersQuiz?: () => void;
 }
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   seo: { label: 'SEO', color: 'bg-blue-500/15 text-blue-500' },
   geo: { label: 'GEO', color: 'bg-emerald-500/15 text-emerald-500' },
   llm: { label: 'LLM', color: 'bg-purple-500/15 text-purple-500' },
+  product: { label: 'Crawlers', color: 'bg-amber-500/15 text-amber-500' },
 };
 
-const DIFFICULTY_DOTS: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
-
-export function SeoQuiz({ questions, answerKey, onComplete }: SeoQuizProps) {
+export function SeoQuiz({ questions, answerKey, quizTitle, onComplete, onRequestCrawlersQuiz }: SeoQuizProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -41,7 +42,7 @@ export function SeoQuiz({ questions, answerKey, onComplete }: SeoQuizProps) {
   const answer = answerKey[q.id];
   const isLast = currentIndex === questions.length - 1;
   const catInfo = CATEGORY_LABELS[q.category] || CATEGORY_LABELS.seo;
-  const diffDots = DIFFICULTY_DOTS[q.difficulty] || 1;
+  const difficulty = q.difficulty || 1;
 
   const handleSelect = (optionIdx: number) => {
     if (isRevealed) return;
@@ -63,7 +64,7 @@ export function SeoQuiz({ questions, answerKey, onComplete }: SeoQuizProps) {
 
   const handleNext = () => {
     if (isLast) {
-      onComplete(score + (selectedAnswer === answer?.correct ? 0 : 0), questions.length, wrongAnswers);
+      onComplete(score, questions.length, wrongAnswers);
       return;
     }
     setCurrentIndex(i => i + 1);
@@ -73,15 +74,20 @@ export function SeoQuiz({ questions, answerKey, onComplete }: SeoQuizProps) {
 
   return (
     <div className="bg-muted/40 rounded-xl p-3 space-y-3 border border-border/50">
+      {/* Title */}
+      {quizTitle && (
+        <div className="text-[11px] font-semibold text-center text-primary">{quizTitle}</div>
+      )}
+
       {/* Progress */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", catInfo.color)}>
             {catInfo.label}
           </span>
-          <div className="flex gap-0.5">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i < diffDots ? "bg-foreground/60" : "bg-foreground/15")} />
+          <div className="flex gap-0.5" title={`Difficulté ${difficulty}/5`}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i < difficulty ? "bg-foreground/60" : "bg-foreground/15")} />
             ))}
           </div>
         </div>
