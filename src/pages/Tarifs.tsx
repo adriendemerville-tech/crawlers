@@ -18,6 +18,7 @@ import {
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
   ScanSearch, GitCompareArrows, Layers
 } from 'lucide-react';
+import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.png';
 
 const translations = {
   fr: {
