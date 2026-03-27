@@ -876,9 +876,43 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
       warnings: guardrailWarnings,
     }
 
+    // ── Determine implementation mode ──
+    // Content Architect handles: H1, H2, <p>, tables, FAQ, visible content
+    // Code Architect handles: JSON-LD, meta tags, OG tags, structured data
+    let implementationMode: 'api_direct' | 'script_injection' | 'brief_only' = 'brief_only'
+    let implementationDetails: any = null
+
+    if (cmsConnection?.hasWriteAccess) {
+      implementationMode = 'api_direct'
+      implementationDetails = {
+        platform: cmsConnection.platform,
+        capabilities: cmsConnection.capabilities,
+        note: `Content Architect peut modifier directement le contenu visible (H1, H2, paragraphes, FAQ, tableaux) via l'API ${cmsConnection.platform}. Les métadonnées et JSON-LD sont gérés par Code Architect.`,
+      }
+    } else if (resolvedSiteId) {
+      // Check if GTM/injection is available
+      const { data: rules } = await serviceClient
+        .from('site_script_rules')
+        .select('id')
+        .eq('domain_id', resolvedSiteId)
+        .limit(1)
+      if (rules && rules.length > 0) {
+        implementationMode = 'script_injection'
+        implementationDetails = { note: 'Pas de CMS API — injection JS pour le contenu visible. Code Architect gère les métadonnées.' }
+      }
+    }
+
     // ── Enrich with source metadata ──
     const result = {
       ...recommendation,
+      implementation: {
+        mode: implementationMode,
+        cms_platform: cmsConnection?.platform || null,
+        cms_write_access: cmsConnection?.hasWriteAccess || false,
+        content_scope: 'visible_content',
+        metadata_scope: 'code_architect',
+        details: implementationDetails,
+      },
       _meta: {
         domain,
         keyword,
