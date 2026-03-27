@@ -28,9 +28,9 @@ export default function ArchitecteGeneratif() {
       {
         '@type': 'TechArticle',
         'headline': t3(language,
-          'Architecte Génératif — Correctif multi-pages SEO/GEO intelligent',
-          'Generative Architect — Intelligent multi-page SEO/GEO corrective code',
-          'Arquitecto Generativo — Código correctivo multi-página SEO/GEO inteligente'
+          'Code Architect — Correctif multi-pages SEO/GEO intelligent',
+          'Code Architect — Intelligent multi-page SEO/GEO corrective code',
+          'Code Architect — Código correctivo multi-página SEO/GEO inteligente'
         ),
         'description': t3(language,
           'Appliquez des correctifs SEO différents pour chaque page de votre site. Routage par URL, modules configurables, garde-fous de sécurité et historique des versions.',
