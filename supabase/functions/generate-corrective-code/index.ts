@@ -272,6 +272,80 @@ function generateRegistryContextComment(recommendations: RegistryRecommendation[
 }
 
 // ══════════════════════════════════════════════════════════════
+// ARCHITECT WORKBENCH - Shared diagnostic table
+// ══════════════════════════════════════════════════════════════
+
+async function fetchWorkbenchItems(domain: string, architect: 'code' | 'content'): Promise<any[]> {
+  try {
+    const serviceClient = getServiceClient();
+    const consumedField = architect === 'code' ? 'consumed_by_code' : 'consumed_by_content';
+    
+    const { data, error } = await serviceClient
+      .from('architect_workbench')
+      .select('*')
+      .eq('domain', domain)
+      .in('action_type', architect === 'code' ? ['code', 'both'] : ['content', 'both'])
+      .eq(consumedField, false)
+      .eq('status', 'pending')
+      .order('severity', { ascending: true })
+      .limit(50);
+    
+    if (error) {
+      console.error(`❌ Workbench fetch error (${architect}):`, error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error(`❌ Workbench fetch exception (${architect}):`, error);
+    return [];
+  }
+}
+
+function generateWorkbenchContextComment(items: any[]): string {
+  if (items.length === 0) return '';
+  
+  const bySource: Record<string, any[]> = {};
+  for (const item of items) {
+    const src = item.source_type || 'unknown';
+    if (!bySource[src]) bySource[src] = [];
+    bySource[src].push(item);
+  }
+  
+  let context = `\n  // ══════════════════════════════════════════════════════════════\n`;
+  context += `  // 🏗️ WORKBENCH PARTAGÉ - Diagnostics consolidés (${items.length} items)\n`;
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  
+  for (const [source, sourceItems] of Object.entries(bySource)) {
+    const icon = source === 'cocoon' ? '🕸️' : source === 'audit_tech' ? '🔧' : source === 'audit_strategic' ? '📈' : '🕷️';
+    context += `  //\n  // ${icon} ${source.toUpperCase()} (${sourceItems.length} findings):\n`;
+    sourceItems.slice(0, 5).forEach((item: any) => {
+      context += `  //   - [${item.severity}] ${(item.title || '').substring(0, 80)}${item.target_url ? ` → ${item.target_url}` : ''}\n`;
+    });
+  }
+  
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  return context;
+}
+
+async function markWorkbenchConsumed(itemIds: string[], architect: 'code' | 'content'): Promise<void> {
+  if (itemIds.length === 0) return;
+  try {
+    const serviceClient = getServiceClient();
+    const updateField = architect === 'code' ? 'consumed_by_code' : 'consumed_by_content';
+    
+    await serviceClient
+      .from('architect_workbench')
+      .update({ [updateField]: true, consumed_at: new Date().toISOString(), status: 'in_progress' })
+      .in('id', itemIds);
+    
+    console.log(`✅ Workbench: ${itemIds.length} items marqués comme consommés par ${architect}`);
+  } catch (error) {
+    console.error(`❌ Workbench mark consumed error:`, error);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // BIBLIOTHÈQUE DE SOLUTIONS - RECHERCHE CACHE-FIRST
 // ══════════════════════════════════════════════════════════════
 
@@ -2836,9 +2910,11 @@ Deno.serve(async (req) => {
       await incrementSolutionUsage(match.id);
     }
 
-    // Récupérer le contexte du registre si demandé
+    // Récupérer le contexte du registre + workbench si demandé
     let registryContext = '';
     let registryRecommendations: RegistryRecommendation[] = [];
+    let workbenchContext = '';
+    let workbenchItemIds: string[] = [];
     
     if (includeRegistryContext) {
       const authHeader = req.headers.get('Authorization') || '';
@@ -2854,12 +2930,24 @@ Deno.serve(async (req) => {
           console.log('Could not parse URL for domain extraction:', siteUrl);
         }
         
-        registryRecommendations = await fetchRecommendationsRegistry(
-          supabaseUrl, supabaseKey, authHeader, domain
-        );
+        // Fetch both registry and workbench in parallel
+        const [regResult, wbResult] = await Promise.allSettled([
+          fetchRecommendationsRegistry(supabaseUrl, supabaseKey, authHeader, domain),
+          fetchWorkbenchItems(domain, 'code'),
+        ]);
         
-        if (registryRecommendations.length > 0) {
-          registryContext = generateRegistryContextComment(registryRecommendations);
+        if (regResult.status === 'fulfilled') {
+          registryRecommendations = regResult.value;
+          if (registryRecommendations.length > 0) {
+            registryContext = generateRegistryContextComment(registryRecommendations);
+          }
+        }
+        
+        if (wbResult.status === 'fulfilled' && wbResult.value.length > 0) {
+          const wbItems = wbResult.value;
+          workbenchItemIds = wbItems.map((i: any) => i.id);
+          workbenchContext = generateWorkbenchContextComment(wbItems);
+          console.log(`📋 Workbench: ${wbItems.length} items de type 'code' trouvés pour ${domain}`);
         }
       }
     }
@@ -2890,7 +2978,8 @@ Deno.serve(async (req) => {
     }
 
     // Générer le script avec contexte et contenu IA
-    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution, aiGeneratedFixes);
+    const fullContext = registryContext + workbenchContext;
+    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, fullContext, aiContent, attribution, aiGeneratedFixes);
     const linesCount = code.split('\n').length;
 
     // ══════════════════════════════════════════════════════════════
@@ -2965,6 +3054,9 @@ Deno.serve(async (req) => {
     console.log(`   → Minifié: ${(minifiedSize / 1024).toFixed(1)} Ko | Syntaxe: ${syntaxCheck.valid ? '✅' : '❌'}`);
     console.log('═══════════════════════════════════════════════════════════════');
 
+    // Mark workbench items as consumed by code architect
+    await markWorkbenchConsumed(workbenchItemIds, 'code');
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -2976,6 +3068,7 @@ Deno.serve(async (req) => {
         libraryHits: libraryHits.length,
         newGenerations: newGenerations.length,
         registryRecommendationsCount: registryRecommendations.length,
+        workbenchItemsUsed: workbenchItemIds.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
         // ═══ NOUVEAUTÉS v4.0 ═══
         cmsDetected: cmsSettings.cmsType || null,

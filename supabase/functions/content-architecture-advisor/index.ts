@@ -215,20 +215,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks ──
-    console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink data`)
+    // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks + Workbench ──
+    console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink/workbench data`)
     let existingAuditData: any = null
     let strategicAuditSerpData: any = null
     let cocoonData: any = null
     let geoScoreData: any = null
     let llmVisibilityData: any = null
     let backlinkData: any = null
+    let workbenchItems: any[] = []
 
-    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
+    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      // Strategic audit SERP recommendations (content_gaps, missing_terms, keyword_positioning, priority_content)
       serviceClient.from('audit_raw_data').select('raw_payload')
         .eq('domain', domain)
         .in('audit_type', ['strategic', 'strategic_parallel'])
@@ -249,6 +249,14 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', tracked_site_id)
             .order('measured_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
+      // Fetch workbench items assigned to content architect
+      serviceClient.from('architect_workbench').select('*')
+        .eq('domain', domain)
+        .in('action_type', ['content', 'both'])
+        .eq('consumed_by_content', false)
+        .eq('status', 'pending')
+        .order('severity', { ascending: true })
+        .limit(30),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
@@ -285,6 +293,12 @@ Deno.serve(async (req) => {
     }
     if (backlinkRes.status === 'fulfilled' && (backlinkRes.value as any)?.data) {
       backlinkData = (backlinkRes.value as any).data
+    }
+    if (workbenchRes.status === 'fulfilled' && (workbenchRes.value as any)?.data) {
+      workbenchItems = (workbenchRes.value as any).data || []
+      if (workbenchItems.length > 0) {
+        console.log(`[content-advisor] Workbench: ${workbenchItems.length} content items found for ${domain}`)
+      }
     }
 
     // ── Step 5: LLM Synthesis ──
@@ -502,6 +516,16 @@ ${(strategicAuditSerpData.opportunities || []).join('\n- ') || 'Aucune'}
 ${(strategicAuditSerpData.competitive_gaps || []).join('\n- ') || 'Aucun'}
 
 RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers sémantique ci-dessus. Le contenu doit couvrir les termes manquants et les gaps identifiés quand c'est pertinent.
+` : ''}
+
+${workbenchItems.length > 0 ? `
+── DIAGNOSTICS CONSOLIDÉS (Workbench Partagé) ──
+Les diagnostics suivants ont été identifiés par les différents modules d'analyse et sont assignés au Content Architect :
+${workbenchItems.slice(0, 15).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
+   Source: ${item.source_type} | Catégorie: ${item.finding_category}
+   ${item.description ? `Description: ${item.description.substring(0, 200)}` : ''}`).join('\n\n')}
+
+RÈGLE : Intègre ces findings dans ta recommandation. Chaque diagnostic pertinent pour le contenu cible doit se refléter dans la structure ou la stratégie proposée.
 ` : ''}
 
 **Données Cocoon (maillage):**
@@ -794,9 +818,24 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
           jargon_distance: jargonDist,
           warnings_count: guardrailWarnings.length,
         },
+        workbench_items_used: workbenchItems.length,
         generated_at: new Date().toISOString(),
         duration_ms: Date.now() - startTime,
       },
+    }
+
+    // ── Mark workbench items as consumed by content architect ──
+    if (workbenchItems.length > 0) {
+      try {
+        const itemIds = workbenchItems.map((i: any) => i.id)
+        await serviceClient
+          .from('architect_workbench')
+          .update({ consumed_by_content: true, consumed_at: new Date().toISOString(), status: 'in_progress' })
+          .in('id', itemIds)
+        console.log(`[content-advisor] Marked ${itemIds.length} workbench items as consumed`)
+      } catch (e) {
+        console.warn('[content-advisor] Failed to mark workbench items:', e)
+      }
     }
 
     // ── Cache for 12h ──
