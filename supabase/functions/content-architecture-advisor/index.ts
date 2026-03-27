@@ -82,10 +82,35 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Fair use check
+    // Fair use check (hourly/daily)
     const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
     if (!fairUse.allowed) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 200/mo)
+    const serviceClientForPlan = getServiceClient()
+    const { data: userProfile } = await serviceClientForPlan
+      .from('profiles')
+      .select('plan_type, subscription_status')
+      .eq('user_id', user.id)
+      .single()
+
+    const planType = (userProfile?.plan_type === 'agency_premium' &&
+      (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling'))
+      ? 'agency_premium'
+      : (userProfile?.plan_type === 'agency_pro' &&
+        (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling'))
+        ? 'agency_pro' : 'free'
+
+    const monthlyFairUse = await checkMonthlyFairUse(user.id, 'content_creation', planType)
+    if (!monthlyFairUse.allowed) {
+      return new Response(JSON.stringify({
+        error: 'Monthly content creation limit reached',
+        details: monthlyFairUse,
+      }), {
         status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
