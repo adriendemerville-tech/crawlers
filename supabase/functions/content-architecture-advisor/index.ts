@@ -576,6 +576,29 @@ ${workbenchItems.slice(0, 15).map((item: any, i: number) => `${i + 1}. [${(item.
 RÈGLE : Intègre ces findings dans ta recommandation. Chaque diagnostic pertinent pour le contenu cible doit se refléter dans la structure ou la stratégie proposée.
 ` : ''}
 
+${workbenchQuickWins.length > 0 ? `
+── QUICK WINS (Workbench — positions 11-20, améliorations faciles) ──
+${workbenchQuickWins.map((qw: any) => `- ${qw.title} ${qw.payload?.current_rank ? `(position: ${qw.payload.current_rank})` : ''} → ${qw.description || ''}`).join('\n')}
+RÈGLE : Si le mot-clé cible correspond à un Quick Win, PRIORITISE l'optimisation pour ce mot-clé.
+` : ''}
+
+${workbenchMissingTerms.length > 0 ? `
+── TERMES MANQUANTS (Workbench — gaps sémantiques identifiés) ──
+${workbenchMissingTerms.map((mt: any) => `- "${mt.payload?.term || mt.title}" (importance: ${mt.severity}) — ${mt.description || ''}`).join('\n')}
+RÈGLE : Intègre ces termes naturellement dans le contenu recommandé. Chaque terme critique DOIT apparaître.
+` : ''}
+
+${workbenchMissingPages.length > 0 ? `
+── PAGES MANQUANTES (Workbench — contenus suggérés par l'audit stratégique) ──
+${workbenchMissingPages.map((mp: any) => `- "${mp.payload?.title || mp.title}" — ${mp.description || ''} (impact: ${mp.severity})`).join('\n')}
+Si la page cible correspond à l'une de ces suggestions, utilise les données comme base pour l'architecture.
+` : ''}
+
+${workbenchContentGaps.length > 0 ? `
+── GAPS DE CONTENU (Workbench — thématiques non couvertes) ──
+${workbenchContentGaps.map((cg: any) => `- "${cg.payload?.keyword || cg.title}" — ${cg.description || ''}`).join('\n')}
+` : ''}
+
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
