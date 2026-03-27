@@ -273,10 +273,14 @@ export function MyActionPlans() {
   const [archivesOpen, setArchivesOpen] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   
-  // Architect modal state
+  // Code Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
   const [architectPlan, setArchitectPlan] = useState<ActionPlan | null>(null);
   const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
+
+  // Content Architect modal state
+  const [isContentArchitectOpen, setIsContentArchitectOpen] = useState(false);
+  const [contentArchitectPlan, setContentArchitectPlan] = useState<ActionPlan | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -657,9 +661,11 @@ export function MyActionPlans() {
                         isArchived={isArchived}
                         onToggle={toggleTask}
                         onOpenArchitect={() => handleOpenArchitect(plan, task)}
+                        onOpenContentArchitect={() => handleOpenContentArchitect(plan)}
                         getPriorityColor={getPriorityColor}
                         getPriorityLabel={getPriorityLabel}
                         architectLabel={t.architect}
+                        contentArchitectLabel={t.contentArchitect}
                       />
                     ))}
                   </div>
