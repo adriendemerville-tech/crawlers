@@ -6,7 +6,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 // ══════════════════════════════════════════════════════════════
-// INTERFACES - ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO Protocol
+// INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
 // + Confidence Score, Impact Estimation, Telemetry, Versioning
 // ══════════════════════════════════════════════════════════════
 
@@ -1094,7 +1094,7 @@ function generateFixCode(
       };
 
     // ═══════════════════════════════════════════════════════════
-    // NOUVEAUX CORRECTIFS STRATÉGIQUES (ARCHITECTE GÉNÉRATIF)
+    // NOUVEAUX CORRECTIFS STRATÉGIQUES (CODE ARCHITECT)
     // ═══════════════════════════════════════════════════════════
 
     case 'inject_faq':
@@ -2446,7 +2446,7 @@ function generateCorrectiveScript(
   // Construire le script IIFE avec architecture centralisée
   const script = `/**
  * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.0 (CLS-ZERO Protocol)
+ * 🏗️ Crawlers.fr — CODE ARCHITECT v3.0 (CLS-ZERO Protocol)
  * ═══════════════════════════════════════════════════════════════
  * 
  * Généré le ${dateStr}
@@ -2584,7 +2584,7 @@ ${fixFunctions.join('\n\n')}
   // ═══════════════════════════════════════════════════════════
 
   ready(function() {
-    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v4.0 — CLS-ZERO Protocol');
+    console.log('[Crawlers.fr] 🏗️ Code Architect v4.0 — CLS-ZERO Protocol');
     
     try {
 ${fixCalls.map(call => `      ${call}`).join('\n')}
@@ -2840,7 +2840,7 @@ Deno.serve(async (req) => {
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO + Confidence + Telemetry');
+    console.log('🏗️ CODE ARCHITECT v4.0 — CLS-ZERO + Confidence + Telemetry');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);

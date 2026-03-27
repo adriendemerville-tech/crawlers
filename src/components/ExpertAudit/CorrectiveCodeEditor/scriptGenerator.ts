@@ -1,4 +1,4 @@
-// Types for fix configuration - ARCHITECTE GÉNÉRATIF v3.2 — CLS-ZERO + Merge-Override Protocol
+// Types for fix configuration - CODE ARCHITECT v3.2 — CLS-ZERO + Merge-Override Protocol
 export interface FixConfig {
   id: string;
   category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic';
@@ -66,7 +66,7 @@ export const AVAILABLE_FIXES = {
   // Hallucination Fix
   fix_hallucination: { category: 'hallucination', label: 'Correction Hallucination IA', priority: 'critical' },
   
-  // Strategic Fixes (Architecte Génératif)
+  // Strategic Fixes (Code Architect)
   inject_faq: { category: 'strategic', label: 'Injection Section FAQ', priority: 'important' },
   inject_blog_section: { category: 'strategic', label: 'Injection Contenu Éditorial', priority: 'important' },
   enhance_semantic_meta: { category: 'strategic', label: 'Enrichissement Sémantique', priority: 'important' },
@@ -130,7 +130,7 @@ export function generateCorrectiveScript(
   
   const script = `/**
  * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.2 (CLS-ZERO + Merge-Override)
+ * 🏗️ Crawlers.fr — CODE ARCHITECT v3.2 (CLS-ZERO + Merge-Override)
  * ═══════════════════════════════════════════════════════════════
  * 
  * Généré le ${new Date().toLocaleDateString(dateLocale)}
@@ -368,7 +368,7 @@ ${fixFunctions.join('\n\n')}
         // Règle 5: Global try-catch — SILENT failure
         try {
 
-          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.2 — CLS-ZERO + Merge-Override');
+          safeLog('[Crawlers.fr] 🏗️ Code Architect v3.2 — CLS-ZERO + Merge-Override');
 
 ${fixCalls.map(call => `          ${call}`).join('\n')}
 

@@ -343,7 +343,7 @@ export default function Methodologie() {
 
             <h3>Outils techniques</h3>
             <ul>
-              <li>Architecte Génératif (code correctif multi-pages)</li>
+              <li>Code Architect (code correctif multi-pages)</li>
               <li>Cocon Sémantique 3D (Three.js, TF-IDF, clusters)</li>
               <li>Crawl multi-pages (sitemap-first, jusqu'à 5000 pages)</li>
               <li>Scanner WordPress (plugins, thèmes, sécurité)</li>

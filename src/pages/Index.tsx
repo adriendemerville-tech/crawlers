@@ -603,10 +603,10 @@ const Index = () => {
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
                 {language === 'fr'
-                  ? 'Suivi de 30 sites, Architecte Génératif multi-pages, crawl 5 000 pages/mois, rapports illimités et correctifs automatiques.'
+                  ? 'Suivi de 30 sites, Code Architect multi-pages, crawl 5 000 pages/mois, rapports illimités et correctifs automatiques.'
                   : language === 'es'
-                  ? 'Seguimiento de 30 sitios, Arquitecto Generativo multi-páginas, crawl de 5 000 páginas/mes, informes ilimitados y correcciones automáticas.'
-                  : '30-site tracking, multi-page Generative Architect, 5,000 pages/month crawl, unlimited reports & automatic fixes.'}
+                  ? 'Seguimiento de 30 sitios, Code Architect multi-páginas, crawl de 5 000 páginas/mes, informes ilimitados y correcciones automáticas.'
+                  : '30-site tracking, multi-page Code Architect, 5,000 pages/month crawl, unlimited reports & automatic fixes.'}
               </p>
               <div className="flex flex-col items-center gap-4 mb-6">
                 <div className="flex items-baseline gap-1">
