@@ -409,6 +409,12 @@ Deno.serve(async (req: Request) => {
             try {
               // ── Special handling for iktracker-actions: iterate over cms_actions ──
               if (funcName === 'iktracker-actions' && Array.isArray(decision.action.payload?.cms_actions)) {
+                // ── Guard: max 10 CMS actions per cycle ──
+                const MAX_CMS_ACTIONS_PER_CYCLE = 10;
+                if (decision.action.payload.cms_actions.length > MAX_CMS_ACTIONS_PER_CYCLE) {
+                  console.warn(`[AutopilotEngine] Truncating ${decision.action.payload.cms_actions.length} CMS actions to ${MAX_CMS_ACTIONS_PER_CYCLE} for ${site.domain}`);
+                  decision.action.payload.cms_actions = decision.action.payload.cms_actions.slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+                }
                 console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions on IKtracker for ${site.domain}`);
                 
                 for (const cmsAction of decision.action.payload.cms_actions) {
