@@ -67,6 +67,10 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   'CMS & Bridges': [
     'drupal-actions', 'iktracker-actions', 'register-cms-webhook',
     'webhook-shopify-orders', 'webhook-woo-orders',
+    'odoo-connector', 'prestashop-connector',
+  ],
+  'Autopilote & Parménion': [
+    'autopilot-engine', 'parmenion-orchestrator', 'parmenion-feedback',
   ],
   'Outils tiers (Bundle)': [
     'gtmetrix-actions', 'rankmath-actions', 'linkwhisper-actions',
