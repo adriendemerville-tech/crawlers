@@ -420,6 +420,92 @@ export type Database = {
           },
         ]
       }
+      architect_workbench: {
+        Row: {
+          action_type:
+            | Database["public"]["Enums"]["architect_action_type"]
+            | null
+          assigned_to: string | null
+          consumed_at: string | null
+          consumed_by_code: boolean
+          consumed_by_content: boolean
+          created_at: string
+          description: string | null
+          domain: string
+          finding_category: string
+          id: string
+          payload: Json | null
+          severity: string
+          source_function: string | null
+          source_record_id: string | null
+          source_type: Database["public"]["Enums"]["diagnostic_source_type"]
+          status: Database["public"]["Enums"]["workbench_item_status"]
+          target_url: string | null
+          title: string
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_type?:
+            | Database["public"]["Enums"]["architect_action_type"]
+            | null
+          assigned_to?: string | null
+          consumed_at?: string | null
+          consumed_by_code?: boolean
+          consumed_by_content?: boolean
+          created_at?: string
+          description?: string | null
+          domain: string
+          finding_category: string
+          id?: string
+          payload?: Json | null
+          severity?: string
+          source_function?: string | null
+          source_record_id?: string | null
+          source_type: Database["public"]["Enums"]["diagnostic_source_type"]
+          status?: Database["public"]["Enums"]["workbench_item_status"]
+          target_url?: string | null
+          title: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_type?:
+            | Database["public"]["Enums"]["architect_action_type"]
+            | null
+          assigned_to?: string | null
+          consumed_at?: string | null
+          consumed_by_code?: boolean
+          consumed_by_content?: boolean
+          created_at?: string
+          description?: string | null
+          domain?: string
+          finding_category?: string
+          id?: string
+          payload?: Json | null
+          severity?: string
+          source_function?: string | null
+          source_record_id?: string | null
+          source_type?: Database["public"]["Enums"]["diagnostic_source_type"]
+          status?: Database["public"]["Enums"]["workbench_item_status"]
+          target_url?: string | null
+          title?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "architect_workbench_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archived_users: {
         Row: {
           affiliate_code_used: string | null
@@ -7616,6 +7702,14 @@ export type Database = {
           risk_predicted: number
         }[]
       }
+      populate_architect_workbench: {
+        Args: {
+          p_domain: string
+          p_tracked_site_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -7657,6 +7751,7 @@ export type Database = {
         | "viewer"
         | "viewer_level2"
         | "auditor"
+      architect_action_type: "content" | "code" | "both"
       article_status:
         | "draft"
         | "published"
@@ -7671,6 +7766,11 @@ export type Database = {
         | "drupal"
         | "odoo"
         | "prestashop"
+      diagnostic_source_type:
+        | "crawl"
+        | "audit_tech"
+        | "audit_strategic"
+        | "cocoon"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -7686,6 +7786,12 @@ export type Database = {
         | "webflow"
         | "wix"
         | "drupal"
+      workbench_item_status:
+        | "pending"
+        | "assigned"
+        | "in_progress"
+        | "done"
+        | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7821,6 +7927,7 @@ export const Constants = {
         "viewer_level2",
         "auditor",
       ],
+      architect_action_type: ["content", "code", "both"],
       article_status: [
         "draft",
         "published",
@@ -7836,6 +7943,12 @@ export const Constants = {
         "drupal",
         "odoo",
         "prestashop",
+      ],
+      diagnostic_source_type: [
+        "crawl",
+        "audit_tech",
+        "audit_strategic",
+        "cocoon",
       ],
       report_type: [
         "seo_technical",
@@ -7853,6 +7966,13 @@ export const Constants = {
         "webflow",
         "wix",
         "drupal",
+      ],
+      workbench_item_status: [
+        "pending",
+        "assigned",
+        "in_progress",
+        "done",
+        "skipped",
       ],
     },
   },
