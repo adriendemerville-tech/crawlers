@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { AlertTriangle, X, RefreshCw, CheckCircle2, XCircle, Zap, Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { AlertTriangle, X, RefreshCw, CheckCircle2, XCircle, Zap, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t3 } from '@/utils/i18n';
@@ -78,18 +78,33 @@ function FlyForceButton({ language, onSuccess }: { language: string; onSuccess: 
   );
 }
 
+type BannerState = 'loading' | 'error' | 'resolved' | 'clean';
+
 export function BrowserlessAlert() {
   const [error, setError] = useState<BrowserlessError | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [bannerState, setBannerState] = useState<BannerState>('loading');
   const { language } = useLanguage();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hadErrorRef = useRef(false);
+  const resolvedAtRef = useRef<Date | null>(null);
 
-  const fetchErrors = async () => {
-    setLoading(true);
+  const clearPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const startFastPolling = useCallback(() => {
+    clearPolling();
+    intervalRef.current = setInterval(fetchErrors, 60 * 1000); // 1 min
+  }, []);
+
+  const fetchErrors = useCallback(async () => {
     try {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-      // Fetch browserless errors and fly-playwright fallback calls in parallel
       const [errResult, flyResult] = await Promise.all([
         supabase
           .from('analytics_events')
@@ -109,11 +124,32 @@ export function BrowserlessAlert() {
 
       const data = errResult.data;
       if (errResult.error || !data || data.length === 0) {
-        setError(null);
+        // No errors found
+        if (hadErrorRef.current) {
+          // Was in error → now resolved!
+          hadErrorRef.current = false;
+          resolvedAtRef.current = new Date();
+          setError(null);
+          setBannerState('resolved');
+          setDismissed(false);
+          // Stop fast polling, switch to slow check
+          clearPolling();
+          intervalRef.current = setInterval(fetchErrors, 5 * 60 * 1000);
+          // Auto-hide resolved banner after 10 min
+          setTimeout(() => {
+            setBannerState(prev => prev === 'resolved' ? 'clean' : prev);
+          }, 10 * 60 * 1000);
+        } else {
+          setBannerState('clean');
+        }
         return;
       }
 
-      // Filter fly-playwright entries from paid_api_call events
+      // Errors found
+      hadErrorRef.current = true;
+      resolvedAtRef.current = null;
+      setBannerState('error');
+
       const flyEntries = (flyResult.data || []).filter(
         (e: any) => (e.event_data as any)?.api_service === 'fly-playwright'
       );
@@ -130,22 +166,68 @@ export function BrowserlessAlert() {
         flyFallbackLastAt: flyEntries.length > 0 ? flyEntries[0].created_at : null,
       });
       setDismissed(false);
+
+      // Ensure fast polling is active during errors
+      if (!intervalRef.current || true) {
+        clearPolling();
+        intervalRef.current = setInterval(fetchErrors, 60 * 1000);
+      }
     } catch (_) {
       // silent
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [clearPolling]);
 
   useEffect(() => {
     fetchErrors();
-    const interval = setInterval(fetchErrors, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    // Default slow polling
+    intervalRef.current = setInterval(fetchErrors, 5 * 60 * 1000);
+    return () => clearPolling();
   }, []);
 
-  if (loading || !error || dismissed) return null;
+  if (bannerState === 'loading' || bannerState === 'clean' || dismissed) return null;
 
   const locale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
+
+  // ── Resolved banner (green) ──
+  if (bannerState === 'resolved') {
+    return (
+      <div className="relative rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-4 mb-6 transition-all">
+        <button
+          onClick={() => setDismissed(true)}
+          className="absolute top-3 right-3 text-emerald-600/70 hover:text-emerald-600 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+          <div className="space-y-1 pr-6">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+              {t3(language,
+                '✅ Browserless — Problème réglé',
+                '✅ Browserless — Problem resolved',
+                '✅ Browserless — Problema resuelto'
+              )}
+            </p>
+            <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80">
+              {t3(language,
+                'Aucune erreur détectée dans la dernière heure. Le service fonctionne normalement.',
+                'No errors detected in the last hour. Service is running normally.',
+                'Sin errores en la última hora. El servicio funciona normalmente.'
+              )}
+            </p>
+            {resolvedAtRef.current && (
+              <p className="text-xs text-muted-foreground">
+                {t3(language, 'Résolu à', 'Resolved at', 'Resuelto a las')} {resolvedAtRef.current.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error banner (red) ──
+  if (!error) return null;
   const flyActive = error.flyFallbackCount > 0;
 
   return (
@@ -196,6 +278,9 @@ export function BrowserlessAlert() {
 
           <p className="text-xs text-muted-foreground">
             {t3(language, 'Dernier incident', 'Last incident', 'Último incidente')} : {new Date(error.lastAt).toLocaleString(locale)}
+            <span className="ml-2 text-[10px] opacity-60">
+              ({t3(language, 'vérification toutes les minutes', 'checking every minute', 'verificación cada minuto')})
+            </span>
           </p>
           <button
             onClick={fetchErrors}
