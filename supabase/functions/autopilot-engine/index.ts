@@ -395,18 +395,91 @@ Deno.serve(async (req: Request) => {
           });
         }
 
-        // ═══ EXECUTE PHASE: Inject routed CMS actions from prescribe if available ═══
-        if (phase === 'execute' && routedCmsActions && routedCmsActions.all.length > 0) {
-          // Merge routed actions into the execute decision payload
+        // ═══ EXECUTE PHASE: Inject routed CMS actions or build fallback CMS actions ═══
+        if (phase === 'execute' && isIktrackerDomain(site.domain)) {
+          if (!decision.action.payload) decision.action.payload = {};
+          const hasCmsActions = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
+          
+          if (routedCmsActions && routedCmsActions.all.length > 0 && !hasCmsActions) {
+            // Inject routed actions from prescribe
+            decision.action.payload.cms_actions = routedCmsActions.all;
+            decision.action.payload._routed = routedCmsActions;
+            console.log(`[AutopilotEngine] Injected ${routedCmsActions.all.length} routed CMS actions into execute phase for ${site.domain}`);
+          } else if (!hasCmsActions) {
+            // ═══ FALLBACK: Build CMS actions from pending recommendations ═══
+            console.log(`[AutopilotEngine] No CMS actions available for ${site.domain}, building fallback from recommendations`);
+            try {
+              const { data: recos } = await supabase
+                .from('audit_recommendations_registry')
+                .select('id, title, description, category, priority, fix_type, fix_data, prompt_summary, url')
+                .eq('domain', site.domain)
+                .eq('is_resolved', false)
+                .order('priority', { ascending: true })
+                .limit(5);
+
+              if (recos && recos.length > 0) {
+                const fallbackCmsActions: Array<Record<string, unknown>> = [];
+                
+                for (const reco of recos) {
+                  const cat = (reco.category || '').toLowerCase();
+                  const isMeta = ['seo', 'meta_tags', 'technique', 'technical'].includes(cat) || reco.fix_type === 'meta';
+                  const isContent = ['contenu', 'content', 'content_gap', 'thin_content', 'eeat', 'autorité', 'identité', 'social'].includes(cat);
+
+                  if (isMeta) {
+                    let pageKey = '/';
+                    try { pageKey = reco.url ? new URL(reco.url).pathname.replace(/^\/|\/$/g, '') || '/' : '/'; } catch {}
+                    fallbackCmsActions.push({
+                      action: 'update-page',
+                      page_key: pageKey,
+                      updates: {
+                        meta_description: reco.fix_data?.meta_description || (reco.description || reco.title || '').slice(0, 155),
+                        ...(reco.fix_data?.meta_title ? { meta_title: reco.fix_data.meta_title } : {}),
+                      },
+                    });
+                  } else if (isContent) {
+                    const slug = (reco.title || 'article')
+                      .toLowerCase()
+                      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-|-$/g, '')
+                      .slice(0, 60);
+                    fallbackCmsActions.push({
+                      action: 'create-post',
+                      body: {
+                        title: reco.title,
+                        slug,
+                        content: `<p>${reco.description || reco.prompt_summary || ''}</p>`,
+                        excerpt: (reco.description || '').slice(0, 200),
+                        status: 'draft',
+                        meta_description: (reco.description || '').slice(0, 155),
+                        author_name: 'Équipe IKtracker',
+                        category: 'Guides',
+                      },
+                    });
+                  }
+                }
+
+                if (fallbackCmsActions.length > 0) {
+                  decision.action.payload.cms_actions = fallbackCmsActions;
+                  console.log(`[AutopilotEngine] Fallback: built ${fallbackCmsActions.length} CMS actions from recommendations for ${site.domain}`);
+                }
+              }
+            } catch (fallbackErr) {
+              console.error('[AutopilotEngine] CMS fallback failed:', fallbackErr);
+            }
+          }
+
+          // Ensure iktracker-actions is in the function list if we have CMS actions
+          const finalHasCms = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
+          if (finalHasCms && !decision.action.functions.includes('iktracker-actions')) {
+            decision.action.functions.push('iktracker-actions');
+          }
+        } else if (phase === 'execute' && routedCmsActions && routedCmsActions.all.length > 0) {
+          // Non-IKtracker sites with routed actions
           if (!decision.action.payload) decision.action.payload = {};
           if (!decision.action.payload.cms_actions || decision.action.payload.cms_actions.length === 0) {
             decision.action.payload.cms_actions = routedCmsActions.all;
             decision.action.payload._routed = routedCmsActions;
-            console.log(`[AutopilotEngine] Injected ${routedCmsActions.all.length} routed CMS actions into execute phase for ${site.domain}`);
-          }
-          // Ensure iktracker-actions is in the function list
-          if (isIktrackerDomain(site.domain) && !decision.action.functions.includes('iktracker-actions')) {
-            decision.action.functions.push('iktracker-actions');
           }
         }
 

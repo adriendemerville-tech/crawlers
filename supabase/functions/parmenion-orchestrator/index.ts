@@ -188,7 +188,7 @@ serve(async (req: Request) => {
       else if (currentPhase === 'prescribe') {
         // Alternate between content and technical based on cycle parity
         // Odd cycles → content-architecture-advisor, Even → generate-corrective-code
-        if (context.isIktracker && cycle_number % 2 === 1) {
+        if (isIktracker && cycle_number % 2 === 1) {
           validatedFunctions.push('content-architecture-advisor');
         } else {
           validatedFunctions.push('generate-corrective-code');
