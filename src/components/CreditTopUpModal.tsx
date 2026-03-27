@@ -66,7 +66,7 @@ const packages = [
 
 const translations = {
   fr: {
-    title: 'Recharger mes crédits',
+    title: 'Abonnement',
     subtitle: 'Choisissez un pack de crédits',
     currentBalance: 'Solde actuel',
     credits: 'crédits',
