@@ -251,78 +251,61 @@ Deno.serve(async (req: Request) => {
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
 
-        // ═══ Call Parménion orchestrator ═══
-        console.log(`[AutopilotEngine] Invoking Parménion for ${site.domain}, cycle #${cycleNumber}`);
-        
-        const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            tracked_site_id: config.tracked_site_id,
-            domain: site.domain,
-            cycle_number: cycleNumber,
-            user_id: config.user_id,
-          }),
-        });
+        // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
+        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
+        let cycleSuccess = true;
+        let lastDecisionId: string | null = null;
+        let lastPipelinePhase = 'audit';
+        let lastDecision: any = null;
+        const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
-        const orchestratorResult = await orchestratorResponse.json();
+        for (const phase of PIPELINE_PHASES) {
+          console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
-        if (!orchestratorResponse.ok || !orchestratorResult.decision_id) {
-          await supabase.from('autopilot_configs').update({ status: 'error', updated_at: new Date().toISOString() }).eq('id', config.id);
-          results.push({ site_id: config.tracked_site_id, domain: site.domain, status: 'error', error: orchestratorResult.error || 'Orchestrator failed' });
-
-          const orchestratorErrorMessage = `Parménion orchestration failed: ${orchestratorResult.error || 'unknown'}`;
-
-          const { error: modificationError } = await supabase.from('autopilot_modification_log').insert({
-            tracked_site_id: config.tracked_site_id,
-            config_id: config.id,
-            user_id: config.user_id,
-            phase: 'orchestration',
-            action_type: 'error',
-            cycle_number: cycleNumber,
-            description: orchestratorErrorMessage,
-            status: 'failed',
+          // ═══ Call Parménion orchestrator for this phase ═══
+          const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              tracked_site_id: config.tracked_site_id,
+              domain: site.domain,
+              cycle_number: cycleNumber,
+              user_id: config.user_id,
+            }),
           });
 
-          if (modificationError) {
-            console.error('[AutopilotEngine] Failed to insert orchestration error log:', modificationError);
-            await trackAnalyticsEvent(
-              supabase,
-              'autopilot:modification_log_error',
-              {
-                tracked_site_id: config.tracked_site_id,
-                domain: site.domain,
-                phase: 'orchestration',
-                cycle_number: cycleNumber,
-                error: modificationError.message,
-              },
-              config.user_id,
-            );
+          const orchestratorResult = await orchestratorResponse.json();
+
+          if (!orchestratorResponse.ok || !orchestratorResult.decision_id) {
+            console.error(`[AutopilotEngine] Orchestrator failed at phase ${phase}:`, orchestratorResult.error);
+            
+            await supabase.from('autopilot_modification_log').insert({
+              tracked_site_id: config.tracked_site_id,
+              config_id: config.id,
+              user_id: config.user_id,
+              phase,
+              action_type: 'error',
+              cycle_number: cycleNumber,
+              description: `Pipeline stopped at ${phase}: ${orchestratorResult.error || 'orchestrator failed'}`,
+              status: 'failed',
+            });
+
+            cycleSuccess = false;
+            break; // Stop pipeline on error but don't skip the whole site
           }
 
-          await pushIktrackerEvent(supabase, {
-            trackedSiteId: config.tracked_site_id,
-            userId: config.user_id,
-            domain: site.domain,
-            cycleNumber,
-            pipelinePhase: 'orchestration',
-            finalStatus: 'error',
-            executionSuccess: false,
-            message: orchestratorErrorMessage,
-            details: { orchestrator_error: orchestratorResult.error || 'unknown' },
-          });
-          continue;
-        }
+          const decision = orchestratorResult.decision;
+          const pipelinePhase = orchestratorResult.pipeline_phase || phase;
+          lastDecisionId = orchestratorResult.decision_id;
+          lastPipelinePhase = pipelinePhase;
+          lastDecision = decision;
 
-        const decision = orchestratorResult.decision;
-        const pipelinePhase = orchestratorResult.pipeline_phase || 'diagnose';
-
-        // ═══ Execute decided functions & capture results ═══
-        let executionSuccess = true;
-        const executionResults: any[] = [];
+          // ═══ Execute decided functions & capture results ═══
+          let executionSuccess = true;
+          const executionResults: any[] = [];
 
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
@@ -581,86 +564,83 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
-        const finalStatus = config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial';
-        
-        await supabase
-          .from('parmenion_decision_log')
-          .update({
-            status: finalStatus,
-            execution_started_at: new Date().toISOString(),
-            execution_completed_at: new Date().toISOString(),
-            execution_results: executionResults,
-            execution_error: executionSuccess ? null : JSON.stringify(executionResults.filter(r => r.status === 'error')),
-          })
-          .eq('id', orchestratorResult.decision_id);
+          // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
+          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial';
+          
+          await supabase
+            .from('parmenion_decision_log')
+            .update({
+              status: phaseStatus,
+              execution_started_at: new Date().toISOString(),
+              execution_completed_at: new Date().toISOString(),
+              execution_results: executionResults,
+              execution_error: executionSuccess ? null : JSON.stringify(executionResults.filter(r => r.status === 'error')),
+            })
+            .eq('id', lastDecisionId);
 
-        // ═══ Update config counters ═══
+          allPhaseResults.push({ phase, decision_id: lastDecisionId!, status: phaseStatus, executionResults });
+
+          // Log each phase in modification registry
+          await supabase.from('autopilot_modification_log').insert({
+            tracked_site_id: config.tracked_site_id,
+            config_id: config.id,
+            user_id: config.user_id,
+            phase: pipelinePhase,
+            action_type: decision.goal?.type || 'auto',
+            page_url: decision.tactic?.target_url || null,
+            cycle_number: cycleNumber,
+            description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
+            diff_before: decision.tactic?.initial_scope || {},
+            diff_after: { execution: executionResults, decision: decision.prudence },
+            status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
+          });
+
+          if (!executionSuccess) {
+            console.warn(`[AutopilotEngine] Phase ${phase} had errors, stopping pipeline for ${site.domain}`);
+            cycleSuccess = false;
+            break;
+          }
+
+          console.log(`[AutopilotEngine] Phase ${phase} completed successfully for ${site.domain}`);
+        } // end phase loop
+
+        // ═══ Update config counters (once per full cycle) ═══
+        const finalCycleStatus = cycleSuccess ? 'completed' : 'partial';
+
         await supabase
           .from('autopilot_configs')
           .update({
-            status: executionSuccess ? 'idle' : 'error',
+            status: cycleSuccess ? 'idle' : 'error',
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
           .eq('id', config.id);
 
-        // ═══ Push event to IKtracker for traceability (must not depend on local registry insert) ═══
+        // ═══ Push final event to IKtracker ═══
         await pushIktrackerEvent(supabase, {
           trackedSiteId: config.tracked_site_id,
           userId: config.user_id,
           domain: site.domain,
           cycleNumber,
-          pipelinePhase,
-          finalStatus,
-          executionSuccess,
-          message: `[Cycle #${cycleNumber}] ${decision.summary || decision.goal?.description || pipelinePhase}`,
-          targetUrl: decision.tactic?.target_url || null,
-          functions: decision.action?.functions || [],
+          pipelinePhase: lastPipelinePhase,
+          finalStatus: finalCycleStatus,
+          executionSuccess: cycleSuccess,
+          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length}/5 phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          targetUrl: lastDecision?.tactic?.target_url || null,
+          functions: lastDecision?.action?.functions || [],
           details: {
-            decision_id: orchestratorResult.decision_id,
+            phases_completed: allPhaseResults.map(r => r.phase),
+            decision_ids: allPhaseResults.map(r => r.decision_id),
           },
         });
-
-        // ═══ Log in modification registry ═══
-        const { error: modificationError } = await supabase.from('autopilot_modification_log').insert({
-          tracked_site_id: config.tracked_site_id,
-          config_id: config.id,
-          user_id: config.user_id,
-          phase: pipelinePhase,
-          action_type: decision.goal?.type || 'auto',
-          page_url: decision.tactic?.target_url || null,
-          cycle_number: cycleNumber,
-          description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
-          diff_before: decision.tactic?.initial_scope || {},
-          diff_after: { execution: executionResults, decision: decision.prudence },
-          status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
-        });
-
-        if (modificationError) {
-          console.error('[AutopilotEngine] Failed to insert modification log:', modificationError);
-          await trackAnalyticsEvent(
-            supabase,
-            'autopilot:modification_log_error',
-            {
-              tracked_site_id: config.tracked_site_id,
-              domain: site.domain,
-              phase: pipelinePhase,
-              cycle_number: cycleNumber,
-              decision_id: orchestratorResult.decision_id,
-              error: modificationError.message,
-            },
-            config.user_id,
-          );
-        }
 
         results.push({
           site_id: config.tracked_site_id,
           domain: site.domain,
-          status: finalStatus,
-          decision_id: orchestratorResult.decision_id,
-          pipeline_phase: pipelinePhase,
+          status: finalCycleStatus,
+          decision_id: lastDecisionId || undefined,
+          pipeline_phase: `full_cycle (${allPhaseResults.length}/5)`,
         });
 
       } catch (siteError) {
