@@ -35,13 +35,13 @@
 # - Crawl Multi-Pages : 1 crédit / 50 pages
 # - Codes Correctifs : 1 crédit ou paiement unique (3-12€)
 #
-# PRO AGENCY : 59€/mois
+# PRO AGENCY : 59€/mois (sans engagement)
 # - Console multi-sites, Cocoon 3D, IAS, GMB, Content Architect
 # - Autopilote Parménion, connexion CMS directe, GSC/GA4
 # - Architecte Génératif Multi-Pages, correction automatique
 # - 5 000 pages crawl/mois, 3 comptes, White Label
 #
-# PRO AGENCY+ : 89€/mois
+# PRO AGENCY+ : 89€/mois (sans engagement)
 # - Tout Pro Agency + 100 000 pages crawl/mois, 5 comptes
 # - 200 contenus/mois, support prioritaire
 #
