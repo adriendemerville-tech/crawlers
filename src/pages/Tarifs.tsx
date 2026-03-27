@@ -87,7 +87,7 @@ const translations = {
     creditsDescription: 'Rechargez votre compte pour accéder aux fonctionnalités premium',
     packs: [
       { name: 'Essentiel', credits: 10, price: 5, pricePerCredit: 0.50 },
-      { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
+      { name: 'Lite', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
     linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.fr sur LinkedIn !',
@@ -189,7 +189,7 @@ const translations = {
     creditsDescription: 'Top up your account to access premium features',
     packs: [
       { name: 'Essential', credits: 10, price: 5, pricePerCredit: 0.50 },
-      { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
+      { name: 'Lite', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
     linkedinOffer: '50 free credits if you share a summary of your Crawlers.fr report on LinkedIn!',
@@ -291,7 +291,7 @@ const translations = {
     creditsDescription: 'Recarga tu cuenta para acceder a las funcionalidades premium',
     packs: [
       { name: 'Esencial', credits: 10, price: 5, pricePerCredit: 0.50 },
-      { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
+      { name: 'Lite', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
       { name: 'Último', credits: 500, price: 99, pricePerCredit: 0.198, savings: '60%' },
     ],
@@ -450,7 +450,7 @@ export default function Tarifs() {
         },
         {
           "@type": "Offer",
-          "name": "Pack Pro — 50 Crédits",
+          "name": "Pack Lite — 50 Crédits",
           "description": "50 crédits à 0.38€/unité. Idéal pour les consultants SEO et les sites multi-pages. Économie de 24%.",
           "price": "19.00",
           "priceCurrency": "EUR",

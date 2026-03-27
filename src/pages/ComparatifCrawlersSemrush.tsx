@@ -527,7 +527,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong>Audit expert SEO</strong> : Gratuit avec inscription</li>
                     <li>• <strong>Audit stratégique IA</strong> : 2 crédits par audit</li>
                     <li>• <strong>Pack Essentiel</strong> : 10 crédits pour 5€</li>
-                    <li>• <strong>Pack Pro</strong> : 50 crédits pour 19€</li>
+                    <li>• <strong>Pack Lite</strong> : 50 crédits pour 19€</li>
                     <li>• <strong>Pack Premium</strong> : 150 crédits pour 45€</li>
                     <li>• <strong>Pro Agency</strong> : 59€/mois — illimité, marque blanche, dashboard agence</li>
                   </ul>

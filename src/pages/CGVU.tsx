@@ -114,7 +114,7 @@ const CGVU = () => {
               <ul>
                 <li><strong>Audit Flash gratuit</strong> (0 €) : analyse de base SEO/GEO avec rapport synthétique ;</li>
                 <li><strong>Pack Essentiel</strong> (5 €) : 10 crédits d'analyse ;</li>
-                <li><strong>Pack Pro</strong> (19 €) : 50 crédits d'analyse ;</li>
+                <li><strong>Pack Lite</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
                 
                 <li><strong>Abonnement Pro Agency</strong> (59 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses.</li>
