@@ -450,7 +450,7 @@ export default function Tarifs() {
         },
         {
           "@type": "Offer",
-          "name": "Pack Pro — 50 Crédits",
+          "name": "Pack Lite — 50 Crédits",
           "description": "50 crédits à 0.38€/unité. Idéal pour les consultants SEO et les sites multi-pages. Économie de 24%.",
           "price": "19.00",
           "priceCurrency": "EUR",
