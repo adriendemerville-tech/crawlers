@@ -215,14 +215,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks ──
-    console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink data`)
+    // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks + Workbench ──
+    console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink/workbench data`)
     let existingAuditData: any = null
     let strategicAuditSerpData: any = null
     let cocoonData: any = null
     let geoScoreData: any = null
     let llmVisibilityData: any = null
     let backlinkData: any = null
+    let workbenchItems: any[] = []
 
     const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
