@@ -817,6 +817,22 @@ export function MyActionPlans() {
           siteName={architectPlan.title}
         />
       )}
+
+      {/* Content Architect Modal */}
+      {contentArchitectPlan && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={isContentArchitectOpen}
+            onClose={() => {
+              setIsContentArchitectOpen(false);
+              setContentArchitectPlan(null);
+            }}
+            nodes={[]}
+            domain={(() => { try { return new URL(contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`).hostname.replace('www.', ''); } catch { return contentArchitectPlan.url; } })()}
+            trackedSiteId=""
+          />
+        </Suspense>
+      )}
     </>
   );
 }
