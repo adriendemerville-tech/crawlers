@@ -272,6 +272,80 @@ function generateRegistryContextComment(recommendations: RegistryRecommendation[
 }
 
 // ══════════════════════════════════════════════════════════════
+// ARCHITECT WORKBENCH - Shared diagnostic table
+// ══════════════════════════════════════════════════════════════
+
+async function fetchWorkbenchItems(domain: string, architect: 'code' | 'content'): Promise<any[]> {
+  try {
+    const serviceClient = getServiceClient();
+    const consumedField = architect === 'code' ? 'consumed_by_code' : 'consumed_by_content';
+    
+    const { data, error } = await serviceClient
+      .from('architect_workbench')
+      .select('*')
+      .eq('domain', domain)
+      .in('action_type', architect === 'code' ? ['code', 'both'] : ['content', 'both'])
+      .eq(consumedField, false)
+      .eq('status', 'pending')
+      .order('severity', { ascending: true })
+      .limit(50);
+    
+    if (error) {
+      console.error(`❌ Workbench fetch error (${architect}):`, error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error(`❌ Workbench fetch exception (${architect}):`, error);
+    return [];
+  }
+}
+
+function generateWorkbenchContextComment(items: any[]): string {
+  if (items.length === 0) return '';
+  
+  const bySource: Record<string, any[]> = {};
+  for (const item of items) {
+    const src = item.source_type || 'unknown';
+    if (!bySource[src]) bySource[src] = [];
+    bySource[src].push(item);
+  }
+  
+  let context = `\n  // ══════════════════════════════════════════════════════════════\n`;
+  context += `  // 🏗️ WORKBENCH PARTAGÉ - Diagnostics consolidés (${items.length} items)\n`;
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  
+  for (const [source, sourceItems] of Object.entries(bySource)) {
+    const icon = source === 'cocoon' ? '🕸️' : source === 'audit_tech' ? '🔧' : source === 'audit_strategic' ? '📈' : '🕷️';
+    context += `  //\n  // ${icon} ${source.toUpperCase()} (${sourceItems.length} findings):\n`;
+    sourceItems.slice(0, 5).forEach((item: any) => {
+      context += `  //   - [${item.severity}] ${(item.title || '').substring(0, 80)}${item.target_url ? ` → ${item.target_url}` : ''}\n`;
+    });
+  }
+  
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  return context;
+}
+
+async function markWorkbenchConsumed(itemIds: string[], architect: 'code' | 'content'): Promise<void> {
+  if (itemIds.length === 0) return;
+  try {
+    const serviceClient = getServiceClient();
+    const updateField = architect === 'code' ? 'consumed_by_code' : 'consumed_by_content';
+    
+    await serviceClient
+      .from('architect_workbench')
+      .update({ [updateField]: true, consumed_at: new Date().toISOString(), status: 'in_progress' })
+      .in('id', itemIds);
+    
+    console.log(`✅ Workbench: ${itemIds.length} items marqués comme consommés par ${architect}`);
+  } catch (error) {
+    console.error(`❌ Workbench mark consumed error:`, error);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // BIBLIOTHÈQUE DE SOLUTIONS - RECHERCHE CACHE-FIRST
 // ══════════════════════════════════════════════════════════════
 
