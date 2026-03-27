@@ -2836,9 +2836,11 @@ Deno.serve(async (req) => {
       await incrementSolutionUsage(match.id);
     }
 
-    // Récupérer le contexte du registre si demandé
+    // Récupérer le contexte du registre + workbench si demandé
     let registryContext = '';
     let registryRecommendations: RegistryRecommendation[] = [];
+    let workbenchContext = '';
+    let workbenchItemIds: string[] = [];
     
     if (includeRegistryContext) {
       const authHeader = req.headers.get('Authorization') || '';
@@ -2854,12 +2856,24 @@ Deno.serve(async (req) => {
           console.log('Could not parse URL for domain extraction:', siteUrl);
         }
         
-        registryRecommendations = await fetchRecommendationsRegistry(
-          supabaseUrl, supabaseKey, authHeader, domain
-        );
+        // Fetch both registry and workbench in parallel
+        const [regResult, wbResult] = await Promise.allSettled([
+          fetchRecommendationsRegistry(supabaseUrl, supabaseKey, authHeader, domain),
+          fetchWorkbenchItems(domain, 'code'),
+        ]);
         
-        if (registryRecommendations.length > 0) {
-          registryContext = generateRegistryContextComment(registryRecommendations);
+        if (regResult.status === 'fulfilled') {
+          registryRecommendations = regResult.value;
+          if (registryRecommendations.length > 0) {
+            registryContext = generateRegistryContextComment(registryRecommendations);
+          }
+        }
+        
+        if (wbResult.status === 'fulfilled' && wbResult.value.length > 0) {
+          const wbItems = wbResult.value;
+          workbenchItemIds = wbItems.map((i: any) => i.id);
+          workbenchContext = generateWorkbenchContextComment(wbItems);
+          console.log(`📋 Workbench: ${wbItems.length} items de type 'code' trouvés pour ${domain}`);
         }
       }
     }
