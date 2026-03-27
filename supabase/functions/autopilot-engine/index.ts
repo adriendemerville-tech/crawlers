@@ -735,7 +735,7 @@ Deno.serve(async (req: Request) => {
           pipelinePhase: lastPipelinePhase,
           finalStatus: finalCycleStatus,
           executionSuccess: cycleSuccess,
-          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length}/6 phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
           targetUrl: lastDecision?.tactic?.target_url || null,
           functions: lastDecision?.action?.functions || [],
           details: {
@@ -749,7 +749,7 @@ Deno.serve(async (req: Request) => {
           domain: site.domain,
           status: finalCycleStatus,
           decision_id: lastDecisionId || undefined,
-          pipeline_phase: `full_cycle (${allPhaseResults.length}/6)`,
+          pipeline_phase: `full_cycle (${allPhaseResults.length} phases)`,
         });
 
       } catch (siteError) {
