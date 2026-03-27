@@ -498,6 +498,15 @@ export function Header() {
           )}
         </div>
       </nav>
+      {showTopUpModal && user && (
+        <Suspense fallback={null}>
+          <CreditTopUpModal
+            open={showTopUpModal}
+            onOpenChange={setShowTopUpModal}
+            currentBalance={creditsBalance}
+          />
+        </Suspense>
+      )}
     </header>
   );
 }
