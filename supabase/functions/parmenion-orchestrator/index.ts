@@ -674,8 +674,11 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
-10. author_name par défaut: "Équipe IKtracker"
+9. ⚠️ INDEXABILITÉ : Le contenu HTML DOIT inclure en tout début une balise meta robots indexable:
+   <meta name="robots" content="index, follow">
+   ET dans le schema_org, ajoute "isAccessibleForFree": true
+10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
+11. author_name par défaut: "Équipe IKtracker"
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
