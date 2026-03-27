@@ -531,7 +531,11 @@ export function MyActionPlans() {
     setIsArchitectOpen(true);
   };
 
-  const renderPlanCard = (plan: ActionPlan, isArchived = false) => {
+  const handleOpenContentArchitect = (plan: ActionPlan) => {
+    setContentArchitectPlan(plan);
+    setIsContentArchitectOpen(true);
+  };
+
     const progress = getProgress(plan.tasks);
     const remaining = getRemainingCount(plan.tasks);
     const isExpanded = expandedPlans.has(plan.id);
