@@ -43,7 +43,7 @@ function detectLanguage(html: string): string {
   
   if (frScore > esScore && frScore >= 3) return 'fr';
   if (esScore > frScore && esScore >= 3) return 'es';
-  return 'fr'; // default to French
+  return 'en'; // default to English if no French/Spanish detected
 }
 
 // ─── Helper: render any object/array as structured HTML ───
@@ -936,6 +936,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
 
 // ─── Wrap a section as standalone HTML (for temporary storage) ───
 function wrapStandaloneHTML(bodyContent: string, title: string, lang: string): string {
+  const tr = getTranslations(lang);
   const now = new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
   return `<!DOCTYPE html>
 <html lang="${lang}">
@@ -956,7 +957,7 @@ function wrapStandaloneHTML(bodyContent: string, title: string, lang: string): s
     ${bodyContent}
     <!-- MARINA_SECTION_BODY_END -->
     <div class="footer">
-      <div>Propulsé par Crawlers AI</div>
+      <div>${tr.poweredBy}</div>
       <div style="margin-top:4px;"><a href="https://crawlers.fr">crawlers.fr</a></div>
     </div>
   </div>
@@ -1363,14 +1364,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       
       // ─── Step 1: Technical SEO Audit (includes crawl) ───
       console.log(`[Marina] Phase 1 Step 1: audit-expert-seo for ${url}`);
-      const expertResult = await callFunction('audit-expert-seo', { url, lang: lang || 'fr' });
+      const expertResult = await callFunction('audit-expert-seo', { url, lang });
       
       if (!expertResult?.success || !expertResult?.data) {
         throw new Error(`Expert SEO audit failed: ${expertResult?.error || 'No data returned'}`);
       }
       
       const domain = expertResult.data.domain;
-      const detectedLang = lang || detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.html || '');
+      const detectedLang = detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.html || '') || lang || 'en';
       
       console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
       await updateProgress(30, 'strategic_audit');
