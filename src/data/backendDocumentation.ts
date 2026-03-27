@@ -1397,6 +1397,56 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
   },
 
   // ───────────────────────────────────────────────
+  // SECTION : PIPELINE MARINA
+  // ───────────────────────────────────────────────
+  {
+    id: 'marina',
+    title: 'Pipeline Marina',
+    icon: 'Ship',
+    content: `
+# Pipeline Marina — Prospection Automatisée
+
+## Vue d'ensemble
+
+Marina est un pipeline de génération de rapports SEO complets pour la prospection. Il est segmenté en **3 phases chaînées** via self-invocation (POST sur lui-même avec paramètre \\\`_phase\\\`) pour contourner les timeouts wall-clock des Edge Functions.
+
+## Phases
+
+\\\`\\\`\\\`
+Phase 1 : Audit SEO (audit-expert-seo) + Audit Stratégique (strategic-orchestrator)
+    ↓ persisté dans audit_cache (marina_intermediate_\${jobId})
+Phase 2 : Crawl multi-pages (crawl-site + polling 100s max)
+    ↓ persisté dans audit_cache
+Phase 3 : Calcul Cocoon + Visibilité LLM + Synthèse rapport HTML
+\\\`\\\`\\\`
+
+## Phase 3 — Agrégation multi-pages
+
+La phase 3 agrège les métriques de **toutes les pages crawlées** (\\\`crawl_pages\\\`) et du **graphe sémantique** (\\\`semantic_nodes\\\`) pour produire un rapport complet :
+
+| Donnée | Source | Agrégation |
+|--------|--------|------------|
+| Score SEO moyen | \\\`crawl_pages.seo_score\\\` | Moyenne |
+| Pages avec erreurs | \\\`crawl_pages.http_status\\\` | Count ≥ 400 |
+| Mots total | \\\`crawl_pages.word_count\\\` | Somme |
+| Liens internes/externes | \\\`crawl_pages\\\` | Somme |
+| Clusters sémantiques | \\\`semantic_nodes\\\` | Count distinct cluster_id |
+| Liens entrants par nœud | \\\`semantic_nodes.internal_links_in\\\` | Moyenne |
+
+## Gestion des jobs
+
+| Fonctionnalité | Détail |
+|----------------|--------|
+| **Table** | \\\`async_jobs\\\` (function_name = 'marina') |
+| **Auto-cleanup** | Jobs bloqués > 10 min → marqués 'failed' |
+| **Annulation** | Statut 'cancelled' + message 'Interrompu manuellement' |
+| **Suppression** | Admin peut supprimer individuellement ou en masse |
+| **Partage** | Liens temporaires via \\\`share-actions\\\` (\\\`/temporarylink/{shareId}\\\`) |
+| **Coûts** | Compteur temps réel (LLM + APIs) via analytics_events |
+`,
+  },
+
+  // ───────────────────────────────────────────────
   // SECTION : AUTOPILOTE
   // ───────────────────────────────────────────────
   {
