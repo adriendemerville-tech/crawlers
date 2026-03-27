@@ -228,7 +228,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - Crawl Multi-Pages : 1 crédit / 50 pages
 - Codes Correctifs : 1 crédit ou paiement unique (3-12€)
 
-## Pro Agency — 59€/mois
+## Pro Agency — 59€/mois (sans engagement, résiliable à tout moment)
 - Console multi-sites (jusqu'à 30 sites)
 - 5 000 pages de crawl/mois
 - 3 comptes (owner + 2 invités)
@@ -239,7 +239,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - Correction automatique des pages
 - White Label / Marque blanche
 
-## Pro Agency+ — 89€/mois
+## Pro Agency+ — 89€/mois (sans engagement, résiliable à tout moment)
 - Tout Pro Agency +
 - 100 000 pages de crawl/mois
 - 5 comptes (owner + 4 invités)
