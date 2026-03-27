@@ -3065,6 +3065,7 @@ Deno.serve(async (req) => {
         libraryHits: libraryHits.length,
         newGenerations: newGenerations.length,
         registryRecommendationsCount: registryRecommendations.length,
+        workbenchItemsUsed: workbenchItemIds.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
         // ═══ NOUVEAUTÉS v4.0 ═══
         cmsDetected: cmsSettings.cmsType || null,
