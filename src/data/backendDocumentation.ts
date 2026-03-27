@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion, pipeline Marina, serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  172 fonctions serverless + 36 modules partagés         │
+│  173 fonctions serverless + 35 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -65,7 +65,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  142 tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  139 tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +77,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 172 fonctions serverless + 36 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 173 fonctions serverless + 35 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -308,7 +308,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (172 fonctions)
+# API — Edge Functions (173 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -534,8 +534,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`marina\` | ✅ | Pipeline de rapports automatisés (async job) |
-| \`autopilot-engine\` | ✅ | Moteur d'autopilote SEO (cron quotidien 3h UTC) |
+| \`marina\` | ✅ | Pipeline de rapports automatisés (3 phases chaînées : audit → crawl → synthèse) |
+| \`autopilot-engine\` | ✅ | Moteur d'autopilote SEO — cycles complets 5 phases (cron quotidien 3h UTC) |
 | \`parmenion-orchestrator\` | ✅ | Intelligence décisionnelle Parménion (Gemini Flash/Pro) |
 | \`parmenion-feedback\` | ✅ | Boucle rétroaction T+30 Parménion |
 | \`mcp-server\` | ❌/✅ | Serveur MCP (Model Context Protocol) — 2 tiers d'accès |
@@ -745,7 +745,7 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 36 modules
+# Modules Partagés (_shared/) — 35 modules
 
 Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
@@ -1344,6 +1344,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Monitoré par** : Agent CTO
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
+- **Indexabilité** : Les contenus générés incluent systématiquement \\\`<meta name="robots" content="index, follow">\\\` et \\\`isAccessibleForFree: true\\\` dans le schema.org
 - **Publication CMS** : Via \\\`cms-publish-draft\\\` (WP, Drupal, Shopify) avec versionnement
 
 ---
@@ -1413,13 +1414,13 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 
 ## Concept
 
-Pipeline cumulatif en 3 phases séquentielles :
+Pipeline **complet en 5 phases séquentielles** exécutées dans un seul cycle :
 
 \`\`\`
-Diagnostic → Prescription → Implémentation
+Audit → Diagnostic → Prescription → Exécution → Validation
 \`\`\`
 
-Chaque phase est configurable indépendamment via des cases à cocher.
+Chaque cycle boucle sur l'ensemble des phases pour garantir un traitement de bout en bout. Les phases individuelles restent configurables via des cases à cocher.
 
 ## Phases
 
@@ -1475,13 +1476,16 @@ Chaque phase est configurable indépendamment via des cases à cocher.
 
 L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invoqué par un **cron job quotidien** (3h UTC) via \`pg_cron\` + \`pg_net\`.
 
-### Pipeline d'exécution
+### Pipeline d'exécution (cycle complet)
 
 1. **Fetch** : Récupère toutes les \`autopilot_configs\` actives
 2. **Cooldown** : Vérifie le délai minimum (défaut 48h) depuis \`last_cycle_at\`
-3. **Orchestration** : Appelle \`parmenion-orchestrator\` (Gemini Flash)
-4. **Exécution** : Invoque les fonctions décidées
-5. **MAJ** : Met à jour compteurs et insère dans \`autopilot_modification_log\`
+3. **Boucle 5 phases** : Pour chaque phase (audit → diagnose → prescribe → execute → validate) :
+   - Appelle \`parmenion-orchestrator\` avec le contexte de la phase
+   - Exécute les actions décidées par Parménion
+   - Log dans \`autopilot_modification_log\` et \`parmenion_decision_log\`
+4. **MAJ** : Incrémente \`total_cycles_run\`, met à jour \`last_cycle_at\`
+5. **Sync IKtracker** : Événement de statut final si applicable
 
 ### Parménion — Intelligence décisionnelle
 
@@ -1511,14 +1515,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '7.0.0',
-  lastUpdated: '2026-03-26',
+  version: '8.0.0',
+  lastUpdated: '2026-03-27',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N',
-  totalEdgeFunctions: 172,
-  totalSharedModules: 36,
-  totalTables: '142',
-  totalLinesOfCode: '205 000+',
-  totalMigrations: 235,
+  totalEdgeFunctions: 173,
+  totalSharedModules: 35,
+  totalTables: '139',
+  totalLinesOfCode: '199 000+',
+  totalMigrations: 243,
   totalPages: 41,
   totalComponents: 311,
 };
