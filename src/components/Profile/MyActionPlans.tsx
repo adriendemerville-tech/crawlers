@@ -69,7 +69,7 @@ const translations = {
     collapse: 'Masquer les tâches',
     saved: 'Progression sauvegardée',
     deleted: 'Plan d\'action supprimé',
-    architect: 'Architecte',
+    architect: 'Code Architect',
     archive: 'Archiver',
     unarchive: 'Restaurer',
     archived: 'Plan archivé',
@@ -385,9 +385,9 @@ export function MyActionPlans() {
     const domain = plan?.url ? (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })() : '';
     
     const confirmMsg = language === 'fr'
-      ? `Supprimer ce plan d'action ? Ce plan alimente aussi l'Architecte Génératif pour générer du code adapté au site "${domain}".`
+      ? `Supprimer ce plan d'action ? Ce plan alimente aussi Code Architect pour générer du code adapté au site "${domain}".`
       : language === 'es'
-      ? `¿Eliminar este plan de acción? Este plan también alimenta el Arquitecto Generativo para generar código adaptado al sitio "${domain}".`
+      ? `¿Eliminar este plan de acción? Este plan también alimenta Code Architect para generar código adaptado al sitio "${domain}".`
       : `Delete this action plan? This plan also feeds the Generative Architect to generate code tailored to site "${domain}".`;
 
     if (!window.confirm(confirmMsg)) return;

@@ -55,7 +55,7 @@ const PAYLOAD_TYPE_LABELS: Record<string, string> = {
 const translations = {
   fr: {
     empty: 'Aucun script injecté',
-    emptyDesc: 'Les scripts apparaîtront après configuration via l\'Architecte',
+    emptyDesc: 'Les scripts apparaîtront après configuration via Code Architect',
     test: 'Tester',
     testing: 'Test...',
     arrived: 'Reçu',

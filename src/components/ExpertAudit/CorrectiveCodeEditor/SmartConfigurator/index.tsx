@@ -1407,7 +1407,7 @@ export function SmartConfigurator({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center">
-          <DialogTitle className="sr-only">Architecte</DialogTitle>
+          <DialogTitle className="sr-only">Code Architect</DialogTitle>
           <DialogDescription className="text-sm font-medium text-foreground truncate max-w-lg text-center">
             {siteUrl}
           </DialogDescription>
@@ -1418,7 +1418,7 @@ export function SmartConfigurator({
           <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-              <span className="text-sm text-muted-foreground">Chargement de l'Architecte…</span>
+              <span className="text-sm text-muted-foreground">Chargement de Code Architect…</span>
             </div>
           </div>
         )}
