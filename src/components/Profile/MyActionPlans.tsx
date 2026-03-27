@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe, GripVertical } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe, GripVertical, PenLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
+const CocoonContentArchitectModal = lazy(() => import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
 import {
   DndContext,
   closestCenter,
@@ -70,6 +71,7 @@ const translations = {
     saved: 'Progression sauvegardée',
     deleted: 'Plan d\'action supprimé',
     architect: 'Code Architect',
+    contentArchitect: 'Content Architect',
     archive: 'Archiver',
     unarchive: 'Restaurer',
     archived: 'Plan archivé',
@@ -98,7 +100,8 @@ const translations = {
     collapse: 'Hide tasks',
     saved: 'Progress saved',
     deleted: 'Action plan deleted',
-    architect: 'Architect',
+    architect: 'Code Architect',
+    contentArchitect: 'Content Architect',
     archive: 'Archive',
     unarchive: 'Restore',
     archived: 'Plan archived',
@@ -127,7 +130,8 @@ const translations = {
     collapse: 'Ocultar tareas',
     saved: 'Progreso guardado',
     deleted: 'Plan de acción eliminado',
-    architect: 'Arquitecto',
+    architect: 'Code Architect',
+    contentArchitect: 'Content Architect',
     archive: 'Archivar',
     unarchive: 'Restaurar',
     archived: 'Plan archivado',
@@ -147,18 +151,22 @@ function SortableTaskItem({
   isArchived,
   onToggle,
   onOpenArchitect,
+  onOpenContentArchitect,
   getPriorityColor,
   getPriorityLabel,
   architectLabel,
+  contentArchitectLabel,
 }: {
   task: ActionPlanTask;
   planId: string;
   isArchived: boolean;
   onToggle: (planId: string, taskId: string) => void;
   onOpenArchitect: () => void;
+  onOpenContentArchitect: () => void;
   getPriorityColor: (p: string) => string;
   getPriorityLabel: (p: string) => string;
   architectLabel: string;
+  contentArchitectLabel: string;
 }) {
   const {
     attributes,
@@ -228,15 +236,26 @@ function SortableTaskItem({
         </div>
       </div>
       {!task.isCompleted && !isArchived && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onOpenArchitect}
-          className="shrink-0 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
-        >
-          <Wand2 className="h-3 w-3" />
-          {architectLabel}
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenContentArchitect}
+            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2"
+          >
+            <PenLine className="h-3 w-3" />
+            <span className="hidden xl:inline">{contentArchitectLabel}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenArchitect}
+            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+          >
+            <Wand2 className="h-3 w-3" />
+            <span className="hidden xl:inline">{architectLabel}</span>
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -254,10 +273,14 @@ export function MyActionPlans() {
   const [archivesOpen, setArchivesOpen] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   
-  // Architect modal state
+  // Code Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
   const [architectPlan, setArchitectPlan] = useState<ActionPlan | null>(null);
   const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
+
+  // Content Architect modal state
+  const [isContentArchitectOpen, setIsContentArchitectOpen] = useState(false);
+  const [contentArchitectPlan, setContentArchitectPlan] = useState<ActionPlan | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -508,6 +531,11 @@ export function MyActionPlans() {
     setIsArchitectOpen(true);
   };
 
+  const handleOpenContentArchitect = (plan: ActionPlan) => {
+    setContentArchitectPlan(plan);
+    setIsContentArchitectOpen(true);
+  };
+
   const renderPlanCard = (plan: ActionPlan, isArchived = false) => {
     const progress = getProgress(plan.tasks);
     const remaining = getRemainingCount(plan.tasks);
@@ -638,9 +666,11 @@ export function MyActionPlans() {
                         isArchived={isArchived}
                         onToggle={toggleTask}
                         onOpenArchitect={() => handleOpenArchitect(plan, task)}
+                        onOpenContentArchitect={() => handleOpenContentArchitect(plan)}
                         getPriorityColor={getPriorityColor}
                         getPriorityLabel={getPriorityLabel}
                         architectLabel={t.architect}
+                        contentArchitectLabel={t.contentArchitect}
                       />
                     ))}
                   </div>
@@ -786,6 +816,22 @@ export function MyActionPlans() {
           siteUrl={architectPlan.url.startsWith('http') ? architectPlan.url : `https://${architectPlan.url}`}
           siteName={architectPlan.title}
         />
+      )}
+
+      {/* Content Architect Modal */}
+      {contentArchitectPlan && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={isContentArchitectOpen}
+            onClose={() => {
+              setIsContentArchitectOpen(false);
+              setContentArchitectPlan(null);
+            }}
+            nodes={[]}
+            domain={(() => { try { return new URL(contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`).hostname.replace('www.', ''); } catch { return contentArchitectPlan.url; } })()}
+            trackedSiteId=""
+          />
+        </Suspense>
       )}
     </>
   );
