@@ -51,6 +51,17 @@ const packages = [
     popular: false,
     savings: '40%',
   },
+  {
+    id: 'ultimate',
+    name: 'Ultime',
+    credits: 500,
+    price: 99,
+    pricePerCredit: 0.20,
+    color: 'from-purple-600 to-violet-600',
+    borderColor: 'border-purple-500/30',
+    popular: false,
+    savings: '60%',
+  },
 ];
 
 const translations = {
@@ -352,7 +363,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
         </motion.div>
 
         {/* Credit Packs — bottom */}
-        <div className="grid gap-3 pt-3 grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 pt-3 grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
