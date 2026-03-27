@@ -182,10 +182,18 @@ serve(async (req: Request) => {
     const validatedFunctions = decision.action.functions.filter((f: string) => allowedFunctions.includes(f));
     if (validatedFunctions.length === 0) {
       console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
-      // Fallback to first function of the phase
+      // Fallback to appropriate function for the phase
       if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
-      else if (currentPhase === 'prescribe') validatedFunctions.push('generate-corrective-code');
+      else if (currentPhase === 'prescribe') {
+        // Alternate between content and technical based on cycle parity
+        // Odd cycles → content-architecture-advisor, Even → generate-corrective-code
+        if (context.isIktracker && cycle_number % 2 === 1) {
+          validatedFunctions.push('content-architecture-advisor');
+        } else {
+          validatedFunctions.push('generate-corrective-code');
+        }
+      }
       else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
