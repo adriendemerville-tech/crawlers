@@ -445,18 +445,6 @@ export function Header() {
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
                     </DropdownMenuItem>
-                    {!isAgencyPro && (
-                      <DropdownMenuItem asChild className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
-                        <div>
-                          <Wallet className="h-4 w-4 text-amber-500" />
-                          <span>{t.wallet}</span>
-                          <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-                            {creditsBalance}
-                            <CreditCoin size="sm" />
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=settings')}>
                         <Settings className="h-4 w-4" />
@@ -475,6 +463,15 @@ export function Header() {
                         <Code2 className="h-4 w-4" />
                         {t.correctiveCodes}
                     </DropdownMenuItem>
+                    {!isCollaborator && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => { setIsProfileOpen(false); setShowTopUpModal(true); }}>
+                          <CreditCard className="h-4 w-4" />
+                          {isAgencyPro ? (language === 'fr' ? 'Abonnement' : language === 'es' ? 'Suscripción' : 'Subscription') : (language === 'fr' ? 'Tarifs' : language === 'es' ? 'Tarifas' : 'Pricing')}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
                       <LogOut className="h-4 w-4" />
