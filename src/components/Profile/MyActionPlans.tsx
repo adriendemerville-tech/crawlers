@@ -315,37 +315,74 @@ export function MyActionPlans() {
   const activePlans = useMemo(() => actionPlans.filter(p => !p.is_archived), [actionPlans]);
   const archivedPlans = useMemo(() => actionPlans.filter(p => p.is_archived), [actionPlans]);
 
-  // Unique tracked URLs for sidebar
+  // Unique tracked URLs for sidebar — group by full URL path, not just hostname
   const uniqueUrls = useMemo(() => {
-    const urls = new Map<string, string>();
-    actionPlans.forEach(p => {
+    const urlMap = new Map<string, { originalUrl: string; hostname: string; path: string; totalTasks: number; criticalCount: number; importantCount: number }>();
+    activePlans.forEach(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        if (!urls.has(hostname)) urls.set(hostname, p.url);
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        const key = hostname + path;
+        const existing = urlMap.get(key);
+        const tasks = p.tasks.filter(t => !t.isCompleted);
+        const critical = tasks.filter(t => t.priority === 'critical').length;
+        const important = tasks.filter(t => t.priority === 'important').length;
+        if (existing) {
+          existing.totalTasks += tasks.length;
+          existing.criticalCount += critical;
+          existing.importantCount += important;
+        } else {
+          urlMap.set(key, { originalUrl: p.url, hostname, path, totalTasks: tasks.length, criticalCount: critical, importantCount: important });
+        }
       } catch {
-        urls.set(p.url, p.url);
+        urlMap.set(p.url, { originalUrl: p.url, hostname: p.url, path: '/', totalTasks: p.tasks.filter(t => !t.isCompleted).length, criticalCount: 0, importantCount: 0 });
       }
     });
-    return Array.from(urls.entries()); // [hostname, originalUrl]
-  }, [actionPlans]);
+    // Sort: critical count desc, then total tasks desc
+    return Array.from(urlMap.entries()).sort((a, b) => b[1].criticalCount - a[1].criticalCount || b[1].totalTasks - a[1].totalTasks);
+  }, [activePlans]);
+
+  // Unique hostnames for sidebar grouping
+  const uniqueHostnames = useMemo(() => {
+    const hosts = new Map<string, number>();
+    uniqueUrls.forEach(([, info]) => {
+      hosts.set(info.hostname, (hosts.get(info.hostname) || 0) + info.totalTasks);
+    });
+    return Array.from(hosts.entries());
+  }, [uniqueUrls]);
 
   // Filter plans by selected URL
   const filteredActivePlans = useMemo(() => {
     if (!selectedUrl) return activePlans;
     return activePlans.filter(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        return hostname === selectedUrl;
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        return (hostname + path) === selectedUrl || hostname === selectedUrl;
       } catch { return p.url === selectedUrl; }
     });
   }, [activePlans, selectedUrl]);
+
+  // Sort filtered plans: critical tasks first
+  const sortedFilteredActivePlans = useMemo(() => {
+    const priorityOrder = { critical: 0, important: 1, optional: 2 };
+    return [...filteredActivePlans].sort((a, b) => {
+      const aMax = Math.min(...a.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
+      const bMax = Math.min(...b.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
+      return aMax - bMax;
+    });
+  }, [filteredActivePlans]);
 
   const filteredArchivedPlans = useMemo(() => {
     if (!selectedUrl) return archivedPlans;
     return archivedPlans.filter(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        return hostname === selectedUrl;
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        return (hostname + path) === selectedUrl || hostname === selectedUrl;
       } catch { return p.url === selectedUrl; }
     });
   }, [archivedPlans, selectedUrl]);
