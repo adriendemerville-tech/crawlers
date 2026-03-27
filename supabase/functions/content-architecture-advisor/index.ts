@@ -109,71 +109,119 @@ Deno.serve(async (req) => {
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
       : await getSiteContext(serviceClient, { domain, userId: user.id })
 
-    // ── Step 2: DataForSEO Keywords (parallel) ──
-    console.log(`[content-advisor] Step 2: DataForSEO keywords + SERP`)
-    const dfLogin = Deno.env.get('DATAFORSEO_LOGIN')
-    const dfPassword = Deno.env.get('DATAFORSEO_PASSWORD')
-    const dfAuth = dfLogin && dfPassword ? 'Basic ' + btoa(`${dfLogin}:${dfPassword}`) : null
-
+    // ── Step 2: Check workbench for cached keyword/SERP data before calling DataForSEO ──
+    console.log(`[content-advisor] Step 2: Checking workbench for keyword data, then DataForSEO fallback`)
+    
     let keywordData: any = null
     let serpData: any = null
+    let workbenchKeywords: any[] = []
+    let workbenchQuickWins: any[] = []
+    let workbenchContentGaps: any[] = []
+    let workbenchMissingTerms: any[] = []
+    let workbenchMissingPages: any[] = []
+    let skippedDataForSEO = false
 
-    if (dfAuth) {
-      const [kwResp, serpResp] = await Promise.allSettled([
-        // Keywords data
-        fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live', {
-          method: 'POST',
-          headers: { 'Authorization': dfAuth, 'Content-Type': 'application/json' },
-          body: JSON.stringify([{
-            keyword, language_code, location_code,
-            limit: 30,
-            include_seed_keyword: true,
-          }]),
-          signal: AbortSignal.timeout(15000),
-        }),
-        // SERP analysis
-        fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-          method: 'POST',
-          headers: { 'Authorization': dfAuth, 'Content-Type': 'application/json' },
-          body: JSON.stringify([{
-            keyword, language_code, location_code,
-            depth: 10,
-          }]),
-          signal: AbortSignal.timeout(15000),
-        }),
-      ])
+    // First, check if workbench has keyword_data items for this domain (populated by strategic audit)
+    const { data: wbKeywordItems } = await serviceClient
+      .from('architect_workbench')
+      .select('finding_category, payload, title, description, severity')
+      .eq('domain', domain)
+      .in('finding_category', ['keyword_data', 'quick_win', 'content_gap', 'missing_terms', 'serp_analysis', 'missing_page', 'content_upgrade', 'competitive_gap'])
+      .order('created_at', { ascending: false })
+      .limit(100)
 
-      if (kwResp.status === 'fulfilled' && kwResp.value.ok) {
-        const json = await kwResp.value.json()
-        const items = json?.tasks?.[0]?.result?.[0]?.items || []
+    if (wbKeywordItems && wbKeywordItems.length > 0) {
+      // We have strategic audit data in workbench — reconstruct keyword/SERP context
+      workbenchKeywords = wbKeywordItems.filter((i: any) => i.finding_category === 'keyword_data')
+      workbenchQuickWins = wbKeywordItems.filter((i: any) => i.finding_category === 'quick_win')
+      workbenchContentGaps = wbKeywordItems.filter((i: any) => i.finding_category === 'content_gap')
+      workbenchMissingTerms = wbKeywordItems.filter((i: any) => i.finding_category === 'missing_terms')
+      workbenchMissingPages = wbKeywordItems.filter((i: any) => i.finding_category === 'missing_page')
+
+      if (workbenchKeywords.length >= 3) {
+        // Reconstruct keywordData from workbench (avoid DataForSEO call)
+        const seedKw = workbenchKeywords.find((k: any) => k.payload?.keyword?.toLowerCase() === keyword.toLowerCase())
         keywordData = {
-          seed: { keyword, search_volume: json?.tasks?.[0]?.result?.[0]?.seed_keyword_data?.keyword_info?.search_volume || 0 },
-          related: items.slice(0, 20).map((i: any) => ({
-            keyword: i.keyword_data?.keyword,
-            volume: i.keyword_data?.keyword_info?.search_volume || 0,
-            cpc: i.keyword_data?.keyword_info?.cpc || 0,
-            competition: i.keyword_data?.keyword_info?.competition_level || 'unknown',
+          seed: {
+            keyword,
+            search_volume: seedKw?.payload?.volume || 0,
+          },
+          related: workbenchKeywords.slice(0, 20).map((k: any) => ({
+            keyword: k.payload?.keyword || k.title?.replace('Mot-clé: ', ''),
+            volume: k.payload?.volume || 0,
+            cpc: 0,
+            competition: k.payload?.difficulty > 70 ? 'high' : k.payload?.difficulty > 40 ? 'medium' : 'low',
           })),
+          source: 'workbench_cache',
         }
-        trackPaidApiCall('dataforseo', 'related_keywords', user.id)
+        skippedDataForSEO = true
+        console.log(`[content-advisor] ✅ Workbench has ${workbenchKeywords.length} keywords — SKIPPING DataForSEO API call (saved 2 credits)`)
       }
+    }
 
-      if (serpResp.status === 'fulfilled' && serpResp.value.ok) {
-        const json = await serpResp.value.json()
-        const items = json?.tasks?.[0]?.result?.[0]?.items || []
-        serpData = {
-          type: json?.tasks?.[0]?.result?.[0]?.type || 'organic',
-          items_count: json?.tasks?.[0]?.result?.[0]?.items_count || 0,
-          featured_snippet: items.some((i: any) => i.type === 'featured_snippet'),
-          people_also_ask: items.filter((i: any) => i.type === 'people_also_ask').flatMap((i: any) => i.items?.map((q: any) => q.title) || []),
-          top_organic: items.filter((i: any) => i.type === 'organic').slice(0, 5).map((i: any) => ({
-            title: i.title,
-            url: i.url,
-            description: i.description,
-            domain: i.domain,
-          })),
+    // Fallback: call DataForSEO only if workbench didn't have keyword data
+    if (!skippedDataForSEO) {
+      console.log(`[content-advisor] No workbench keyword cache — calling DataForSEO`)
+      const dfLogin = Deno.env.get('DATAFORSEO_LOGIN')
+      const dfPassword = Deno.env.get('DATAFORSEO_PASSWORD')
+      const dfAuth = dfLogin && dfPassword ? 'Basic ' + btoa(`${dfLogin}:${dfPassword}`) : null
+
+      if (dfAuth) {
+        const [kwResp, serpResp] = await Promise.allSettled([
+          fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live', {
+            method: 'POST',
+            headers: { 'Authorization': dfAuth, 'Content-Type': 'application/json' },
+            body: JSON.stringify([{
+              keyword, language_code, location_code,
+              limit: 30,
+              include_seed_keyword: true,
+            }]),
+            signal: AbortSignal.timeout(15000),
+          }),
+          fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+            method: 'POST',
+            headers: { 'Authorization': dfAuth, 'Content-Type': 'application/json' },
+            body: JSON.stringify([{
+              keyword, language_code, location_code,
+              depth: 10,
+            }]),
+            signal: AbortSignal.timeout(15000),
+          }),
+        ])
+
+        if (kwResp.status === 'fulfilled' && kwResp.value.ok) {
+          const json = await kwResp.value.json()
+          const items = json?.tasks?.[0]?.result?.[0]?.items || []
+          keywordData = {
+            seed: { keyword, search_volume: json?.tasks?.[0]?.result?.[0]?.seed_keyword_data?.keyword_info?.search_volume || 0 },
+            related: items.slice(0, 20).map((i: any) => ({
+              keyword: i.keyword_data?.keyword,
+              volume: i.keyword_data?.keyword_info?.search_volume || 0,
+              cpc: i.keyword_data?.keyword_info?.cpc || 0,
+              competition: i.keyword_data?.keyword_info?.competition_level || 'unknown',
+            })),
+            source: 'dataforseo_live',
+          }
+          trackPaidApiCall('dataforseo', 'related_keywords', user.id)
         }
-        trackPaidApiCall('dataforseo', 'serp_organic', user.id)
+
+        if (serpResp.status === 'fulfilled' && serpResp.value.ok) {
+          const json = await serpResp.value.json()
+          const items = json?.tasks?.[0]?.result?.[0]?.items || []
+          serpData = {
+            type: json?.tasks?.[0]?.result?.[0]?.type || 'organic',
+            items_count: json?.tasks?.[0]?.result?.[0]?.items_count || 0,
+            featured_snippet: items.some((i: any) => i.type === 'featured_snippet'),
+            people_also_ask: items.filter((i: any) => i.type === 'people_also_ask').flatMap((i: any) => i.items?.map((q: any) => q.title) || []),
+            top_organic: items.filter((i: any) => i.type === 'organic').slice(0, 5).map((i: any) => ({
+              title: i.title,
+              url: i.url,
+              description: i.description,
+              domain: i.domain,
+            })),
+          }
+          trackPaidApiCall('dataforseo', 'serp_organic', user.id)
+        }
       }
     }
 
