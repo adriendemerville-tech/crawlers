@@ -145,7 +145,7 @@ export default function ArchitecteGeneratif() {
         <meta property="og:locale" content="fr_FR" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
+        <meta name="twitter:title" content="Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
         <meta name="twitter:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
       </Helmet>
@@ -175,9 +175,9 @@ export default function ArchitecteGeneratif() {
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 {t3(language,
-                  'L\'Architecte Génératif analyse votre site et applique automatiquement les bons correctifs SEO/GEO sur les bonnes pages. Données structurées, métadonnées, Open Graph : chaque URL reçoit exactement ce dont elle a besoin.',
-                  'The Generative Architect analyzes your site and automatically applies the right SEO/GEO fixes to the right pages. Structured data, metadata, Open Graph: each URL gets exactly what it needs.',
-                  'El Arquitecto Generativo analiza su sitio y aplica automáticamente las correcciones SEO/GEO correctas en las páginas correctas. Datos estructurados, metadatos, Open Graph: cada URL recibe exactamente lo que necesita.'
+                  'Code Architect analyse votre site et applique automatiquement les bons correctifs SEO/GEO sur les bonnes pages. Données structurées, métadonnées, Open Graph : chaque URL reçoit exactement ce dont elle a besoin.',
+                  'Code Architect analyzes your site and automatically applies the right SEO/GEO fixes to the right pages. Structured data, metadata, Open Graph: each URL gets exactly what it needs.',
+                  'Code Architect analiza su sitio y aplica automáticamente las correcciones SEO/GEO correctas en las páginas correctas. Datos estructurados, metadatos, Open Graph: cada URL recibe exactamente lo que necesita.'
                 )}
               </p>
             </div>
@@ -287,9 +287,9 @@ export default function ArchitecteGeneratif() {
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                   {t3(language,
-                    'Injecter du code sur un site est une responsabilité. C\'est pourquoi chaque couche de l\'Architecte Génératif intègre des mécanismes de protection automatiques.',
-                    'Injecting code on a site is a responsibility. That\'s why every layer of the Generative Architect integrates automatic protection mechanisms.',
-                    'Inyectar código en un sitio es una responsabilidad. Por eso cada capa del Arquitecto Generativo integra mecanismos de protección automáticos.'
+                    'Injecter du code sur un site est une responsabilité. C\'est pourquoi chaque couche de Code Architect intègre des mécanismes de protection automatiques.',
+                    'Injecting code on a site is a responsibility. That\'s why every layer of Code Architect integrates automatic protection mechanisms.',
+                    'Inyectar código en un sitio es una responsabilidad. Por eso cada capa de Code Architect integra mecanismos de protección automáticos.'
                   )}
                 </p>
               </div>
