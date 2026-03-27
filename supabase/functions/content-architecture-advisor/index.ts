@@ -518,6 +518,16 @@ ${(strategicAuditSerpData.competitive_gaps || []).join('\n- ') || 'Aucun'}
 RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers sémantique ci-dessus. Le contenu doit couvrir les termes manquants et les gaps identifiés quand c'est pertinent.
 ` : ''}
 
+${workbenchItems.length > 0 ? `
+── DIAGNOSTICS CONSOLIDÉS (Workbench Partagé) ──
+Les diagnostics suivants ont été identifiés par les différents modules d'analyse et sont assignés au Content Architect :
+${workbenchItems.slice(0, 15).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
+   Source: ${item.source_type} | Catégorie: ${item.finding_category}
+   ${item.description ? `Description: ${item.description.substring(0, 200)}` : ''}`).join('\n\n')}
+
+RÈGLE : Intègre ces findings dans ta recommandation. Chaque diagnostic pertinent pour le contenu cible doit se refléter dans la structure ou la stratégie proposée.
+` : ''}
+
 **Données Cocoon (maillage):**
 ${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
 
