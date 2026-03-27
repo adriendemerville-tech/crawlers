@@ -315,37 +315,74 @@ export function MyActionPlans() {
   const activePlans = useMemo(() => actionPlans.filter(p => !p.is_archived), [actionPlans]);
   const archivedPlans = useMemo(() => actionPlans.filter(p => p.is_archived), [actionPlans]);
 
-  // Unique tracked URLs for sidebar
+  // Unique tracked URLs for sidebar — group by full URL path, not just hostname
   const uniqueUrls = useMemo(() => {
-    const urls = new Map<string, string>();
-    actionPlans.forEach(p => {
+    const urlMap = new Map<string, { originalUrl: string; hostname: string; path: string; totalTasks: number; criticalCount: number; importantCount: number }>();
+    activePlans.forEach(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        if (!urls.has(hostname)) urls.set(hostname, p.url);
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        const key = hostname + path;
+        const existing = urlMap.get(key);
+        const tasks = p.tasks.filter(t => !t.isCompleted);
+        const critical = tasks.filter(t => t.priority === 'critical').length;
+        const important = tasks.filter(t => t.priority === 'important').length;
+        if (existing) {
+          existing.totalTasks += tasks.length;
+          existing.criticalCount += critical;
+          existing.importantCount += important;
+        } else {
+          urlMap.set(key, { originalUrl: p.url, hostname, path, totalTasks: tasks.length, criticalCount: critical, importantCount: important });
+        }
       } catch {
-        urls.set(p.url, p.url);
+        urlMap.set(p.url, { originalUrl: p.url, hostname: p.url, path: '/', totalTasks: p.tasks.filter(t => !t.isCompleted).length, criticalCount: 0, importantCount: 0 });
       }
     });
-    return Array.from(urls.entries()); // [hostname, originalUrl]
-  }, [actionPlans]);
+    // Sort: critical count desc, then total tasks desc
+    return Array.from(urlMap.entries()).sort((a, b) => b[1].criticalCount - a[1].criticalCount || b[1].totalTasks - a[1].totalTasks);
+  }, [activePlans]);
+
+  // Unique hostnames for sidebar grouping
+  const uniqueHostnames = useMemo(() => {
+    const hosts = new Map<string, number>();
+    uniqueUrls.forEach(([, info]) => {
+      hosts.set(info.hostname, (hosts.get(info.hostname) || 0) + info.totalTasks);
+    });
+    return Array.from(hosts.entries());
+  }, [uniqueUrls]);
 
   // Filter plans by selected URL
   const filteredActivePlans = useMemo(() => {
     if (!selectedUrl) return activePlans;
     return activePlans.filter(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        return hostname === selectedUrl;
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        return (hostname + path) === selectedUrl || hostname === selectedUrl;
       } catch { return p.url === selectedUrl; }
     });
   }, [activePlans, selectedUrl]);
+
+  // Sort filtered plans: critical tasks first
+  const sortedFilteredActivePlans = useMemo(() => {
+    const priorityOrder = { critical: 0, important: 1, optional: 2 };
+    return [...filteredActivePlans].sort((a, b) => {
+      const aMax = Math.min(...a.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
+      const bMax = Math.min(...b.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
+      return aMax - bMax;
+    });
+  }, [filteredActivePlans]);
 
   const filteredArchivedPlans = useMemo(() => {
     if (!selectedUrl) return archivedPlans;
     return archivedPlans.filter(p => {
       try {
-        const hostname = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '');
-        return hostname === selectedUrl;
+        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
+        const hostname = parsed.hostname.replace('www.', '');
+        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
+        return (hostname + path) === selectedUrl || hostname === selectedUrl;
       } catch { return p.url === selectedUrl; }
     });
   }, [archivedPlans, selectedUrl]);
@@ -699,34 +736,66 @@ export function MyActionPlans() {
             </div>
           ) : (
             <div className="flex gap-4">
-              {/* Left sidebar: tracked URLs */}
-              {uniqueUrls.length > 1 && (
-                <div className="w-48 shrink-0 space-y-1 border-r pr-3">
+              {/* Left sidebar: tracked URLs grouped by hostname */}
+              {uniqueHostnames.length >= 1 && (
+                <div className="w-52 shrink-0 border-r pr-3 max-h-[70vh] overflow-y-auto">
                   <Button
                     variant={selectedUrl === null ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="w-full justify-start text-xs"
+                    className="w-full justify-start text-xs mb-2"
                     onClick={() => setSelectedUrl(null)}
                   >
-                    <Globe className="h-3.5 w-3.5 mr-2" />
+                    <Globe className="h-3.5 w-3.5 mr-2 shrink-0" />
                     {t.allSites}
+                    <span className="ml-auto text-[10px] text-muted-foreground">
+                      {activePlans.reduce((s, p) => s + p.tasks.filter(t => !t.isCompleted).length, 0)}
+                    </span>
                   </Button>
-                  {uniqueUrls.map(([hostname]) => {
-                    const count = actionPlans.filter(p => {
-                      try { return new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`).hostname.replace('www.', '') === hostname; }
-                      catch { return p.url === hostname; }
-                    }).length;
+
+                  {uniqueHostnames.map(([hostname, totalTasks]) => {
+                    const hostUrls = uniqueUrls.filter(([, info]) => info.hostname === hostname);
+                    const isHostSelected = selectedUrl === hostname;
+                    const hasMultipleUrls = hostUrls.length > 1;
+
                     return (
-                      <Button
-                        key={hostname}
-                        variant={selectedUrl === hostname ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-xs truncate"
-                        onClick={() => setSelectedUrl(hostname)}
-                      >
-                        <span className="truncate">{hostname}</span>
-                        <span className="ml-auto text-[10px] text-muted-foreground">{count}</span>
-                      </Button>
+                      <div key={hostname} className="mb-1">
+                        {/* Hostname header */}
+                        <Button
+                          variant={isHostSelected ? 'secondary' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-xs font-semibold"
+                          onClick={() => setSelectedUrl(hostname)}
+                        >
+                          <Globe className="h-3 w-3 mr-1.5 shrink-0 text-primary" />
+                          <span className="truncate">{hostname}</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{totalTasks}</span>
+                        </Button>
+
+                        {/* Individual URL paths under this hostname */}
+                        {hasMultipleUrls && (
+                          <div className="ml-4 space-y-0.5 mt-0.5">
+                            {hostUrls.map(([key, info]) => (
+                              <Button
+                                key={key}
+                                variant={selectedUrl === key ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="w-full justify-start text-[11px] h-7 px-2"
+                                onClick={() => setSelectedUrl(key)}
+                              >
+                                <span className="truncate text-muted-foreground">{info.path === '/' ? '/' : info.path}</span>
+                                <span className="ml-auto flex items-center gap-1">
+                                  {info.criticalCount > 0 && (
+                                    <span className="text-[9px] bg-destructive/15 text-destructive px-1 rounded">{info.criticalCount}</span>
+                                  )}
+                                  {info.importantCount > 0 && (
+                                    <span className="text-[9px] bg-warning/15 text-warning-foreground px-1 rounded">{info.importantCount}</span>
+                                  )}
+                                </span>
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
 
@@ -738,7 +807,6 @@ export function MyActionPlans() {
                         size="sm"
                         className="w-full justify-start text-xs text-primary"
                         onClick={() => {
-                          // TODO: open editorial calendar modal
                           toast.info(t.editorialCalendar);
                         }}
                       >
@@ -750,22 +818,21 @@ export function MyActionPlans() {
                 </div>
               )}
 
-              {/* Main content */}
+              {/* Main content — sorted by priority */}
               <div className="flex-1 space-y-4 min-w-0">
-                {/* Active plans */}
-                {filteredActivePlans.length === 0 && filteredArchivedPlans.length > 0 && (
+                {sortedFilteredActivePlans.length === 0 && filteredArchivedPlans.length > 0 && (
                   <div className="text-center py-8">
                     <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
                     <p className="text-sm text-muted-foreground">{t.noPlans}</p>
                   </div>
                 )}
-                {filteredActivePlans.length === 0 && filteredArchivedPlans.length === 0 && selectedUrl && (
+                {sortedFilteredActivePlans.length === 0 && filteredArchivedPlans.length === 0 && selectedUrl && (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">{t.noPlans}</p>
                   </div>
                 )}
                 <AnimatePresence>
-                  {filteredActivePlans.map((plan) => renderPlanCard(plan, false))}
+                  {sortedFilteredActivePlans.map((plan) => renderPlanCard(plan, false))}
                 </AnimatePresence>
 
                 {/* Archived plans collapsible */}
