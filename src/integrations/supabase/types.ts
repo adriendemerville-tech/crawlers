@@ -7632,6 +7632,10 @@ export type Database = {
         }
         Returns: Json
       }
+      check_monthly_fair_use: {
+        Args: { p_action: string; p_monthly_limit: number; p_user_id: string }
+        Returns: Json
+      }
       check_rate_limit: {
         Args: {
           p_action: string
