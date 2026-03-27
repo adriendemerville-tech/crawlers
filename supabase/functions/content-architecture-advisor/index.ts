@@ -294,6 +294,12 @@ Deno.serve(async (req) => {
     if (backlinkRes.status === 'fulfilled' && (backlinkRes.value as any)?.data) {
       backlinkData = (backlinkRes.value as any).data
     }
+    if (workbenchRes.status === 'fulfilled' && (workbenchRes.value as any)?.data) {
+      workbenchItems = (workbenchRes.value as any).data || []
+      if (workbenchItems.length > 0) {
+        console.log(`[content-advisor] Workbench: ${workbenchItems.length} content items found for ${domain}`)
+      }
+    }
 
     // ── Step 5: LLM Synthesis ──
     console.log(`[content-advisor] Step 5: LLM synthesis`)
