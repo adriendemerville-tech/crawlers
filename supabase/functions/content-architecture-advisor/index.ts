@@ -2,7 +2,7 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getSiteContext, extractDomain } from '../_shared/getSiteContext.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
-import { checkFairUse } from '../_shared/fairUse.ts'
+import { checkFairUse, checkMonthlyFairUse } from '../_shared/fairUse.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 /**
