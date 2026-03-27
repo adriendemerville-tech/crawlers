@@ -2978,7 +2978,8 @@ Deno.serve(async (req) => {
     }
 
     // Générer le script avec contexte et contenu IA
-    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution, aiGeneratedFixes);
+    const fullContext = registryContext + workbenchContext;
+    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, fullContext, aiContent, attribution, aiGeneratedFixes);
     const linesCount = code.split('\n').length;
 
     // ══════════════════════════════════════════════════════════════
