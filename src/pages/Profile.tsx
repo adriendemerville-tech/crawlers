@@ -352,6 +352,17 @@ function ProfileContent() {
             currentBalance={balance}
           />
         )}
+        {isAdmin && (
+          <Suspense fallback={null}>
+            <CocoonContentArchitectModal
+              isOpen={showContentArchitect}
+              onClose={() => setShowContentArchitect(false)}
+              nodes={[]}
+              domain=""
+              trackedSiteId=""
+            />
+          </Suspense>
+        )}
       </div>
     </>
   );
