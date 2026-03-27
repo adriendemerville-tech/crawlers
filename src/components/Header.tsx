@@ -108,6 +108,20 @@ export function Header() {
   const t = translations[language];
   
 
+  // Collaborator detection (team members cannot manage billing)
+  const [isCollaborator, setIsCollaborator] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('agency_team_members')
+      .select('id')
+      .eq('member_user_id', user.id)
+      .limit(1)
+      .then(({ data }) => setIsCollaborator(!!data && data.length > 0));
+  }, [user]);
+
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
