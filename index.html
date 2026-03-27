@@ -181,43 +181,68 @@
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "Crawlers.fr - Audit SEO & GEO Expert",
-      "alternateName": ["Audit Technique SEO Gratuit", "Score GEO IA", "Analyse LLM Marketing", "Crawlers AI"],
-      "description": "Plateforme SaaS d'audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et performance web. Optimisez votre présence sur les moteurs de recherche classiques et les IA génératives (ChatGPT, Google Gemini, Perplexity, Claude).",
+      "name": "Crawlers.fr - Audit SEO, GEO & Autopilote IA",
+      "alternateName": ["Audit Technique SEO Gratuit", "Score GEO IA", "Analyse LLM Marketing", "Crawlers AI", "Autopilote SEO Parménion", "Content Architect"],
+      "description": "Plateforme SaaS d'audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM, création de contenu IA, connexion CMS directe, gestion Google My Business, correction automatique des pages et maintenance prédictive par machine learning. Optimisez votre présence sur les moteurs de recherche classiques et les IA génératives (ChatGPT, Google Gemini, Perplexity, Claude).",
       "url": "https://crawlers.fr",
       "applicationCategory": "BusinessApplication",
-      "applicationSubCategory": "SEO & GEO Optimization Platform",
+      "applicationSubCategory": "SEO, GEO & AI Marketing Automation Platform",
       "operatingSystem": "Web",
-      "offers": {
-        "@type": "AggregateOffer",
-        "lowPrice": "0",
-        "highPrice": "50",
-        "priceCurrency": "EUR",
-        "offerCount": 5,
-        "availability": "https://schema.org/InStock",
-        "priceValidUntil": "2027-12-31"
-      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Outils Gratuits",
+          "description": "Bots IA, Score GEO, Visibilité LLM, PageSpeed — 100% gratuits sans inscription",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro Agency",
+          "description": "Console multi-sites, Cocoon 3D, IAS, Architecte Génératif, Google My Business, Content Architect, Autopilote Parménion, connexion CMS directe, Google Search Console & GA4",
+          "price": "59",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "billingIncrement": "P1M"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro Agency +",
+          "description": "Tout Pro Agency + 100 000 pages crawl/mois, 5 comptes, support prioritaire",
+          "price": "89",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "billingIncrement": "P1M"
+        }
+      ],
       "featureList": [
-        "Audit SEO technique complet sur 200 points",
-        "Score GEO — Optimisation pour moteurs génératifs (ChatGPT, Gemini, Perplexity)",
-        "Analyse de Crawlability — Vérification des accès bots IA (GPTBot, ClaudeBot, Google-Extended)",
-        "Performances PageSpeed — Core Web Vitals desktop & mobile (LCP, FID, CLS, TTFB)",
+        "Audit SEO technique complet sur 200 points — GRATUIT",
+        "Score GEO — Optimisation pour moteurs génératifs (ChatGPT, Gemini, Perplexity) — GRATUIT",
+        "Analyse de Crawlability — Vérification des accès bots IA (GPTBot, ClaudeBot, Google-Extended) — GRATUIT",
+        "Performances PageSpeed — Core Web Vitals desktop & mobile (LCP, FID, CLS, TTFB) — GRATUIT",
         "Audit Stratégique IA — Analyse EEAT, positionnement de marque, écosystème concurrentiel",
-        "Audit Comparé — Analyse concurrentielle face-à-face de deux sites (SWOT, Brand DNA, visibilité LLM)",
-        "Crawl Multi-Pages — Analyse récursive de site entier (10-500 pages), score SEO/200 par page, synthèse IA globale",
-        "Keyword Ranking — Positionnement mots-clés avec analyse d'intention et business value",
-        "Analyse EEAT — Expertise, Expérience, Autorité, Confiance",
-        "Requêtes cibles LLM — Génération de requêtes optimisées pour les modèles de langage",
-        "Content Analysis — Évaluation de la qualité et citabilité du contenu",
-        "Génération de code correctif personnalisé — Scripts sur mesure pour votre CMS",
-        "Intégration GTM en 30 secondes — Snippet universel de 3 lignes pour déployer automatiquement les correctifs via Google Tag Manager ou injection directe",
-        "Suivi de l'évolution technique — Monitoring continu des KPI SEO/GEO",
-        "Rapports & Plans d'action — Export PDF avec recommandations priorisées",
-        "Intégration Google Search Console — Suivi des KPI d'audience en temps réel",
-        "Indice d'Alignement Stratégique (IAS) — Diagnostic automatisé Brand / Non-Brand basé sur les données GSC réelles",
-        "Détection d'hallucinations IA — Correction des fausses informations des LLM",
+        "Audit Comparé — Analyse concurrentielle face-à-face (SWOT, Brand DNA, SERP Battlefield)",
+        "Crawl Multi-Pages — Analyse récursive de site entier (jusqu'à 100 000 pages Pro Agency+)",
+        "Connexion CMS directe — WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo via API native",
+        "Google My Business (GMB) — Gestion multi-fiches, avis, posts, performance Maps",
+        "Google Search Console & GA4 — Intégration OAuth pour données d'audience en temps réel",
+        "Content Architect — Création de contenu IA avec données structurées et maillage automatique",
+        "Autopilote Parménion — Maintenance prédictive IA avec machine learning (2-10 actions CMS par cycle)",
+        "Correction automatique des pages — Injection JSON-LD, meta tags, Open Graph, FAQ, HowTo via GTM ou API CMS",
+        "Architecte Génératif Multi-Pages — Règles de correction ciblées par URL avec garde-fous de sécurité",
+        "Cocoon — Architecture sémantique 3D vivante (Three.js) avec PageRank interne et ROI prédictif",
+        "Indice d'Alignement Stratégique (IAS) — Diagnostic Brand/Non-Brand automatisé via GSC",
+        "Maintenance prédictive ML — Triangle Prédictif avec boucle de rétroaction à T+30/60/90 jours",
+        "Détection d'anomalies — Alertes automatiques sur dégradations SEO/GEO avec z-score",
+        "Serveur MCP natif — 12 outils exposés pour Claude et clients MCP compatibles",
+        "Matrice d'audit — Benchmark multi-critères avec fuzzy matching et scoring pondéré",
+        "Robots.txt Generator — Génération optimisée avec gestion des bots IA",
         "Marque blanche (White Label) — Rapports personnalisés pour agences",
-        "Prédiction IA de hausse de trafic — Estimation des gains post-optimisation"
+        "Prédiction IA de hausse de trafic — 3 scénarios (pessimiste, réaliste, agressif)",
+        "Pro Agency+ — 100 000 pages crawl/mois, 5 comptes, support prioritaire à 89€/mois"
       ],
       "inLanguage": ["fr", "en", "es"],
       "isAccessibleForFree": true,
@@ -226,7 +251,9 @@
         "ratingValue": "4.9",
         "ratingCount": "1250",
         "bestRating": "5"
-      }
+      },
+      "softwareVersion": "9.0.0",
+      "dateModified": "2026-03-27"
     }
     </script>
     <script type="application/ld+json">
@@ -234,7 +261,7 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Crawlers.fr",
-      "alternateName": "Audit SEO & GEO Expert",
+      "alternateName": ["Crawlers SEO", "Audit SEO & GEO Expert"],
       "url": "https://crawlers.fr",
       "logo": {
         "@type": "ImageObject",
@@ -242,8 +269,24 @@
         "width": 512,
         "height": 512
       },
-      "description": "Plateforme experte d'audit technique SEO et GEO pour IA, ChatGPT, Google Gemini et moteurs de recherche.",
-      "areaServed": ["France", "Europe", "North America", "South America"]
+      "description": "Plateforme SaaS experte d'audit SEO technique et GEO, création de contenu IA, correction automatique de pages, gestion Google My Business, connexion CMS directe (WordPress, Shopify, Wix, Drupal, PrestaShop, Odoo) et maintenance prédictive par machine learning pour moteurs de recherche et IA génératives.",
+      "areaServed": ["France", "Europe", "North America", "South America"],
+      "knowsAbout": [
+        "Search Engine Optimization (SEO)",
+        "Generative Engine Optimization (GEO)",
+        "AI Visibility (ChatGPT, Gemini, Claude, Perplexity)",
+        "Content Creation & Publishing",
+        "CMS Integration (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)",
+        "Google My Business Management",
+        "Google Search Console & GA4 Analytics",
+        "Predictive Maintenance & Machine Learning",
+        "Schema.org & JSON-LD Structured Data",
+        "Technical SEO Auditing",
+        "Semantic Architecture & Internal Linking"
+      ],
+      "sameAs": [
+        "https://twitter.com/crawlersfr"
+      ]
     }
     </script>
     <script type="application/ld+json">
@@ -256,7 +299,11 @@
         {"@type": "ListItem", "position": 3, "name": "Audit Comparé — Analyse concurrentielle", "item": "https://crawlers.fr/audit-compare"},
         {"@type": "ListItem", "position": 4, "name": "Crawl Multi-Pages SEO", "item": "https://crawlers.fr/site-crawl"},
         {"@type": "ListItem", "position": 5, "name": "Indice d'Alignement Stratégique (IAS)", "item": "https://crawlers.fr/indice-alignement-strategique"},
-        {"@type": "ListItem", "position": 6, "name": "Lexique SEO, GEO & IA", "item": "https://crawlers.fr/lexique"}
+        {"@type": "ListItem", "position": 6, "name": "Cocoon — Architecture Sémantique 3D", "item": "https://crawlers.fr/cocoon"},
+        {"@type": "ListItem", "position": 7, "name": "Architecte Génératif Multi-Pages", "item": "https://crawlers.fr/architecte-generatif"},
+        {"@type": "ListItem", "position": 8, "name": "Matrice d'Audit Multi-Critères", "item": "https://crawlers.fr/matrice"},
+        {"@type": "ListItem", "position": 9, "name": "Tarifs & Abonnements", "item": "https://crawlers.fr/tarifs"},
+        {"@type": "ListItem", "position": 10, "name": "Lexique SEO, GEO & IA", "item": "https://crawlers.fr/lexique"}
       ]
     }
     </script>
