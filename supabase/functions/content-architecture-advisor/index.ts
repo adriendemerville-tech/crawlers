@@ -225,11 +225,10 @@ Deno.serve(async (req) => {
     let backlinkData: any = null
     let workbenchItems: any[] = []
 
-    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes] = await Promise.allSettled([
+    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      // Strategic audit SERP recommendations (content_gaps, missing_terms, keyword_positioning, priority_content)
       serviceClient.from('audit_raw_data').select('raw_payload')
         .eq('domain', domain)
         .in('audit_type', ['strategic', 'strategic_parallel'])
@@ -250,6 +249,14 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', tracked_site_id)
             .order('measured_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
+      // Fetch workbench items assigned to content architect
+      serviceClient.from('architect_workbench').select('*')
+        .eq('domain', domain)
+        .in('action_type', ['content', 'both'])
+        .eq('consumed_by_content', false)
+        .eq('status', 'pending')
+        .order('severity', { ascending: true })
+        .limit(30),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
