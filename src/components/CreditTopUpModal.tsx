@@ -31,7 +31,7 @@ const packages = [
   },
   {
     id: 'pro',
-    name: 'Pro',
+    name: 'Lite',
     credits: 50,
     price: 19,
     pricePerCredit: 0.38,
