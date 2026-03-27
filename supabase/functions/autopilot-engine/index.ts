@@ -607,6 +607,42 @@ Deno.serve(async (req: Request) => {
         // ═══ Update config counters (once per full cycle) ═══
         const finalCycleStatus = cycleSuccess ? 'completed' : 'partial';
 
+        await supabase
+          .from('autopilot_configs')
+          .update({
+            status: cycleSuccess ? 'idle' : 'error',
+            total_cycles_run: cycleNumber,
+            last_cycle_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', config.id);
+
+        // ═══ Push final event to IKtracker ═══
+        await pushIktrackerEvent(supabase, {
+          trackedSiteId: config.tracked_site_id,
+          userId: config.user_id,
+          domain: site.domain,
+          cycleNumber,
+          pipelinePhase: lastPipelinePhase,
+          finalStatus: finalCycleStatus,
+          executionSuccess: cycleSuccess,
+          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length}/5 phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          targetUrl: lastDecision?.tactic?.target_url || null,
+          functions: lastDecision?.action?.functions || [],
+          details: {
+            phases_completed: allPhaseResults.map(r => r.phase),
+            decision_ids: allPhaseResults.map(r => r.decision_id),
+          },
+        });
+
+        results.push({
+          site_id: config.tracked_site_id,
+          domain: site.domain,
+          status: finalCycleStatus,
+          decision_id: lastDecisionId || undefined,
+          pipeline_phase: `full_cycle (${allPhaseResults.length}/5)`,
+        });
+
       } catch (siteError) {
         console.error(`[AutopilotEngine] Error processing site ${config.tracked_site_id}:`, siteError);
         results.push({ site_id: config.tracked_site_id, domain: '?', status: 'error', error: siteError instanceof Error ? siteError.message : 'unknown' });
