@@ -133,6 +133,7 @@ function ProfileContent() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
