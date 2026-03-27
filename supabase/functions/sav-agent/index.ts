@@ -56,14 +56,14 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 ## Pages outils
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
 - /cocoon → cocon sémantique 3D (Three.js, TF-IDF, chat IA intégré)
-- /architecte-generatif → générateur de codes correctifs JSON-LD
+- /architecte-generatif → Code Architect (métadonnées, JSON-LD, données structurées)
 
-## Architecte Génératif (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
+## Code Architect (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
 Onglets internes : Basique | Super | Stratégie | Contenu (admin) | Scribe β (admin) | Multi (admin)
-- Basique = fixes techniques SEO (title, meta, H1, etc.)
-- Super = fixes génératifs (FAQ, info box expert, contenus enrichis)
+- Basique = fixes techniques SEO (meta title, meta description, canonical, robots)
+- Super = fixes génératifs (JSON-LD, OG tags, données structurées)
 - Stratégie = roadmap stratégique, action plans
-- Contenu = Content Architecture Advisor (admin seulement)
+- Contenu = Content Architecture Advisor — contenu visible (H1, H2, paragraphes, FAQ, tableaux)
 - Scribe β = générateur contenu avancé 13 paramètres (admin seulement)
 - Multi = router multi-pages
 
