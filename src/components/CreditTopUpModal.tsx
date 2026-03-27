@@ -155,8 +155,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
   const { toast } = useToast();
   const { language } = useLanguage();
   const { user } = useAuth();
-  const { balance } = useCredits();
+  const { balance, isAgencyPro } = useCredits();
   const t = translations[language];
+  const modalTitle = isAgencyPro ? t.title : (t as any).titleFree || t.title;
 
   useEffect(() => {
     if (!user || !open) return;
@@ -233,7 +234,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
       <DialogContent className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto">
         <DialogHeader className="pb-1">
           <DialogTitle className="text-lg font-semibold">
-            {t.title}
+            {modalTitle}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {t.subtitle}
