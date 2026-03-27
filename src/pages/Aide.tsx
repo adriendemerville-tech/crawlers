@@ -311,8 +311,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Comment acheter des crédits ?',
         content: `Depuis votre tableau de bord > section Crédits :
 <ul class="list-disc pl-6 mt-1 space-y-1">
-<li>Pack ponctuel : à l'unité selon le barème</li>
-<li>Pack Ultime : 500 crédits pour 99€ (one-shot)</li>
+<li>Pack ponctuel : à l'unité selon le barème (Essentiel, Pro, Premium)</li>
 <li>Bundle APIs : accès APIs tierces selon volume</li>
 </ul>
 <p class="mt-2 text-sm text-muted-foreground">Paiement sécurisé via Stripe. Facturation immédiate, crédits disponibles instantanément.</p>`,

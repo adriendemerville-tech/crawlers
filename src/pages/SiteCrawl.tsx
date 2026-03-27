@@ -333,7 +333,6 @@ const CREDIT_PACKAGES = [
   { id: 'essential', name: 'Essentiel', credits: 10, price: 5, color: 'from-blue-500 to-cyan-500', border: 'border-blue-500/30' },
   { id: 'pro', name: 'Pro', credits: 50, price: 19, color: 'from-emerald-500 to-green-500', border: 'border-emerald-500/50', popular: true, savings: '24%' },
   { id: 'premium', name: 'Premium', credits: 150, price: 45, color: 'from-amber-500 to-orange-500', border: 'border-amber-500/30', savings: '40%' },
-  { id: 'ultimate', name: 'Ultime', credits: 500, price: 99, color: 'from-violet-500 to-fuchsia-500', border: 'border-violet-500/40', savings: '60%' },
 ];
 
 function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit, onClose }: { language: string; crawlPagesThisMonth: number; fairUseLimit: number; onClose: () => void }) {

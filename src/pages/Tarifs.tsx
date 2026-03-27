@@ -89,7 +89,6 @@ const translations = {
       { name: 'Essentiel', credits: 10, price: 5, pricePerCredit: 0.50 },
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
-      { name: 'Ultime', credits: 500, price: 99, pricePerCredit: 0.198, savings: '60%' },
     ],
     linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.fr sur LinkedIn !',
     getStarted: 'Commencer gratuitement',
@@ -192,7 +191,6 @@ const translations = {
       { name: 'Essential', credits: 10, price: 5, pricePerCredit: 0.50 },
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
-      { name: 'Ultimate', credits: 500, price: 99, pricePerCredit: 0.198, savings: '60%' },
     ],
     linkedinOffer: '50 free credits if you share a summary of your Crawlers.fr report on LinkedIn!',
     getStarted: 'Get started for free',
@@ -470,16 +468,6 @@ export default function Tarifs() {
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
         },
-        {
-          "@type": "Offer",
-          "name": "Pack Ultime — 500 Crédits",
-          "description": "500 crédits à 0.20€/unité. Volume maximal pour crawl intensif et audits à grande échelle. Économie de 60%.",
-          "price": "99.00",
-          "priceCurrency": "EUR",
-          "availability": "https://schema.org/InStock",
-          "priceValidUntil": "2027-12-31",
-          "category": "Credit Pack"
-        }
       ]
     },
     "aggregateRating": {

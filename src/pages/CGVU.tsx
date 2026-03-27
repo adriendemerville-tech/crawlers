@@ -116,7 +116,7 @@ const CGVU = () => {
                 <li><strong>Pack Essentiel</strong> (5 €) : 10 crédits d'analyse ;</li>
                 <li><strong>Pack Pro</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
-                <li><strong>Pack Ultime</strong> (99 €) : 500 crédits d'analyse ;</li>
+                
                 <li><strong>Abonnement Pro Agency</strong> (59 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses.</li>
               </ul>
             </section>

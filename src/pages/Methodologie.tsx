@@ -449,11 +449,6 @@ export default function Methodologie() {
                     <td className="py-3 px-4">À l'unité</td>
                     <td className="py-3 px-4">Audit comparé, crawl ponctuel</td>
                   </tr>
-                  <tr>
-                    <td className="py-3 px-4">Pack Ultime</td>
-                    <td className="py-3 px-4">99€ one-shot</td>
-                    <td className="py-3 px-4">500 crédits</td>
-                  </tr>
                 </tbody>
               </table>
             </div>

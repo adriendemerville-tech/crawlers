@@ -249,7 +249,7 @@ Accessible via Code Architect > onglet "Contenu", le Content Architect génère 
 - Freemium : bots IA, GEO Score, LLM, PageSpeed gratuits. Audit SEO 1/jour.
 - Pro Agency : 59€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
 - Pro Agency + : 89€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).
-- Pack Ultime : 500 crédits pour 99€.
+- Packs de crédits ponctuels : Essentiel (10 crédits, 5€), Pro (50 crédits, 19€), Premium (150 crédits, 45€).
 - Résiliation : [Console](https://crawlers.fr/console) > Paramètres > Abonnement > Résilier.
 
 ## Problèmes fréquents
@@ -695,14 +695,14 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           if (userPlan === 'free') {
             alertBlock += `Suggère de passer au plan Pro Agency (59€/mois) pour bénéficier de l'Audit Expert et du Code Correctif illimités + 5000 pages de crawl. Lien : [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           } else {
-            alertBlock += `Suggère d'acheter le Pack Ultime (500 crédits à 99€) ou de recharger depuis [Mon Portefeuille](https://crawlers.fr/console) > onglet Pro Agency.`;
+            alertBlock += `Suggère de recharger avec un pack de crédits (Premium : 150 crédits à 45€) depuis [Mon Portefeuille](https://crawlers.fr/console) > onglet Pro Agency.`;
           }
         } else if (userCredits <= 3) {
           alertBlock += `\n⚠️ ALERTE CRÉDITS BAS : Il ne reste que ${userCredits} crédit(s). `;
           if (userPlan === 'free') {
             alertBlock += `Mentionne que le plan Pro Agency (59€/mois) offre l'Audit Expert et le Code Correctif illimités. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           } else {
-            alertBlock += `Propose de recharger avec le Pack Ultime (500 crédits à 99€) depuis l'onglet Pro Agency dans la Console.`;
+            alertBlock += `Propose de recharger avec le Pack Premium (150 crédits à 45€) depuis l'onglet Pro Agency dans la Console.`;
           }
         }
 
