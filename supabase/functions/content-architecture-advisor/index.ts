@@ -103,11 +103,32 @@ Deno.serve(async (req) => {
       })
     }
 
-    // ── Step 1: Site Identity ──
-    console.log(`[content-advisor] Step 1: Fetching site context for ${domain}`)
+    // ── Step 1: Site Identity + CMS Detection ──
+    console.log(`[content-advisor] Step 1: Fetching site context + CMS for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
       : await getSiteContext(serviceClient, { domain, userId: user.id })
+
+    // Detect CMS connection for implementation routing
+    let cmsConnection: { platform: string; hasWriteAccess: boolean; capabilities: any } | null = null
+    const resolvedSiteId = tracked_site_id || (siteContext as any)?.id
+    if (resolvedSiteId) {
+      const { data: conn } = await serviceClient
+        .from('cms_connections')
+        .select('platform, status, auth_method, capabilities')
+        .eq('tracked_site_id', resolvedSiteId)
+        .eq('status', 'active')
+        .maybeSingle()
+      if (conn) {
+        const caps = (conn.capabilities as Record<string, any>) || {}
+        cmsConnection = {
+          platform: conn.platform,
+          hasWriteAccess: caps.write_content === true || caps.write_meta === true || conn.auth_method === 'oauth2' || conn.auth_method === 'api_key',
+          capabilities: caps,
+        }
+        console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
+      }
+    }
 
     // ── Step 2: Check workbench for cached keyword/SERP data before calling DataForSEO ──
     console.log(`[content-advisor] Step 2: Checking workbench for keyword data, then DataForSEO fallback`)
@@ -855,9 +876,43 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
       warnings: guardrailWarnings,
     }
 
+    // ── Determine implementation mode ──
+    // Content Architect handles: H1, H2, <p>, tables, FAQ, visible content
+    // Code Architect handles: JSON-LD, meta tags, OG tags, structured data
+    let implementationMode: 'api_direct' | 'script_injection' | 'brief_only' = 'brief_only'
+    let implementationDetails: any = null
+
+    if (cmsConnection?.hasWriteAccess) {
+      implementationMode = 'api_direct'
+      implementationDetails = {
+        platform: cmsConnection.platform,
+        capabilities: cmsConnection.capabilities,
+        note: `Content Architect peut modifier directement le contenu visible (H1, H2, paragraphes, FAQ, tableaux) via l'API ${cmsConnection.platform}. Les métadonnées et JSON-LD sont gérés par Code Architect.`,
+      }
+    } else if (resolvedSiteId) {
+      // Check if GTM/injection is available
+      const { data: rules } = await serviceClient
+        .from('site_script_rules')
+        .select('id')
+        .eq('domain_id', resolvedSiteId)
+        .limit(1)
+      if (rules && rules.length > 0) {
+        implementationMode = 'script_injection'
+        implementationDetails = { note: 'Pas de CMS API — injection JS pour le contenu visible. Code Architect gère les métadonnées.' }
+      }
+    }
+
     // ── Enrich with source metadata ──
     const result = {
       ...recommendation,
+      implementation: {
+        mode: implementationMode,
+        cms_platform: cmsConnection?.platform || null,
+        cms_write_access: cmsConnection?.hasWriteAccess || false,
+        content_scope: 'visible_content',
+        metadata_scope: 'code_architect',
+        details: implementationDetails,
+      },
       _meta: {
         domain,
         keyword,

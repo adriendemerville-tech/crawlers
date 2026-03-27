@@ -158,7 +158,13 @@ async function fetchSiteSettings(siteUrl: string): Promise<SiteSettings> {
 
 /**
  * Assemble les consignes CMS spécifiques à injecter dans le prompt LLM.
- * Si aucune API n'est connectée en écriture, retourne le prompt Vanilla JS par défaut.
+ * 
+ * SCOPE: Code Architect gère les MÉTADONNÉES et DONNÉES STRUCTURÉES uniquement :
+ * - JSON-LD, meta title, meta description, canonical, OG tags, robots
+ * - Le contenu visible (H1, H2, paragraphes, FAQ, tableaux) est géré par Content Architect.
+ * 
+ * Si une API CMS est connectée, Code Architect peut modifier directement
+ * les champs meta via l'API au lieu de générer du JS d'injection.
  */
 function buildCmsContextualPrompt(site: SiteSettings): string {
   if (!site.hasApiConnection || !site.cmsType || site.cmsType === 'native') {

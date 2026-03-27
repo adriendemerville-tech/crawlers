@@ -56,14 +56,14 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 ## Pages outils
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
 - /cocoon → cocon sémantique 3D (Three.js, TF-IDF, chat IA intégré)
-- /architecte-generatif → générateur de codes correctifs JSON-LD
+- /architecte-generatif → Code Architect (métadonnées, JSON-LD, données structurées)
 
-## Architecte Génératif (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
+## Code Architect (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
 Onglets internes : Basique | Super | Stratégie | Contenu (admin) | Scribe β (admin) | Multi (admin)
-- Basique = fixes techniques SEO (title, meta, H1, etc.)
-- Super = fixes génératifs (FAQ, info box expert, contenus enrichis)
+- Basique = fixes techniques SEO (meta title, meta description, canonical, robots)
+- Super = fixes génératifs (JSON-LD, OG tags, données structurées)
 - Stratégie = roadmap stratégique, action plans
-- Contenu = Content Architecture Advisor (admin seulement)
+- Contenu = Content Architecture Advisor — contenu visible (H1, H2, paragraphes, FAQ, tableaux)
 - Scribe β = générateur contenu avancé 13 paramètres (admin seulement)
 - Multi = router multi-pages
 
@@ -93,7 +93,7 @@ Affiche l'historique hebdomadaire de : Score SEO, Score GEO, Taux de citation LL
 ## Actions disponibles par site
 - Icône calendrier = dernier audit complet (date)
 - Icône poubelle = supprimer le site
-- Bouton "Optimiser" = ouvrir l'Architecte Génératif avec les données du dernier audit
+- Bouton "Optimiser" = ouvrir Code Architect avec les données du dernier audit
 
 ## Paramètres utilisateur (/console > avatar)
 - Profil (nom, email, avatar)
@@ -142,7 +142,7 @@ ${FRONTEND_TAXONOMY}
 Tu as accès aux données des sites trackés de l'utilisateur. Utilise-les pour faire des suggestions proactives et personnalisées :
 - Si un site n'a pas été scanné depuis longtemps, propose un nouveau crawl
 - Si des scripts ont été injectés, demande si les résultats sont satisfaisants
-- Si le GEO score est bas, recommande l'Architecte Génératif
+- Si le GEO score est bas, recommande Code Architect
 - Si pas de données GSC/GA4, suggère la connexion
 - Si le score SEO a baissé, propose un audit de diagnostic
 - Suggère le Cocon Sémantique pour mesurer les gaps de contenu et lancer une stratégie 360°
@@ -208,7 +208,7 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
   5. Les lots (batches) sont sauvegardés, renommables, et le dernier utilisé s'affiche en premier.
   6. Export en rapport PDF/HTML avec les deux méthodes de scoring.
 - [Cocon Sémantique 3D](https://crawlers.fr/cocoon) : Three.js, TF-IDF, clusters. Pro Agency.
-- [Architecte Génératif](https://crawlers.fr/architecte-generatif) : code correctif JSON-LD. 1 crédit.
+- [Code Architect](https://crawlers.fr/architecte-generatif) : métadonnées, JSON-LD, données structurées. 1 crédit.
 - [Crawl Multi-Pages](https://crawlers.fr/site-crawl) : jusqu'à 5000 pages. Pro Agency.
 - Tracking SERP : positions Google hebdomadaires dans [Console](https://crawlers.fr/console) > Mes sites.
 
@@ -237,7 +237,7 @@ L'assistant Cocoon intègre un mode **Stratégie 360°** (bouton boussole dans l
 L'assistant Cocoon présente tout cela de manière conversationnelle. Les tâches validées se retrouvent dans [Console](https://crawlers.fr/console) > Plans d'Action.
 
 ## Content Architect (fonctionnalité avancée, Admin)
-Accessible via l'Architecte Génératif > onglet "Contenu", le Content Architect génère des contenus pré-configurés selon les recommandations de la stratégie 360°. Il propose :
+Accessible via Code Architect > onglet "Contenu", le Content Architect génère des contenus pré-configurés selon les recommandations de la stratégie 360°. Il propose :
 - Type de contenu, longueur, mots-clés cibles
 - Structure éditoriale (résumé, tableau LLM, FAQ, sources, CTA)
 - Calendrier éditorial (Admin uniquement)
@@ -253,7 +253,7 @@ Accessible via l'Architecte Génératif > onglet "Contenu", le Content Architect
 ## Problèmes fréquents
 - Audit bloqué : attendre 5 min, rafraîchir, relancer après 10 min.
 - GSC/GA4 non connecté : bon compte Google, tous scopes OAuth, site vérifié dans GSC. Connexion depuis [Console](https://crawlers.fr/console).
-- GEO bas : pas de JSON-LD, contenu générique, bots IA bloqués dans robots.txt, pas de page À propos. Utiliser [l'Architecte Génératif](https://crawlers.fr/architecte-generatif).
+- GEO bas : pas de JSON-LD, contenu générique, bots IA bloqués dans robots.txt, pas de page À propos. Utiliser [Code Architect](https://crawlers.fr/architecte-generatif).
 - Données GSC absentes : patienter 5-10 min, 28j d'historique minimum.
 - Stratégie 360° ne se lance pas : vérifier qu'un crawl a été effectué et que le cocon sémantique est généré.
 

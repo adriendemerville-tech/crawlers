@@ -352,7 +352,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
   const getPedagogy = (fixId: string): FixPedagogy => FIX_PEDAGOGY[fixId] || DEFAULT_PEDAGOGY;
 
   const t = {
-    title: language === 'en' ? 'Generative Architect' : language === 'es' ? 'Arquitecto Generativo' : 'Architecte Génératif',
+    title: language === 'en' ? 'Code Architect' : language === 'es' ? 'Code Architect' : 'Code Architect',
     generate: language === 'en' ? 'Generate Script' : language === 'es' ? 'Generar Script' : 'Générer le Script',
     generating: language === 'en' ? 'Generating…' : language === 'es' ? 'Generando…' : 'Génération…',
     copy: language === 'en' ? 'Copy' : language === 'es' ? 'Copiar' : 'Copier',
