@@ -251,78 +251,61 @@ Deno.serve(async (req: Request) => {
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
 
-        // ═══ Call Parménion orchestrator ═══
-        console.log(`[AutopilotEngine] Invoking Parménion for ${site.domain}, cycle #${cycleNumber}`);
-        
-        const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            tracked_site_id: config.tracked_site_id,
-            domain: site.domain,
-            cycle_number: cycleNumber,
-            user_id: config.user_id,
-          }),
-        });
+        // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
+        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
+        let cycleSuccess = true;
+        let lastDecisionId: string | null = null;
+        let lastPipelinePhase = 'audit';
+        let lastDecision: any = null;
+        const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
-        const orchestratorResult = await orchestratorResponse.json();
+        for (const phase of PIPELINE_PHASES) {
+          console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
-        if (!orchestratorResponse.ok || !orchestratorResult.decision_id) {
-          await supabase.from('autopilot_configs').update({ status: 'error', updated_at: new Date().toISOString() }).eq('id', config.id);
-          results.push({ site_id: config.tracked_site_id, domain: site.domain, status: 'error', error: orchestratorResult.error || 'Orchestrator failed' });
-
-          const orchestratorErrorMessage = `Parménion orchestration failed: ${orchestratorResult.error || 'unknown'}`;
-
-          const { error: modificationError } = await supabase.from('autopilot_modification_log').insert({
-            tracked_site_id: config.tracked_site_id,
-            config_id: config.id,
-            user_id: config.user_id,
-            phase: 'orchestration',
-            action_type: 'error',
-            cycle_number: cycleNumber,
-            description: orchestratorErrorMessage,
-            status: 'failed',
+          // ═══ Call Parménion orchestrator for this phase ═══
+          const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              tracked_site_id: config.tracked_site_id,
+              domain: site.domain,
+              cycle_number: cycleNumber,
+              user_id: config.user_id,
+            }),
           });
 
-          if (modificationError) {
-            console.error('[AutopilotEngine] Failed to insert orchestration error log:', modificationError);
-            await trackAnalyticsEvent(
-              supabase,
-              'autopilot:modification_log_error',
-              {
-                tracked_site_id: config.tracked_site_id,
-                domain: site.domain,
-                phase: 'orchestration',
-                cycle_number: cycleNumber,
-                error: modificationError.message,
-              },
-              config.user_id,
-            );
+          const orchestratorResult = await orchestratorResponse.json();
+
+          if (!orchestratorResponse.ok || !orchestratorResult.decision_id) {
+            console.error(`[AutopilotEngine] Orchestrator failed at phase ${phase}:`, orchestratorResult.error);
+            
+            await supabase.from('autopilot_modification_log').insert({
+              tracked_site_id: config.tracked_site_id,
+              config_id: config.id,
+              user_id: config.user_id,
+              phase,
+              action_type: 'error',
+              cycle_number: cycleNumber,
+              description: `Pipeline stopped at ${phase}: ${orchestratorResult.error || 'orchestrator failed'}`,
+              status: 'failed',
+            });
+
+            cycleSuccess = false;
+            break; // Stop pipeline on error but don't skip the whole site
           }
 
-          await pushIktrackerEvent(supabase, {
-            trackedSiteId: config.tracked_site_id,
-            userId: config.user_id,
-            domain: site.domain,
-            cycleNumber,
-            pipelinePhase: 'orchestration',
-            finalStatus: 'error',
-            executionSuccess: false,
-            message: orchestratorErrorMessage,
-            details: { orchestrator_error: orchestratorResult.error || 'unknown' },
-          });
-          continue;
-        }
+          const decision = orchestratorResult.decision;
+          const pipelinePhase = orchestratorResult.pipeline_phase || phase;
+          lastDecisionId = orchestratorResult.decision_id;
+          lastPipelinePhase = pipelinePhase;
+          lastDecision = decision;
 
-        const decision = orchestratorResult.decision;
-        const pipelinePhase = orchestratorResult.pipeline_phase || 'diagnose';
-
-        // ═══ Execute decided functions & capture results ═══
-        let executionSuccess = true;
-        const executionResults: any[] = [];
+          // ═══ Execute decided functions & capture results ═══
+          let executionSuccess = true;
+          const executionResults: any[] = [];
 
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
