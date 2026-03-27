@@ -686,8 +686,9 @@ Quand tu crées un article pour combler un gap de contenu:
 - INTERDIT de créer du contenu hors-sujet (ex: article sur le SEO, le marketing digital, ou tout autre sujet non lié à l'activité du site)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
-- Tu peux combiner JUSQU'À 10 cms_actions dans un seul payload (maximum strict: 10 actions par cycle)
+- Tu DOIS générer AU MINIMUM 2 cms_actions par cycle (et jusqu'à 10 maximum strict)
 - Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus pour maximiser l'impact
+- Si tu ne trouves qu'un seul correctif prioritaire, cherche un second (meta description manquante, titre non optimisé, contenu thin, etc.)
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
 - Catégories suggérées: "Guides", "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels"
