@@ -164,6 +164,76 @@ export async function checkFairUse(
 /**
  * Helper: extract userId and planType from request + supabase.
  */
+// ── Monthly Fair Use (for content creation) ──────────────────────
+
+const MONTHLY_LIMITS: Record<string, Record<string, number>> = {
+  free:            { content_creation: 5 },
+  agency_pro:      { content_creation: 100 },
+  agency_premium:  { content_creation: 200 },
+};
+
+interface MonthlyFairUseResult {
+  allowed: boolean;
+  reason?: string;
+  monthly_count?: number;
+  monthly_limit?: number;
+  resets_at?: string;
+}
+
+/**
+ * Check monthly fair use limits (e.g. content creation).
+ * Uses check_monthly_fair_use RPC: 1 DB call.
+ */
+export async function checkMonthlyFairUse(
+  userId: string,
+  action: string,
+  planType: string = 'free',
+): Promise<MonthlyFairUseResult> {
+  const planLimits = MONTHLY_LIMITS[planType] || MONTHLY_LIMITS.free;
+  const limit = planLimits[action];
+  if (limit === undefined) return { allowed: true };
+
+  try {
+    const supabase = getServiceClient();
+    const { data, error } = await supabase.rpc('check_monthly_fair_use', {
+      p_user_id: userId,
+      p_action: action,
+      p_monthly_limit: limit,
+    });
+
+    if (error) {
+      console.error('[MonthlyFairUse] RPC error (allowing):', error);
+      return { allowed: true };
+    }
+
+    const result = data as any;
+    if (result.is_admin) return { allowed: true };
+
+    if (!result.allowed) {
+      console.warn(`[MonthlyFairUse] BLOCKED ${userId} on ${action}: monthly limit (${result.monthly_count}/${limit})`);
+      return {
+        allowed: false,
+        reason: `Vous avez atteint la limite mensuelle de ${limit} contenus. Renouvellement le ${result.resets_at?.substring(0, 10) || 'premier du mois'}.`,
+        monthly_count: result.monthly_count,
+        monthly_limit: result.monthly_limit,
+        resets_at: result.resets_at,
+      };
+    }
+
+    return {
+      allowed: true,
+      monthly_count: result.monthly_count,
+      monthly_limit: result.monthly_limit,
+    };
+  } catch (e) {
+    console.error('[MonthlyFairUse] Error (allowing):', e);
+    return { allowed: true };
+  }
+}
+
+/**
+ * Helper: extract userId and planType from request + supabase.
+ */
 export async function getUserContext(req: Request): Promise<{
   userId: string;
   planType: string;
@@ -183,9 +253,12 @@ export async function getUserContext(req: Request): Promise<{
     .eq('user_id', user.id)
     .single();
 
-  const planType = (profile?.plan_type === 'agency_pro' && 
+  const planType = (profile?.plan_type === 'agency_premium' && 
     (profile?.subscription_status === 'active' || profile?.subscription_status === 'canceling'))
-    ? 'agency_pro' : 'free';
+    ? 'agency_premium'
+    : (profile?.plan_type === 'agency_pro' && 
+      (profile?.subscription_status === 'active' || profile?.subscription_status === 'canceling'))
+      ? 'agency_pro' : 'free';
 
   return { userId: user.id, planType, supabase };
 }
