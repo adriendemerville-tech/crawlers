@@ -536,6 +536,7 @@ export function MyActionPlans() {
     setIsContentArchitectOpen(true);
   };
 
+  const renderPlanCard = (plan: ActionPlan, isArchived = false) => {
     const progress = getProgress(plan.tasks);
     const remaining = getRemainingCount(plan.tasks);
     const isExpanded = expandedPlans.has(plan.id);
