@@ -467,7 +467,7 @@ export default function Tarifs() {
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
-        },
+        }
       ]
     },
     "aggregateRating": {
