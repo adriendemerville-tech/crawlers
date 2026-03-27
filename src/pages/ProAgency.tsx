@@ -358,17 +358,29 @@ export default function ProAgency() {
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    "name": "Crawlers.fr Pro Agency",
+    "name": "Crawlers.fr Pro Agency — Sans engagement",
     "description": t.metaDescription,
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
-    "offers": {
-      "@type": "Offer",
-      "price": "59.00",
-      "priceCurrency": "EUR",
-      "availability": "https://schema.org/InStock",
-      "priceValidUntil": "2026-12-31",
-      "url": "https://crawlers.fr/pro-agency",
-    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Pro Agency — Sans engagement",
+        "price": "59.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock",
+        "priceValidUntil": "2026-12-31",
+        "url": "https://crawlers.fr/pro-agency",
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Agency + — Sans engagement",
+        "price": "89.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock",
+        "priceValidUntil": "2026-12-31",
+        "url": "https://crawlers.fr/pro-agency",
+      },
+    ],
   };
 
   return (
