@@ -3054,6 +3054,9 @@ Deno.serve(async (req) => {
     console.log(`   → Minifié: ${(minifiedSize / 1024).toFixed(1)} Ko | Syntaxe: ${syntaxCheck.valid ? '✅' : '❌'}`);
     console.log('═══════════════════════════════════════════════════════════════');
 
+    // Mark workbench items as consumed by code architect
+    await markWorkbenchConsumed(workbenchItemIds, 'code');
+
     return new Response(
       JSON.stringify({
         success: true,
