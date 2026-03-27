@@ -421,28 +421,22 @@ Deno.serve(async (req: Request) => {
                 const fallbackCmsActions: Array<Record<string, unknown>> = [];
                 
                 for (const reco of recos) {
-                  if (reco.category === 'meta_tags' || reco.fix_type === 'meta') {
-                    // Update meta description/title on existing page
-                    const pageKey = reco.url ? new URL(reco.url).pathname.replace(/^\/|\/$/g, '') || '/' : '/';
+                  const cat = (reco.category || '').toLowerCase();
+                  const isMeta = ['seo', 'meta_tags', 'technique', 'technical'].includes(cat) || reco.fix_type === 'meta';
+                  const isContent = ['contenu', 'content', 'content_gap', 'thin_content', 'eeat', 'autorité', 'identité', 'social'].includes(cat);
+
+                  if (isMeta) {
+                    let pageKey = '/';
+                    try { pageKey = reco.url ? new URL(reco.url).pathname.replace(/^\/|\/$/g, '') || '/' : '/'; } catch {}
                     fallbackCmsActions.push({
                       action: 'update-page',
                       page_key: pageKey,
                       updates: {
-                        meta_description: reco.fix_data?.meta_description || reco.description?.slice(0, 155) || reco.title,
+                        meta_description: reco.fix_data?.meta_description || (reco.description || reco.title || '').slice(0, 155),
                         ...(reco.fix_data?.meta_title ? { meta_title: reco.fix_data.meta_title } : {}),
                       },
                     });
-                  } else if (reco.category === 'structured_data') {
-                    const pageKey = reco.url ? new URL(reco.url).pathname.replace(/^\/|\/$/g, '') || '/' : '/';
-                    fallbackCmsActions.push({
-                      action: 'update-page',
-                      page_key: pageKey,
-                      updates: {
-                        schema_org: reco.fix_data?.schema_org || { '@context': 'https://schema.org', '@type': 'WebPage', name: reco.title },
-                      },
-                    });
-                  } else if (['content_gap', 'thin_content', 'eeat', 'content'].includes(reco.category)) {
-                    // Create a draft post to fill content gap
+                  } else if (isContent) {
                     const slug = (reco.title || 'article')
                       .toLowerCase()
                       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
