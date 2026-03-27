@@ -6,7 +6,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 // ══════════════════════════════════════════════════════════════
-// INTERFACES - ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO Protocol
+// INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
 // + Confidence Score, Impact Estimation, Telemetry, Versioning
 // ══════════════════════════════════════════════════════════════
 
