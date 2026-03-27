@@ -818,9 +818,24 @@ Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
           jargon_distance: jargonDist,
           warnings_count: guardrailWarnings.length,
         },
+        workbench_items_used: workbenchItems.length,
         generated_at: new Date().toISOString(),
         duration_ms: Date.now() - startTime,
       },
+    }
+
+    // ── Mark workbench items as consumed by content architect ──
+    if (workbenchItems.length > 0) {
+      try {
+        const itemIds = workbenchItems.map((i: any) => i.id)
+        await serviceClient
+          .from('architect_workbench')
+          .update({ consumed_by_content: true, consumed_at: new Date().toISOString(), status: 'in_progress' })
+          .in('id', itemIds)
+        console.log(`[content-advisor] Marked ${itemIds.length} workbench items as consumed`)
+      } catch (e) {
+        console.warn('[content-advisor] Failed to mark workbench items:', e)
+      }
     }
 
     // ── Cache for 12h ──
