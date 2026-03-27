@@ -8,6 +8,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useTheme } from 'next-themes';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
