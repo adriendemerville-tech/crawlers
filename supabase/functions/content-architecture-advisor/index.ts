@@ -103,11 +103,32 @@ Deno.serve(async (req) => {
       })
     }
 
-    // ── Step 1: Site Identity ──
-    console.log(`[content-advisor] Step 1: Fetching site context for ${domain}`)
+    // ── Step 1: Site Identity + CMS Detection ──
+    console.log(`[content-advisor] Step 1: Fetching site context + CMS for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
       : await getSiteContext(serviceClient, { domain, userId: user.id })
+
+    // Detect CMS connection for implementation routing
+    let cmsConnection: { platform: string; hasWriteAccess: boolean; capabilities: any } | null = null
+    const resolvedSiteId = tracked_site_id || (siteContext as any)?.id
+    if (resolvedSiteId) {
+      const { data: conn } = await serviceClient
+        .from('cms_connections')
+        .select('platform, status, auth_method, capabilities')
+        .eq('tracked_site_id', resolvedSiteId)
+        .eq('status', 'active')
+        .maybeSingle()
+      if (conn) {
+        const caps = (conn.capabilities as Record<string, any>) || {}
+        cmsConnection = {
+          platform: conn.platform,
+          hasWriteAccess: caps.write_content === true || caps.write_meta === true || conn.auth_method === 'oauth2' || conn.auth_method === 'api_key',
+          capabilities: caps,
+        }
+        console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
+      }
+    }
 
     // ── Step 2: Check workbench for cached keyword/SERP data before calling DataForSEO ──
     console.log(`[content-advisor] Step 2: Checking workbench for keyword data, then DataForSEO fallback`)
