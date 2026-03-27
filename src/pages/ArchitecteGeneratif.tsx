@@ -50,16 +50,16 @@ export default function ArchitecteGeneratif() {
           {
             '@type': 'Question',
             'name': t3(language,
-              'Qu\'est-ce que l\'Architecte Génératif ?',
-              'What is the Generative Architect?',
-              '¿Qué es el Arquitecto Generativo?'
+              'Qu\'est-ce que Code Architect ?',
+              'What is Code Architect?',
+              '¿Qué es Code Architect?'
             ),
             'acceptedAnswer': {
               '@type': 'Answer',
               'text': t3(language,
-                'L\'Architecte Génératif est un système qui permet de configurer des correctifs SEO/GEO différents pour chaque page ou groupe de pages de votre site. Il route automatiquement le bon code vers la bonne URL.',
-                'The Generative Architect is a system that allows you to configure different SEO/GEO fixes for each page or group of pages on your site. It automatically routes the right code to the right URL.',
-                'El Arquitecto Generativo es un sistema que permite configurar correcciones SEO/GEO diferentes para cada página o grupo de páginas de su sitio.'
+                'Code Architect est un système qui permet de configurer des correctifs SEO/GEO différents pour chaque page ou groupe de pages de votre site. Il route automatiquement le bon code vers la bonne URL.',
+                'Code Architect is a system that allows you to configure different SEO/GEO fixes for each page or group of pages on your site. It automatically routes the right code to the right URL.',
+                'Code Architect es un sistema que permite configurar correcciones SEO/GEO diferentes para cada página o grupo de páginas de su sitio.'
               )
             }
           },
@@ -101,7 +101,7 @@ export default function ArchitecteGeneratif() {
         '@type': 'BreadcrumbList',
         'itemListElement': [
           { '@type': 'ListItem', 'position': 1, 'name': 'Accueil', 'item': SITE_URL },
-          { '@type': 'ListItem', 'position': 2, 'name': t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'), 'item': `${SITE_URL}/architecte-generatif` }
+          { '@type': 'ListItem', 'position': 2, 'name': t3(language, 'Code Architect', 'Code Architect', 'Code Architect'), 'item': `${SITE_URL}/architecte-generatif` }
         ]
       }
     ]
@@ -120,9 +120,9 @@ export default function ArchitecteGeneratif() {
 
   // ── Translations ──
   const title = t3(language,
-    'Architecte Génératif — Correctif Multi-Pages SEO/GEO',
-    'Generative Architect — Multi-Page SEO/GEO Corrective Code',
-    'Arquitecto Generativo — Código Correctivo Multi-Página SEO/GEO'
+    'Code Architect — Correctif Multi-Pages SEO/GEO',
+    'Code Architect — Multi-Page SEO/GEO Corrective Code',
+    'Code Architect — Código Correctivo Multi-Página SEO/GEO'
   );
   const metaDesc = t3(language,
     'Appliquez des correctifs SEO différents pour chaque page de votre site. Routage par URL, modules configurables, garde-fous de sécurité et historique des versions. Pro Agency.',
@@ -133,13 +133,13 @@ export default function ArchitecteGeneratif() {
   return (
     <>
       <Helmet>
-        <title>Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr</title>
+        <title>Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr</title>
         <meta name="description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/architecte-generatif" />
-        <meta property="og:title" content="Architecte Génératif — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
+        <meta property="og:title" content="Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
         <meta property="og:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
         <meta property="og:locale" content="fr_FR" />
