@@ -21,6 +21,7 @@ const MAX_RISK_CONSERVATIVE = 2;
 
 // Pipeline phases in strict order
 const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
+// Note: 'route' is handled inline by the engine, not as a separate orchestrator phase
 type PipelinePhase = typeof PIPELINE_PHASES[number];
 
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
@@ -57,7 +58,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -75,7 +76,10 @@ serve(async (req: Request) => {
       .limit(10);
 
     const lastPhase = (lastCompletedDecisions || [])[0]?.pipeline_phase as PipelinePhase | undefined;
-    const currentPhase = getNextPhase(lastPhase);
+    // Use forced_phase from engine if provided, otherwise auto-detect
+    const currentPhase = (forced_phase && PIPELINE_PHASES.includes(forced_phase)) 
+      ? (forced_phase as PipelinePhase) 
+      : getNextPhase(lastPhase);
 
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
@@ -178,10 +182,18 @@ serve(async (req: Request) => {
     const validatedFunctions = decision.action.functions.filter((f: string) => allowedFunctions.includes(f));
     if (validatedFunctions.length === 0) {
       console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
-      // Fallback to first function of the phase
+      // Fallback to appropriate function for the phase
       if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
-      else if (currentPhase === 'prescribe') validatedFunctions.push('generate-corrective-code');
+      else if (currentPhase === 'prescribe') {
+        // Alternate between content and technical based on cycle parity
+        // Odd cycles → content-architecture-advisor, Even → generate-corrective-code
+        if (context.isIktracker && cycle_number % 2 === 1) {
+          validatedFunctions.push('content-architecture-advisor');
+        } else {
+          validatedFunctions.push('generate-corrective-code');
+        }
+      }
       else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
@@ -686,9 +698,7 @@ Quand tu crées un article pour combler un gap de contenu:
 - INTERDIT de créer du contenu hors-sujet (ex: article sur le SEO, le marketing digital, ou tout autre sujet non lié à l'activité du site)
 - Utilise les résultats des diagnostics précédents pour décider QUOI modifier/créer
 - Priorise: meta descriptions manquantes → titres non optimisés → contenu thin → nouveaux articles ciblant des content gaps
-- Tu DOIS générer AU MINIMUM 2 cms_actions par cycle (et jusqu'à 10 maximum strict)
-- Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus pour maximiser l'impact
-- Si tu ne trouves qu'un seul correctif prioritaire, cherche un second (meta description manquante, titre non optimisé, contenu thin, etc.)
+- Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus quand c'est pertinent
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
 - Catégories suggérées: "Guides", "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels"

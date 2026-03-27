@@ -100,12 +100,11 @@ Deno.test("iktracker-actions: test-connection works", async () => {
   }
 });
 
-// ── Integration test: verify PIPELINE_PHASES includes 'route' ──
+// ── Integration test: verify PIPELINE_PHASES structure ──
 
-Deno.test("Pipeline phases constant includes route step", () => {
-  const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'route', 'execute', 'validate'];
-  assert(PIPELINE_PHASES.includes('route'), 'route phase missing');
-  assertEquals(PIPELINE_PHASES.indexOf('route'), 3, 'route should be after prescribe (index 2)');
-  assertEquals(PIPELINE_PHASES.indexOf('execute'), 4, 'execute should be after route (index 3)');
-  assertEquals(PIPELINE_PHASES.length, 6, 'Should have 6 phases');
+Deno.test("Pipeline phases constant has correct structure (route is inline)", () => {
+  const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'];
+  assertEquals(PIPELINE_PHASES.length, 5, 'Should have 5 orchestrator phases (route is handled inline)');
+  assertEquals(PIPELINE_PHASES.indexOf('prescribe'), 2, 'prescribe at index 2');
+  assertEquals(PIPELINE_PHASES.indexOf('execute'), 3, 'execute at index 3');
 });

@@ -310,17 +310,19 @@ Deno.serve(async (req: Request) => {
         const cycleNumber = (config.total_cycles_run || 0) + 1;
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
-        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'route', 'execute', 'validate'] as const;
+        // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
+        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
         let cycleSuccess = true;
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
         let lastDecision: any = null;
+        let routedCmsActions: RoutedActions | null = null;
         const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
         for (const phase of PIPELINE_PHASES) {
           console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
-          // ═══ Call Parménion orchestrator for this phase ═══
+          // ═══ Call Parménion orchestrator for this phase (with forced_phase) ═══
           const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
             method: 'POST',
             headers: {
@@ -332,6 +334,7 @@ Deno.serve(async (req: Request) => {
               domain: site.domain,
               cycle_number: cycleNumber,
               user_id: config.user_id,
+              forced_phase: phase, // ← Engine drives the phase, not auto-detection
             }),
           });
 
@@ -365,25 +368,19 @@ Deno.serve(async (req: Request) => {
           let executionSuccess = true;
           const executionResults: any[] = [];
 
-        // ═══ ROUTE PHASE: Categorize prescriptions into content vs code channels ═══
-        if (phase === 'route' && lastDecision?.action?.payload?.cms_actions) {
-          const routedActions = routeCmsActions(lastDecision.action.payload.cms_actions, site.domain);
-          // Inject routed actions back into the decision for the execute phase
-          if (!lastDecision.action.payload._routed) {
-            lastDecision.action.payload._routed = routedActions;
-            lastDecision.action.payload.cms_actions = routedActions.all;
-            console.log(`[AutopilotEngine] Routed ${routedActions.content.length} content + ${routedActions.code.length} code actions for ${site.domain}`);
-          }
-          // Route phase doesn't call external functions, just categorizes
-          executionResults.push({
+        // ═══ INLINE ROUTING: After prescribe, route CMS actions for execute phase ═══
+        if (phase === 'prescribe' && decision.action?.payload?.cms_actions) {
+          routedCmsActions = routeCmsActions(decision.action.payload.cms_actions, site.domain);
+          console.log(`[AutopilotEngine] Routed ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} code actions for ${site.domain}`);
+          
+          allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
             function: 'cms-router',
             status: 'success',
-            content_actions: routedActions.content.length,
-            code_actions: routedActions.code.length,
-            total: routedActions.all.length,
-          });
-          // Store and continue to next phase
-          allPhaseResults.push({ phase, decision_id: lastDecisionId!, status: 'completed', executionResults });
+            content_actions: routedCmsActions.content.length,
+            code_actions: routedCmsActions.code.length,
+            total: routedCmsActions.all.length,
+          }] });
+          
           await supabase.from('autopilot_modification_log').insert({
             tracked_site_id: config.tracked_site_id,
             config_id: config.id,
@@ -391,17 +388,26 @@ Deno.serve(async (req: Request) => {
             phase: 'route',
             action_type: 'routing',
             cycle_number: cycleNumber,
-            description: `[ROUTE] ${routedActions.content.length} content + ${routedActions.code.length} code actions`,
-            diff_before: { original_actions: lastDecision.action.payload.cms_actions?.length || 0 },
-            diff_after: { content: routedActions.content.length, code: routedActions.code.length },
+            description: `[ROUTE] ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} code actions`,
+            diff_before: { original_actions: decision.action.payload.cms_actions?.length || 0 },
+            diff_after: { content: routedCmsActions.content.length, code: routedCmsActions.code.length },
             status: 'applied',
           });
-          console.log(`[AutopilotEngine] Phase route completed for ${site.domain}`);
-          continue; // Skip to next phase (execute)
-        } else if (phase === 'route') {
-          // No cms_actions to route, skip route phase
-          allPhaseResults.push({ phase, decision_id: lastDecisionId || 'skip', status: 'skipped', executionResults: [] });
-          continue;
+        }
+
+        // ═══ EXECUTE PHASE: Inject routed CMS actions from prescribe if available ═══
+        if (phase === 'execute' && routedCmsActions && routedCmsActions.all.length > 0) {
+          // Merge routed actions into the execute decision payload
+          if (!decision.action.payload) decision.action.payload = {};
+          if (!decision.action.payload.cms_actions || decision.action.payload.cms_actions.length === 0) {
+            decision.action.payload.cms_actions = routedCmsActions.all;
+            decision.action.payload._routed = routedCmsActions;
+            console.log(`[AutopilotEngine] Injected ${routedCmsActions.all.length} routed CMS actions into execute phase for ${site.domain}`);
+          }
+          // Ensure iktracker-actions is in the function list
+          if (isIktrackerDomain(site.domain) && !decision.action.functions.includes('iktracker-actions')) {
+            decision.action.functions.push('iktracker-actions');
+          }
         }
 
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
@@ -729,7 +735,7 @@ Deno.serve(async (req: Request) => {
           pipelinePhase: lastPipelinePhase,
           finalStatus: finalCycleStatus,
           executionSuccess: cycleSuccess,
-          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length}/6 phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
           targetUrl: lastDecision?.tactic?.target_url || null,
           functions: lastDecision?.action?.functions || [],
           details: {
@@ -743,7 +749,7 @@ Deno.serve(async (req: Request) => {
           domain: site.domain,
           status: finalCycleStatus,
           decision_id: lastDecisionId || undefined,
-          pipeline_phase: `full_cycle (${allPhaseResults.length}/6)`,
+          pipeline_phase: `full_cycle (${allPhaseResults.length} phases)`,
         });
 
       } catch (siteError) {
