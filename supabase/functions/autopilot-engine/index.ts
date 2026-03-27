@@ -414,7 +414,6 @@ Deno.serve(async (req: Request) => {
                 .select('id, title, description, category, priority, fix_type, fix_data, prompt_summary, url')
                 .eq('domain', site.domain)
                 .eq('is_resolved', false)
-                .in('category', ['meta_tags', 'content', 'structured_data', 'eeat', 'thin_content', 'content_gap'])
                 .order('priority', { ascending: true })
                 .limit(5);
 
