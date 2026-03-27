@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 
 // Lazy load credit button (loads modal with framer-motion on demand)
 const CreditRechargeButton = lazy(() => import('./CreditRechargeButton').then(m => ({ default: m.CreditRechargeButton })));
+const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
