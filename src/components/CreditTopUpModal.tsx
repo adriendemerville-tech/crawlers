@@ -51,17 +51,6 @@ const packages = [
     popular: false,
     savings: '40%',
   },
-  {
-    id: 'ultimate',
-    name: 'Ultime',
-    credits: 500,
-    price: 99,
-    pricePerCredit: 0.198,
-    color: 'from-violet-500 to-fuchsia-500',
-    borderColor: 'border-violet-500/40',
-    popular: false,
-    savings: '60%',
-  },
 ];
 
 const translations = {
