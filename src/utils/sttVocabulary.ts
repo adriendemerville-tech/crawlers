@@ -16,7 +16,7 @@ const CRAWLERS_VOCAB: [RegExp, string][] = [
   [/\bauto ?pil(?:ote?|ot)\b/gi, 'Autopilot'],
   [/\bco ?coo?n\b/gi, 'Cocoon'],
   [/\bmatrice\b/gi, 'Matrice'],
-  [/\barchitecte? géné?rati(?:f|ve)\b/gi, 'Architecte Génératif'],
+  [/\barchitecte? géné?rati(?:f|ve)\b/gi, 'Code Architect'],
   [/\bcontent? architecte?\b/gi, 'Content Architect'],
   [/\bstratège\b/gi, 'Stratège'],
   [/\baudit (?:exper(?:t|te?))\b/gi, 'Audit Expert'],
