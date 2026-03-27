@@ -269,26 +269,47 @@ const CGVU = () => {
 
             {/* Article 7 */}
             <section id="abonnement">
-              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnement Pro Agency</h2>
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnements Pro Agency et Pro Agency +</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">7.1. Modalités</h3>
               <p>
-                L'abonnement Pro Agency est proposé au tarif de <strong>59 € TTC par mois</strong>, sans engagement. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
+                Les abonnements Crawlers sont proposés <strong>sans engagement</strong> :
+              </p>
+              <ul>
+                <li><strong>Pro Agency</strong> : 59 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
+                <li><strong>Pro Agency +</strong> : 89 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
+              </ul>
+              <p className="mt-2">
+                Le paiement est prélevé automatiquement chaque mois via Stripe. L'utilisateur peut résilier à tout moment sans frais ni pénalités.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
+              <p className="font-semibold mt-2">Pro Agency (59€/mois) :</p>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
-                <li><strong>Crawl multi-pages</strong> : analyse récursive complète de sites (jusqu'à 500 pages par crawl, Fair Use Policy de 5 000 pages/mois) ;</li>
+                <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 5 000 pages/mois ;</li>
                 <li><strong>Module Cocoon</strong> : graphe sémantique illimité ;</li>
-                <li>Dashboard agence dédié avec gestion multi-clients ;</li>
+                <li><strong>Content Architect</strong> : 100 contenus/mois (Fair Use) ;</li>
+                <li><strong>Autopilote Parménion</strong> : maintenance prédictive IA (2-10 actions/cycle) ;</li>
+                <li><strong>Connexion CMS directe</strong> : WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo ;</li>
+                <li><strong>Google Search Console & GA4</strong> : intégration OAuth ;</li>
+                <li><strong>Google My Business</strong> : gestion multi-fiches ;</li>
+                <li>Dashboard agence dédié avec gestion multi-clients (3 comptes) ;</li>
                 <li>Export de rapports personnalisés au format PDF ;</li>
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
                 <li>Support prioritaire.</li>
               </ul>
+              <p className="font-semibold mt-4">Pro Agency + (89€/mois) :</p>
+              <ul>
+                <li>Tout Pro Agency inclus ;</li>
+                <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 100 000 pages/mois ;</li>
+                <li><strong>Content Architect</strong> : 200 contenus/mois (Fair Use) ;</li>
+                <li>5 comptes inclus (owner + 4 invités) ;</li>
+                <li>Support prioritaire renforcé.</li>
+              </ul>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.3. Résiliation</h3>
               <p>
-                L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours.
+                L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours. <strong>Aucun engagement de durée n'est requis.</strong>
               </p>
             </section>
 

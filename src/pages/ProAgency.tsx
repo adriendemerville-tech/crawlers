@@ -498,10 +498,11 @@ export default function ProAgency() {
                   <Crown className="h-7 w-7 text-violet-500" />
                   <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
                 </div>
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-extrabold text-foreground">59€</span>
                   <span className="text-lg text-muted-foreground">{t.period}</span>
                 </div>
+                <p className="text-xs font-medium text-violet-500 mb-4">{language === 'fr' ? 'Sans engagement — résiliable à tout moment' : language === 'es' ? 'Sin compromiso — cancelable en cualquier momento' : 'No commitment — cancel anytime'}</p>
                 <p className="text-sm text-muted-foreground mb-6">{t.compTargetPro}</p>
                 <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '5 000 pages crawlées/mois' : language === 'es' ? '5 000 páginas/mes' : '5,000 pages/month'}</li>
@@ -533,10 +534,11 @@ export default function ProAgency() {
                   </div>
                   <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Pro Agency +</h3>
                 </div>
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-extrabold text-foreground">89€</span>
                   <span className="text-lg text-muted-foreground">{t.period}</span>
                 </div>
+                <p className="text-xs font-medium text-amber-500 mb-4">{language === 'fr' ? 'Sans engagement — résiliable à tout moment' : language === 'es' ? 'Sin compromiso — cancelable en cualquier momento' : 'No commitment — cancel anytime'}</p>
                 <p className="text-sm text-muted-foreground mb-6">{t.compTargetPlus}</p>
                 <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '50 000 pages crawlées/mois' : language === 'es' ? '50 000 páginas/mes' : '50,000 pages/month'}</li>

@@ -61,9 +61,9 @@ const MentionsLegales = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, de crawl multi-pages, d\'analyse concurrentielle et de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés et un abonnement mensuel Pro Agency (59€ TTC/mois). Les analyses portent exclusivement sur des données publiquement accessibles.',
-                  'Crawlers AI is a platform offering SEO and GEO audit services, multi-page crawling, competitive analysis and corrective code generation. The activity includes the provision of free and paid digital services via a prepaid credit system and a monthly Pro Agency subscription (€59 incl. VAT/month). Analyses exclusively cover publicly accessible data.',
-                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, crawl multi-páginas, análisis competitivo y generación de código correctivo. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados y una suscripción mensual Pro Agency (59€ IVA incl./mes). Los análisis se refieren exclusivamente a datos públicamente accesibles.'
+                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, de crawl multi-pages, d\'analyse concurrentielle, de création de contenu IA, de correction automatique de pages, de connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), de gestion Google My Business et de maintenance prédictive par machine learning. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés et deux abonnements mensuels sans engagement : Pro Agency (59€ TTC/mois) et Pro Agency+ (89€ TTC/mois). Les analyses portent exclusivement sur des données publiquement accessibles.',
+                  'Crawlers AI is a platform offering SEO and GEO audit services, multi-page crawling, competitive analysis, AI content creation, automatic page correction, direct CMS connection (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), Google My Business management and predictive maintenance through machine learning. The activity includes the provision of free and paid digital services via a prepaid credit system and two monthly subscriptions with no commitment: Pro Agency (€59 incl. VAT/month) and Pro Agency+ (€89 incl. VAT/month). Analyses exclusively cover publicly accessible data.',
+                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, crawl multi-páginas, análisis competitivo, creación de contenido IA, corrección automática de páginas, conexión CMS directa (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), gestión Google My Business y mantenimiento predictivo mediante machine learning. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados y dos suscripciones mensuales sin compromiso: Pro Agency (59€ IVA incl./mes) y Pro Agency+ (89€ IVA incl./mes). Los análisis se refieren exclusivamente a datos públicamente accesibles.'
                 )}
               </p>
             </section>
@@ -170,7 +170,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 27 mars 2026', 'Last updated: March 27, 2026', 'Última actualización: 27 de marzo de 2026')}
             </p>
           </article>
         </div>
