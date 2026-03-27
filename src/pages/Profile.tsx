@@ -268,6 +268,17 @@ function ProfileContent() {
                     <span className="hidden sm:inline">{t.creator}</span>
                   </TabsTrigger>
                 )}
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowContentArchitect(true)}
+                    className="gap-1.5 text-xs text-[hsl(var(--accent-foreground))] hover:bg-accent/50 h-8 px-2.5 ml-1"
+                  >
+                    <PenLine className="h-3.5 w-3.5 text-[#fbbf24]" />
+                    <span className="hidden lg:inline">Content Architect</span>
+                  </Button>
+                )}
               </TabsList>
 
               <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
