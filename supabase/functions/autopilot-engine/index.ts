@@ -252,7 +252,7 @@ Deno.serve(async (req: Request) => {
         const cycleNumber = (config.total_cycles_run || 0) + 1;
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
-        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
+        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'route', 'execute', 'validate'] as const;
         let cycleSuccess = true;
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
@@ -306,6 +306,45 @@ Deno.serve(async (req: Request) => {
           // ═══ Execute decided functions & capture results ═══
           let executionSuccess = true;
           const executionResults: any[] = [];
+
+        // ═══ ROUTE PHASE: Categorize prescriptions into content vs code channels ═══
+        if (phase === 'route' && lastDecision?.action?.payload?.cms_actions) {
+          const routedActions = routeCmsActions(lastDecision.action.payload.cms_actions, site.domain);
+          // Inject routed actions back into the decision for the execute phase
+          if (!lastDecision.action.payload._routed) {
+            lastDecision.action.payload._routed = routedActions;
+            lastDecision.action.payload.cms_actions = routedActions.all;
+            console.log(`[AutopilotEngine] Routed ${routedActions.content.length} content + ${routedActions.code.length} code actions for ${site.domain}`);
+          }
+          // Route phase doesn't call external functions, just categorizes
+          executionResults.push({
+            function: 'cms-router',
+            status: 'success',
+            content_actions: routedActions.content.length,
+            code_actions: routedActions.code.length,
+            total: routedActions.all.length,
+          });
+          // Store and continue to next phase
+          allPhaseResults.push({ phase, decision_id: lastDecisionId!, status: 'completed', executionResults });
+          await supabase.from('autopilot_modification_log').insert({
+            tracked_site_id: config.tracked_site_id,
+            config_id: config.id,
+            user_id: config.user_id,
+            phase: 'route',
+            action_type: 'routing',
+            cycle_number: cycleNumber,
+            description: `[ROUTE] ${routedActions.content.length} content + ${routedActions.code.length} code actions`,
+            diff_before: { original_actions: lastDecision.action.payload.cms_actions?.length || 0 },
+            diff_after: { content: routedActions.content.length, code: routedActions.code.length },
+            status: 'applied',
+          });
+          console.log(`[AutopilotEngine] Phase route completed for ${site.domain}`);
+          continue; // Skip to next phase (execute)
+        } else if (phase === 'route') {
+          // No cms_actions to route, skip route phase
+          allPhaseResults.push({ phase, decision_id: lastDecisionId || 'skip', status: 'skipped', executionResults: [] });
+          continue;
+        }
 
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
