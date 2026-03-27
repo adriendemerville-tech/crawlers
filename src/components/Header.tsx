@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,6 +8,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useTheme } from 'next-themes';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 
 // Lazy load credit button (loads modal with framer-motion on demand)
 const CreditRechargeButton = lazy(() => import('./CreditRechargeButton').then(m => ({ default: m.CreditRechargeButton })));
+const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -107,6 +109,20 @@ export function Header() {
   const location = useLocation();
   const t = translations[language];
   
+
+  // Collaborator detection (team members cannot manage billing)
+  const [isCollaborator, setIsCollaborator] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('agency_team_members')
+      .select('id')
+      .eq('member_user_id', user.id)
+      .limit(1)
+      .then(({ data }) => setIsCollaborator(!!data && data.length > 0));
+  }, [user]);
 
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -430,18 +446,6 @@ export function Header() {
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
                     </DropdownMenuItem>
-                    {!isAgencyPro && (
-                      <DropdownMenuItem asChild className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
-                        <div>
-                          <Wallet className="h-4 w-4 text-amber-500" />
-                          <span>{t.wallet}</span>
-                          <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-                            {creditsBalance}
-                            <CreditCoin size="sm" />
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=settings')}>
                         <Settings className="h-4 w-4" />
@@ -460,6 +464,15 @@ export function Header() {
                         <Code2 className="h-4 w-4" />
                         {t.correctiveCodes}
                     </DropdownMenuItem>
+                    {!isCollaborator && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => { setIsProfileOpen(false); setShowTopUpModal(true); }}>
+                          <CreditCard className="h-4 w-4" />
+                          {isAgencyPro ? (language === 'fr' ? 'Abonnement' : language === 'es' ? 'Suscripción' : 'Subscription') : (language === 'fr' ? 'Tarifs' : language === 'es' ? 'Tarifas' : 'Pricing')}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
                       <LogOut className="h-4 w-4" />
@@ -486,6 +499,15 @@ export function Header() {
           )}
         </div>
       </nav>
+      {showTopUpModal && user && (
+        <Suspense fallback={null}>
+          <CreditTopUpModal
+            open={showTopUpModal}
+            onOpenChange={setShowTopUpModal}
+            currentBalance={creditsBalance}
+          />
+        </Suspense>
+      )}
     </header>
   );
 }

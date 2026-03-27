@@ -67,6 +67,7 @@ const packages = [
 const translations = {
   fr: {
     title: 'Abonnement',
+    titleFree: 'Tarifs',
     subtitle: 'Choisissez un pack de crédits',
     currentBalance: 'Solde actuel',
     credits: 'crédits',
@@ -90,7 +91,8 @@ const translations = {
     linkedinDescription: 'Partagez votre audit et gagnez 50 crédits par clic.',
   },
   en: {
-    title: 'Top up my credits',
+    title: 'Subscription',
+    titleFree: 'Pricing',
     subtitle: 'Choose a credit pack',
     currentBalance: 'Current balance',
     credits: 'credits',
@@ -114,7 +116,8 @@ const translations = {
     linkedinDescription: 'Share your audit and earn 50 credits per click.',
   },
   es: {
-    title: 'Recargar mis créditos',
+    title: 'Suscripción',
+    titleFree: 'Tarifas',
     subtitle: 'Elige un paquete de créditos',
     currentBalance: 'Saldo actual',
     credits: 'créditos',
@@ -152,8 +155,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
   const { toast } = useToast();
   const { language } = useLanguage();
   const { user } = useAuth();
-  const { balance } = useCredits();
+  const { balance, isAgencyPro } = useCredits();
   const t = translations[language];
+  const modalTitle = isAgencyPro ? t.title : (t as any).titleFree || t.title;
 
   useEffect(() => {
     if (!user || !open) return;
@@ -230,7 +234,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
       <DialogContent className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto">
         <DialogHeader className="pb-1">
           <DialogTitle className="text-lg font-semibold">
-            {t.title}
+            {modalTitle}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {t.subtitle}
