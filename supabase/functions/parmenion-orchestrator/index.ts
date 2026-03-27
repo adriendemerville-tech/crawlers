@@ -21,6 +21,7 @@ const MAX_RISK_CONSERVATIVE = 2;
 
 // Pipeline phases in strict order
 const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
+// Note: 'route' is handled inline by the engine, not as a separate orchestrator phase
 type PipelinePhase = typeof PIPELINE_PHASES[number];
 
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
@@ -57,7 +58,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -75,7 +76,10 @@ serve(async (req: Request) => {
       .limit(10);
 
     const lastPhase = (lastCompletedDecisions || [])[0]?.pipeline_phase as PipelinePhase | undefined;
-    const currentPhase = getNextPhase(lastPhase);
+    // Use forced_phase from engine if provided, otherwise auto-detect
+    const currentPhase = (forced_phase && PIPELINE_PHASES.includes(forced_phase)) 
+      ? (forced_phase as PipelinePhase) 
+      : getNextPhase(lastPhase);
 
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
