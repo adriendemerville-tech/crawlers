@@ -310,17 +310,19 @@ Deno.serve(async (req: Request) => {
         const cycleNumber = (config.total_cycles_run || 0) + 1;
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
-        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'route', 'execute', 'validate'] as const;
+        // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
+        const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
         let cycleSuccess = true;
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
         let lastDecision: any = null;
+        let routedCmsActions: RoutedActions | null = null;
         const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
         for (const phase of PIPELINE_PHASES) {
           console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
-          // ═══ Call Parménion orchestrator for this phase ═══
+          // ═══ Call Parménion orchestrator for this phase (with forced_phase) ═══
           const orchestratorResponse = await fetch(`${SUPABASE_URL}/functions/v1/parmenion-orchestrator`, {
             method: 'POST',
             headers: {
@@ -332,6 +334,7 @@ Deno.serve(async (req: Request) => {
               domain: site.domain,
               cycle_number: cycleNumber,
               user_id: config.user_id,
+              forced_phase: phase, // ← Engine drives the phase, not auto-detection
             }),
           });
 
