@@ -1567,10 +1567,10 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '8.0.0',
+  version: '8.1.0',
   lastUpdated: '2026-03-27',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N',
-  totalEdgeFunctions: 173,
+  totalEdgeFunctions: 176,
   totalSharedModules: 35,
   totalTables: '139',
   totalLinesOfCode: '199 000+',
