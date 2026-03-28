@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
@@ -179,6 +180,7 @@ export function Header() {
   };
 
   return (
+    <>
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
       <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
@@ -523,7 +525,9 @@ export function Header() {
           />
         </Suspense>
       )}
-      {isAdmin && showContentArchitect && (
+    </header>
+    <>
+      {isAdmin && showContentArchitect && createPortal(
         <Suspense fallback={null}>
           <CocoonContentArchitectModal
             isOpen={showContentArchitect}
@@ -532,8 +536,10 @@ export function Header() {
             domain=""
             trackedSiteId=""
           />
-        </Suspense>
+        </Suspense>,
+        document.body
       )}
-    </header>
+    </>
+    </>
   );
 }
