@@ -1058,6 +1058,33 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
       }
     }
 
+    // ── LOG GENERATION for performance correlation training ──
+    try {
+      await serviceClient.from('content_generation_logs').insert({
+        user_id: user.id,
+        tracked_site_id: resolvedSiteId || '',
+        domain,
+        market_sector: siteIdentity?.sector || null,
+        page_type,
+        target_url: url,
+        keyword,
+        brief_tone: contentBrief.tone,
+        brief_angle: contentBrief.angle,
+        brief_length_target: contentBrief.target_length,
+        brief_h2_count: contentBrief.h2_count.max,
+        brief_h3_count: contentBrief.h3_count.max,
+        brief_cta_count: contentBrief.cta.length,
+        brief_internal_links_count: contentBrief.internal_links.length,
+        brief_schema_types: contentBrief.schema_types,
+        brief_eeat_signals: contentBrief.eeat_signals,
+        brief_geo_passages: contentBrief.geo_citable_passages,
+        source: 'content_architect',
+      });
+      console.log(`[content-advisor] Generation logged for correlation training`);
+    } catch (e) {
+      console.warn('[content-advisor] Failed to log generation:', e);
+    }
+
     // ── Cache for 12h ──
     try {
       await setCache(ck, 'content-architecture-advisor', result, 12)
