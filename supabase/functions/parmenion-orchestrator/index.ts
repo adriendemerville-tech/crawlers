@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
