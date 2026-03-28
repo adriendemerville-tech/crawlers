@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { callLovableAI } from '../_shared/lovableAI.ts';
 
 /**
  * Agent SEO Autonome v2
@@ -432,68 +433,56 @@ ${html.substring(0, 14000)}
 
 Analyse et propose des améliorations SEO incrémentales ciblées.`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.3,
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: 'submit_seo_improvements',
-            description: 'Submit SEO improvements for a page',
-            parameters: {
-              type: 'object',
-              properties: {
-                improvements: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      type: { type: 'string', enum: ['content_improvement', 'meta_optimization', 'internal_linking', 'structure_improvement', 'jsonld_addition', 'eeat_enhancement'] },
-                      location: { type: 'string' },
-                      before: { type: 'string' },
-                      after: { type: 'string' },
-                      impact_axes: { type: 'array', items: { type: 'string' } },
-                      reason: { type: 'string' },
-                    },
-                    required: ['type', 'location', 'after', 'reason'],
+  const resp = await callLovableAI({
+    system: systemPrompt,
+    user: userPrompt,
+    tools: [
+      {
+        type: 'function',
+        function: {
+          name: 'submit_seo_improvements',
+          description: 'Submit SEO improvements for a page',
+          parameters: {
+            type: 'object',
+            properties: {
+              improvements: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['content_improvement', 'meta_optimization', 'internal_linking', 'structure_improvement', 'jsonld_addition', 'eeat_enhancement'] },
+                    location: { type: 'string' },
+                    before: { type: 'string' },
+                    after: { type: 'string' },
+                    impact_axes: { type: 'array', items: { type: 'string' } },
+                    reason: { type: 'string' },
                   },
+                  required: ['type', 'location', 'after', 'reason'],
                 },
-                estimated_score_improvement: { type: 'number' },
-                confidence_score: { type: 'number' },
-                priority_fixes: { type: 'array', items: { type: 'string' } },
-                summary: { type: 'string' },
               },
-              required: ['improvements', 'estimated_score_improvement', 'confidence_score', 'summary'],
-              additionalProperties: false,
+              estimated_score_improvement: { type: 'number' },
+              confidence_score: { type: 'number' },
+              priority_fixes: { type: 'array', items: { type: 'string' } },
+              summary: { type: 'string' },
             },
+            required: ['improvements', 'estimated_score_improvement', 'confidence_score', 'summary'],
+            additionalProperties: false,
           },
         },
-      ],
-      tool_choice: { type: 'function', function: { name: 'submit_seo_improvements' } },
-    }),
+      },
+    ],
+    toolChoice: { type: 'function', function: { name: 'submit_seo_improvements' } },
   });
 
-  const data = await response.json();
   const tokens = {
-    input: data.usage?.prompt_tokens || 0,
-    output: data.usage?.completion_tokens || 0,
+    input: resp.usage?.prompt_tokens || 0,
+    output: resp.usage?.completion_tokens || 0,
   };
 
   // Parse tool call or fallback
   let content = '';
   let confidence = 0;
-  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+  const toolCall = resp.toolCalls?.[0] as any;
   if (toolCall?.function?.arguments) {
     content = toolCall.function.arguments;
     try {
@@ -501,7 +490,7 @@ Analyse et propose des améliorations SEO incrémentales ciblées.`;
       confidence = parsed.confidence_score || 0;
     } catch { /* ignore */ }
   } else {
-    content = data.choices?.[0]?.message?.content || '';
+    content = resp.content;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
