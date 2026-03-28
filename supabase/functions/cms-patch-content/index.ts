@@ -672,9 +672,47 @@ async function patchDrupal(conn: CmsConnection, input: PatchInput): Promise<Patc
         details.push({ zone: 'slug', success: true });
         patchesApplied++;
         break;
+      case 'meta_description':
+        // Drupal metatag module field
+        attributes.field_meta_description = strVal;
+        details.push({ zone: 'meta_description', success: true, detail: 'Via metatag field (requires metatag module)' });
+        patchesApplied++;
+        break;
+      case 'canonical':
+        attributes.field_canonical_url = strVal;
+        details.push({ zone: 'canonical', success: true, detail: 'Via metatag canonical field' });
+        patchesApplied++;
+        break;
+      case 'robots_meta':
+        attributes.field_robots = strVal;
+        details.push({ zone: 'robots_meta', success: true, detail: 'Via metatag robots field' });
+        patchesApplied++;
+        break;
+      case 'og_title':
+        attributes.field_og_title = strVal;
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        attributes.field_og_description = strVal;
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        details.push({ zone: 'og_image', success: false, detail: 'OG image requires file upload — use manual process' });
+        break;
+      case 'schema_org': {
+        // Inject JSON-LD in body
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = nodeData.attributes?.body?.value || '';
+        attributes.body = { value: curBody + `\n<script type="application/ld+json">${jsonLd}</script>`, format: 'full_html' };
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in body' });
+        patchesApplied++;
+        break;
+      }
       default: {
         // Content zones → patch body HTML
-        const currentBody = nodeData.attributes?.body?.value || '';
+        const currentBody = (attributes.body as any)?.value || nodeData.attributes?.body?.value || '';
         const { html: patched, applied } = applyHtmlPatches(currentBody, [patch]);
         if (patched !== currentBody) {
           attributes.body = { value: patched, format: 'full_html' };
