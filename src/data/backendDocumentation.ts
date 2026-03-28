@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  173 fonctions serverless + 35 modules partagés         │
+│  175 fonctions serverless + 37 modules partagés         │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -65,7 +65,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  139 tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  149 tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +77,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 173 fonctions serverless + 35 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 175 fonctions serverless + 37 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -178,6 +178,15 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`prompt_registry\` | Registre des prompts versionnés | \`function_name\`, \`prompt_text\`, \`version\`, \`is_champion\` |
 | \`hallucination_corrections\` | Corrections d'hallucinations | \`url\`, \`original_values\`, \`corrected_values\`, \`discrepancies\` |
 | \`llm_depth_conversations\` | Conversations LLM Depth | \`domain\`, \`model\`, \`messages\`, \`expires_at\` |
+
+### Content Engine & Corrélations
+
+| Table | Description | Colonnes clés |
+|-------|-------------|---------------|
+| \`content_prompt_presets\` | Prompts custom par user/site/type | \`user_id\`, \`tracked_site_id\`, \`page_type\`, \`name\`, \`preset_data\` (ton, angle, longueur, CTA…), \`is_default\` |
+| \`content_prompt_templates\` | Templates SEO/GEO système par type de page | \`page_type\`, \`template_data\`, \`is_active\` |
+| \`content_generation_logs\` | Log chaque génération (features du brief, pas le texte) | \`user_id\`, \`tracked_site_id\`, \`page_type\`, \`market_sector\`, \`brief_tone\`, \`brief_angle\`, \`brief_length_target\`, \`brief_h2_count\`, \`brief_cta_count\`, \`source\` (content_architect/parmenion), \`measurement_phase\`, deltas GSC/GEO/LLM à T+30/T+90 |
+| \`content_performance_correlations\` | Agrégats anonymes cross-utilisateurs | \`page_type\`, \`market_sector\`, \`tone\`, \`angle\`, \`avg_gsc_clicks_delta\`, \`avg_geo_score_delta\`, \`avg_llm_visibility_delta\`, \`sample_count\`, \`confidence_grade\` (A/B/C/F), \`week_start\` |
 | \`sav_quality_scores\` | Scoring précision agent SAV | \`conversation_id\`, \`precision_score\`, \`route_match\`, \`repeated_intent_count\`, \`escalated_to_phone\` |
 
 ### Signalement & Recettage
@@ -308,7 +317,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (173 fonctions)
+# API — Edge Functions (175 fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -541,6 +550,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`mcp-server\` | ❌/✅ | Serveur MCP (Model Context Protocol) — 2 tiers d'accès |
 | \`api-balances\` | ✅ | Soldes API en temps réel (SerpAPI, OpenRouter, Firecrawl) |
 | \`seasonality-detector\` | ✅ | Détection de saisonnalité (tendances cycliques) |
+| \`content-perf-aggregator\` | ✅ | CRON hebdo — agrégation anonyme corrélations prompt→performance (T+30/T+90) |
 | \`content-freshness\` | ✅ | Détection de contenu obsolète |
 | \`content-pruning\` | ✅ | Analyse de contenu à élaguer |
 | \`link-intersection\` | ✅ | Intersection de backlinks concurrents |
@@ -745,7 +755,7 @@ Ces secrets sont configurés dans Lovable Cloud :
     title: 'Modules Partagés',
     icon: 'Package',
     content: `
-# Modules Partagés (_shared/) — 35 modules
+# Modules Partagés (_shared/) — 37 modules
 
 Le dossier \`supabase/functions/_shared/\` contient les utilitaires réutilisés par toutes les Edge Functions. Depuis mars 2026, **toutes les fonctions** utilisent les singletons de ce dossier au lieu de créer leurs propres clients.
 
@@ -852,6 +862,9 @@ Utilitaires de manipulation de texte (troncature, nettoyage HTML, extraction).
 
 ### \`browserlessConfig.ts\`
 Configuration du rendu headless (Browserless/Fly.io).
+
+### \`contentBrief.ts\` *(nouveau)*
+Calcul déterministe du **ContentBrief** avant appel LLM : longueur cible, ton, nombre de H2/H3, angle éditorial, CTA, liens internes. Utilisé par Content Architect et Parménion.
 
 ### \`email-templates/\`
 Templates HTML d'emails transactionnels (bienvenue, vérification, rapports).
@@ -1311,7 +1324,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 
 ---
 
-## Diagnostics Cocoon (4 fonctions spécialisées)
+## Diagnostics Cocoon (5 fonctions spécialisées)
 
 | Fonction | Axe d'analyse | Données croisées |
 |----------|--------------|------------------|
@@ -1319,6 +1332,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 | \\\`cocoon-diag-content\\\` | Qualité contenu | Thin content, duplicata, content gaps, word count |
 | \\\`cocoon-diag-semantic\\\` | Sémantique & clusters | Cannibalization, intent distribution, TF-IDF |
 | \\\`cocoon-diag-structure\\\` | Structure technique | Profondeur Hn, pages orphelines, maillage |
+| \\\`cocoon-diag-subdomains\\\` | Sous-domaines | Détection et analyse des sous-domaines du site |
 
 - **Table** : \\\`cocoon_diagnostic_results\\\` (type, scores, findings, metadata)
 - **Accès** : Utilisateurs avec site tracké
@@ -1340,7 +1354,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 ## Content Architecture Advisor
 
 - **Edge Function** : \\\`content-architecture-advisor\\\`
-- **Accès** : Admin only (onglet Contenu dans Architecte), masqué en démo
+- **Accès** : Admin only (onglet Content dans Console), masqué en démo
 - **Monitoré par** : Agent CTO
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
@@ -1348,6 +1362,19 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker. Paramètre \\\`content_type: "page" | "post"\\\`
 - **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 200/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
 - **Routeur CMS** : Parménion utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
+- **ContentBrief déterministe** : Le module \\\`_shared/contentBrief.ts\\\` calcule les contraintes éditoriales (longueur, ton, H2/H3, angle, CTA, liens internes) avant l'appel LLM
+- **Presets utilisateur** : Prompts custom par site et type de page (\\\`content_prompt_presets\\\`), appelables depuis Cocoon ou Content
+- **Templates système** : Templates SEO/GEO par type de page (\\\`content_prompt_templates\\\`) : landing, product, article
+- **Sidebar multi-sites** : Menu vertical avec liste des sites trackés, onglets Landing Page / Produit / Article Blog par site
+- **Logging performance** : Chaque génération est instrumentée dans \\\`content_generation_logs\\\` (features du brief, pas le texte du prompt)
+
+### Pipeline de corrélation prompt→performance
+
+- **Collecte** : À chaque génération, les features du brief (ton, angle, longueur, H2, CTA, liens internes, signaux E-E-A-T, passages GEO) sont logguées dans \\\`content_generation_logs\\\`
+- **Mesure** : Le cron hebdomadaire \\\`content-perf-aggregator\\\` enrichit les logs avec les deltas GSC/GEO/LLM à T+30 et T+90
+- **Agrégation** : Corrélations anonymes cross-utilisateurs dans \\\`content_performance_correlations\\\`, groupées par \\\`page_type × market_sector × tone × angle\\\`
+- **Confiance** : Grade A (≥20 samples), B (≥10), C (≥5), F (<5)
+- **Usage futur** : Recommandation inline de paramètres optimaux par secteur et type de page (V2)
 
 ---
 
@@ -1553,6 +1580,7 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
 | \`autopilot-engine-cycle\` | Quotidien 3h UTC | \`autopilot-engine\` |
 | \`refresh-serp-all\` | Hebdo | \`refresh-serp-all\` |
 | \`watchdog-scripts\` | 15 min | \`watchdog-scripts\` |
+| \`content-perf-aggregator\` | Hebdo lundi 3h UTC | \`content-perf-aggregator\` |
 
 ## Registre des modifications
 
@@ -1567,14 +1595,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '8.1.0',
-  lastUpdated: '2026-03-27',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N',
-  totalEdgeFunctions: 176,
-  totalSharedModules: 35,
-  totalTables: '139',
-  totalLinesOfCode: '199 000+',
-  totalMigrations: 243,
+  version: '9.0.0',
+  lastUpdated: '2026-03-28',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
+  totalEdgeFunctions: 175,
+  totalSharedModules: 37,
+  totalTables: '149',
+  totalLinesOfCode: '205 000+',
+  totalMigrations: 245,
   totalPages: 41,
   totalComponents: 311,
 };
