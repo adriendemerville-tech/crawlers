@@ -158,7 +158,7 @@ serve(async (req: Request) => {
       const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
         p_domain: domain,
         p_user_id: userId,
-        p_limit: 5,
+        p_limit: 8,
       });
       if (scoreErr) {
         console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
@@ -169,23 +169,41 @@ serve(async (req: Request) => {
     }
 
     // ═══ PHASE 3: LLM Decision ═══
-    const decision = await askParmenionLLM({
-      domain,
-      cycle_number,
-      currentPhase,
-      conservativeMode,
-      maxRisk,
-      diagnostics,
-      cocoon,
-      pastErrors,
-      previousPhaseResults,
-      pendingRecommendations,
-      rawAuditData,
-      isIktracker,
-      siteKeywords,
-      siteInfo,
-      scoredWorkbenchItems,
-    });
+    let decision: ParmenionDecision | null = null;
+    
+    if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
+      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools ═══
+      decision = await prescribeWithDualPrompts({
+        domain,
+        cycle_number,
+        conservativeMode,
+        maxRisk,
+        scoredWorkbenchItems,
+        siteKeywords,
+        siteInfo,
+        isIktracker,
+        tracked_site_id,
+      });
+    } else {
+      // Non-prescribe phases or empty workbench: single LLM call
+      decision = await askParmenionLLM({
+        domain,
+        cycle_number,
+        currentPhase,
+        conservativeMode,
+        maxRisk,
+        diagnostics,
+        cocoon,
+        pastErrors,
+        previousPhaseResults,
+        pendingRecommendations,
+        rawAuditData,
+        isIktracker,
+        siteKeywords,
+        siteInfo,
+        scoredWorkbenchItems,
+      });
+    }
 
     if (!decision) {
       return new Response(JSON.stringify({ error: 'Parménion could not produce a decision' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -264,7 +282,335 @@ serve(async (req: Request) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// LLM REASONING ENGINE
+// PRESCRIBE V2: DUAL PROMPT ENGINE (tech + content in parallel)
+// ═══════════════════════════════════════════════════════════════
+
+const TECH_TOOLS = [
+  {
+    type: 'function' as const,
+    function: {
+      name: 'emit_code',
+      description: 'Emit injectable JS code fix (lazy loading, CLS, performance, etc.)',
+      parameters: {
+        type: 'object',
+        properties: {
+          fix_id: { type: 'string' },
+          label: { type: 'string', description: 'Short human-readable description' },
+          category: { type: 'string', enum: ['performance', 'seo', 'accessibility', 'security'] },
+          prompt: { type: 'string', description: 'Detailed instructions for JS code generation' },
+          target_url: { type: 'string' },
+          target_selector: { type: 'string', description: 'CSS selector or DOM element to target' },
+        },
+        required: ['fix_id', 'label', 'category', 'prompt'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'emit_corrective_data',
+      description: 'Emit corrective metadata: meta_description, canonical, schema_org, robots, JSON-LD',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['update-page', 'update-post'] },
+          page_key: { type: 'string', description: 'Page slug or identifier' },
+          slug: { type: 'string', description: 'Post slug (for update-post)' },
+          field: { type: 'string', enum: ['meta_description', 'meta_title', 'canonical_url', 'schema_org', 'robots'] },
+          value: { type: 'string', description: 'New value for the field' },
+          schema_org_value: { type: 'object', description: 'JSON-LD object (when field=schema_org)' },
+        },
+        required: ['action', 'field', 'value'],
+      },
+    },
+  },
+];
+
+const CONTENT_TOOLS = [
+  {
+    type: 'function' as const,
+    function: {
+      name: 'emit_corrective_content',
+      description: 'Emit corrective content for an existing page: fix H1, H2, enrich paragraphs, add FAQ, etc.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['update-page', 'update-post'] },
+          page_key: { type: 'string' },
+          slug: { type: 'string' },
+          updates: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              content: { type: 'string', description: 'HTML content to replace/append' },
+              excerpt: { type: 'string' },
+            },
+          },
+          target_selector: { type: 'string', description: 'Which section to update (e.g. h1, h2#section, content)' },
+          operation: { type: 'string', enum: ['replace', 'append', 'insert_after'] },
+        },
+        required: ['action', 'updates'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'emit_editorial_content',
+      description: 'Create a new article or page from scratch to fill a content gap',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['create-post', 'create-page'] },
+          body: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              slug: { type: 'string' },
+              content: { type: 'string', description: 'Full HTML content with H2, H3, lists, internal links' },
+              excerpt: { type: 'string' },
+              meta_description: { type: 'string' },
+              meta_title: { type: 'string' },
+              status: { type: 'string', enum: ['draft'] },
+              author_name: { type: 'string' },
+              category: { type: 'string' },
+              tags: { type: 'array', items: { type: 'string' } },
+              schema_org: { type: 'object' },
+            },
+            required: ['title', 'slug', 'content', 'excerpt', 'meta_description', 'status'],
+          },
+        },
+        required: ['action', 'body'],
+      },
+    },
+  },
+];
+
+const TIER_NAMES: Record<number, string> = {
+  0: 'Accessibilité critique', 1: 'Performance', 2: 'Crawl mineur',
+  3: 'Données structurées GEO', 4: 'On-page mineur (meta)',
+  5: 'On-page majeur (contenu)', 6: 'Maillage interne',
+  7: 'Cannibalisation', 8: 'Gap par modification',
+  9: 'Gap par création', 10: 'Expansion sémantique',
+};
+
+async function prescribeWithDualPrompts(context: {
+  domain: string;
+  cycle_number: number;
+  conservativeMode: boolean;
+  maxRisk: number;
+  scoredWorkbenchItems: any[];
+  siteKeywords: string[];
+  siteInfo: any;
+  isIktracker: boolean;
+  tracked_site_id: string;
+}): Promise<ParmenionDecision | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) return null;
+
+  const items = context.scoredWorkbenchItems;
+  const techItems = items.filter((it: any) => it.tier <= 3);
+  const contentItems = items.filter((it: any) => it.tier >= 4);
+
+  const siteCtx = context.siteInfo
+    ? `Site: ${context.siteInfo.site_name || context.domain} | Secteur: ${context.siteInfo.market_sector || '?'} | Cibles: ${context.siteInfo.client_targets || '?'}`
+    : `Site: ${context.domain}`;
+  const kwCtx = context.siteKeywords.length > 0
+    ? `Mots-clés du site: ${context.siteKeywords.slice(0, 30).join(', ')}`
+    : '';
+
+  function buildItemsList(lot: any[]): string {
+    return lot.map((it: any, i: number) =>
+      `${i + 1}. [Tier ${it.tier}: ${TIER_NAMES[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity}
+   "${it.title}" → page: ${it.target_url || '?'} | champ: ${it.target_selector || 'auto'} | op: ${it.target_operation || 'replace'}
+   ${it.description?.slice(0, 300) || ''}`
+    ).join('\n\n');
+  }
+
+  const promises: Promise<any[]>[] = [];
+
+  // ── PROMPT TECHNIQUE (tiers 0-3) ──
+  if (techItems.length > 0) {
+    const techPrompt = `Tu es un moteur d'exécution SEO technique. Tu reçois des items prioritaires à corriger.
+Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+
+${siteCtx}
+
+ITEMS À TRAITER (par ordre de priorité):
+${buildItemsList(techItems)}
+
+RÈGLES:
+- emit_code: pour du JS injectable (performance, lazy loading, CLS, etc.)
+- emit_corrective_data: pour des métadonnées CMS (meta_description, canonical, schema_org, etc.)
+- Pour IKtracker: les page_key sont les slugs des pages (ex: "bareme-ik", "calcul-trajet")
+- Chaque item a un champ cible (target_selector) et une opération (target_operation) — respecte-les
+- Ne crée PAS de contenu éditorial ici`;
+
+    promises.push(callLLMWithTools(LOVABLE_API_KEY, techPrompt, TECH_TOOLS));
+  } else {
+    promises.push(Promise.resolve([]));
+  }
+
+  // ── PROMPT CONTENU (tiers 4-10) ──
+  if (contentItems.length > 0) {
+    const contentPrompt = `Tu es un moteur de production de contenu SEO. Tu reçois des items prioritaires.
+Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+
+${siteCtx}
+${kwCtx}
+
+ITEMS À TRAITER (par ordre de priorité):
+${buildItemsList(contentItems)}
+
+RÈGLES:
+- emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
+- emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
+- Le contenu DOIT être pertinent pour le secteur du site. INTERDIT de créer du contenu hors-sujet.
+- Le contenu HTML doit être riche: H2, H3, listes, liens internes, FAQ si pertinent
+- status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
+- Pour les articles: 800-1500 mots minimum, slug en kebab-case sans accents
+- Inclure 3-5 liens internes vers les pages existantes du site`;
+
+    promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
+  } else {
+    promises.push(Promise.resolve([]));
+  }
+
+  // ── PARALLEL EXECUTION ──
+  console.log(`[Parménion] 🔀 Prescribe V2: ${techItems.length} tech items + ${contentItems.length} content items → 2 parallel LLM calls`);
+  const [techResults, contentResults] = await Promise.all(promises);
+
+  const allToolCalls = [...techResults, ...contentResults];
+  console.log(`[Parménion] ✅ Prescribe V2: ${techResults.length} tech + ${contentResults.length} content = ${allToolCalls.length} tool calls total`);
+
+  // ── BUILD DECISION FROM TOOL CALLS ──
+  const topItem = items[0];
+  const cmsActions: any[] = [];
+  const fixes: any[] = [];
+
+  for (const tc of allToolCalls) {
+    const args = tc.arguments;
+    switch (tc.name) {
+      case 'emit_code':
+        fixes.push({
+          id: args.fix_id,
+          label: args.label,
+          category: args.category,
+          prompt: args.prompt,
+          enabled: true,
+          target_url: args.target_url,
+          target_selector: args.target_selector,
+        });
+        break;
+      case 'emit_corrective_data':
+        cmsActions.push({
+          action: args.action || 'update-page',
+          page_key: args.page_key || args.slug,
+          slug: args.slug,
+          updates: args.field === 'schema_org'
+            ? { schema_org: args.schema_org_value || args.value }
+            : { [args.field]: args.value },
+          _channel: 'data',
+        });
+        break;
+      case 'emit_corrective_content':
+        cmsActions.push({
+          action: args.action || 'update-page',
+          page_key: args.page_key || args.slug,
+          slug: args.slug,
+          updates: args.updates,
+          _channel: 'content_corrective',
+          _target_selector: args.target_selector,
+          _operation: args.operation,
+        });
+        break;
+      case 'emit_editorial_content':
+        cmsActions.push({
+          action: args.action || 'create-post',
+          body: { ...args.body, status: 'draft' },
+          _channel: 'content_editorial',
+        });
+        break;
+    }
+  }
+
+  const functions: string[] = [];
+  if (fixes.length > 0) functions.push('generate-corrective-code');
+  if (cmsActions.length > 0) functions.push('iktracker-actions');
+
+  return {
+    goal: {
+      type: topItem.tier <= 3 ? 'technical_fix' : topItem.tier <= 7 ? 'content_gap' : 'content_creation',
+      description: `[Prescribe V2] Tier ${topItem.tier} (${TIER_NAMES[topItem.tier]}): ${topItem.title}. ${fixes.length} code fixes + ${cmsActions.length} CMS actions.`,
+    },
+    tactic: {
+      initial_scope: { items_scored: items.length, tech: techItems.length, content: contentItems.length },
+      final_scope: { fixes: fixes.length, cms_actions: cmsActions.length, tool_calls: allToolCalls.length },
+      scope_reductions: 0,
+      estimated_tokens: 0,
+      target_url: topItem.target_url,
+    },
+    prudence: {
+      impact_level: topItem.tier <= 1 ? 'avancé' : topItem.tier <= 4 ? 'modéré' : 'faible',
+      risk_score: Math.min(context.maxRisk, topItem.tier <= 1 ? 2 : 1),
+      iterations: 0,
+      goal_changed: false,
+      reasoning: `Scoring pyramidal: top item tier ${topItem.tier} (${TIER_NAMES[topItem.tier]}), score ${topItem.total_score}. ${allToolCalls.length} actions produites via dual-prompt.`,
+    },
+    action: {
+      type: fixes.length > 0 && cmsActions.length > 0 ? 'mixed' : fixes.length > 0 ? 'code' : 'cms',
+      payload: {
+        fixes: fixes.length > 0 ? fixes : undefined,
+        cms_actions: cmsActions.length > 0 ? cmsActions : undefined,
+        _prescribe_v2: true,
+        _tool_calls_raw: allToolCalls,
+      },
+      functions,
+    },
+    summary: `Prescribe V2: ${fixes.length} fixes code + ${cmsActions.length} actions CMS (${techResults.length} tech + ${contentResults.length} content tool calls). Top: Tier ${topItem.tier} — ${topItem.title}`,
+  };
+}
+
+async function callLLMWithTools(apiKey: string, prompt: string, tools: any[]): Promise<any[]> {
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        tools,
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[Parménion] LLM tool call error:', response.status, err.slice(0, 300));
+      return [];
+    }
+
+    const result = await response.json();
+    const toolCalls = result.choices?.[0]?.message?.tool_calls || [];
+    
+    return toolCalls.map((tc: any) => ({
+      name: tc.function.name,
+      arguments: typeof tc.function.arguments === 'string' 
+        ? JSON.parse(tc.function.arguments) 
+        : tc.function.arguments,
+    }));
+  } catch (e) {
+    console.error('[Parménion] LLM tool call failed:', e);
+    return [];
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LLM REASONING ENGINE (for non-prescribe phases)
 // ═══════════════════════════════════════════════════════════════
 
 interface ParmenionDecision {

@@ -368,18 +368,44 @@ Deno.serve(async (req: Request) => {
           let executionSuccess = true;
           const executionResults: any[] = [];
 
-        // ═══ INLINE ROUTING: After prescribe, route CMS actions for execute phase ═══
-        if (phase === 'prescribe' && decision.action?.payload?.cms_actions) {
-          routedCmsActions = routeCmsActions(decision.action.payload.cms_actions, site.domain);
-          console.log(`[AutopilotEngine] Routed ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} code actions for ${site.domain}`);
+        // ═══ INLINE ROUTING: After prescribe, detect V2 structured payload ═══
+        if (phase === 'prescribe') {
+          const payload = decision.action?.payload || {};
           
-          allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
-            function: 'cms-router',
-            status: 'success',
-            content_actions: routedCmsActions.content.length,
-            code_actions: routedCmsActions.code.length,
-            total: routedCmsActions.all.length,
-          }] });
+          if (payload._prescribe_v2) {
+            // V2: Tool calls already structured with _channel tags
+            const allCmsActions = payload.cms_actions || [];
+            const allFixes = payload.fixes || [];
+            
+            routedCmsActions = {
+              content: allCmsActions.filter((a: any) => a._channel === 'content_corrective' || a._channel === 'content_editorial'),
+              code: allCmsActions.filter((a: any) => a._channel === 'data'),
+              all: allCmsActions,
+            };
+            
+            console.log(`[AutopilotEngine] Prescribe V2: ${allFixes?.length || 0} code fixes + ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} data CMS actions`);
+            
+            allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
+              function: 'prescribe-v2-router',
+              status: 'success',
+              code_fixes: allFixes?.length || 0,
+              content_actions: routedCmsActions.content.length,
+              data_actions: routedCmsActions.code.length,
+              total_cms: allCmsActions.length,
+            }] });
+          } else if (payload.cms_actions) {
+            // Legacy V1: route by field inspection
+            routedCmsActions = routeCmsActions(payload.cms_actions, site.domain);
+            console.log(`[AutopilotEngine] Routed ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} code actions for ${site.domain}`);
+            
+            allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
+              function: 'cms-router',
+              status: 'success',
+              content_actions: routedCmsActions.content.length,
+              code_actions: routedCmsActions.code.length,
+              total: routedCmsActions.all.length,
+            }] });
+          }
           
           await supabase.from('autopilot_modification_log').insert({
             tracked_site_id: config.tracked_site_id,
@@ -388,9 +414,9 @@ Deno.serve(async (req: Request) => {
             phase: 'route',
             action_type: 'routing',
             cycle_number: cycleNumber,
-            description: `[ROUTE] ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} code actions`,
-            diff_before: { original_actions: decision.action.payload.cms_actions?.length || 0 },
-            diff_after: { content: routedCmsActions.content.length, code: routedCmsActions.code.length },
+            description: `[ROUTE${payload._prescribe_v2 ? ' V2' : ''}] ${routedCmsActions?.content.length || 0} content + ${routedCmsActions?.code.length || 0} data + ${payload.fixes?.length || 0} code fixes`,
+            diff_before: { prescribe_v2: !!payload._prescribe_v2, original_cms: payload.cms_actions?.length || 0, original_fixes: payload.fixes?.length || 0 },
+            diff_after: { content: routedCmsActions?.content.length || 0, code: routedCmsActions?.code.length || 0, fixes: payload.fixes?.length || 0 },
             status: 'applied',
           });
         }
