@@ -264,12 +264,6 @@ function ProfileContent() {
                     <Settings className="h-4 w-4" />
                   </TabsTrigger>
                 )}
-                {hasAdminAccess && (
-                  <TabsTrigger value="admin" className="gap-2 text-primary">
-                    <Shield className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.creator}</span>
-                  </TabsTrigger>
-                )}
                 {isAdmin && (
                   <Button
                     variant="ghost"
@@ -280,6 +274,12 @@ function ProfileContent() {
                     <PenLine className="h-3.5 w-3.5" />
                     <span className="hidden lg:inline">Content</span>
                   </Button>
+                )}
+                {hasAdminAccess && (
+                  <TabsTrigger value="admin" className="gap-2 text-primary">
+                    <Shield className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.creator}</span>
+                  </TabsTrigger>
                 )}
               </TabsList>
 
