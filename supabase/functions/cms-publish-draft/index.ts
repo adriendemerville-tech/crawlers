@@ -317,7 +317,7 @@ Deno.serve(async (req) => {
 
     // Save original version if content was edited
     if (original_result_data) {
-      const originalHtml = buildHtml(original_result_data);
+      const originalHtml = buildHtml(original_result_data, undefined, keyword);
       await service.from("cocoon_architect_drafts").insert({
         domain: conn.site_url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
         user_id: user.id,
