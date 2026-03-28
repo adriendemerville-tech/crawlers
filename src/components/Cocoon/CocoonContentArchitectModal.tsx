@@ -82,6 +82,29 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     applyDraft(draft);
   }, [isOpen, draftData, trackedSiteId, domain]);
 
+  // Auto-inject default preset when modal opens with a trackedSiteId
+  useEffect(() => {
+    if (!isOpen || !trackedSiteId) return;
+    const detectType = (): 'landing' | 'product' | 'article' => {
+      if (draftData?.page_type === 'landing' || draftData?.page_type === 'product') return draftData.page_type;
+      if (pageType === 'landing' || pageType === 'product') return pageType as 'landing' | 'product';
+      return 'article';
+    };
+    const pt = detectType();
+    supabase
+      .from('content_prompt_presets')
+      .select('prompt_text, name, page_type')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('page_type', pt)
+      .eq('is_default', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.prompt_text && !prompt) {
+          setPrompt(data.prompt_text);
+        }
+      });
+  }, [isOpen, trackedSiteId]);
+
   const applyDraft = (draft: Record<string, any>) => {
     if (draft.url) setUrl(draft.url);
     if (draft.keyword) setKeyword(draft.keyword);
