@@ -722,6 +722,7 @@ RÈGLES:
 - RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
 - UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps)
 - Intègre les liens internes pré-calculés dans le brief de manière naturelle dans le texte
+${presetBlock}
 ${templateBlock}`;
 
     promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
