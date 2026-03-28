@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
+import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw, Upload, Lock } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ interface CocoonContentArchitectModalProps {
   trackedSiteId?: string;
   hasCmsConnection?: boolean;
   draftData?: Record<string, any> | null;
+  prefillUrl?: string;
+  isExistingPage?: boolean;
 }
 
 const PAGE_TYPES = [
@@ -40,7 +42,7 @@ const LENGTHS = [
   { value: 'pillar', label: 'Pilier (3000+ mots)' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
@@ -51,6 +53,20 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [generatedImages, setGeneratedImages] = useState<import('./ImageStylePicker').GeneratedImageItem[]>([]);
   const [imageIterations, setImageIterations] = useState(0);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
+
+  // Workflow step: 1=config, 2=content generated, 3=images available
+  const workflowStep = useMemo(() => {
+    if (result) return 3; // content generated → images unlocked
+    if (loading) return 2; // generating
+    return 1; // config only
+  }, [result, loading]);
+
+  // Auto-fill URL from Stratège prefill
+  useEffect(() => {
+    if (isOpen && prefillUrl && !url) {
+      setUrl(prefillUrl);
+    }
+  }, [isOpen, prefillUrl]);
 
   // Form fields
   const [url, setUrl] = useState('');
@@ -215,7 +231,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           style: img.style,
         }));
 
-      const { data, error } = await supabase.functions.invoke('cms-publish-draft', {
+      const functionName = isExistingPage ? 'cms-patch-content' : 'cms-publish-draft';
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           tracked_site_id: trackedSiteId,
           result_data: result,
@@ -228,15 +245,21 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(t3(language,
-        isEdited
-          ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
-          : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
-        isEdited
-          ? 'Draft sent to CMS (edited version). The original version is saved in history.'
-          : 'Draft sent to CMS. You can review and publish it from your editor.',
-        isEdited
-          ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
-          : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
+        isExistingPage
+          ? 'Page mise à jour avec succès.'
+          : isEdited
+            ? 'Brouillon envoyé au CMS (version modifiée).'
+            : 'Brouillon envoyé au CMS.',
+        isExistingPage
+          ? 'Page updated successfully.'
+          : isEdited
+            ? 'Draft sent to CMS (edited version).'
+            : 'Draft sent to CMS.',
+        isExistingPage
+          ? 'Página actualizada con éxito.'
+          : isEdited
+            ? 'Borrador enviado al CMS (versión editada).'
+            : 'Borrador enviado al CMS.'));
     } catch (err: any) {
       toast.error(err.message || 'Erreur de publication');
     } finally {
@@ -282,9 +305,32 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
-            <X className="w-4 h-4 text-white/50" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Publish / Update button in header */}
+            {result && (
+              <Button
+                onClick={handlePublish}
+                disabled={publishing || !result}
+                size="sm"
+                className={hasCmsConnection
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold h-7 text-xs'
+                  : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 h-7 text-xs'}
+              >
+                {publishing ? (
+                  <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
+                ) : hasCmsConnection ? (
+                  <><Upload className="w-3 h-3 mr-1.5" />{isExistingPage
+                    ? t3(language, 'Mettre à jour', 'Update', 'Actualizar')
+                    : t3(language, 'Publier', 'Publish', 'Publicar')}{isEdited ? ' ✎' : ''}</>
+                ) : (
+                  <><Plug className="w-3 h-3 mr-1.5" />{t3(language, 'Connecter CMS', 'Connect CMS', 'Conectar CMS')}</>
+                )}
+              </Button>
+            )}
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+              <X className="w-4 h-4 text-white/50" />
+            </button>
+          </div>
         </div>
 
         {/* Body: left options + right preview */}
@@ -673,35 +719,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
             </ScrollArea>
 
-            {/* Bottom: Publish + Guide */}
+            {/* Bottom: Guide + Reset */}
             {result && (
-              <div className="border-t border-white/10 px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  {isEdited && (
-                    <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
-                      <RotateCcw className="w-3 h-3" />
-                      {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
-                    </button>
-                  )}
-                  {!isEdited && <div />}
-                  <Button
-                    onClick={handlePublish}
-                    disabled={publishing}
-                    className={hasCmsConnection
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold'
-                      : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
-                  >
-                    {publishing ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
-                    ) : hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}{isEdited ? ' ✎' : ''}</>
-                    ) : (
-                      <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Collapsible guide — opens upward */}
+              <div className="border-t border-white/10 px-4 py-2.5 flex items-center justify-between">
+                {isEdited ? (
+                  <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
+                    <RotateCcw className="w-3 h-3" />
+                    {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
+                  </button>
+                ) : <div />}
                 <div className="relative">
                   <button
                     onClick={() => setShowGuide(!showGuide)}
@@ -713,15 +739,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     Mode d'emploi
                   </button>
                   {showGuide && (
-                    <div className="absolute bottom-full left-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
-                      <p className="font-medium text-white/80">🎯 Comment ça marche ?</p>
+                    <div className="absolute bottom-full right-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
+                      <p className="font-medium text-white/80">Comment ça marche ?</p>
                       <ol className="list-decimal list-inside space-y-1">
                         <li>Remplissez l'URL et le mot-clé cible à gauche</li>
-                        <li>L'IA analyse la SERP, vos concurrents et votre site</li>
-                        <li>Visualisez la structure recommandée (page ou code)</li>
-                        <li>Publiez directement si votre CMS est connecté</li>
+                        <li>Cliquez sur "Générer" pour créer la structure</li>
+                        <li>Éditez le contenu directement dans la preview</li>
+                        <li>Générez des images (colonne débloquée après génération)</li>
+                        <li>Publiez via le bouton en haut à droite</li>
                       </ol>
-                      <p className="text-[10px] text-white/30 italic">Les recommandations respectent le ton et le style existants de votre site. Pas de risque de contenu hors-sujet.</p>
                     </div>
                   )}
                 </div>
@@ -729,25 +755,37 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             )}
           </div>
 
-          {/* Right column — Image generation */}
-          <ImageColumn
-            pageType={pageType}
-            trackedSiteId={trackedSiteId}
-            targetUrl={url}
-            identityCard={identityCard}
-            generatedImages={generatedImages}
-            iterationsUsed={imageIterations}
-            onImageGenerated={(dataUri, style) => {
-              setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
-              setImageIterations(prev => prev + 1);
-            }}
-            onImageRemoved={(index) => {
-              setGeneratedImages(prev => prev.filter((_, i) => i !== index));
-            }}
-            onImagePlacement={(index, placement) => {
-              setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
-            }}
-          />
+          {/* Right column — Image generation (locked until content generated) */}
+          {workflowStep >= 3 ? (
+            <ImageColumn
+              pageType={pageType}
+              trackedSiteId={trackedSiteId}
+              targetUrl={url}
+              identityCard={identityCard}
+              generatedImages={generatedImages}
+              iterationsUsed={imageIterations}
+              onImageGenerated={(dataUri, style) => {
+                setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
+                setImageIterations(prev => prev + 1);
+              }}
+              onImageRemoved={(index) => {
+                setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+              }}
+              onImagePlacement={(index, placement) => {
+                setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
+              }}
+            />
+          ) : (
+            <div className="w-[280px] shrink-0 border-l border-white/10 flex flex-col items-center justify-center bg-white/[0.01]">
+              <div className="text-center space-y-3 px-6">
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto">
+                  <Lock className="w-5 h-5 text-white/15" />
+                </div>
+                <p className="text-xs text-white/25">Génération d'images</p>
+                <p className="text-[10px] text-white/15">Disponible après la génération du contenu</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

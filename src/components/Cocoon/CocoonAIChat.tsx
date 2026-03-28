@@ -366,6 +366,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [showArchitectModal, setShowArchitectModal] = useState(false);
+  const [architectPrefillUrl, setArchitectPrefillUrl] = useState<string | undefined>();
+  const [architectIsExistingPage, setArchitectIsExistingPage] = useState(false);
   const [isStrategistMode, setIsStrategistMode] = useState(false);
   const [strategistCompleted, setStrategistCompleted] = useState(false);
   const [strategyPlan, setStrategyPlan] = useState<any>(null);
@@ -783,11 +785,16 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     if (strategyPlan?.tasks?.length && !architectDraft) {
       const topTask = (strategyPlan.tasks as any[]).find((t: any) => t.execution_mode === 'content_architect');
       if (topTask) {
+        // Auto-fill URL from Stratège recommendation
+        const prefillUrl = topTask.affected_urls?.[0] || topTask.url || undefined;
+        setArchitectPrefillUrl(prefillUrl);
+        setArchitectIsExistingPage(!!prefillUrl && topTask.action !== 'create');
         setArchitectDraft({
           strategy_task: topTask,
           title: topTask.title,
           description: topTask.description,
           affected_urls: topTask.affected_urls || [],
+          url: prefillUrl,
         });
       }
     }
@@ -1967,12 +1974,18 @@ Termina con un resumen ejecutivo y próximos pasos.`,
       {isContentArchitectVisible && (
         <CocoonContentArchitectModal
           isOpen={showArchitectModal}
-          onClose={() => setShowArchitectModal(false)}
+          onClose={() => {
+            setShowArchitectModal(false);
+            setArchitectPrefillUrl(undefined);
+            setArchitectIsExistingPage(false);
+          }}
           nodes={nodes}
           domain={domain}
           trackedSiteId={trackedSiteId}
           hasCmsConnection={hasCmsConnection}
           draftData={architectDraft}
+          prefillUrl={architectPrefillUrl}
+          isExistingPage={architectIsExistingPage}
         />
       )}
     </div>
