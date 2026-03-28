@@ -340,10 +340,17 @@ const PROVIDER_MAP: Record<ImageProvider, (req: ImageGenerationRequest) => Promi
 };
 
 export async function generateImage(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
-  const provider = resolveProvider(req.style, req.provider);
+  let provider = resolveProvider(req.style, req.provider);
+
+  // If reference image is provided, force Imagen3 (Gemini) since it supports multimodal
+  if (req.referenceImageUrl && provider !== 'imagen3') {
+    console.log(`[imageGen] Reference image provided, rerouting ${provider} → imagen3 for multimodal support`);
+    provider = 'imagen3';
+  }
+
   const handler = PROVIDER_MAP[provider];
 
-  console.log(`[imageGen] Routing style="${req.style}" → provider="${provider}"`);
+  console.log(`[imageGen] Routing style="${req.style}" → provider="${provider}"${req.referenceImageUrl ? ` (with reference, mode=${req.referenceMode})` : ''}`);
 
   const startMs = Date.now();
   const result = await handler(req);
