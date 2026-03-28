@@ -173,3 +173,19 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - Affiche les 5 crawls les plus audités dans Cocoon en priorité
 - Barre de recherche en haut du filtre pour retrouver tous les crawls réalisés par l'utilisateur
 - Détection automatique du crawl source quand l'utilisateur arrive depuis /crawl
+
+## Stack technique
+
+### Langages
+| Couche | Langage | Détails |
+|--------|---------|---------|
+| **Frontend** | TypeScript | React 18 + Vite + Tailwind CSS |
+| **Frontend** | CSS | Tailwind utility classes + tokens sémantiques (`index.css`) |
+| **Frontend** | HTML | `index.html` (point d'entrée Vite) |
+| **Backend (Edge Functions)** | TypeScript | Runtime Deno (toutes les edge functions dans `supabase/functions/`) |
+| **Base de données** | SQL (PL/pgSQL) | Migrations, fonctions DB (`score_workbench_priority`, `populate_architect_workbench`, triggers, RLS policies) |
+
+### Résumé
+- **TypeScript** est le langage unique partagé entre frontend et backend
+- **SQL/PL/pgSQL** pour toute la logique base de données (scoring, triggers, RLS)
+- Pas de Python, Ruby, Java ou autre langage serveur
