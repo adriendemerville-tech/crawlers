@@ -267,7 +267,6 @@ function applySinglePatch(html: string, patch: PatchOperation): { html: string; 
 
     case 'image': {
       if (action === 'replace' && old_value) {
-        // old_value = old src, value = new src
         const imgRegex = new RegExp(`(<img[^>]*src=")${escapeRegex(old_value)}("[^>]*>)`, 'gi');
         if (imgRegex.test(html)) {
           return { html: html.replace(imgRegex, `$1${strValue}$2`), changed: true };
@@ -275,6 +274,55 @@ function applySinglePatch(html: string, patch: PatchOperation): { html: string; 
         return { html, changed: false, detail: `No <img> with src="${old_value}" found` };
       }
       return { html, changed: false, detail: 'Provide old_value (old src) for image replace' };
+    }
+
+    case 'alt_text': {
+      // value = new alt text, old_value = img src to target OR selector
+      if (old_value) {
+        const altRegex = new RegExp(`(<img[^>]*src="${escapeRegex(old_value)}"[^>]*?)alt="[^"]*"`, 'gi');
+        const altRegexNoAlt = new RegExp(`(<img[^>]*src="${escapeRegex(old_value)}"[^>]*?)(\\/?>)`, 'gi');
+        if (altRegex.test(html)) {
+          return { html: html.replace(altRegex, `$1alt="${strValue}"`), changed: true };
+        }
+        // Image has no alt attr — add it
+        if (altRegexNoAlt.test(html)) {
+          return { html: html.replace(altRegexNoAlt, `$1 alt="${strValue}" $2`), changed: true };
+        }
+        return { html, changed: false, detail: `No <img> with src="${old_value}" found` };
+      }
+      // Without old_value, patch ALL images missing alt
+      if (action === 'replace') {
+        const missingAlt = /<img(?![^>]*alt=)[^>]*?(\/?>) /gi;
+        const newHtml = html.replace(missingAlt, (match, close) => match.replace(close, ` alt="${strValue}" ${close}`));
+        return { html: newHtml, changed: newHtml !== html, detail: newHtml !== html ? 'Added alt to images missing it' : 'No images missing alt' };
+      }
+      return { html, changed: false, detail: 'Provide old_value (img src) to target a specific image' };
+    }
+
+    case 'schema_org': {
+      // Inject or replace JSON-LD script in HTML
+      const jsonLd = typeof value === 'string' ? value : JSON.stringify(value);
+      const ldRegex = /<script\s+type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/i;
+      const ldTag = `<script type="application/ld+json">${jsonLd}</script>`;
+      
+      if (action === 'replace' && ldRegex.test(html)) {
+        return { html: html.replace(ldRegex, ldTag), changed: true };
+      }
+      if (action === 'append' || (action === 'replace' && !ldRegex.test(html))) {
+        const headClose = html.indexOf('</head>');
+        if (headClose > -1) {
+          return { html: html.slice(0, headClose) + '\n' + ldTag + '\n' + html.slice(headClose), changed: true };
+        }
+        const bodyClose = html.lastIndexOf('</body>');
+        if (bodyClose > -1) {
+          return { html: html.slice(0, bodyClose) + '\n' + ldTag + '\n' + html.slice(bodyClose), changed: true };
+        }
+        return { html: html + '\n' + ldTag, changed: true };
+      }
+      if (action === 'remove') {
+        return { html: html.replace(ldRegex, ''), changed: ldRegex.test(html) };
+      }
+      return { html, changed: false, detail: `Unsupported action '${action}' for schema_org` };
     }
 
     default:
