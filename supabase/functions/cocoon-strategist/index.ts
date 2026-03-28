@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
