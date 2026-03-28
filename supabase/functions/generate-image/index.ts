@@ -53,12 +53,15 @@ serve(async (req) => {
       });
     }
 
-    const { data: fairUse } = await supabase.rpc('check_fair_use_v2', {
-      p_user_id: user.id,
-      p_action: 'generate_image',
-      p_hourly_limit: 5,
-      p_daily_limit: 10,
-    });
+    // Skip fair-use check for service_role calls
+    const { data: fairUse } = isServiceRole 
+      ? { data: { allowed: true } }
+      : await supabase.rpc('check_fair_use_v2', {
+          p_user_id: userId,
+          p_action: 'generate_image',
+          p_hourly_limit: 5,
+          p_daily_limit: 10,
+        });
 
     if (fairUse && !fairUse.allowed) {
       return new Response(JSON.stringify({ 
