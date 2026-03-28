@@ -1643,7 +1643,9 @@ function generateRecommendations(
         "Valider le JSON avec jsonlint.com",
         "Vérifier les virgules et guillemets manquants",
         "Tester avec Google Rich Results Test"
-      ]
+      ],
+      target_selector: 'schema_org',
+      target_operation: 'replace',
     });
   } else if (insights.jsonLdValidation.count === 0) {
     recommendations.push({
@@ -1656,7 +1658,9 @@ function generateRecommendations(
       fixes: [
         "Implémenter Organization et WebSite au minimum",
         "Ajouter FAQPage pour les sections FAQ"
-      ]
+      ],
+      target_selector: 'schema_org',
+      target_operation: 'create',
     });
   }
   
