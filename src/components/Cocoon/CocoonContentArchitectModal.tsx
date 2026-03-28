@@ -239,6 +239,16 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
         {/* Body: left options + right preview */}
         <div className="flex-1 flex overflow-hidden">
+          {/* Sites sidebar */}
+          <ContentArchitectSidebar
+            selectedSiteId={trackedSiteId}
+            selectedPageType={pageType === 'landing' || pageType === 'product' || pageType === 'article' ? pageType : undefined}
+            onSelectPreset={(preset, site) => {
+              if (preset.prompt_text) setPrompt(preset.prompt_text);
+              setPageType(preset.page_type === 'landing' ? 'landing' : preset.page_type === 'product' ? 'product' : 'article');
+              if (!url && site.domain) setUrl(`https://${site.domain}`);
+            }}
+          />
           {/* Left column — options */}
           <div className="w-[340px] shrink-0 border-r border-white/10 overflow-y-auto p-4 pb-12 space-y-3">
             <div className="space-y-1.5">
