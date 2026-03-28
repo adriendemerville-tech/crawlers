@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
+import { ImageStylePicker, type ImageStyle } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,57 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [result, setResult] = useState<any>(null);
   const [originalResult, setOriginalResult] = useState<any>(null);
   const [publishing, setPublishing] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
+
+  // Load identity card for smart suggestions
+  useEffect(() => {
+    if (!trackedSiteId || !isOpen) return;
+    supabase
+      .from('tracked_sites')
+      .select('identity_card')
+      .eq('id', trackedSiteId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.identity_card) setIdentityCard(data.identity_card as Record<string, any>);
+      });
+  }, [trackedSiteId, isOpen]);
+
+  const handleGenerateImage = useCallback(async (style: ImageStyle, imagePrompt: string) => {
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt: imagePrompt, style },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setGeneratedImage(data.dataUri);
+
+      // Track style preference
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Upsert preference - try insert, on conflict increment
+        await supabase.from('image_style_preferences').upsert(
+          {
+            user_id: user.id,
+            tracked_site_id: trackedSiteId || null,
+            target_url: url || null,
+            style_key: style,
+            usage_count: 1,
+            last_used_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,tracked_site_id,target_url,style_key', ignoreDuplicates: false }
+        );
+      }
+
+      toast.success('Image générée !');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de génération d\'image');
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, [trackedSiteId, url]);
 
   // Form fields
   const [url, setUrl] = useState('');
