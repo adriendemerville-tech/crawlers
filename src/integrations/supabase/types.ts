@@ -2095,6 +2095,210 @@ export type Database = {
         }
         Relationships: []
       }
+      content_generation_logs: {
+        Row: {
+          brief_angle: string | null
+          brief_cta_count: number | null
+          brief_eeat_signals: string[] | null
+          brief_geo_passages: number | null
+          brief_h2_count: number | null
+          brief_h3_count: number | null
+          brief_internal_links_count: number | null
+          brief_length_target: number | null
+          brief_schema_types: string[] | null
+          brief_tone: string | null
+          created_at: string
+          domain: string
+          ga4_conversions_baseline: number | null
+          ga4_conversions_t90: number | null
+          ga4_sessions_baseline: number | null
+          ga4_sessions_t90: number | null
+          geo_score_baseline: number | null
+          geo_score_t90: number | null
+          gsc_clicks_baseline: number | null
+          gsc_clicks_t30: number | null
+          gsc_clicks_t90: number | null
+          gsc_ctr_baseline: number | null
+          gsc_ctr_t90: number | null
+          id: string
+          keyword: string | null
+          llm_visibility_baseline: number | null
+          llm_visibility_t90: number | null
+          market_sector: string | null
+          measured_at: string | null
+          measurement_phase: string | null
+          page_type: string
+          preset_id: string | null
+          preset_page_type: string | null
+          source: string
+          target_url: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          brief_angle?: string | null
+          brief_cta_count?: number | null
+          brief_eeat_signals?: string[] | null
+          brief_geo_passages?: number | null
+          brief_h2_count?: number | null
+          brief_h3_count?: number | null
+          brief_internal_links_count?: number | null
+          brief_length_target?: number | null
+          brief_schema_types?: string[] | null
+          brief_tone?: string | null
+          created_at?: string
+          domain: string
+          ga4_conversions_baseline?: number | null
+          ga4_conversions_t90?: number | null
+          ga4_sessions_baseline?: number | null
+          ga4_sessions_t90?: number | null
+          geo_score_baseline?: number | null
+          geo_score_t90?: number | null
+          gsc_clicks_baseline?: number | null
+          gsc_clicks_t30?: number | null
+          gsc_clicks_t90?: number | null
+          gsc_ctr_baseline?: number | null
+          gsc_ctr_t90?: number | null
+          id?: string
+          keyword?: string | null
+          llm_visibility_baseline?: number | null
+          llm_visibility_t90?: number | null
+          market_sector?: string | null
+          measured_at?: string | null
+          measurement_phase?: string | null
+          page_type: string
+          preset_id?: string | null
+          preset_page_type?: string | null
+          source?: string
+          target_url?: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          brief_angle?: string | null
+          brief_cta_count?: number | null
+          brief_eeat_signals?: string[] | null
+          brief_geo_passages?: number | null
+          brief_h2_count?: number | null
+          brief_h3_count?: number | null
+          brief_internal_links_count?: number | null
+          brief_length_target?: number | null
+          brief_schema_types?: string[] | null
+          brief_tone?: string | null
+          created_at?: string
+          domain?: string
+          ga4_conversions_baseline?: number | null
+          ga4_conversions_t90?: number | null
+          ga4_sessions_baseline?: number | null
+          ga4_sessions_t90?: number | null
+          geo_score_baseline?: number | null
+          geo_score_t90?: number | null
+          gsc_clicks_baseline?: number | null
+          gsc_clicks_t30?: number | null
+          gsc_clicks_t90?: number | null
+          gsc_ctr_baseline?: number | null
+          gsc_ctr_t90?: number | null
+          id?: string
+          keyword?: string | null
+          llm_visibility_baseline?: number | null
+          llm_visibility_t90?: number | null
+          market_sector?: string | null
+          measured_at?: string | null
+          measurement_phase?: string | null
+          page_type?: string
+          preset_id?: string | null
+          preset_page_type?: string | null
+          source?: string
+          target_url?: string | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_generation_logs_preset_id_fkey"
+            columns: ["preset_id"]
+            isOneToOne: false
+            referencedRelation: "content_prompt_presets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_logs_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_performance_correlations: {
+        Row: {
+          angle: string | null
+          avg_cta_count: number | null
+          avg_ga4_conversions_delta: number | null
+          avg_ga4_sessions_delta: number | null
+          avg_geo_passages: number | null
+          avg_geo_score_delta: number | null
+          avg_gsc_clicks_delta: number | null
+          avg_gsc_ctr_delta: number | null
+          avg_h2_count: number | null
+          avg_internal_links: number | null
+          avg_length_target: number | null
+          avg_llm_visibility_delta: number | null
+          confidence_grade: string | null
+          created_at: string
+          id: string
+          market_sector: string
+          page_type: string
+          sample_count: number
+          tone: string | null
+          week_start: string
+        }
+        Insert: {
+          angle?: string | null
+          avg_cta_count?: number | null
+          avg_ga4_conversions_delta?: number | null
+          avg_ga4_sessions_delta?: number | null
+          avg_geo_passages?: number | null
+          avg_geo_score_delta?: number | null
+          avg_gsc_clicks_delta?: number | null
+          avg_gsc_ctr_delta?: number | null
+          avg_h2_count?: number | null
+          avg_internal_links?: number | null
+          avg_length_target?: number | null
+          avg_llm_visibility_delta?: number | null
+          confidence_grade?: string | null
+          created_at?: string
+          id?: string
+          market_sector: string
+          page_type: string
+          sample_count?: number
+          tone?: string | null
+          week_start: string
+        }
+        Update: {
+          angle?: string | null
+          avg_cta_count?: number | null
+          avg_ga4_conversions_delta?: number | null
+          avg_ga4_sessions_delta?: number | null
+          avg_geo_passages?: number | null
+          avg_geo_score_delta?: number | null
+          avg_gsc_clicks_delta?: number | null
+          avg_gsc_ctr_delta?: number | null
+          avg_h2_count?: number | null
+          avg_internal_links?: number | null
+          avg_length_target?: number | null
+          avg_llm_visibility_delta?: number | null
+          confidence_grade?: string | null
+          created_at?: string
+          id?: string
+          market_sector?: string
+          page_type?: string
+          sample_count?: number
+          tone?: string | null
+          week_start?: string
+        }
+        Relationships: []
+      }
       content_prompt_presets: {
         Row: {
           created_at: string
