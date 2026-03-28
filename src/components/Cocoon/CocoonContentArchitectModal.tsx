@@ -728,6 +728,26 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
             )}
           </div>
+
+          {/* Right column — Image generation */}
+          <ImageColumn
+            pageType={pageType}
+            trackedSiteId={trackedSiteId}
+            targetUrl={url}
+            identityCard={identityCard}
+            generatedImages={generatedImages}
+            iterationsUsed={imageIterations}
+            onImageGenerated={(dataUri, style) => {
+              setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
+              setImageIterations(prev => prev + 1);
+            }}
+            onImageRemoved={(index) => {
+              setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+            }}
+            onImagePlacement={(index, placement) => {
+              setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
+            }}
+          />
         </div>
       </div>
     </div>
