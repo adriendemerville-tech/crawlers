@@ -2184,10 +2184,8 @@ Deno.serve(async (req) => {
     try {
       const authHeader = req.headers.get('Authorization') || '';
       if (authHeader) {
-        const { createClient } = await import('npm:@supabase/supabase-js@2');
-        const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-          global: { headers: { Authorization: authHeader } }
-        });
+        const { getUserClient } = await import('../_shared/supabaseClient.ts');
+        const sb = getUserClient(authHeader);
         const { data: { user } } = await sb.auth.getUser();
         if (user) {
           saveRawAuditData({
