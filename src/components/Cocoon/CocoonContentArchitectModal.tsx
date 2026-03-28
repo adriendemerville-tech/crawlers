@@ -332,18 +332,6 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <label className="text-[11px] text-white/50 uppercase tracking-wider">Instructions spécifiques</label>
                 <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Ex: Inclure un tableau comparatif…" rows={2} className="bg-white/5 border-white/10 text-white text-xs resize-none" />
               </div>
-
-              {/* Image style picker */}
-              <div className="border-t border-white/10 pt-3">
-                <ImageStylePicker
-                  pageType={pageType}
-                  trackedSiteId={trackedSiteId}
-                  targetUrl={url}
-                  identityCard={identityCard}
-                  onGenerate={handleGenerateImage}
-                  generating={generatingImage}
-                />
-              </div>
             </div>
 
             <div className="shrink-0 p-4 border-t border-white/10">
@@ -352,6 +340,17 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </Button>
             </div>
           </div>
+
+          {/* Image column */}
+          <ImageColumn
+            pageType={pageType}
+            trackedSiteId={trackedSiteId}
+            targetUrl={url}
+            identityCard={identityCard}
+            generatedImage={generatedImage}
+            onImageGenerated={(dataUri) => setGeneratedImage(dataUri)}
+            onImageRemoved={() => setGeneratedImage(null)}
+          />
 
           {/* Right column — preview */}
           <div className="flex-1 flex flex-col overflow-hidden">
