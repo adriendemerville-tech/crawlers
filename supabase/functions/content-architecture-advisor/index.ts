@@ -128,8 +128,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    // ── Step 1: Site Identity + CMS Detection ──
-    console.log(`[content-advisor] Step 1: Fetching site context + CMS for ${domain}`)
+    // ── Step 1: Site Identity + CMS Detection + Content Template ──
+    console.log(`[content-advisor] Step 1: Fetching site context + CMS + prompt template for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
       : await getSiteContext(serviceClient, { domain, userId: user.id })
@@ -152,6 +152,26 @@ Deno.serve(async (req) => {
           capabilities: caps,
         }
         console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
+      }
+    }
+
+    // ── Load SEO/GEO prompt template for this page type ──
+    const templatePageType = page_type === 'homepage' || page_type === 'category' ? 'landing'
+      : page_type === 'faq' ? 'article'
+      : page_type as string
+    let contentTemplate: any = null
+    {
+      const { data: tpl } = await serviceClient
+        .from('content_prompt_templates')
+        .select('*')
+        .eq('page_type', templatePageType)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (tpl) {
+        contentTemplate = tpl
+        console.log(`[content-advisor] Loaded prompt template: ${tpl.label} (${tpl.page_type})`)
+      } else {
+        console.log(`[content-advisor] No template found for page_type=${templatePageType}, using defaults`)
       }
     }
 
@@ -683,7 +703,31 @@ Active chaque critère selon les signaux disponibles. Voici l'état des signaux 
 IMPORTANT : Le contenu recommandé NE DOIT PAS être en rupture de ton/style avec le reste du site. Reste dans la continuité de ce qui existe déjà. Si tu proposes quelque chose de très différent, SIGNALE-LE dans coherence_check.warnings et BAISSE le confidence_score.
 
 Le ratio sémantique doit refléter la distance jargon: jargon_distance 1-3 → contenu technique, 7-10 → très vulgarisé.
-Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
+Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.
+
+${contentTemplate ? `
+═══ TEMPLATE SEO/GEO SPÉCIALISÉ: ${contentTemplate.label.toUpperCase()} ═══
+
+${contentTemplate.system_prompt}
+
+STRUCTURE DE RÉFÉRENCE:
+${contentTemplate.structure_template}
+
+RÈGLES SEO OBLIGATOIRES:
+${contentTemplate.seo_rules}
+
+RÈGLES GEO (OPTIMISATION IA GÉNÉRATIVE) OBLIGATOIRES:
+${contentTemplate.geo_rules}
+
+DIRECTIVES DE TON:
+${contentTemplate.tone_guidelines}
+
+EXEMPLES DE RÉFÉRENCE:
+${JSON.stringify(contentTemplate.examples, null, 2)}
+
+⚠️ Le contenu des sections (body_text) DOIT suivre ces règles. Un contenu qui ne respecte pas les règles GEO (passages citables, réponse directe, FAQ) sera considéré comme non conforme.
+═══ FIN TEMPLATE ═══
+` : ''}`
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
