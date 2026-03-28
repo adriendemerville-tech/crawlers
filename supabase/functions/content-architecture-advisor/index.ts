@@ -646,6 +646,8 @@ ${silo_context.gap_description ? `Gap identifié: ${silo_context.gap_description
 RÈGLE: Le contenu doit renforcer ce silo thématique. Il doit lier vers les pages existantes du silo ET être conçu pour recevoir des liens depuis ces pages.
 ` : ''}
 
+${keywordCloudBlock}
+
 **Identité du site:**
 ${siteIdentity ? JSON.stringify(siteIdentity, null, 2) : 'Non disponible — recommandations génériques'}
 
