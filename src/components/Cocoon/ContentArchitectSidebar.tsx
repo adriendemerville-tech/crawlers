@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 interface TrackedSite {
   id: string;
   domain: string;
-  url: string;
 }
 
 interface PromptPreset {
