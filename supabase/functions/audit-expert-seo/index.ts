@@ -141,6 +141,8 @@ interface RecommendationItem {
   strengths?: string[];
   weaknesses?: string[];
   fixes?: string[];
+  target_selector?: string;
+  target_operation?: 'replace' | 'insert_after' | 'append' | 'create' | 'delete_element';
 }
 
 // ==================== TOXIC ANCHORS LIST ====================
@@ -1518,7 +1520,9 @@ function generateRecommendations(
         "Implémenter le lazy loading",
         "Activer la compression Brotli",
         "Utiliser un CDN"
-      ]
+      ],
+      target_selector: 'performance_lcp',
+      target_operation: 'replace',
     });
   }
   
@@ -1532,7 +1536,9 @@ function generateRecommendations(
       title: 'JavaScript bloquant : interactivité dégradée',
       description: `Le TBT de ${Math.round(tbtMs)}ms dépasse le seuil de 200ms.`,
       weaknesses: [`TBT actuel : ${Math.round(tbtMs)}ms (objectif < 200ms)`],
-      fixes: ["Code splitting", "Différer les scripts non critiques", "Utiliser SSR"]
+      fixes: ["Code splitting", "Différer les scripts non critiques", "Utiliser SSR"],
+      target_selector: 'performance_tbt',
+      target_operation: 'replace',
     });
   }
   
@@ -1554,7 +1560,9 @@ function generateRecommendations(
         "Réduire le JavaScript et CSS inline",
         "Supprimer le code HTML inutile",
         "Enrichir le contenu textuel visible"
-      ]
+      ],
+      target_selector: 'content',
+      target_operation: 'replace',
     });
   }
   
@@ -1574,7 +1582,9 @@ function generateRecommendations(
       fixes: [
         "Varier le H1 pour inclure des synonymes ou des variantes",
         "Garder le mot-clé principal dans les deux mais formuler différemment"
-      ]
+      ],
+      target_selector: 'h1',
+      target_operation: 'replace',
     });
   } else if (insights.semanticConsistency.verdict === 'inconsistent') {
     recommendations.push({
@@ -1591,7 +1601,9 @@ function generateRecommendations(
       fixes: [
         "Aligner le H1 sur le sujet principal du Title",
         "S'assurer que les deux traitent du même sujet"
-      ]
+      ],
+      target_selector: 'h1',
+      target_operation: 'replace',
     });
   }
   
@@ -1611,7 +1623,9 @@ function generateRecommendations(
       fixes: [
         "Remplacer par des ancres descriptives contenant des mots-clés",
         "Exemple : 'Découvrez nos services SEO' au lieu de 'cliquez ici'"
-      ]
+      ],
+      target_selector: 'a',
+      target_operation: 'replace',
     });
   }
   
@@ -1629,7 +1643,9 @@ function generateRecommendations(
         "Valider le JSON avec jsonlint.com",
         "Vérifier les virgules et guillemets manquants",
         "Tester avec Google Rich Results Test"
-      ]
+      ],
+      target_selector: 'schema_org',
+      target_operation: 'replace',
     });
   } else if (insights.jsonLdValidation.count === 0) {
     recommendations.push({
@@ -1642,7 +1658,9 @@ function generateRecommendations(
       fixes: [
         "Implémenter Organization et WebSite au minimum",
         "Ajouter FAQPage pour les sections FAQ"
-      ]
+      ],
+      target_selector: 'schema_org',
+      target_operation: 'create',
     });
   }
   
@@ -1655,7 +1673,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'Balise Title absente',
       description: 'Aucune balise <title> détectée.',
-      fixes: ["Ajouter une balise <title> unique de 50-60 caractères"]
+      fixes: ["Ajouter une balise <title> unique de 50-60 caractères"],
+      target_selector: 'title',
+      target_operation: 'create',
     });
   }
   
@@ -1667,7 +1687,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'Balise H1 absente',
       description: 'Aucune balise H1 détectée.',
-      fixes: ["Ajouter exactement une balise <h1> par page"]
+      fixes: ["Ajouter exactement une balise <h1> par page"],
+      target_selector: 'h1',
+      target_operation: 'create',
     });
   }
   
@@ -1679,7 +1701,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'HTTPS non activé',
       description: 'Le site utilise HTTP non sécurisé.',
-      fixes: ["Obtenir un certificat SSL via Let's Encrypt"]
+      fixes: ["Obtenir un certificat SSL via Let's Encrypt"],
+      target_selector: 'ssl_config',
+      target_operation: 'replace',
     });
   }
   
@@ -1703,7 +1727,9 @@ function generateRecommendations(
         "Supprimer ou corriger les liens vers les pages inexistantes",
         "Mettre en place des redirections 301 si les pages ont été déplacées",
         "Utiliser un outil de monitoring des liens cassés"
-      ]
+      ],
+      target_selector: 'a[href]',
+      target_operation: 'replace',
     });
   }
   
@@ -1726,7 +1752,9 @@ function generateRecommendations(
           "Utiliser une hiérarchie stricte : H1 → H2 → H3 (sans sauter de niveau)",
           "Ne pas utiliser les balises Hn pour le style visuel — utiliser CSS à la place",
           "Vérifier que le H1 est unique et que chaque section a son propre H2"
-        ]
+        ],
+        target_selector: 'h2,h3,h4',
+        target_operation: 'replace',
       });
     }
   }
@@ -1741,6 +1769,13 @@ function generateRecommendations(
         'http_sitemap_on_https': 'sitemap-http-declaration',
         'blocks_rendering_resources': 'robots-blocks-resources',
         'sitemap_not_in_robots': 'sitemap-undeclared',
+      };
+      const selectorMap: Record<string, string> = {
+        'noindex_in_sitemap': 'sitemap_xml',
+        'http_urls_in_sitemap': 'sitemap_xml',
+        'http_sitemap_on_https': 'sitemap_xml',
+        'blocks_rendering_resources': 'robots_txt',
+        'sitemap_not_in_robots': 'robots_txt',
       };
       recommendations.push({
         id: idMap[issue.type] || `sitemap-${issue.type}`,
@@ -1765,7 +1800,9 @@ function generateRecommendations(
           ? ["Mettre à jour toutes les URLs du sitemap en HTTPS", "Vérifier que les redirections 301 HTTP→HTTPS sont en place"]
           : issue.type === 'sitemap_not_in_robots'
           ? ["Ajouter 'Sitemap: https://votre-site.com/sitemap.xml' dans robots.txt", "Soumettre le sitemap dans Google Search Console"]
-          : ["Corriger l'incohérence entre le sitemap et le robots.txt"]
+          : ["Corriger l'incohérence entre le sitemap et le robots.txt"],
+        target_selector: selectorMap[issue.type] || 'sitemap_xml',
+        target_operation: 'replace',
       });
     }
   }

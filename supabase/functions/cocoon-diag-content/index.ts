@@ -26,6 +26,8 @@ interface Finding {
   description: string;
   affected_urls: string[];
   data?: Record<string, any>;
+  target_selector?: string;
+  target_operation?: 'replace' | 'insert_after' | 'append' | 'create' | 'delete_element';
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -257,6 +259,25 @@ Deno.serve(async (req) => {
         description: `${badHierarchy.length} pages`,
         affected_urls: badHierarchy.map(p => p.url),
       });
+    }
+
+    // Enrich findings with target coordinates for workbench
+    const contentTargetMap: Record<string, { selector: string; operation: string }> = {
+      thin_content: { selector: 'content', operation: 'replace' },
+      no_h1: { selector: 'h1', operation: 'create' },
+      no_meta_desc: { selector: 'meta_description', operation: 'create' },
+      short_meta_desc: { selector: 'meta_description', operation: 'replace' },
+      duplicate_content: { selector: 'content', operation: 'replace' },
+      images_no_alt: { selector: 'img[alt]', operation: 'replace' },
+      no_images: { selector: 'content', operation: 'append' },
+      heading_hierarchy: { selector: 'h2,h3', operation: 'replace' },
+    };
+    for (const f of findings) {
+      const target = contentTargetMap[f.id];
+      if (target) {
+        f.target_selector = target.selector;
+        f.target_operation = target.operation as any;
+      }
     }
 
     // Calculate content quality score (0-100)

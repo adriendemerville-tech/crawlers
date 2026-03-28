@@ -25,6 +25,8 @@ interface Finding {
   description: string;
   affected_urls: string[];
   data?: Record<string, any>;
+  target_selector?: string;
+  target_operation?: 'replace' | 'insert_after' | 'append' | 'create' | 'delete_element';
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -300,6 +302,25 @@ Deno.serve(async (req) => {
         });
       }
     }
+    // Enrich findings with target coordinates for workbench
+    const authorityTargetMap: Record<string, { selector: string; operation: string }> = {
+      low_domain_rank: { selector: 'backlink_profile', operation: 'append' },
+      low_referring_domains: { selector: 'backlink_profile', operation: 'append' },
+      losing_backlinks: { selector: 'backlink_profile', operation: 'append' },
+      anchor_over_optimization: { selector: 'a[href]', operation: 'replace' },
+      high_external_links: { selector: 'a[href]', operation: 'delete_element' },
+      pagerank_concentration: { selector: 'internal_links', operation: 'append' },
+      pages_with_external_authority: { selector: 'internal_links', operation: 'append' },
+      pillar_pages_no_backlinks: { selector: 'backlink_profile', operation: 'append' },
+    };
+    for (const f of findings) {
+      const target = authorityTargetMap[f.id];
+      if (target) {
+        f.target_selector = target.selector;
+        f.target_operation = target.operation as any;
+      }
+    }
+
     // Score
     const criticals = findings.filter(f => f.severity === 'critical').length;
     const warnings = findings.filter(f => f.severity === 'warning').length;
