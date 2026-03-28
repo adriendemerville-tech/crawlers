@@ -386,8 +386,8 @@ async function patchWordPress(conn: CmsConnection, input: PatchInput): Promise<P
   const endpoint = postData.type === 'page' ? 'pages' : 'posts';
 
   // Step 2: Separate meta patches from content patches
-  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags'].includes(p.zone));
-  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags'].includes(p.zone));
+  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'].includes(p.zone));
+  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'].includes(p.zone));
 
   // Step 3: Build WP update payload
   const updatePayload: Record<string, unknown> = {};
