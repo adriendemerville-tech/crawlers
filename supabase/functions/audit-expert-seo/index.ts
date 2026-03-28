@@ -1673,7 +1673,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'Balise Title absente',
       description: 'Aucune balise <title> détectée.',
-      fixes: ["Ajouter une balise <title> unique de 50-60 caractères"]
+      fixes: ["Ajouter une balise <title> unique de 50-60 caractères"],
+      target_selector: 'title',
+      target_operation: 'create',
     });
   }
   
@@ -1685,7 +1687,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'Balise H1 absente',
       description: 'Aucune balise H1 détectée.',
-      fixes: ["Ajouter exactement une balise <h1> par page"]
+      fixes: ["Ajouter exactement une balise <h1> par page"],
+      target_selector: 'h1',
+      target_operation: 'create',
     });
   }
   
@@ -1697,7 +1701,9 @@ function generateRecommendations(
       icon: '🔴',
       title: 'HTTPS non activé',
       description: 'Le site utilise HTTP non sécurisé.',
-      fixes: ["Obtenir un certificat SSL via Let's Encrypt"]
+      fixes: ["Obtenir un certificat SSL via Let's Encrypt"],
+      target_selector: 'ssl_config',
+      target_operation: 'replace',
     });
   }
   
