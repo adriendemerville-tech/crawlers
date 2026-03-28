@@ -424,6 +424,49 @@ async function patchWordPress(conn: CmsConnection, input: PatchInput): Promise<P
       case 'author':
         details.push({ zone: 'author', success: false, detail: 'Author ID resolution not yet implemented' });
         break;
+      case 'canonical':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_canonical: strVal };
+        details.push({ zone: 'canonical', success: true, detail: 'Set via Yoast canonical field' });
+        patchesApplied++;
+        break;
+      case 'robots_meta': {
+        // strVal like "noindex,nofollow"
+        const robots = strVal.split(',').map(s => s.trim());
+        const metaObj: Record<string, string> = {};
+        if (robots.includes('noindex')) metaObj._yoast_wpseo_meta_robots_noindex = '1';
+        if (robots.includes('nofollow')) metaObj._yoast_wpseo_meta_robots_nofollow = '1';
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), ...metaObj };
+        details.push({ zone: 'robots_meta', success: true, detail: `Set via Yoast: ${strVal}` });
+        patchesApplied++;
+        break;
+      }
+      case 'og_title':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_title: strVal };
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_description: strVal };
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_image: strVal };
+        details.push({ zone: 'og_image', success: true });
+        patchesApplied++;
+        break;
+      case 'schema_org': {
+        // WordPress: inject via Yoast wpseo_schema field or as content-level JSON-LD
+        // Fall through to content patches for HTML injection
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const ldTag = `<script type="application/ld+json">${jsonLd}</script>`;
+        // Append to content
+        const curContent = updatePayload.content as string || postData.content?.rendered || postData.content?.raw || '';
+        updatePayload.content = curContent + '\n' + ldTag;
+        details.push({ zone: 'schema_org', success: true, detail: 'Injected JSON-LD in post content' });
+        patchesApplied++;
+        break;
+      }
     }
   }
 
