@@ -604,10 +604,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 </div>
               )}
               {loading && (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#fbbf24] mx-auto" />
-                    <p className="text-xs text-white/40">Content Architect analyse la page…</p>
+                <div className="flex items-center justify-center h-full min-h-[400px]">
+                  <div className="text-center space-y-4">
+                    <div className="relative w-10 h-10 mx-auto">
+                      <div className="absolute inset-0 rounded-full border-2 border-white/5" />
+                      <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#fbbf24]/70 animate-spin" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-white/40 tracking-wide">Génération en cours</p>
+                      <p className="text-[10px] text-white/20">Analyse SERP · Concurrents · Structure optimale</p>
+                    </div>
+                  </div>
+                </div>
                   </div>
                 </div>
               )}
