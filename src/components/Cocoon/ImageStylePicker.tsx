@@ -247,11 +247,33 @@ export function ImageColumn({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      onImageGenerated(data.dataUri, selectedStyle);
-      setCarouselIndex(generatedImages.length);
 
+      // Upload generated image to storage for persistence
       const { data: { user } } = await supabase.auth.getUser();
+      let persistedUrl = data.dataUri;
       if (user) {
+        try {
+          const base64Match = data.dataUri.match(/^data:(image\/\w+);base64,(.+)$/);
+          if (base64Match) {
+            const mimeType = base64Match[1];
+            const ext = mimeType === 'image/png' ? 'png' : 'jpg';
+            const raw = atob(base64Match[2]);
+            const bytes = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+            const blob = new Blob([bytes], { type: mimeType });
+            const folder = trackedSiteId ? `${user.id}/${trackedSiteId}/generated` : `${user.id}/generated`;
+            const fileName = `${Date.now()}_${selectedStyle}.${ext}`;
+            const filePath = `${folder}/${fileName}`;
+            const { error: uploadErr } = await supabase.storage.from('image-references').upload(filePath, blob, { contentType: mimeType });
+            if (!uploadErr) {
+              const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(filePath);
+              persistedUrl = urlData.publicUrl;
+            }
+          }
+        } catch (e) {
+          console.warn('[ImageColumn] Storage upload failed, keeping dataUri:', e);
+        }
+
         await supabase.from('image_style_preferences' as any).upsert(
           {
             user_id: user.id,
@@ -264,6 +286,8 @@ export function ImageColumn({
           { onConflict: 'user_id,tracked_site_id,target_url,style_key', ignoreDuplicates: false }
         );
       }
+      onImageGenerated(persistedUrl, selectedStyle);
+      setCarouselIndex(generatedImages.length);
       toast.success('Image générée !');
     } catch (err: any) {
       toast.error(err.message || 'Erreur de génération d\'image');
