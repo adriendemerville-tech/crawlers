@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { getServiceClient } from "../_shared/supabaseClient.ts";
+import { getServiceClient, getUserClient } from "../_shared/supabaseClient.ts";
+import { corsHeaders } from '../_shared/cors.ts'
 
 /**
  * admin-backend-query: Read-only backend exploration for creator admins.
@@ -9,12 +9,6 @@ import { getServiceClient } from "../_shared/supabaseClient.ts";
  * 
  * SECURITY: Only accessible to users with admin role. Read-only queries only.
  */
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 // Complete schema reference for the LLM to generate accurate queries
 const SCHEMA_REFERENCE = `
@@ -139,12 +133,7 @@ serve(async (req) => {
     const sb = getServiceClient();
 
     // Verify user is admin
-    const { createClient } = await import("npm:@supabase/supabase-js@2");
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const userClient = getUserClient(authHeader);
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
