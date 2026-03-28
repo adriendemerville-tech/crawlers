@@ -79,25 +79,149 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
 
-  // Load identity card for smart suggestions
+  // Track which fields were auto-filled (so we don't overwrite user edits)
+  const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
+
+  // ── Auto-detect page type from URL pattern ──
+  const detectPageTypeFromUrl = useCallback((targetUrl: string): string | null => {
+    const lower = targetUrl.toLowerCase();
+    if (/\/(blog|article|post|news|actualit|actu)\b/i.test(lower)) return 'article';
+    if (/\/(produit|product|shop|boutique|item)\b/i.test(lower)) return 'product';
+    if (/\/(faq|aide|help|support)\b/i.test(lower)) return 'faq';
+    if (/\/(landing|lp|offre|promo)\b/i.test(lower)) return 'landing';
+    if (/\/(categori|collection|rayon)\b/i.test(lower)) return 'category';
+    // Root URL → homepage
+    try { const u = new URL(targetUrl); if (u.pathname === '/' || u.pathname === '') return 'homepage'; } catch {}
+    return null;
+  }, []);
+
+  // ── Auto-detect content length from page type ──
+  const suggestLengthFromType = useCallback((type: string): string => {
+    switch (type) {
+      case 'homepage': return 'medium';
+      case 'product': return 'short';
+      case 'article': return 'long';
+      case 'faq': return 'medium';
+      case 'landing': return 'medium';
+      case 'category': return 'short';
+      default: return 'medium';
+    }
+  }, []);
+
+  // ── Load identity card + workbench data for smart auto-fills ──
   useEffect(() => {
     if (!trackedSiteId || !isOpen) return;
+
+    // 1. Identity card → tone, CTA, sector-based instructions
     supabase
       .from('tracked_sites')
-      .select('identity_card' as any)
+      .select('identity_card, domain' as any)
       .eq('id', trackedSiteId)
       .maybeSingle()
       .then(({ data }: any) => {
-        if (data?.identity_card) setIdentityCard(data.identity_card as Record<string, any>);
+        if (!data?.identity_card) return;
+        const ic = data.identity_card as Record<string, any>;
+        setIdentityCard(ic);
+
+        // Auto-fill tone from identity voice
+        if (!tone && !autoFilled.has('tone')) {
+          const voiceTone = ic.user_manual?.voice?.tone
+            || ic.voice?.tone
+            || ic.editorial_tone
+            || ic.tone;
+          if (voiceTone) {
+            setTone(typeof voiceTone === 'string' ? voiceTone : Array.isArray(voiceTone) ? voiceTone.join(', ') : '');
+            setAutoFilled(prev => new Set(prev).add('tone'));
+          }
+        }
+
+        // Auto-fill CTA link from identity
+        if (!ctaLink && !autoFilled.has('ctaLink')) {
+          const mainCta = ic.conversion_url || ic.cta_url || ic.main_cta_url || ic.contact_url;
+          if (mainCta) {
+            setCtaLink(mainCta);
+            setAutoFilled(prev => new Set(prev).add('ctaLink'));
+          }
+        }
+
+        // Auto-fill domain-based URL if empty
+        if (!url && !prefillUrl && data.domain && !autoFilled.has('url')) {
+          setUrl(`https://${data.domain}`);
+          setAutoFilled(prev => new Set(prev).add('url'));
+        }
+      });
+
+    // 2. Workbench → keyword, competitor, instructions from diagnostic findings
+    supabase
+      .from('architect_workbench')
+      .select('title, description, target_url, payload, finding_category, severity')
+      .eq('tracked_site_id', trackedSiteId)
+      .in('status', ['pending', 'in_progress'])
+      .eq('consumed_by_content', false)
+      .order('severity', { ascending: true })
+      .limit(5)
+      .then(({ data: findings }) => {
+        if (!findings?.length) return;
+
+        // Auto-fill keyword from top finding if not set
+        if (!keyword && !autoFilled.has('keyword')) {
+          const keywordFinding = findings.find((f: any) => f.payload?.keyword || f.payload?.target_keyword);
+          if (keywordFinding) {
+            const kw = keywordFinding.payload?.keyword || keywordFinding.payload?.target_keyword;
+            if (kw) {
+              setKeyword(kw);
+              setAutoFilled(prev => new Set(prev).add('keyword'));
+            }
+          }
+        }
+
+        // Auto-fill competitor URL from SERP findings
+        if (!competitorUrl && !autoFilled.has('competitorUrl')) {
+          const serpFinding = findings.find((f: any) => f.payload?.competitor_url || f.payload?.serp_competitor);
+          if (serpFinding) {
+            const comp = serpFinding.payload?.competitor_url || serpFinding.payload?.serp_competitor;
+            if (comp) {
+              setCompetitorUrl(comp);
+              setAutoFilled(prev => new Set(prev).add('competitorUrl'));
+            }
+          }
+        }
+
+        // Build smart instructions from diagnostic findings
+        if (!prompt && !autoFilled.has('prompt')) {
+          const instructions = findings
+            .filter((f: any) => f.finding_category && f.description)
+            .slice(0, 3)
+            .map((f: any) => {
+              if (f.finding_category.includes('eeat')) return 'Renforcer les signaux E-E-A-T (expertise, expérience, autorité)';
+              if (f.finding_category.includes('content_gap')) return `Combler le gap de contenu : ${f.title}`;
+              if (f.finding_category.includes('schema') || f.finding_category.includes('structured')) return 'Ajouter des données structurées (FAQ, HowTo, Article)';
+              if (f.finding_category.includes('thin')) return 'Enrichir le contenu (page jugée trop fine)';
+              if (f.finding_category.includes('cannibal')) return `Attention cannibalisation : différencier de ${f.payload?.cannibalized_url || 'pages similaires'}`;
+              return f.description?.substring(0, 80);
+            })
+            .filter(Boolean);
+
+          // Don't set prompt here — let the preset load first, append diagnostics
+          if (instructions.length > 0) {
+            // We'll merge with preset in the preset effect below
+            setAutoFilled(prev => {
+              const next = new Set(prev);
+              next.add('_diagnostic_instructions');
+              return next;
+            });
+            // Store for later merge
+            (window as any).__contentArchitectDiagnostics = instructions;
+          }
+        }
       });
   }, [trackedSiteId, isOpen]);
 
-  // Auto-fill from draft data (from Cocoon assistant extraction)
+  // ── Auto-fill from draft data (from Cocoon assistant extraction) ──
   useEffect(() => {
     if (!isOpen) return;
     const draft = draftData;
     if (!draft) {
-      // Fallback: load from database
       if (trackedSiteId && domain) {
         supabase
           .from('cocoon_architect_drafts')
@@ -115,7 +239,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     applyDraft(draft);
   }, [isOpen, draftData, trackedSiteId, domain]);
 
-  // Auto-inject default preset when modal opens with a trackedSiteId
+  // ── Auto-detect page type from URL when URL changes ──
+  useEffect(() => {
+    if (!url || autoFilled.has('pageType_manual')) return;
+    const detected = detectPageTypeFromUrl(url);
+    if (detected && detected !== pageType) {
+      setPageType(detected);
+      // Also suggest appropriate length
+      setLength(suggestLengthFromType(detected));
+    }
+  }, [url]);
+
+  // ── Auto-inject default preset + merge diagnostics ──
   useEffect(() => {
     if (!isOpen || !trackedSiteId) return;
     const detectType = (): 'landing' | 'product' | 'article' => {
@@ -132,22 +267,35 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       .eq('is_default', true)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.prompt_text && !prompt) {
-          setPrompt(data.prompt_text);
+        if (!prompt || autoFilled.has('prompt')) {
+          let finalPrompt = data?.prompt_text || '';
+
+          // Merge diagnostic instructions if available
+          const diagnostics = (window as any).__contentArchitectDiagnostics as string[] | undefined;
+          if (diagnostics?.length) {
+            const diagText = '\n\n📋 Points diagnostics à intégrer :\n• ' + diagnostics.join('\n• ');
+            finalPrompt = finalPrompt ? finalPrompt + diagText : diagText.trim();
+            delete (window as any).__contentArchitectDiagnostics;
+          }
+
+          if (finalPrompt) {
+            setPrompt(finalPrompt);
+            setAutoFilled(prev => new Set(prev).add('prompt'));
+          }
         }
       });
   }, [isOpen, trackedSiteId]);
 
   const applyDraft = (draft: Record<string, any>) => {
     if (draft.url) setUrl(draft.url);
-    if (draft.keyword) setKeyword(draft.keyword);
-    if (draft.page_type && PAGE_TYPES.some(p => p.value === draft.page_type)) setPageType(draft.page_type);
+    if (draft.keyword) { setKeyword(draft.keyword); setAutoFilled(prev => new Set(prev).add('keyword')); }
+    if (draft.page_type && PAGE_TYPES.some(p => p.value === draft.page_type)) { setPageType(draft.page_type); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }
     if (draft.content_length && LENGTHS.some(l => l.value === draft.content_length)) setLength(draft.content_length);
-    if (draft.tone) setTone(draft.tone);
-    if (draft.custom_prompt) setPrompt(draft.custom_prompt);
-    if (draft.cta_suggestion) setCtaLink(draft.cta_suggestion);
+    if (draft.tone) { setTone(draft.tone); setAutoFilled(prev => new Set(prev).add('tone')); }
+    if (draft.custom_prompt) { setPrompt(draft.custom_prompt); setAutoFilled(prev => new Set(prev).add('prompt')); }
+    if (draft.cta_suggestion) { setCtaLink(draft.cta_suggestion); setAutoFilled(prev => new Set(prev).add('ctaLink')); }
+    if (draft.competitor_url) { setCompetitorUrl(draft.competitor_url); setAutoFilled(prev => new Set(prev).add('competitorUrl')); }
     if (draft.h1_suggestion) {
-      // Use H1 suggestion as part of custom prompt if no custom_prompt
       if (!draft.custom_prompt) setPrompt(`H1 suggéré : ${draft.h1_suggestion}`);
     }
   };
