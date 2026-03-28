@@ -522,6 +522,17 @@ export function Header() {
           />
         </Suspense>
       )}
+      {isAdmin && showContentArchitect && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitect}
+            onClose={() => setShowContentArchitect(false)}
+            nodes={[]}
+            domain=""
+            trackedSiteId=""
+          />
+        </Suspense>
+      )}
     </header>
   );
 }
