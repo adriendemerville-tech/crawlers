@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -125,6 +126,7 @@ serve(async (req: Request) => {
         .select('site_name, market_sector, business_type, client_targets, site_context')
         .eq('id', tracked_site_id)
         .maybeSingle(),
+      getSiteContext(supabase, { trackedSiteId: tracked_site_id }),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
