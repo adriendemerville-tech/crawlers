@@ -128,8 +128,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    // ── Step 1: Site Identity + CMS Detection ──
-    console.log(`[content-advisor] Step 1: Fetching site context + CMS for ${domain}`)
+    // ── Step 1: Site Identity + CMS Detection + Content Template ──
+    console.log(`[content-advisor] Step 1: Fetching site context + CMS + prompt template for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
       : await getSiteContext(serviceClient, { domain, userId: user.id })
@@ -152,6 +152,26 @@ Deno.serve(async (req) => {
           capabilities: caps,
         }
         console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
+      }
+    }
+
+    // ── Load SEO/GEO prompt template for this page type ──
+    const templatePageType = page_type === 'homepage' || page_type === 'category' ? 'landing'
+      : page_type === 'faq' ? 'article'
+      : page_type as string
+    let contentTemplate: any = null
+    {
+      const { data: tpl } = await serviceClient
+        .from('content_prompt_templates')
+        .select('*')
+        .eq('page_type', templatePageType)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (tpl) {
+        contentTemplate = tpl
+        console.log(`[content-advisor] Loaded prompt template: ${tpl.label} (${tpl.page_type})`)
+      } else {
+        console.log(`[content-advisor] No template found for page_type=${templatePageType}, using defaults`)
       }
     }
 
