@@ -26,7 +26,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
-const CocoonContentArchitectModal = lazy(() => import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
+
 
 const translations = {
   fr: {
@@ -133,7 +133,7 @@ function ProfileContent() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
-  const [showContentArchitect, setShowContentArchitect] = useState(false);
+  
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
