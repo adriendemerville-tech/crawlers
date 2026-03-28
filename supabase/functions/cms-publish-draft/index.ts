@@ -185,14 +185,26 @@ async function publishWordPress(conn: any, title: string, htmlContent: string, m
 
   // If we have a featured image, upload it first
   let featuredMediaId: number | undefined;
-  if (featuredImageUrl && featuredImageUrl.startsWith('data:')) {
+  if (featuredImageUrl) {
     try {
-      const base64Data = featuredImageUrl.split(',')[1];
-      const mimeMatch = featuredImageUrl.match(/data:([^;]+);/);
-      const mime = mimeMatch?.[1] || 'image/jpeg';
-      const ext = mime.includes('png') ? 'png' : 'jpg';
-      const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      let binaryData: Uint8Array;
+      let mime = 'image/jpeg';
 
+      if (featuredImageUrl.startsWith('data:')) {
+        // Base64 data URI
+        const base64Data = featuredImageUrl.split(',')[1];
+        const mimeMatch = featuredImageUrl.match(/data:([^;]+);/);
+        mime = mimeMatch?.[1] || 'image/jpeg';
+        binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      } else {
+        // Public URL — fetch the image bytes
+        const imgResp = await fetch(featuredImageUrl);
+        if (!imgResp.ok) throw new Error(`Failed to fetch image: ${imgResp.status}`);
+        mime = imgResp.headers.get('content-type') || 'image/jpeg';
+        binaryData = new Uint8Array(await imgResp.arrayBuffer());
+      }
+
+      const ext = mime.includes('png') ? 'png' : 'jpg';
       const uploadHeaders: Record<string, string> = {
         ...headers,
         'Content-Type': mime,
