@@ -126,6 +126,10 @@ export interface ImageGenerationRequest {
   aspectRatio?: string;
   /** Negative prompt (FLUX) */
   negativePrompt?: string;
+  /** Reference image URL for inspiration/edit mode */
+  referenceImageUrl?: string;
+  /** 'inspiration' = use as visual context, 'edit' = transform the reference */
+  referenceMode?: 'inspiration' | 'edit';
 }
 
 export interface ImageGenerationResult {
@@ -156,6 +160,20 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
 
   const styleConfig = getStyleConfig(req.style);
 
+  // Build message content — multimodal if reference image provided
+  let content: any;
+  if (req.referenceImageUrl) {
+    const textInstruction = req.referenceMode === 'edit'
+      ? `Transform this image with the following style and instructions. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}`
+      : `Use this image as visual inspiration (style, composition, mood) to create a NEW original image. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}`;
+    content = [
+      { type: 'text', text: textInstruction },
+      { type: 'image_url', image_url: { url: req.referenceImageUrl } },
+    ];
+  } else {
+    content = `${styleConfig.promptPrefix} ${req.prompt}`;
+  }
+
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -164,12 +182,7 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
     },
     body: JSON.stringify({
       model: 'google/gemini-3-pro-image-preview',
-      messages: [
-        {
-          role: 'user',
-          content: `${styleConfig.promptPrefix} ${req.prompt}`,
-        },
-      ],
+      messages: [{ role: 'user', content }],
       modalities: ['image', 'text'],
     }),
   });
