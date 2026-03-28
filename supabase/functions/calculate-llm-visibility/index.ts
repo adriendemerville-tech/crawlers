@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
+import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 
 /**
  * calculate-llm-visibility v3
@@ -227,89 +228,29 @@ function scorePromptResult(
 }
 
 // ═══════════════════════════════════════════════
-// PROMPT GENERATION
+// PROMPT GENERATION — delegated to shared module
 // ═══════════════════════════════════════════════
 
 function generatePrompts(site: any): string[] {
-  const sector = (site.market_sector || '').trim()
-  const target = (site.target_audience || '').trim()
-  const products = (site.products_services || '').trim()
-  const area = (site.commercial_area || '').trim()
-  const entityType = (site.entity_type || 'business').trim()
-  const specialties = (site.media_specialties || []) as string[]
-  const isMedia = entityType === 'media' || entityType === 'blog'
-
-  const all: string[] = []
-
-  if (isMedia) {
-    // Media/blog: keyword-based queries like a user would type in Google
-    const mainTopic = specialties[0] || sector || products.split(',')[0]?.trim() || ''
-    if (mainTopic) {
-      all.push(`C'est quoi l'actu ${mainTopic} du moment ?`)
-      all.push(`Résume-moi ce qui s'est passé récemment en ${mainTopic}.`)
-    }
-    if (specialties[1]) {
-      all.push(`Et côté ${specialties[1]}, il s'est passé quoi dernièrement ?`)
-    }
-    if (all.length === 0) {
-      all.push("C'est quoi les infos du jour ?")
-      all.push("Résume-moi l'actualité de cette semaine.")
-    }
-  } else {
-    // Business: natural customer questions
-    if (products) {
-      all.push(
-        area
-          ? `Je cherche ${products} ${area}, t'as des idées ?`
-          : `Je cherche ${products}, t'as des idées ?`
-      )
-      all.push(`C'est quoi le mieux pour ${products} en ce moment ?`)
-    }
-
-    if (sector) {
-      all.push(`J'ai besoin d'un coup de main pour ${sector}, tu connais des bons ?`)
-      all.push(
-        target
-          ? `Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`
-          : `J'ai besoin de ${sector}, par quoi je commence ?`
-      )
-    }
-
-    if (target && products) {
-      all.push(`En tant que ${target}, j'hésite pour ${products}, tu me conseilles quoi ?`)
-    }
+  const ctx: NaturalSiteContext = {
+    market_sector: site.market_sector,
+    products_services: site.products_services,
+    target_audience: site.target_audience,
+    commercial_area: site.commercial_area,
+    entity_type: site.entity_type,
+    media_specialties: site.media_specialties,
   }
-
-  if (all.length === 0) {
-    const fb = sector || 'un service'
-    return [
-      `J'ai besoin d'aide pour ${fb}, tu connais ?`,
-      `C'est quoi le mieux pour ${fb} en ce moment ?`,
-      `Tu me recommandes quoi pour ${fb} ?`,
-    ]
-  }
-
-  return [...new Set(all)].slice(0, NUM_PROMPTS)
+  const { prompts } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: NUM_PROMPTS, domain: site.domain })
+  return prompts
 }
 
-// ═══════════════════════════════════════════════
-// LLM QUERY ENGINE — 3-iteration discovery
-// ═══════════════════════════════════════════════
-
 function getFollowUpPrompts(site: any): string[] {
-  const entityType = (site.entity_type || 'business').trim()
-  const isMedia = entityType === 'media' || entityType === 'blog'
-  
-  if (isMedia) {
-    return [
-      "Où est-ce que tu trouves ces infos ? Quelles sont tes sources ?",
-      "Tu me conseillerais quels sites ou médias pour suivre ça ?",
-    ]
+  const ctx: NaturalSiteContext = {
+    entity_type: site.entity_type,
+    media_specialties: site.media_specialties,
   }
-  return [
-    "Ok et t'aurais pas d'autres idées ?",
-    "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
-  ]
+  const { followUps } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: 1, domain: site.domain })
+  return followUps
 }
 
 async function queryWithIterations(

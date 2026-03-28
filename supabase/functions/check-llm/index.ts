@@ -4,8 +4,18 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
-import { getSiteContext, extractDomain as extractDomainHelper } from '../_shared/getSiteContext.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  generateNaturalPrompts,
+  buildBrandPatterns,
+  detectCitationInText,
+  detectSentimentFromText,
+  detectRecommendationInText,
+  type SiteContext,
+  type BrandPatterns,
+  type PromptLang,
+} from '../_shared/naturalPrompts.ts';
 
 interface LLMProvider {
   id: string;
@@ -47,141 +57,6 @@ interface LLMResponse {
 }
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ═══════════════════════════════════════════════
-// Brand pattern detection (post-processing, no bias)
-// ═══════════════════════════════════════════════
-
-interface BrandPatterns {
-  exact: string[];
-  domain: string;
-}
-
-function buildBrandPatterns(domain: string): BrandPatterns {
-  const cleanDomain = domain.replace(/^www\./, '');
-  const domainBase = cleanDomain.split('.')[0].toLowerCase();
-  // Build brand name from domain: "gkg-consulting" → "gkg consulting"
-  const brandWords = domainBase.split(/[-_]/).join(' ');
-  
-  const patterns: string[] = [domainBase];
-  if (brandWords !== domainBase) patterns.push(brandWords);
-  // Add full domain
-  patterns.push(cleanDomain.toLowerCase());
-  // Add without hyphens: "gkgconsulting"
-  const noSep = domainBase.replace(/[-_]/g, '');
-  if (noSep !== domainBase) patterns.push(noSep);
-  
-  return { exact: [...new Set(patterns)], domain: cleanDomain };
-}
-
-function detectCitation(text: string, patterns: BrandPatterns): boolean {
-  const lower = text.toLowerCase();
-  return patterns.exact.some(p => lower.includes(p));
-}
-
-function detectSentimentFromText(text: string, cited: boolean): SentimentType {
-  if (!cited) return 'neutral';
-  const lower = text.toLowerCase();
-  
-  const strongPositive = ['excellent', 'leader', 'meilleur', 'best', 'top', 'référence', 'confiance', 'reconnu', 'incontournable', 'outstanding', 'highly recommended', 'premier'];
-  const mildPositive = ['bon', 'good', 'recommand', 'fiable', 'sérieux', 'professionnel', 'reliable', 'solid', 'decent', 'expert', 'spécialis'];
-  const negative = ['problème', 'éviter', 'avoid', 'mauvais', 'bad', 'issue', 'poor', 'méfiance', 'critique', 'controversy', 'scandal'];
-  const mixed = ['mais', 'cependant', 'toutefois', 'however', 'although', 'mixed', 'partagé', 'divisé'];
-  
-  let posScore = 0, negScore = 0, mixScore = 0;
-  for (const s of strongPositive) { if (lower.includes(s)) posScore += 2; }
-  for (const s of mildPositive) { if (lower.includes(s)) posScore += 1; }
-  for (const s of negative) { if (lower.includes(s)) negScore += 2; }
-  for (const s of mixed) { if (lower.includes(s)) mixScore += 1; }
-  
-  if (negScore > posScore && negScore > mixScore) return 'negative';
-  if (mixScore > 2 || (posScore > 0 && negScore > 0)) return 'mixed';
-  if (posScore >= 4) return 'positive';
-  if (posScore >= 1) return 'mostly_positive';
-  return 'neutral';
-}
-
-function detectRecommendation(text: string, cited: boolean): boolean {
-  if (!cited) return false;
-  const lower = text.toLowerCase();
-  const recoSignals = ['recommand', 'recommend', 'je conseille', 'i suggest', 'je suggère', 'vous pouvez', 'n\'hésitez pas', 'bonne option', 'good option', 'worth', 'go with'];
-  return recoSignals.some(s => lower.includes(s));
-}
-
-// ═══════════════════════════════════════════════
-// Natural prompt generation (NO brand/domain mention)
-// ═══════════════════════════════════════════════
-
-interface SiteContext {
-  market_sector?: string;
-  products_services?: string;
-  target_audience?: string;
-  commercial_area?: string;
-}
-
-function generateNaturalPrompts(ctx: SiteContext, lang: Language): string[] {
-  const sector = ctx.market_sector || '';
-  const products = ctx.products_services || '';
-  const target = ctx.target_audience || '';
-  const area = ctx.commercial_area || '';
-  
-  const prompts: string[] = [];
-  
-  if (lang === 'fr') {
-    if (products) {
-      prompts.push(area
-        ? `Je cherche ${products} ${area}, tu connais des bons prestataires ?`
-        : `Je cherche ${products}, tu peux me recommander quelqu'un ?`
-      );
-      prompts.push(`C'est quoi le mieux pour ${products} en ce moment ?`);
-    }
-    if (sector) {
-      prompts.push(`J'ai besoin d'un coup de main en ${sector}, tu connais des bons ?`);
-      if (target) {
-        prompts.push(`Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`);
-      }
-    }
-    if (prompts.length === 0) {
-      prompts.push(`Je cherche un bon prestataire pour mon projet, tu as des recommandations ?`);
-      prompts.push(`Quels sont les meilleurs dans ce domaine en ce moment ?`);
-    }
-  } else if (lang === 'en') {
-    if (products) {
-      prompts.push(area
-        ? `I'm looking for ${products} in ${area}, any good recommendations?`
-        : `I need ${products}, who would you recommend?`
-      );
-      prompts.push(`What's the best option for ${products} right now?`);
-    }
-    if (sector) {
-      prompts.push(`I need help with ${sector}, do you know any good providers?`);
-      if (target) {
-        prompts.push(`As a ${target}, I need ${sector}, what would you suggest?`);
-      }
-    }
-    if (prompts.length === 0) {
-      prompts.push(`I'm looking for a good service provider for my project, any recommendations?`);
-      prompts.push(`Who are the best in this field right now?`);
-    }
-  } else {
-    // es
-    if (products) {
-      prompts.push(area
-        ? `Busco ${products} en ${area}, ¿conoces buenos proveedores?`
-        : `Necesito ${products}, ¿a quién me recomiendas?`
-      );
-      prompts.push(`¿Cuál es la mejor opción para ${products} ahora mismo?`);
-    }
-    if (sector) {
-      prompts.push(`Necesito ayuda con ${sector}, ¿conoces buenos proveedores?`);
-    }
-    if (prompts.length === 0) {
-      prompts.push(`Busco un buen proveedor para mi proyecto, ¿alguna recomendación?`);
-    }
-  }
-  
-  return [...new Set(prompts)].slice(0, 2);
-}
 
 // ═══════════════════════════════════════════════
 // Natural LLM query — no brand mention, post-process
@@ -236,7 +111,7 @@ async function queryLLMNatural(
       allResponses.push(content);
       
       // If cited on first prompt, no need for second
-      if (detectCitation(content, patterns)) break;
+      if (detectCitationInText(content, patterns)) break;
     } catch (err) {
       console.error(`[check-llm] ${model} error on prompt:`, err);
     }
@@ -254,30 +129,20 @@ async function queryLLMNatural(
     };
   }
   
-  // Post-process: analyze all responses for brand mentions
   const fullText = allResponses.join('\n');
-  const cited = detectCitation(fullText, patterns);
+  const cited = detectCitationInText(fullText, patterns);
   const sentiment = detectSentimentFromText(fullText, cited);
-  const recommends = detectRecommendation(fullText, cited);
+  const recommends = detectRecommendationInText(fullText, cited);
   
-  // Extract a summary from the response
-  const summaryText = allResponses[0].slice(0, 300);
   const summary = cited
     ? `${patterns.exact[0]} ${sentiment === 'positive' || sentiment === 'mostly_positive' ? 'est mentionné positivement' : sentiment === 'negative' ? 'est mentionné négativement' : 'est mentionné'} dans les réponses du LLM.`
     : `${patterns.exact[0]} n'est pas spontanément cité par ce LLM.`;
   
-  return {
-    cited,
-    sentiment,
-    recommends,
-    summary,
-    coreValueMatch: cited,
-    hallucinations: [],
-  };
+  return { cited, sentiment, recommends, summary, coreValueMatch: cited, hallucinations: [] };
 }
 
 // ═══════════════════════════════════════════════
-// Legacy custom prompt support (audit-matrice, etc.)
+// Legacy custom prompt support
 // ═══════════════════════════════════════════════
 
 async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: string): Promise<LLMResponse> {
@@ -372,8 +237,14 @@ Deno.serve(async (req) => {
       console.warn('[check-llm] Could not fetch site context:', e);
     }
 
-    // Generate natural prompts (NO domain/brand mention)
-    const naturalPrompts = generateNaturalPrompts(siteCtx, lang);
+    // Generate natural prompts via shared module (NO domain/brand mention)
+    const promptLang: PromptLang = lang as PromptLang;
+    const { prompts: naturalPrompts } = generateNaturalPrompts({
+      site: siteCtx,
+      lang: ['fr', 'en', 'es'].includes(promptLang) ? promptLang : 'fr',
+      maxPrompts: 2,
+      domain,
+    });
     console.log(`[check-llm] Natural prompts: ${naturalPrompts.map(p => p.slice(0, 60)).join(' | ')}`);
 
     // Filter providers if targetProvider is specified
@@ -387,33 +258,24 @@ Deno.serve(async (req) => {
       await delay(index * 250);
       console.log(`[check-llm] Querying ${provider.name} (${provider.model})...`);
       
-      // Custom prompt path (legacy: audit-matrice, etc.)
       if (customPrompt) {
         const effectivePrompt = `${customPrompt}\n\nRéponds au format JSON :\n{"cited": boolean, "sentiment": "positive"|"mostly_positive"|"neutral"|"mixed"|"negative", "recommends": boolean, "summary": "string", "coreValueMatch": boolean, "hallucinations": []}`;
         const result = await queryLLMWithCustomPrompt(apiKey, provider.model, effectivePrompt);
         return {
           provider: { id: provider.id, name: provider.name, company: provider.company },
-          cited: result.cited,
-          iterationDepth: result.cited ? 1 : 0,
-          sentiment: result.sentiment,
-          recommends: result.recommends,
-          coreValueMatch: result.coreValueMatch,
-          summary: result.summary,
+          cited: result.cited, iterationDepth: result.cited ? 1 : 0,
+          sentiment: result.sentiment, recommends: result.recommends,
+          coreValueMatch: result.coreValueMatch, summary: result.summary,
           hallucinations: result.hallucinations?.length ? result.hallucinations : undefined,
         };
       }
       
-      // Natural prompt path (default)
       const result = await queryLLMNatural(apiKey, provider.model, domain, naturalPrompts, patterns, lang);
-      
       return {
         provider: { id: provider.id, name: provider.name, company: provider.company },
-        cited: result.cited,
-        iterationDepth: result.cited ? 1 : 0,
-        sentiment: result.sentiment,
-        recommends: result.recommends,
-        coreValueMatch: result.coreValueMatch,
-        summary: result.summary,
+        cited: result.cited, iterationDepth: result.cited ? 1 : 0,
+        sentiment: result.sentiment, recommends: result.recommends,
+        coreValueMatch: result.coreValueMatch, summary: result.summary,
         hallucinations: result.hallucinations?.length ? result.hallucinations : undefined,
         ...(result.error ? { error: true } : {}),
       };
