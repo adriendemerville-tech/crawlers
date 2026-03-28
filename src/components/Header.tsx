@@ -333,6 +333,19 @@ export function Header() {
             )
           )}
 
+          {/* Content Architect button — admin only, on console page */}
+          {isProfilePage && isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowContentArchitect(true)}
+              className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            >
+              <PenLine className="h-4 w-4" />
+              <span className="text-sm font-semibold">Content</span>
+            </Button>
+          )}
+
           {/* Console — for paid users, hidden on console page */}
           {!isProfilePage && (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) && (
             isAuditExpertPage ? (
@@ -363,18 +376,6 @@ export function Header() {
             </Suspense>
           )}
 
-          {/* Content Architect button — admin only, on console page */}
-          {isProfilePage && isAdmin && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowContentArchitect(true)}
-              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 h-9 px-3"
-            >
-              <PenLine className="h-4 w-4" />
-              <span className="hidden sm:inline">Content</span>
-            </Button>
-          )}
 
           {/* Console button (logged in, hidden on /console) */}
           {!loading && user && !isProfilePage && (
