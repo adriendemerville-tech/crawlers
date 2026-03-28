@@ -308,8 +308,8 @@ Deno.serve(async (req) => {
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics + strategic audit data in parallel
-    const [diagsResult, strategicAuditResult, siteContextResult] = await Promise.all([
+    // Fetch recent diagnostics + strategic audit data + keyword cloud in parallel
+    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -330,7 +330,27 @@ Deno.serve(async (req) => {
         console.warn('[strategist] Could not fetch site context:', e);
         return null;
       }),
+      // Load keyword cloud from SERP snapshots (reference universe)
+      supabase
+        .from('serp_snapshots')
+        .select('sample_keywords')
+        .eq('tracked_site_id', tracked_site_id)
+        .order('measured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
+
+    // Extract keyword cloud as reference universe
+    const keywordCloud: string[] = [];
+    const serpKwData = (serpKeywordsResult as any)?.data?.sample_keywords;
+    if (Array.isArray(serpKwData)) {
+      for (const kw of serpKwData) {
+        if (kw?.keyword) keywordCloud.push(kw.keyword);
+      }
+      if (keywordCloud.length > 0) {
+        console.log(`[strategist] ☁️ Keyword cloud loaded: ${keywordCloud.length} keywords (${keywordCloud.slice(0, 5).join(', ')}...)`);
+      }
+    }
 
     // Extract identity data from site context
     const siteIdentityData = siteContextResult ? {
