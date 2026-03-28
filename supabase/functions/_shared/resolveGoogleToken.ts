@@ -211,17 +211,88 @@ async function ensureFreshToken(supabase: any, conn: any, clientId: string, clie
   return conn.access_token
 }
 
-async function refreshOAuthToken(clientId: string, clientSecret: string, refreshToken: string): Promise<{ access_token: string; expires_in: number } | null> {
-  const resp = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  })
-  if (!resp.ok) return null
-  return resp.json()
+// ─── Circuit breaker state (module-level, persists across invocations) ───
+const circuitBreaker = {
+  failures: 0,
+  lastFailure: 0,
+  isOpen(): boolean {
+    if (this.failures < 3) return false
+    // Open for 60s after 3+ consecutive failures
+    return Date.now() - this.lastFailure < 60_000
+  },
+  recordFailure() {
+    this.failures++
+    this.lastFailure = Date.now()
+  },
+  recordSuccess() {
+    this.failures = 0
+  },
+}
+
+async function refreshOAuthToken(
+  clientId: string,
+  clientSecret: string,
+  refreshToken: string,
+): Promise<{ access_token: string; expires_in: number } | null> {
+  // Circuit breaker check
+  if (circuitBreaker.isOpen()) {
+    console.warn('[resolveGoogleToken] Circuit breaker OPEN — skipping refresh')
+    return null
+  }
+
+  const MAX_RETRIES = 2
+  const RETRY_DELAYS = [500, 1500] // ms
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const resp = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      })
+
+      if (resp.ok) {
+        circuitBreaker.recordSuccess()
+        return resp.json()
+      }
+
+      const status = resp.status
+      const body = await resp.text().catch(() => '')
+
+      // Non-retryable: token revoked or invalid
+      if (status === 400 || status === 401) {
+        console.error(`[resolveGoogleToken] Token revoked/invalid (${status}): ${body.slice(0, 200)}`)
+        circuitBreaker.recordFailure()
+        return null
+      }
+
+      // Retryable: rate limit or server error
+      if (attempt < MAX_RETRIES && (status === 429 || status >= 500)) {
+        console.warn(`[resolveGoogleToken] Retry ${attempt + 1}/${MAX_RETRIES} after ${status}`)
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]))
+        continue
+      }
+
+      console.error(`[resolveGoogleToken] Refresh failed (${status}): ${body.slice(0, 200)}`)
+      circuitBreaker.recordFailure()
+      return null
+    } catch (err) {
+      // Network error — retryable
+      if (attempt < MAX_RETRIES) {
+        console.warn(`[resolveGoogleToken] Network error, retry ${attempt + 1}/${MAX_RETRIES}: ${err}`)
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]))
+        continue
+      }
+      console.error(`[resolveGoogleToken] Network error after retries: ${err}`)
+      circuitBreaker.recordFailure()
+      return null
+    }
+  }
+
+  return null
 }
