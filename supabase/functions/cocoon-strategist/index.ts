@@ -818,13 +818,12 @@ Deno.serve(async (req) => {
       }
 
       // Auto-enrich identity card from diagnostic data if missing (reuse already-fetched data)
-      const siteData = siteIdentityData;
+      if (siteIdentityData) {
         const identityUpdates = [];
-        // If findings reveal specific business characteristics, suggest identity updates
         const contentFindings = allFindings.filter(f => f.source_type === 'content');
         const semanticFindings = allFindings.filter(f => f.source_type === 'semantic');
 
-        if (!siteData.target_audience && semanticFindings.length > 0) {
+        if (!siteIdentityData.target_audience && semanticFindings.length > 0) {
           const keywords = semanticFindings
             .flatMap((f: any) => f.data?.keywords || [])
             .slice(0, 5)
