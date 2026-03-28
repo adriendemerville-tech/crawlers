@@ -519,10 +519,30 @@ RÈGLES:
     promises.push(Promise.resolve([]));
   }
 
-  // ── PROMPT CONTENU (tiers 4-10) ──
+  // ── PROMPT CONTENU (tiers 4-10) avec templates SEO/GEO par type de page ──
   if (contentItems.length > 0) {
-    const contentPrompt = `Tu es un moteur de production de contenu SEO. Tu reçois des items prioritaires.
-Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+    // Load prompt templates from DB
+    const templates = await loadPromptTemplates(supabase);
+    
+    // Detect page types for each content item and build per-type instructions
+    const typeInstructions = new Map<string, string>();
+    for (const item of contentItems) {
+      const pageType = detectPageType(item);
+      if (pageType && templates.has(pageType) && !typeInstructions.has(pageType)) {
+        typeInstructions.set(pageType, buildTemplateInstructions(templates.get(pageType)));
+      }
+      // Tag the item with detected type for logging
+      item._detected_page_type = pageType;
+    }
+    
+    const templateBlock = typeInstructions.size > 0
+      ? `\n\nTEMPLATES PAR TYPE DE PAGE (APPLIQUE LE TEMPLATE CORRESPONDANT AU TYPE DÉTECTÉ):\n${Array.from(typeInstructions.values()).join('\n\n')}`
+      : '';
+
+    console.log(`[Parménion] 📄 Content items page types: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
+
+    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
+Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
 ${siteCtx}
 ${kwCtx}
@@ -530,14 +550,22 @@ ${kwCtx}
 ITEMS À TRAITER (par ordre de priorité):
 ${buildItemsList(contentItems)}
 
-RÈGLES:
+RÈGLES GÉNÉRALES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
 - Le contenu DOIT être pertinent pour le secteur du site. INTERDIT de créer du contenu hors-sujet.
-- Le contenu HTML doit être riche: H2, H3, listes, liens internes, FAQ si pertinent
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - Pour les articles: 800-1500 mots minimum, slug en kebab-case sans accents
-- Inclure 3-5 liens internes vers les pages existantes du site`;
+- Inclure 3-5 liens internes vers les pages existantes du site
+
+RÈGLES SEO/GEO CRITIQUES:
+- Chaque H2 doit contenir au moins 1 passage citable autonome (40-80 mots) exploitable par les LLM
+- L'introduction doit répondre directement à la question principale en 2-3 phrases
+- Inclure une section "Erreurs à éviter" ou "FAQ" — ces formats sont 2x plus cités par les IA
+- Données chiffrées obligatoires (pas de "beaucoup", "souvent" — des chiffres)
+- Mentionner l'année (2026) et des sources quand possible
+- Structure: H1 → H2 → H3 strictement hiérarchique, listes <ul>/<ol>, tableaux si pertinent
+${templateBlock}`;
 
     promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
   } else {
