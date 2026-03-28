@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json()
+    const { url, siteContext: externalContext } = await req.json()
     if (!url) {
       return new Response(JSON.stringify({ error: 'URL required' }), {
         status: 400,
@@ -64,8 +64,10 @@ Deno.serve(async (req) => {
     const brand = extractBrandFromDomain(domain)
     const patterns = buildBrandPatterns(domain)
     
-    // Natural prompts via shared module — NO brand/domain mention, with seasonality
-    const { prompts } = generateNaturalPrompts({ domain, lang: 'fr', maxPrompts: 2 })
+    // Natural prompts: prefer caller-provided context, fallback to domain inference
+    const siteCtx = externalContext?.market_sector ? externalContext : undefined
+    const { prompts } = generateNaturalPrompts({ site: siteCtx, domain, lang: 'fr', maxPrompts: 2 })
+    if (siteCtx) console.log(`[llm-lite] Using caller-provided context (sector: ${siteCtx.market_sector})`)
     console.log(`[llm-lite] ${domain} — patterns: ${patterns.exact.join(', ')} — prompts: ${prompts.map(p => p.slice(0, 50)).join(' | ')}`)
 
     const results = await Promise.all(

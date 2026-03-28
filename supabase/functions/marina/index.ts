@@ -1631,6 +1631,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
 
+      // Extract site context from strategic audit data (enriches LLM prompts)
+      const marinaSiteContext: Record<string, string> = {};
+      if (strategicData) {
+        const intro = strategicData.introduction || strategicData.executive_summary || {};
+        if (intro.sector || intro.market_sector) marinaSiteContext.market_sector = intro.sector || intro.market_sector;
+        if (intro.products_services || intro.core_offering) marinaSiteContext.products_services = intro.products_services || intro.core_offering;
+        if (intro.target_audience || intro.primary_audience) marinaSiteContext.target_audience = intro.target_audience || intro.primary_audience;
+        if (intro.commercial_area || intro.geographic_scope) marinaSiteContext.commercial_area = intro.commercial_area || intro.geographic_scope;
+        // Also try top-level fields
+        if (!marinaSiteContext.market_sector && strategicData.market_sector) marinaSiteContext.market_sector = strategicData.market_sector;
+        if (!marinaSiteContext.products_services && strategicData.products_services) marinaSiteContext.products_services = strategicData.products_services;
+      }
+      const hasMarinaContext = Object.keys(marinaSiteContext).length > 0;
+      if (hasMarinaContext) {
+        console.log(`[Marina] Enriched LLM visibility context: ${JSON.stringify(marinaSiteContext)}`);
+      }
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
         try {
@@ -1638,6 +1655,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           const result = await callFunction('calculate-llm-visibility', {
             tracked_site_id: trackedSiteId,
             user_id: parentJob.user_id,
+            ...(hasMarinaContext ? { siteContext: marinaSiteContext } : {}),
           });
           if (result && !result.error && (result.scores || result.data?.scores)) {
             llmVisibilityData = result;
