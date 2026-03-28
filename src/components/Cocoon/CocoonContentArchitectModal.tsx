@@ -352,29 +352,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             </div>
           </div>
 
-          {/* Image column */}
-          <ImageColumn
-            pageType={pageType}
-            trackedSiteId={trackedSiteId}
-            targetUrl={url}
-            identityCard={identityCard}
-            generatedImages={generatedImages}
-            iterationsUsed={imageIterations}
-            onImageGenerated={(dataUri, style) => {
-              setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
-              setImageIterations(prev => prev + 1);
-            }}
-            onImageRemoved={(index) => {
-              setGeneratedImages(prev => prev.filter((_, i) => i !== index));
-            }}
-            onImagePlacement={(index, placement) => {
-              setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
-            }}
-          />
-
-          {/* Right column — preview */}
+          {/* Center column — preview */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Switch page/code */}
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                 <span className="text-xs text-white/60">Aperçu de la structure</span>
@@ -383,8 +362,28 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
             <ScrollArea className="flex-1 p-4">
               {!result && !loading && (
-                <div className="flex items-center justify-center h-full text-white/20 text-sm">
-                  Remplissez les champs et lancez la génération
+                <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden border border-white/10">
+                  {url ? (
+                    <>
+                      <iframe
+                        src={url}
+                        className="w-full h-full absolute inset-0 opacity-30 pointer-events-none"
+                        sandbox="allow-scripts"
+                        title="Aperçu du site cible"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+                        <div className="text-center space-y-2">
+                          <FileText className="w-8 h-8 text-white/15 mx-auto" />
+                          <p className="text-sm text-white/30">Prêt à générer du contenu</p>
+                          <p className="text-[10px] text-white/15">Le contenu apparaîtra ici avec le style de votre site</p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-white/20 text-sm">
+                      Remplissez les champs et lancez la génération
+                    </div>
+                  )}
                 </div>
               )}
               {loading && (
