@@ -498,6 +498,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
 function buildPhaseInstructions(context: {
   currentPhase: PipelinePhase;
   isIktracker: boolean;
+  scoredWorkbenchItems: any[];
 }): string {
   switch (context.currentPhase) {
     case 'audit':
