@@ -790,6 +790,49 @@ Deno.serve(async (req: Request) => {
                   }
                 }
                 continue;
+              } else if (funcName === 'cms-push-redirect' && Array.isArray(decision.action.payload?.redirect_actions)) {
+                // ── CMS Redirect: create/delete redirections via CMS API ──
+                const redirectActions = decision.action.payload.redirect_actions.slice(0, 10);
+                for (const rAction of redirectActions) {
+                  try {
+                    const redirectBody = {
+                      tracked_site_id: config.tracked_site_id,
+                      action: rAction.action === 'delete-redirect' ? 'delete' : 'create',
+                      from: rAction.from || rAction.source_url,
+                      to: rAction.to || rAction.target_url,
+                      type: rAction.redirect_type || 301,
+                      redirect_id: rAction.redirect_id,
+                    };
+
+                    const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/cms-push-redirect`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                        'x-autopilot-user-id': config.user_id,
+                      },
+                      body: JSON.stringify(redirectBody),
+                      signal: AbortSignal.timeout(30000),
+                    });
+
+                    const funcResult = await funcResponse.json().catch(() => ({}));
+                    executionResults.push({
+                      function: 'cms-push-redirect',
+                      from: redirectBody.from,
+                      to: redirectBody.to,
+                      status: funcResponse.ok && funcResult.success ? 'success' : 'error',
+                      detail: funcResult.error || funcResult.platform,
+                    });
+                  } catch (actionErr) {
+                    executionResults.push({
+                      function: 'cms-push-redirect',
+                      status: 'error',
+                      detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
+                    });
+                    executionSuccess = false;
+                  }
+                }
+                continue;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
                 let funcBody: Record<string, unknown> = {
