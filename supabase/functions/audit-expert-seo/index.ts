@@ -1727,7 +1727,9 @@ function generateRecommendations(
         "Supprimer ou corriger les liens vers les pages inexistantes",
         "Mettre en place des redirections 301 si les pages ont été déplacées",
         "Utiliser un outil de monitoring des liens cassés"
-      ]
+      ],
+      target_selector: 'a[href]',
+      target_operation: 'replace',
     });
   }
   
@@ -1750,7 +1752,9 @@ function generateRecommendations(
           "Utiliser une hiérarchie stricte : H1 → H2 → H3 (sans sauter de niveau)",
           "Ne pas utiliser les balises Hn pour le style visuel — utiliser CSS à la place",
           "Vérifier que le H1 est unique et que chaque section a son propre H2"
-        ]
+        ],
+        target_selector: 'h2,h3,h4',
+        target_operation: 'replace',
       });
     }
   }
@@ -1765,6 +1769,13 @@ function generateRecommendations(
         'http_sitemap_on_https': 'sitemap-http-declaration',
         'blocks_rendering_resources': 'robots-blocks-resources',
         'sitemap_not_in_robots': 'sitemap-undeclared',
+      };
+      const selectorMap: Record<string, string> = {
+        'noindex_in_sitemap': 'sitemap_xml',
+        'http_urls_in_sitemap': 'sitemap_xml',
+        'http_sitemap_on_https': 'sitemap_xml',
+        'blocks_rendering_resources': 'robots_txt',
+        'sitemap_not_in_robots': 'robots_txt',
       };
       recommendations.push({
         id: idMap[issue.type] || `sitemap-${issue.type}`,
@@ -1789,7 +1800,9 @@ function generateRecommendations(
           ? ["Mettre à jour toutes les URLs du sitemap en HTTPS", "Vérifier que les redirections 301 HTTP→HTTPS sont en place"]
           : issue.type === 'sitemap_not_in_robots'
           ? ["Ajouter 'Sitemap: https://votre-site.com/sitemap.xml' dans robots.txt", "Soumettre le sitemap dans Google Search Console"]
-          : ["Corriger l'incohérence entre le sitemap et le robots.txt"]
+          : ["Corriger l'incohérence entre le sitemap et le robots.txt"],
+        target_selector: selectorMap[issue.type] || 'sitemap_xml',
+        target_operation: 'replace',
       });
     }
   }
