@@ -226,11 +226,15 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
 
   for (const s of series) {
     const { z, mean, stddev } = computeZScore(s.values, s.current);
-    const classification = classifyAnomaly(z);
-    if (!classification) continue;
+
+    // Seasonal sites: relax thresholds to avoid false positives during expected dips
+    const adjustedClassification = isSeasonal
+      ? classifyAnomaly(z * 0.75) // Reduce z-score sensitivity by 25% for seasonal sites
+      : classifyAnomaly(z);
+    if (!adjustedClassification) continue;
 
     // For position, direction is inverted (lower is better)
-    let { severity, direction } = classification;
+    let { severity, direction } = adjustedClassification;
     if (s.metric_name === 'Position moyenne' || s.metric_name === 'Taux de rebond' || s.metric_name === 'Coût publicitaire') {
       // Inverted metrics: going down is good
       if (direction === 'up') {
