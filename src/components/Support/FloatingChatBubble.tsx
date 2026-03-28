@@ -241,7 +241,7 @@ export function FloatingChatBubble() {
       )}
 
       {/* Guest quiz suggestion tooltip */}
-      {showGuestQuizSuggestion && !isOpen && !showOnboardingPulse && (
+      {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
         <div
           className="fixed bottom-[72px] z-50 max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
           style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
