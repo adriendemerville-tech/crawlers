@@ -120,23 +120,24 @@ interface CMSAdapter {
 
 ## Actions supportées par CMS
 
-| Action                 | WordPress | Shopify | Webflow | Wix  | Drupal |
-|------------------------|:---------:|:-------:|:-------:|:----:|:------:|
-| Modifier title/meta    | ✅        | ✅      | ✅      | ⚠️   | ✅     |
-| Modifier canonical     | ✅        | ❌      | ✅      | ❌   | ✅ (1) |
-| Ajouter JSON-LD        | ✅        | ✅ (2)  | ⚠️ (3) | ❌   | ✅ (4) |
-| Maillage interne       | ✅        | ⚠️ (5) | ⚠️ (3) | ❌   | ✅     |
-| Redirections 301/302   | ✅        | ✅      | ✅      | ✅   | ✅ (6) |
-| Lister les pages       | ✅        | ✅      | ✅      | ✅   | ✅     |
-| Découvrir les types    | ❌        | ❌      | ❌      | ❌   | ✅     |
+| Action                 | WordPress | Shopify | Webflow | Wix  | Drupal | PrestaShop | Odoo |
+|------------------------|:---------:|:-------:|:-------:|:----:|:------:|:----------:|:----:|
+| Modifier title/meta    | ✅        | ✅      | ✅      | ⚠️   | ✅     | ✅         | ✅   |
+| Modifier canonical     | ✅        | ❌      | ❌      | ❌   | ✅     | ❌         | ❌   |
+| Modifier robots meta   | ✅        | ❌      | ❌      | ❌   | ✅     | ❌         | ❌   |
+| Open Graph (title/desc)| ✅        | ❌ (1)  | ✅      | ❌   | ✅     | ❌         | ❌   |
+| Ajouter JSON-LD        | ✅        | ✅      | ✅      | ❌   | ✅     | ✅ (2)     | ✅ (2)|
+| Alt text images        | ✅        | ✅      | ✅      | ❌   | ✅     | ✅         | ✅   |
+| Maillage interne       | ✅        | ⚠️      | ⚠️      | ❌   | ✅     | ✅         | ✅   |
+| Redirections 301/302   | ✅ (3)    | ✅      | ✅      | ✅   | ✅     | ❌ (4)     | ✅   |
+| Lister les pages       | ✅        | ✅      | ✅      | ✅   | ✅     | ✅         | ✅   |
+| Patch contenu (H1/FAQ) | ✅        | ✅      | ✅      | ⚠️   | ✅     | ✅         | ✅   |
 
 Notes :
-1. Drupal canonical : Via le module `metatag` avec le champ `canonical_url`.
-2. Shopify : JSON-LD via modification du thème Liquid (plus complexe).
-3. Webflow : Pas de manipulation HTML fine via API — limité aux champs CMS.
-4. Drupal JSON-LD : Via le module `schema_metatag` ou injection dans le body.
-5. Shopify : Le contenu des pages est en Liquid, l'injection de liens nécessite du parsing HTML.
-6. Drupal redirections : Nécessite le module contrib `redirect`.
+1. Shopify OG tags sont auto-générés depuis title/description/image.
+2. JSON-LD injecté dans le body HTML du contenu.
+3. WordPress redirections : nécessite le plugin Redirection ou le plugin Crawlers.
+4. PrestaShop : pas d'API native pour les redirections — nécessite `.htaccess` ou module tiers.
 
 ## Edge Functions
 
