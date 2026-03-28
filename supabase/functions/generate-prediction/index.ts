@@ -721,7 +721,19 @@ Deno.serve(async (req) => {
         if (ctx.products_services) parts.push(`Products: ${ctx.products_services}`);
         if (ctx.target_audience) parts.push(`Target: ${ctx.target_audience}`);
         if (ctx.commercial_area) parts.push(`Area: ${ctx.commercial_area}`);
+        if (ctx.entity_type) parts.push(`Type: ${ctx.entity_type}`);
+        if (ctx.commercial_model) parts.push(`Model: ${ctx.commercial_model}`);
         if (parts.length > 0) siteContextHint = `\nSite identity: ${parts.join(' | ')}`;
+
+        // Override sector from identity card if available (more accurate than heuristic)
+        if (ctx.market_sector) {
+          const identitySector = resolveSector({ sector: ctx.market_sector });
+          if (identitySector !== 'Services') {
+            intel.sector = identitySector;
+            console.log(`[generate-prediction] Sector overridden by identity card: ${identitySector}`);
+          }
+        }
+
         console.log(`[generate-prediction] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
       }
     } catch (e) {

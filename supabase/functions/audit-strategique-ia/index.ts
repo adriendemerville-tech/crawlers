@@ -2691,6 +2691,23 @@ Deno.serve(async (req) => {
       userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
     }
 
+    // Inject site identity card context into prompt for better strategic analysis
+    if (siteIdentityCtx) {
+      const idParts: string[] = [];
+      if (siteIdentityCtx.market_sector) idParts.push(`Secteur: ${siteIdentityCtx.market_sector}`);
+      if (siteIdentityCtx.entity_type) idParts.push(`Type: ${siteIdentityCtx.entity_type}`);
+      if (siteIdentityCtx.commercial_model) idParts.push(`Modèle: ${siteIdentityCtx.commercial_model}`);
+      if (siteIdentityCtx.products_services) idParts.push(`Produits/Services: ${siteIdentityCtx.products_services}`);
+      if (siteIdentityCtx.target_audience) idParts.push(`Cible: ${siteIdentityCtx.target_audience}`);
+      if (siteIdentityCtx.commercial_area) idParts.push(`Zone: ${siteIdentityCtx.commercial_area}`);
+      if (siteIdentityCtx.company_size) idParts.push(`Taille: ${siteIdentityCtx.company_size}`);
+      if (siteIdentityCtx.business_type) idParts.push(`Activité: ${siteIdentityCtx.business_type}`);
+      if (siteIdentityCtx.competitors) idParts.push(`Concurrents connus: ${siteIdentityCtx.competitors}`);
+      if (idParts.length > 0) {
+        userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\nUtilise ces données pour contextualiser TOUTE l'analyse.\n` + userPrompt;
+      }
+    }
+
     if (!isContentMode && localCompetitorsAll.length > 0) {
       const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
       userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS (SERP + Carte d'identité):\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
