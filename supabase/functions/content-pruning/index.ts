@@ -142,6 +142,11 @@ Deno.serve(async (req) => {
     const { data: site } = await sb.from('tracked_sites').select('domain').eq('id', tracked_site_id).single()
     if (!site) return json({ error: 'Site not found' }, 404)
 
+    // Fetch identity card for sector context
+    const siteContext = await getSiteContext(sb, { trackedSiteId: tracked_site_id, userId: user.id })
+    const sector = siteContext?.market_sector || ''
+    const entityType = siteContext?.entity_type || 'business'
+
     // 2. Get GSC data (last 90 days page-level clicks/impressions)
     const { data: gscData } = await sb
       .from('gsc_page_stats')
@@ -201,6 +206,8 @@ Deno.serve(async (req) => {
       redirect: results.filter(r => r.decision === 'redirect').length,
       delete: results.filter(r => r.decision === 'delete').length,
       health_score: results.length > 0 ? Math.round(results.filter(r => r.decision === 'keep').length / results.length * 100) : 0,
+      sector,
+      entity_type: entityType,
     }
 
     // Log usage

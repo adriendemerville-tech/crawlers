@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
       // Simple trend: if we only have one snapshot, compare clicks to a threshold
       const clicksTrend = gsc ? (gsc.clicks >= 10 ? 'stable' : gsc.clicks >= 1 ? 'declining' : 'unknown') : 'unknown'
 
-      const score = calculateFreshnessScore(daysSince, clicksTrend, page.word_count || 0, hasGscData)
+      const score = calculateFreshnessScore(daysSince, clicksTrend, page.word_count || 0, hasGscData, isSeasonal)
 
       const urgency: FreshnessResult['urgency'] =
         score < 30 ? 'critical' :
