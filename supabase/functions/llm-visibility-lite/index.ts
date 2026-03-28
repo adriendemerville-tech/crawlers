@@ -86,22 +86,17 @@ Deno.serve(async (req) => {
                 title: 'Crawlers.fr - LLM Visibility Lite',
               });
 
-            clearTimeout(timeout)
-
-            if (!resp.ok) {
-              console.error(`[llm-lite] ${llm.name} HTTP ${resp.status}`)
+              const content = resp.content;
+              trackTokenUsage('llm-visibility-lite', llm.model, resp.usage, domain)
+              trackPaidApiCall('llm-visibility-lite', 'openrouter', llm.model, domain)
+              
+              allResponses.push(content)
+              
+              if (detectCitationInText(content, patterns)) break
+            } catch (promptErr) {
+              console.error(`[llm-lite] ${llm.name} error on prompt:`, promptErr)
               continue
             }
-
-            const data = await resp.json()
-            const content = data.choices?.[0]?.message?.content || ''
-
-            trackTokenUsage('llm-visibility-lite', llm.model, data.usage, domain)
-            trackPaidApiCall('llm-visibility-lite', 'openrouter', llm.model, domain)
-            
-            allResponses.push(content)
-            
-            if (detectCitationInText(content, patterns)) break
           }
           
           if (allResponses.length === 0) {
