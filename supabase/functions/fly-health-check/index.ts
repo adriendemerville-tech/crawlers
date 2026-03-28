@@ -23,39 +23,24 @@ async function tryFlyRender(flyUrl: string, flySecret: string | undefined): Prom
   }
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // Auth check — admin only
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
+Deno.serve(handleRequest(async (req) => {
+  const supabase = getServiceClient();
 
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
+  if (!authHeader) return jsonError('Unauthorized', 401);
 
   const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
+  if (!user) return jsonError('Unauthorized', 401);
 
   const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
   const isAdmin = roles?.some((r: any) => r.role === 'admin');
-  if (!isAdmin) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
+  if (!isAdmin) return jsonError('Forbidden', 403);
 
   const flyUrl = Deno.env.get('FLY_RENDERER_URL');
   const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
 
   if (!flyUrl) {
-    return new Response(JSON.stringify({ status: 'error', message: 'FLY_RENDERER_URL not configured' }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ status: 'error', message: 'FLY_RENDERER_URL not configured' });
   }
 
   // Attempt 1
@@ -69,18 +54,18 @@ serve(async (req) => {
   }
 
   if (result.ok) {
-    return new Response(JSON.stringify({
+    return jsonOk({
       status: 'ok',
       message: `Fly.io Playwright opérationnel (${result.chars} chars rendus)`,
       rendered_chars: result.chars,
-    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
   } else {
-    return new Response(JSON.stringify({
+    return jsonOk({
       status: 'error',
       message: result.status
         ? `Fly.io a répondu avec HTTP ${result.status}`
         : `Fly.io inaccessible: ${result.error}`,
       http_status: result.status || null,
-    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
   }
-});
+}));
