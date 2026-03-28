@@ -68,6 +68,38 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     }
   }, [isOpen, prefillUrl]);
 
+  // Restore previously generated images from storage on modal open
+  useEffect(() => {
+    if (!isOpen || generatedImages.length > 0) return;
+    const loadPersistedImages = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const folder = trackedSiteId ? `${user.id}/${trackedSiteId}/generated` : `${user.id}/generated`;
+        const { data: files } = await supabase.storage.from('image-references').list(folder, { limit: 10, sortBy: { column: 'created_at', order: 'desc' } });
+        if (!files || files.length === 0) return;
+        // Only load images from last 24h
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const recent = files.filter(f => f.created_at && new Date(f.created_at).getTime() > cutoff);
+        if (recent.length === 0) return;
+        const restored = recent.slice(0, 5).map(f => {
+          const path = `${folder}/${f.name}`;
+          const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(path);
+          const styleMatch = f.name.match(/_([a-z_]+)\.\w+$/);
+          return {
+            dataUri: urlData.publicUrl,
+            style: (styleMatch?.[1] || 'photo') as any,
+            placement: null as 'header' | 'body' | null,
+          };
+        });
+        setGeneratedImages(restored);
+      } catch (e) {
+        console.warn('[ContentArchitect] Failed to restore images:', e);
+      }
+    };
+    loadPersistedImages();
+  }, [isOpen, trackedSiteId]);
+
   // Form fields
   const [url, setUrl] = useState('');
   const [keyword, setKeyword] = useState('');
