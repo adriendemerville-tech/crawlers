@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
@@ -308,7 +309,7 @@ Deno.serve(async (req) => {
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
     // Fetch recent diagnostics + strategic audit data in parallel
-    const [diagsResult, strategicAuditResult, siteIdentityResult] = await Promise.all([
+    const [diagsResult, strategicAuditResult, siteContextResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -324,13 +325,33 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      // Load site identity card for semantic anchoring
-      supabase
-        .from('tracked_sites')
-        .select('site_name, market_sector, business_type, client_targets, identity_card, jargon_distance')
-        .eq('id', tracked_site_id)
-        .single(),
+      // Load site identity card via getSiteContext (auto-enrichment)
+      getSiteContext(supabase, { trackedSiteId: tracked_site_id, userId: auth.userId }).catch(e => {
+        console.warn('[strategist] Could not fetch site context:', e);
+        return null;
+      }),
     ]);
+
+    // Extract identity data from site context
+    const siteIdentityData = siteContextResult ? {
+      site_name: siteContextResult.site_name,
+      market_sector: siteContextResult.market_sector,
+      business_type: siteContextResult.business_type,
+      entity_type: siteContextResult.entity_type,
+      commercial_model: siteContextResult.commercial_model,
+      products_services: siteContextResult.products_services,
+      target_audience: siteContextResult.target_audience,
+      commercial_area: siteContextResult.commercial_area,
+      company_size: siteContextResult.company_size,
+      competitors: siteContextResult.competitors,
+      client_targets: (siteContextResult as any).client_targets,
+      jargon_distance: (siteContextResult as any).jargon_distance,
+      identity_confidence: siteContextResult.identity_confidence,
+    } : null;
+
+    if (siteIdentityData) {
+      console.log(`[strategist] Identity card loaded: sector=${siteIdentityData.market_sector || 'unknown'}, confidence=${siteIdentityData.identity_confidence || 0}`);
+    }
 
     // Extract strategic audit SERP data
     let strategicSerpData: {
@@ -357,7 +378,7 @@ Deno.serve(async (req) => {
             serp_recommendations: kp.serp_recommendations || [],
           } : null,
           priority_content: pc || null,
-          market_sector: siteIdentityResult.data?.market_sector || '',
+          market_sector: siteIdentityData?.market_sector || '',
         };
         console.log(`[strategist] Loaded strategic audit SERP data: ${strategicSerpData.content_gaps.length} gaps, ${strategicSerpData.missing_terms.length} missing terms, ${strategicSerpData.keyword_positioning?.main_keywords?.length || 0} keywords`);
       }
@@ -796,20 +817,13 @@ Deno.serve(async (req) => {
         await writeSiteMemory(tracked_site_id, auth.userId, memoryEntries, 'stratege');
       }
 
-      // Auto-enrich identity card from diagnostic data if missing
-      const { data: siteData } = await supabase
-        .from('tracked_sites')
-        .select('market_sector, products_services, target_audience, company_size, commercial_area')
-        .eq('id', tracked_site_id)
-        .single();
-
-      if (siteData) {
+      // Auto-enrich identity card from diagnostic data if missing (reuse already-fetched data)
+      if (siteIdentityData) {
         const identityUpdates = [];
-        // If findings reveal specific business characteristics, suggest identity updates
         const contentFindings = allFindings.filter(f => f.source_type === 'content');
         const semanticFindings = allFindings.filter(f => f.source_type === 'semantic');
 
-        if (!siteData.target_audience && semanticFindings.length > 0) {
+        if (!siteIdentityData.target_audience && semanticFindings.length > 0) {
           const keywords = semanticFindings
             .flatMap((f: any) => f.data?.keywords || [])
             .slice(0, 5)

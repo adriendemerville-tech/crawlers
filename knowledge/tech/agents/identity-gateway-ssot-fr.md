@@ -1,0 +1,30 @@
+# Memory: tech/agents/identity-gateway-ssot-fr
+Updated: just now
+
+L'architecture de la 'Carte d'identité' (`identity_card`) est centralisée via un module 'Identity Gateway' (`_shared/identityGateway.ts`), unique point d'entrée pour toute modification. Il impose des règles strictes : validation par whitelist, protection des sources 'user_manual'/'user_voice', et mode hybride (suggestions pour les champs critiques, update direct pour les mineurs).
+
+## Sources actives (ÉCRITURE via gateway)
+- `enrichSiteContext` (auto-remplissage LLM, `forceDirectWrite: true`)
+- `voice-identity-enrichment` (audio utilisateur, `forceOverwrite: true`)
+- `siteMemory.applyIdentityUpdates()` (Félix/Stratège, mode hybride)
+- `expert-audit` → `cms_platform` (détection de 22 CMS)
+- `marina` → `market_sector`, `products_services` (contexte stratégique)
+- `cocoon-strategist` → `target_audience` (déduit des diagnostics sémantiques)
+- `seasonality-detector` → `is_seasonal`, `seasonality_profile`
+- **Différé** : `agent-seo` (limité au suivi interne 'crawlers.fr')
+
+## Fonctions qui LISENT la carte (via getSiteContext)
+### Lecture + injection dans les prompts LLM
+- `audit-strategique-ia` — Injecte secteur/type/modèle/produits/cible/zone/taille/concurrents dans le prompt (📇 CARTE D'IDENTITÉ)
+- `content-architecture-advisor` — Utilise la carte pour contextualiser les recommandations d'architecture
+- `generate-prediction` — Override du secteur pour la saisonnalité, injection dans le prompt de prédiction
+- `check-llm`, `llm-visibility-lite`, `calculate-llm-visibility`
+- `calculate-sov`, `generate-target-queries`
+- `sav-agent` (Félix)
+
+### Lecture pour ajustement algorithmique
+- `detect-anomalies` — Utilise `is_seasonal`/`seasonality_profile` pour relaxer les seuils Z-score (-25% de sensibilité pour les sites saisonniers)
+- `cocoon-strategist` — Utilise la carte via `getSiteContext` (auto-enrichissement) au lieu d'un accès direct DB. Secteur injecté dans les données SERP stratégiques.
+
+### Sources identifiées
+`llm_auto`, `llm_verified`, `user_manual`, `user_voice`, `felix`, `stratege`, `seasonality`, `expert_audit`, `agent_seo`, `marina`, `system`

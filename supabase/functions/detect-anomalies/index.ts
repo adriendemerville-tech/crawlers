@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 /**
  * detect-anomalies: Z-score anomaly detection across all data sources
@@ -108,6 +109,18 @@ Deno.serve(async (req) => {
 });
 
 async function detectForSite(supabase: any, trackedSiteId: string, domain: string, userId: string): Promise<number> {
+  // Fetch site identity card for seasonality awareness
+  let isSeasonal = false;
+  let seasonalityProfile: any = null;
+  try {
+    const ctx = await getSiteContext(supabase, { trackedSiteId });
+    if (ctx) {
+      isSeasonal = !!(ctx as any).is_seasonal;
+      seasonalityProfile = (ctx as any).seasonality_profile;
+      if (isSeasonal) console.log(`[detect-anomalies] ${domain}: seasonal site detected, adjusting thresholds`);
+    }
+  } catch (_) { /* non-blocking */ }
+
   // Fetch all historical data in parallel (8 weeks + current)
   const [gscRes, ga4Res, gmbRes, adsRes, serpRes] = await Promise.all([
     supabase
@@ -213,11 +226,15 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
 
   for (const s of series) {
     const { z, mean, stddev } = computeZScore(s.values, s.current);
-    const classification = classifyAnomaly(z);
-    if (!classification) continue;
+
+    // Seasonal sites: relax thresholds to avoid false positives during expected dips
+    const adjustedClassification = isSeasonal
+      ? classifyAnomaly(z * 0.75) // Reduce z-score sensitivity by 25% for seasonal sites
+      : classifyAnomaly(z);
+    if (!adjustedClassification) continue;
 
     // For position, direction is inverted (lower is better)
-    let { severity, direction } = classification;
+    let { severity, direction } = adjustedClassification;
     if (s.metric_name === 'Position moyenne' || s.metric_name === 'Taux de rebond' || s.metric_name === 'Coût publicitaire') {
       // Inverted metrics: going down is good
       if (direction === 'up') {
