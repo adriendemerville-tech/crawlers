@@ -1045,7 +1045,7 @@ function sortByStrategicRelevance(
   return scored.map(s => s.kw);
 }
 
-async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = ''): Promise<MarketData | null> {
+async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = '', existingKeywords: string[] = []): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
@@ -1054,19 +1054,26 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    // ═══ PHASE 1: AI-Driven Seed Generation ═══
+    // ═══ PHASE 0: Use existing keyword cloud as pre-seeds if available ═══
     let seedKeywords: string[] = [];
     const effectiveUrl = url || `https://${domain}`;
-    
-    const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
-    
-    if (aiSeeds.length >= 5) {
-      seedKeywords = aiSeeds;
-      console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+
+    if (existingKeywords.length >= 5) {
+      // Use keyword cloud from SERP snapshots — skip AI seed generation & save API calls
+      seedKeywords = existingKeywords.slice(0, 15);
+      console.log(`☁️ Using existing keyword cloud as seeds (${seedKeywords.length} terms) — skipping AI seed generation`);
     } else {
-      // Fallback to metadata extraction
-      console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
-      seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+      // ═══ PHASE 1: AI-Driven Seed Generation (fallback) ═══
+      const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
+      
+      if (aiSeeds.length >= 5) {
+        seedKeywords = aiSeeds;
+        console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+      } else {
+        // Fallback to metadata extraction
+        console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
+        seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+      }
     }
     
     console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
@@ -2561,15 +2568,39 @@ Deno.serve(async (req) => {
         console.warn(`⚠️ Carte d'identité non disponible:`, e);
       }
 
+      // ── Fetch keyword cloud from SERP snapshots as pre-seeds ──
+      let existingKeywords: string[] = [];
+      try {
+        const sbService = getServiceClient();
+        const domainClean = domainWithoutWww.replace(/^www\./, '').toLowerCase();
+        const { data: serpSnapshot } = await sbService
+          .from('serp_snapshots')
+          .select('sample_keywords')
+          .ilike('domain', `%${domainClean}%`)
+          .order('measured_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (serpSnapshot?.sample_keywords && Array.isArray(serpSnapshot.sample_keywords)) {
+          existingKeywords = serpSnapshot.sample_keywords
+            .filter((k: any) => k?.keyword)
+            .map((k: any) => k.keyword as string);
+          if (existingKeywords.length > 0) {
+            console.log(`☁️ Keyword cloud loaded: ${existingKeywords.length} keywords as pre-seeds`);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch keyword cloud:', e);
+      }
+
       // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
+        // Market data (DataForSEO keywords) — uses keyword cloud as pre-seeds when available
         withDeadline(
-          fetchMarketData(domain, context, pageContentContext, url),
+          fetchMarketData(domain, context, pageContentContext, url, existingKeywords),
           120_000, 'market_data'
         ),
         // LLM visibility check (sub-function call) — always needed

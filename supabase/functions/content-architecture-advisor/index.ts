@@ -353,7 +353,7 @@ Deno.serve(async (req) => {
     let backlinkData: any = null
     let workbenchItems: any[] = []
 
-    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes] = await Promise.allSettled([
+    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes, serpKeywordsRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -385,6 +385,12 @@ Deno.serve(async (req) => {
         .eq('status', 'pending')
         .order('severity', { ascending: true })
         .limit(30),
+      // Fetch keyword cloud from SERP snapshots (reference universe)
+      tracked_site_id
+        ? serviceClient.from('serp_snapshots').select('sample_keywords')
+            .eq('tracked_site_id', tracked_site_id)
+            .order('measured_at', { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
@@ -428,8 +434,25 @@ Deno.serve(async (req) => {
         console.log(`[content-advisor] Workbench: ${workbenchItems.length} content items found for ${domain}`)
       }
     }
+    // Extract keyword cloud as reference universe
+    let keywordCloudBlock = ''
+    if (serpKeywordsRes.status === 'fulfilled' && (serpKeywordsRes.value as any)?.data?.sample_keywords) {
+      const kwList = ((serpKeywordsRes.value as any).data.sample_keywords as any[])
+        .filter((k: any) => k?.keyword)
+        .map((k: any) => `- "${k.keyword}" (pos: ${k.position || '?'}, vol: ${k.volume || '?'})`)
+      if (kwList.length > 0) {
+        keywordCloudBlock = `
+── UNIVERS MOTS-CLÉS DE RÉFÉRENCE (${kwList.length} termes classés) ──
+⚠️ CRITIQUE : Ce nuage de mots-clés représente le positionnement RÉEL du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique.
+${kwList.slice(0, 30).join('\n')}
 
-    // ── Step 5: LLM Synthesis ──
+RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout contenu hors de cet univers thématique est INTERDIT.
+`
+        console.log(`[content-advisor] ☁️ Keyword cloud injected: ${kwList.length} keywords`)
+      }
+    }
+
+
     console.log(`[content-advisor] Step 5: LLM synthesis`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) {
@@ -622,6 +645,8 @@ ${silo_context.gap_description ? `Gap identifié: ${silo_context.gap_description
 
 RÈGLE: Le contenu doit renforcer ce silo thématique. Il doit lier vers les pages existantes du silo ET être conçu pour recevoir des liens depuis ces pages.
 ` : ''}
+
+${keywordCloudBlock}
 
 **Identité du site:**
 ${siteIdentity ? JSON.stringify(siteIdentity, null, 2) : 'Non disponible — recommandations génériques'}
