@@ -162,6 +162,14 @@ Notes :
 | `create-redirect`    | POST    | Crée une redirection 301/302                         |
 | `delete-redirect`    | POST    | Supprime une redirection                             |
 
+## Intégration Autopilote Parménion
+
+L'Autopilote utilise le bridge CMS (`iktracker-actions`) comme canal d'exécution pour les corrections de contenu et les créations éditoriales. Les coordonnées de ciblage (`target_selector`, `target_operation`) issues du workbench sont traduites en actions CMS concrètes :
+- `target_selector: h1` + `target_operation: replace` → `update-page` avec le nouveau H1
+- `target_selector: content` + `target_operation: append` → `update-page` avec contenu enrichi
+- `target_selector: meta_description` + `target_operation: create` → `update-page` avec nouvelle meta
+- Canal `emit_editorial_content` → `create-post` pour les nouveaux articles
+
 ## Roadmap
 
 1. **Phase 1** : Table `cms_connections` ✅ + WordPress Adapter (meta, redirections, maillage via plugin existant)
