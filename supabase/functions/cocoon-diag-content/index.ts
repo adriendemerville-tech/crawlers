@@ -26,6 +26,8 @@ interface Finding {
   description: string;
   affected_urls: string[];
   data?: Record<string, any>;
+  target_selector?: string;
+  target_operation?: 'replace' | 'insert_after' | 'append' | 'create' | 'delete_element';
 }
 
 const LABELS: Record<string, Record<string, string>> = {

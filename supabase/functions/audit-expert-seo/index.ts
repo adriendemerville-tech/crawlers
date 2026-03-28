@@ -141,6 +141,8 @@ interface RecommendationItem {
   strengths?: string[];
   weaknesses?: string[];
   fixes?: string[];
+  target_selector?: string;
+  target_operation?: 'replace' | 'insert_after' | 'append' | 'create' | 'delete_element';
 }
 
 // ==================== TOXIC ANCHORS LIST ====================
