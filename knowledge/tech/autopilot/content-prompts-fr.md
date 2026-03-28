@@ -44,10 +44,23 @@ Ordre de priorité :
 - **Fraîcheur** : mentionner l'année, dater les informations
 - **E-E-A-T** : expertise auteur, expérience terrain, sources
 
+### Enrichissement mots-clés (prescribe)
+
+Avant d'envoyer le prompt contenu, Parménion agrège les mots-clés stratégiques depuis 4 sources :
+1. **Payloads workbench** : `keyword`, `keywords`, `target_keyword`, `term` extraits du `payload` JSONB
+2. **`keyword_rankings`** : positions actuelles du domaine (top 30, tri par position)
+3. **`serpapi_cache`** : `related_searches` des SERP récentes (mots-clés d'opportunité)
+4. **`audit_raw_data` (strategic)** : `keyword_positioning` (high_opportunity, quick_wins, primary/secondary)
+
+Les mots-clés sont dédupliqués, triés par volume, et injectés dans le prompt LLM avec :
+- Liste des 40 mots-clés prioritaires (avec volume et position si disponibles)
+- Section Quick Wins (positions 8-25) avec consigne d'optimisation prioritaire
+
 ### Injection dans Parménion
 
 Le prompt contenu (`prescribeWithDualPrompts`) :
 1. Charge les templates actifs depuis `content_prompt_templates`
 2. Détecte le type de chaque item via `detectPageType()`
-3. Injecte le template correspondant dans le prompt LLM
-4. Le LLM produit du contenu formaté selon la structure du template
+3. **Enrichit avec les mots-clés** via `enrichKeywordsForPrescribe()` (4 sources)
+4. Injecte template + mots-clés dans le prompt LLM
+5. Le LLM produit du contenu formaté selon la structure du template, optimisé pour les mots-clés identifiés
