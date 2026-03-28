@@ -817,14 +817,8 @@ Deno.serve(async (req) => {
         await writeSiteMemory(tracked_site_id, auth.userId, memoryEntries, 'stratege');
       }
 
-      // Auto-enrich identity card from diagnostic data if missing
-      const { data: siteData } = await supabase
-        .from('tracked_sites')
-        .select('market_sector, products_services, target_audience, company_size, commercial_area')
-        .eq('id', tracked_site_id)
-        .single();
-
-      if (siteData) {
+      // Auto-enrich identity card from diagnostic data if missing (reuse already-fetched data)
+      const siteData = siteIdentityData;
         const identityUpdates = [];
         // If findings reveal specific business characteristics, suggest identity updates
         const contentFindings = allFindings.filter(f => f.source_type === 'content');
