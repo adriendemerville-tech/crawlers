@@ -143,6 +143,24 @@ serve(async (req: Request) => {
       }
     }
     const siteInfo = (siteInfoRes as any)?.data || null;
+    // Enrich siteInfo with identity card fields (auto-enriched via getSiteContext)
+    if (identityCard) {
+      if (!siteInfo) {
+        // fallback: use identity card as siteInfo
+      }
+      // Merge identity card into siteInfo for downstream use
+      const enrichedSiteInfo = {
+        ...(siteInfo || {}),
+        market_sector: identityCard.market_sector || siteInfo?.market_sector,
+        entity_type: identityCard.entity_type || siteInfo?.business_type,
+        commercial_model: identityCard.commercial_model,
+        target_audience: identityCard.target_audience,
+        products_services: identityCard.products_services,
+        commercial_area: identityCard.commercial_area,
+        identity_confidence: identityCard.identity_confidence,
+      };
+      Object.assign(siteInfo || {}, enrichedSiteInfo);
+    }
 
     const previousPhaseResults = (lastCompletedDecisions || [])
       .filter(d => d.execution_results)
