@@ -17,17 +17,8 @@
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { writeIdentity, type IdentitySource } from './identityGateway.ts'
 
-// Critical fields that require user validation before update
-const CRITICAL_IDENTITY_FIELDS = new Set([
-  'site_name', 'market_sector', 'entity_type', 'commercial_model',
-])
-
-// Minor fields that can be auto-updated
-const AUTO_UPDATE_FIELDS = new Set([
-  'company_size', 'target_audience', 'commercial_area', 'products_services',
-  'media_specialties', 'nonprofit_type', 'address',
-  'is_seasonal', 'seasonality_profile', 'founding_year',
-])
+// Field classification is now centralized in identityGateway.ts
+// CRITICAL_IDENTITY_FIELDS and AUTO_UPDATE_FIELDS are managed there.
 
 export interface MemoryEntry {
   memory_key: string
