@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts'
+import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import {
@@ -46,8 +47,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!openrouterKey) {
+    if (!Deno.env.get('OPENROUTER_API_KEY')) {
       return new Response(JSON.stringify({ error: 'API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -76,25 +76,15 @@ Deno.serve(async (req) => {
           const allResponses: string[] = []
           
           for (const prompt of prompts) {
-            const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 15000)
-
-            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${openrouterKey}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://crawlers.lovable.app',
-                'X-Title': 'Crawlers.fr - LLM Visibility Lite',
-              },
-              body: JSON.stringify({
+            try {
+              const resp = await callOpenRouter({
                 model: llm.model,
-                messages: [{ role: 'user', content: prompt }],
+                user: prompt,
                 temperature: 0.4,
-                max_tokens: 500,
-              }),
-              signal: controller.signal,
-            })
+                maxTokens: 500,
+                signal: AbortSignal.timeout(15000),
+                title: 'Crawlers.fr - LLM Visibility Lite',
+              });
 
             clearTimeout(timeout)
 
