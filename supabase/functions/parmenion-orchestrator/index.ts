@@ -605,7 +605,7 @@ Fonctions autorisées: generate-corrective-code, content-architecture-advisor
 5. Le "goal.description" doit mentionner le tier et l'item traité.`;
 }
 
-
+function buildIktrackerExecuteInstructions(): string {
   return `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
 Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement.
 
