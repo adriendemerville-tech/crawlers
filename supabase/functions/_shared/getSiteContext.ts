@@ -13,6 +13,31 @@
 
 import { ensureSiteContext, SiteContext } from './enrichSiteContext.ts'
 
+// ─── In-memory cache (per Deno isolate instance) ────────────────────
+// Avoids redundant SELECTs when multiple functions run in parallel
+// on the same isolate (e.g. Parmenion triggering 5 audits at once).
+const CACHE_TTL_MS = 30_000 // 30 seconds
+const siteCache = new Map<string, { data: SiteContext; expiresAt: number }>()
+
+function getCached(key: string): SiteContext | null {
+  const entry = siteCache.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    siteCache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCache(key: string, data: SiteContext): void {
+  // Cap cache size to prevent memory leaks in long-lived isolates
+  if (siteCache.size > 200) {
+    const oldest = siteCache.keys().next().value
+    if (oldest) siteCache.delete(oldest)
+  }
+  siteCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS })
+}
+
 interface GetByDomain {
   domain: string
   trackedSiteId?: never
@@ -37,6 +62,18 @@ export async function getSiteContext(
   supabase: any,
   params: GetContextParams,
 ): Promise<SiteContext | null> {
+  // Build cache key
+  const cacheKey = 'trackedSiteId' in params && params.trackedSiteId
+    ? `id:${params.trackedSiteId}`
+    : `dom:${(params as GetByDomain).domain?.toLowerCase()}`
+
+  // Check cache first
+  const cached = getCached(cacheKey)
+  if (cached) {
+    console.log(`[getSiteContext] ⚡ Cache hit for ${cacheKey}`)
+    return cached
+  }
+
   let site: Record<string, unknown> | null = null
 
   if ('trackedSiteId' in params && params.trackedSiteId) {
@@ -55,7 +92,6 @@ export async function getSiteContext(
     }
     site = data
   } else if ('domain' in params && params.domain) {
-    // Normalize domain
     const normalizedDomain = params.domain
       .replace(/^https?:\/\//, '')
       .replace(/^www\./, '')
@@ -80,8 +116,12 @@ export async function getSiteContext(
 
   if (!site) return null
 
-  // Enrich and return
-  return ensureSiteContext(site)
+  // Enrich and cache
+  const enriched = await ensureSiteContext(site)
+  if (enriched) {
+    setCache(cacheKey, enriched)
+  }
+  return enriched
 }
 
 /**
