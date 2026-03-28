@@ -344,9 +344,13 @@ async function deployViaCms(
       if (conn.platform === 'wordpress') {
         const result = await deployToWordPress(conn, sourceUrl, recs, backups)
         results.push(result)
+      } else if (['shopify', 'drupal', 'wix', 'prestashop', 'webflow'].includes(conn.platform)) {
+        // Delegate to unified cms-push-draft for non-WordPress CMS
+        // For batch link injection, we still use widget injection as link patching
+        // requires reading existing content first (cms-push-draft is for new content creation)
+        results.push({ url: sourceUrl, status: 'skipped', detail: `CMS ${conn.platform}: link injection requires widget mode. Use cms-push-draft for new content.` })
       } else {
-        // Fallback for non-WordPress CMS: use widget injection
-        results.push({ url: sourceUrl, status: 'skipped', detail: `CMS ${conn.platform} batch not yet supported` })
+        results.push({ url: sourceUrl, status: 'skipped', detail: `CMS ${conn.platform} not supported for batch link injection` })
       }
     } catch (e) {
       results.push({ url: sourceUrl, status: 'error', detail: e instanceof Error ? e.message : 'Unknown' })

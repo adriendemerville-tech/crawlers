@@ -501,11 +501,17 @@ Deno.serve(async (req: Request) => {
             decision.action.functions.push('iktracker-actions');
           }
         } else if (phase === 'execute' && routedCmsActions && routedCmsActions.all.length > 0) {
-          // Non-IKtracker sites with routed actions
+          // Non-IKtracker sites with routed CMS actions → use cms-push-draft
           if (!decision.action.payload) decision.action.payload = {};
           if (!decision.action.payload.cms_actions || decision.action.payload.cms_actions.length === 0) {
             decision.action.payload.cms_actions = routedCmsActions.all;
             decision.action.payload._routed = routedCmsActions;
+          }
+          // Route to cms-push-draft instead of iktracker-actions for non-IKTracker sites
+          if (!decision.action.functions.includes('cms-push-draft')) {
+            decision.action.functions = decision.action.functions
+              .filter((f: string) => f !== 'iktracker-actions')
+              .concat(['cms-push-draft']);
           }
         }
 
@@ -670,6 +676,58 @@ Deno.serve(async (req: Request) => {
                   result: funcResult,
                 });
                 if (!funcResponse.ok) executionSuccess = false;
+              } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
+                // ── CMS Push Draft: unified draft push for non-IKTracker CMS ──
+                const MAX_CMS_ACTIONS = 10;
+                const cmsActions = decision.action.payload.cms_actions.slice(0, MAX_CMS_ACTIONS);
+                console.log(`[AutopilotEngine] Executing ${cmsActions.length} CMS push-draft actions for ${site.domain}`);
+
+                for (const cmsAction of cmsActions) {
+                  try {
+                    const pushBody = {
+                      tracked_site_id: config.tracked_site_id,
+                      content_type: cmsAction.action?.includes('page') ? 'page' : 'post',
+                      title: cmsAction.body?.title || cmsAction.title || 'Draft',
+                      body: cmsAction.body?.content || cmsAction.body?.body || '',
+                      slug: cmsAction.body?.slug || cmsAction.slug,
+                      excerpt: cmsAction.body?.excerpt,
+                      meta_title: cmsAction.body?.meta_title,
+                      meta_description: cmsAction.body?.meta_description,
+                      tags: cmsAction.body?.tags,
+                      category: cmsAction.body?.category,
+                      author_name: cmsAction.body?.author_name,
+                    };
+
+                    const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/cms-push-draft`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(pushBody),
+                    });
+
+                    const funcResult = await funcResponse.json().catch(() => ({}));
+                    executionResults.push({
+                      function: 'cms-push-draft',
+                      cms_action: cmsAction.action,
+                      target: cmsAction.body?.title || 'draft',
+                      status: funcResponse.ok && funcResult.success ? 'success' : 'error',
+                      http_status: funcResponse.status,
+                      result: funcResult,
+                    });
+                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                  } catch (actionErr) {
+                    executionResults.push({
+                      function: 'cms-push-draft',
+                      cms_action: cmsAction.action,
+                      status: 'error',
+                      detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
+                    });
+                    executionSuccess = false;
+                  }
+                }
+                continue;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
                 let funcBody: Record<string, unknown> = {

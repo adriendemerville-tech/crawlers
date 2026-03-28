@@ -29,7 +29,7 @@ const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   audit: ['audit-expert-seo'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
-  execute: ['wpsync', 'iktracker-actions', 'generate-corrective-code'],
+  execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'generate-corrective-code'],
   validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
 
