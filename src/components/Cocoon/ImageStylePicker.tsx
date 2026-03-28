@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Image, Loader2, Sparkles, X, ChevronLeft, ChevronRight, ImagePlus, MousePointerClick } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Image, Loader2, Sparkles, X, ChevronLeft, ChevronRight, ImagePlus, MousePointerClick, Upload, FolderOpen, Wand2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -38,11 +38,19 @@ const ALL_STYLES: StyleOption[] = [
 
 const MAX_IMAGES = 2;
 const MAX_ITERATIONS = 3;
+const MAX_REFS = 5;
+const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 
 export interface GeneratedImageItem {
   dataUri: string;
   style: ImageStyle;
   placement?: 'header' | 'body' | null;
+}
+
+export interface ReferenceImage {
+  url: string;
+  name: string;
+  path: string;
 }
 
 interface ImageColumnProps {
@@ -57,17 +65,106 @@ interface ImageColumnProps {
   onImagePlacement: (index: number, placement: 'header' | 'body') => void;
 }
 
+type TabMode = 'generate' | 'library';
+type RefMode = 'inspiration' | 'edit';
+
 export function ImageColumn({
   pageType, trackedSiteId, targetUrl, identityCard,
   generatedImages, iterationsUsed,
   onImageGenerated, onImageRemoved, onImagePlacement,
 }: ImageColumnProps) {
+  const [tab, setTab] = useState<TabMode>('generate');
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle | null>(null);
   const [imagePrompt, setImagePrompt] = useState('');
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [userHistory, setUserHistory] = useState<{ style_key: string; usage_count: number }[]>([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Library state
+  const [references, setReferences] = useState<ReferenceImage[]>([]);
+  const [loadingRefs, setLoadingRefs] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedRef, setSelectedRef] = useState<ReferenceImage | null>(null);
+  const [refMode, setRefMode] = useState<RefMode>('inspiration');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load references from storage
+  useEffect(() => {
+    loadReferences();
+  }, [trackedSiteId]);
+
+  const loadReferences = async () => {
+    setLoadingRefs(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const folder = trackedSiteId ? `${user.id}/${trackedSiteId}` : user.id;
+      const { data, error } = await supabase.storage.from('image-references').list(folder, { limit: 50 });
+      if (error) throw error;
+      const refs: ReferenceImage[] = (data || [])
+        .filter(f => f.name && !f.name.startsWith('.'))
+        .map(f => {
+          const path = `${folder}/${f.name}`;
+          const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(path);
+          return { url: urlData.publicUrl, name: f.name, path };
+        });
+      setReferences(refs);
+    } catch (e) {
+      console.error('[ImageRef] load error:', e);
+    } finally {
+      setLoadingRefs(false);
+    }
+  };
+
+  const handleUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Non connecté'); return; }
+
+    if (references.length + files.length > MAX_REFS) {
+      toast.error(`Maximum ${MAX_REFS} images de référence`);
+      return;
+    }
+
+    setUploading(true);
+    const folder = trackedSiteId ? `${user.id}/${trackedSiteId}` : user.id;
+
+    for (const file of Array.from(files)) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(`Format non supporté: ${file.name}. Utilisez JPG ou PNG.`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`Fichier trop volumineux: ${file.name} (max 5 Mo)`);
+        continue;
+      }
+      const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const path = `${folder}/${safeName}`;
+      const { error } = await supabase.storage.from('image-references').upload(path, file, { contentType: file.type });
+      if (error) {
+        toast.error(`Erreur upload: ${file.name}`);
+        console.error(error);
+      }
+    }
+    await loadReferences();
+    setUploading(false);
+    toast.success('Image(s) importée(s)');
+  };
+
+  const handleDeleteRef = async (ref: ReferenceImage) => {
+    const { error } = await supabase.storage.from('image-references').remove([ref.path]);
+    if (error) { toast.error('Erreur suppression'); return; }
+    if (selectedRef?.path === ref.path) setSelectedRef(null);
+    setReferences(prev => prev.filter(r => r.path !== ref.path));
+    toast.success('Image supprimée');
+  };
+
+  // Drag & drop
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    handleUpload(e.dataTransfer.files);
+  };
 
   // Load user style history
   useEffect(() => {
@@ -90,7 +187,6 @@ export function ImageColumn({
     load();
   }, [trackedSiteId, targetUrl]);
 
-  // Smart suggestions
   const suggestedStyles = useMemo(() => {
     const sector = (identityCard?.sector || identityCard?.industry || '').toLowerCase();
     const pt = (pageType || 'article').toLowerCase();
@@ -120,7 +216,6 @@ export function ImageColumn({
     }
   }, [suggestedStyles]);
 
-  // Build default prompt from identity card
   useEffect(() => {
     if (imagePrompt) return;
     const parts: string[] = [];
@@ -139,15 +234,22 @@ export function ImageColumn({
     if (!selectedStyle || !imagePrompt || !canGenerate) return;
     setGenerating(true);
     try {
+      const body: any = { prompt: imagePrompt, style: selectedStyle };
+
+      // If a reference image is selected, include it
+      if (selectedRef) {
+        body.referenceImageUrl = selectedRef.url;
+        body.referenceMode = refMode; // 'inspiration' or 'edit'
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt: imagePrompt, style: selectedStyle },
+        body,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       onImageGenerated(data.dataUri, selectedStyle);
-      setCarouselIndex(generatedImages.length); // jump to new image
+      setCarouselIndex(generatedImages.length);
 
-      // Track preference
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('image_style_preferences' as any).upsert(
@@ -173,7 +275,6 @@ export function ImageColumn({
   const handleDoubleClick = (index: number) => {
     const img = generatedImages[index];
     if (!img) return;
-    // Toggle between header → body → unset
     if (!img.placement) {
       onImagePlacement(index, 'header');
       toast.success('Image assignée en entête');
@@ -190,179 +291,308 @@ export function ImageColumn({
 
   return (
     <div className="w-[260px] shrink-0 border-l border-white/10 flex flex-col">
-      {/* Header */}
-      <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Image className="w-3.5 h-3.5 text-[#fbbf24]" />
-          <span className="text-xs font-semibold text-white/80">Image IA</span>
-        </div>
-        <span className="text-[9px] text-white/30">
-          {iterationsUsed}/{MAX_ITERATIONS} itér. · {generatedImages.length}/{MAX_IMAGES} img
-        </span>
+      {/* Header with tabs */}
+      <div className="px-1 py-1.5 border-b border-white/10 flex items-center gap-0.5">
+        <button
+          onClick={() => setTab('generate')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-medium transition-all ${
+            tab === 'generate'
+              ? 'bg-[#fbbf24]/15 text-[#fbbf24] border border-[#fbbf24]/30'
+              : 'text-white/40 hover:text-white/60 border border-transparent'
+          }`}
+        >
+          <Wand2 className="w-3 h-3" />
+          Générer
+        </button>
+        <button
+          onClick={() => setTab('library')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-medium transition-all ${
+            tab === 'library'
+              ? 'bg-[#fbbf24]/15 text-[#fbbf24] border border-[#fbbf24]/30'
+              : 'text-white/40 hover:text-white/60 border border-transparent'
+          }`}
+        >
+          <FolderOpen className="w-3 h-3" />
+          Bibliothèque
+          {references.length > 0 && (
+            <span className="text-[8px] bg-white/10 rounded-full px-1">{references.length}</span>
+          )}
+        </button>
       </div>
 
-      {/* Top: image carousel preview */}
-      <div className="shrink-0 border-b border-white/10">
-        {generatedImages.length > 0 ? (
-          <div className="relative">
-            <img
-              src={generatedImages[carouselIndex]?.dataUri}
-              alt={`Image ${carouselIndex + 1}`}
-              className="w-full aspect-square object-contain bg-black/30 cursor-pointer"
-              onDoubleClick={() => handleDoubleClick(carouselIndex)}
-              title="Double-clic : assigner en entête ou corps"
-            />
-            {/* Placement badge */}
-            {generatedImages[carouselIndex]?.placement && (
-              <Badge className="absolute top-2 left-2 text-[8px] bg-[#fbbf24]/90 text-[#0f0a1e] border-none">
-                {generatedImages[carouselIndex].placement === 'header' ? '🖼️ Entête' : '📄 Corps'}
-              </Badge>
-            )}
-            {/* Remove button */}
-            <button
-              onClick={() => {
-                onImageRemoved(carouselIndex);
-                setCarouselIndex(Math.max(0, carouselIndex - 1));
-              }}
-              className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-            >
-              <X className="w-3 h-3 text-white/70" />
-            </button>
-            {/* Carousel nav */}
-            {generatedImages.length > 1 && (
-              <>
+      {tab === 'generate' ? (
+        <>
+          {/* Carousel preview */}
+          <div className="shrink-0 border-b border-white/10">
+            {generatedImages.length > 0 ? (
+              <div className="relative">
+                <img
+                  src={generatedImages[carouselIndex]?.dataUri}
+                  alt={`Image ${carouselIndex + 1}`}
+                  className="w-full aspect-square object-contain bg-black/30 cursor-pointer"
+                  onDoubleClick={() => handleDoubleClick(carouselIndex)}
+                  title="Double-clic : assigner en entête ou corps"
+                />
+                {generatedImages[carouselIndex]?.placement && (
+                  <Badge className="absolute top-2 left-2 text-[8px] bg-[#fbbf24]/90 text-[#0f0a1e] border-none">
+                    {generatedImages[carouselIndex].placement === 'header' ? '🖼️ Entête' : '📄 Corps'}
+                  </Badge>
+                )}
                 <button
-                  onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
-                  disabled={carouselIndex === 0}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
+                  onClick={() => {
+                    onImageRemoved(carouselIndex);
+                    setCarouselIndex(Math.max(0, carouselIndex - 1));
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
                 >
-                  <ChevronLeft className="w-3 h-3 text-white" />
+                  <X className="w-3 h-3 text-white/70" />
                 </button>
-                <button
-                  onClick={() => setCarouselIndex(i => Math.min(generatedImages.length - 1, i + 1))}
-                  disabled={carouselIndex >= generatedImages.length - 1}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
-                >
-                  <ChevronRight className="w-3 h-3 text-white" />
-                </button>
-                {/* Dots */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {generatedImages.map((_, i) => (
+                {generatedImages.length > 1 && (
+                  <>
                     <button
-                      key={i}
-                      onClick={() => setCarouselIndex(i)}
-                      className={`w-1.5 h-1.5 rounded-full transition-all ${
-                        i === carouselIndex ? 'bg-[#fbbf24] scale-125' : 'bg-white/40'
-                      }`}
-                    />
-                  ))}
+                      onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
+                      disabled={carouselIndex === 0}
+                      className="absolute left-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
+                    >
+                      <ChevronLeft className="w-3 h-3 text-white" />
+                    </button>
+                    <button
+                      onClick={() => setCarouselIndex(i => Math.min(generatedImages.length - 1, i + 1))}
+                      disabled={carouselIndex >= generatedImages.length - 1}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
+                    >
+                      <ChevronRight className="w-3 h-3 text-white" />
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {generatedImages.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCarouselIndex(i)}
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${
+                            i === carouselIndex ? 'bg-[#fbbf24] scale-125' : 'bg-white/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+                <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 rounded px-1.5 py-0.5">
+                  <MousePointerClick className="w-2.5 h-2.5 text-white/50" />
+                  <span className="text-[7px] text-white/40">2×clic = placer</span>
                 </div>
-              </>
-            )}
-            {/* Double-click hint */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 rounded px-1.5 py-0.5">
-              <MousePointerClick className="w-2.5 h-2.5 text-white/50" />
-              <span className="text-[7px] text-white/40">2×clic = placer</span>
-            </div>
-          </div>
-        ) : (
-          <div className="w-full aspect-square flex items-center justify-center bg-white/[0.02]">
-            <div className="text-center space-y-2">
-              <ImagePlus className="w-8 h-8 text-white/10 mx-auto" />
-              <p className="text-[10px] text-white/20">Aucune image générée</p>
-              <p className="text-[8px] text-white/15">Max {MAX_IMAGES} images · {MAX_ITERATIONS} itérations</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom: params */}
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-3">
-          {/* Style selector */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-[10px] text-white/50 uppercase tracking-wider">Style</label>
-              <button
-                onClick={() => setShowAllStyles(!showAllStyles)}
-                className="text-[9px] text-[#fbbf24]/60 hover:text-[#fbbf24] transition-colors"
-              >
-                {showAllStyles ? '← Suggestions' : 'Tous →'}
-              </button>
-            </div>
-
-            {!showAllStyles && (
-              <div className="flex items-center gap-1 mb-0.5">
-                <Sparkles className="w-2.5 h-2.5 text-[#fbbf24]/40" />
-                <span className="text-[8px] text-white/25">Suggérés pour votre contexte</span>
+              </div>
+            ) : (
+              <div className="w-full aspect-square flex items-center justify-center bg-white/[0.02]">
+                <div className="text-center space-y-2">
+                  <ImagePlus className="w-8 h-8 text-white/10 mx-auto" />
+                  <p className="text-[10px] text-white/20">Aucune image générée</p>
+                  <p className="text-[8px] text-white/15">Max {MAX_IMAGES} images · {MAX_ITERATIONS} itérations</p>
+                </div>
               </div>
             )}
+          </div>
 
-            <div className="flex flex-wrap gap-1">
-              {stylesToShow.map(style => (
+          {/* Selected reference indicator */}
+          {selectedRef && (
+            <div className="px-3 py-1.5 border-b border-white/10 flex items-center gap-2 bg-[#fbbf24]/5">
+              <img src={selectedRef.url} alt="" className="w-6 h-6 rounded object-cover" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[8px] text-white/50 truncate">Réf: {selectedRef.name}</p>
+                <div className="flex gap-1 mt-0.5">
+                  <button
+                    onClick={() => setRefMode('inspiration')}
+                    className={`text-[7px] px-1 py-0.5 rounded ${refMode === 'inspiration' ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : 'text-white/30'}`}
+                  >
+                    <Sparkles className="w-2 h-2 inline mr-0.5" />Inspiration
+                  </button>
+                  <button
+                    onClick={() => setRefMode('edit')}
+                    className={`text-[7px] px-1 py-0.5 rounded ${refMode === 'edit' ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : 'text-white/30'}`}
+                  >
+                    <Pencil className="w-2 h-2 inline mr-0.5" />Édition
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => setSelectedRef(null)} className="text-white/30 hover:text-white/60">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Params */}
+          <ScrollArea className="flex-1">
+            <div className="p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-white/30">
+                  {iterationsUsed}/{MAX_ITERATIONS} itér. · {generatedImages.length}/{MAX_IMAGES} img
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-white/50 uppercase tracking-wider">Style</label>
+                  <button
+                    onClick={() => setShowAllStyles(!showAllStyles)}
+                    className="text-[9px] text-[#fbbf24]/60 hover:text-[#fbbf24] transition-colors"
+                  >
+                    {showAllStyles ? '← Suggestions' : 'Tous →'}
+                  </button>
+                </div>
+                {!showAllStyles && (
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Sparkles className="w-2.5 h-2.5 text-[#fbbf24]/40" />
+                    <span className="text-[8px] text-white/25">Suggérés pour votre contexte</span>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  {stylesToShow.map(style => (
+                    <button
+                      key={style.key}
+                      onClick={() => setSelectedStyle(style.key)}
+                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] transition-all border ${
+                        selectedStyle === style.key
+                          ? 'bg-[#fbbf24]/20 border-[#fbbf24]/50 text-[#fbbf24]'
+                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{style.emoji}</span>
+                      <span>{style.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedStyle && (
+                <Badge variant="outline" className="text-[8px] border-white/10 text-white/30">
+                  {ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'imagen3' ? '🔵 Imagen 3' :
+                   ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'flux' ? '🟣 FLUX' : '🟢 Ideogram'}
+                </Badge>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/50 uppercase tracking-wider">Prompt image</label>
+                <Textarea
+                  value={imagePrompt}
+                  onChange={e => setImagePrompt(e.target.value)}
+                  placeholder="Décrivez l'image souhaitée…"
+                  rows={3}
+                  className="bg-white/5 border-white/10 text-white text-[11px] resize-none"
+                />
+              </div>
+
+              {!canGenerate && (
+                <div className="rounded bg-red-500/10 border border-red-500/20 p-2">
+                  <p className="text-[9px] text-red-400">
+                    {generatedImages.length >= MAX_IMAGES
+                      ? `Maximum ${MAX_IMAGES} images atteint. Supprimez-en une pour en générer une nouvelle.`
+                      : `Maximum ${MAX_ITERATIONS} itérations atteint pour ce contenu.`}
+                  </p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Footer */}
+          <div className="shrink-0 p-3 border-t border-white/10">
+            <Button
+              onClick={handleGenerate}
+              disabled={!selectedStyle || !imagePrompt || generating || !canGenerate}
+              className="w-full h-8 text-[11px] bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
+            >
+              {generating ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />Génération…</>
+              ) : (
+                <><Image className="w-3.5 h-3.5 mr-1.5" />
+                  {selectedRef ? (refMode === 'edit' ? 'Éditer depuis réf.' : 'Générer (inspiré)') : 'Générer l\'image'}
+                </>
+              )}
+            </Button>
+          </div>
+        </>
+      ) : (
+        /* ── Library Tab ── */
+        <>
+          <div
+            className="flex-1 flex flex-col"
+            onDragOver={e => e.preventDefault()}
+            onDrop={handleDrop}
+          >
+            <ScrollArea className="flex-1">
+              <div className="p-3 space-y-3">
+                {/* Upload zone */}
                 <button
-                  key={style.key}
-                  onClick={() => setSelectedStyle(style.key)}
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] transition-all border ${
-                    selectedStyle === style.key
-                      ? 'bg-[#fbbf24]/20 border-[#fbbf24]/50 text-[#fbbf24]'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
-                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || references.length >= MAX_REFS}
+                  className="w-full border-2 border-dashed border-white/10 hover:border-[#fbbf24]/30 rounded-lg p-4 flex flex-col items-center gap-2 transition-colors disabled:opacity-40"
                 >
-                  <span>{style.emoji}</span>
-                  <span>{style.label}</span>
+                  {uploading ? (
+                    <Loader2 className="w-6 h-6 text-[#fbbf24] animate-spin" />
+                  ) : (
+                    <Upload className="w-6 h-6 text-white/20" />
+                  )}
+                  <span className="text-[9px] text-white/30">
+                    {uploading ? 'Import en cours…' : 'Glissez ou cliquez pour importer'}
+                  </span>
+                  <span className="text-[8px] text-white/15">JPG, PNG — max 5 Mo — {references.length}/{MAX_REFS}</span>
                 </button>
-              ))}
-            </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png"
+                  multiple
+                  className="hidden"
+                  onChange={e => handleUpload(e.target.files)}
+                />
+
+                {/* Reference grid */}
+                {loadingRefs ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="w-4 h-4 text-white/20 animate-spin" />
+                  </div>
+                ) : references.length === 0 ? (
+                  <p className="text-center text-[9px] text-white/20 py-4">
+                    Aucune image importée pour ce site
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {references.map(ref => (
+                      <div
+                        key={ref.path}
+                        className={`relative group rounded overflow-hidden cursor-pointer border-2 transition-all ${
+                          selectedRef?.path === ref.path
+                            ? 'border-[#fbbf24] ring-1 ring-[#fbbf24]/30'
+                            : 'border-transparent hover:border-white/20'
+                        }`}
+                        onClick={() => {
+                          setSelectedRef(selectedRef?.path === ref.path ? null : ref);
+                          if (selectedRef?.path !== ref.path) setTab('generate');
+                        }}
+                      >
+                        <img src={ref.url} alt={ref.name} className="w-full aspect-square object-cover" />
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDeleteRef(ref); }}
+                          className="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-2.5 h-2.5 text-white/70" />
+                        </button>
+                        {selectedRef?.path === ref.path && (
+                          <div className="absolute bottom-0 inset-x-0 bg-[#fbbf24]/90 text-[#0f0a1e] text-[7px] text-center py-0.5 font-semibold">
+                            ✓ Sélectionnée
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[8px] text-white/20 leading-relaxed">
+                  Sélectionnez une image puis passez à l'onglet <strong>Générer</strong> pour l'utiliser comme référence visuelle (inspiration ou édition).
+                </p>
+              </div>
+            </ScrollArea>
           </div>
-
-          {/* Provider badge */}
-          {selectedStyle && (
-            <Badge variant="outline" className="text-[8px] border-white/10 text-white/30">
-              {ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'imagen3' ? '🔵 Imagen 3' :
-               ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'flux' ? '🟣 FLUX' : '🟢 Ideogram'}
-            </Badge>
-          )}
-
-          {/* Prompt */}
-          <div className="space-y-1">
-            <label className="text-[10px] text-white/50 uppercase tracking-wider">Prompt image</label>
-            <Textarea
-              value={imagePrompt}
-              onChange={e => setImagePrompt(e.target.value)}
-              placeholder="Décrivez l'image souhaitée…"
-              rows={3}
-              className="bg-white/5 border-white/10 text-white text-[11px] resize-none"
-            />
-          </div>
-
-          {/* Limit warning */}
-          {!canGenerate && (
-            <div className="rounded bg-red-500/10 border border-red-500/20 p-2">
-              <p className="text-[9px] text-red-400">
-                {generatedImages.length >= MAX_IMAGES
-                  ? `Maximum ${MAX_IMAGES} images atteint. Supprimez-en une pour en générer une nouvelle.`
-                  : `Maximum ${MAX_ITERATIONS} itérations atteint pour ce contenu.`}
-              </p>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      {/* Fixed footer: generate button */}
-      <div className="shrink-0 p-3 border-t border-white/10">
-        <Button
-          onClick={handleGenerate}
-          disabled={!selectedStyle || !imagePrompt || generating || !canGenerate}
-          className="w-full h-8 text-[11px] bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
-        >
-          {generating ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />Génération…</>
-          ) : (
-            <><Image className="w-3.5 h-3.5 mr-1.5" />Générer l'image</>
-          )}
-        </Button>
-      </div>
+        </>
+      )}
     </div>
   );
 }
