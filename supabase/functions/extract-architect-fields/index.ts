@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { callLovableAIJson } from '../_shared/lovableAI.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -139,35 +140,13 @@ Extract a JSON with these fields (all optional except keyword):
 
 ${p.outro}`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: lang === 'en' ? "You are a structured data extractor. Respond only in valid JSON. All text must be in English." : lang === 'es' ? "Eres un extractor de datos estructurados. Responde solo en JSON válido. Todo el texto debe estar en español." : "Tu es un extracteur de données structurées. Réponds uniquement en JSON valide. Tout le texte doit être en français." },
-          { role: "user", content: extractionPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      console.error("[extract-architect-fields] AI error:", aiResponse.status);
-      return new Response(JSON.stringify({ error: "AI extraction failed" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const aiData = await aiResponse.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || '{}';
-    
     let draftData: Record<string, any>;
     try {
-      draftData = JSON.parse(rawContent);
+      draftData = await callLovableAIJson<Record<string, any>>({
+        system: lang === 'en' ? "You are a structured data extractor. Respond only in valid JSON. All text must be in English." : lang === 'es' ? "Eres un extractor de datos estructurados. Responde solo en JSON válido. Todo el texto debe estar en español." : "Tu es un extracteur de données structurées. Réponds uniquement en JSON valide. Tout le texte doit être en français.",
+        user: extractionPrompt,
+        model: 'google/gemini-2.5-flash-lite',
+      });
     } catch {
       console.error("[extract-architect-fields] Failed to parse AI response:", rawContent.slice(0, 200));
       draftData = {};

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
+import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,55 +49,39 @@ serve(async (req) => {
     let translatedMessage = raw_message;
     let category = 'bug_ui';
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (LOVABLE_API_KEY) {
+    if (isLovableAIConfigured()) {
       try {
-        const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash-lite',
-            messages: [
-              {
-                role: 'system',
-                content: `Tu es un traducteur technique. L'utilisateur signale un problème sur une app SaaS SEO (crawlers.fr).
+        const aiResp = await callLovableAI({
+          system: `Tu es un traducteur technique. L'utilisateur signale un problème sur une app SaaS SEO (crawlers.fr).
 Traduis son message en description technique exploitable pour un développeur CTO.
 Classe le signalement dans une catégorie: bug_ui, bug_data, bug_function, feature_request, question.
-Réponds UNIQUEMENT en JSON: {"translated": "...", "category": "..."}`
-              },
-              {
-                role: 'user',
-                content: `Route: ${route || 'inconnue'}\nMessage utilisateur: ${raw_message}\nContexte: ${JSON.stringify(context_data || {})}`
+Réponds UNIQUEMENT en JSON: {"translated": "...", "category": "..."}`,
+          user: `Route: ${route || 'inconnue'}\nMessage utilisateur: ${raw_message}\nContexte: ${JSON.stringify(context_data || {})}`,
+          model: 'google/gemini-2.5-flash-lite',
+          tools: [{
+            type: 'function',
+            function: {
+              name: 'classify_report',
+              description: 'Classify and translate a bug report',
+              parameters: {
+                type: 'object',
+                properties: {
+                  translated: { type: 'string', description: 'Technical translation of the user message' },
+                  category: { type: 'string', enum: ['bug_ui', 'bug_data', 'bug_function', 'feature_request', 'question'] }
+                },
+                required: ['translated', 'category'],
+                additionalProperties: false
               }
-            ],
-            tools: [{
-              type: 'function',
-              function: {
-                name: 'classify_report',
-                description: 'Classify and translate a bug report',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    translated: { type: 'string', description: 'Technical translation of the user message' },
-                    category: { type: 'string', enum: ['bug_ui', 'bug_data', 'bug_function', 'feature_request', 'question'] }
-                  },
-                  required: ['translated', 'category'],
-                  additionalProperties: false
-                }
-              }
-            }],
-            tool_choice: { type: 'function', function: { name: 'classify_report' } }
-          }),
+            }
+          }],
+          toolChoice: { type: 'function', function: { name: 'classify_report' } },
         });
 
-        if (aiResp.ok) {
-          const aiData = await aiResp.json();
-          const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-          if (toolCall) {
-            const parsed = JSON.parse(toolCall.function.arguments);
-            translatedMessage = parsed.translated || raw_message;
-            category = parsed.category || 'bug_ui';
-          }
+        const toolCall = aiResp.toolCalls?.[0] as any;
+        if (toolCall) {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          translatedMessage = parsed.translated || raw_message;
+          category = parsed.category || 'bug_ui';
         }
       } catch (e) {
         console.error('AI translation failed, using raw message:', e);

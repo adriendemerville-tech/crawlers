@@ -3,6 +3,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { callOpenRouter } from '../_shared/openRouterAI.ts'
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -17,7 +18,6 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
  * 4. Only modify prompts when statistical evidence supports it
  */
 
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
 // Supabase client via _shared/supabaseClient.ts (singleton)
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -151,33 +151,23 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
 
 // ─── LLM call ────────────────────────────────────────────────────────
 async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ content: string; tokens: { input: number; output: number } }> {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://crawlers.fr',
-      'X-Title': 'Crawlers CTO Agent v2',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.2,
-      max_tokens: 4000,
-    }),
-  })
+  const resp = await callOpenRouter({
+    model: 'anthropic/claude-3.5-sonnet',
+    system: systemPrompt,
+    user: userPrompt,
+    temperature: 0.2,
+    maxTokens: 4000,
+    title: 'Crawlers CTO Agent v2',
+  });
 
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content || ''
-  const tokens = {
-    input: data.usage?.prompt_tokens || 0,
-    output: data.usage?.completion_tokens || 0,
-  }
   trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet')
-  return { content, tokens }
+  return {
+    content: resp.content,
+    tokens: {
+      input: resp.usage?.prompt_tokens || 0,
+      output: resp.usage?.completion_tokens || 0,
+    },
+  }
 }
 
 // ─── Response parser ─────────────────────────────────────────────────

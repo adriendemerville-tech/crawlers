@@ -1,12 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
-
-/**
- * normalize-quiz-options — One-time cleanup to equalize answer lengths
- * Makes wrong answers as plausible and similar in length as correct ones
- */
-
-const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+import { callLovableAIText } from '../_shared/lovableAI.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,8 +8,7 @@ Deno.serve(async (req) => {
   }
 
   const supabase = getServiceClient();
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
-  if (!apiKey) throw new Error('LOVABLE_API_KEY not configured');
+  if (!Deno.env.get('LOVABLE_API_KEY')) throw new Error('LOVABLE_API_KEY not configured');
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -71,23 +64,12 @@ Réponds UNIQUEMENT en JSON :
   { "id": "...", "options": ["...", "...", "..."], "correct_index": 0 }
 ]`;
 
-    const llmResp = await fetch(LOVABLE_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'Tu normalises des options de quiz. Réponds uniquement en JSON valide.' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
+    const raw = await callLovableAIText({
+      system: 'Tu normalises des options de quiz. Réponds uniquement en JSON valide.',
+      user: prompt,
+      temperature: 0.7,
+      maxTokens: 4000,
     });
-
-    if (!llmResp.ok) throw new Error(`LLM error: ${llmResp.status}`);
-    const llmData = await llmResp.json();
-    const raw = llmData.choices?.[0]?.message?.content || '';
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No JSON in LLM response');
 
