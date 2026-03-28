@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "next-themes";
 import { ScrollToTop } from "@/components/ScrollToTop";
-import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
+import { SessionHeartbeatManager } from "@/components/SessionHeartbeatManager";
 
 // Lazy load providers not needed for first paint
 const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
