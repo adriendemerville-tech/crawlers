@@ -394,6 +394,73 @@ const TIER_NAMES: Record<number, string> = {
   9: 'Gap par création', 10: 'Expansion sémantique',
 };
 
+// ═══ PAGE TYPE DETECTION ═══
+function detectPageType(item: any): 'landing' | 'product' | 'article' | null {
+  const url = (item.target_url || '').toLowerCase();
+  const cat = (item.finding_category || '').toLowerCase();
+  const title = (item.title || '').toLowerCase();
+  const desc = (item.description || '').toLowerCase();
+  const op = (item.target_operation || '').toLowerCase();
+  const combined = `${url} ${cat} ${title} ${desc}`;
+
+  // 1. Workbench category signals (priority)
+  if (['content_gap', 'content_freshness', 'missing_terms'].includes(cat) && op === 'create') return 'article';
+  if (cat === 'missing_page' && (combined.includes('guide') || combined.includes('article') || combined.includes('blog'))) return 'article';
+  if (cat === 'missing_page' && (combined.includes('landing') || combined.includes('service') || combined.includes('offre'))) return 'landing';
+  if (cat === 'content_upgrade' && (combined.includes('produit') || combined.includes('product') || combined.includes('fiche'))) return 'product';
+
+  // 2. URL pattern detection (fallback)
+  if (/\/(blog|article|actualite|guide|conseil|tutoriel)/.test(url)) return 'article';
+  if (/\/(produit|product|shop|boutique|fiche|item)/.test(url)) return 'product';
+  if (/\/(landing|lp-|offre|solution|service|decouvrir|essai)/.test(url)) return 'landing';
+
+  // 3. Intent signals
+  if (combined.match(/comment|pourquoi|guide|tutoriel|conseils|erreurs/)) return 'article';
+  if (combined.match(/acheter|prix|avis|livraison|stock|fiche produit/)) return 'product';
+  if (combined.match(/conversion|signup|demo|essai|devis|offre/)) return 'landing';
+
+  // 4. Default based on operation
+  if (op === 'create') return 'article'; // Most created content is editorial
+  return null;
+}
+
+async function loadPromptTemplates(supabase: ReturnType<typeof getServiceClient>): Promise<Map<string, any>> {
+  const { data, error } = await supabase
+    .from('content_prompt_templates')
+    .select('*')
+    .eq('is_active', true);
+  
+  const map = new Map<string, any>();
+  if (data && !error) {
+    for (const t of data) map.set(t.page_type, t);
+  }
+  return map;
+}
+
+function buildTemplateInstructions(template: any): string {
+  if (!template) return '';
+  return `
+═══ TEMPLATE DE CONTENU: ${template.label.toUpperCase()} ═══
+
+${template.system_prompt}
+
+STRUCTURE OBLIGATOIRE:
+${template.structure_template}
+
+RÈGLES SEO:
+${template.seo_rules}
+
+RÈGLES GEO (OPTIMISATION IA GÉNÉRATIVE):
+${template.geo_rules}
+
+TON ET STYLE:
+${template.tone_guidelines}
+
+EXEMPLES DE RÉFÉRENCE:
+${JSON.stringify(template.examples, null, 2)}
+═══ FIN TEMPLATE ═══`;
+}
+
 async function prescribeWithDualPrompts(context: {
   domain: string;
   cycle_number: number;
@@ -406,6 +473,7 @@ async function prescribeWithDualPrompts(context: {
   tracked_site_id: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const supabase = getServiceClient();
   if (!LOVABLE_API_KEY) return null;
 
   const items = context.scoredWorkbenchItems;
