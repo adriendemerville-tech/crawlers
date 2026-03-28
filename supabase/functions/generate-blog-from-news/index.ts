@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { callLovableAI } from '../_shared/lovableAI.ts';
 
 /**
  * Blog Article Generator v2

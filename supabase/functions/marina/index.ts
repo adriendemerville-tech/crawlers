@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
+import { callLovableAIText } from '../_shared/lovableAI.ts';
 
 /**
  * Edge Function: Marina
@@ -1167,37 +1168,20 @@ ${thinBlock}
 
 Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority 1"},{"title":"...","description":"...","priority":"Priority 2"},{"title":"...","description":"...","priority":"Priority 3"}]`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: 'You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.' },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: 2048,
-    }),
-    signal: AbortSignal.timeout(45_000),
-  });
-
-  if (!response.ok) {
-    console.warn(`[Marina] Lite Stratège API error: ${response.status}`);
-    return [];
-  }
-
-  const result = await response.json();
-  const content = result?.choices?.[0]?.message?.content || '';
-  
-  // Extract JSON array from response
-  const jsonMatch = content.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) return [];
-  
   try {
-    const parsed = JSON.parse(jsonMatch[0]);
+    const content = await callLovableAIText({
+      system: 'You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.',
+      user: prompt,
+      maxTokens: 2048,
+      signal: AbortSignal.timeout(45_000),
+    });
+  
+    // Extract JSON array from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+  
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
     return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
   } catch {
     return [];
