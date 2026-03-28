@@ -8,6 +8,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { writeIdentity } from '../_shared/identityGateway.ts'
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
@@ -173,6 +174,8 @@ interface HtmlAnalysis {
   orphanRisk?: boolean; // page has < 3 internal links
   // Misplaced structural tags (outside <head>)
   misplacedHeadTags?: string[];
+  // CMS / Platform detection
+  detectedCMS?: string | null;
 }
 
 interface RobotsAnalysis {
@@ -306,6 +309,37 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     // ═══ HSTS DETECTION ═══
     const hstsHeader = headResponse?.headers.get('Strict-Transport-Security') || null;
     const hasHSTS = !!hstsHeader;
+
+    // ═══ CMS / PLATFORM DETECTION ═══
+    const detectedCMS = (() => {
+      const xPowered = headResponse?.headers.get('X-Powered-By')?.toLowerCase() || '';
+      const serverHeader = headResponse?.headers.get('Server')?.toLowerCase() || '';
+      const generator = (html.match(/<meta[^>]*name=["']generator["'][^>]*content=["']([^"']*)["']/i) || [])[1] || '';
+      const lowerHtml = html.toLowerCase();
+      
+      if (/wp-content|wp-includes|wordpress/i.test(html) || /wordpress/i.test(generator)) return 'WordPress';
+      if (/shopify/i.test(html) || /shopify/i.test(xPowered)) return 'Shopify';
+      if (/wix\.com/i.test(html)) return 'Wix';
+      if (/squarespace/i.test(html)) return 'Squarespace';
+      if (/webflow/i.test(html)) return 'Webflow';
+      if (/prestashop/i.test(html) || /prestashop/i.test(generator)) return 'PrestaShop';
+      if (/magento|mage/i.test(html) || /magento/i.test(xPowered)) return 'Magento';
+      if (/drupal/i.test(html) || /drupal/i.test(generator) || /drupal/i.test(xPowered)) return 'Drupal';
+      if (/joomla/i.test(generator) || /joomla/i.test(xPowered)) return 'Joomla';
+      if (/ghost/i.test(xPowered) || /ghost/i.test(generator)) return 'Ghost';
+      if (/hubspot/i.test(html)) return 'HubSpot';
+      if (/typo3/i.test(generator)) return 'TYPO3';
+      if (/contentful/i.test(html)) return 'Contentful';
+      if (/strapi/i.test(xPowered)) return 'Strapi';
+      if (/__NEXT_DATA__/i.test(html)) return 'Next.js';
+      if (/__NUXT__/i.test(html)) return 'Nuxt.js';
+      if (/gatsby/i.test(html) || /gatsby/i.test(generator)) return 'Gatsby';
+      if (/framer/i.test(html)) return 'Framer';
+      if (lowerHtml.includes('duda.co')) return 'Duda';
+      if (lowerHtml.includes('jimdo')) return 'Jimdo';
+      return null;
+    })();
+    if (detectedCMS) console.log(`[analyzeHtml] 🔧 CMS detected: ${detectedCMS}`);
 
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
@@ -732,6 +766,8 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       // Case studies
       // HSTS
       hasHSTS,
+      // CMS detection
+      detectedCMS,
       // Schema enhanced
       hasSameAs,
       hasWikidataSameAs,
@@ -917,6 +953,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       socialLinksCount: 0,
       linkedInLinksCount: 0,
       hasHSTS: false,
+      detectedCMS: null,
       hasSameAs: false,
       hasWikidataSameAs: false,
       hasAuthorInJsonLd: false,
@@ -2510,6 +2547,34 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
     
     // ═══ SPA DETECTION FLAG ═══
     const isSPA = !!(htmlAnalysis.hasSPAMarkers && htmlAnalysis.isContentJSDependent);
+
+    // ═══ ENRICH IDENTITY CARD (fire-and-forget) ═══
+    if (htmlAnalysis.detectedCMS) {
+      // Try to find the tracked site and write CMS via gateway
+      const identityFields: Record<string, unknown> = { cms_platform: htmlAnalysis.detectedCMS };
+      getSiteContext(getUserClient(registryAuthHeader || ''), { domain })
+        .then(ctx => {
+          if (!ctx) return;
+          // We need the site ID — re-fetch it
+          const sb = getUserClient(registryAuthHeader || '');
+          return sb.from('tracked_sites').select('id').ilike('domain', `%${domain}%`).limit(1).maybeSingle()
+            .then(({ data }) => {
+              if (data?.id) {
+                return writeIdentity({
+                  siteId: data.id,
+                  fields: identityFields,
+                  source: 'expert_audit',
+                });
+              }
+            });
+        })
+        .then(result => {
+          if (result?.applied?.length) {
+            console.log(`[expert-audit] 🏗️ Identity enriched: cms_platform=${htmlAnalysis.detectedCMS}`);
+          }
+        })
+        .catch(err => console.warn('[expert-audit] Identity enrichment failed (non-fatal):', err));
+    }
 
     const responseBody = {
       success: true,
