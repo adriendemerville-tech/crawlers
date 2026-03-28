@@ -6,14 +6,15 @@ Updated: 2026-03-28
 ### Principe
 L'orchestrateur Parménion distingue strictement les canaux de déploiement selon le type de correctif prescrit par le LLM.
 
-### 4 canaux de sortie
+### 5 canaux de sortie
 
 | Canal | Payload LLM | Destination | Exemples |
 |-------|------------|-------------|----------|
 | `emit_code` | JS injectable, CSS, scripts | `generate-corrective-code` | Fix LCP, lazy-loading, schema.org dynamique |
+| `emit_code_deploy` | Code correctif prêt | `cms-push-code` | Push du JS correctif dans WordPress, Shopify, Drupal, Webflow, PrestaShop, Odoo (fallback widget.js) |
 | `emit_corrective_data` | JSON, meta, structured data | `iktracker-actions` (update-page) | robots.txt, sitemap entries, JSON-LD |
 | `emit_corrective_content` | H1, H2, paragraphes existants | `iktracker-actions` (update-page) | Réécriture titre, enrichissement contenu |
-| `emit_editorial_content` | Nouveaux articles, nouvelles pages | `iktracker-actions` (create-post) | Articles de blog, pages FAQ, landing pages |
+| `emit_editorial_content` | Nouveaux articles, nouvelles pages | `iktracker-actions` (create-post) / `cms-push-draft` | Articles de blog, pages FAQ, landing pages |
 
 ### Règles de groupement
 - **Lot TECHNIQUE** : `emit_code` + `emit_corrective_data` (même prompt LLM)
