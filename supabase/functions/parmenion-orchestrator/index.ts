@@ -519,7 +519,7 @@ RÈGLES:
     promises.push(Promise.resolve([]));
   }
 
-  // ── PROMPT CONTENU (tiers 4-10) avec templates SEO/GEO par type de page ──
+  // ── PROMPT CONTENU (tiers 4-10) avec templates SEO/GEO + enrichissement keywords ──
   if (contentItems.length > 0) {
     // Load prompt templates from DB
     const templates = await loadPromptTemplates(supabase);
@@ -531,7 +531,6 @@ RÈGLES:
       if (pageType && templates.has(pageType) && !typeInstructions.has(pageType)) {
         typeInstructions.set(pageType, buildTemplateInstructions(templates.get(pageType)));
       }
-      // Tag the item with detected type for logging
       item._detected_page_type = pageType;
     }
     
@@ -539,13 +538,19 @@ RÈGLES:
       ? `\n\nTEMPLATES PAR TYPE DE PAGE (APPLIQUE LE TEMPLATE CORRESPONDANT AU TYPE DÉTECTÉ):\n${Array.from(typeInstructions.values()).join('\n\n')}`
       : '';
 
-    console.log(`[Parménion] 📄 Content items page types: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
+    // ── KEYWORD ENRICHMENT: aggregate from multiple sources ──
+    const keywordEnrichment = await enrichKeywordsForPrescribe(supabase, context.domain, context.tracked_site_id, contentItems);
+
+    console.log(`[Parménion] 📄 Content items: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
+    console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
 
     const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
 Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
 ${siteCtx}
 ${kwCtx}
+
+${keywordEnrichment.promptBlock}
 
 ITEMS À TRAITER (par ordre de priorité):
 ${buildItemsList(contentItems)}
@@ -557,6 +562,7 @@ RÈGLES GÉNÉRALES:
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - Pour les articles: 800-1500 mots minimum, slug en kebab-case sans accents
 - Inclure 3-5 liens internes vers les pages existantes du site
+- UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps). Chaque mot-clé principal DOIT apparaître au moins 1 fois.
 
 RÈGLES SEO/GEO CRITIQUES:
 - Chaque H2 doit contenir au moins 1 passage citable autonome (40-80 mots) exploitable par les LLM
