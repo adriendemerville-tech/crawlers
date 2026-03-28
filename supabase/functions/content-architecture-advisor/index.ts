@@ -94,12 +94,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Fair use check (hourly/daily)
-    const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
-    if (!fairUse.allowed) {
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // Fair use check (hourly/daily) — skip for service role
+    if (!isServiceRole) {
+      const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 200/mo)
