@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
+import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw, Upload, Lock } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ interface CocoonContentArchitectModalProps {
   trackedSiteId?: string;
   hasCmsConnection?: boolean;
   draftData?: Record<string, any> | null;
+  prefillUrl?: string;
+  isExistingPage?: boolean;
 }
 
 const PAGE_TYPES = [
@@ -40,7 +42,7 @@ const LENGTHS = [
   { value: 'pillar', label: 'Pilier (3000+ mots)' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
@@ -51,6 +53,20 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [generatedImages, setGeneratedImages] = useState<import('./ImageStylePicker').GeneratedImageItem[]>([]);
   const [imageIterations, setImageIterations] = useState(0);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
+
+  // Workflow step: 1=config, 2=content generated, 3=images available
+  const workflowStep = useMemo(() => {
+    if (result) return 3; // content generated → images unlocked
+    if (loading) return 2; // generating
+    return 1; // config only
+  }, [result, loading]);
+
+  // Auto-fill URL from Stratège prefill
+  useEffect(() => {
+    if (isOpen && prefillUrl && !url) {
+      setUrl(prefillUrl);
+    }
+  }, [isOpen, prefillUrl]);
 
   // Form fields
   const [url, setUrl] = useState('');
