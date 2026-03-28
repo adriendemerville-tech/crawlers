@@ -4,6 +4,7 @@ import { getSiteContext, extractDomain } from '../_shared/getSiteContext.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { checkFairUse, checkMonthlyFairUse } from '../_shared/fairUse.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType } from '../_shared/contentBrief.ts'
 
 /**
  * content-architecture-advisor
@@ -548,12 +549,32 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     const isNonProfit = ['service_public', 'association', 'ong', 'organisation_internationale', 'federation_sportive', 'syndicat'].includes(siteIdentity?.nonprofit_type || '')
     const jargonDist = typeof siteIdentity?.jargon_distance === 'number' ? siteIdentity.jargon_distance : null
 
+    // ── BUILD CONTENT BRIEF (deterministic, pre-LLM) ──
+    const contentBrief = await buildContentBrief({
+      page_type: page_type as BriefPageType,
+      keyword,
+      target_url: url,
+      domain,
+      tracked_site_id: resolvedSiteId || '',
+      title: '',
+      finding_category: '',
+      sector: siteIdentity?.sector || '',
+      jargon_distance: jargonDist,
+      language: language_code,
+      secondary_keywords: workbenchKeywords.map((k: any) => k.payload?.keyword || k.title).filter(Boolean).slice(0, 10),
+      supabase: serviceClient,
+    })
+    const briefBlock = briefToPromptBlock(contentBrief)
+    console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}`)
+
     const userPrompt = `Analyse et recommande l'architecture de contenu optimale pour:
 
 **Page cible:** ${url}
 **Mot-clé principal:** ${keyword}  
 **Type de page:** ${page_type}
 **Langue:** ${language_code}
+
+${briefBlock}
 
 ${strategic_objectives?.length ? `
 ── OBJECTIFS STRATÉGIQUES MULTIPLES ──
