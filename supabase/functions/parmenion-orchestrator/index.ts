@@ -701,6 +701,35 @@ RÈGLES:
     console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
     console.log(`[Parménion] 📋 ContentBrief: type=${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}`);
 
+    // ── LOG GENERATION for performance correlation training ──
+    try {
+      const siteInfo = context.siteInfo || {};
+      await supabase.from('content_generation_logs').insert({
+        user_id: context.user_id,
+        tracked_site_id: context.tracked_site_id,
+        domain: context.domain,
+        market_sector: siteInfo.market_sector || null,
+        page_type: briefPageType,
+        target_url: topContentItem?.target_url || `https://${context.domain}`,
+        keyword: primaryKw,
+        brief_tone: contentBrief.tone,
+        brief_angle: contentBrief.angle,
+        brief_length_target: contentBrief.target_length,
+        brief_h2_count: contentBrief.h2_count.max,
+        brief_h3_count: contentBrief.h3_count.max,
+        brief_cta_count: contentBrief.cta.length,
+        brief_internal_links_count: contentBrief.internal_links.length,
+        brief_schema_types: contentBrief.schema_types,
+        brief_eeat_signals: contentBrief.eeat_signals,
+        brief_geo_passages: contentBrief.geo_citable_passages,
+        preset_id: null, // TODO: link when preset is loaded
+        source: 'parmenion',
+      });
+      console.log(`[Parménion] 📊 Generation logged for correlation training`);
+    } catch (e) {
+      console.warn('[Parménion] Failed to log generation:', e);
+    }
+
     const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
 Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
