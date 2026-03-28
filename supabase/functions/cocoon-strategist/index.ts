@@ -562,6 +562,28 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 2c: Inject keyword cloud as reference universe
+    // ═══════════════════════════════════════════════════════════
+    if (keywordCloud.length > 0) {
+      for (const f of allFindings) {
+        if (f.data) {
+          f.data.keyword_cloud_universe = keywordCloud;
+        }
+      }
+      // If no keyword_gaps finding exists, add one from the keyword cloud
+      const hasKeywordFinding = allFindings.some(f => f.category === 'keyword_gaps');
+      if (!hasKeywordFinding) {
+        allFindings.push({
+          category: 'keyword_gaps',
+          severity: 'info',
+          description: `Univers de mots-clés de référence (${keywordCloud.length} termes): ${keywordCloud.slice(0, 10).join(', ')}`,
+          affected_urls: [],
+          source_type: 'serp_snapshots',
+          data: { keyword_cloud_universe: keywordCloud },
+        });
+      }
+    }
+
     // PHASE 3: Transformer findings en tâches stratégiques
     // ═══════════════════════════════════════════════════════════
     const rawTasks: StrategicTask[] = [];
