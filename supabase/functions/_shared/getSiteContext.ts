@@ -62,6 +62,18 @@ export async function getSiteContext(
   supabase: any,
   params: GetContextParams,
 ): Promise<SiteContext | null> {
+  // Build cache key
+  const cacheKey = 'trackedSiteId' in params && params.trackedSiteId
+    ? `id:${params.trackedSiteId}`
+    : `dom:${(params as GetByDomain).domain?.toLowerCase()}`
+
+  // Check cache first
+  const cached = getCached(cacheKey)
+  if (cached) {
+    console.log(`[getSiteContext] ⚡ Cache hit for ${cacheKey}`)
+    return cached
+  }
+
   let site: Record<string, unknown> | null = null
 
   if ('trackedSiteId' in params && params.trackedSiteId) {
@@ -80,7 +92,6 @@ export async function getSiteContext(
     }
     site = data
   } else if ('domain' in params && params.domain) {
-    // Normalize domain
     const normalizedDomain = params.domain
       .replace(/^https?:\/\//, '')
       .replace(/^www\./, '')
@@ -105,8 +116,12 @@ export async function getSiteContext(
 
   if (!site) return null
 
-  // Enrich and return
-  return ensureSiteContext(site)
+  // Enrich and cache
+  const enriched = await ensureSiteContext(site)
+  if (enriched) {
+    setCache(cacheKey, enriched)
+  }
+  return enriched
 }
 
 /**
