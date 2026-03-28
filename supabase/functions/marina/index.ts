@@ -1183,7 +1183,11 @@ Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority
     try {
       const parsed = JSON.parse(jsonMatch[0]);
     return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
-  } catch {
+    } catch {
+      return [];
+    }
+  } catch (err) {
+    console.warn(`[Marina] Lite Stratège error:`, err);
     return [];
   }
 }
