@@ -7759,6 +7759,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string
+          is_active: boolean
+          kicked_reason: string | null
+          last_heartbeat_at: string
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: string
+          is_active?: boolean
+          kicked_reason?: string | null
+          last_heartbeat_at?: string
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string
+          is_active?: boolean
+          kicked_reason?: string | null
+          last_heartbeat_at?: string
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_stats_history: {
         Row: {
           ads_budget_saved: number | null
@@ -7844,6 +7880,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      workspace_autosaves: {
+        Row: {
+          created_at: string
+          id: string
+          state_data: Json
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+          workspace_key: string
+          workspace_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          state_data?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+          workspace_key: string
+          workspace_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          state_data?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+          workspace_key?: string
+          workspace_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_autosaves_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -7998,6 +8075,7 @@ export type Database = {
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
       cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
+      cleanup_stale_sessions: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -8008,6 +8086,7 @@ export type Database = {
         Returns: number
       }
       get_database_size: { Args: never; Returns: Json }
+      get_max_sessions: { Args: { p_user_id: string }; Returns: number }
       get_site_revenue: {
         Args: {
           p_end_date: string
