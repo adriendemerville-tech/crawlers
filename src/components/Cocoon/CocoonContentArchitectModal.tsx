@@ -165,9 +165,10 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
         // Auto-fill keyword from top finding if not set
         if (!keyword && !autoFilled.has('keyword')) {
-          const keywordFinding = findings.find((f: any) => f.payload?.keyword || f.payload?.target_keyword);
+          const keywordFinding = findings.find((f: any) => (f.payload as any)?.keyword || (f.payload as any)?.target_keyword);
           if (keywordFinding) {
-            const kw = keywordFinding.payload?.keyword || keywordFinding.payload?.target_keyword;
+            const p = keywordFinding.payload as any;
+            const kw = p?.keyword || p?.target_keyword;
             if (kw) {
               setKeyword(kw);
               setAutoFilled(prev => new Set(prev).add('keyword'));
@@ -177,9 +178,10 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
         // Auto-fill competitor URL from SERP findings
         if (!competitorUrl && !autoFilled.has('competitorUrl')) {
-          const serpFinding = findings.find((f: any) => f.payload?.competitor_url || f.payload?.serp_competitor);
+          const serpFinding = findings.find((f: any) => (f.payload as any)?.competitor_url || (f.payload as any)?.serp_competitor);
           if (serpFinding) {
-            const comp = serpFinding.payload?.competitor_url || serpFinding.payload?.serp_competitor;
+            const sp = serpFinding.payload as any;
+            const comp = sp?.competitor_url || sp?.serp_competitor;
             if (comp) {
               setCompetitorUrl(comp);
               setAutoFilled(prev => new Set(prev).add('competitorUrl'));
