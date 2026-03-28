@@ -498,16 +498,25 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           <div className="w-[340px] shrink-0 border-r border-white/10 flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">URL cible</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  URL cible
+                  {autoFilled.has('url') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">Mot-clé cible</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Mot-clé cible
+                  {autoFilled.has('keyword') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Input value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="mot-clé principal" className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">Type de page</label>
-                <Select value={pageType} onValueChange={setPageType}>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Type de page
+                  {url && detectPageTypeFromUrl(url) && <span className="text-[9px] text-[#fbbf24]/60 normal-case">détecté</span>}
+                </label>
+                <Select value={pageType} onValueChange={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}>
                   <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>{PAGE_TYPES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
                 </Select>
@@ -520,11 +529,17 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">URL concurrent</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  URL concurrent
+                  {autoFilled.has('competitorUrl') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Input value={competitorUrl} onChange={e => setCompetitorUrl(e.target.value)} placeholder="https://concurrent.com/page" className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">Lien CTA cible</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Lien CTA cible
+                  {autoFilled.has('ctaLink') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Input value={ctaLink} onChange={e => setCtaLink(e.target.value)} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
@@ -532,11 +547,17 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <Input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} placeholder="URL image ou description" className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">Ton souhaité</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Ton souhaité
+                  {autoFilled.has('tone') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Input value={tone} onChange={e => setTone(e.target.value)} placeholder="Expert, accessible, commercial…" className="bg-white/5 border-white/10 text-white text-xs h-8" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] text-white/50 uppercase tracking-wider">Instructions spécifiques</label>
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Instructions spécifiques
+                  {autoFilled.has('prompt') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
                 <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Ex: Inclure un tableau comparatif…" rows={2} className="bg-white/5 border-white/10 text-white text-xs resize-none" />
               </div>
             </div>
