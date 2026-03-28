@@ -275,8 +275,8 @@ function ProfileContent() {
                     onClick={() => setShowContentArchitect(true)}
                     className="gap-1.5 text-xs text-[hsl(var(--accent-foreground))] hover:bg-accent/50 h-8 px-2.5 ml-1"
                   >
-                    <PenLine className="h-3.5 w-3.5 text-[#fbbf24]" />
-                    <span className="hidden lg:inline">Content Architect</span>
+                    <PenLine className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">Content</span>
                   </Button>
                 )}
               </TabsList>
