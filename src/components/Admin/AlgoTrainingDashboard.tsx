@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff, AlertTriangle, Link2, DollarSign, Search, Sparkles, Building2, Play, Loader2 } from 'lucide-react';
+import { Brain, Network, Target, BarChart3, TrendingDown, GitMerge, ArrowLeftRight, Diff, AlertTriangle, Link2, DollarSign, Search, Sparkles, Building2, Play, Loader2, FileBarChart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -257,6 +257,25 @@ const ALGOS: AlgoConfig[] = [
       { label: 'Type', value: 'Statistique' },
       { label: 'Min. data', value: '100 domaines/secteur' },
       { label: 'Output', value: 'Percentile rank' },
+    ],
+  },
+  {
+    id: 'content-perf-correlation',
+    name: 'Content Performance Correlator',
+    description: 'Corrèle les features de brief (ton, angle, longueur, H2, CTA, liens internes, passages GEO) avec les deltas GSC/GEO/LLM à T+30 et T+90. Agrégation anonyme cross-utilisateurs par page_type × market_sector.',
+    tier: 2,
+    tierLabel: 'Données 3-6 mois',
+    icon: FileBarChart,
+    trainingScore: 5,
+    dataRequirement: 'content_generation_logs + gsc_weekly_snapshots + llm_visibility_snapshots (50+ générations complètes)',
+    status: 'collecting',
+    enabled: true,
+    edgeFunction: 'content-perf-aggregator',
+    metrics: [
+      { label: 'Type', value: 'Corrélation cross-user' },
+      { label: 'Cron', value: 'Hebdo lundi 3h UTC' },
+      { label: 'Tables', value: 'content_generation_logs → content_performance_correlations' },
+      { label: 'Confiance', value: 'A (≥20) / B (≥10) / C (≥5) / F (<5)' },
     ],
   },
   {
