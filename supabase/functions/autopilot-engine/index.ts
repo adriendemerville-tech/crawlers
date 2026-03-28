@@ -734,6 +734,57 @@ Deno.serve(async (req: Request) => {
                   }
                 }
                 continue;
+              } else if (funcName === 'cms-patch-content' && Array.isArray(decision.action.payload?.patch_actions)) {
+                // ── CMS Patch Content: partial content updates on existing pages ──
+                const MAX_PATCH_ACTIONS = 10;
+                const patchActions = decision.action.payload.patch_actions.slice(0, MAX_PATCH_ACTIONS);
+                console.log(`[AutopilotEngine] Executing ${patchActions.length} CMS patch-content actions for ${site.domain}`);
+
+                for (const patchAction of patchActions) {
+                  try {
+                    const patches = patchAction.patches || [{
+                      zone: patchAction.zone || 'body_section',
+                      action: 'replace',
+                      value: patchAction.body?.content || patchAction.value || '',
+                      old_value: patchAction.body?.old_value || patchAction.old_value,
+                    }];
+
+                    const patchBody = {
+                      tracked_site_id: config.tracked_site_id,
+                      target_url: patchAction.target_url || patchAction.url || `https://${site.domain}`,
+                      cms_post_id: patchAction.cms_post_id,
+                      patches,
+                    };
+
+                    const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/cms-patch-content`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(patchBody),
+                    });
+
+                    const funcResult = await funcResponse.json().catch(() => ({}));
+                    executionResults.push({
+                      function: 'cms-patch-content',
+                      target_url: patchBody.target_url,
+                      status: funcResponse.ok && funcResult.success ? 'success' : 'error',
+                      patches_applied: funcResult.patches_applied,
+                      patches_failed: funcResult.patches_failed,
+                      result: funcResult,
+                    });
+                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                  } catch (actionErr) {
+                    executionResults.push({
+                      function: 'cms-patch-content',
+                      status: 'error',
+                      detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
+                    });
+                    executionSuccess = false;
+                  }
+                }
+                continue;
               } else {
                 // ── Special handling for generate-corrective-code: ensure fixes array ──
                 let funcBody: Record<string, unknown> = {
