@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { prompt, style, width, height, aspectRatio, negativePrompt, provider } = body;
+    const { prompt, style, width, height, aspectRatio, negativePrompt, provider, referenceImageUrl, referenceMode } = body;
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length < 3) {
       return new Response(JSON.stringify({ error: "prompt required (min 3 chars)" }), {
@@ -68,6 +68,8 @@ serve(async (req) => {
       height: height || undefined,
       aspectRatio: aspectRatio || undefined,
       negativePrompt: negativePrompt || undefined,
+      referenceImageUrl: referenceImageUrl || undefined,
+      referenceMode: referenceMode || undefined,
     });
 
     await trackTokenUsage('generate-image', result.provider, {
