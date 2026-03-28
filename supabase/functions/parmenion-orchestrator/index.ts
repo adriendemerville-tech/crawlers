@@ -38,6 +38,24 @@ function isIktrackerDomain(domain: string): boolean {
   return domain.toLowerCase().includes('iktracker');
 }
 
+/** Normalize a page_key from LLM output: strip URLs, lowercase, extract last slug segment */
+function sanitizePageKey(raw?: string | null): string {
+  if (!raw) return 'homepage';
+  const trimmed = raw.trim();
+  // Already a clean slug
+  if (/^[a-z0-9][a-z0-9-]*$/i.test(trimmed)) return trimmed.toLowerCase();
+  // Full URL → extract path
+  try {
+    const parsed = new URL(trimmed);
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    return segments.length > 0 ? segments[segments.length - 1].toLowerCase() : 'homepage';
+  } catch {
+    const normalized = trimmed.replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+|\/+$/g, '');
+    if (!normalized) return 'homepage';
+    return normalized.split('/').filter(Boolean).pop()?.toLowerCase() || 'homepage';
+  }
+}
+
 function getNextPhase(lastPhase: PipelinePhase | undefined): PipelinePhase {
   if (!lastPhase) return 'audit';
   const idx = PIPELINE_PHASES.indexOf(lastPhase);
@@ -808,7 +826,7 @@ ${templateBlock}`;
       case 'emit_corrective_data':
         cmsActions.push({
           action: args.action || 'update-page',
-          page_key: args.page_key || args.slug,
+          page_key: sanitizePageKey(args.page_key || args.slug),
           slug: args.slug,
           updates: args.field === 'schema_org'
             ? { schema_org: args.schema_org_value || args.value }
@@ -819,7 +837,7 @@ ${templateBlock}`;
       case 'emit_corrective_content':
         cmsActions.push({
           action: args.action || 'update-page',
-          page_key: args.page_key || args.slug,
+          page_key: sanitizePageKey(args.page_key || args.slug),
           slug: args.slug,
           updates: args.updates,
           _channel: 'content_corrective',

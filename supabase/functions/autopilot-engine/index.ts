@@ -38,15 +38,22 @@ function isIktrackerDomain(domain: string): boolean {
 function normalizePageKey(targetUrl?: string | null): string | null {
   if (!targetUrl) return null;
 
+  // Already a clean slug (no slashes, no protocol) → return as-is
+  const trimmed = targetUrl.trim();
+  if (/^[a-z0-9][a-z0-9-]*$/i.test(trimmed)) return trimmed.toLowerCase();
+
   try {
-    const parsed = new URL(targetUrl);
+    const parsed = new URL(trimmed);
     const segments = parsed.pathname.split('/').filter(Boolean);
-    return segments[segments.length - 1] || parsed.pathname || null;
+    // Homepage → return 'homepage' (IKtracker needs a real slug, not '/')
+    if (segments.length === 0) return 'homepage';
+    return segments[segments.length - 1].toLowerCase();
   } catch {
-    const normalized = targetUrl.trim().replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+|\/+$/g, '');
-    if (!normalized) return null;
+    // Not a valid URL — strip protocol/domain if present
+    const normalized = trimmed.replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+|\/+$/g, '');
+    if (!normalized) return 'homepage';
     const segments = normalized.split('/').filter(Boolean);
-    return segments[segments.length - 1] || normalized;
+    return (segments[segments.length - 1] || 'homepage').toLowerCase();
   }
 }
 
@@ -452,8 +459,7 @@ Deno.serve(async (req: Request) => {
                   const isContent = ['contenu', 'content', 'content_gap', 'thin_content', 'eeat', 'autorité', 'identité', 'social'].includes(cat);
 
                   if (isMeta) {
-                    let pageKey = '/';
-                    try { pageKey = reco.url ? new URL(reco.url).pathname.replace(/^\/|\/$/g, '') || '/' : '/'; } catch {}
+                    const pageKey = normalizePageKey(reco.url) || 'homepage';
                     fallbackCmsActions.push({
                       action: 'update-page',
                       page_key: pageKey,
