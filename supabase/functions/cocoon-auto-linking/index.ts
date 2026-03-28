@@ -1,20 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-
-/**
- * Edge Function: cocoon-auto-linking
- * 
- * Analyzes a source page's content and finds optimal anchor text placements
- * for internal links to semantically related target pages.
- * 
- * Features:
- * - Pre-scan: checks if target title/H1 already appears in source text (saves API calls)
- * - AI anchor selection via Lovable AI
- * - Granular exclusion support (source/target/both)
- * - Stores results in cocoon_auto_links for reversibility
- */
-
-const AI_GATEWAY = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 
 interface AutoLinkRequest {
   tracked_site_id: string;
@@ -190,8 +176,7 @@ Deno.serve(async (req) => {
     // 8. AI anchor selection for remaining targets (if needed)
     const remainingSlots = max_links - suggestions.length;
     if (remainingSlots > 0 && needsAI.length > 0) {
-      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-      if (!LOVABLE_API_KEY) {
+      if (!isLovableAIConfigured()) {
         console.warn('LOVABLE_API_KEY not configured, skipping AI anchor selection');
       } else {
         const targetList = needsAI.slice(0, 10).map(t => 
@@ -221,73 +206,56 @@ Réponds UNIQUEMENT avec un JSON array:
 [{"target_url":"...","anchor_text":"...","context_sentence":"...","confidence":0.8}]`;
 
         try {
-          const aiResponse = await fetch(AI_GATEWAY, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                { role: 'system', content: 'Tu es un expert SEO spécialisé en maillage interne. Réponds uniquement en JSON valide.' },
-                { role: 'user', content: prompt },
-              ],
-              tools: [{
-                type: 'function',
-                function: {
-                  name: 'suggest_internal_links',
-                  description: 'Return internal link suggestions with anchor text',
-                  parameters: {
-                    type: 'object',
-                    properties: {
-                      links: {
-                        type: 'array',
-                        items: {
-                          type: 'object',
-                          properties: {
-                            target_url: { type: 'string' },
-                            anchor_text: { type: 'string' },
-                            context_sentence: { type: 'string' },
-                            confidence: { type: 'number' },
-                          },
-                          required: ['target_url', 'anchor_text', 'context_sentence', 'confidence'],
-                          additionalProperties: false,
+          const aiResp = await callLovableAI({
+            system: 'Tu es un expert SEO spécialisé en maillage interne. Réponds uniquement en JSON valide.',
+            user: prompt,
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'suggest_internal_links',
+                description: 'Return internal link suggestions with anchor text',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    links: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          target_url: { type: 'string' },
+                          anchor_text: { type: 'string' },
+                          context_sentence: { type: 'string' },
+                          confidence: { type: 'number' },
                         },
+                        required: ['target_url', 'anchor_text', 'context_sentence', 'confidence'],
+                        additionalProperties: false,
                       },
                     },
-                    required: ['links'],
-                    additionalProperties: false,
                   },
+                  required: ['links'],
+                  additionalProperties: false,
                 },
-              }],
-              tool_choice: { type: 'function', function: { name: 'suggest_internal_links' } },
-            }),
+              },
+            }],
+            toolChoice: { type: 'function', function: { name: 'suggest_internal_links' } },
           });
 
-          if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
-            const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-            if (toolCall?.function?.arguments) {
-              const parsed = JSON.parse(toolCall.function.arguments);
-              const aiLinks = parsed.links || [];
-              
-              for (const link of aiLinks.slice(0, remainingSlots)) {
-                const targetInfo = needsAI.find(t => t.url === link.target_url);
-                suggestions.push({
-                  target_url: link.target_url,
-                  target_title: targetInfo?.title || targetInfo?.h1 || link.target_url,
-                  anchor_text: link.anchor_text,
-                  context_sentence: link.context_sentence,
-                  confidence: Math.min(1, Math.max(0, link.confidence || 0.7)),
-                  pre_scan_match: false,
-                });
-              }
+          const toolCall = aiResp.toolCalls?.[0] as any;
+          if (toolCall?.function?.arguments) {
+            const parsed = JSON.parse(toolCall.function.arguments);
+            const aiLinks = parsed.links || [];
+            
+            for (const link of aiLinks.slice(0, remainingSlots)) {
+              const targetInfo = needsAI.find(t => t.url === link.target_url);
+              suggestions.push({
+                target_url: link.target_url,
+                target_title: targetInfo?.title || targetInfo?.h1 || link.target_url,
+                anchor_text: link.anchor_text,
+                context_sentence: link.context_sentence,
+                confidence: Math.min(1, Math.max(0, link.confidence || 0.7)),
+                pre_scan_match: false,
+              });
             }
-          } else if (aiResponse.status === 429) {
-            console.warn('AI rate limited, returning pre-scan results only');
-          } else if (aiResponse.status === 402) {
-            console.warn('AI credits exhausted, returning pre-scan results only');
           }
         } catch (aiErr) {
           console.error('AI anchor selection error:', aiErr);

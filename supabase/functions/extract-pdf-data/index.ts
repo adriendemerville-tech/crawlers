@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 import { corsHeaders } from '../_shared/cors.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
 
 /**
  * Edge Function: extract-pdf-data
@@ -188,40 +189,15 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
       });
     }
 
-    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': supabaseUrl,
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
-        messages,
-      }),
+    const aiResp = await callOpenRouter({
+      model: 'anthropic/claude-3.5-sonnet',
+      messages,
+      referer: supabaseUrl,
     });
 
-    if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      if (aiResponse.status === 429) {
-        await supabase.from('pdf_audits').update({ status: 'pending', error_message: 'Rate limited, will retry' }).eq('id', audit_id);
-        return new Response(JSON.stringify({ error: 'Rate limited, please retry later' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (aiResponse.status === 402) {
-        await supabase.from('pdf_audits').update({ status: 'error', error_message: 'Credits exhausted on OpenRouter' }).eq('id', audit_id);
-        return new Response(JSON.stringify({ error: 'OpenRouter credits exhausted' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      throw new Error(`AI error ${aiResponse.status}: ${errText}`);
-    }
+    const rawContent = aiResp.content;
 
-    const aiData = await aiResponse.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || '';
-
-    await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiData.usage, targetDomain);
+    await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiResp.usage, targetDomain);
     trackPaidApiCall('extract-pdf-data', 'openrouter', 'anthropic/claude-3.5-sonnet', targetDomain);
 
     // 7. Parse JSON

@@ -1,18 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
-
-/**
- * sync-quiz-crawlers — Monthly cron that regenerates Crawlers product quiz questions
- * 
- * 1. Reads SAV documentation from backendDocumentation content
- * 2. Reads current active Crawlers questions for dedup
- * 3. Generates new questions via LLM (Gemini Flash)
- * 4. Inserts them as is_active=false, auto_generated=true (pending admin validation in Félix)
- * 
- * Admin validates in Félix (Creator mode) → toggles is_active=true
- */
-
-const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+import { callLovableAIText } from '../_shared/lovableAI.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -86,30 +74,12 @@ Réponds UNIQUEMENT en JSON valide, format :
   }
 ]`;
 
-    const apiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!apiKey) throw new Error('LOVABLE_API_KEY not configured');
-
-    const llmResp = await fetch(LOVABLE_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: 'Génère les 10 questions maintenant.' },
-        ],
-        temperature: 0.8,
-        max_tokens: 4000,
-      }),
+    const raw = await callLovableAIText({
+      system: systemPrompt,
+      user: 'Génère les 10 questions maintenant.',
+      temperature: 0.8,
+      maxTokens: 4000,
     });
-
-    if (!llmResp.ok) {
-      const errText = await llmResp.text();
-      throw new Error(`LLM API error: ${llmResp.status} - ${errText}`);
-    }
-
-    const llmData = await llmResp.json();
-    const raw = llmData.choices?.[0]?.message?.content || '';
 
     // Extract JSON from response
     const jsonMatch = raw.match(/\[[\s\S]*\]/);

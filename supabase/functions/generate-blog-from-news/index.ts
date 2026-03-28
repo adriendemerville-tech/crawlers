@@ -2,6 +2,8 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { callLovableAI } from '../_shared/lovableAI.ts';
 
 /**
  * Blog Article Generator v2
@@ -285,32 +287,14 @@ Retourne UNIQUEMENT un JSON valide avec :
 
     console.log("[blog-gen v2] Step 2: Calling Perplexity Sonar...");
 
-    const searchRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${openRouterKey}`,
-        "HTTP-Referer": "https://crawlers.fr",
-        "X-Title": "Crawlers.fr Blog Generator v2",
-      },
-      body: JSON.stringify({
-        model: "perplexity/sonar",
-        messages: [
-          { role: "system", content: "Tu es un chercheur expert en SEO et IA. Retourne uniquement du JSON valide, sans markdown." },
-          { role: "user", content: searchPrompt },
-        ],
-        temperature: 0.3,
-      }),
+    const searchResp = await callOpenRouter({
+      model: 'perplexity/sonar',
+      system: "Tu es un chercheur expert en SEO et IA. Retourne uniquement du JSON valide, sans markdown.",
+      user: searchPrompt,
+      title: 'Crawlers.fr Blog Generator v2',
     });
 
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      console.error("[blog-gen v2] Perplexity search failed:", searchRes.status, errText);
-      throw new Error(`Web search failed: ${searchRes.status}`);
-    }
-
-    const searchData = await searchRes.json();
-    const searchRaw = searchData.choices?.[0]?.message?.content || "";
+    const searchRaw = searchResp.content;
     const searchCleaned = searchRaw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
 
     trackPaidApiCall('generate-blog-from-news', 'openrouter', 'perplexity/sonar');
@@ -391,71 +375,37 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
 
     console.log("[blog-gen v2] Step 3: Calling Gemini with tool calling...");
 
-    const genRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableApiKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Tu es un rédacteur SEO/GEO expert produisant du contenu factuel sourcé. Nous sommes en 2026. Renforce les signaux E-E-A-T dans chaque article.",
-          },
-          { role: "user", content: articlePrompt },
-        ],
-        temperature: 0.6,
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "publish_article",
-              description: "Publish a blog article with SEO-optimized content",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "SEO title < 60 chars" },
-                  slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
-                  excerpt: { type: "string", description: "Meta description < 155 chars" },
-                  content: { type: "string", description: "Full HTML article with summary-card, impact-card, internal links, external authority links" },
-                  category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
-                  keywords: { type: "string", description: "Comma-separated keywords" },
-                },
-                required: ["title", "slug", "excerpt", "content", "category", "keywords"],
-                additionalProperties: false,
+    const genResp = await callLovableAI({
+      system: "Tu es un rédacteur SEO/GEO expert produisant du contenu factuel sourcé. Nous sommes en 2026. Renforce les signaux E-E-A-T dans chaque article.",
+      user: articlePrompt,
+      temperature: 0.6,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "publish_article",
+            description: "Publish a blog article with SEO-optimized content",
+            parameters: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "SEO title < 60 chars" },
+                slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
+                excerpt: { type: "string", description: "Meta description < 155 chars" },
+                content: { type: "string", description: "Full HTML article with summary-card, impact-card, internal links, external authority links" },
+                category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
+                keywords: { type: "string", description: "Comma-separated keywords" },
               },
+              required: ["title", "slug", "excerpt", "content", "category", "keywords"],
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "publish_article" } },
-      }),
+        },
+      ],
+      toolChoice: { type: "function", function: { name: "publish_article" } },
     });
 
-    if (!genRes.ok) {
-      const errText = await genRes.text();
-      console.error("[blog-gen v2] Generation failed:", genRes.status, errText);
-
-      // Handle rate limit / payment errors
-      if (genRes.status === 429) {
-        return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded, retry later" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (genRes.status === 402) {
-        return new Response(JSON.stringify({ success: false, error: "Payment required for AI credits" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      throw new Error(`AI generation failed: ${genRes.status}`);
-    }
-
-    const genData = await genRes.json();
-
     let article: any;
-    const toolCall = genData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = genResp.toolCalls?.[0] as any;
     if (toolCall?.function?.arguments) {
       try {
         article = JSON.parse(toolCall.function.arguments);
@@ -465,7 +415,7 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
     }
 
     if (!article) {
-      const rawText = genData.choices?.[0]?.message?.content || "";
+      const rawText = genResp.content;
       const cleaned = rawText.replace(/```json\n?/g, "").replace(/```/g, "").trim();
       try {
         article = JSON.parse(cleaned);
@@ -537,47 +487,30 @@ Title: ${article.title}
 Excerpt: ${article.excerpt}
 Content: ${article.content}`;
 
-    const [enRes, esRes] = await Promise.all([
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            { role: "system", content: "Professional translator. Return only valid JSON." },
-            { role: "user", content: translationPrompt("en", "English") },
-          ],
-          temperature: 0.3,
-        }),
+    const [enResp, esResp] = await Promise.all([
+      callLovableAI({
+        system: "Professional translator. Return only valid JSON.",
+        user: translationPrompt("en", "English"),
+        model: 'google/gemini-2.5-flash-lite',
       }),
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            { role: "system", content: "Professional translator. Return only valid JSON." },
-            { role: "user", content: translationPrompt("es", "Spanish") },
-          ],
-          temperature: 0.3,
-        }),
+      callLovableAI({
+        system: "Professional translator. Return only valid JSON.",
+        user: translationPrompt("es", "Spanish"),
+        model: 'google/gemini-2.5-flash-lite',
       }),
     ]);
 
     let enArticle: any = null;
     let esArticle: any = null;
 
-    for (const [res, lang] of [[enRes, "en"], [esRes, "es"]] as const) {
+    for (const [resp, lang] of [[enResp, "en"], [esResp, "es"]] as const) {
       try {
-        if (res.ok) {
-          const data = await res.json();
-          const raw = data.choices?.[0]?.message?.content || "";
-          const cleaned = raw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
-          const parsed = JSON.parse(cleaned);
-          if (lang === "en") enArticle = parsed;
-          else esArticle = parsed;
-          console.log(`[blog-gen v2] ✅ ${lang.toUpperCase()} translation ready`);
-        }
+        const raw = resp.content;
+        const cleaned = raw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        if (lang === "en") enArticle = parsed;
+        else esArticle = parsed;
+        console.log(`[blog-gen v2] ✅ ${lang.toUpperCase()} translation ready`);
       } catch (e) {
         console.warn(`[blog-gen v2] ⚠️ ${lang.toUpperCase()} translation error:`, e);
       }

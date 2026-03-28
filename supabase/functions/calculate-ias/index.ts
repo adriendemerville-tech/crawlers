@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { callLovableAIJson, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,42 +83,21 @@ function isBrandQuery(query: string, brandName: string, domain: string, siteName
 }
 
 async function classifyWithLLM(site: any): Promise<{ brandName: string; categoryId: number }> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return { brandName: site.domain.replace("www.", "").split(".")[0], categoryId: 3 };
+  if (!isLovableAIConfigured()) return { brandName: site.domain.replace("www.", "").split(".")[0], categoryId: 3 };
 
   try {
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          {
-            role: "system",
-            content: `You extract a brand name and classify a website into exactly one category. Return ONLY valid JSON: {"brand_name":"...", "category_id": N}
+    const parsed = await callLovableAIJson<{ brand_name?: string; category_id?: number }>({
+      system: `You extract a brand name and classify a website into exactly one category. Return ONLY valid JSON: {"brand_name":"...", "category_id": N}
 Categories: 1=E-commerce, 2=Media/Blog, 3=Lead Gen B2B, 4=SaaS, 5=Local, 6=Luxury Brand`,
-          },
-          {
-            role: "user",
-            content: `Domain: ${site.domain}\nSite name: ${site.site_name || ""}\nSector: ${site.market_sector || ""}\nProducts: ${site.products_services || ""}`,
-          },
-        ],
-        max_tokens: 80,
-      }),
+      user: `Domain: ${site.domain}\nSite name: ${site.site_name || ""}\nSector: ${site.market_sector || ""}\nProducts: ${site.products_services || ""}`,
+      model: 'google/gemini-2.5-flash-lite',
+      maxTokens: 80,
     });
-    if (resp.ok) {
-      const data = await resp.json();
-      const raw = (data.choices?.[0]?.message?.content || "").trim();
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const catId = Number(parsed.category_id);
-        return {
-          brandName: parsed.brand_name || site.domain.replace("www.", "").split(".")[0],
-          categoryId: CATEGORIES[catId] ? catId : 3,
-        };
-      }
-    }
+    const catId = Number(parsed.category_id);
+    return {
+      brandName: parsed.brand_name || site.domain.replace("www.", "").split(".")[0],
+      categoryId: CATEGORIES[catId] ? catId : 3,
+    };
   } catch (e) {
     console.error("LLM classification error:", e);
   }
