@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
   try {
     const user = await getUserFromRequest(req);
     const body = await req.json();
-    const { tracked_site_id, result_data, original_result_data, url, keyword, content_type } = body;
+    const { tracked_site_id, result_data, original_result_data, url, keyword, content_type, images } = body;
 
     // content_type: "page" | "post" (default "post")
     const resolvedContentType = content_type === 'page' ? 'page' : 'post';
@@ -283,9 +283,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const htmlContent = buildHtml(result_data);
+    const htmlContent = buildHtml(result_data, images, keyword);
     const title = result_data?.content_structure?.recommended_h1 || keyword || "Draft";
     const metaDescription = result_data?.metadata_enrichment?.meta_description || "";
+
+    // Extract header image URL for CMS featured image field (if supported)
+    const headerImage = images?.find((img: any) => img.placement === 'header');
+    const featuredImageUrl = headerImage?.dataUri || null;
 
     let publishResult: any = null;
 
