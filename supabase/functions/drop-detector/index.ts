@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getDomainContext } from '../_shared/getDomainContext.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });

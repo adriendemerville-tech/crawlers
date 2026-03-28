@@ -10,6 +10,7 @@
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

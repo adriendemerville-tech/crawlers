@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 /**
  * Edge Function: backlink-scanner
