@@ -10,21 +10,82 @@ async function getUserFromRequest(req: Request) {
   return user;
 }
 
+/** Generate alt text and caption from context */
+function generateImageAlt(keyword: string, title: string, placement: string): { alt: string; caption: string } {
+  const cleanTitle = (title || '').replace(/<[^>]*>/g, '').trim();
+  const cleanKeyword = (keyword || '').trim();
+
+  if (placement === 'header') {
+    return {
+      alt: cleanKeyword
+        ? `Illustration ${cleanKeyword} — ${cleanTitle}`
+        : `Illustration — ${cleanTitle}`,
+      caption: cleanKeyword
+        ? `${cleanTitle} · ${cleanKeyword}`
+        : cleanTitle,
+    };
+  }
+  // body placement
+  return {
+    alt: cleanKeyword
+      ? `${cleanKeyword} — image illustrative`
+      : `Image illustrative — ${cleanTitle}`,
+    caption: cleanKeyword
+      ? `Illustration : ${cleanKeyword}`
+      : `Illustration`,
+  };
+}
+
+/** Build accessible <figure> HTML for an image */
+function buildImageFigure(imageUrl: string, alt: string, caption: string, placement: string): string {
+  const loading = placement === 'header' ? '' : ' loading="lazy"';
+  const width = placement === 'header' ? ' width="1200" height="630"' : ' width="800" height="450"';
+  return `<figure class="wp-block-image${placement === 'header' ? ' is-featured' : ''}">
+  <img src="${imageUrl}" alt="${escapeHtml(alt)}"${width}${loading} />
+  <figcaption>${escapeHtml(caption)}</figcaption>
+</figure>`;
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 /** Build HTML from content_structure result */
-function buildHtml(result: any): string {
+function buildHtml(result: any, images?: Array<{ dataUri: string; placement: string; style: string }>, keyword?: string): string {
   const parts: string[] = [];
   const cs = result?.content_structure;
   if (!cs) return '';
 
+  const title = cs.recommended_h1 || '';
+
+  // Header image (before H1)
+  const headerImage = images?.find(img => img.placement === 'header');
+  if (headerImage) {
+    const { alt, caption } = generateImageAlt(keyword || '', title, 'header');
+    parts.push(buildImageFigure(headerImage.dataUri, alt, caption, 'header'));
+  }
+
   if (cs.recommended_h1) parts.push(`<h1>${cs.recommended_h1}</h1>`);
 
+  // Collect body content
+  const bodyParts: string[] = [];
   for (const hn of (cs.hn_hierarchy || [])) {
-    if (hn.level !== 'h1') parts.push(`<${hn.level}>${hn.text}</${hn.level}>`);
+    if (hn.level !== 'h1') bodyParts.push(`<${hn.level}>${hn.text}</${hn.level}>`);
   }
 
   for (const section of (cs.sections || [])) {
-    parts.push(`<section>\n  <h2>${section.title}</h2>\n  <p>${section.purpose || ''}</p>\n</section>`);
+    bodyParts.push(`<section>\n  <h2>${section.title}</h2>\n  <p>${section.purpose || ''}</p>\n</section>`);
   }
+
+  // Insert body image after the first section (or after first H2)
+  const bodyImage = images?.find(img => img.placement === 'body');
+  if (bodyImage && bodyParts.length > 0) {
+    const insertIdx = Math.min(2, bodyParts.length); // After 2nd element
+    const { alt, caption } = generateImageAlt(keyword || '', title, 'body');
+    bodyParts.splice(insertIdx, 0, buildImageFigure(bodyImage.dataUri, alt, caption, 'body'));
+  }
+
+  parts.push(...bodyParts);
 
   if (result.metadata_enrichment?.json_ld_schemas?.length) {
     for (const schema of result.metadata_enrichment.json_ld_schemas) {
