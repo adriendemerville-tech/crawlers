@@ -778,7 +778,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <p className="text-[10px] text-white/15">Disponible après la génération du contenu</p>
               </div>
             </div>
-          )
+          )}
         </div>
       </div>
     </div>
