@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 // Lazy load credit button (loads modal with framer-motion on demand)
 const CreditRechargeButton = lazy(() => import('./CreditRechargeButton').then(m => ({ default: m.CreditRechargeButton })));
 const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
+const CocoonContentArchitectModal = lazy(() => import('./Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -113,6 +114,7 @@ export function Header() {
   // Collaborator detection (team members cannot manage billing)
   const [isCollaborator, setIsCollaborator] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -361,6 +363,18 @@ export function Header() {
             </Suspense>
           )}
 
+          {/* Content Architect button — admin only, on console page */}
+          {isProfilePage && isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowContentArchitect(true)}
+              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 h-9 px-3"
+            >
+              <PenLine className="h-4 w-4" />
+              <span className="hidden sm:inline">Content</span>
+            </Button>
+          )}
 
           {/* Console button (logged in, hidden on /console) */}
           {!loading && user && !isProfilePage && (
@@ -505,6 +519,17 @@ export function Header() {
             open={showTopUpModal}
             onOpenChange={setShowTopUpModal}
             currentBalance={creditsBalance}
+          />
+        </Suspense>
+      )}
+      {isAdmin && showContentArchitect && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitect}
+            onClose={() => setShowContentArchitect(false)}
+            nodes={[]}
+            domain=""
+            trackedSiteId=""
           />
         </Suspense>
       )}

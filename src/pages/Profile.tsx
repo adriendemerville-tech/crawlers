@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } 
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, PenLine } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,7 +26,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
-const CocoonContentArchitectModal = lazy(() => import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
+
 
 const translations = {
   fr: {
@@ -133,7 +133,7 @@ function ProfileContent() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
-  const [showContentArchitect, setShowContentArchitect] = useState(false);
+  
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
@@ -264,17 +264,6 @@ function ProfileContent() {
                     <Settings className="h-4 w-4" />
                   </TabsTrigger>
                 )}
-                {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowContentArchitect(true)}
-                    className="gap-1.5 text-xs text-[hsl(var(--accent-foreground))] hover:bg-accent/50 h-8 px-2.5 ml-1"
-                  >
-                    <PenLine className="h-3.5 w-3.5" />
-                    <span className="hidden lg:inline">Content</span>
-                  </Button>
-                )}
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
@@ -353,17 +342,6 @@ function ProfileContent() {
             onOpenChange={setShowCreditModal}
             currentBalance={balance}
           />
-        )}
-        {isAdmin && (
-          <Suspense fallback={null}>
-            <CocoonContentArchitectModal
-              isOpen={showContentArchitect}
-              onClose={() => setShowContentArchitect(false)}
-              nodes={[]}
-              domain=""
-              trackedSiteId=""
-            />
-          </Suspense>
         )}
       </div>
     </>
