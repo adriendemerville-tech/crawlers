@@ -396,34 +396,8 @@ const TIER_NAMES: Record<number, string> = {
 };
 
 // ═══ PAGE TYPE DETECTION ═══
-function detectPageType(item: any): 'landing' | 'product' | 'article' | null {
-  const url = (item.target_url || '').toLowerCase();
-  const cat = (item.finding_category || '').toLowerCase();
-  const title = (item.title || '').toLowerCase();
-  const desc = (item.description || '').toLowerCase();
-  const op = (item.target_operation || '').toLowerCase();
-  const combined = `${url} ${cat} ${title} ${desc}`;
-
-  // 1. Workbench category signals (priority)
-  if (['content_gap', 'content_freshness', 'missing_terms'].includes(cat) && op === 'create') return 'article';
-  if (cat === 'missing_page' && (combined.includes('guide') || combined.includes('article') || combined.includes('blog'))) return 'article';
-  if (cat === 'missing_page' && (combined.includes('landing') || combined.includes('service') || combined.includes('offre'))) return 'landing';
-  if (cat === 'content_upgrade' && (combined.includes('produit') || combined.includes('product') || combined.includes('fiche'))) return 'product';
-
-  // 2. URL pattern detection (fallback)
-  if (/\/(blog|article|actualite|guide|conseil|tutoriel)/.test(url)) return 'article';
-  if (/\/(produit|product|shop|boutique|fiche|item)/.test(url)) return 'product';
-  if (/\/(landing|lp-|offre|solution|service|decouvrir|essai)/.test(url)) return 'landing';
-
-  // 3. Intent signals
-  if (combined.match(/comment|pourquoi|guide|tutoriel|conseils|erreurs/)) return 'article';
-  if (combined.match(/acheter|prix|avis|livraison|stock|fiche produit/)) return 'product';
-  if (combined.match(/conversion|signup|demo|essai|devis|offre/)) return 'landing';
-
-  // 4. Default based on operation
-  if (op === 'create') return 'article'; // Most created content is editorial
-  return null;
-}
+// Use shared detectPageType from _shared/contentBrief.ts
+const detectPageType = sharedDetectPageType;
 
 async function loadPromptTemplates(supabase: ReturnType<typeof getServiceClient>): Promise<Map<string, any>> {
   const { data, error } = await supabase
