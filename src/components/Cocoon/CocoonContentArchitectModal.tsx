@@ -616,8 +616,6 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     </div>
                   </div>
                 </div>
-                  </div>
-                </div>
               )}
               {result && (
                 <div className="space-y-4 text-white/80">
