@@ -353,7 +353,7 @@ Deno.serve(async (req) => {
     let backlinkData: any = null
     let workbenchItems: any[] = []
 
-    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes] = await Promise.allSettled([
+    const [auditRes, strategicAuditRes, cocoonRes, geoRes, llmRes, backlinkRes, workbenchRes, serpKeywordsRes] = await Promise.allSettled([
       serviceClient.from('audit_raw_data').select('raw_payload, audit_type')
         .eq('user_id', user.id).eq('domain', domain)
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
@@ -385,6 +385,12 @@ Deno.serve(async (req) => {
         .eq('status', 'pending')
         .order('severity', { ascending: true })
         .limit(30),
+      // Fetch keyword cloud from SERP snapshots (reference universe)
+      tracked_site_id
+        ? serviceClient.from('serp_snapshots').select('sample_keywords')
+            .eq('tracked_site_id', tracked_site_id)
+            .order('measured_at', { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
 
     if (auditRes.status === 'fulfilled' && auditRes.value?.data) {
