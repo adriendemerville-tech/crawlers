@@ -558,6 +558,65 @@ Deno.serve(async (req: Request) => {
                       console.warn(`[AutopilotEngine] CMS action missing 'action' field, inferred: ${inferredAction}`);
                     }
 
+                    // ── Auto-generate image for new articles ──
+                    if (inferredAction === 'create-post' && cmsAction.body) {
+                      try {
+                        const articleTitle = cmsAction.body.title || '';
+                        const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
+                        const imagePrompt = `Blog article header image for: ${articleTitle}. Context: ${articleExcerpt}`.slice(0, 500);
+                        
+                        console.log(`[AutopilotEngine] Generating image for IKtracker article: "${articleTitle}"`);
+                        
+                        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            prompt: imagePrompt,
+                            style: 'cinematic',
+                          }),
+                        });
+
+                        if (imgResponse.ok) {
+                          const imgResult = await imgResponse.json().catch(() => null);
+                          if (imgResult?.dataUri) {
+                            // Upload to storage bucket for a persistent URL
+                            const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
+                            const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
+                            
+                            if (base64Match) {
+                              const binaryStr = atob(base64Match[1]);
+                              const bytes = new Uint8Array(binaryStr.length);
+                              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                              
+                              const { error: uploadErr } = await supabase.storage
+                                .from('image-references')
+                                .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
+
+                              if (!uploadErr) {
+                                const { data: urlData } = supabase.storage
+                                  .from('image-references')
+                                  .getPublicUrl(imgFileName);
+                                
+                                cmsAction.body.image_url = urlData.publicUrl;
+                                console.log(`[AutopilotEngine] Image generated and uploaded for "${articleTitle}": ${urlData.publicUrl}`);
+                              } else {
+                                console.warn(`[AutopilotEngine] Image upload failed:`, uploadErr);
+                                // Fallback: embed as data URI
+                                cmsAction.body.image_url = imgResult.dataUri;
+                              }
+                            }
+                          }
+                        } else {
+                          console.warn(`[AutopilotEngine] Image generation failed for "${articleTitle}": ${imgResponse.status}`);
+                        }
+                      } catch (imgErr) {
+                        console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
+                      }
+                    }
+
                     const actionBody = {
                       action: inferredAction,
                       ...(cmsAction.page_key ? { page_key: cmsAction.page_key } : {}),
@@ -585,6 +644,7 @@ Deno.serve(async (req: Request) => {
                       status: funcResponse.ok ? 'success' : 'error',
                       http_status: funcResponse.status,
                       result: funcResult,
+                      image_generated: !!cmsAction.body?.image_url,
                     });
                     if (!funcResponse.ok) executionSuccess = false;
                   } catch (actionErr) {
