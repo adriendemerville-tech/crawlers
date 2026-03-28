@@ -2095,6 +2095,53 @@ export type Database = {
         }
         Relationships: []
       }
+      content_prompt_presets: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_default: boolean
+          name: string
+          page_type: string
+          prompt_text: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_default?: boolean
+          name: string
+          page_type: string
+          prompt_text?: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_default?: boolean
+          name?: string
+          page_type?: string
+          prompt_text?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_prompt_presets_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_prompt_templates: {
         Row: {
           created_at: string
