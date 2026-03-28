@@ -1601,7 +1601,7 @@ export const docMetadata = {
   totalEdgeFunctions: 175,
   totalSharedModules: 37,
   totalTables: '149',
-  totalLinesOfCode: '205 000+',
+  totalLinesOfCode: '211 600+',
   totalMigrations: 245,
   totalPages: 41,
   totalComponents: 311,
