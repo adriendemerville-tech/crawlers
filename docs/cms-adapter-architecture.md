@@ -146,7 +146,11 @@ Notes :
 | `cms-oauth-callback`   | Réception du callback OAuth, stockage des tokens            |
 | `cms-actions`          | Routeur principal : `list-pages`, `update-meta`, `add-redirect`, `add-links` |
 | `cms-token-refresh`    | Cron job pour rafraîchir les tokens expirés                 |
-| `drupal-actions`       | **Routeur Drupal** : 10 actions (test, list-pages, get-page, update-meta, update-body, add-internal-links, list/create/delete-redirect, discover-node-types) |
+| `cms-patch-content`    | **Patch granulaire** : H1/H2, FAQ, schema_org, canonical, robots, OG, alt_text |
+| `cms-push-redirect`    | **Redirections universelles** : create/list/delete 301/302 sur tous les CMS |
+| `cms-push-draft`       | Création de nouveaux contenus (brouillon) sur CMS           |
+| `cms-push-code`        | Injection de code correctif JS via API native CMS           |
+| `drupal-actions`       | Routeur Drupal : 10 actions (test, list-pages, get-page, update-meta, etc.) |
 
 ## Edge Function `drupal-actions` — Actions disponibles
 
