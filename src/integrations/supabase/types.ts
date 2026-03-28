@@ -4158,6 +4158,47 @@ export type Database = {
           },
         ]
       }
+      image_style_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          last_used_at: string
+          style_key: string
+          target_url: string | null
+          tracked_site_id: string | null
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_used_at?: string
+          style_key: string
+          target_url?: string | null
+          tracked_site_id?: string | null
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_used_at?: string
+          style_key?: string
+          target_url?: string | null
+          tracked_site_id?: string | null
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_style_preferences_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       injection_abuse_logs: {
         Row: {
           abuse_type: string
