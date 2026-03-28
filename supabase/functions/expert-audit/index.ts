@@ -173,6 +173,8 @@ interface HtmlAnalysis {
   orphanRisk?: boolean; // page has < 3 internal links
   // Misplaced structural tags (outside <head>)
   misplacedHeadTags?: string[];
+  // CMS / Platform detection
+  detectedCMS?: string | null;
 }
 
 interface RobotsAnalysis {
@@ -306,6 +308,37 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     // ═══ HSTS DETECTION ═══
     const hstsHeader = headResponse?.headers.get('Strict-Transport-Security') || null;
     const hasHSTS = !!hstsHeader;
+
+    // ═══ CMS / PLATFORM DETECTION ═══
+    const detectedCMS = (() => {
+      const xPowered = headResponse?.headers.get('X-Powered-By')?.toLowerCase() || '';
+      const serverHeader = headResponse?.headers.get('Server')?.toLowerCase() || '';
+      const generator = (html.match(/<meta[^>]*name=["']generator["'][^>]*content=["']([^"']*)["']/i) || [])[1] || '';
+      const lowerHtml = html.toLowerCase();
+      
+      if (/wp-content|wp-includes|wordpress/i.test(html) || /wordpress/i.test(generator)) return 'WordPress';
+      if (/shopify/i.test(html) || /shopify/i.test(xPowered)) return 'Shopify';
+      if (/wix\.com/i.test(html)) return 'Wix';
+      if (/squarespace/i.test(html)) return 'Squarespace';
+      if (/webflow/i.test(html)) return 'Webflow';
+      if (/prestashop/i.test(html) || /prestashop/i.test(generator)) return 'PrestaShop';
+      if (/magento|mage/i.test(html) || /magento/i.test(xPowered)) return 'Magento';
+      if (/drupal/i.test(html) || /drupal/i.test(generator) || /drupal/i.test(xPowered)) return 'Drupal';
+      if (/joomla/i.test(generator) || /joomla/i.test(xPowered)) return 'Joomla';
+      if (/ghost/i.test(xPowered) || /ghost/i.test(generator)) return 'Ghost';
+      if (/hubspot/i.test(html)) return 'HubSpot';
+      if (/typo3/i.test(generator)) return 'TYPO3';
+      if (/contentful/i.test(html)) return 'Contentful';
+      if (/strapi/i.test(xPowered)) return 'Strapi';
+      if (/__NEXT_DATA__/i.test(html)) return 'Next.js';
+      if (/__NUXT__/i.test(html)) return 'Nuxt.js';
+      if (/gatsby/i.test(html) || /gatsby/i.test(generator)) return 'Gatsby';
+      if (/framer/i.test(html)) return 'Framer';
+      if (lowerHtml.includes('duda.co')) return 'Duda';
+      if (lowerHtml.includes('jimdo')) return 'Jimdo';
+      return null;
+    })();
+    if (detectedCMS) console.log(`[analyzeHtml] 🔧 CMS detected: ${detectedCMS}`);
 
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
