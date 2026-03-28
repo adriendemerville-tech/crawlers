@@ -398,7 +398,17 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             )}
 
             <ScrollArea className="flex-1 p-4">
-              {!result && !loading && (
+              {/* Generated image preview */}
+              {generatedImage && (
+                <div className="mb-4 rounded-lg border border-white/10 overflow-hidden">
+                  <img src={generatedImage} alt="Image générée" className="w-full max-h-64 object-contain bg-black/30" />
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.03]">
+                    <span className="text-[10px] text-white/30">Image générée</span>
+                    <button onClick={() => setGeneratedImage(null)} className="text-[10px] text-white/30 hover:text-white/50">✕ Retirer</button>
+                  </div>
+                </div>
+              )}
+              {!result && !loading && !generatedImage && (
                 <div className="flex items-center justify-center h-full text-white/20 text-sm">
                   Remplissez les champs et lancez la génération
                 </div>
