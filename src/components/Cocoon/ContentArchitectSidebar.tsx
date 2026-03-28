@@ -55,7 +55,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
     if (!user) return;
     supabase
       .from('tracked_sites')
-      .select('id, domain, url')
+      .select('id, domain')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .then(({ data }) => {
