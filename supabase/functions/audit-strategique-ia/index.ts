@@ -2568,15 +2568,39 @@ Deno.serve(async (req) => {
         console.warn(`⚠️ Carte d'identité non disponible:`, e);
       }
 
+      // ── Fetch keyword cloud from SERP snapshots as pre-seeds ──
+      let existingKeywords: string[] = [];
+      try {
+        const sbService = getServiceClient();
+        const domainClean = domainWithoutWww.replace(/^www\./, '').toLowerCase();
+        const { data: serpSnapshot } = await sbService
+          .from('serp_snapshots')
+          .select('sample_keywords')
+          .ilike('domain', `%${domainClean}%`)
+          .order('measured_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (serpSnapshot?.sample_keywords && Array.isArray(serpSnapshot.sample_keywords)) {
+          existingKeywords = serpSnapshot.sample_keywords
+            .filter((k: any) => k?.keyword)
+            .map((k: any) => k.keyword as string);
+          if (existingKeywords.length > 0) {
+            console.log(`☁️ Keyword cloud loaded: ${existingKeywords.length} keywords as pre-seeds`);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch keyword cloud:', e);
+      }
+
       // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
+        // Market data (DataForSEO keywords) — uses keyword cloud as pre-seeds when available
         withDeadline(
-          fetchMarketData(domain, context, pageContentContext, url),
+          fetchMarketData(domain, context, pageContentContext, url, existingKeywords),
           120_000, 'market_data'
         ),
         // LLM visibility check (sub-function call) — always needed
