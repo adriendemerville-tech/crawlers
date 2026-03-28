@@ -1,28 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { generateImage, getAvailableProviders, type ImageStyle } from '../_shared/imageGeneration.ts';
+import { generateImage, getAvailableProviders, IMAGE_STYLES, type ImageStyle } from '../_shared/imageGeneration.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 
-/**
- * generate-image
- * 
- * Routing:
- *   style=photo       → Imagen 3 (Gemini, photo-réaliste)
- *   style=artistic    → FLUX (Black Forest Labs, illustration)
- *   style=typography  → Ideogram (texte, logo, typo)
- * 
- * Body:
- *   { prompt, style, width?, height?, aspectRatio?, negativePrompt?, provider? }
- * 
- * Returns:
- *   { success, provider, dataUri, mimeType, metadata? }
- */
+const VALID_STYLES = IMAGE_STYLES.map(s => s.key);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -39,7 +26,6 @@ serve(async (req) => {
       });
     }
 
-    // Parse request
     const body = await req.json();
     const { prompt, style, width, height, aspectRatio, negativePrompt, provider } = body;
 
@@ -49,17 +35,15 @@ serve(async (req) => {
       });
     }
 
-    const validStyles: ImageStyle[] = ['photo', 'artistic', 'typography'];
-    if (!style || !validStyles.includes(style)) {
+    if (!style || !VALID_STYLES.includes(style)) {
       return new Response(JSON.stringify({ 
-        error: `style must be one of: ${validStyles.join(', ')}`,
+        error: `style must be one of: ${VALID_STYLES.join(', ')}`,
         available_providers: getAvailableProviders(),
       }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fair use check (10/day)
     const { data: fairUse } = await supabase.rpc('check_fair_use_v2', {
       p_user_id: user.id,
       p_action: 'generate_image',
@@ -76,10 +60,9 @@ serve(async (req) => {
       });
     }
 
-    // Generate
     const result = await generateImage({
       prompt: prompt.trim(),
-      style,
+      style: style as ImageStyle,
       provider,
       width: width || undefined,
       height: height || undefined,
@@ -87,7 +70,6 @@ serve(async (req) => {
       negativePrompt: negativePrompt || undefined,
     });
 
-    // Track usage
     await trackTokenUsage('generate-image', result.provider, {
       prompt_tokens: prompt.length,
       completion_tokens: Math.round(result.imageBase64.length / 1024),
@@ -97,6 +79,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       provider: result.provider,
+      style: result.style,
       dataUri: result.dataUri,
       mimeType: result.mimeType,
       metadata: result.metadata || null,
@@ -106,9 +89,7 @@ serve(async (req) => {
 
   } catch (e) {
     console.error("[generate-image] Error:", e);
-
     const status = e instanceof Error && e.message.includes('not configured') ? 503 : 500;
-
     return new Response(JSON.stringify({ 
       error: e instanceof Error ? e.message : "Unknown error",
     }), {
