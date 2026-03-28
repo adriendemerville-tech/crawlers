@@ -722,18 +722,6 @@ export function GMBDashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Construction banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
-        <Construction className="h-5 w-5 text-amber-500 shrink-0" />
-        <div>
-          <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-            {t.constructionTitle}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t.constructionDesc}
-          </p>
-        </div>
-      </div>
 
       <div className="flex gap-4">
         {/* Location sidebar — only shown when 2+ locations */}
