@@ -261,6 +261,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Enrich findings with target coordinates for workbench
+    const structureTargetMap: Record<string, { selector: string; operation: string }> = {
+      deep_pages: { selector: 'internal_links', operation: 'append' },
+      orphan_pages: { selector: 'internal_links', operation: 'create' },
+      broken_links: { selector: 'a[href]', operation: 'replace' },
+      redirect_chains: { selector: 'redirect_config', operation: 'replace' },
+      canonical_issues: { selector: 'canonical_url', operation: 'replace' },
+      long_urls: { selector: 'url_structure', operation: 'replace' },
+      noindex_in_sitemap: { selector: 'robots', operation: 'replace' },
+      low_internal_links: { selector: 'internal_links', operation: 'append' },
+    };
+    for (const f of findings) {
+      const target = structureTargetMap[f.id];
+      if (target) {
+        f.target_selector = target.selector;
+        f.target_operation = target.operation as any;
+      }
+    }
+
     // Score
     const criticals = findings.filter(f => f.severity === 'critical').length;
     const warnings = findings.filter(f => f.severity === 'warning').length;

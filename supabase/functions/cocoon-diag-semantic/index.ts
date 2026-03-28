@@ -523,6 +523,27 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════
+    // Enrich findings with target coordinates for workbench
+    const semanticTargetMap: Record<string, { selector: string; operation: string }> = {
+      duplicate_titles: { selector: 'title', operation: 'replace' },
+      title_h1_mismatch: { selector: 'h1', operation: 'replace' },
+      low_heading_diversity: { selector: 'h2,h3', operation: 'append' },
+      missing_semantic_depth: { selector: 'content', operation: 'append' },
+      intent_imbalance: { selector: 'title', operation: 'replace' },
+      no_clear_keyword: { selector: 'title', operation: 'replace' },
+      keyword_gaps: { selector: 'content', operation: 'create' },
+      cannibalization: { selector: 'title', operation: 'replace' },
+      parent_child_incoherence: { selector: 'internal_links', operation: 'replace' },
+      keyword_content_mismatch: { selector: 'content', operation: 'replace' },
+    };
+    for (const f of findings) {
+      const target = semanticTargetMap[f.id];
+      if (target) {
+        f.target_selector = target.selector;
+        f.target_operation = target.operation as any;
+      }
+    }
+
     // Score
     // ══════════════════════════════════════════
     const criticals = findings.filter(f => f.severity === 'critical').length;
