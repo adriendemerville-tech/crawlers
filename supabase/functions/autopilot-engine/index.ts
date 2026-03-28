@@ -501,11 +501,17 @@ Deno.serve(async (req: Request) => {
             decision.action.functions.push('iktracker-actions');
           }
         } else if (phase === 'execute' && routedCmsActions && routedCmsActions.all.length > 0) {
-          // Non-IKtracker sites with routed actions
+          // Non-IKtracker sites with routed CMS actions → use cms-push-draft
           if (!decision.action.payload) decision.action.payload = {};
           if (!decision.action.payload.cms_actions || decision.action.payload.cms_actions.length === 0) {
             decision.action.payload.cms_actions = routedCmsActions.all;
             decision.action.payload._routed = routedCmsActions;
+          }
+          // Route to cms-push-draft instead of iktracker-actions for non-IKTracker sites
+          if (!decision.action.functions.includes('cms-push-draft')) {
+            decision.action.functions = decision.action.functions
+              .filter((f: string) => f !== 'iktracker-actions')
+              .concat(['cms-push-draft']);
           }
         }
 
