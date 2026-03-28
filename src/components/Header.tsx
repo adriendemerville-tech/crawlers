@@ -114,6 +114,7 @@ export function Header() {
   // Collaborator detection (team members cannot manage billing)
   const [isCollaborator, setIsCollaborator] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
 
   useEffect(() => {
     if (!user) return;
