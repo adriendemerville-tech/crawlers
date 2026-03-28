@@ -434,8 +434,25 @@ Deno.serve(async (req) => {
         console.log(`[content-advisor] Workbench: ${workbenchItems.length} content items found for ${domain}`)
       }
     }
+    // Extract keyword cloud as reference universe
+    let keywordCloudBlock = ''
+    if (serpKeywordsRes.status === 'fulfilled' && (serpKeywordsRes.value as any)?.data?.sample_keywords) {
+      const kwList = ((serpKeywordsRes.value as any).data.sample_keywords as any[])
+        .filter((k: any) => k?.keyword)
+        .map((k: any) => `- "${k.keyword}" (pos: ${k.position || '?'}, vol: ${k.volume || '?'})`)
+      if (kwList.length > 0) {
+        keywordCloudBlock = `
+── UNIVERS MOTS-CLÉS DE RÉFÉRENCE (${kwList.length} termes classés) ──
+⚠️ CRITIQUE : Ce nuage de mots-clés représente le positionnement RÉEL du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique.
+${kwList.slice(0, 30).join('\n')}
 
-    // ── Step 5: LLM Synthesis ──
+RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout contenu hors de cet univers thématique est INTERDIT.
+`
+        console.log(`[content-advisor] ☁️ Keyword cloud injected: ${kwList.length} keywords`)
+      }
+    }
+
+
     console.log(`[content-advisor] Step 5: LLM synthesis`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) {
