@@ -681,6 +681,22 @@ RÈGLES:
     });
     const briefBlock = briefToPromptBlock(contentBrief);
 
+    // ── PRESET INJECTION: load user's default preset for this site+pageType (admin only) ──
+    let presetBlock = '';
+    {
+      const { data: preset } = await supabase
+        .from('content_prompt_presets')
+        .select('prompt_text, name')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .eq('page_type', briefPageType)
+        .eq('is_default', true)
+        .maybeSingle();
+      if (preset?.prompt_text) {
+        presetBlock = `\n## INSTRUCTIONS CUSTOM (preset "${preset.name}")\n${preset.prompt_text}\n`;
+        console.log(`[Parménion] 📝 Preset injecté: "${preset.name}" (${preset.prompt_text.length} car.)`);
+      }
+    }
+
     console.log(`[Parménion] 📄 Content items: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
     console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
     console.log(`[Parménion] 📋 ContentBrief: type=${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}`);
@@ -706,6 +722,7 @@ RÈGLES:
 - RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
 - UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps)
 - Intègre les liens internes pré-calculés dans le brief de manière naturelle dans le texte
+${presetBlock}
 ${templateBlock}`;
 
     promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));

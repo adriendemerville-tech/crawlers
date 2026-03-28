@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 
 interface TrackedSite {
@@ -38,6 +39,7 @@ interface ContentArchitectSidebarProps {
 
 export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, selectedPageType }: ContentArchitectSidebarProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string | null>(selectedSiteId || null);
   const [activePageType, setActivePageType] = useState<'landing' | 'product' | 'article'>((selectedPageType as any) || 'landing');
@@ -59,11 +61,16 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
       .order('created_at', { ascending: true })
       .then(({ data }) => {
         if (data) {
-          setSites(data);
-          if (!activeSiteId && data.length > 0) setActiveSiteId(data[0].id);
+          let allSites = [...data];
+          // For creator (non-admin) accounts, ensure iktracker.fr is always visible
+          if (!isAdmin && !allSites.some(s => s.domain.includes('iktracker'))) {
+            allSites.unshift({ id: 'iktracker-pinned', domain: 'iktracker.fr' });
+          }
+          setSites(allSites);
+          if (!activeSiteId && allSites.length > 0) setActiveSiteId(allSites[0].id);
         }
       });
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Fetch presets for active site + page type
   useEffect(() => {
