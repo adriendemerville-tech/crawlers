@@ -525,6 +525,7 @@ export function Header() {
         </Suspense>
       )}
     </header>
+    <>
       {isAdmin && showContentArchitect && createPortal(
         <Suspense fallback={null}>
           <CocoonContentArchitectModal
@@ -537,5 +538,7 @@ export function Header() {
         </Suspense>,
         document.body
       )}
+    </>
+    </>
   );
 }
