@@ -403,29 +403,8 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
       toolChoice: { type: "function", function: { name: "publish_article" } },
     });
 
-    if (!genRes.ok) {
-      const errText = await genRes.text();
-      console.error("[blog-gen v2] Generation failed:", genRes.status, errText);
-
-      // Handle rate limit / payment errors
-      if (genRes.status === 429) {
-        return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded, retry later" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (genRes.status === 402) {
-        return new Response(JSON.stringify({ success: false, error: "Payment required for AI credits" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      throw new Error(`AI generation failed: ${genRes.status}`);
-    }
-
-    const genData = await genRes.json();
-
     let article: any;
-    const toolCall = genData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = genResp.toolCalls?.[0] as any;
     if (toolCall?.function?.arguments) {
       try {
         article = JSON.parse(toolCall.function.arguments);
@@ -435,7 +414,7 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
     }
 
     if (!article) {
-      const rawText = genData.choices?.[0]?.message?.content || "";
+      const rawText = genResp.content;
       const cleaned = rawText.replace(/```json\n?/g, "").replace(/```/g, "").trim();
       try {
         article = JSON.parse(cleaned);
@@ -507,47 +486,30 @@ Title: ${article.title}
 Excerpt: ${article.excerpt}
 Content: ${article.content}`;
 
-    const [enRes, esRes] = await Promise.all([
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            { role: "system", content: "Professional translator. Return only valid JSON." },
-            { role: "user", content: translationPrompt("en", "English") },
-          ],
-          temperature: 0.3,
-        }),
+    const [enResp, esResp] = await Promise.all([
+      callLovableAI({
+        system: "Professional translator. Return only valid JSON.",
+        user: translationPrompt("en", "English"),
+        model: 'google/gemini-2.5-flash-lite',
       }),
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            { role: "system", content: "Professional translator. Return only valid JSON." },
-            { role: "user", content: translationPrompt("es", "Spanish") },
-          ],
-          temperature: 0.3,
-        }),
+      callLovableAI({
+        system: "Professional translator. Return only valid JSON.",
+        user: translationPrompt("es", "Spanish"),
+        model: 'google/gemini-2.5-flash-lite',
       }),
     ]);
 
     let enArticle: any = null;
     let esArticle: any = null;
 
-    for (const [res, lang] of [[enRes, "en"], [esRes, "es"]] as const) {
+    for (const [resp, lang] of [[enResp, "en"], [esResp, "es"]] as const) {
       try {
-        if (res.ok) {
-          const data = await res.json();
-          const raw = data.choices?.[0]?.message?.content || "";
-          const cleaned = raw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
-          const parsed = JSON.parse(cleaned);
-          if (lang === "en") enArticle = parsed;
-          else esArticle = parsed;
-          console.log(`[blog-gen v2] ✅ ${lang.toUpperCase()} translation ready`);
-        }
+        const raw = resp.content;
+        const cleaned = raw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        if (lang === "en") enArticle = parsed;
+        else esArticle = parsed;
+        console.log(`[blog-gen v2] ✅ ${lang.toUpperCase()} translation ready`);
       } catch (e) {
         console.warn(`[blog-gen v2] ⚠️ ${lang.toUpperCase()} translation error:`, e);
       }
