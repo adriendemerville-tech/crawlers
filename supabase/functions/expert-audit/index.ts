@@ -952,6 +952,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       socialLinksCount: 0,
       linkedInLinksCount: 0,
       hasHSTS: false,
+      detectedCMS: null,
       hasSameAs: false,
       hasWikidataSameAs: false,
       hasAuthorInJsonLd: false,
