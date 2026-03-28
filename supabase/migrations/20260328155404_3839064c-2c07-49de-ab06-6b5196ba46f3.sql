@@ -1,0 +1,1 @@
+UPDATE autopilot_configs SET last_cycle_at = now() - interval '3 hours' WHERE id = '0092c4c9-7d82-417b-ae93-5fc67c8fdd38';

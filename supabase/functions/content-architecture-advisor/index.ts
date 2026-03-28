@@ -60,12 +60,23 @@ Deno.serve(async (req) => {
       })
     }
 
-    const userClient = getUserClient(authHeader)
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // Service role bypass for internal calls (autopilot-engine, etc.)
+    const token = authHeader.replace('Bearer ', '')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const isServiceRole = !!(serviceRoleKey && token === serviceRoleKey)
+
+    let user: { id: string; email?: string } | null = null
+    if (isServiceRole) {
+      user = { id: 'service-role', email: 'system@crawlers.fr' }
+    } else {
+      const userClient = getUserClient(authHeader)
+      const { data: { user: authUser }, error: userError } = await userClient.auth.getUser()
+      if (userError || !authUser) {
+        return new Response(JSON.stringify({ error: 'Invalid token' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      user = authUser
     }
 
     const body: AdvisorInput = await req.json()
@@ -83,12 +94,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Fair use check (hourly/daily)
-    const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
-    if (!fairUse.allowed) {
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // Fair use check (hourly/daily) — skip for service role
+    if (!isServiceRole) {
+      const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
+      if (!fairUse.allowed) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 200/mo)
