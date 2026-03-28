@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { writeIdentity } from '../_shared/identityGateway.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -126,9 +126,9 @@ Réponds UNIQUEMENT en JSON valide.`
       }
     }
 
-    // Step 3: Persist to tracked_sites (only known DB columns)
+    // Step 3: Persist via Identity Gateway (single write point)
     const dbColumns = ['market_sector', 'products_services', 'target_audience', 'commercial_area', 'company_size', 'business_type', 'short_term_goal', 'mid_term_goal', 'main_serp_competitor', 'confusion_risk']
-    const updatePayload: Record<string, string> = {}
+    const updatePayload: Record<string, unknown> = {}
     for (const col of dbColumns) {
       if (enrichedFields[col]) {
         updatePayload[col] = enrichedFields[col]
@@ -136,15 +136,14 @@ Réponds UNIQUEMENT en JSON valide.`
     }
 
     if (Object.keys(updatePayload).length > 0) {
-      const sb = getServiceClient()
-
-      const { error } = await sb
-        .from('tracked_sites')
-        .update({ ...updatePayload, identity_source: 'user_voice', identity_enriched_at: new Date().toISOString() })
-        .eq('id', site_id)
-
-      if (error) console.error('[voice-identity] DB update error:', error)
-      else console.log(`[voice-identity] Updated ${domain} with fields:`, Object.keys(updatePayload))
+      const result = await writeIdentity({
+        siteId: site_id,
+        fields: updatePayload,
+        source: 'user_voice',
+        forceDirectWrite: true, // Voice input = user authority, write directly
+        forceOverwrite: true,   // User voice always takes priority
+      })
+      console.log(`[voice-identity] Updated ${domain} via gateway: ${result.applied.length} fields applied`)
     }
 
     return new Response(JSON.stringify({
