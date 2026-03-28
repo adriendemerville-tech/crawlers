@@ -52,15 +52,26 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
 
+  // Form fields
+  const [url, setUrl] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [pageType, setPageType] = useState('article');
+  const [length, setLength] = useState('medium');
+  const [prompt, setPrompt] = useState('');
+  const [ctaLink, setCtaLink] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [competitorUrl, setCompetitorUrl] = useState('');
+  const [tone, setTone] = useState('');
+
   // Load identity card for smart suggestions
   useEffect(() => {
     if (!trackedSiteId || !isOpen) return;
     supabase
       .from('tracked_sites')
-      .select('identity_card')
+      .select('identity_card' as any)
       .eq('id', trackedSiteId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data?.identity_card) setIdentityCard(data.identity_card as Record<string, any>);
       });
   }, [trackedSiteId, isOpen]);
@@ -78,8 +89,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       // Track style preference
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Upsert preference - try insert, on conflict increment
-        await supabase.from('image_style_preferences').upsert(
+        await supabase.from('image_style_preferences' as any).upsert(
           {
             user_id: user.id,
             tracked_site_id: trackedSiteId || null,
@@ -87,7 +97,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             style_key: style,
             usage_count: 1,
             last_used_at: new Date().toISOString(),
-          },
+          } as any,
           { onConflict: 'user_id,tracked_site_id,target_url,style_key', ignoreDuplicates: false }
         );
       }
@@ -99,17 +109,6 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       setGeneratingImage(false);
     }
   }, [trackedSiteId, url]);
-
-  // Form fields
-  const [url, setUrl] = useState('');
-  const [keyword, setKeyword] = useState('');
-  const [pageType, setPageType] = useState('article');
-  const [length, setLength] = useState('medium');
-  const [prompt, setPrompt] = useState('');
-  const [ctaLink, setCtaLink] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [competitorUrl, setCompetitorUrl] = useState('');
-  const [tone, setTone] = useState('');
 
   // Auto-fill from draft data (from Cocoon assistant extraction)
   useEffect(() => {
