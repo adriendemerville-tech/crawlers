@@ -378,7 +378,7 @@ Deno.serve(async (req) => {
             serp_recommendations: kp.serp_recommendations || [],
           } : null,
           priority_content: pc || null,
-          market_sector: siteIdentityResult.data?.market_sector || '',
+          market_sector: siteIdentityData?.market_sector || '',
         };
         console.log(`[strategist] Loaded strategic audit SERP data: ${strategicSerpData.content_gaps.length} gaps, ${strategicSerpData.missing_terms.length} missing terms, ${strategicSerpData.keyword_positioning?.main_keywords?.length || 0} keywords`);
       }
