@@ -30,7 +30,7 @@ import { corsHeaders } from '../_shared/cors.ts';
  */
 
 interface PatchOperation {
-  zone: 'h1' | 'h2' | 'h3' | 'meta_title' | 'meta_description' | 'faq' | 'body_section' | 'image' | 'author' | 'excerpt' | 'slug' | 'tags' | 'schema_org';
+  zone: 'h1' | 'h2' | 'h3' | 'meta_title' | 'meta_description' | 'faq' | 'body_section' | 'image' | 'alt_text' | 'author' | 'excerpt' | 'slug' | 'tags' | 'schema_org' | 'canonical' | 'robots_meta' | 'og_title' | 'og_description' | 'og_image';
   action: 'replace' | 'append' | 'prepend' | 'remove';
   selector?: string;
   value: string | Record<string, unknown>;
