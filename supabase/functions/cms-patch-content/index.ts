@@ -803,8 +803,35 @@ async function patchWebflow(conn: CmsConnection, input: PatchInput): Promise<Pat
         details.push({ zone: 'excerpt', success: true });
         patchesApplied++;
         break;
+      case 'og_title':
+        fieldData['og-title'] = strVal;
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        fieldData['og-description'] = strVal;
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        fieldData['og-image'] = strVal;
+        details.push({ zone: 'og_image', success: true });
+        patchesApplied++;
+        break;
+      case 'canonical':
+      case 'robots_meta':
+        details.push({ zone: patch.zone, success: false, detail: 'Webflow manages these via site settings, not per-item API' });
+        break;
+      case 'schema_org': {
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = (fieldData['post-body'] as string) || itemData.fieldData?.['post-body'] || '';
+        fieldData['post-body'] = curBody + `\n<script type="application/ld+json">${jsonLd}</script>`;
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in post-body' });
+        patchesApplied++;
+        break;
+      }
       default: {
-        const currentBody = itemData.fieldData?.['post-body'] || '';
+        const currentBody = (fieldData['post-body'] as string) || itemData.fieldData?.['post-body'] || '';
         const { html: patched, applied } = applyHtmlPatches(currentBody, [patch]);
         if (patched !== currentBody) {
           fieldData['post-body'] = patched;
