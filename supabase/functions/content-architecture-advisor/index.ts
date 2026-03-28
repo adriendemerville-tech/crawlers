@@ -703,7 +703,31 @@ Active chaque critère selon les signaux disponibles. Voici l'état des signaux 
 IMPORTANT : Le contenu recommandé NE DOIT PAS être en rupture de ton/style avec le reste du site. Reste dans la continuité de ce qui existe déjà. Si tu proposes quelque chose de très différent, SIGNALE-LE dans coherence_check.warnings et BAISSE le confidence_score.
 
 Le ratio sémantique doit refléter la distance jargon: jargon_distance 1-3 → contenu technique, 7-10 → très vulgarisé.
-Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.`
+Les schemas JSON-LD doivent être adaptés au type de page: ${page_type}.
+
+${contentTemplate ? `
+═══ TEMPLATE SEO/GEO SPÉCIALISÉ: ${contentTemplate.label.toUpperCase()} ═══
+
+${contentTemplate.system_prompt}
+
+STRUCTURE DE RÉFÉRENCE:
+${contentTemplate.structure_template}
+
+RÈGLES SEO OBLIGATOIRES:
+${contentTemplate.seo_rules}
+
+RÈGLES GEO (OPTIMISATION IA GÉNÉRATIVE) OBLIGATOIRES:
+${contentTemplate.geo_rules}
+
+DIRECTIVES DE TON:
+${contentTemplate.tone_guidelines}
+
+EXEMPLES DE RÉFÉRENCE:
+${JSON.stringify(contentTemplate.examples, null, 2)}
+
+⚠️ Le contenu des sections (body_text) DOIT suivre ces règles. Un contenu qui ne respecte pas les règles GEO (passages citables, réponse directe, FAQ) sera considéré comme non conforme.
+═══ FIN TEMPLATE ═══
+` : ''}`
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
