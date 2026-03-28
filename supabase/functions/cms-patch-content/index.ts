@@ -30,7 +30,7 @@ import { corsHeaders } from '../_shared/cors.ts';
  */
 
 interface PatchOperation {
-  zone: 'h1' | 'h2' | 'h3' | 'meta_title' | 'meta_description' | 'faq' | 'body_section' | 'image' | 'author' | 'excerpt' | 'slug' | 'tags' | 'schema_org';
+  zone: 'h1' | 'h2' | 'h3' | 'meta_title' | 'meta_description' | 'faq' | 'body_section' | 'image' | 'alt_text' | 'author' | 'excerpt' | 'slug' | 'tags' | 'schema_org' | 'canonical' | 'robots_meta' | 'og_title' | 'og_description' | 'og_image';
   action: 'replace' | 'append' | 'prepend' | 'remove';
   selector?: string;
   value: string | Record<string, unknown>;
@@ -267,7 +267,6 @@ function applySinglePatch(html: string, patch: PatchOperation): { html: string; 
 
     case 'image': {
       if (action === 'replace' && old_value) {
-        // old_value = old src, value = new src
         const imgRegex = new RegExp(`(<img[^>]*src=")${escapeRegex(old_value)}("[^>]*>)`, 'gi');
         if (imgRegex.test(html)) {
           return { html: html.replace(imgRegex, `$1${strValue}$2`), changed: true };
@@ -275,6 +274,55 @@ function applySinglePatch(html: string, patch: PatchOperation): { html: string; 
         return { html, changed: false, detail: `No <img> with src="${old_value}" found` };
       }
       return { html, changed: false, detail: 'Provide old_value (old src) for image replace' };
+    }
+
+    case 'alt_text': {
+      // value = new alt text, old_value = img src to target OR selector
+      if (old_value) {
+        const altRegex = new RegExp(`(<img[^>]*src="${escapeRegex(old_value)}"[^>]*?)alt="[^"]*"`, 'gi');
+        const altRegexNoAlt = new RegExp(`(<img[^>]*src="${escapeRegex(old_value)}"[^>]*?)(\\/?>)`, 'gi');
+        if (altRegex.test(html)) {
+          return { html: html.replace(altRegex, `$1alt="${strValue}"`), changed: true };
+        }
+        // Image has no alt attr — add it
+        if (altRegexNoAlt.test(html)) {
+          return { html: html.replace(altRegexNoAlt, `$1 alt="${strValue}" $2`), changed: true };
+        }
+        return { html, changed: false, detail: `No <img> with src="${old_value}" found` };
+      }
+      // Without old_value, patch ALL images missing alt
+      if (action === 'replace') {
+        const missingAlt = /<img(?![^>]*alt=)[^>]*?(\/?>) /gi;
+        const newHtml = html.replace(missingAlt, (match, close) => match.replace(close, ` alt="${strValue}" ${close}`));
+        return { html: newHtml, changed: newHtml !== html, detail: newHtml !== html ? 'Added alt to images missing it' : 'No images missing alt' };
+      }
+      return { html, changed: false, detail: 'Provide old_value (img src) to target a specific image' };
+    }
+
+    case 'schema_org': {
+      // Inject or replace JSON-LD script in HTML
+      const jsonLd = typeof value === 'string' ? value : JSON.stringify(value);
+      const ldRegex = /<script\s+type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/i;
+      const ldTag = `<script type="application/ld+json">${jsonLd}</script>`;
+      
+      if (action === 'replace' && ldRegex.test(html)) {
+        return { html: html.replace(ldRegex, ldTag), changed: true };
+      }
+      if (action === 'append' || (action === 'replace' && !ldRegex.test(html))) {
+        const headClose = html.indexOf('</head>');
+        if (headClose > -1) {
+          return { html: html.slice(0, headClose) + '\n' + ldTag + '\n' + html.slice(headClose), changed: true };
+        }
+        const bodyClose = html.lastIndexOf('</body>');
+        if (bodyClose > -1) {
+          return { html: html.slice(0, bodyClose) + '\n' + ldTag + '\n' + html.slice(bodyClose), changed: true };
+        }
+        return { html: html + '\n' + ldTag, changed: true };
+      }
+      if (action === 'remove') {
+        return { html: html.replace(ldRegex, ''), changed: ldRegex.test(html) };
+      }
+      return { html, changed: false, detail: `Unsupported action '${action}' for schema_org` };
     }
 
     default:
@@ -338,8 +386,8 @@ async function patchWordPress(conn: CmsConnection, input: PatchInput): Promise<P
   const endpoint = postData.type === 'page' ? 'pages' : 'posts';
 
   // Step 2: Separate meta patches from content patches
-  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags'].includes(p.zone));
-  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags'].includes(p.zone));
+  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'].includes(p.zone));
+  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'excerpt', 'slug', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'].includes(p.zone));
 
   // Step 3: Build WP update payload
   const updatePayload: Record<string, unknown> = {};
@@ -376,6 +424,49 @@ async function patchWordPress(conn: CmsConnection, input: PatchInput): Promise<P
       case 'author':
         details.push({ zone: 'author', success: false, detail: 'Author ID resolution not yet implemented' });
         break;
+      case 'canonical':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_canonical: strVal };
+        details.push({ zone: 'canonical', success: true, detail: 'Set via Yoast canonical field' });
+        patchesApplied++;
+        break;
+      case 'robots_meta': {
+        // strVal like "noindex,nofollow"
+        const robots = strVal.split(',').map(s => s.trim());
+        const metaObj: Record<string, string> = {};
+        if (robots.includes('noindex')) metaObj._yoast_wpseo_meta_robots_noindex = '1';
+        if (robots.includes('nofollow')) metaObj._yoast_wpseo_meta_robots_nofollow = '1';
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), ...metaObj };
+        details.push({ zone: 'robots_meta', success: true, detail: `Set via Yoast: ${strVal}` });
+        patchesApplied++;
+        break;
+      }
+      case 'og_title':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_title: strVal };
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_description: strVal };
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        updatePayload.meta = { ...(updatePayload.meta as object || {}), _yoast_wpseo_opengraph_image: strVal };
+        details.push({ zone: 'og_image', success: true });
+        patchesApplied++;
+        break;
+      case 'schema_org': {
+        // WordPress: inject via Yoast wpseo_schema field or as content-level JSON-LD
+        // Fall through to content patches for HTML injection
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const ldTag = `<script type="application/ld+json">${jsonLd}</script>`;
+        // Append to content
+        const curContent = updatePayload.content as string || postData.content?.rendered || postData.content?.raw || '';
+        updatePayload.content = curContent + '\n' + ldTag;
+        details.push({ zone: 'schema_org', success: true, detail: 'Injected JSON-LD in post content' });
+        patchesApplied++;
+        break;
+      }
     }
   }
 
@@ -452,8 +543,9 @@ async function patchShopify(conn: CmsConnection, input: PatchInput): Promise<Pat
     return { success: false, platform: 'shopify', method: 'api_native', patches_applied: 0, patches_failed: input.patches.length, details: [{ zone: '*', success: false, detail: `Entity #${postId} not found` }] };
   }
 
-  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'tags'].includes(p.zone));
-  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'tags'].includes(p.zone));
+  const seoZones = ['meta_title', 'meta_description', 'author', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'];
+  const metaPatches = input.patches.filter(p => seoZones.includes(p.zone));
+  const contentPatches = input.patches.filter(p => !seoZones.includes(p.zone));
 
   const updatePayload: Record<string, unknown> = {};
 
@@ -479,6 +571,26 @@ async function patchShopify(conn: CmsConnection, input: PatchInput): Promise<Pat
         else if (Array.isArray(patch.value)) { updatePayload.tags = (patch.value as string[]).join(', '); patchesApplied++; }
         details.push({ zone: 'tags', success: true });
         break;
+      case 'canonical':
+        details.push({ zone: 'canonical', success: false, detail: 'Shopify does not support custom canonical via API' });
+        break;
+      case 'robots_meta':
+        details.push({ zone: 'robots_meta', success: false, detail: 'Shopify manages robots via theme — use cms-push-code for injection' });
+        break;
+      case 'og_title':
+      case 'og_description':
+      case 'og_image':
+        details.push({ zone: patch.zone, success: false, detail: 'Shopify OG tags are auto-generated from title/description/image — update those instead' });
+        break;
+      case 'schema_org': {
+        // Shopify: inject JSON-LD into body_html
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = (updatePayload.body_html as string) || entityData.body_html || '';
+        updatePayload.body_html = curBody + `\n<script type="application/ld+json">${jsonLd}</script>`;
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in body_html' });
+        patchesApplied++;
+        break;
+      }
     }
   }
 
@@ -560,9 +672,47 @@ async function patchDrupal(conn: CmsConnection, input: PatchInput): Promise<Patc
         details.push({ zone: 'slug', success: true });
         patchesApplied++;
         break;
+      case 'meta_description':
+        // Drupal metatag module field
+        attributes.field_meta_description = strVal;
+        details.push({ zone: 'meta_description', success: true, detail: 'Via metatag field (requires metatag module)' });
+        patchesApplied++;
+        break;
+      case 'canonical':
+        attributes.field_canonical_url = strVal;
+        details.push({ zone: 'canonical', success: true, detail: 'Via metatag canonical field' });
+        patchesApplied++;
+        break;
+      case 'robots_meta':
+        attributes.field_robots = strVal;
+        details.push({ zone: 'robots_meta', success: true, detail: 'Via metatag robots field' });
+        patchesApplied++;
+        break;
+      case 'og_title':
+        attributes.field_og_title = strVal;
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        attributes.field_og_description = strVal;
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        details.push({ zone: 'og_image', success: false, detail: 'OG image requires file upload — use manual process' });
+        break;
+      case 'schema_org': {
+        // Inject JSON-LD in body
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = nodeData.attributes?.body?.value || '';
+        attributes.body = { value: curBody + `\n<script type="application/ld+json">${jsonLd}</script>`, format: 'full_html' };
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in body' });
+        patchesApplied++;
+        break;
+      }
       default: {
         // Content zones → patch body HTML
-        const currentBody = nodeData.attributes?.body?.value || '';
+        const currentBody = (attributes.body as any)?.value || nodeData.attributes?.body?.value || '';
         const { html: patched, applied } = applyHtmlPatches(currentBody, [patch]);
         if (patched !== currentBody) {
           attributes.body = { value: patched, format: 'full_html' };
@@ -653,8 +803,35 @@ async function patchWebflow(conn: CmsConnection, input: PatchInput): Promise<Pat
         details.push({ zone: 'excerpt', success: true });
         patchesApplied++;
         break;
+      case 'og_title':
+        fieldData['og-title'] = strVal;
+        details.push({ zone: 'og_title', success: true });
+        patchesApplied++;
+        break;
+      case 'og_description':
+        fieldData['og-description'] = strVal;
+        details.push({ zone: 'og_description', success: true });
+        patchesApplied++;
+        break;
+      case 'og_image':
+        fieldData['og-image'] = strVal;
+        details.push({ zone: 'og_image', success: true });
+        patchesApplied++;
+        break;
+      case 'canonical':
+      case 'robots_meta':
+        details.push({ zone: patch.zone, success: false, detail: 'Webflow manages these via site settings, not per-item API' });
+        break;
+      case 'schema_org': {
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = (fieldData['post-body'] as string) || itemData.fieldData?.['post-body'] || '';
+        fieldData['post-body'] = curBody + `\n<script type="application/ld+json">${jsonLd}</script>`;
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in post-body' });
+        patchesApplied++;
+        break;
+      }
       default: {
-        const currentBody = itemData.fieldData?.['post-body'] || '';
+        const currentBody = (fieldData['post-body'] as string) || itemData.fieldData?.['post-body'] || '';
         const { html: patched, applied } = applyHtmlPatches(currentBody, [patch]);
         if (patched !== currentBody) {
           fieldData['post-body'] = patched;
