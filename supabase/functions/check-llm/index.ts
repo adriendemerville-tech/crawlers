@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
       }
     }
     
-    const { url, lang: requestLang, correction, customPrompt, targetProvider } = await req.json();
+    const { url, lang: requestLang, correction, customPrompt, targetProvider, siteContext: externalContext } = await req.json();
     const lang = parseLanguage(requestLang);
     const t = getLLMTranslations(lang);
 
@@ -219,22 +219,34 @@ Deno.serve(async (req) => {
     const patterns = buildBrandPatterns(domain);
     console.log(`[check-llm] Analyzing: ${domain}, patterns: ${patterns.exact.join(', ')}`);
 
-    // Fetch site context for natural prompts
+    // Site context: prefer caller-provided context, fallback to DB lookup
     let siteCtx: SiteContext = {};
-    try {
-      const supabase = getServiceClient();
-      const ctx = await getSiteContext(supabase, { domain });
-      if (ctx) {
-        siteCtx = {
-          market_sector: ctx.market_sector,
-          products_services: ctx.products_services,
-          target_audience: ctx.target_audience,
-          commercial_area: ctx.commercial_area,
-        };
-        console.log(`[check-llm] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+    if (externalContext && (externalContext.market_sector || externalContext.products_services)) {
+      siteCtx = {
+        market_sector: externalContext.market_sector,
+        products_services: externalContext.products_services,
+        target_audience: externalContext.target_audience,
+        commercial_area: externalContext.commercial_area,
+        entity_type: externalContext.entity_type,
+      };
+      console.log(`[check-llm] Using caller-provided site context (sector: ${siteCtx.market_sector})`);
+    } else {
+      // Fallback: DB lookup
+      try {
+        const supabase = getServiceClient();
+        const ctx = await getSiteContext(supabase, { domain });
+        if (ctx) {
+          siteCtx = {
+            market_sector: ctx.market_sector,
+            products_services: ctx.products_services,
+            target_audience: ctx.target_audience,
+            commercial_area: ctx.commercial_area,
+          };
+          console.log(`[check-llm] Site context loaded from DB (confidence: ${ctx.identity_confidence || 0})`);
+        }
+      } catch (e) {
+        console.warn('[check-llm] Could not fetch site context:', e);
       }
-    } catch (e) {
-      console.warn('[check-llm] Could not fetch site context:', e);
     }
 
     // Generate natural prompts via shared module (NO domain/brand mention)

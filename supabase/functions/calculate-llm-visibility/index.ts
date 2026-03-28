@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
   const supabase = getServiceClient()
 
   try {
-    const { tracked_site_id, user_id } = await req.json()
+    const { tracked_site_id, user_id, siteContext: externalContext } = await req.json()
 
     if (!tracked_site_id || !user_id) {
       return new Response(JSON.stringify({ error: 'Missing tracked_site_id or user_id' }), {
@@ -380,8 +380,19 @@ Deno.serve(async (req) => {
     // ── Auto-enrich site identity card if context fields are empty ──
     const enrichedContext = await ensureSiteContext(site)
 
-    // Merge enriched context back into site object for prompt generation
-    const enrichedSite = { ...site, ...enrichedContext }
+    // Merge: caller-provided context > enriched context > site data (fallback chain)
+    const enrichedSite = {
+      ...site,
+      ...enrichedContext,
+      ...(externalContext?.market_sector ? { market_sector: externalContext.market_sector } : {}),
+      ...(externalContext?.products_services ? { products_services: externalContext.products_services } : {}),
+      ...(externalContext?.target_audience ? { target_audience: externalContext.target_audience } : {}),
+      ...(externalContext?.commercial_area ? { commercial_area: externalContext.commercial_area } : {}),
+      ...(externalContext?.entity_type ? { entity_type: externalContext.entity_type } : {}),
+    }
+    if (externalContext?.market_sector) {
+      console.log(`[llm-vis] Using caller-provided context override (sector: ${externalContext.market_sector})`)
+    }
 
     const patterns = buildBrandPatterns(enrichedSite)
     const prompts = generatePrompts(enrichedSite)
