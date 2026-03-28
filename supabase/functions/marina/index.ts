@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
+import { writeIdentity } from '../_shared/identityGateway.ts';
 
 /**
  * Edge Function: Marina
@@ -1646,6 +1647,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const hasMarinaContext = Object.keys(marinaSiteContext).length > 0;
       if (hasMarinaContext) {
         console.log(`[Marina] Enriched LLM visibility context: ${JSON.stringify(marinaSiteContext)}`);
+        
+        // Persist extracted context to identity card via gateway (fire-and-forget)
+        if (trackedSiteId) {
+          writeIdentity({
+            siteId: trackedSiteId,
+            fields: marinaSiteContext,
+            source: 'marina',
+            userId: parentJob.user_id,
+          })
+            .then(result => {
+              if (result.applied.length) {
+                console.log(`[Marina] 🏗️ Identity enriched: ${result.applied.join(', ')}`);
+              }
+            })
+            .catch(err => console.warn('[Marina] Identity enrichment failed (non-fatal):', err));
+        }
       }
 
       const llmVisibilityPromise = (async () => {
