@@ -808,7 +808,7 @@ ${templateBlock}`;
       case 'emit_corrective_data':
         cmsActions.push({
           action: args.action || 'update-page',
-          page_key: args.page_key || args.slug,
+          page_key: sanitizePageKey(args.page_key || args.slug),
           slug: args.slug,
           updates: args.field === 'schema_org'
             ? { schema_org: args.schema_org_value || args.value }
@@ -819,7 +819,7 @@ ${templateBlock}`;
       case 'emit_corrective_content':
         cmsActions.push({
           action: args.action || 'update-page',
-          page_key: args.page_key || args.slug,
+          page_key: sanitizePageKey(args.page_key || args.slug),
           slug: args.slug,
           updates: args.updates,
           _channel: 'content_corrective',
