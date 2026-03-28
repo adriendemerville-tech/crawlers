@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -395,34 +396,8 @@ const TIER_NAMES: Record<number, string> = {
 };
 
 // ═══ PAGE TYPE DETECTION ═══
-function detectPageType(item: any): 'landing' | 'product' | 'article' | null {
-  const url = (item.target_url || '').toLowerCase();
-  const cat = (item.finding_category || '').toLowerCase();
-  const title = (item.title || '').toLowerCase();
-  const desc = (item.description || '').toLowerCase();
-  const op = (item.target_operation || '').toLowerCase();
-  const combined = `${url} ${cat} ${title} ${desc}`;
-
-  // 1. Workbench category signals (priority)
-  if (['content_gap', 'content_freshness', 'missing_terms'].includes(cat) && op === 'create') return 'article';
-  if (cat === 'missing_page' && (combined.includes('guide') || combined.includes('article') || combined.includes('blog'))) return 'article';
-  if (cat === 'missing_page' && (combined.includes('landing') || combined.includes('service') || combined.includes('offre'))) return 'landing';
-  if (cat === 'content_upgrade' && (combined.includes('produit') || combined.includes('product') || combined.includes('fiche'))) return 'product';
-
-  // 2. URL pattern detection (fallback)
-  if (/\/(blog|article|actualite|guide|conseil|tutoriel)/.test(url)) return 'article';
-  if (/\/(produit|product|shop|boutique|fiche|item)/.test(url)) return 'product';
-  if (/\/(landing|lp-|offre|solution|service|decouvrir|essai)/.test(url)) return 'landing';
-
-  // 3. Intent signals
-  if (combined.match(/comment|pourquoi|guide|tutoriel|conseils|erreurs/)) return 'article';
-  if (combined.match(/acheter|prix|avis|livraison|stock|fiche produit/)) return 'product';
-  if (combined.match(/conversion|signup|demo|essai|devis|offre/)) return 'landing';
-
-  // 4. Default based on operation
-  if (op === 'create') return 'article'; // Most created content is editorial
-  return null;
-}
+// Use shared detectPageType from _shared/contentBrief.ts
+const detectPageType = sharedDetectPageType;
 
 async function loadPromptTemplates(supabase: ReturnType<typeof getServiceClient>): Promise<Map<string, any>> {
   const { data, error } = await supabase
@@ -684,8 +659,31 @@ RÈGLES:
     // ── KEYWORD ENRICHMENT: aggregate from multiple sources ──
     const keywordEnrichment = await enrichKeywordsForPrescribe(supabase, context.domain, context.tracked_site_id, contentItems);
 
+    // ── CONTENT BRIEF: build deterministic brief for the top content item ──
+    const topContentItem = contentItems[0];
+    const briefPageType = topContentItem?._detected_page_type || 'article';
+    const primaryKw = topContentItem?.payload?.keyword || topContentItem?.payload?.target_keyword || topContentItem?.title || '';
+    const contentBrief = await buildContentBrief({
+      page_type: briefPageType,
+      keyword: primaryKw,
+      target_url: topContentItem?.target_url || `https://${context.domain}`,
+      domain: context.domain,
+      tracked_site_id: context.tracked_site_id,
+      title: topContentItem?.title || '',
+      finding_category: topContentItem?.finding_category || '',
+      sector: context.siteInfo?.market_sector || '',
+      jargon_distance: context.siteInfo?.jargon_distance ?? null,
+      language: 'fr',
+      secondary_keywords: keywordEnrichment.totalKeywords > 0
+        ? Array.from({ length: Math.min(10, keywordEnrichment.totalKeywords) }).map((_, i) => '') // filled from kwEnrichment
+        : [],
+      supabase,
+    });
+    const briefBlock = briefToPromptBlock(contentBrief);
+
     console.log(`[Parménion] 📄 Content items: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
     console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
+    console.log(`[Parménion] 📋 ContentBrief: type=${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}`);
 
     const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
 Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
@@ -693,27 +691,21 @@ Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produ
 ${siteCtx}
 ${kwCtx}
 
+${briefBlock}
+
 ${keywordEnrichment.promptBlock}
 
 ITEMS À TRAITER (par ordre de priorité):
 ${buildItemsList(contentItems)}
 
-RÈGLES GÉNÉRALES:
+RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
 - Le contenu DOIT être pertinent pour le secteur du site. INTERDIT de créer du contenu hors-sujet.
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
-- Pour les articles: 800-1500 mots minimum, slug en kebab-case sans accents
-- Inclure 3-5 liens internes vers les pages existantes du site
-- UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps). Chaque mot-clé principal DOIT apparaître au moins 1 fois.
-
-RÈGLES SEO/GEO CRITIQUES:
-- Chaque H2 doit contenir au moins 1 passage citable autonome (40-80 mots) exploitable par les LLM
-- L'introduction doit répondre directement à la question principale en 2-3 phrases
-- Inclure une section "Erreurs à éviter" ou "FAQ" — ces formats sont 2x plus cités par les IA
-- Données chiffrées obligatoires (pas de "beaucoup", "souvent" — des chiffres)
-- Mentionner l'année (2026) et des sources quand possible
-- Structure: H1 → H2 → H3 strictement hiérarchique, listes <ul>/<ol>, tableaux si pertinent
+- RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
+- UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps)
+- Intègre les liens internes pré-calculés dans le brief de manière naturelle dans le texte
 ${templateBlock}`;
 
     promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
