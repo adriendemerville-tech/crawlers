@@ -374,46 +374,33 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
 
     console.log("[blog-gen v2] Step 3: Calling Gemini with tool calling...");
 
-    const genRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableApiKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Tu es un rédacteur SEO/GEO expert produisant du contenu factuel sourcé. Nous sommes en 2026. Renforce les signaux E-E-A-T dans chaque article.",
-          },
-          { role: "user", content: articlePrompt },
-        ],
-        temperature: 0.6,
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "publish_article",
-              description: "Publish a blog article with SEO-optimized content",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "SEO title < 60 chars" },
-                  slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
-                  excerpt: { type: "string", description: "Meta description < 155 chars" },
-                  content: { type: "string", description: "Full HTML article with summary-card, impact-card, internal links, external authority links" },
-                  category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
-                  keywords: { type: "string", description: "Comma-separated keywords" },
-                },
-                required: ["title", "slug", "excerpt", "content", "category", "keywords"],
-                additionalProperties: false,
+    const genResp = await callLovableAI({
+      system: "Tu es un rédacteur SEO/GEO expert produisant du contenu factuel sourcé. Nous sommes en 2026. Renforce les signaux E-E-A-T dans chaque article.",
+      user: articlePrompt,
+      temperature: 0.6,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "publish_article",
+            description: "Publish a blog article with SEO-optimized content",
+            parameters: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "SEO title < 60 chars" },
+                slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
+                excerpt: { type: "string", description: "Meta description < 155 chars" },
+                content: { type: "string", description: "Full HTML article with summary-card, impact-card, internal links, external authority links" },
+                category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
+                keywords: { type: "string", description: "Comma-separated keywords" },
               },
+              required: ["title", "slug", "excerpt", "content", "category", "keywords"],
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "publish_article" } },
-      }),
+        },
+      ],
+      toolChoice: { type: "function", function: { name: "publish_article" } },
     });
 
     if (!genRes.ok) {
