@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, FileText, Code2, ChevronUp, ChevronDown, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
+import { ImageStylePicker, type ImageStyle } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [result, setResult] = useState<any>(null);
   const [originalResult, setOriginalResult] = useState<any>(null);
   const [publishing, setPublishing] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
 
   // Form fields
   const [url, setUrl] = useState('');
@@ -58,6 +62,53 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [photoUrl, setPhotoUrl] = useState('');
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
+
+  // Load identity card for smart suggestions
+  useEffect(() => {
+    if (!trackedSiteId || !isOpen) return;
+    supabase
+      .from('tracked_sites')
+      .select('identity_card' as any)
+      .eq('id', trackedSiteId)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data?.identity_card) setIdentityCard(data.identity_card as Record<string, any>);
+      });
+  }, [trackedSiteId, isOpen]);
+
+  const handleGenerateImage = useCallback(async (style: ImageStyle, imagePrompt: string) => {
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt: imagePrompt, style },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setGeneratedImage(data.dataUri);
+
+      // Track style preference
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('image_style_preferences' as any).upsert(
+          {
+            user_id: user.id,
+            tracked_site_id: trackedSiteId || null,
+            target_url: url || null,
+            style_key: style,
+            usage_count: 1,
+            last_used_at: new Date().toISOString(),
+          } as any,
+          { onConflict: 'user_id,tracked_site_id,target_url,style_key', ignoreDuplicates: false }
+        );
+      }
+
+      toast.success('Image générée !');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de génération d\'image');
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, [trackedSiteId, url]);
 
   // Auto-fill from draft data (from Cocoon assistant extraction)
   useEffect(() => {
@@ -316,6 +367,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 <label className="text-[11px] text-white/50 uppercase tracking-wider">Instructions spécifiques</label>
                 <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Ex: Inclure un tableau comparatif…" rows={2} className="bg-white/5 border-white/10 text-white text-xs resize-none" />
               </div>
+
+              {/* Image style picker */}
+              <div className="border-t border-white/10 pt-3">
+                <ImageStylePicker
+                  pageType={pageType}
+                  trackedSiteId={trackedSiteId}
+                  targetUrl={url}
+                  identityCard={identityCard}
+                  onGenerate={handleGenerateImage}
+                  generating={generatingImage}
+                />
+              </div>
             </div>
 
             <div className="shrink-0 p-4 border-t border-white/10">
@@ -335,7 +398,17 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             )}
 
             <ScrollArea className="flex-1 p-4">
-              {!result && !loading && (
+              {/* Generated image preview */}
+              {generatedImage && (
+                <div className="mb-4 rounded-lg border border-white/10 overflow-hidden">
+                  <img src={generatedImage} alt="Image générée" className="w-full max-h-64 object-contain bg-black/30" />
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.03]">
+                    <span className="text-[10px] text-white/30">Image générée</span>
+                    <button onClick={() => setGeneratedImage(null)} className="text-[10px] text-white/30 hover:text-white/50">✕ Retirer</button>
+                  </div>
+                </div>
+              )}
+              {!result && !loading && !generatedImage && (
                 <div className="flex items-center justify-center h-full text-white/20 text-sm">
                   Remplissez les champs et lancez la génération
                 </div>

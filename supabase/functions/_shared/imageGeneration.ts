@@ -1,17 +1,118 @@
 /**
- * Image Generation Module — Multi-provider routing
+ * Image Generation Module — Multi-provider routing with 12 styles
  * 
  * Providers:
- *   - imagen3: Google Imagen 3 via Lovable AI Gateway (photo-réaliste)
- *   - flux:    Black Forest Labs FLUX (artistique, illustration)
- *   - ideogram: Ideogram (typographie, logos, texte sur image)
- * 
- * Usage:
- *   import { generateImage, ImageStyle } from '../_shared/imageGeneration.ts';
+ *   - imagen3: Google Imagen 3 via Lovable AI Gateway (photo-réaliste, cinématique)
+ *   - flux:    Black Forest Labs FLUX (artistique, illustration, sketch, etc.)
+ *   - ideogram: Ideogram (typographie, logos, noir & blanc, peinture classique)
  */
 
-export type ImageStyle = 'photo' | 'artistic' | 'typography';
+export type ImageStyle =
+  | 'photo'           // Photo réaliste → imagen3
+  | 'cinematic'       // Cinématique → imagen3
+  | 'flat'            // Illustration flat → flux
+  | 'watercolor'      // Aquarelle → flux
+  | 'isometric'       // Isométrique 3D → flux
+  | 'sketch'          // Croquis / Sketch → flux
+  | 'popart'          // Pop Art → flux
+  | 'vintage'         // Vintage / Rétro → flux
+  | 'typography'      // Typographique → ideogram
+  | 'infographic'     // Infographie → ideogram
+  | 'bw_photo'        // Noir & Blanc → ideogram
+  | 'classic_painting'; // Peinture classique (gouache, huile, fauvisme) → ideogram
+
 export type ImageProvider = 'imagen3' | 'flux' | 'ideogram';
+
+export interface ImageStyleConfig {
+  key: ImageStyle;
+  label: string;
+  emoji: string;
+  provider: ImageProvider;
+  promptPrefix: string;
+  /** Which page types this style suits best */
+  suitableFor: string[];
+  /** Which sectors this style suits best (from identity card) */
+  suitableSectors: string[];
+}
+
+export const IMAGE_STYLES: ImageStyleConfig[] = [
+  {
+    key: 'photo', label: 'Photo réaliste', emoji: '📸', provider: 'imagen3',
+    promptPrefix: 'Generate a photorealistic high-quality photograph:',
+    suitableFor: ['product', 'landing', 'homepage'],
+    suitableSectors: ['ecommerce', 'immobilier', 'tourisme', 'restauration', 'mode'],
+  },
+  {
+    key: 'cinematic', label: 'Cinématique', emoji: '🌙', provider: 'imagen3',
+    promptPrefix: 'Generate a cinematic image with dramatic lighting, shallow depth of field, and film-like color grading:',
+    suitableFor: ['landing', 'homepage', 'article'],
+    suitableSectors: ['luxe', 'mode', 'culture', 'entertainment', 'tourisme'],
+  },
+  {
+    key: 'flat', label: 'Illustration flat', emoji: '🎨', provider: 'flux',
+    promptPrefix: 'Create a flat design vector-style illustration with clean shapes and bold colors:',
+    suitableFor: ['article', 'landing', 'faq'],
+    suitableSectors: ['tech', 'saas', 'startup', 'education', 'finance'],
+  },
+  {
+    key: 'watercolor', label: 'Aquarelle', emoji: '🖌️', provider: 'flux',
+    promptPrefix: 'Create a watercolor painting with soft textures, flowing colors and artistic brush strokes:',
+    suitableFor: ['article', 'landing'],
+    suitableSectors: ['art', 'bien-etre', 'nature', 'education', 'culture'],
+  },
+  {
+    key: 'isometric', label: 'Isométrique 3D', emoji: '🏗️', provider: 'flux',
+    promptPrefix: 'Create an isometric 3D illustration with stylized objects and clean perspective:',
+    suitableFor: ['landing', 'article', 'product'],
+    suitableSectors: ['tech', 'saas', 'immobilier', 'industrie', 'logistique'],
+  },
+  {
+    key: 'sketch', label: 'Croquis / Sketch', emoji: '✏️', provider: 'flux',
+    promptPrefix: 'Create a pencil sketch drawing with elegant hand-drawn lines and subtle shading:',
+    suitableFor: ['article', 'faq'],
+    suitableSectors: ['architecture', 'design', 'education', 'artisanat'],
+  },
+  {
+    key: 'popart', label: 'Pop Art', emoji: '🌈', provider: 'flux',
+    promptPrefix: 'Create a pop art style image with vivid colors, bold outlines, Ben-Day dots and Warhol-inspired aesthetic:',
+    suitableFor: ['landing', 'article'],
+    suitableSectors: ['culture', 'entertainment', 'mode', 'media'],
+  },
+  {
+    key: 'vintage', label: 'Vintage / Rétro', emoji: '🪵', provider: 'flux',
+    promptPrefix: 'Create a vintage retro style image with sepia tones, film grain, and 1970s aesthetic:',
+    suitableFor: ['article', 'landing'],
+    suitableSectors: ['artisanat', 'restauration', 'culture', 'mode', 'tourisme'],
+  },
+  {
+    key: 'typography', label: 'Typographique', emoji: '🔤', provider: 'ideogram',
+    promptPrefix: 'Create a typographic design with beautiful integrated text, poster-style layout:',
+    suitableFor: ['landing', 'homepage', 'category'],
+    suitableSectors: ['marketing', 'media', 'education', 'saas'],
+  },
+  {
+    key: 'infographic', label: 'Infographie', emoji: '📊', provider: 'ideogram',
+    promptPrefix: 'Create a clean infographic with visual data representation, icons and structured layout:',
+    suitableFor: ['article', 'faq', 'landing'],
+    suitableSectors: ['finance', 'sante', 'tech', 'education', 'b2b'],
+  },
+  {
+    key: 'bw_photo', label: 'Noir & Blanc', emoji: '⚫', provider: 'ideogram',
+    promptPrefix: 'Create a stunning black and white photograph with dramatic contrast, rich tones and artistic composition:',
+    suitableFor: ['article', 'landing', 'homepage'],
+    suitableSectors: ['luxe', 'architecture', 'art', 'mode', 'culture'],
+  },
+  {
+    key: 'classic_painting', label: 'Peinture classique', emoji: '🖼️', provider: 'ideogram',
+    promptPrefix: 'Create an oil painting in classical art style, inspired by fauvism with bold brushstrokes, vivid gouache-like colors and vintage poster aesthetic:',
+    suitableFor: ['article', 'landing'],
+    suitableSectors: ['art', 'culture', 'tourisme', 'restauration', 'luxe', 'vin'],
+  },
+];
+
+export function getStyleConfig(styleKey: ImageStyle): ImageStyleConfig {
+  return IMAGE_STYLES.find(s => s.key === styleKey) || IMAGE_STYLES[0];
+}
 
 export interface ImageGenerationRequest {
   prompt: string;
@@ -29,6 +130,7 @@ export interface ImageGenerationRequest {
 
 export interface ImageGenerationResult {
   provider: ImageProvider;
+  style: ImageStyle;
   /** base64-encoded image data (without data URI prefix) */
   imageBase64: string;
   /** MIME type */
@@ -42,12 +144,8 @@ export interface ImageGenerationResult {
 /** Route style → provider */
 export function resolveProvider(style: ImageStyle, override?: ImageProvider): ImageProvider {
   if (override) return override;
-  switch (style) {
-    case 'photo': return 'imagen3';
-    case 'artistic': return 'flux';
-    case 'typography': return 'ideogram';
-    default: return 'imagen3';
-  }
+  const config = getStyleConfig(style);
+  return config.provider;
 }
 
 // ─── Imagen 3 (via Lovable AI Gateway) ───────────────────────────
@@ -55,6 +153,8 @@ export function resolveProvider(style: ImageStyle, override?: ImageProvider): Im
 async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY not configured');
+
+  const styleConfig = getStyleConfig(req.style);
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -67,7 +167,7 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
       messages: [
         {
           role: 'user',
-          content: `Generate a photorealistic image: ${req.prompt}`,
+          content: `${styleConfig.promptPrefix} ${req.prompt}`,
         },
       ],
       modalities: ['image', 'text'],
@@ -87,12 +187,12 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
     throw new Error('Imagen3: no image in response');
   }
 
-  // Parse data URI → base64
   const match = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
   if (!match) throw new Error('Imagen3: unexpected image format');
 
   return {
     provider: 'imagen3',
+    style: req.style,
     imageBase64: match[2],
     mimeType: match[1],
     dataUri: imageData,
@@ -105,7 +205,8 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
   const apiKey = Deno.env.get('BFL_API_KEY');
   if (!apiKey) throw new Error('BFL_API_KEY not configured');
 
-  // Step 1: Submit generation request
+  const styleConfig = getStyleConfig(req.style);
+
   const submitResponse = await fetch('https://api.bfl.ml/v1/flux-pro-1.1', {
     method: 'POST',
     headers: {
@@ -113,7 +214,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      prompt: req.prompt,
+      prompt: `${styleConfig.promptPrefix} ${req.prompt}`,
       width: req.width || 1024,
       height: req.height || 1024,
       ...(req.negativePrompt ? { negative_prompt: req.negativePrompt } : {}),
@@ -129,7 +230,6 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
   const { id: taskId } = await submitResponse.json();
   if (!taskId) throw new Error('FLUX: no task ID returned');
 
-  // Step 2: Poll for result (max 120s)
   const maxAttempts = 60;
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 2000));
@@ -143,7 +243,6 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
     const result = await pollResponse.json();
 
     if (result.status === 'Ready' && result.result?.sample) {
-      // FLUX returns a URL — fetch and convert to base64
       const imgResponse = await fetch(result.result.sample);
       const imgBuffer = await imgResponse.arrayBuffer();
       const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
@@ -151,6 +250,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
 
       return {
         provider: 'flux',
+        style: req.style,
         imageBase64: base64,
         mimeType,
         dataUri: `data:${mimeType};base64,${base64}`,
@@ -170,7 +270,9 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
 
 async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
   const apiKey = Deno.env.get('IDEOGRAM_API_KEY');
-  if (!apiKey) throw new Error('IDEOGRAM_API_KEY not configured — module prêt, clé requise');
+  if (!apiKey) throw new Error('IDEOGRAM_API_KEY not configured');
+
+  const styleConfig = getStyleConfig(req.style);
 
   const response = await fetch('https://api.ideogram.ai/generate', {
     method: 'POST',
@@ -180,7 +282,7 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
     },
     body: JSON.stringify({
       image_request: {
-        prompt: req.prompt,
+        prompt: `${styleConfig.promptPrefix} ${req.prompt}`,
         model: 'V_2',
         aspect_ratio: req.aspectRatio || 'ASPECT_1_1',
         magic_prompt_option: 'AUTO',
@@ -201,7 +303,6 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
     throw new Error('Ideogram: no image URL in response');
   }
 
-  // Fetch image and convert to base64
   const imgResponse = await fetch(imageUrl);
   const imgBuffer = await imgResponse.arrayBuffer();
   const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
@@ -209,6 +310,7 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
 
   return {
     provider: 'ideogram',
+    style: req.style,
     imageBase64: base64,
     mimeType,
     dataUri: `data:${mimeType};base64,${base64}`,
@@ -240,10 +342,48 @@ export async function generateImage(req: ImageGenerationRequest): Promise<ImageG
 }
 
 /** Check which providers are available based on configured secrets */
-export function getAvailableProviders(): { provider: ImageProvider; available: boolean; style: ImageStyle }[] {
+export function getAvailableProviders(): { provider: ImageProvider; available: boolean }[] {
   return [
-    { provider: 'imagen3', available: !!Deno.env.get('LOVABLE_API_KEY'), style: 'photo' },
-    { provider: 'flux', available: !!Deno.env.get('BFL_API_KEY'), style: 'artistic' },
-    { provider: 'ideogram', available: !!Deno.env.get('IDEOGRAM_API_KEY'), style: 'typography' },
+    { provider: 'imagen3', available: !!Deno.env.get('LOVABLE_API_KEY') },
+    { provider: 'flux', available: !!Deno.env.get('BFL_API_KEY') },
+    { provider: 'ideogram', available: !!Deno.env.get('IDEOGRAM_API_KEY') },
   ];
+}
+
+/** Suggest 3 styles based on page type, sector, and user history */
+export function suggestStyles(
+  pageType: string,
+  sector: string | null,
+  userHistory: { style_key: string; usage_count: number }[] = [],
+): ImageStyle[] {
+  const normalizedSector = (sector || '').toLowerCase();
+  const normalizedPageType = (pageType || 'article').toLowerCase();
+
+  // Score each style
+  const scored = IMAGE_STYLES.map(style => {
+    let score = 0;
+    // Page type match
+    if (style.suitableFor.includes(normalizedPageType)) score += 3;
+    // Sector match
+    if (normalizedSector && style.suitableSectors.some(s => normalizedSector.includes(s))) score += 2;
+    // Usage history bonus
+    const history = userHistory.find(h => h.style_key === style.key);
+    if (history) score += Math.min(5, history.usage_count);
+    return { style: style.key, score };
+  });
+
+  // Sort by score desc, take top 3
+  scored.sort((a, b) => b.score - a.score);
+
+  // Always include the user's most-used style if they have history
+  const suggestions = scored.slice(0, 3).map(s => s.style);
+
+  if (userHistory.length > 0) {
+    const topUsed = userHistory.sort((a, b) => b.usage_count - a.usage_count)[0];
+    if (topUsed && !suggestions.includes(topUsed.style_key as ImageStyle)) {
+      suggestions[2] = topUsed.style_key as ImageStyle;
+    }
+  }
+
+  return suggestions;
 }
