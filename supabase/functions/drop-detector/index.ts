@@ -46,7 +46,14 @@ Deno.serve(async (req) => {
 
     for (const site of sites) {
       try {
-        const result = await analyzeSite(supabase, site, minWeeks, dropThreshold, predictionThreshold);
+        // Fetch identity card for seasonality awareness
+        const siteContext = await getSiteContext(supabase, { trackedSiteId: site.id, userId: site.user_id })
+        const isSeasonal = !!(siteContext as any)?.is_seasonal
+        // Relax drop threshold by 25% for seasonal sites
+        const adjustedDropThreshold = isSeasonal ? dropThreshold * 1.25 : dropThreshold
+        const adjustedPredictionThreshold = isSeasonal ? Math.min(95, predictionThreshold * 1.15) : predictionThreshold
+
+        const result = await analyzeSite(supabase, site, minWeeks, adjustedDropThreshold, adjustedPredictionThreshold);
         if (result.alert) alertsGenerated++;
         if (result.diagnostic) diagnosticsCreated++;
       } catch (err) {
