@@ -39,6 +39,7 @@ interface ContentArchitectSidebarProps {
 
 export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, selectedPageType }: ContentArchitectSidebarProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string | null>(selectedSiteId || null);
   const [activePageType, setActivePageType] = useState<'landing' | 'product' | 'article'>((selectedPageType as any) || 'landing');
