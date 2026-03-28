@@ -246,7 +246,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-[95vw] max-w-6xl h-[85vh] bg-[#0f0a1e] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+      <div className="w-[98vw] max-w-[1400px] h-[90vh] bg-[#0f0a1e] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
         {/* Header with counters */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
           <div className="flex items-center gap-3">
