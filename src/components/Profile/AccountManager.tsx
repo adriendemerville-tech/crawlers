@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 const translations = {
   fr: {
     title: 'Gestion des comptes',
-    description: 'Invitez jusqu\'à 2 collaborateurs (3 comptes max.)',
+    description: 'Gérez les collaborateurs de votre équipe',
     ownerAccount: 'Compte propriétaire',
     you: '(vous)',
     invite: 'Inviter',
@@ -39,7 +39,7 @@ const translations = {
   },
   en: {
     title: 'Account Management',
-    description: 'Invite up to 2 collaborators (3 accounts max.)',
+    description: 'Manage your team collaborators',
     ownerAccount: 'Owner Account',
     you: '(you)',
     invite: 'Invite',
@@ -66,7 +66,7 @@ const translations = {
   },
   es: {
     title: 'Gestión de cuentas',
-    description: 'Invite hasta 2 colaboradores (3 cuentas máx.)',
+    description: 'Gestione sus colaboradores de equipo',
     ownerAccount: 'Cuenta propietaria',
     you: '(usted)',
     invite: 'Invitar',
@@ -231,7 +231,7 @@ export function AccountManager() {
               {t.title}
             </CardTitle>
             <Badge variant="outline" className="border-violet-500/30 text-violet-600">
-              {totalSlots + 1}/3 {t.slots} {t.used}
+              {totalSlots + 1}/{maxCollaborators + 1} {t.slots} {t.used}
             </Badge>
           </div>
           <CardDescription>{t.description}</CardDescription>
