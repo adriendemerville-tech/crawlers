@@ -128,7 +128,7 @@ function ProfileContent() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
   const { isAdmin, isViewer, isViewerLevel2, hasAdminAccess, isReadOnly, isAuditor, auditorExpired, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, canSeeIntelligence, loading: adminLoading } = useAdmin();
-  const { isAgencyPro, balance } = useCredits();
+  const { isAgencyPro, balance, planType } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = translations[language];
@@ -194,7 +194,9 @@ function ProfileContent() {
                 {isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Crown className="h-4 w-4 text-yellow-500" />
-                    <span className="hidden sm:inline font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">Pro Agency</span>
+                    <span className="hidden sm:inline font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
+                      {planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency'}
+                    </span>
                   </TabsTrigger>
                 )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
