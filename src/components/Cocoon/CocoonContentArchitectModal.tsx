@@ -298,9 +298,32 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
-            <X className="w-4 h-4 text-white/50" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Publish / Update button in header */}
+            {result && (
+              <Button
+                onClick={handlePublish}
+                disabled={publishing || !result}
+                size="sm"
+                className={hasCmsConnection
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold h-7 text-xs'
+                  : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 h-7 text-xs'}
+              >
+                {publishing ? (
+                  <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
+                ) : hasCmsConnection ? (
+                  <><Upload className="w-3 h-3 mr-1.5" />{isExistingPage
+                    ? t3(language, 'Mettre à jour', 'Update', 'Actualizar')
+                    : t3(language, 'Publier', 'Publish', 'Publicar')}{isEdited ? ' ✎' : ''}</>
+                ) : (
+                  <><Plug className="w-3 h-3 mr-1.5" />{t3(language, 'Connecter CMS', 'Connect CMS', 'Conectar CMS')}</>
+                )}
+              </Button>
+            )}
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+              <X className="w-4 h-4 text-white/50" />
+            </button>
+          </div>
         </div>
 
         {/* Body: left options + right preview */}
