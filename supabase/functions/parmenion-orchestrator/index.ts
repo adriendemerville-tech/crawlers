@@ -113,7 +113,6 @@ serve(async (req: Request) => {
         .eq('domain', domain)
         .order('created_at', { ascending: false })
         .limit(3),
-      // Fetch the site's actual keyword universe from domain_data_cache
       supabase.from('domain_data_cache')
         .select('result_data')
         .eq('domain', domain)
@@ -121,7 +120,6 @@ serve(async (req: Request) => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      // Fetch site identity (market sector, business type)
       supabase.from('tracked_sites')
         .select('site_name, market_sector, business_type, client_targets, site_context')
         .eq('id', tracked_site_id)
@@ -134,7 +132,6 @@ serve(async (req: Request) => {
     const pendingRecommendations = recoRegistryRes.data || [];
     const rawAuditData = auditRawRes.data || [];
 
-    // Extract the site's keyword universe
     const siteKeywords: string[] = [];
     const serpKpis = (siteKeywordsRes as any)?.data?.result_data;
     if (serpKpis?.sample_keywords) {
@@ -144,7 +141,6 @@ serve(async (req: Request) => {
     }
     const siteInfo = (siteInfoRes as any)?.data || null;
 
-    // Collect execution results from previous phases in this pipeline run
     const previousPhaseResults = (lastCompletedDecisions || [])
       .filter(d => d.execution_results)
       .slice(0, 5)
@@ -154,6 +150,23 @@ serve(async (req: Request) => {
         functions: d.functions_called,
         results: d.execution_results,
       }));
+
+    // ═══ PHASE 2b: ALGORITHMIC PRIORITY SCORING (prescribe phase) ═══
+    let scoredWorkbenchItems: any[] = [];
+    if (currentPhase === 'prescribe') {
+      const userId = authUserId || bodyUserId || tracked_site_id;
+      const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
+        p_domain: domain,
+        p_user_id: userId,
+        p_limit: 5,
+      });
+      if (scoreErr) {
+        console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
+      } else {
+        scoredWorkbenchItems = scored || [];
+        console.log(`[Parménion] 📊 Scored ${scoredWorkbenchItems.length} workbench items. Top tier: ${scoredWorkbenchItems[0]?.tier ?? 'none'}, top score: ${scoredWorkbenchItems[0]?.total_score ?? 0}`);
+      }
+    }
 
     // ═══ PHASE 3: LLM Decision ═══
     const decision = await askParmenionLLM({
@@ -171,6 +184,7 @@ serve(async (req: Request) => {
       isIktracker,
       siteKeywords,
       siteInfo,
+      scoredWorkbenchItems,
     });
 
     if (!decision) {
@@ -276,6 +290,7 @@ async function askParmenionLLM(context: {
   isIktracker: boolean;
   siteKeywords: string[];
   siteInfo: any;
+  scoredWorkbenchItems: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -483,6 +498,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
 function buildPhaseInstructions(context: {
   currentPhase: PipelinePhase;
   isIktracker: boolean;
+  scoredWorkbenchItems: any[];
 }): string {
   switch (context.currentPhase) {
     case 'audit':
@@ -501,78 +517,7 @@ Choisis la fonction la plus pertinente selon les problèmes révélés par l'aud
 IMPORTANT: Ne refais PAS d'audit technique. Les données sont là, utilise-les pour choisir le bon diagnostic.`;
 
     case 'prescribe':
-      return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
-Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
-Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
-Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
-
-## RÈGLE CRITIQUE DE PERTINENCE THÉMATIQUE
-⚠️ Le mot-clé ("keyword") choisi pour content-architecture-advisor DOIT être en rapport DIRECT avec l'activité du site.
-- Consulte l'UNIVERS MOTS-CLÉS DU SITE ci-dessus pour choisir un mot-clé pertinent
-- Si le site est sur les "indemnités kilométriques", le keyword doit concerner les frais de déplacement, la fiscalité auto, etc. — PAS le SEO, le marketing, ou tout autre sujet hors secteur
-- Le contenu créé doit répondre aux questions que les CLIENTS du site se posent, pas aux questions techniques du webmaster
-- En cas de doute, utilise un mot-clé issu directement de la liste de mots-clés fournie dans le contexte
-
-## DEUX TYPES DE PRESCRIPTIONS
-
-### TYPE A: Correctifs techniques (meta, performance, schema)
-→ Utilise generate-corrective-code
-→ Payload: tableau "fixes" avec id, label, category, prompt, enabled, target_url
-
-### TYPE B: Création de contenu (multi-objectifs)
-→ Utilise content-architecture-advisor pour générer l'architecture du contenu
-→ Payload ENRICHI:
-{
-  "url": "https://domain.tld",
-  "keyword": "mot-clé-cible PERTINENT pour le secteur du site",
-  "page_type": "article",
-  "tracked_site_id": "...",
-  "page_type": "article",
-  "tracked_site_id": "...",
-  "strategic_objectives": [
-    { "type": "content_gap", "description": "Combler le gap sur X", "priority": "high", "related_keywords": ["kw1", "kw2"] },
-    { "type": "internal_linking", "description": "Renforcer le maillage vers /page-A et /page-B", "priority": "high", "related_urls": ["https://domain.tld/page-A"] },
-    { "type": "eeat_improvement", "description": "Démontrer l'expertise sur le sujet Y", "priority": "medium" },
-    { "type": "silo_rebalance", "description": "Rééquilibrer le cluster Z", "priority": "medium" },
-    { "type": "cannibalization_fix", "description": "Différencier de /page-C qui cannibalise le mot-clé W", "priority": "high" }
-  ],
-  "target_internal_links": [
-    { "url": "https://domain.tld/page-cible", "anchor_text": "texte d'ancre suggéré", "reason": "page pilier du silo" }
-  ],
-  "cannibalization_data": [
-    { "keyword": "mot-clé cannibalisé", "competing_urls": ["https://domain.tld/page-A", "https://domain.tld/page-B"], "severity": "high" }
-  ],
-  "silo_context": {
-    "cluster_name": "Nom du cluster",
-    "existing_pages": ["https://domain.tld/p1", "https://domain.tld/p2"],
-    "gap_description": "Description du trou dans le silo"
-  }
-}
-
-RÈGLES POUR CONSTRUIRE LE PAYLOAD:
-1. Un contenu doit TOUJOURS servir AU MOINS 2 objectifs stratégiques (ex: gap + maillage, ou nouveau mot-clé + E-E-A-T)
-2. Utilise les données du cocon sémantique pour remplir target_internal_links avec les URLs concrètes des pages du cluster
-3. Si le diagnostic révèle une cannibalisation, INCLUS les données dans cannibalization_data
-4. Si le contenu s'inscrit dans un silo, INCLUS le silo_context avec les pages existantes
-5. Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
-
-## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
-Le payload DOIT contenir un tableau "fixes" avec ce format exact:
-{
-  "fixes": [
-    {
-      "id": "fix-unique-id",
-      "label": "Description courte du correctif",
-      "category": "seo|performance|strategic|accessibility",
-      "prompt": "Instructions détaillées pour le LLM générateur: ce qu'il doit corriger, où, et comment",
-      "enabled": true,
-      "target_url": "https://domain.tld/page-cible (optionnel)"
-    }
-  ]
-}
-SANS ce tableau "fixes", l'appel ÉCHOUERA. Génère au moins 1 fix basé sur les diagnostics.
-
-IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`;
+      return buildPrescribeInstructions(context);
 
     case 'execute':
       return context.isIktracker ? buildIktrackerExecuteInstructions() : buildWpsyncExecuteInstructions();
@@ -596,6 +541,68 @@ Dans ton summary, compare les métriques avant/après si disponibles.
 IMPORTANT: C'est une vérification READ-ONLY. Tu ne modifies RIEN. Tu constates et tu mesures.
 Si la validation échoue (correctifs non appliqués), signale-le dans le reasoning avec un risk_score élevé.`;
   }
+}
+
+function buildPrescribeInstructions(context: { isIktracker: boolean; scoredWorkbenchItems: any[] }): string {
+  const items = context.scoredWorkbenchItems;
+  
+  if (items.length === 0) {
+    return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+Aucun item prioritaire n'a été identifié dans le workbench. 
+Utilise les recommandations en attente et les données d'audit brutes pour générer un correctif technique via generate-corrective-code.
+Fonctions autorisées: generate-corrective-code, content-architecture-advisor`;
+  }
+
+  const tierNames: Record<number, string> = {
+    0: 'Accessibilité critique', 1: 'Performance', 2: 'Crawl mineur',
+    3: 'Données structurées GEO', 4: 'On-page mineur (meta)',
+    5: 'On-page majeur (contenu)', 6: 'Maillage interne',
+    7: 'Cannibalisation', 8: 'Gap par modification',
+    9: 'Gap par création', 10: 'Expansion sémantique',
+  };
+
+  const itemsTable = items.map((it: any, i: number) => 
+    `${i + 1}. [Tier ${it.tier}: ${tierNames[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity} | ${it.finding_category}
+   "${it.title}" → ${it.target_url || 'N/A'}
+   ${it.description?.slice(0, 200) || ''}
+   action_type: ${it.action_type} | payload: ${JSON.stringify(it.payload)?.slice(0, 500)}`
+  ).join('\n\n');
+
+  // Determine if top items are code or content
+  const topItem = items[0];
+  const isCodeAction = ['code', 'both'].includes(topItem.action_type) && 
+    [0, 1, 2, 3, 4].includes(topItem.tier);
+  const isContentAction = ['content', 'both'].includes(topItem.action_type) && 
+    topItem.tier >= 5;
+
+  let channelInstruction = '';
+  if (isCodeAction) {
+    channelInstruction = `→ L'item #1 est de type TECHNIQUE (tier ${topItem.tier}). Utilise generate-corrective-code avec un payload "fixes".`;
+  } else if (isContentAction) {
+    channelInstruction = `→ L'item #1 est de type CONTENU (tier ${topItem.tier}). Utilise content-architecture-advisor.`;
+  } else {
+    channelInstruction = `→ Choisis generate-corrective-code (technique) ou content-architecture-advisor (contenu) selon le type de l'item #1.`;
+  }
+
+  return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+
+## PRIORITÉS ALGORITHMIQUES (scoring pyramidal — NE CHANGE PAS L'ORDRE)
+L'algorithme de scoring a classé les items suivants par priorité. Tu DOIS traiter l'item #1 en priorité.
+Tu ne décides PAS quoi faire — l'algorithme l'a déjà décidé. Tu génères le payload correct.
+
+${itemsTable}
+
+## CANAL DE DÉPLOIEMENT
+${channelInstruction}
+
+Fonctions autorisées: generate-corrective-code, content-architecture-advisor
+
+## RÈGLES
+1. Traite l'item #1. Si tu peux aussi traiter #2 dans le même payload, fais-le.
+2. Pour generate-corrective-code: payload DOIT contenir "fixes": [{ "id", "label", "category", "prompt", "enabled": true, "target_url" }]
+3. Pour content-architecture-advisor: payload DOIT contenir "url", "keyword" (pertinent au secteur du site), "page_type", "tracked_site_id"
+4. Ne refais PAS de diagnostic. Les données sont classées, exécute.
+5. Le "goal.description" doit mentionner le tier et l'item traité.`;
 }
 
 function buildIktrackerExecuteInstructions(): string {
