@@ -1,5 +1,6 @@
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts'
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -150,22 +151,15 @@ Expressions de 2-5 mots à forte intention.
 JSON uniquement: {"seeds": ["mot clé 1", ...]}`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-      }),
+    const resp = await callLovableAI({
+      user: prompt,
+      model: 'google/gemini-2.5-flash-lite',
+      temperature: 0.5,
       signal: AbortSignal.timeout(12000),
     });
 
-    if (!response.ok) { await response.text(); return []; }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('generate-more-keywords-seeds', 'google/gemini-2.5-flash-lite', data.usage, domain);
+    const content = resp.content;
+    trackTokenUsage('generate-more-keywords-seeds', 'google/gemini-2.5-flash-lite', resp.usage, domain);
 
     let seeds: string[] = [];
     try {
@@ -199,8 +193,7 @@ async function synthesizeStrategicAnalysis(
 ): Promise<KeywordItem[]> {
   if (keywords.length === 0) return keywords;
   
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) return keywords;
+  if (!isLovableAIConfigured()) return keywords;
 
   const kwList = keywords.slice(0, 10).map(k => 
     `"${k.keyword}" (vol:${k.volume}, diff:${k.difficulty}, pos:${k.current_rank})`
@@ -217,22 +210,14 @@ Pour chaque mot-clé, fournis une analyse stratégique. Réponds en JSON:
 {"analyses": [{"keyword": "...", "intent": "Transactionnel|Informatif|Décisionnel", "business_value": "High|Medium|Low", "pain_point": "Problème que l'utilisateur cherche à résoudre", "recommended_action": "Action concrète"}]}`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      }),
+    const resp = await callLovableAI({
+      user: prompt,
+      model: 'google/gemini-2.5-flash-lite',
       signal: AbortSignal.timeout(15000),
     });
 
-    if (!response.ok) { await response.text(); return keywords; }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('generate-more-keywords-synthesis', 'google/gemini-2.5-flash-lite', data.usage, domain);
+    const content = resp.content;
+    trackTokenUsage('generate-more-keywords-synthesis', 'google/gemini-2.5-flash-lite', resp.usage, domain);
 
     let analyses: any[] = [];
     try {
