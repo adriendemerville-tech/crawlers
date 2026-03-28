@@ -10,7 +10,7 @@
  * Uses Lovable AI Gateway (preferred) or OpenRouter as fallback.
  */
 
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { writeIdentity } from './identityGateway.ts'
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -303,49 +303,35 @@ export async function ensureSiteContext(
     nonprofit_type: inferred.nonprofit_type || currentContext.nonprofit_type,
   }
 
-  // Persist enriched data to tracked_sites
+  // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {
     try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      const supabase = createClient(supabaseUrl, serviceKey)
-
-      const updatePayload: Record<string, unknown> = {
-        identity_enriched_at: new Date().toISOString(),
-        identity_source: newSource,
-      }
-      if (merged.market_sector) updatePayload.market_sector = merged.market_sector
-      if (merged.products_services) updatePayload.products_services = merged.products_services
-      if (merged.target_audience) updatePayload.target_audience = merged.target_audience
-      if (merged.commercial_area) updatePayload.commercial_area = merged.commercial_area
-      if (merged.company_size) updatePayload.company_size = merged.company_size
-      if (merged.entity_type) updatePayload.entity_type = merged.entity_type
-      if (merged.media_specialties?.length) updatePayload.media_specialties = merged.media_specialties
-      if (merged.commercial_model) updatePayload.commercial_model = merged.commercial_model
-      if (merged.nonprofit_type) updatePayload.nonprofit_type = merged.nonprofit_type
+      const fields: Record<string, unknown> = {}
+      if (merged.market_sector) fields.market_sector = merged.market_sector
+      if (merged.products_services) fields.products_services = merged.products_services
+      if (merged.target_audience) fields.target_audience = merged.target_audience
+      if (merged.commercial_area) fields.commercial_area = merged.commercial_area
+      if (merged.company_size) fields.company_size = merged.company_size
+      if (merged.entity_type) fields.entity_type = merged.entity_type
+      if (merged.media_specialties?.length) fields.media_specialties = merged.media_specialties
+      if (merged.commercial_model) fields.commercial_model = merged.commercial_model
+      if (merged.nonprofit_type) fields.nonprofit_type = merged.nonprofit_type
       if (merged.site_name && merged.site_name !== domain) {
-        updatePayload.site_name = merged.site_name
+        fields.site_name = merged.site_name
       }
 
-      // Calculate confidence on the merged result
-      const confidenceInput = { ...site, ...updatePayload }
-      const confidence = calculateConfidence(confidenceInput)
-      updatePayload.identity_confidence = confidence
+      const result = await writeIdentity({
+        siteId,
+        fields,
+        source: newSource as any,
+        forceDirectWrite: true, // enrichSiteContext always does direct writes
+      })
 
-      const { error } = await supabase
-        .from('tracked_sites')
-        .update(updatePayload)
-        .eq('id', siteId)
-
-      if (error) {
-        console.error(`[enrich-site] DB update error for ${domain}:`, error)
-      } else {
-        console.log(`[enrich-site] 💾 ${domain} identity card saved (confidence: ${confidence}, source: ${newSource})`)
-      }
-
-      merged.identity_confidence = confidence
+      merged.identity_confidence = result.confidence
       merged.identity_source = newSource
-      merged.identity_enriched_at = updatePayload.identity_enriched_at as string
+      merged.identity_enriched_at = new Date().toISOString()
+      
+      console.log(`[enrich-site] 💾 ${domain} via gateway: ${result.applied.length} applied, confidence: ${result.confidence}`)
     } catch (err) {
       console.error(`[enrich-site] Persist error:`, err)
     }
