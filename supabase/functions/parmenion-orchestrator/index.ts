@@ -381,7 +381,7 @@ const CONTENT_TOOLS = [
             type: 'object',
             properties: {
               title: { type: 'string' },
-              content: { type: 'string', description: 'HTML content to replace/append' },
+              content: { type: 'string', description: 'Markdown content to replace/append' },
               excerpt: { type: 'string' },
             },
           },
@@ -406,7 +406,7 @@ const CONTENT_TOOLS = [
             properties: {
               title: { type: 'string' },
               slug: { type: 'string' },
-              content: { type: 'string', description: 'Full HTML content with H2, H3, lists, internal links. MINIMUM 800 mots (environ 5000 caractères). Un article de qualité fait entre 800 et 1500 mots. Ne JAMAIS produire moins de 600 mots.', minLength: 3000 },
+              content: { type: 'string', description: 'Full Markdown content with ## H2, ### H3, lists, internal links [ancre](url). MINIMUM 800 mots (environ 5000 caractères). Un article de qualité fait entre 800 et 1500 mots. Ne JAMAIS produire moins de 600 mots.', minLength: 3000 },
               excerpt: { type: 'string' },
               meta_description: { type: 'string' },
               meta_title: { type: 'string' },
@@ -786,7 +786,8 @@ RÈGLES:
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
 - Le contenu DOIT être pertinent pour le secteur du site (${context.siteInfo?.market_sector || 'inconnu'}). INTERDIT de créer du contenu hors-sujet ou générique sur le SEO.
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
-- LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères HTML). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
+- LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
+- FORMAT OBLIGATOIRE: tout le contenu DOIT être en **Markdown** (pas de HTML). Utilise ## pour H2, ### pour H3, **gras**, *italique*, - pour listes, [ancre](url) pour liens, > pour citations.
 - RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
 - UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps)
 - Intègre les liens internes pré-calculés dans le brief de manière naturelle dans le texte
@@ -1312,7 +1313,7 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 | title | string | Titre affiché de la page |
 | meta_title | string | Balise <title> SEO (si différent du title) |
 | meta_description | string | Meta description SEO |
-| content | object/string | Contenu HTML de la page |
+| content | object/string | Contenu Markdown de la page |
 | canonical_url | string | URL canonique (si cross-posting ou duplicate) |
 | schema_org | object | Données structurées JSON-LD (FAQPage, HowTo, etc.) |
 | page_key | string | Identifiant unique / slug de la page |
@@ -1322,7 +1323,7 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 |-------|------|-------------|
 | title | string | Titre de l'article |
 | slug | string | URL slug en kebab-case sans accents |
-| content | string | Contenu HTML complet et riche |
+| content | string | Contenu Markdown complet et riche |
 | excerpt | string | Résumé court affiché en listing/cards (2-3 phrases) |
 | meta_description | string | Meta description SEO (max 160 chars) |
 | meta_title | string | Balise <title> SEO si différent du title |
@@ -1350,12 +1351,12 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 
 ## RÈGLES POUR LA CRÉATION DE CONTENU (create-post)
 Quand tu crées un article pour combler un gap de contenu:
-1. Le contenu DOIT être du HTML complet et riche (pas du texte brut) avec :
-   - Des titres H2/H3 bien structurés
+1. Le contenu DOIT être en **Markdown** (PAS de HTML) avec :
+   - Des titres ## H2 et ### H3 bien structurés
    - Des paragraphes de 3-4 phrases max
-   - Des listes à puces ou numérotées quand pertinent
-   - Un chapô introductif en gras
-2. Le contenu DOIT inclure des LIENS INTERNES concrets sous forme <a href="https://iktracker.fr/chemin">ancre</a>
+   - Des listes à puces (- item) ou numérotées (1. item) quand pertinent
+   - Un chapô introductif en **gras**
+2. Le contenu DOIT inclure des LIENS INTERNES concrets sous forme [ancre descriptive](https://iktracker.fr/chemin)
    - Utilise les URLs existantes du site trouvées dans les diagnostics et le cocon sémantique
    - Vise 3 à 5 liens internes par article, vers les pages stratégiquement liées
    - Les ancres doivent être naturelles et descriptives (pas "cliquez ici")
@@ -1367,11 +1368,10 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. ⚠️ INDEXABILITÉ : Le contenu HTML DOIT inclure en tout début une balise meta robots indexable:
-   <meta name="robots" content="index, follow">
-   ET dans le schema_org, ajoute "isAccessibleForFree": true
+9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true
 10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
 11. author_name par défaut: "Équipe IKtracker"
+12. ⚠️ FORMAT: N'utilise JAMAIS de balises HTML (<h2>, <p>, <a>, <ul>, etc.). Tout DOIT être en syntaxe Markdown pure.
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
