@@ -516,78 +516,7 @@ Choisis la fonction la plus pertinente selon les problèmes révélés par l'aud
 IMPORTANT: Ne refais PAS d'audit technique. Les données sont là, utilise-les pour choisir le bon diagnostic.`;
 
     case 'prescribe':
-      return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
-Les audits et diagnostics sont terminés. Tu as les résultats ci-dessous.
-Tu dois maintenant GÉNÉRER LE CODE CORRECTIF concret à appliquer.
-Fonctions autorisées: cocoon-strategist, calculate-cocoon-logic, generate-corrective-code, content-architecture-advisor
-
-## RÈGLE CRITIQUE DE PERTINENCE THÉMATIQUE
-⚠️ Le mot-clé ("keyword") choisi pour content-architecture-advisor DOIT être en rapport DIRECT avec l'activité du site.
-- Consulte l'UNIVERS MOTS-CLÉS DU SITE ci-dessus pour choisir un mot-clé pertinent
-- Si le site est sur les "indemnités kilométriques", le keyword doit concerner les frais de déplacement, la fiscalité auto, etc. — PAS le SEO, le marketing, ou tout autre sujet hors secteur
-- Le contenu créé doit répondre aux questions que les CLIENTS du site se posent, pas aux questions techniques du webmaster
-- En cas de doute, utilise un mot-clé issu directement de la liste de mots-clés fournie dans le contexte
-
-## DEUX TYPES DE PRESCRIPTIONS
-
-### TYPE A: Correctifs techniques (meta, performance, schema)
-→ Utilise generate-corrective-code
-→ Payload: tableau "fixes" avec id, label, category, prompt, enabled, target_url
-
-### TYPE B: Création de contenu (multi-objectifs)
-→ Utilise content-architecture-advisor pour générer l'architecture du contenu
-→ Payload ENRICHI:
-{
-  "url": "https://domain.tld",
-  "keyword": "mot-clé-cible PERTINENT pour le secteur du site",
-  "page_type": "article",
-  "tracked_site_id": "...",
-  "page_type": "article",
-  "tracked_site_id": "...",
-  "strategic_objectives": [
-    { "type": "content_gap", "description": "Combler le gap sur X", "priority": "high", "related_keywords": ["kw1", "kw2"] },
-    { "type": "internal_linking", "description": "Renforcer le maillage vers /page-A et /page-B", "priority": "high", "related_urls": ["https://domain.tld/page-A"] },
-    { "type": "eeat_improvement", "description": "Démontrer l'expertise sur le sujet Y", "priority": "medium" },
-    { "type": "silo_rebalance", "description": "Rééquilibrer le cluster Z", "priority": "medium" },
-    { "type": "cannibalization_fix", "description": "Différencier de /page-C qui cannibalise le mot-clé W", "priority": "high" }
-  ],
-  "target_internal_links": [
-    { "url": "https://domain.tld/page-cible", "anchor_text": "texte d'ancre suggéré", "reason": "page pilier du silo" }
-  ],
-  "cannibalization_data": [
-    { "keyword": "mot-clé cannibalisé", "competing_urls": ["https://domain.tld/page-A", "https://domain.tld/page-B"], "severity": "high" }
-  ],
-  "silo_context": {
-    "cluster_name": "Nom du cluster",
-    "existing_pages": ["https://domain.tld/p1", "https://domain.tld/p2"],
-    "gap_description": "Description du trou dans le silo"
-  }
-}
-
-RÈGLES POUR CONSTRUIRE LE PAYLOAD:
-1. Un contenu doit TOUJOURS servir AU MOINS 2 objectifs stratégiques (ex: gap + maillage, ou nouveau mot-clé + E-E-A-T)
-2. Utilise les données du cocon sémantique pour remplir target_internal_links avec les URLs concrètes des pages du cluster
-3. Si le diagnostic révèle une cannibalisation, INCLUS les données dans cannibalization_data
-4. Si le contenu s'inscrit dans un silo, INCLUS le silo_context avec les pages existantes
-5. Priorise les gaps qui renforcent le maillage interne existant (combler des trous entre clusters)
-
-## FORMAT OBLIGATOIRE DU PAYLOAD POUR generate-corrective-code
-Le payload DOIT contenir un tableau "fixes" avec ce format exact:
-{
-  "fixes": [
-    {
-      "id": "fix-unique-id",
-      "label": "Description courte du correctif",
-      "category": "seo|performance|strategic|accessibility",
-      "prompt": "Instructions détaillées pour le LLM générateur: ce qu'il doit corriger, où, et comment",
-      "enabled": true,
-      "target_url": "https://domain.tld/page-cible (optionnel)"
-    }
-  ]
-}
-SANS ce tableau "fixes", l'appel ÉCHOUERA. Génère au moins 1 fix basé sur les diagnostics.
-
-IMPORTANT: Ne refais PAS de diagnostic. Les données sont là, utilise-les.`;
+      return buildPrescribeInstructions(context);
 
     case 'execute':
       return context.isIktracker ? buildIktrackerExecuteInstructions() : buildWpsyncExecuteInstructions();
