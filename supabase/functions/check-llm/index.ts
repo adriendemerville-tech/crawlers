@@ -43,10 +43,242 @@ interface LLMResponse {
   summary: string;
   coreValueMatch: boolean;
   hallucinations?: string[];
+  error?: boolean;
 }
 
-// Helper function for delay between API calls
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ═══════════════════════════════════════════════
+// Brand pattern detection (post-processing, no bias)
+// ═══════════════════════════════════════════════
+
+interface BrandPatterns {
+  exact: string[];
+  domain: string;
+}
+
+function buildBrandPatterns(domain: string): BrandPatterns {
+  const cleanDomain = domain.replace(/^www\./, '');
+  const domainBase = cleanDomain.split('.')[0].toLowerCase();
+  // Build brand name from domain: "gkg-consulting" → "gkg consulting"
+  const brandWords = domainBase.split(/[-_]/).join(' ');
+  
+  const patterns: string[] = [domainBase];
+  if (brandWords !== domainBase) patterns.push(brandWords);
+  // Add full domain
+  patterns.push(cleanDomain.toLowerCase());
+  // Add without hyphens: "gkgconsulting"
+  const noSep = domainBase.replace(/[-_]/g, '');
+  if (noSep !== domainBase) patterns.push(noSep);
+  
+  return { exact: [...new Set(patterns)], domain: cleanDomain };
+}
+
+function detectCitation(text: string, patterns: BrandPatterns): boolean {
+  const lower = text.toLowerCase();
+  return patterns.exact.some(p => lower.includes(p));
+}
+
+function detectSentimentFromText(text: string, cited: boolean): SentimentType {
+  if (!cited) return 'neutral';
+  const lower = text.toLowerCase();
+  
+  const strongPositive = ['excellent', 'leader', 'meilleur', 'best', 'top', 'référence', 'confiance', 'reconnu', 'incontournable', 'outstanding', 'highly recommended', 'premier'];
+  const mildPositive = ['bon', 'good', 'recommand', 'fiable', 'sérieux', 'professionnel', 'reliable', 'solid', 'decent', 'expert', 'spécialis'];
+  const negative = ['problème', 'éviter', 'avoid', 'mauvais', 'bad', 'issue', 'poor', 'méfiance', 'critique', 'controversy', 'scandal'];
+  const mixed = ['mais', 'cependant', 'toutefois', 'however', 'although', 'mixed', 'partagé', 'divisé'];
+  
+  let posScore = 0, negScore = 0, mixScore = 0;
+  for (const s of strongPositive) { if (lower.includes(s)) posScore += 2; }
+  for (const s of mildPositive) { if (lower.includes(s)) posScore += 1; }
+  for (const s of negative) { if (lower.includes(s)) negScore += 2; }
+  for (const s of mixed) { if (lower.includes(s)) mixScore += 1; }
+  
+  if (negScore > posScore && negScore > mixScore) return 'negative';
+  if (mixScore > 2 || (posScore > 0 && negScore > 0)) return 'mixed';
+  if (posScore >= 4) return 'positive';
+  if (posScore >= 1) return 'mostly_positive';
+  return 'neutral';
+}
+
+function detectRecommendation(text: string, cited: boolean): boolean {
+  if (!cited) return false;
+  const lower = text.toLowerCase();
+  const recoSignals = ['recommand', 'recommend', 'je conseille', 'i suggest', 'je suggère', 'vous pouvez', 'n\'hésitez pas', 'bonne option', 'good option', 'worth', 'go with'];
+  return recoSignals.some(s => lower.includes(s));
+}
+
+// ═══════════════════════════════════════════════
+// Natural prompt generation (NO brand/domain mention)
+// ═══════════════════════════════════════════════
+
+interface SiteContext {
+  market_sector?: string;
+  products_services?: string;
+  target_audience?: string;
+  commercial_area?: string;
+}
+
+function generateNaturalPrompts(ctx: SiteContext, lang: Language): string[] {
+  const sector = ctx.market_sector || '';
+  const products = ctx.products_services || '';
+  const target = ctx.target_audience || '';
+  const area = ctx.commercial_area || '';
+  
+  const prompts: string[] = [];
+  
+  if (lang === 'fr') {
+    if (products) {
+      prompts.push(area
+        ? `Je cherche ${products} ${area}, tu connais des bons prestataires ?`
+        : `Je cherche ${products}, tu peux me recommander quelqu'un ?`
+      );
+      prompts.push(`C'est quoi le mieux pour ${products} en ce moment ?`);
+    }
+    if (sector) {
+      prompts.push(`J'ai besoin d'un coup de main en ${sector}, tu connais des bons ?`);
+      if (target) {
+        prompts.push(`Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`);
+      }
+    }
+    if (prompts.length === 0) {
+      prompts.push(`Je cherche un bon prestataire pour mon projet, tu as des recommandations ?`);
+      prompts.push(`Quels sont les meilleurs dans ce domaine en ce moment ?`);
+    }
+  } else if (lang === 'en') {
+    if (products) {
+      prompts.push(area
+        ? `I'm looking for ${products} in ${area}, any good recommendations?`
+        : `I need ${products}, who would you recommend?`
+      );
+      prompts.push(`What's the best option for ${products} right now?`);
+    }
+    if (sector) {
+      prompts.push(`I need help with ${sector}, do you know any good providers?`);
+      if (target) {
+        prompts.push(`As a ${target}, I need ${sector}, what would you suggest?`);
+      }
+    }
+    if (prompts.length === 0) {
+      prompts.push(`I'm looking for a good service provider for my project, any recommendations?`);
+      prompts.push(`Who are the best in this field right now?`);
+    }
+  } else {
+    // es
+    if (products) {
+      prompts.push(area
+        ? `Busco ${products} en ${area}, ¿conoces buenos proveedores?`
+        : `Necesito ${products}, ¿a quién me recomiendas?`
+      );
+      prompts.push(`¿Cuál es la mejor opción para ${products} ahora mismo?`);
+    }
+    if (sector) {
+      prompts.push(`Necesito ayuda con ${sector}, ¿conoces buenos proveedores?`);
+    }
+    if (prompts.length === 0) {
+      prompts.push(`Busco un buen proveedor para mi proyecto, ¿alguna recomendación?`);
+    }
+  }
+  
+  return [...new Set(prompts)].slice(0, 2);
+}
+
+// ═══════════════════════════════════════════════
+// Natural LLM query — no brand mention, post-process
+// ═══════════════════════════════════════════════
+
+async function queryLLMNatural(
+  apiKey: string,
+  model: string,
+  domain: string,
+  prompts: string[],
+  patterns: BrandPatterns,
+  lang: Language,
+): Promise<LLMResponse> {
+  const t = getLLMTranslations(lang);
+  const allResponses: string[] = [];
+  
+  for (const prompt of prompts) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        signal: controller.signal,
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://crawlers.lovable.app',
+          'X-Title': 'Crawlers.fr - LLM Visibility',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.4,
+          max_tokens: 600,
+        }),
+      });
+      
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        console.error(`[check-llm] ${model} HTTP ${response.status}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      
+      trackTokenUsage('check-llm', model, data.usage, domain);
+      trackPaidApiCall('check-llm', 'openrouter', model, domain);
+      
+      allResponses.push(content);
+      
+      // If cited on first prompt, no need for second
+      if (detectCitation(content, patterns)) break;
+    } catch (err) {
+      console.error(`[check-llm] ${model} error on prompt:`, err);
+    }
+  }
+  
+  if (allResponses.length === 0) {
+    return {
+      cited: false,
+      sentiment: 'neutral',
+      recommends: false,
+      summary: t.unableToRetrieve(domain),
+      coreValueMatch: false,
+      hallucinations: [],
+      error: true,
+    };
+  }
+  
+  // Post-process: analyze all responses for brand mentions
+  const fullText = allResponses.join('\n');
+  const cited = detectCitation(fullText, patterns);
+  const sentiment = detectSentimentFromText(fullText, cited);
+  const recommends = detectRecommendation(fullText, cited);
+  
+  // Extract a summary from the response
+  const summaryText = allResponses[0].slice(0, 300);
+  const summary = cited
+    ? `${patterns.exact[0]} ${sentiment === 'positive' || sentiment === 'mostly_positive' ? 'est mentionné positivement' : sentiment === 'negative' ? 'est mentionné négativement' : 'est mentionné'} dans les réponses du LLM.`
+    : `${patterns.exact[0]} n'est pas spontanément cité par ce LLM.`;
+  
+  return {
+    cited,
+    sentiment,
+    recommends,
+    summary,
+    coreValueMatch: cited,
+    hallucinations: [],
+  };
+}
+
+// ═══════════════════════════════════════════════
+// Legacy custom prompt support (audit-matrice, etc.)
+// ═══════════════════════════════════════════════
 
 async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: string): Promise<LLMResponse> {
   try {
@@ -72,197 +304,15 @@ async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: s
   }
 }
 
-// Prompts traduits par langue avec 5 niveaux de sentiment (descriptions améliorées)
-const llmPrompts: Record<Language, (domain: string, siteContext?: string) => string> = {
-  fr: (domain, siteContext) => `Tu analyses le site web/marque "${domain}".${siteContext ? `\n\nContexte vérifié sur ce site :\n${siteContext}` : ''}\nRéponds à ces questions au format JSON :
-
-1. Connais-tu ce site web/cette marque ? (cited: true/false)
-2. Quel est ton sentiment général sur ce site ? Choisis EXACTEMENT l'une de ces 5 valeurs :
-   - "positive" : Excellent, recommandé sans aucune réserve, très bonne réputation
-   - "mostly_positive" : Bon service/produit mais avec quelques critiques mineures ou petits défauts
-   - "neutral" : Pas d'opinion particulière, manque d'informations pour juger
-   - "mixed" : Avis très partagés, polémiques, controverses (ex: bon produit mais mauvais support client)
-   - "negative" : Mauvais, problèmes significatifs détectés, mauvaise réputation
-   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
-3. Recommanderais-tu ce site aux utilisateurs recherchant ses services ? (recommends: true/false)
-4. Fournis un bref résumé en 1-2 phrases de ce que tu sais sur ce site. (summary: string - RÉPONDS EN FRANÇAIS)
-5. Comprends-tu correctement l'objectif principal/la proposition de valeur de ce site ? (coreValueMatch: true/false)
-6. Liste les éventuelles inexactitudes ou hallucinations dans tes connaissances sur ce site. (hallucinations: array de strings en français, vide si aucune)
-
-IMPORTANT : Réponds UNIQUEMENT avec du JSON valide, sans texte avant ou après. Format exact :
-{
-  "cited": boolean,
-  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
-  "recommends": boolean,
-  "summary": "string en français",
-  "coreValueMatch": boolean,
-  "hallucinations": ["string"] ou []
-}`,
-  en: (domain, siteContext) => `You are analyzing the website/brand "${domain}".${siteContext ? `\n\nVerified context about this site:\n${siteContext}` : ''}\nAnswer these questions in JSON format:
-
-1. Are you aware of this website/brand? (cited: true/false)
-2. What is your overall sentiment about this site? Choose EXACTLY one of these 5 values:
-   - "positive": Excellent, recommended without any reservation, very good reputation
-   - "mostly_positive": Good service/product but with some minor criticisms or small flaws
-   - "neutral": No particular opinion, lack of information to judge
-   - "mixed": Very divided opinions, controversies, polarizing (e.g., good product but bad customer support)
-   - "negative": Bad, significant problems detected, poor reputation
-   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
-3. Would you recommend this site to users looking for its services? (recommends: true/false)
-4. Provide a brief 1-2 sentence summary of what you know about this site. (summary: string - RESPOND IN ENGLISH)
-5. Do you understand the core purpose/value proposition of this site correctly? (coreValueMatch: true/false)
-6. List any potential inaccuracies or hallucinations in your knowledge about this site. (hallucinations: array of strings, empty if none)
-
-IMPORTANT: Respond ONLY with valid JSON, no text before or after. Exact format:
-{
-  "cited": boolean,
-  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
-  "recommends": boolean,
-  "summary": "string in English",
-  "coreValueMatch": boolean,
-  "hallucinations": ["string"] or []
-}`,
-  es: (domain, siteContext) => `Estás analizando el sitio web/marca "${domain}".${siteContext ? `\n\nContexto verificado sobre este sitio:\n${siteContext}` : ''}\nResponde a estas preguntas en formato JSON:
-
-1. ¿Conoces este sitio web/marca? (cited: true/false)
-2. ¿Cuál es tu sentimiento general sobre este sitio? Elige EXACTAMENTE uno de estos 5 valores:
-   - "positive": Excelente, recomendado sin ninguna reserva, muy buena reputación
-   - "mostly_positive": Buen servicio/producto pero con algunas críticas menores o pequeños defectos
-   - "neutral": Sin opinión particular, falta de información para juzgar
-   - "mixed": Opiniones muy divididas, controversias, polarizante (ej: buen producto pero mal soporte)
-   - "negative": Malo, problemas significativos detectados, mala reputación
-   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
-3. ¿Recomendarías este sitio a usuarios que buscan sus servicios? (recommends: true/false)
-4. Proporciona un breve resumen de 1-2 oraciones de lo que sabes sobre este sitio. (summary: string - RESPONDE EN ESPAÑOL)
-5. ¿Comprendes correctamente el propósito principal/propuesta de valor de este sitio? (coreValueMatch: true/false)
-6. Lista cualquier inexactitud potencial o alucinación en tu conocimiento sobre este sitio. (hallucinations: array de strings en español, vacío si no hay ninguna)
-
-IMPORTANTE: Responde ÚNICAMENTE con JSON válido, sin texto antes o después. Formato exacto:
-{
-  "cited": boolean,
-  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
-  "recommends": boolean,
-  "summary": "string en español",
-  "coreValueMatch": boolean,
-  "hallucinations": ["string"] o []
-}`
-};
-
-async function queryLLM(
-  apiKey: string,
-  model: string,
-  domain: string,
-  lang: Language,
-  correctionContext: string = '',
-  siteContextStr: string = ''
-): Promise<LLMResponse> {
-  const t = getLLMTranslations(lang);
-  const prompt = llmPrompts[lang](domain, siteContextStr) + correctionContext;
-
-  try {
-    // Individual 8s timeout per LLM to prevent one slow provider from blocking all
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      signal: controller.signal,
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://crawlers.lovable.app',
-        'X-Title': 'Crawlers.fr - LLM Visibility Analyzer',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
-      }),
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error from ${model}:`, response.status, errorText);
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-
-    // Track token usage
-    trackTokenUsage('check-llm', model, data.usage, domain);
-    trackPaidApiCall('check-llm', 'openrouter', model, domain);
-
-    if (!content) {
-      throw new Error('No content in response');
-    }
-
-    // Parse JSON from response (handle markdown code blocks and extra text)
-    let jsonStr = content.trim();
-    // Strip markdown fences aggressively
-    jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
-    // Fallback: extract JSON by finding first { and last }
-    const firstBrace = jsonStr.indexOf('{');
-    const lastBrace = jsonStr.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace > firstBrace) {
-      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-    }
-
-    // Sanitize malformed JSON from LLMs (single quotes, trailing commas, unquoted keys)
-    jsonStr = jsonStr
-      // Replace single-quoted string values with double-quoted
-      .replace(/:\s*'([^']*)'/g, ': "$1"')
-      // Replace single-quoted keys
-      .replace(/'([^']+)'\s*:/g, '"$1":')
-      // Remove trailing commas before } or ]
-      .replace(/,\s*([\]}])/g, '$1');
-
-    const parsed = JSON.parse(jsonStr.trim());
-
-    // Validate sentiment is one of the 5 valid values (with strict validation)
-    const validSentiments: SentimentType[] = ['positive', 'mostly_positive', 'neutral', 'mixed', 'negative'];
-    const rawSentiment = String(parsed.sentiment || '').toLowerCase().trim();
-    const sentiment: SentimentType = validSentiments.includes(rawSentiment as SentimentType) 
-      ? (rawSentiment as SentimentType)
-      : 'neutral';
-
-    return {
-      cited: Boolean(parsed.cited),
-      sentiment,
-      recommends: Boolean(parsed.recommends),
-      summary: parsed.summary || `Analysis of ${domain}`,
-      coreValueMatch: Boolean(parsed.coreValueMatch),
-      hallucinations: Array.isArray(parsed.hallucinations) ? parsed.hallucinations : [],
-    };
-  } catch (error) {
-    console.error(`Failed to query ${model}:`, error);
-    // Return an error response — will be treated as neutral (not counted in score)
-    return {
-      cited: false,
-      sentiment: 'neutral' as SentimentType,
-      recommends: false,
-      summary: t.unableToRetrieve(domain),
-      coreValueMatch: false,
-      hallucinations: [],
-      error: true,
-    };
-  }
-}
+// ═══════════════════════════════════════════════
+// Main handler
+// ═══════════════════════════════════════════════
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // ── IP Rate Limit ──
   const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'check-llm', 10, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
@@ -270,7 +320,6 @@ Deno.serve(async (req) => {
   if (!acquireConcurrency('check-llm', 30)) return concurrencyResponse(corsHeaders);
 
   try {
-    // ── Fair Use ──
     const userCtx = await getUserContext(req);
     if (userCtx) {
       const fairUse = await checkFairUse(userCtx.userId, 'llm_check', userCtx.planType);
@@ -281,6 +330,7 @@ Deno.serve(async (req) => {
         });
       }
     }
+    
     const { url, lang: requestLang, correction, customPrompt, targetProvider } = await req.json();
     const lang = parseLanguage(requestLang);
     const t = getLLMTranslations(lang);
@@ -301,26 +351,30 @@ Deno.serve(async (req) => {
     }
 
     const domain = extractDomain(url);
-    const correctionContext = correction ? `\n\nIMPORTANT CORRECTION FROM THE SITE OWNER: "${correction}". Take this into account in your analysis.` : '';
-    console.log(`Analyzing LLM visibility for: ${domain}${correction ? ' (with user correction)' : ''}`);
+    const patterns = buildBrandPatterns(domain);
+    console.log(`[check-llm] Analyzing: ${domain}, patterns: ${patterns.exact.join(', ')}`);
 
-    // ── Fetch site identity card (enriches if needed) ──
-    let siteContextStr = '';
+    // Fetch site context for natural prompts
+    let siteCtx: SiteContext = {};
     try {
       const supabase = getServiceClient();
       const ctx = await getSiteContext(supabase, { domain });
       if (ctx) {
-        const parts: string[] = [];
-        if (ctx.market_sector) parts.push(`Secteur: ${ctx.market_sector}`);
-        if (ctx.products_services) parts.push(`Produits/Services: ${ctx.products_services}`);
-        if (ctx.target_audience) parts.push(`Cible: ${ctx.target_audience}`);
-        if (ctx.commercial_area) parts.push(`Zone: ${ctx.commercial_area}`);
-        if (parts.length > 0) siteContextStr = parts.join('\n');
+        siteCtx = {
+          market_sector: ctx.market_sector,
+          products_services: ctx.products_services,
+          target_audience: ctx.target_audience,
+          commercial_area: ctx.commercial_area,
+        };
         console.log(`[check-llm] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
       }
     } catch (e) {
       console.warn('[check-llm] Could not fetch site context:', e);
     }
+
+    // Generate natural prompts (NO domain/brand mention)
+    const naturalPrompts = generateNaturalPrompts(siteCtx, lang);
+    console.log(`[check-llm] Natural prompts: ${naturalPrompts.map(p => p.slice(0, 60)).join(' | ')}`);
 
     // Filter providers if targetProvider is specified
     const activeProviders = targetProvider
@@ -328,29 +382,34 @@ Deno.serve(async (req) => {
       : LLM_PROVIDERS;
     const providersToQuery = activeProviders.length > 0 ? activeProviders : LLM_PROVIDERS;
 
-    // Query LLMs with staggered delays to avoid 429 rate limiting
+    // Query LLMs with staggered delays
     const citationPromises = providersToQuery.map(async (provider, index) => {
-      // Stagger requests by 250ms each to avoid overwhelming OpenRouter
       await delay(index * 250);
-      console.log(`Querying ${provider.name} (${provider.model})...`);
-      const startTime = Date.now();
-      // Use customPrompt if provided, otherwise use standard prompt
-      const effectivePrompt = customPrompt
-        ? `${customPrompt}\n\nRéponds au format JSON :\n{"cited": boolean, "sentiment": "positive"|"mostly_positive"|"neutral"|"mixed"|"negative", "recommends": boolean, "summary": "string", "coreValueMatch": boolean, "hallucinations": []}`
-        : undefined;
-      const result = effectivePrompt
-        ? await queryLLMWithCustomPrompt(apiKey, provider.model, effectivePrompt)
-        : await queryLLM(apiKey, provider.model, domain, lang, correctionContext, siteContextStr);
-      const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
-
+      console.log(`[check-llm] Querying ${provider.name} (${provider.model})...`);
+      
+      // Custom prompt path (legacy: audit-matrice, etc.)
+      if (customPrompt) {
+        const effectivePrompt = `${customPrompt}\n\nRéponds au format JSON :\n{"cited": boolean, "sentiment": "positive"|"mostly_positive"|"neutral"|"mixed"|"negative", "recommends": boolean, "summary": "string", "coreValueMatch": boolean, "hallucinations": []}`;
+        const result = await queryLLMWithCustomPrompt(apiKey, provider.model, effectivePrompt);
+        return {
+          provider: { id: provider.id, name: provider.name, company: provider.company },
+          cited: result.cited,
+          iterationDepth: result.cited ? 1 : 0,
+          sentiment: result.sentiment,
+          recommends: result.recommends,
+          coreValueMatch: result.coreValueMatch,
+          summary: result.summary,
+          hallucinations: result.hallucinations?.length ? result.hallucinations : undefined,
+        };
+      }
+      
+      // Natural prompt path (default)
+      const result = await queryLLMNatural(apiKey, provider.model, domain, naturalPrompts, patterns, lang);
+      
       return {
-        provider: {
-          id: provider.id,
-          name: provider.name,
-          company: provider.company,
-        },
+        provider: { id: provider.id, name: provider.name, company: provider.company },
         cited: result.cited,
-        iterationDepth: Math.min(iterationDepth, 5),
+        iterationDepth: result.cited ? 1 : 0,
         sentiment: result.sentiment,
         recommends: result.recommends,
         coreValueMatch: result.coreValueMatch,
@@ -360,45 +419,33 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Use Promise.allSettled to prevent one failed provider from crashing all
     const settled = await Promise.allSettled(citationPromises);
     const citations = settled.map((result, index) => {
       if (result.status === 'fulfilled') return result.value;
-      console.warn(`[check-llm] Provider ${LLM_PROVIDERS[index].name} rejected:`, result.reason);
+      console.warn(`[check-llm] Provider ${providersToQuery[index].name} rejected:`, result.reason);
       return {
-        provider: { id: LLM_PROVIDERS[index].id, name: LLM_PROVIDERS[index].name, company: LLM_PROVIDERS[index].company },
+        provider: { id: providersToQuery[index].id, name: providersToQuery[index].name, company: providersToQuery[index].company },
         cited: false, iterationDepth: 0, sentiment: 'neutral' as SentimentType,
-        recommends: false, coreValueMatch: false, summary: `Unable to query ${LLM_PROVIDERS[index].name}`,
+        recommends: false, coreValueMatch: false, summary: `Unable to query ${providersToQuery[index].name}`,
         error: true,
       };
     });
 
-    // Calculate metrics — error models count as "not cited" to penalize the score
+    // Calculate metrics
     const totalModels = citations.length || 1;
     const validCitations = citations.filter(c => !c.error);
-    const errorCount = citations.filter(c => c.error).length;
     const citedCount = validCitations.filter(c => c.cited).length;
-    // Error models + non-cited valid models = invisible
     const invisibleList = citations.filter(c => c.error || !c.cited).map(c => c.provider);
 
     const avgIterationDepth = citedCount > 0
       ? validCitations.filter(c => c.cited).reduce((sum, c) => sum + c.iterationDepth, 0) / citedCount
       : 0;
 
-    const sentimentCounts: Record<SentimentType, number> = { 
-      positive: 0, 
-      mostly_positive: 0, 
-      neutral: 0, 
-      mixed: 0, 
-      negative: 0 
-    };
+    const sentimentCounts: Record<SentimentType, number> = { positive: 0, mostly_positive: 0, neutral: 0, mixed: 0, negative: 0 };
     validCitations.filter(c => c.cited).forEach(c => {
-      if (sentimentCounts[c.sentiment] !== undefined) {
-        sentimentCounts[c.sentiment]++;
-      }
+      if (sentimentCounts[c.sentiment] !== undefined) sentimentCounts[c.sentiment]++;
     });
 
-    // Determine overall sentiment based on 5-level scale
     let overallSentiment: SentimentType = 'neutral';
     const positiveTotal = sentimentCounts.positive + sentimentCounts.mostly_positive;
     const negativeTotal = sentimentCounts.negative;
@@ -414,47 +461,23 @@ Deno.serve(async (req) => {
 
     const overallRecommendation = validCitations.filter(c => c.recommends).length > totalModels / 2;
 
-    // Calculate overall score — use total models (including errors) as denominator
-    // Error models drag the score down since they count as "not cited"
     const citationScore = (citedCount / totalModels) * 40;
-    const sentimentScoreMap: Record<SentimentType, number> = {
-      positive: 30,
-      mostly_positive: 22,
-      neutral: 15,
-      mixed: 10,
-      negative: 0
-    };
+    const sentimentScoreMap: Record<SentimentType, number> = { positive: 30, mostly_positive: 22, neutral: 15, mixed: 10, negative: 0 };
     const sentimentScore = sentimentScoreMap[overallSentiment];
     const recommendationScore = overallRecommendation ? 20 : 0;
     const coreValueScore = validCitations.filter(c => c.coreValueMatch).length / totalModels * 10;
-
     const overallScore = Math.round(citationScore + sentimentScore + recommendationScore + coreValueScore);
 
-    // Generate core value summary with translations
-    const citedSummaries = citations.filter(c => c.cited).map(c => c.summary);
-    let coreValueSummary: string;
-    
-    if (citedCount > 0) {
-      const perceptionText = overallSentiment === 'positive'
-        ? t.coreValueSummary.positivePerception
-        : overallSentiment === 'negative'
-        ? t.coreValueSummary.negativePerception
-        : t.coreValueSummary.neutralPerception;
-      
-      coreValueSummary = `${t.coreValueSummary.basedOn(citedCount)} ${citedSummaries[0]} ${perceptionText}`;
-    } else {
-      coreValueSummary = t.coreValueSummary.lowVisibility(domain);
-    }
+    const coreValueSummary = citedCount > 0
+      ? `${t.coreValueSummary.basedOn(citedCount)} ${overallSentiment === 'positive' ? t.coreValueSummary.positivePerception : overallSentiment === 'negative' ? t.coreValueSummary.negativePerception : t.coreValueSummary.neutralPerception}`
+      : t.coreValueSummary.lowVisibility(domain);
 
     const result = {
       url: `https://${domain}`,
       domain,
       scannedAt: new Date().toISOString(),
       overallScore,
-      citationRate: {
-        cited: citedCount,
-        total: totalModels,
-      },
+      citationRate: { cited: citedCount, total: totalModels },
       invisibleList,
       averageIterationDepth: Math.round(avgIterationDepth * 10) / 10,
       overallSentiment,
@@ -463,9 +486,7 @@ Deno.serve(async (req) => {
       citations,
     };
 
-    console.log(`Analysis complete. Score: ${result.overallScore}/100, Citations: ${result.citationRate.cited}/${result.citationRate.total}`);
-
-    // Fire-and-forget URL tracking
+    console.log(`[check-llm] ✅ ${domain}: ${overallScore}/100, cited ${citedCount}/${totalModels}`);
     trackAnalyzedUrl(`https://${domain}`).catch(() => {});
 
     return new Response(
@@ -473,7 +494,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error analyzing LLM visibility:', error);
+    console.error('[check-llm] Error:', error);
     await trackEdgeFunctionError('check-llm', error instanceof Error ? error.message : 'Analysis failed').catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
