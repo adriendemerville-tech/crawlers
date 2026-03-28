@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
         const totalSlots =
           (members?.length || 0) + (pendingInvites?.length || 0);
-        const maxSlots = isAgencyPremium ? 4 : 2; // 5 total for Premium, 3 for Pro
+        const maxSlots = isAgencyPremium ? 2 : 1; // 3 total for Premium, 2 for Pro
         if (totalSlots >= maxSlots) {
           return new Response(
             JSON.stringify({

@@ -125,8 +125,10 @@ export function AccountManager() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('collaborator');
 
+  const isAgencyPremium = profile?.plan_type === 'agency_premium';
+  const maxCollaborators = isAgencyPremium ? 2 : 1;
   const totalSlots = members.length + invitations.length;
-  const canInvite = totalSlots < 2;
+  const canInvite = totalSlots < maxCollaborators;
 
   const fetchTeam = async () => {
     setLoading(true);
