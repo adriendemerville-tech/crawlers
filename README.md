@@ -2,7 +2,7 @@
 
 > **Dernière mise à jour** : 25 mars 2026  
 > **Version** : 2.12.0  
-> **Lignes de code** : ~203 000 (Backend: 63 966 · Frontend: 132 823 · SQL: 6 540)
+> **Lignes de code** : ~223 000 (Backend: 77 951 · Frontend: 136 612 · SQL: 8 592)
 
 ---
 
