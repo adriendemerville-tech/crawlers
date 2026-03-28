@@ -290,6 +290,7 @@ async function askParmenionLLM(context: {
   isIktracker: boolean;
   siteKeywords: string[];
   siteInfo: any;
+  scoredWorkbenchItems: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
