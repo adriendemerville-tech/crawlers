@@ -644,13 +644,13 @@ export function MyTracking() {
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">
                         {/* LLM Visibility Dashboard */}
-                        <LLMVisibilityDashboard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                        <LLMVisibilityDashboard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
 
                         {/* LLM Depth */}
                         <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} key={h.llmBenchmarkRefreshKey} />
 
                         {/* IAS */}
-                        <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                        <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
 
                         {/* Keyword Cloud */}
                         {h.latestSerpData?.sample_keywords && (
@@ -663,7 +663,7 @@ export function MyTracking() {
                         )}
 
                         {/* Quick Wins */}
-                        <QuickWinsCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                        <QuickWinsCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} keywords={h.latestSerpData?.sample_keywords || []} userId={h.user?.id || ''} />
                       </TabsContent>
                       <TabsContent value="evolution" className="space-y-4">
                         {h.chartData.length > 0 ? (
@@ -874,7 +874,7 @@ export function MyTracking() {
                           h.setRefreshingSerp(false);
                         }
                       }}
-                      refreshing={h.refreshingSerp}
+                      isRefreshing={h.refreshingSerp}
                     />
                   </div>
                 )}
