@@ -1520,7 +1520,9 @@ function generateRecommendations(
         "Implémenter le lazy loading",
         "Activer la compression Brotli",
         "Utiliser un CDN"
-      ]
+      ],
+      target_selector: 'performance_lcp',
+      target_operation: 'replace',
     });
   }
   
@@ -1534,7 +1536,9 @@ function generateRecommendations(
       title: 'JavaScript bloquant : interactivité dégradée',
       description: `Le TBT de ${Math.round(tbtMs)}ms dépasse le seuil de 200ms.`,
       weaknesses: [`TBT actuel : ${Math.round(tbtMs)}ms (objectif < 200ms)`],
-      fixes: ["Code splitting", "Différer les scripts non critiques", "Utiliser SSR"]
+      fixes: ["Code splitting", "Différer les scripts non critiques", "Utiliser SSR"],
+      target_selector: 'performance_tbt',
+      target_operation: 'replace',
     });
   }
   
@@ -1556,7 +1560,9 @@ function generateRecommendations(
         "Réduire le JavaScript et CSS inline",
         "Supprimer le code HTML inutile",
         "Enrichir le contenu textuel visible"
-      ]
+      ],
+      target_selector: 'content',
+      target_operation: 'replace',
     });
   }
   
