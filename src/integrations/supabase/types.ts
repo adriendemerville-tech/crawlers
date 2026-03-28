@@ -7744,6 +7744,8 @@ export type Database = {
           severity: string
           severity_bonus: number
           source_type: string
+          target_operation: string
+          target_selector: string
           target_url: string
           tier: number
           title: string
