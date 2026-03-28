@@ -510,6 +510,7 @@ Deno.serve(async (req: Request) => {
           // Separate create vs patch actions
           const createActions = routedCmsActions.all.filter((a: any) => a.action === 'create-post' || a.action === 'create-page');
           const patchActions = routedCmsActions.all.filter((a: any) => a.action === 'update-page' || a.action === 'patch-content' || a.action === 'update-h1' || a.action === 'update-faq' || a.action === 'update-meta');
+          const redirectActions = routedCmsActions.all.filter((a: any) => a.action === 'create-redirect' || a.action === 'delete-redirect');
           
           decision.action.functions = decision.action.functions.filter((f: string) => f !== 'iktracker-actions');
           if (createActions.length > 0 && !decision.action.functions.includes('cms-push-draft')) {
@@ -518,6 +519,10 @@ Deno.serve(async (req: Request) => {
           if (patchActions.length > 0 && !decision.action.functions.includes('cms-patch-content')) {
             decision.action.functions.push('cms-patch-content');
             decision.action.payload.patch_actions = patchActions;
+          }
+          if (redirectActions.length > 0 && !decision.action.functions.includes('cms-push-redirect')) {
+            decision.action.functions.push('cms-push-redirect');
+            decision.action.payload.redirect_actions = redirectActions;
           }
         }
 
