@@ -231,7 +231,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           style: img.style,
         }));
 
-      const { data, error } = await supabase.functions.invoke('cms-publish-draft', {
+      const functionName = isExistingPage ? 'cms-patch-content' : 'cms-publish-draft';
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           tracked_site_id: trackedSiteId,
           result_data: result,
@@ -244,15 +245,21 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(t3(language,
-        isEdited
-          ? 'Brouillon envoyé au CMS (version modifiée). La version originale est conservée en historique.'
-          : 'Brouillon envoyé au CMS. Vous pourrez le relire et le publier depuis votre éditeur.',
-        isEdited
-          ? 'Draft sent to CMS (edited version). The original version is saved in history.'
-          : 'Draft sent to CMS. You can review and publish it from your editor.',
-        isEdited
-          ? 'Borrador enviado al CMS (versión editada). La versión original se conserva en el historial.'
-          : 'Borrador enviado al CMS. Puede revisarlo y publicarlo desde su editor.'));
+        isExistingPage
+          ? 'Page mise à jour avec succès.'
+          : isEdited
+            ? 'Brouillon envoyé au CMS (version modifiée).'
+            : 'Brouillon envoyé au CMS.',
+        isExistingPage
+          ? 'Page updated successfully.'
+          : isEdited
+            ? 'Draft sent to CMS (edited version).'
+            : 'Draft sent to CMS.',
+        isExistingPage
+          ? 'Página actualizada con éxito.'
+          : isEdited
+            ? 'Borrador enviado al CMS (versión editada).'
+            : 'Borrador enviado al CMS.'));
     } catch (err: any) {
       toast.error(err.message || 'Erreur de publication');
     } finally {
