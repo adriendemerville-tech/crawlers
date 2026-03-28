@@ -13,6 +13,31 @@
 
 import { ensureSiteContext, SiteContext } from './enrichSiteContext.ts'
 
+// ─── In-memory cache (per Deno isolate instance) ────────────────────
+// Avoids redundant SELECTs when multiple functions run in parallel
+// on the same isolate (e.g. Parmenion triggering 5 audits at once).
+const CACHE_TTL_MS = 30_000 // 30 seconds
+const siteCache = new Map<string, { data: SiteContext; expiresAt: number }>()
+
+function getCached(key: string): SiteContext | null {
+  const entry = siteCache.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    siteCache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCache(key: string, data: SiteContext): void {
+  // Cap cache size to prevent memory leaks in long-lived isolates
+  if (siteCache.size > 200) {
+    const oldest = siteCache.keys().next().value
+    if (oldest) siteCache.delete(oldest)
+  }
+  siteCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS })
+}
+
 interface GetByDomain {
   domain: string
   trackedSiteId?: never
