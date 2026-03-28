@@ -440,6 +440,8 @@ export type Database = {
           source_record_id: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
           status: Database["public"]["Enums"]["workbench_item_status"]
+          target_operation: string | null
+          target_selector: string | null
           target_url: string | null
           title: string
           tracked_site_id: string | null
@@ -465,6 +467,8 @@ export type Database = {
           source_record_id?: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
           status?: Database["public"]["Enums"]["workbench_item_status"]
+          target_operation?: string | null
+          target_selector?: string | null
           target_url?: string | null
           title: string
           tracked_site_id?: string | null
@@ -490,6 +494,8 @@ export type Database = {
           source_record_id?: string | null
           source_type?: Database["public"]["Enums"]["diagnostic_source_type"]
           status?: Database["public"]["Enums"]["workbench_item_status"]
+          target_operation?: string | null
+          target_selector?: string | null
           target_url?: string | null
           title?: string
           tracked_site_id?: string | null
