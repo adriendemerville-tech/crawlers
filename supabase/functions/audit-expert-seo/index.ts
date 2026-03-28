@@ -1582,7 +1582,9 @@ function generateRecommendations(
       fixes: [
         "Varier le H1 pour inclure des synonymes ou des variantes",
         "Garder le mot-clé principal dans les deux mais formuler différemment"
-      ]
+      ],
+      target_selector: 'h1',
+      target_operation: 'replace',
     });
   } else if (insights.semanticConsistency.verdict === 'inconsistent') {
     recommendations.push({
@@ -1599,7 +1601,9 @@ function generateRecommendations(
       fixes: [
         "Aligner le H1 sur le sujet principal du Title",
         "S'assurer que les deux traitent du même sujet"
-      ]
+      ],
+      target_selector: 'h1',
+      target_operation: 'replace',
     });
   }
   
@@ -1619,7 +1623,9 @@ function generateRecommendations(
       fixes: [
         "Remplacer par des ancres descriptives contenant des mots-clés",
         "Exemple : 'Découvrez nos services SEO' au lieu de 'cliquez ici'"
-      ]
+      ],
+      target_selector: 'a',
+      target_operation: 'replace',
     });
   }
   
