@@ -2095,6 +2095,57 @@ export type Database = {
         }
         Relationships: []
       }
+      content_prompt_templates: {
+        Row: {
+          created_at: string
+          detection_patterns: Json
+          examples: Json
+          geo_rules: string
+          id: string
+          is_active: boolean
+          label: string
+          page_type: Database["public"]["Enums"]["content_page_type"]
+          seo_rules: string
+          structure_template: string
+          system_prompt: string
+          tone_guidelines: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          detection_patterns?: Json
+          examples?: Json
+          geo_rules: string
+          id?: string
+          is_active?: boolean
+          label: string
+          page_type: Database["public"]["Enums"]["content_page_type"]
+          seo_rules: string
+          structure_template: string
+          system_prompt: string
+          tone_guidelines: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          detection_patterns?: Json
+          examples?: Json
+          geo_rules?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          page_type?: Database["public"]["Enums"]["content_page_type"]
+          seo_rules?: string
+          structure_template?: string
+          system_prompt?: string
+          tone_guidelines?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       crawl_index_history: {
         Row: {
           crawl_id: string | null
@@ -7799,6 +7850,7 @@ export type Database = {
         | "drupal"
         | "odoo"
         | "prestashop"
+      content_page_type: "landing" | "product" | "article"
       diagnostic_source_type:
         | "crawl"
         | "audit_tech"
@@ -7977,6 +8029,7 @@ export const Constants = {
         "odoo",
         "prestashop",
       ],
+      content_page_type: ["landing", "product", "article"],
       diagnostic_source_type: [
         "crawl",
         "audit_tech",

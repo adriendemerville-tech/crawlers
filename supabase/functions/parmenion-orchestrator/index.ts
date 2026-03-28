@@ -394,6 +394,73 @@ const TIER_NAMES: Record<number, string> = {
   9: 'Gap par création', 10: 'Expansion sémantique',
 };
 
+// ═══ PAGE TYPE DETECTION ═══
+function detectPageType(item: any): 'landing' | 'product' | 'article' | null {
+  const url = (item.target_url || '').toLowerCase();
+  const cat = (item.finding_category || '').toLowerCase();
+  const title = (item.title || '').toLowerCase();
+  const desc = (item.description || '').toLowerCase();
+  const op = (item.target_operation || '').toLowerCase();
+  const combined = `${url} ${cat} ${title} ${desc}`;
+
+  // 1. Workbench category signals (priority)
+  if (['content_gap', 'content_freshness', 'missing_terms'].includes(cat) && op === 'create') return 'article';
+  if (cat === 'missing_page' && (combined.includes('guide') || combined.includes('article') || combined.includes('blog'))) return 'article';
+  if (cat === 'missing_page' && (combined.includes('landing') || combined.includes('service') || combined.includes('offre'))) return 'landing';
+  if (cat === 'content_upgrade' && (combined.includes('produit') || combined.includes('product') || combined.includes('fiche'))) return 'product';
+
+  // 2. URL pattern detection (fallback)
+  if (/\/(blog|article|actualite|guide|conseil|tutoriel)/.test(url)) return 'article';
+  if (/\/(produit|product|shop|boutique|fiche|item)/.test(url)) return 'product';
+  if (/\/(landing|lp-|offre|solution|service|decouvrir|essai)/.test(url)) return 'landing';
+
+  // 3. Intent signals
+  if (combined.match(/comment|pourquoi|guide|tutoriel|conseils|erreurs/)) return 'article';
+  if (combined.match(/acheter|prix|avis|livraison|stock|fiche produit/)) return 'product';
+  if (combined.match(/conversion|signup|demo|essai|devis|offre/)) return 'landing';
+
+  // 4. Default based on operation
+  if (op === 'create') return 'article'; // Most created content is editorial
+  return null;
+}
+
+async function loadPromptTemplates(supabase: ReturnType<typeof getServiceClient>): Promise<Map<string, any>> {
+  const { data, error } = await supabase
+    .from('content_prompt_templates')
+    .select('*')
+    .eq('is_active', true);
+  
+  const map = new Map<string, any>();
+  if (data && !error) {
+    for (const t of data) map.set(t.page_type, t);
+  }
+  return map;
+}
+
+function buildTemplateInstructions(template: any): string {
+  if (!template) return '';
+  return `
+═══ TEMPLATE DE CONTENU: ${template.label.toUpperCase()} ═══
+
+${template.system_prompt}
+
+STRUCTURE OBLIGATOIRE:
+${template.structure_template}
+
+RÈGLES SEO:
+${template.seo_rules}
+
+RÈGLES GEO (OPTIMISATION IA GÉNÉRATIVE):
+${template.geo_rules}
+
+TON ET STYLE:
+${template.tone_guidelines}
+
+EXEMPLES DE RÉFÉRENCE:
+${JSON.stringify(template.examples, null, 2)}
+═══ FIN TEMPLATE ═══`;
+}
+
 async function prescribeWithDualPrompts(context: {
   domain: string;
   cycle_number: number;
@@ -406,6 +473,7 @@ async function prescribeWithDualPrompts(context: {
   tracked_site_id: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const supabase = getServiceClient();
   if (!LOVABLE_API_KEY) return null;
 
   const items = context.scoredWorkbenchItems;
@@ -451,10 +519,30 @@ RÈGLES:
     promises.push(Promise.resolve([]));
   }
 
-  // ── PROMPT CONTENU (tiers 4-10) ──
+  // ── PROMPT CONTENU (tiers 4-10) avec templates SEO/GEO par type de page ──
   if (contentItems.length > 0) {
-    const contentPrompt = `Tu es un moteur de production de contenu SEO. Tu reçois des items prioritaires.
-Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+    // Load prompt templates from DB
+    const templates = await loadPromptTemplates(supabase);
+    
+    // Detect page types for each content item and build per-type instructions
+    const typeInstructions = new Map<string, string>();
+    for (const item of contentItems) {
+      const pageType = detectPageType(item);
+      if (pageType && templates.has(pageType) && !typeInstructions.has(pageType)) {
+        typeInstructions.set(pageType, buildTemplateInstructions(templates.get(pageType)));
+      }
+      // Tag the item with detected type for logging
+      item._detected_page_type = pageType;
+    }
+    
+    const templateBlock = typeInstructions.size > 0
+      ? `\n\nTEMPLATES PAR TYPE DE PAGE (APPLIQUE LE TEMPLATE CORRESPONDANT AU TYPE DÉTECTÉ):\n${Array.from(typeInstructions.values()).join('\n\n')}`
+      : '';
+
+    console.log(`[Parménion] 📄 Content items page types: ${contentItems.map((it: any) => `${it.title?.slice(0, 30)}→${it._detected_page_type || 'auto'}`).join(', ')}`);
+
+    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
+Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
 ${siteCtx}
 ${kwCtx}
@@ -462,14 +550,22 @@ ${kwCtx}
 ITEMS À TRAITER (par ordre de priorité):
 ${buildItemsList(contentItems)}
 
-RÈGLES:
+RÈGLES GÉNÉRALES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
 - Le contenu DOIT être pertinent pour le secteur du site. INTERDIT de créer du contenu hors-sujet.
-- Le contenu HTML doit être riche: H2, H3, listes, liens internes, FAQ si pertinent
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - Pour les articles: 800-1500 mots minimum, slug en kebab-case sans accents
-- Inclure 3-5 liens internes vers les pages existantes du site`;
+- Inclure 3-5 liens internes vers les pages existantes du site
+
+RÈGLES SEO/GEO CRITIQUES:
+- Chaque H2 doit contenir au moins 1 passage citable autonome (40-80 mots) exploitable par les LLM
+- L'introduction doit répondre directement à la question principale en 2-3 phrases
+- Inclure une section "Erreurs à éviter" ou "FAQ" — ces formats sont 2x plus cités par les IA
+- Données chiffrées obligatoires (pas de "beaucoup", "souvent" — des chiffres)
+- Mentionner l'année (2026) et des sources quand possible
+- Structure: H1 → H2 → H3 strictement hiérarchique, listes <ul>/<ol>, tableaux si pertinent
+${templateBlock}`;
 
     promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
   } else {

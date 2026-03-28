@@ -123,7 +123,7 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `drop-detector` : Détection de chute réactive + prédictive
 - `strategic-orchestrator` : Pipeline modulaire audit GEO (5 micro-fonctions)
 - `strategic-crawl` / `strategic-market` / `strategic-competitors` / `strategic-synthesis` : Micro-fonctions du pipeline
-- `autopilot-engine` : Parménion v2 — double cycle macro/micro, scoring déterministe 11 tiers, 4 canaux LLM (emit_code, emit_corrective_data, emit_corrective_content, emit_editorial_content), dispatch vers iktracker-actions ou generate-corrective-code
+- `autopilot-engine` : Parménion v2 — double cycle macro/micro, scoring déterministe 11 tiers, 4 canaux LLM (emit_code, emit_corrective_data, emit_corrective_content, emit_editorial_content), dispatch vers iktracker-actions ou generate-corrective-code, **prompts SEO/GEO par type de page** (landing/produit/article) depuis `content_prompt_templates`
 - `run-backend-tests` : 12 tests CI (sécurité, facturation, audit, tracking)
 - `felix-seo-quiz` : Quiz adaptatif SEO/GEO/LLM + Quiz Crawlers + Quiz Stratège Cocoon. Mélange aléatoire de la position des bonnes réponses (`shuffleOptions`) à chaque requête. Actions : `get_questions`, `get_crawlers_quiz`, `get_stratege_cocoon_quiz`, `get_last_score`.
 - `sync-quiz-crawlers` : Cron mensuel (1er du mois, 3h) — régénère 10 questions Crawlers via LLM + doc SAV, sauvées `is_active=false` en attente de validation admin dans Félix
