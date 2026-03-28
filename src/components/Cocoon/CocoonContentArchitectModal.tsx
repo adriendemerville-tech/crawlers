@@ -712,35 +712,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
             </ScrollArea>
 
-            {/* Bottom: Publish + Guide */}
+            {/* Bottom: Guide + Reset */}
             {result && (
-              <div className="border-t border-white/10 px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  {isEdited && (
-                    <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
-                      <RotateCcw className="w-3 h-3" />
-                      {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
-                    </button>
-                  )}
-                  {!isEdited && <div />}
-                  <Button
-                    onClick={handlePublish}
-                    disabled={publishing}
-                    className={hasCmsConnection
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold'
-                      : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10'}
-                  >
-                    {publishing ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t3(language, 'Envoi…', 'Sending…', 'Enviando…')}</>
-                    ) : hasCmsConnection ? (
-                      <><Send className="w-4 h-4 mr-2" />{t3(language, 'Envoyer en brouillon', 'Send as draft', 'Enviar como borrador')}{isEdited ? ' ✎' : ''}</>
-                    ) : (
-                      <><Plug className="w-4 h-4 mr-2" />{t3(language, 'Connecter mon CMS', 'Connect my CMS', 'Conectar mi CMS')}</>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Collapsible guide — opens upward */}
+              <div className="border-t border-white/10 px-4 py-2.5 flex items-center justify-between">
+                {isEdited ? (
+                  <button onClick={handleResetEdits} className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors">
+                    <RotateCcw className="w-3 h-3" />
+                    {t3(language, 'Restaurer l\'original', 'Restore original', 'Restaurar original')}
+                  </button>
+                ) : <div />}
                 <div className="relative">
                   <button
                     onClick={() => setShowGuide(!showGuide)}
@@ -752,15 +732,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     Mode d'emploi
                   </button>
                   {showGuide && (
-                    <div className="absolute bottom-full left-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
-                      <p className="font-medium text-white/80">🎯 Comment ça marche ?</p>
+                    <div className="absolute bottom-full right-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
+                      <p className="font-medium text-white/80">Comment ça marche ?</p>
                       <ol className="list-decimal list-inside space-y-1">
                         <li>Remplissez l'URL et le mot-clé cible à gauche</li>
-                        <li>L'IA analyse la SERP, vos concurrents et votre site</li>
-                        <li>Visualisez la structure recommandée (page ou code)</li>
-                        <li>Publiez directement si votre CMS est connecté</li>
+                        <li>Cliquez sur "Générer" pour créer la structure</li>
+                        <li>Éditez le contenu directement dans la preview</li>
+                        <li>Générez des images (colonne débloquée après génération)</li>
+                        <li>Publiez via le bouton en haut à droite</li>
                       </ol>
-                      <p className="text-[10px] text-white/30 italic">Les recommandations respectent le ton et le style existants de votre site. Pas de risque de contenu hors-sujet.</p>
                     </div>
                   )}
                 </div>
@@ -768,25 +748,37 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             )}
           </div>
 
-          {/* Right column — Image generation */}
-          <ImageColumn
-            pageType={pageType}
-            trackedSiteId={trackedSiteId}
-            targetUrl={url}
-            identityCard={identityCard}
-            generatedImages={generatedImages}
-            iterationsUsed={imageIterations}
-            onImageGenerated={(dataUri, style) => {
-              setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
-              setImageIterations(prev => prev + 1);
-            }}
-            onImageRemoved={(index) => {
-              setGeneratedImages(prev => prev.filter((_, i) => i !== index));
-            }}
-            onImagePlacement={(index, placement) => {
-              setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
-            }}
-          />
+          {/* Right column — Image generation (locked until content generated) */}
+          {workflowStep >= 3 ? (
+            <ImageColumn
+              pageType={pageType}
+              trackedSiteId={trackedSiteId}
+              targetUrl={url}
+              identityCard={identityCard}
+              generatedImages={generatedImages}
+              iterationsUsed={imageIterations}
+              onImageGenerated={(dataUri, style) => {
+                setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
+                setImageIterations(prev => prev + 1);
+              }}
+              onImageRemoved={(index) => {
+                setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+              }}
+              onImagePlacement={(index, placement) => {
+                setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
+              }}
+            />
+          ) : (
+            <div className="w-[280px] shrink-0 border-l border-white/10 flex flex-col items-center justify-center bg-white/[0.01]">
+              <div className="text-center space-y-3 px-6">
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto">
+                  <Lock className="w-5 h-5 text-white/15" />
+                </div>
+                <p className="text-xs text-white/25">Génération d'images</p>
+                <p className="text-[10px] text-white/15">Disponible après la génération du contenu</p>
+              </div>
+            </div>
+          )
         </div>
       </div>
     </div>
