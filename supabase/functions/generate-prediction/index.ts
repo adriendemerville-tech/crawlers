@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -767,42 +768,17 @@ Deno.serve(async (req) => {
     const prompt = buildPrompt(intel, seg, anchors) + siteContextHint;
 
     // ── Call AI ──
-    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': supabaseUrl,
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
-        messages: [
-          { role: 'system', content: 'You are a quantitative search traffic simulator. Return only valid JSON.' },
-          { role: 'user', content: prompt },
-        ],
-      }),
+    const resp = await callOpenRouter({
+      model: 'anthropic/claude-3.5-sonnet',
+      system: 'You are a quantitative search traffic simulator. Return only valid JSON.',
+      user: prompt,
+      referer: supabaseUrl,
     });
 
-    if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limited' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'Credits exhausted' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      throw new Error(`AI error ${aiResponse.status}: ${errText}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const raw = aiData.choices?.[0]?.message?.content || '';
+    const raw = resp.content;
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-    await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', aiData.usage);
+    await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', resp.usage);
     trackPaidApiCall('generate-prediction', 'openrouter', 'anthropic/claude-3.5-sonnet');
 
     let prediction: any;

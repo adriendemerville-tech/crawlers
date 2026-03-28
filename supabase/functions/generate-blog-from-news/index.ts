@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
 
 /**
  * Blog Article Generator v2
@@ -285,32 +286,14 @@ Retourne UNIQUEMENT un JSON valide avec :
 
     console.log("[blog-gen v2] Step 2: Calling Perplexity Sonar...");
 
-    const searchRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${openRouterKey}`,
-        "HTTP-Referer": "https://crawlers.fr",
-        "X-Title": "Crawlers.fr Blog Generator v2",
-      },
-      body: JSON.stringify({
-        model: "perplexity/sonar",
-        messages: [
-          { role: "system", content: "Tu es un chercheur expert en SEO et IA. Retourne uniquement du JSON valide, sans markdown." },
-          { role: "user", content: searchPrompt },
-        ],
-        temperature: 0.3,
-      }),
+    const searchResp = await callOpenRouter({
+      model: 'perplexity/sonar',
+      system: "Tu es un chercheur expert en SEO et IA. Retourne uniquement du JSON valide, sans markdown.",
+      user: searchPrompt,
+      title: 'Crawlers.fr Blog Generator v2',
     });
 
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      console.error("[blog-gen v2] Perplexity search failed:", searchRes.status, errText);
-      throw new Error(`Web search failed: ${searchRes.status}`);
-    }
-
-    const searchData = await searchRes.json();
-    const searchRaw = searchData.choices?.[0]?.message?.content || "";
+    const searchRaw = searchResp.content;
     const searchCleaned = searchRaw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
 
     trackPaidApiCall('generate-blog-from-news', 'openrouter', 'perplexity/sonar');
