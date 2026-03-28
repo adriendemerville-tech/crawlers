@@ -15,18 +15,10 @@
  */
 
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
+import { writeIdentity, type IdentitySource } from './identityGateway.ts'
 
-// Critical fields that require user validation before update
-const CRITICAL_IDENTITY_FIELDS = new Set([
-  'site_name', 'market_sector', 'entity_type', 'commercial_model',
-])
-
-// Minor fields that can be auto-updated
-const AUTO_UPDATE_FIELDS = new Set([
-  'company_size', 'target_audience', 'commercial_area', 'products_services',
-  'media_specialties', 'nonprofit_type', 'address',
-  'is_seasonal', 'seasonality_profile', 'founding_year',
-])
+// Field classification is now centralized in identityGateway.ts
+// CRITICAL_IDENTITY_FIELDS and AUTO_UPDATE_FIELDS are managed there.
 
 export interface MemoryEntry {
   memory_key: string
@@ -147,9 +139,8 @@ export async function writeSiteMemory(
 }
 
 /**
- * Apply identity card updates with hybrid validation:
- * - Minor fields → direct update on tracked_sites
- * - Critical fields → insert into identity_card_suggestions for user review
+ * Apply identity card updates via the centralized Identity Gateway.
+ * Hybrid validation (critical vs minor) is handled by the gateway.
  */
 export async function applyIdentityUpdates(
   trackedSiteId: string,
@@ -157,67 +148,23 @@ export async function applyIdentityUpdates(
   updates: IdentityUpdate[],
   source = 'felix',
 ): Promise<{ autoApplied: string[]; pendingReview: string[] }> {
-  const sb = getClient()
-  const autoApplied: string[] = []
-  const pendingReview: string[] = []
-
-  // Fetch current site values for comparison
-  const { data: site } = await sb
-    .from('tracked_sites')
-    .select('*')
-    .eq('id', trackedSiteId)
-    .single()
-
-  if (!site) return { autoApplied, pendingReview }
-
-  const directUpdates: Record<string, unknown> = {}
-
+  // Convert IdentityUpdate[] to flat fields map
+  const fields: Record<string, unknown> = {}
   for (const update of updates) {
-    const currentValue = (site as Record<string, unknown>)[update.field_name]
-    const currentStr = currentValue ? String(currentValue).trim() : ''
-
-    // Skip if value is the same
-    if (currentStr === update.value.trim()) continue
-
-    if (CRITICAL_IDENTITY_FIELDS.has(update.field_name)) {
-      // Critical field → needs user validation (unless empty)
-      if (!currentStr) {
-        // Field is empty → auto-fill is OK
-        directUpdates[update.field_name] = update.value
-        autoApplied.push(update.field_name)
-      } else {
-        // Field has a value → suggest change
-        await sb.from('identity_card_suggestions').insert({
-          tracked_site_id: trackedSiteId,
-          user_id: userId,
-          field_name: update.field_name,
-          current_value: currentStr,
-          suggested_value: update.value,
-          source,
-          reason: update.reason,
-          status: 'pending',
-        })
-        pendingReview.push(update.field_name)
-      }
-    } else if (AUTO_UPDATE_FIELDS.has(update.field_name)) {
-      // Minor field → direct update
-      directUpdates[update.field_name] = update.value
-      autoApplied.push(update.field_name)
-    }
+    fields[update.field_name] = update.value
   }
 
-  // Apply direct updates
-  if (Object.keys(directUpdates).length > 0) {
-    directUpdates.identity_source = source === 'felix' ? 'llm_auto' : 'llm_auto'
-    directUpdates.identity_enriched_at = new Date().toISOString()
+  const result = await writeIdentity({
+    siteId: trackedSiteId,
+    fields,
+    source: source as IdentitySource,
+    userId,
+  })
 
-    await sb
-      .from('tracked_sites')
-      .update(directUpdates)
-      .eq('id', trackedSiteId)
+  return {
+    autoApplied: result.applied,
+    pendingReview: result.pendingReview,
   }
-
-  return { autoApplied, pendingReview }
 }
 
 /**
