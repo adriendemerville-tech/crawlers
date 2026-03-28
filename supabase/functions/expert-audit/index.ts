@@ -2548,6 +2548,34 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
     // ═══ SPA DETECTION FLAG ═══
     const isSPA = !!(htmlAnalysis.hasSPAMarkers && htmlAnalysis.isContentJSDependent);
 
+    // ═══ ENRICH IDENTITY CARD (fire-and-forget) ═══
+    if (htmlAnalysis.detectedCMS) {
+      // Try to find the tracked site and write CMS via gateway
+      const identityFields: Record<string, unknown> = { cms_platform: htmlAnalysis.detectedCMS };
+      getSiteContext(getUserClient(registryAuthHeader || ''), { domain })
+        .then(ctx => {
+          if (!ctx) return;
+          // We need the site ID — re-fetch it
+          const sb = getUserClient(registryAuthHeader || '');
+          return sb.from('tracked_sites').select('id').ilike('domain', `%${domain}%`).limit(1).maybeSingle()
+            .then(({ data }) => {
+              if (data?.id) {
+                return writeIdentity({
+                  siteId: data.id,
+                  fields: identityFields,
+                  source: 'expert_audit',
+                });
+              }
+            });
+        })
+        .then(result => {
+          if (result?.applied?.length) {
+            console.log(`[expert-audit] 🏗️ Identity enriched: cms_platform=${htmlAnalysis.detectedCMS}`);
+          }
+        })
+        .catch(err => console.warn('[expert-audit] Identity enrichment failed (non-fatal):', err));
+    }
+
     const responseBody = {
       success: true,
       data: {
