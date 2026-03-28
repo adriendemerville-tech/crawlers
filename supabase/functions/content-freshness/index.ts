@@ -9,6 +9,7 @@
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -33,17 +34,19 @@ function calculateFreshnessScore(
   clicksTrend: string,
   wordCount: number,
   hasGscData: boolean,
+  isSeasonal = false,
 ): number {
   let score = 100
 
-  // Age penalty
+  // Age penalty — seasonal sites get more lenient thresholds
+  const ageFactor = isSeasonal ? 1.5 : 1.0
   if (daysSinceUpdate !== null) {
-    if (daysSinceUpdate > 730) score -= 50        // >2 years
-    else if (daysSinceUpdate > 365) score -= 35   // >1 year
-    else if (daysSinceUpdate > 180) score -= 20   // >6 months
-    else if (daysSinceUpdate > 90) score -= 10    // >3 months
+    if (daysSinceUpdate > 730 * ageFactor) score -= 50
+    else if (daysSinceUpdate > 365 * ageFactor) score -= 35
+    else if (daysSinceUpdate > 180 * ageFactor) score -= 20
+    else if (daysSinceUpdate > 90 * ageFactor) score -= 10
   } else {
-    score -= 15 // Unknown age is a mild penalty
+    score -= 15
   }
 
   // Click trend bonus/penalty
@@ -99,6 +102,11 @@ Deno.serve(async (req) => {
     const { data: site } = await sb.from('tracked_sites').select('domain').eq('id', tracked_site_id).single()
     if (!site) return json({ error: 'Site not found' }, 404)
 
+    // Fetch identity card for sector/seasonality context
+    const siteContext = await getSiteContext(sb, { trackedSiteId: tracked_site_id, userId: user.id })
+    const isSeasonal = !!(siteContext as any)?.is_seasonal
+    const sector = siteContext?.market_sector || ''
+
     // Fetch crawl data with last_modified
     const { data: crawlPages } = await sb
       .from('crawl_pages')
@@ -128,7 +136,7 @@ Deno.serve(async (req) => {
       // Simple trend: if we only have one snapshot, compare clicks to a threshold
       const clicksTrend = gsc ? (gsc.clicks >= 10 ? 'stable' : gsc.clicks >= 1 ? 'declining' : 'unknown') : 'unknown'
 
-      const score = calculateFreshnessScore(daysSince, clicksTrend, page.word_count || 0, hasGscData)
+      const score = calculateFreshnessScore(daysSince, clicksTrend, page.word_count || 0, hasGscData, isSeasonal)
 
       const urgency: FreshnessResult['urgency'] =
         score < 30 ? 'critical' :

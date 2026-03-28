@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 /**
  * Edge Function: backlink-scanner
@@ -21,6 +22,9 @@ Deno.serve(async (req) => {
     const supabase = getServiceClient()
     const { crawl_id, tracked_site_id: providedSiteId, top_n = 10 } = await req.json()
 
+    // Fetch identity card for strategic context (competitors, sector)
+    let siteContext: any = null
+
     if (!crawl_id) {
       return new Response(JSON.stringify({ error: 'crawl_id required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -34,6 +38,14 @@ Deno.serve(async (req) => {
       if (crawl) {
         const { data: site } = await supabase.from('tracked_sites').select('id').eq('domain', crawl.domain).eq('user_id', crawl.user_id).maybeSingle()
         tracked_site_id = site?.id
+      }
+    }
+
+    // Load identity card once we have tracked_site_id
+    if (tracked_site_id) {
+      siteContext = await getSiteContext(supabase, { trackedSiteId: tracked_site_id })
+      if (siteContext) {
+        console.log(`[backlink-scanner] 📇 Identity: sector="${siteContext.market_sector}", competitors="${(siteContext as any).competitors || 'none'}"`)
       }
     }
 

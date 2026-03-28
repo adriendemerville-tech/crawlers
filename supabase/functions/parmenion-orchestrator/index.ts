@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -90,7 +91,7 @@ serve(async (req: Request) => {
     const maxRisk = conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL;
 
     // ═══ PHASE 2: Gather context ═══
-    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes] = await Promise.all([
+    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes, identityCard] = await Promise.all([
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
         .eq('tracked_site_id', tracked_site_id)
@@ -125,6 +126,7 @@ serve(async (req: Request) => {
         .select('site_name, market_sector, business_type, client_targets, site_context')
         .eq('id', tracked_site_id)
         .maybeSingle(),
+      getSiteContext(supabase, { trackedSiteId: tracked_site_id }),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
@@ -141,6 +143,24 @@ serve(async (req: Request) => {
       }
     }
     const siteInfo = (siteInfoRes as any)?.data || null;
+    // Enrich siteInfo with identity card fields (auto-enriched via getSiteContext)
+    if (identityCard) {
+      if (!siteInfo) {
+        // fallback: use identity card as siteInfo
+      }
+      // Merge identity card into siteInfo for downstream use
+      const enrichedSiteInfo = {
+        ...(siteInfo || {}),
+        market_sector: identityCard.market_sector || siteInfo?.market_sector,
+        entity_type: identityCard.entity_type || siteInfo?.business_type,
+        commercial_model: identityCard.commercial_model,
+        target_audience: identityCard.target_audience,
+        products_services: identityCard.products_services,
+        commercial_area: identityCard.commercial_area,
+        identity_confidence: identityCard.identity_confidence,
+      };
+      Object.assign(siteInfo || {}, enrichedSiteInfo);
+    }
 
     const previousPhaseResults = (lastCompletedDecisions || [])
       .filter(d => d.execution_results)

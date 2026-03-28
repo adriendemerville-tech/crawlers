@@ -11,6 +11,7 @@ L'architecture de la 'Carte d'identité' (`identity_card`) est centralisée via 
 - `marina` → `market_sector`, `products_services` (contexte stratégique)
 - `cocoon-strategist` → `target_audience` (déduit des diagnostics sémantiques)
 - `seasonality-detector` → `is_seasonal`, `seasonality_profile`
+- `audit-strategique-ia` → `client_targets`, `jargon_distance`
 - **Différé** : `agent-seo` (limité au suivi interne 'crawlers.fr')
 
 ## Fonctions qui LISENT la carte (via getSiteContext)
@@ -21,10 +22,15 @@ L'architecture de la 'Carte d'identité' (`identity_card`) est centralisée via 
 - `check-llm`, `llm-visibility-lite`, `calculate-llm-visibility`
 - `calculate-sov`, `generate-target-queries`
 - `sav-agent` (Félix)
+- `parmenion-orchestrator` — Enrichit le siteInfo avec secteur/type/modèle/cible/produits/zone pour contextualiser les décisions LLM
 
 ### Lecture pour ajustement algorithmique
 - `detect-anomalies` — Utilise `is_seasonal`/`seasonality_profile` pour relaxer les seuils Z-score (-25% de sensibilité pour les sites saisonniers)
 - `cocoon-strategist` — Utilise la carte via `getSiteContext` (auto-enrichissement) au lieu d'un accès direct DB. Secteur injecté dans les données SERP stratégiques.
+- `content-freshness` — `is_seasonal` relâche les seuils d'âge (×1.5) pour les sites saisonniers
+- `content-pruning` — Secteur et entity_type ajoutés au summary pour contextualisation
+- `drop-detector` — `is_seasonal` relâche le seuil de chute (+25%) et le seuil prédictif (+15%) pour les sites saisonniers
+- `backlink-scanner` — Log le secteur et les concurrents pour traçabilité stratégique
 
 ### Sources identifiées
 `llm_auto`, `llm_verified`, `user_manual`, `user_voice`, `felix`, `stratege`, `seasonality`, `expert_audit`, `agent_seo`, `marina`, `system`
