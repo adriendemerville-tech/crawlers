@@ -158,7 +158,7 @@ serve(async (req: Request) => {
       const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
         p_domain: domain,
         p_user_id: userId,
-        p_limit: 5,
+        p_limit: 8,
       });
       if (scoreErr) {
         console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
@@ -169,23 +169,41 @@ serve(async (req: Request) => {
     }
 
     // ═══ PHASE 3: LLM Decision ═══
-    const decision = await askParmenionLLM({
-      domain,
-      cycle_number,
-      currentPhase,
-      conservativeMode,
-      maxRisk,
-      diagnostics,
-      cocoon,
-      pastErrors,
-      previousPhaseResults,
-      pendingRecommendations,
-      rawAuditData,
-      isIktracker,
-      siteKeywords,
-      siteInfo,
-      scoredWorkbenchItems,
-    });
+    let decision: ParmenionDecision | null = null;
+    
+    if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
+      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools ═══
+      decision = await prescribeWithDualPrompts({
+        domain,
+        cycle_number,
+        conservativeMode,
+        maxRisk,
+        scoredWorkbenchItems,
+        siteKeywords,
+        siteInfo,
+        isIktracker,
+        tracked_site_id,
+      });
+    } else {
+      // Non-prescribe phases or empty workbench: single LLM call
+      decision = await askParmenionLLM({
+        domain,
+        cycle_number,
+        currentPhase,
+        conservativeMode,
+        maxRisk,
+        diagnostics,
+        cocoon,
+        pastErrors,
+        previousPhaseResults,
+        pendingRecommendations,
+        rawAuditData,
+        isIktracker,
+        siteKeywords,
+        siteInfo,
+        scoredWorkbenchItems,
+      });
+    }
 
     if (!decision) {
       return new Response(JSON.stringify({ error: 'Parménion could not produce a decision' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
