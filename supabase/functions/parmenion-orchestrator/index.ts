@@ -113,7 +113,6 @@ serve(async (req: Request) => {
         .eq('domain', domain)
         .order('created_at', { ascending: false })
         .limit(3),
-      // Fetch the site's actual keyword universe from domain_data_cache
       supabase.from('domain_data_cache')
         .select('result_data')
         .eq('domain', domain)
@@ -121,7 +120,6 @@ serve(async (req: Request) => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      // Fetch site identity (market sector, business type)
       supabase.from('tracked_sites')
         .select('site_name, market_sector, business_type, client_targets, site_context')
         .eq('id', tracked_site_id)
@@ -134,7 +132,6 @@ serve(async (req: Request) => {
     const pendingRecommendations = recoRegistryRes.data || [];
     const rawAuditData = auditRawRes.data || [];
 
-    // Extract the site's keyword universe
     const siteKeywords: string[] = [];
     const serpKpis = (siteKeywordsRes as any)?.data?.result_data;
     if (serpKpis?.sample_keywords) {
@@ -144,7 +141,6 @@ serve(async (req: Request) => {
     }
     const siteInfo = (siteInfoRes as any)?.data || null;
 
-    // Collect execution results from previous phases in this pipeline run
     const previousPhaseResults = (lastCompletedDecisions || [])
       .filter(d => d.execution_results)
       .slice(0, 5)
@@ -154,6 +150,23 @@ serve(async (req: Request) => {
         functions: d.functions_called,
         results: d.execution_results,
       }));
+
+    // ═══ PHASE 2b: ALGORITHMIC PRIORITY SCORING (prescribe phase) ═══
+    let scoredWorkbenchItems: any[] = [];
+    if (currentPhase === 'prescribe') {
+      const userId = authUserId || bodyUserId || tracked_site_id;
+      const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
+        p_domain: domain,
+        p_user_id: userId,
+        p_limit: 5,
+      });
+      if (scoreErr) {
+        console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
+      } else {
+        scoredWorkbenchItems = scored || [];
+        console.log(`[Parménion] 📊 Scored ${scoredWorkbenchItems.length} workbench items. Top tier: ${scoredWorkbenchItems[0]?.tier ?? 'none'}, top score: ${scoredWorkbenchItems[0]?.total_score ?? 0}`);
+      }
+    }
 
     // ═══ PHASE 3: LLM Decision ═══
     const decision = await askParmenionLLM({
@@ -171,6 +184,7 @@ serve(async (req: Request) => {
       isIktracker,
       siteKeywords,
       siteInfo,
+      scoredWorkbenchItems,
     });
 
     if (!decision) {
