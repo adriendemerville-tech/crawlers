@@ -334,8 +334,8 @@ export function ImageColumn({
                   title="Double-clic : assigner en entête ou corps"
                 />
                 {generatedImages[carouselIndex]?.placement && (
-                  <Badge className="absolute top-2 left-2 text-[8px] bg-[#fbbf24]/90 text-[#0f0a1e] border-none">
-                    {generatedImages[carouselIndex].placement === 'header' ? '🖼️ Entête' : '📄 Corps'}
+                   <Badge className="absolute top-2 left-2 text-[8px] bg-[#fbbf24]/90 text-[#0f0a1e] border-none">
+                    {generatedImages[carouselIndex].placement === 'header' ? 'Entête' : 'Corps'}
                   </Badge>
                 )}
                 <button
@@ -428,6 +428,19 @@ export function ImageColumn({
                 </span>
               </div>
 
+              {/* Prompt FIRST */}
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/50 uppercase tracking-wider">Prompt image</label>
+                <Textarea
+                  value={imagePrompt}
+                  onChange={e => setImagePrompt(e.target.value)}
+                  placeholder="Décrivez l'image souhaitée…"
+                  rows={3}
+                  className="bg-white/5 border-white/10 text-white text-[11px] resize-none"
+                />
+              </div>
+
+              {/* Styles AFTER prompt */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] text-white/50 uppercase tracking-wider">Style</label>
@@ -455,29 +468,10 @@ export function ImageColumn({
                           : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
                       }`}
                     >
-                      <span>{style.emoji}</span>
                       <span>{style.label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {selectedStyle && (
-                <Badge variant="outline" className="text-[8px] border-white/10 text-white/30">
-                  {ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'imagen3' ? '🔵 Imagen 3' :
-                   ALL_STYLES.find(s => s.key === selectedStyle)?.provider === 'flux' ? '🟣 FLUX' : '🟢 Ideogram'}
-                </Badge>
-              )}
-
-              <div className="space-y-1">
-                <label className="text-[10px] text-white/50 uppercase tracking-wider">Prompt image</label>
-                <Textarea
-                  value={imagePrompt}
-                  onChange={e => setImagePrompt(e.target.value)}
-                  placeholder="Décrivez l'image souhaitée…"
-                  rows={3}
-                  className="bg-white/5 border-white/10 text-white text-[11px] resize-none"
-                />
               </div>
 
               {!canGenerate && (
