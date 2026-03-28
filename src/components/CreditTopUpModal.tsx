@@ -236,7 +236,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           <DialogTitle className="text-lg font-semibold">
             {modalTitle}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="sr-only">
             {t.subtitle}
           </DialogDescription>
         </DialogHeader>
@@ -363,7 +363,8 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
         </motion.div>
 
         {/* Credit Packs — bottom */}
-        <div className="grid gap-3 pt-3 grid-cols-2 lg:grid-cols-4">
+        <h3 className="text-sm font-semibold text-muted-foreground pt-2">{t.subtitle}</h3>
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
