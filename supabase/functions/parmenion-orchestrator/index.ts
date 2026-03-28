@@ -543,7 +543,69 @@ Si la validation échoue (correctifs non appliqués), signale-le dans le reasoni
   }
 }
 
-function buildIktrackerExecuteInstructions(): string {
+function buildPrescribeInstructions(context: { isIktracker: boolean; scoredWorkbenchItems: any[] }): string {
+  const items = context.scoredWorkbenchItems;
+  
+  if (items.length === 0) {
+    return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+Aucun item prioritaire n'a été identifié dans le workbench. 
+Utilise les recommandations en attente et les données d'audit brutes pour générer un correctif technique via generate-corrective-code.
+Fonctions autorisées: generate-corrective-code, content-architecture-advisor`;
+  }
+
+  const tierNames: Record<number, string> = {
+    0: 'Accessibilité critique', 1: 'Performance', 2: 'Crawl mineur',
+    3: 'Données structurées GEO', 4: 'On-page mineur (meta)',
+    5: 'On-page majeur (contenu)', 6: 'Maillage interne',
+    7: 'Cannibalisation', 8: 'Gap par modification',
+    9: 'Gap par création', 10: 'Expansion sémantique',
+  };
+
+  const itemsTable = items.map((it: any, i: number) => 
+    `${i + 1}. [Tier ${it.tier}: ${tierNames[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity} | ${it.finding_category}
+   "${it.title}" → ${it.target_url || 'N/A'}
+   ${it.description?.slice(0, 200) || ''}
+   action_type: ${it.action_type} | payload: ${JSON.stringify(it.payload)?.slice(0, 500)}`
+  ).join('\n\n');
+
+  // Determine if top items are code or content
+  const topItem = items[0];
+  const isCodeAction = ['code', 'both'].includes(topItem.action_type) && 
+    [0, 1, 2, 3, 4].includes(topItem.tier);
+  const isContentAction = ['content', 'both'].includes(topItem.action_type) && 
+    topItem.tier >= 5;
+
+  let channelInstruction = '';
+  if (isCodeAction) {
+    channelInstruction = `→ L'item #1 est de type TECHNIQUE (tier ${topItem.tier}). Utilise generate-corrective-code avec un payload "fixes".`;
+  } else if (isContentAction) {
+    channelInstruction = `→ L'item #1 est de type CONTENU (tier ${topItem.tier}). Utilise content-architecture-advisor.`;
+  } else {
+    channelInstruction = `→ Choisis generate-corrective-code (technique) ou content-architecture-advisor (contenu) selon le type de l'item #1.`;
+  }
+
+  return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
+
+## PRIORITÉS ALGORITHMIQUES (scoring pyramidal — NE CHANGE PAS L'ORDRE)
+L'algorithme de scoring a classé les items suivants par priorité. Tu DOIS traiter l'item #1 en priorité.
+Tu ne décides PAS quoi faire — l'algorithme l'a déjà décidé. Tu génères le payload correct.
+
+${itemsTable}
+
+## CANAL DE DÉPLOIEMENT
+${channelInstruction}
+
+Fonctions autorisées: generate-corrective-code, content-architecture-advisor
+
+## RÈGLES
+1. Traite l'item #1. Si tu peux aussi traiter #2 dans le même payload, fais-le.
+2. Pour generate-corrective-code: payload DOIT contenir "fixes": [{ "id", "label", "category", "prompt", "enabled": true, "target_url" }]
+3. Pour content-architecture-advisor: payload DOIT contenir "url", "keyword" (pertinent au secteur du site), "page_type", "tracked_site_id"
+4. Ne refais PAS de diagnostic. Les données sont classées, exécute.
+5. Le "goal.description" doit mentionner le tier et l'item traité.`;
+}
+
+
   return `## PHASE ACTUELLE: EXECUTE (DÉPLOYER SUR IKTRACKER)
 Les correctifs sont générés. Tu dois maintenant les APPLIQUER concrètement.
 
