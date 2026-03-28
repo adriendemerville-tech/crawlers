@@ -29,7 +29,7 @@ const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
   audit: ['audit-expert-seo'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
-  execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'generate-corrective-code'],
+  execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'cms-push-code', 'generate-corrective-code'],
   validate: ['audit-expert-seo', 'cocoon-diag-content'],
 };
 
@@ -1251,7 +1251,13 @@ Pour: modifier title, meta_description, contenu de page/article, créer des arti
 Pour: scripts techniques (lazy loading, CLS fixes, schema JSON-LD, optimisations performance, etc.)
 → functions: ["generate-corrective-code"]
 → payload DOIT contenir "fixes": [{ "id": "...", "label": "...", "category": "...", "prompt": "...", "enabled": true }]
-→ Le code généré sera injecté via site_script_rules, PAS via le CMS
+→ Le code généré sera poussé vers le CMS via cms-push-code si connexion CMS active, sinon via site_script_rules (widget.js)
+
+### CANAL 3: Déploiement natif du code correctif (cms-push-code)
+Pour: pousser le JS généré par generate-corrective-code directement dans le CMS de l'utilisateur
+→ functions: ["cms-push-code"]
+→ payload: { "tracked_site_id", "code", "code_minified", "label", "placement": "header"|"footer", "fixes_summary": [...] }
+→ Supporte: WordPress, Shopify, Drupal, Webflow, PrestaShop, Odoo (fallback widget.js si échec ou Wix)
 
 ## RÈGLE CRITIQUE
 - Si tes correctifs sont du contenu (texte, méta, articles) → CANAL 1 (iktracker-actions + cms_actions)
