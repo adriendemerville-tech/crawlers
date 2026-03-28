@@ -206,6 +206,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     if (!result || !trackedSiteId) return;
     setPublishing(true);
     try {
+      // Build image data for CMS injection
+      const imageData = generatedImages
+        .filter(img => img.placement)
+        .map(img => ({
+          dataUri: img.dataUri,
+          placement: img.placement,
+          style: img.style,
+        }));
+
       const { data, error } = await supabase.functions.invoke('cms-publish-draft', {
         body: {
           tracked_site_id: trackedSiteId,
@@ -213,6 +222,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           original_result_data: isEdited ? originalResult : null,
           url,
           keyword,
+          images: imageData.length > 0 ? imageData : undefined,
         },
       });
       if (error) throw error;
@@ -232,7 +242,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     } finally {
       setPublishing(false);
     }
-  }, [hasCmsConnection, result, originalResult, isEdited, trackedSiteId, url, keyword, language]);
+  }, [hasCmsConnection, result, originalResult, isEdited, trackedSiteId, url, keyword, language, generatedImages]);
 
 
 
