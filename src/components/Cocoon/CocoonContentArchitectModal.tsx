@@ -48,7 +48,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [result, setResult] = useState<any>(null);
   const [originalResult, setOriginalResult] = useState<any>(null);
   const [publishing, setPublishing] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<import('./ImageStylePicker').GeneratedImageItem[]>([]);
+  const [imageIterations, setImageIterations] = useState(0);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
 
   // Form fields
@@ -347,9 +348,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             trackedSiteId={trackedSiteId}
             targetUrl={url}
             identityCard={identityCard}
-            generatedImage={generatedImage}
-            onImageGenerated={(dataUri) => setGeneratedImage(dataUri)}
-            onImageRemoved={() => setGeneratedImage(null)}
+            generatedImages={generatedImages}
+            iterationsUsed={imageIterations}
+            onImageGenerated={(dataUri, style) => {
+              setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]);
+              setImageIterations(prev => prev + 1);
+            }}
+            onImageRemoved={(index) => {
+              setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+            }}
+            onImagePlacement={(index, placement) => {
+              setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img));
+            }}
           />
 
           {/* Right column — preview */}

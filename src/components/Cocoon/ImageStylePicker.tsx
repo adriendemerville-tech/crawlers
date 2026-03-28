@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Image, Loader2, Sparkles, X } from 'lucide-react';
+import { Image, Loader2, Sparkles, X, ChevronLeft, ChevronRight, ImagePlus, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -36,22 +36,38 @@ const ALL_STYLES: StyleOption[] = [
   { key: 'classic_painting', label: 'Peinture classique', emoji: '🖼️', provider: 'ideogram', suitableFor: ['article', 'landing'], suitableSectors: ['art', 'culture', 'tourisme', 'restauration', 'luxe', 'vin'] },
 ];
 
+const MAX_IMAGES = 2;
+const MAX_ITERATIONS = 3;
+
+export interface GeneratedImageItem {
+  dataUri: string;
+  style: ImageStyle;
+  placement?: 'header' | 'body' | null;
+}
+
 interface ImageColumnProps {
   pageType: string;
   trackedSiteId?: string;
   targetUrl?: string;
   identityCard?: Record<string, any> | null;
-  generatedImage: string | null;
-  onImageGenerated: (dataUri: string) => void;
-  onImageRemoved: () => void;
+  generatedImages: GeneratedImageItem[];
+  iterationsUsed: number;
+  onImageGenerated: (dataUri: string, style: ImageStyle) => void;
+  onImageRemoved: (index: number) => void;
+  onImagePlacement: (index: number, placement: 'header' | 'body') => void;
 }
 
-export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, generatedImage, onImageGenerated, onImageRemoved }: ImageColumnProps) {
+export function ImageColumn({
+  pageType, trackedSiteId, targetUrl, identityCard,
+  generatedImages, iterationsUsed,
+  onImageGenerated, onImageRemoved, onImagePlacement,
+}: ImageColumnProps) {
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle | null>(null);
   const [imagePrompt, setImagePrompt] = useState('');
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [userHistory, setUserHistory] = useState<{ style_key: string; usage_count: number }[]>([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   // Load user style history
   useEffect(() => {
@@ -117,8 +133,10 @@ export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, 
     }
   }, [identityCard]);
 
+  const canGenerate = iterationsUsed < MAX_ITERATIONS && generatedImages.length < MAX_IMAGES;
+
   const handleGenerate = async () => {
-    if (!selectedStyle || !imagePrompt) return;
+    if (!selectedStyle || !imagePrompt || !canGenerate) return;
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-image', {
@@ -126,7 +144,8 @@ export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, 
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      onImageGenerated(data.dataUri);
+      onImageGenerated(data.dataUri, selectedStyle);
+      setCarouselIndex(generatedImages.length); // jump to new image
 
       // Track preference
       const { data: { user } } = await supabase.auth.getUser();
@@ -151,33 +170,107 @@ export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, 
     }
   };
 
+  const handleDoubleClick = (index: number) => {
+    const img = generatedImages[index];
+    if (!img) return;
+    // Toggle between header → body → unset
+    if (!img.placement) {
+      onImagePlacement(index, 'header');
+      toast.success('Image assignée en entête');
+    } else if (img.placement === 'header') {
+      onImagePlacement(index, 'body');
+      toast.success('Image assignée dans le corps');
+    } else {
+      onImagePlacement(index, 'header');
+      toast.success('Image assignée en entête');
+    }
+  };
+
   const stylesToShow = showAllStyles ? ALL_STYLES : suggestedStyles;
 
   return (
     <div className="w-[260px] shrink-0 border-l border-white/10 flex flex-col">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
-        <Image className="w-3.5 h-3.5 text-[#fbbf24]" />
-        <span className="text-xs font-semibold text-white/80">Image IA</span>
+      <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image className="w-3.5 h-3.5 text-[#fbbf24]" />
+          <span className="text-xs font-semibold text-white/80">Image IA</span>
+        </div>
+        <span className="text-[9px] text-white/30">
+          {iterationsUsed}/{MAX_ITERATIONS} itér. · {generatedImages.length}/{MAX_IMAGES} img
+        </span>
       </div>
 
-      {/* Top: image preview */}
+      {/* Top: image carousel preview */}
       <div className="shrink-0 border-b border-white/10">
-        {generatedImage ? (
+        {generatedImages.length > 0 ? (
           <div className="relative">
-            <img src={generatedImage} alt="Image générée" className="w-full aspect-square object-contain bg-black/30" />
+            <img
+              src={generatedImages[carouselIndex]?.dataUri}
+              alt={`Image ${carouselIndex + 1}`}
+              className="w-full aspect-square object-contain bg-black/30 cursor-pointer"
+              onDoubleClick={() => handleDoubleClick(carouselIndex)}
+              title="Double-clic : assigner en entête ou corps"
+            />
+            {/* Placement badge */}
+            {generatedImages[carouselIndex]?.placement && (
+              <Badge className="absolute top-2 left-2 text-[8px] bg-[#fbbf24]/90 text-[#0f0a1e] border-none">
+                {generatedImages[carouselIndex].placement === 'header' ? '🖼️ Entête' : '📄 Corps'}
+              </Badge>
+            )}
+            {/* Remove button */}
             <button
-              onClick={onImageRemoved}
+              onClick={() => {
+                onImageRemoved(carouselIndex);
+                setCarouselIndex(Math.max(0, carouselIndex - 1));
+              }}
               className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
             >
               <X className="w-3 h-3 text-white/70" />
             </button>
+            {/* Carousel nav */}
+            {generatedImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
+                  disabled={carouselIndex === 0}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
+                >
+                  <ChevronLeft className="w-3 h-3 text-white" />
+                </button>
+                <button
+                  onClick={() => setCarouselIndex(i => Math.min(generatedImages.length - 1, i + 1))}
+                  disabled={carouselIndex >= generatedImages.length - 1}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 hover:bg-black/60 disabled:opacity-30 transition-all"
+                >
+                  <ChevronRight className="w-3 h-3 text-white" />
+                </button>
+                {/* Dots */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {generatedImages.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCarouselIndex(i)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                        i === carouselIndex ? 'bg-[#fbbf24] scale-125' : 'bg-white/40'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {/* Double-click hint */}
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 rounded px-1.5 py-0.5">
+              <MousePointerClick className="w-2.5 h-2.5 text-white/50" />
+              <span className="text-[7px] text-white/40">2×clic = placer</span>
+            </div>
           </div>
         ) : (
           <div className="w-full aspect-square flex items-center justify-center bg-white/[0.02]">
             <div className="text-center space-y-2">
-              <Image className="w-8 h-8 text-white/10 mx-auto" />
+              <ImagePlus className="w-8 h-8 text-white/10 mx-auto" />
               <p className="text-[10px] text-white/20">Aucune image générée</p>
+              <p className="text-[8px] text-white/15">Max {MAX_IMAGES} images · {MAX_ITERATIONS} itérations</p>
             </div>
           </div>
         )}
@@ -242,6 +335,17 @@ export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, 
               className="bg-white/5 border-white/10 text-white text-[11px] resize-none"
             />
           </div>
+
+          {/* Limit warning */}
+          {!canGenerate && (
+            <div className="rounded bg-red-500/10 border border-red-500/20 p-2">
+              <p className="text-[9px] text-red-400">
+                {generatedImages.length >= MAX_IMAGES
+                  ? `Maximum ${MAX_IMAGES} images atteint. Supprimez-en une pour en générer une nouvelle.`
+                  : `Maximum ${MAX_ITERATIONS} itérations atteint pour ce contenu.`}
+              </p>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -249,7 +353,7 @@ export function ImageColumn({ pageType, trackedSiteId, targetUrl, identityCard, 
       <div className="shrink-0 p-3 border-t border-white/10">
         <Button
           onClick={handleGenerate}
-          disabled={!selectedStyle || !imagePrompt || generating}
+          disabled={!selectedStyle || !imagePrompt || generating || !canGenerate}
           className="w-full h-8 text-[11px] bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
         >
           {generating ? (
