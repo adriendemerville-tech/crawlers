@@ -543,8 +543,9 @@ async function patchShopify(conn: CmsConnection, input: PatchInput): Promise<Pat
     return { success: false, platform: 'shopify', method: 'api_native', patches_applied: 0, patches_failed: input.patches.length, details: [{ zone: '*', success: false, detail: `Entity #${postId} not found` }] };
   }
 
-  const metaPatches = input.patches.filter(p => ['meta_title', 'meta_description', 'author', 'tags'].includes(p.zone));
-  const contentPatches = input.patches.filter(p => !['meta_title', 'meta_description', 'author', 'tags'].includes(p.zone));
+  const seoZones = ['meta_title', 'meta_description', 'author', 'tags', 'canonical', 'robots_meta', 'og_title', 'og_description', 'og_image', 'schema_org'];
+  const metaPatches = input.patches.filter(p => seoZones.includes(p.zone));
+  const contentPatches = input.patches.filter(p => !seoZones.includes(p.zone));
 
   const updatePayload: Record<string, unknown> = {};
 
@@ -570,6 +571,26 @@ async function patchShopify(conn: CmsConnection, input: PatchInput): Promise<Pat
         else if (Array.isArray(patch.value)) { updatePayload.tags = (patch.value as string[]).join(', '); patchesApplied++; }
         details.push({ zone: 'tags', success: true });
         break;
+      case 'canonical':
+        details.push({ zone: 'canonical', success: false, detail: 'Shopify does not support custom canonical via API' });
+        break;
+      case 'robots_meta':
+        details.push({ zone: 'robots_meta', success: false, detail: 'Shopify manages robots via theme — use cms-push-code for injection' });
+        break;
+      case 'og_title':
+      case 'og_description':
+      case 'og_image':
+        details.push({ zone: patch.zone, success: false, detail: 'Shopify OG tags are auto-generated from title/description/image — update those instead' });
+        break;
+      case 'schema_org': {
+        // Shopify: inject JSON-LD into body_html
+        const jsonLd = typeof patch.value === 'string' ? patch.value : JSON.stringify(patch.value);
+        const curBody = (updatePayload.body_html as string) || entityData.body_html || '';
+        updatePayload.body_html = curBody + `\n<script type="application/ld+json">${jsonLd}</script>`;
+        details.push({ zone: 'schema_org', success: true, detail: 'JSON-LD injected in body_html' });
+        patchesApplied++;
+        break;
+      }
     }
   }
 
