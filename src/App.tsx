@@ -98,6 +98,7 @@ const App = () => (
           <LanguageProvider>
             <Suspense fallback={null}>
               <AuthProvider>
+                <SessionHeartbeatManager />
                 <DemoModeProvider>
                 <FreemiumProvider>
                 <CreditsProvider>
