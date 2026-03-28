@@ -765,6 +765,8 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       // Case studies
       // HSTS
       hasHSTS,
+      // CMS detection
+      detectedCMS,
       // Schema enhanced
       hasSameAs,
       hasWikidataSameAs,
