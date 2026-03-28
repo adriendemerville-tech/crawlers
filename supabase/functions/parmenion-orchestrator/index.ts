@@ -406,7 +406,7 @@ const CONTENT_TOOLS = [
             properties: {
               title: { type: 'string' },
               slug: { type: 'string' },
-              content: { type: 'string', description: 'Full HTML content with H2, H3, lists, internal links' },
+              content: { type: 'string', description: 'Full HTML content with H2, H3, lists, internal links. MINIMUM 800 mots (environ 5000 caractères). Un article de qualité fait entre 800 et 1500 mots. Ne JAMAIS produire moins de 600 mots.', minLength: 3000 },
               excerpt: { type: 'string' },
               meta_description: { type: 'string' },
               meta_title: { type: 'string' },
@@ -784,15 +784,16 @@ ${buildItemsList(contentItems)}
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
-- Le contenu DOIT être pertinent pour le secteur du site. INTERDIT de créer du contenu hors-sujet.
+- Le contenu DOIT être pertinent pour le secteur du site (${context.siteInfo?.market_sector || 'inconnu'}). INTERDIT de créer du contenu hors-sujet ou générique sur le SEO.
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
+- LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères HTML). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
 - RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
 - UTILISE les mots-clés stratégiques ci-dessus dans le contenu (titres, H2, corps)
 - Intègre les liens internes pré-calculés dans le brief de manière naturelle dans le texte
 ${presetBlock}
 ${templateBlock}`;
 
-    promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS));
+    promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS, 'google/gemini-2.5-pro'));
   } else {
     promises.push(Promise.resolve([]));
   }
@@ -892,7 +893,7 @@ ${templateBlock}`;
   };
 }
 
-async function callLLMWithTools(apiKey: string, prompt: string, tools: any[]): Promise<any[]> {
+async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], model = 'google/gemini-2.5-flash'): Promise<any[]> {
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -901,7 +902,7 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[]): P
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         tools,
