@@ -1045,7 +1045,7 @@ function sortByStrategicRelevance(
   return scored.map(s => s.kw);
 }
 
-async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = ''): Promise<MarketData | null> {
+async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = '', existingKeywords: string[] = []): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
@@ -1054,19 +1054,26 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    // ═══ PHASE 1: AI-Driven Seed Generation ═══
+    // ═══ PHASE 0: Use existing keyword cloud as pre-seeds if available ═══
     let seedKeywords: string[] = [];
     const effectiveUrl = url || `https://${domain}`;
-    
-    const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
-    
-    if (aiSeeds.length >= 5) {
-      seedKeywords = aiSeeds;
-      console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+
+    if (existingKeywords.length >= 5) {
+      // Use keyword cloud from SERP snapshots — skip AI seed generation & save API calls
+      seedKeywords = existingKeywords.slice(0, 15);
+      console.log(`☁️ Using existing keyword cloud as seeds (${seedKeywords.length} terms) — skipping AI seed generation`);
     } else {
-      // Fallback to metadata extraction
-      console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
-      seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+      // ═══ PHASE 1: AI-Driven Seed Generation (fallback) ═══
+      const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
+      
+      if (aiSeeds.length >= 5) {
+        seedKeywords = aiSeeds;
+        console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+      } else {
+        // Fallback to metadata extraction
+        console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
+        seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+      }
     }
     
     console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
