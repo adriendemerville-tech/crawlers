@@ -54,18 +54,23 @@ export function FloatingChatBubble() {
   }, [location.pathname, isMuted]);
 
   // Suggest Crawlers quiz to non-logged users on home after 5s
+  // Auto-hide the bubble after 10s but keep the notification badge
+  const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
   useEffect(() => {
     if (isMuted) return;
     if (user) return;
     if (location.pathname !== '/') return;
     const key = 'felix_guest_quiz_suggested';
     if (sessionStorage.getItem(key)) return;
-    const timer = setTimeout(() => {
+    const showTimer = setTimeout(() => {
       sessionStorage.setItem(key, '1');
       setShowGuestQuizSuggestion(true);
+      setGuestBubbleVisible(true);
       playNotificationSound();
+      // Auto-hide bubble text after 10s, keep notification dot
+      setTimeout(() => setGuestBubbleVisible(false), 10000);
     }, 5000);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(showTimer);
   }, [user, location.pathname, isMuted]);
 
   // Show notification only every 3 visits, not if dismissed this session
@@ -236,7 +241,7 @@ export function FloatingChatBubble() {
       )}
 
       {/* Guest quiz suggestion tooltip */}
-      {showGuestQuizSuggestion && !isOpen && !showOnboardingPulse && (
+      {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
         <div
           className="fixed bottom-[72px] z-50 max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
           style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
