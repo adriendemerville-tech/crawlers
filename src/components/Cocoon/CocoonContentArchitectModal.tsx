@@ -533,11 +533,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-[98vw] max-w-[1600px] h-[92vh] bg-[#0f0a1e] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+      <div className={`w-[98vw] max-w-[1600px] h-[92vh] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl ${colorTheme === 'green' ? 'bg-[#0b1a14]' : 'bg-[#0f0a1e]'}`}>
         {/* Header — compact, no publish here */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
+        <div className={`flex items-center justify-between px-4 py-2 border-b border-white/10 ${colorTheme === 'green' ? 'bg-gradient-to-r from-[#0d2218] to-[#0b1a14]' : 'bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]'}`}>
           <div className="flex items-center gap-3">
-            <FileText className="w-4 h-4 text-[#fbbf24] stroke-[1.5]" />
+            <FileText className={`w-4 h-4 stroke-[1.5] ${colorTheme === 'green' ? 'text-emerald-400' : 'text-[#fbbf24]'}`} />
             <span className="text-sm font-semibold text-white">Content Architect</span>
             {result && (
               <div className="flex items-center gap-2 ml-3">
@@ -554,11 +554,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
         {/* Body: Toolbar + Panel + Resizable Preview */}
         <div className="flex-1 flex overflow-hidden">
-          <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} />
+          <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} colorTheme={colorTheme} />
 
           {/* Expandable panel + shared instructions */}
           {activePanel && (
-            <div className="w-[320px] shrink-0 border-r border-white/10 flex flex-col bg-[#0d0819] animate-in slide-in-from-left-2 duration-200">
+            <div className={`w-[320px] shrink-0 border-r border-white/10 flex flex-col animate-in slide-in-from-left-2 duration-200 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
               {/* Panel content area */}
               <div className="flex-1 overflow-y-auto min-h-0">
                 {activePanel === 'prompt' && (
