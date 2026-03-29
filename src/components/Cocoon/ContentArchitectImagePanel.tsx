@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { Lock, Image as ImageIcon } from 'lucide-react';
 import { ImageColumn, type GeneratedImageItem } from './ImageStylePicker';
 
 interface ContentArchitectImagePanelProps {
