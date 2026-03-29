@@ -1,5 +1,5 @@
 # Memory: tech/admin/admin-features-fr
-Updated: now
+Updated: 2026-03-29
 
 ## Dashboard Admin — Fonctionnalités
 
@@ -142,9 +142,24 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - **Tracking** : Résilience token tracker, headers CORS
 
 
-## Homepage — Section LLM & Lead Magnets
+## Homepage — Améliorations SEO/GEO (v5.1 — 2026-03-29)
 
-### Logos LLM
+### Section "Comment ça marche" (`HowItWorksSection`)
+- Nouvelle section ajoutée sur la homepage entre les sections existantes
+- 4 étapes visuelles : Analyser → Scorer → Prioriser → Déployer
+- Chaque étape : icône, titre, description du bénéfice concret
+- Design responsive avec grille 4 colonnes
+
+### Pages SEO créées
+- **`/a-propos`** : Page E-E-A-T complète — bio fondateur (Mukesh Bagri), mission, histoire, valeurs, chiffres clés, technologie. JSON-LD `Person` intégré.
+- **`/audit-semantique`** : Landing page SEO ciblant "audit sémantique" (880/mois). Sections : définition, fonctionnement, comparaison technique vs sémantique, CTA. FAQ + JSON-LD `FAQPage`.
+
+### Schema.org — Corrections
+- Suppression du `sameAs` invalide vers "caroulepartout" dans le schéma `Organization`
+- Ajout d'un champ `founder` (`Person` JSON-LD) dans `Organization` (Mukesh Bagri)
+- Liens `sameAs` mis à jour vers les profils réels (LinkedIn, X/Twitter)
+
+### Section Logos LLM
 - **ChatGPT** : logo noir en mode clair, logo blanc en mode sombre (switch automatique via `dark:hidden`/`hidden dark:block`)
 - **Gemini** : logo officiel uploadé (PNG)
 - **Claude** : logo officiel uploadé (PNG)
@@ -173,6 +188,7 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - Affiche les 5 crawls les plus audités dans Cocoon en priorité
 - Barre de recherche en haut du filtre pour retrouver tous les crawls réalisés par l'utilisateur
 - Détection automatique du crawl source quand l'utilisateur arrive depuis /crawl
+- **Filtres remis à zéro** à chaque nouvelle session et à chaque changement d'URL affichée
 
 ## Stack technique
 

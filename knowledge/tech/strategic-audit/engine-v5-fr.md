@@ -1,4 +1,5 @@
 # Memory: tech/strategic-audit/engine-v5-fr
+Updated: 2026-03-29
 
 L'Audit Stratégique GEO (v5) intègre une analyse profonde de la SERP et de l'audience :
 
@@ -15,6 +16,12 @@ L'Audit Stratégique GEO (v5) intègre une analyse profonde de la SERP et de l'a
    - Persisté dans `tracked_sites.jargon_distance` (jsonb).
    - Front-end : 3 jauges (primaire/secondaire/potentielle) + badge d'intentionnalité + interprétation contextuelle croisée.
 7. **Audio** : Le lecteur Spotify inclut des boutons de navigation 'Précédent' et 'Suivant'.
+
+## Corrections rapport PDF (v5.1 — 2026-03-29)
+- **Fix `undefined`** : Tous les champs GAP, Empreinte Lexicale utilisent des fallbacks (`?? '—'`) pour éviter l'affichage de valeurs `undefined` dans l'export PDF.
+- **Ratios Jargon/Concret** : Les ratios absurdes (2000%/8000%) sont maintenant capés et formatés en pourcentages lisibles avec référentiel.
+- **Méthodologie du score** : Un encadré "Méthodologie du scoring" est ajouté au rapport expliquant les 5 piliers (Performance, Sécurité, SEO, Accessibilité, Bonnes Pratiques) et la pondération /200.
+- **AEO détaillé** : Chaque critère AEO affiche désormais une explication + conseil correctif (dans le PDF et dans l'UI `AEOScoreCard`), au lieu d'une simple checklist binaire ❌/✅.
 
 ## Tables impactées
 - `tracked_sites.client_targets` (jsonb) — cibles B2B/B2C

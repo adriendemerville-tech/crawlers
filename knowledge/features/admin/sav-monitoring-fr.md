@@ -1,5 +1,5 @@
 # Memory: features/admin/sav-monitoring-fr
-Updated: now
+Updated: 2026-03-29
 
 Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des conversations de l'agent 'Crawler'. Il permet de suivre les indicateurs de satisfaction, les demandes d'escalade vers un rappel téléphonique et le registre des numéros de téléphone collectés (purgés sous 48h via `cleanup_expired_phone_callbacks()`). Cette interface assure le contrôle qualité des réponses générées par l'IA et la gestion des demandes de support complexes.
 
@@ -58,6 +58,7 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - **Bouton horloge** : accès historique des sessions passées
 - **Signalement bugs** : même circuit que Crawler → `user_bug_reports` → CTO → notification résolution
 - **Changement auto** : historique et conversation changent quand l'utilisateur sélectionne un autre site/URL
+- **Boutons d'action** : taille maximale réduite pour éviter la superposition avec le bouton "+" en bas à droite
 
 ## Circuit de Signalement (Recettage)
 - Table : `user_bug_reports` (raw_message, translated_message, route, context_data, category, status, cto_response, notified_user)

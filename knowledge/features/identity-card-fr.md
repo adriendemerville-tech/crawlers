@@ -1,4 +1,5 @@
 # Memory: features/identity-card-fr
+Updated: 2026-03-29
 
 ## Carte d'Identité (Mes Sites → onglet URL)
 - Bouton carré "Carte d'identité" en haut de chaque onglet site, design minimaliste (bordure grise, fond transparent).
@@ -39,3 +40,8 @@
 - Moteur d'audit sur-mesure : 6 types de KPIs (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
 - Accepte .csv et .doc/.docx en import (extraction IA via Gemini).
 - Pondération, seuils personnalisables, gestion de lots, score pondéré global /100.
+
+## Pages SEO publiques (ajoutées 2026-03-29)
+- **`/a-propos`** : Page E-E-A-T — bio fondateur Mukesh Bagri, mission, histoire, valeurs, chiffres, techno. JSON-LD `Person`.
+- **`/audit-semantique`** : Landing page SEO "audit sémantique" (880 recherches/mois). FAQ + JSON-LD `FAQPage`.
+- **`HowItWorksSection`** : Section homepage 4 étapes (Analyser → Scorer → Prioriser → Déployer).
