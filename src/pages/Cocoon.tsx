@@ -239,9 +239,16 @@ export default function Cocoon() {
     }
   }, [nodes]);
 
-  // Initialize filters when nodes change
+  // Reset filters when site changes
   useEffect(() => {
-    if (nodes.length > 0 && !filtersInitialized) {
+    setFiltersInitialized(false);
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
+  }, [selectedSiteId]);
+
+  // Initialize filters when nodes change — always re-init on new node set
+  const nodesFingerprint = useMemo(() => nodes.map((n: any) => n.id).sort().join(','), [nodes]);
+  useEffect(() => {
+    if (nodes.length > 0) {
       const pageTypes = new Set(nodes.map((n: any) => n.page_type || 'unknown'));
       const juiceTypes = new Set<string>();
       const maxAuth = Math.max(1, ...nodes.map((n: any) => n.page_authority ?? 0));
@@ -266,9 +273,10 @@ export default function Cocoon() {
       }
       setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true, showParticles: true });
       setFiltersInitialized(true);
+    } else {
+      setFiltersInitialized(false);
     }
-    if (nodes.length === 0) setFiltersInitialized(false);
-  }, [nodes, filtersInitialized]);
+  }, [nodesFingerprint]);
 
   // Filtered nodes based on selected page types
   const filteredNodes = useMemo(() => {
