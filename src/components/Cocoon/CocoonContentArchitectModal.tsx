@@ -634,10 +634,33 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                  URL cible
-                  {autoFilled.has('url') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                  Répertoire
                 </label>
-                <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                <Select value={directory} onValueChange={(v) => { setDirectory(v); setAutoFilled(prev => new Set(prev).add('directory_manual')); }}>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8"><SelectValue placeholder="Choisir un répertoire" /></SelectTrigger>
+                  <SelectContent>
+                    {directories.map(d => (
+                      <SelectItem key={d.path} value={d.path}>
+                        {d.label} <span className="text-white/30 ml-1">({d.path || '/'})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Slug
+                  {!isExistingPage && keyword && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-white/30 shrink-0">{domain}{directory}/</span>
+                  <Input
+                    value={slug}
+                    onChange={e => { setSlug(e.target.value); setAutoFilled(prev => new Set(prev).add('slug_manual')); }}
+                    placeholder="mon-article"
+                    className="bg-white/5 border-white/10 text-white text-xs h-8 flex-1"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
@@ -649,7 +672,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
                   Type de page
-                  {url && detectPageTypeFromUrl(url) && <span className="text-[9px] text-[#fbbf24]/60 normal-case">détecté</span>}
+                  {directory && detectPageTypeFromDirectory(directory, directories.find(d => d.path === directory)?.category || null) && <span className="text-[9px] text-[#fbbf24]/60 normal-case">détecté</span>}
                 </label>
                 <Select value={pageType} onValueChange={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}>
                   <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8"><SelectValue /></SelectTrigger>
