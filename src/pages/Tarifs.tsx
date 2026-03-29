@@ -16,7 +16,7 @@ import {
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
-  ScanSearch, GitCompareArrows, Layers
+  ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database
 } from 'lucide-react';
 import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.png';
 
@@ -123,6 +123,18 @@ const translations = {
       '3 comptes inclus (2 collaborateurs)',
     ],
     agencyPremiumCta: "S'abonner · 99€/mois",
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'Pour les grands comptes et organisations',
+    enterprisePrice: 'Sur demande',
+    enterpriseFeatures: [
+      'Tout illimité, sans restriction',
+      'Nombre d\'utilisateurs sur mesure',
+      'Serveur dédié & isolé',
+      'Données dupliquées & isolées',
+      'SLA garanti',
+      'Onboarding personnalisé',
+    ],
+    enterpriseCta: 'Contactez-nous via l\'assistant IA',
     or: 'ou',
   },
   en: {
@@ -227,6 +239,18 @@ const translations = {
       '3 accounts included (2 collaborators)',
     ],
     agencyPremiumCta: 'Subscribe · €99/mo',
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'For large organizations and enterprise teams',
+    enterprisePrice: 'Custom pricing',
+    enterpriseFeatures: [
+      'Everything unlimited, no restrictions',
+      'Custom number of users',
+      'Dedicated & isolated server',
+      'Duplicated & isolated data',
+      'Guaranteed SLA',
+      'Personalized onboarding',
+    ],
+    enterpriseCta: 'Contact us via AI assistant',
     or: 'or',
   },
   es: {
@@ -332,6 +356,18 @@ const translations = {
       '3 cuentas incluidas (2 colaboradores)',
     ],
     agencyPremiumCta: 'Suscribirse · 99€/mes',
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'Para grandes cuentas y organizaciones',
+    enterprisePrice: 'Bajo demanda',
+    enterpriseFeatures: [
+      'Todo ilimitado, sin restricciones',
+      'Número de usuarios a medida',
+      'Servidor dedicado y aislado',
+      'Datos duplicados y aislados',
+      'SLA garantizado',
+      'Onboarding personalizado',
+    ],
+    enterpriseCta: 'Contáctenos vía asistente IA',
     or: 'o',
   },
 };
@@ -938,6 +974,61 @@ export default function Tarifs() {
                     >
                       <Crown className="h-4 w-4" />
                       {premiumLoading ? t.agencyLoading : (t as any).agencyPremiumCta}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Enterprise Card */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="md:col-span-2"
+              >
+                <Card className="relative border border-emerald-500/40 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5">
+                  <div className="absolute top-0 right-0">
+                    <Badge className="rounded-none rounded-bl-lg bg-emerald-600 text-white border-0 px-3 py-1 text-xs font-bold">
+                      Enterprise
+                    </Badge>
+                  </div>
+                  <CardHeader className="pb-3 pt-8">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Building2 className="h-6 w-6 text-emerald-500" />
+                      {(t as any).enterpriseTitle}
+                    </CardTitle>
+                    <CardDescription>{(t as any).enterpriseSubtitle}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
+                        {(t as any).enterprisePrice}
+                      </span>
+                    </div>
+                    <ul className="grid gap-2 sm:grid-cols-2">
+                      {((t as any).enterpriseFeatures || []).map((feature: string, i: number) => {
+                        const icons = [Infinity, Users, Server, Database, Shield, Headphones];
+                        const Icon = icons[i] || CheckCircle2;
+                        return (
+                          <li key={i} className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-emerald-500 shrink-0" />
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <Button
+                      size="lg"
+                      className="w-full gap-2 font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white shadow-lg shadow-emerald-500/25"
+                      onClick={() => {
+                        // Open Felix chat
+                        const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
+                        if (felixBtn) felixBtn.click();
+                        else window.location.href = '/#felix';
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      {(t as any).enterpriseCta}
                     </Button>
                   </CardContent>
                 </Card>

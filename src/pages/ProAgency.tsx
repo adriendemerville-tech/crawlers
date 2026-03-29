@@ -16,7 +16,8 @@ import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
-  Palette, Globe, Brain, TrendingUp, Lock, Star, Layers
+  Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
+  Building2, MessageCircle, Server, Database
 } from 'lucide-react';
 
 const translations = {
@@ -86,23 +87,38 @@ const translations = {
     ],
     // Comparison — side by side
     comparisonTitle: 'Choisissez votre formule Pro',
-    comparisonSubtitle: 'Deux offres taillées pour deux réalités de terrain.',
-    compHeader: ['Fonctionnalité', 'Pro Agency', 'Pro Agency +'],
+    comparisonSubtitle: 'Trois offres taillées pour trois réalités de terrain.',
+    compHeader: ['Fonctionnalité', 'Pro Agency', 'Pro Agency +', 'Enterprise'],
     compRows: [
-      ['Audits techniques', 'Illimité ∞', 'Illimité ∞'],
-      ['Audits stratégiques IA', 'Illimité ∞', 'Illimité ∞'],
-      ['Codes correctifs', 'Illimité ∞', 'Illimité ∞'],
-      ['Crawl multi-pages', '5 000 pages/mois', '50 000 pages/mois'],
-      ['Pages par scan', '10 pages', '50 pages'],
-      ['URL suivis (tracking)', '30 inclus', '30 inclus'],
-      ['Correctif multi-pages', '✓', '✓'],
-      ['Marque blanche', '✓', '✓'],
-      ['Multi-comptes', '3 comptes', '5 comptes'],
-      ['Support prioritaire', '✓', '✓'],
+      ['Audits techniques', 'Illimité ∞', 'Illimité ∞', 'Illimité ∞'],
+      ['Audits stratégiques IA', 'Illimité ∞', 'Illimité ∞', 'Illimité ∞'],
+      ['Codes correctifs', 'Illimité ∞', 'Illimité ∞', 'Illimité ∞'],
+      ['Crawl multi-pages', '5 000 pages/mois', '50 000 pages/mois', 'Illimité'],
+      ['Pages par scan', '10 pages', '50 pages', 'Illimité'],
+      ['URL suivis (tracking)', '30 inclus', '30 inclus', 'Illimité'],
+      ['Correctif multi-pages', '✓', '✓', '✓'],
+      ['Marque blanche', '✓', '✓', '✓'],
+      ['Multi-comptes', '3 comptes', '5 comptes', 'Sur mesure'],
+      ['Support prioritaire', '✓', '✓', 'SLA garanti'],
+      ['Serveur dédié', '—', '—', '✓'],
+      ['Données isolées', '—', '—', '✓'],
     ],
     compTargetLabel: 'Profil cible',
     compTargetPro: 'Freelances, consultants, petites agences (1-5 clients)',
     compTargetPlus: 'Agences structurées, équipes internes SEO (10+ clients)',
+    compTargetEnterprise: 'Grands comptes, organisations, équipes 20+',
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'Pour les grands comptes et organisations',
+    enterprisePrice: 'Sur demande',
+    enterpriseFeatures: [
+      'Tout illimité, sans restriction',
+      'Nombre d\'utilisateurs sur mesure',
+      'Serveur dédié & isolé',
+      'Données dupliquées & isolées',
+      'SLA garanti',
+      'Onboarding personnalisé',
+    ],
+    enterpriseCta: 'Contactez-nous via l\'assistant IA',
     fromLabel: 'à partir de',
     // Use cases
     useCasesTitle: 'Pensé pour les professionnels',
@@ -180,23 +196,38 @@ const translations = {
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
     ],
     comparisonTitle: 'Choose your Pro plan',
-    comparisonSubtitle: 'Two plans built for two different realities.',
-    compHeader: ['Feature', 'Pro Agency', 'Pro Agency +'],
+    comparisonSubtitle: 'Three plans built for three different realities.',
+    compHeader: ['Feature', 'Pro Agency', 'Pro Agency +', 'Enterprise'],
     compRows: [
-      ['Technical audits', 'Unlimited ∞', 'Unlimited ∞'],
-      ['Strategic AI audits', 'Unlimited ∞', 'Unlimited ∞'],
-      ['Corrective code', 'Unlimited ∞', 'Unlimited ∞'],
-      ['Multi-page crawl', '5,000 pages/month', '50,000 pages/month'],
-      ['Pages per scan', '10 pages', '50 pages'],
-      ['Tracked URLs', '30 included', '30 included'],
-      ['Multi-page corrective', '✓', '✓'],
-      ['White label', '✓', '✓'],
-      ['Multi-accounts', '3 accounts', '5 accounts'],
-      ['Priority support', '✓', '✓'],
+      ['Technical audits', 'Unlimited ∞', 'Unlimited ∞', 'Unlimited ∞'],
+      ['Strategic AI audits', 'Unlimited ∞', 'Unlimited ∞', 'Unlimited ∞'],
+      ['Corrective code', 'Unlimited ∞', 'Unlimited ∞', 'Unlimited ∞'],
+      ['Multi-page crawl', '5,000 pages/month', '50,000 pages/month', 'Unlimited'],
+      ['Pages per scan', '10 pages', '50 pages', 'Unlimited'],
+      ['Tracked URLs', '30 included', '30 included', 'Unlimited'],
+      ['Multi-page corrective', '✓', '✓', '✓'],
+      ['White label', '✓', '✓', '✓'],
+      ['Multi-accounts', '3 accounts', '5 accounts', 'Custom'],
+      ['Priority support', '✓', '✓', 'Guaranteed SLA'],
+      ['Dedicated server', '—', '—', '✓'],
+      ['Isolated data', '—', '—', '✓'],
     ],
     compTargetLabel: 'Best for',
     compTargetPro: 'Freelancers, consultants, small agencies (1-5 clients)',
     compTargetPlus: 'Structured agencies, internal SEO teams (10+ clients)',
+    compTargetEnterprise: 'Large organizations, enterprise teams 20+',
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'For large organizations and enterprise teams',
+    enterprisePrice: 'Custom pricing',
+    enterpriseFeatures: [
+      'Everything unlimited, no restrictions',
+      'Custom number of users',
+      'Dedicated & isolated server',
+      'Duplicated & isolated data',
+      'Guaranteed SLA',
+      'Personalized onboarding',
+    ],
+    enterpriseCta: 'Contact us via AI assistant',
     fromLabel: 'from',
     useCasesTitle: 'Built for professionals',
     useCases: [
@@ -247,23 +278,38 @@ const translations = {
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
     ],
     comparisonTitle: 'Elige tu fórmula Pro',
-    comparisonSubtitle: 'Dos ofertas diseñadas para dos realidades de terreno.',
-    compHeader: ['Funcionalidad', 'Pro Agency', 'Pro Agency +'],
+    comparisonSubtitle: 'Tres ofertas diseñadas para tres realidades de terreno.',
+    compHeader: ['Funcionalidad', 'Pro Agency', 'Pro Agency +', 'Enterprise'],
     compRows: [
-      ['Auditorías técnicas', 'Ilimitado ∞', 'Ilimitado ∞'],
-      ['Auditorías estratégicas IA', 'Ilimitado ∞', 'Ilimitado ∞'],
-      ['Código correctivo', 'Ilimitado ∞', 'Ilimitado ∞'],
-      ['Crawl multi-páginas', '5 000 páginas/mes', '50 000 páginas/mes'],
-      ['Páginas por escaneo', '10 páginas', '50 páginas'],
-      ['URL seguidos', '30 incluidos', '30 incluidos'],
-      ['Correctivo multi-páginas', '✓', '✓'],
-      ['Marca blanca', '✓', '✓'],
-      ['Multi-cuentas', '3 cuentas', '5 cuentas'],
-      ['Soporte prioritario', '✓', '✓'],
+      ['Auditorías técnicas', 'Ilimitado ∞', 'Ilimitado ∞', 'Ilimitado ∞'],
+      ['Auditorías estratégicas IA', 'Ilimitado ∞', 'Ilimitado ∞', 'Ilimitado ∞'],
+      ['Código correctivo', 'Ilimitado ∞', 'Ilimitado ∞', 'Ilimitado ∞'],
+      ['Crawl multi-páginas', '5 000 páginas/mes', '50 000 páginas/mes', 'Ilimitado'],
+      ['Páginas por escaneo', '10 páginas', '50 páginas', 'Ilimitado'],
+      ['URL seguidos', '30 incluidos', '30 incluidos', 'Ilimitado'],
+      ['Correctivo multi-páginas', '✓', '✓', '✓'],
+      ['Marca blanca', '✓', '✓', '✓'],
+      ['Multi-cuentas', '3 cuentas', '5 cuentas', 'A medida'],
+      ['Soporte prioritario', '✓', '✓', 'SLA garantizado'],
+      ['Servidor dedicado', '—', '—', '✓'],
+      ['Datos aislados', '—', '—', '✓'],
     ],
     compTargetLabel: 'Perfil ideal',
     compTargetPro: 'Freelancers, consultores, pequeñas agencias (1-5 clientes)',
     compTargetPlus: 'Agencias estructuradas, equipos SEO internos (10+ clientes)',
+    compTargetEnterprise: 'Grandes cuentas, organizaciones, equipos 20+',
+    enterpriseTitle: 'Enterprise',
+    enterpriseSubtitle: 'Para grandes cuentas y organizaciones',
+    enterprisePrice: 'Bajo demanda',
+    enterpriseFeatures: [
+      'Todo ilimitado, sin restricciones',
+      'Número de usuarios a medida',
+      'Servidor dedicado y aislado',
+      'Datos duplicados y aislados',
+      'SLA garantizado',
+      'Onboarding personalizado',
+    ],
+    enterpriseCta: 'Contáctenos vía asistente IA',
     fromLabel: 'desde',
     useCasesTitle: 'Diseñado para profesionales',
     useCases: [
@@ -503,7 +549,7 @@ export default function ProAgency() {
             </div>
 
             {/* Side-by-side plan cards */}
-            <div className="grid gap-6 md:grid-cols-2 mb-12">
+            <div className="grid gap-6 md:grid-cols-3 mb-12">
               {/* Pro Agency Card */}
               <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
@@ -590,6 +636,49 @@ export default function ProAgency() {
                   {t.ctaSubscribe}
                 </Button>
               </div>
+
+              {/* Enterprise Card */}
+              <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-card to-card p-8 flex flex-col">
+                <div className="absolute -top-3 right-6">
+                  <Badge className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-xs px-3 py-1 border-0">
+                    🏢 Enterprise
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">{(t as any).enterpriseTitle}</h3>
+                </div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-transparent">{(t as any).enterprisePrice}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">{(t as any).compTargetEnterprise}</p>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+                  {((t as any).enterpriseFeatures || []).map((feat: string, i: number) => {
+                    const icons = [Infinity, Users, Server, Database, Shield, Headphones];
+                    const Icon = icons[i] || CheckCircle2;
+                    return (
+                      <li key={i} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-emerald-500 shrink-0" />
+                        {feat}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
+                    if (felixBtn) felixBtn.click();
+                    else window.location.href = '/#felix';
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  {(t as any).enterpriseCta}
+                </Button>
+              </div>
             </div>
 
             {/* Detailed comparison table */}
@@ -597,10 +686,11 @@ export default function ProAgency() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    {t.compHeader.map((h, i) => (
-                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 1 ? 'text-violet-500' : ''} ${i === 2 ? 'text-amber-500' : ''}`}>
+                     {t.compHeader.map((h, i) => (
+                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 1 ? 'text-violet-500' : ''} ${i === 2 ? 'text-amber-500' : ''} ${i === 3 ? 'text-emerald-500' : ''}`}>
                         {i === 1 && <Crown className="inline h-4 w-4 mr-1 text-violet-500" />}
                         {i === 2 && <Crown className="inline h-4 w-4 mr-1 text-amber-500" />}
+                        {i === 3 && <Building2 className="inline h-4 w-4 mr-1 text-emerald-500" />}
                         {h}
                       </th>
                     ))}
@@ -612,6 +702,7 @@ export default function ProAgency() {
                       <td className="px-4 py-3 font-medium text-foreground">{row[0]}</td>
                       <td className="px-4 py-3 text-violet-400">{row[1]}</td>
                       <td className="px-4 py-3 font-semibold text-amber-400">{row[2]}</td>
+                      <td className="px-4 py-3 font-semibold text-emerald-400">{row[3]}</td>
                     </tr>
                   ))}
                   {/* Target profile row */}
@@ -619,6 +710,7 @@ export default function ProAgency() {
                     <td className="px-4 py-3 font-semibold text-foreground">{t.compTargetLabel}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{t.compTargetPro}</td>
                     <td className="px-4 py-3 text-sm text-amber-400/80">{t.compTargetPlus}</td>
+                    <td className="px-4 py-3 text-sm text-emerald-400/80">{(t as any).compTargetEnterprise}</td>
                   </tr>
                 </tbody>
               </table>
