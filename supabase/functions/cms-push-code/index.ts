@@ -615,10 +615,13 @@ Deno.serve(async (req) => {
     let result: PushResult;
     const label = input.label || `Crawlers SEO Fix (${input.fixes_summary?.length || 0} corrections)`;
 
+    // For service role calls, use the site owner's user_id for rule ownership
+    const effectiveUserId = isServiceCall ? site.user_id : user.id;
+
     if (!cmsConn) {
       // No CMS → widget.js fallback
       console.log(`[cms-push-code] No CMS connection for site ${tracked_site_id}, using widget fallback`);
-      result = await fallbackToWidgetRules(supabase, site.id, user.id, input.code_minified || code, label);
+      result = await fallbackToWidgetRules(supabase, site.id, effectiveUserId, input.code_minified || code, label);
     } else {
       console.log(`[cms-push-code] Pushing code to ${cmsConn.platform} for ${site.domain}`);
       
