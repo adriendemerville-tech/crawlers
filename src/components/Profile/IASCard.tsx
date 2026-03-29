@@ -342,7 +342,13 @@ export function IASCard({ trackedSiteId, userId, domain, isPremium, onUpgrade }:
       <Card className="border-dashed opacity-80">
         <CardContent className="py-6 text-center text-muted-foreground text-sm">
           <Activity className="h-8 w-8 mx-auto mb-3 opacity-30" />
-          <p>{t.noData}</p>
+          <p>{language === 'fr' ? 'Aucune donnée IAS disponible. Cliquez sur "Recalculer" pour lancer le premier calcul.' : language === 'es' ? 'Sin datos IAS. Haga clic en "Recalcular" para iniciar el primer cálculo.' : 'No IAS data available. Click "Recalculate" to run the first calculation.'}</p>
+          {hasAccess && (
+            <Button variant="outline" size="sm" className="mt-3" onClick={handleRecalculate} disabled={recalculating}>
+              {recalculating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              {t.recalculate}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
