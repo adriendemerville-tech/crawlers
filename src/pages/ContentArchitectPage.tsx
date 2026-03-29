@@ -5,12 +5,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   PenTool, ArrowRight, Globe, Image, Layers, FileText,
   Sparkles, Rocket, Check, Zap, Brain, Code, Settings,
   BarChart3, Search, Shield, Database, Cpu, BookOpen,
-  CheckCircle2, ArrowDown, ChevronRight, Star
+  CheckCircle2, ArrowDown, ChevronRight, Star,
+  Coins, Palette, Save, Building2, MessageCircle,
+  PanelLeft, Eye, Syringe, ImagePlus, Server
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -19,108 +20,165 @@ const t = {
   fr: {
     meta: {
       title: 'Content Architect — Création de contenu SEO & GEO automatisée | Crawlers.fr',
-      description: 'Générez des pages SEO optimisées en 30 secondes. Publication directe sur 7 CMS. Images IA, schema.org, brief éditorial intelligent. Inclus dans Pro Agency.',
+      description: 'Générez des pages SEO optimisées en 30 secondes. Publication sur 7 CMS. Images IA multi-moteurs, schema.org, brouillons, 5 crédits/page ou illimité en Pro Agency.',
     },
     hero: {
       badge: 'Content Architect',
       title: 'Créez du contenu SEO & GEO',
       titleAccent: 'en quelques secondes',
-      subtitle: 'Le premier outil français qui génère des pages entièrement optimisées — contenu, images IA, données structurées — et les publie directement sur votre CMS.',
+      subtitle: 'Interface Canva-like pour générer des pages optimisées — contenu, images IA multi-moteurs, données structurées — et les publier sur votre CMS. Accessible à tous dès 5 crédits.',
       cta: 'Commencer gratuitement',
       ctaSecondary: 'Voir les forfaits',
     },
     stats: [
       { value: '7', label: 'CMS supportés', detail: 'WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop, Odoo' },
-      { value: '< 30s', label: 'par article', detail: 'Génération complète avec images et métadonnées' },
-      { value: '100%', label: 'SEO-ready', detail: 'Schema.org, meta, Open Graph, alt text' },
-      { value: '0', label: 'compétence requise', detail: 'Brief calculé automatiquement depuis votre stratégie' },
+      { value: '3', label: 'Moteurs d\'image IA', detail: 'Imagen 3, FLUX, Ideogram — 12+ styles' },
+      { value: '5 ₵', label: 'par page (hors abo)', detail: 'Contenu + 2 images IA incluses' },
+      { value: '∞', label: 'en Pro Agency', detail: '100 pages/mois (150 en Pro Agency+)' },
     ],
     workflowTitle: 'Comment ça fonctionne',
-    workflowSubtitle: 'Un workflow en 3 étapes, entièrement automatisé',
+    workflowSubtitle: 'Un workflow en 4 étapes dans une interface Canva-like',
     workflow: [
       {
         step: '01',
         title: 'Configuration intelligente',
-        desc: 'Le brief éditorial est pré-rempli automatiquement : mot-clé cible, type de page, ton, longueur, CTA, liens internes — tout est calculé depuis votre fiche d\'identité site et votre Workbench stratégique.',
-        features: ['Auto-fill depuis Identity Card', 'Taxonomie du site chargée', 'Slug auto-généré', 'Type de page détecté (landing, article, produit)'],
+        desc: 'Le brief éditorial est pré-rempli automatiquement. En standalone, un appel au Stratège Cocoon génère les recommandations (mots-clés, angle, prescriptions visuelles). Le slug, le type de page et la structure sont calculés automatiquement.',
+        features: ['Auto-fill depuis Identity Card & Workbench', 'Prescriptions visuelles (style, placement, nombre)', 'Slug & type de page auto-détectés', 'Panneau Structure avec H1, H2, mots-clés éditables'],
       },
       {
         step: '02',
         title: 'Génération du contenu',
-        desc: 'L\'IA génère un contenu structuré de 800 à 1 500 mots, optimisé SEO et GEO : H1, H2, H3, FAQ, schema.org, méta description. Le brief éditorial contraint la sortie pour éviter les hallucinations.',
-        features: ['800-1 500 mots structurés', 'FAQ et données structurées', 'Markdown pur (pas de HTML brut)', 'Ton et angle éditorial maîtrisés'],
+        desc: 'L\'IA génère un contenu structuré E-E-A-T de 800 à 1 500 mots : chapô, H1-H3, FAQ, sources, schema.org. Le panneau Données structurées permet d\'éditer le JSON-LD directement.',
+        features: ['800-1 500 mots E-E-A-T optimisés', 'Chapô, FAQ, sources automatiques', 'Données structurées éditables (JSON-LD)', 'Zone d\'instructions spécifiques (Syringe)'],
       },
       {
         step: '03',
-        title: 'Image IA & Publication',
-        desc: 'Une image cinématique est générée automatiquement et injectée avec alt text optimisé. Publiez en un clic sur votre CMS connecté — WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop ou Odoo.',
-        features: ['Image cinématique IA intégrée', 'Alt text SEO automatique', 'Publication directe multi-CMS', 'Prévisualisation en temps réel'],
+        title: 'Images IA multi-moteurs',
+        desc: 'Routage intelligent vers Imagen 3 (Photo, Cinématique), FLUX (Artistic, Flat, Aquarelle…) ou Ideogram (Typographie, Infographie, N&B). Assignation par double-clic. Bibliothèque de 5 images de référence par site.',
+        features: ['12+ styles visuels (3 moteurs IA)', 'Image de référence (Inspiration / Édition)', '2 images par contenu (Entête + Corps)', 'Alt text, caption, lazy-loading automatiques'],
       },
+      {
+        step: '04',
+        title: 'Brouillon & Publication',
+        desc: 'Sauvegardez vos brouillons (historique par URL) et publiez en un clic sur votre CMS. Le header, footer et styles sont gérés par votre thème — seul le corps est injecté.',
+        features: ['Brouillons sauvegardés par URL', 'Preview canvas temps réel', 'Publication CMS directe (corps uniquement)', 'Coût affiché dans le bouton Publier'],
+      },
+    ],
+    layoutTitle: 'Interface style Canva',
+    layoutSubtitle: 'Un éditeur visuel professionnel pensé pour le SEO',
+    layoutFeatures: [
+      { icon: PanelLeft, name: 'Toolbar verticale', desc: '8 panneaux contextuels : Prompt, Structure, Images, Données structurées, Brouillon, Bibliothèque, Options, Tâches.' },
+      { icon: Layers, name: 'Panneau contextuel', desc: 'Un seul ouvert à la fois. Champs éditables (H1, H2, URL, mots-clés avec badges). Largeur flexible 260-500px.' },
+      { icon: Syringe, name: 'Zone d\'instructions', desc: 'Commune à tous les outils. Champ redimensionnable + bouton sticky "Injecter" pour affiner la génération.' },
+      { icon: Eye, name: 'Canvas Preview', desc: 'Zone de rendu à droite, largeur ajustable par drag. Boutons "Enregistrer" et "Publier vers le CMS" intégrés.' },
+      { icon: ImagePlus, name: 'Panneau Images', desc: 'Sélection du style, moteur IA routé automatiquement. Double-clic pour assigner Entête ou Corps.' },
+      { icon: Save, name: 'Panneau Brouillon', desc: 'Historique des versions par URL. Restauration en un clic. Réservé aux abonnés Pro Agency.' },
     ],
     toolsTitle: 'Les outils qui alimentent Content Architect',
     toolsSubtitle: 'Un écosystème complet au service de la création de contenu',
     tools: [
-      { icon: Search, name: 'Workbench Stratégique', desc: 'Fournit les mots-clés, quick wins, gaps de contenu et recommandations prioritaires issues des audits.' },
-      { icon: Database, name: 'Identity Card', desc: 'Pré-remplit automatiquement le brief avec le secteur, le ton, la cible et la taxonomie du site.' },
-      { icon: Brain, name: 'Content Brief Engine', desc: 'Calcule les contraintes éditoriales : longueur, nombre de H2/H3, angle, CTA et liens internes.' },
-      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Modèle de génération de texte. Produit du Markdown structuré avec contrôle sémantique strict.' },
-      { icon: Image, name: 'Générateur d\'images IA', desc: 'Crée des illustrations cinématiques uniques, stockées et injectées automatiquement.' },
-      { icon: Globe, name: 'Bridge CMS', desc: 'Publie en un clic via les APIs natives de 7 CMS : WordPress REST, Shopify Admin, etc.' },
+      { icon: Search, name: 'Workbench Stratégique', desc: 'Mots-clés, quick wins, gaps de contenu et recommandations prioritaires issues des audits.' },
+      { icon: Database, name: 'Identity Card', desc: 'Pré-remplit automatiquement le brief : secteur, ton, cible, taxonomie du site.' },
+      { icon: Brain, name: 'Stratège Cocoon', desc: 'Pré-appel stratégique en standalone pour recommandations riches incluant prescriptions visuelles.' },
+      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Modèle de génération de texte. Markdown structuré E-E-A-T avec contrôle sémantique.' },
+      { icon: Image, name: 'Routeur d\'images IA', desc: 'Imagen 3 (Photo), FLUX (Artistic), Ideogram (Typo/Infographie). 12+ styles, image de référence.' },
+      { icon: Globe, name: 'Bridge CMS', desc: 'Publication via APIs natives de 7 CMS. Injection du corps uniquement (header/footer gérés par le thème).' },
     ],
     apisTitle: 'APIs & Technologies',
     apisSubtitle: 'Infrastructure transparente — vous savez exactement ce qui est utilisé',
     apis: [
-      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'Génération de contenu structuré SEO/GEO' },
-      { name: 'BFL / Ideogram', category: 'Image IA', usage: 'Illustrations cinématiques et visuels éditoriaux' },
-      { name: 'WordPress REST API', category: 'CMS', usage: 'Publication d\'articles et pages' },
+      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'Génération de contenu structuré SEO/GEO E-E-A-T' },
+      { name: 'Google Imagen 3', category: 'Image IA', usage: 'Styles Photo et Cinématique, images de référence' },
+      { name: 'FLUX (BFL)', category: 'Image IA', usage: 'Styles Artistic, Flat, Aquarelle, et variantes créatives' },
+      { name: 'Ideogram', category: 'Image IA', usage: 'Typographie, Infographie, Noir & Blanc, Peinture classique' },
+      { name: 'WordPress REST API', category: 'CMS', usage: 'Publication d\'articles, pages et featured_media' },
       { name: 'Shopify Admin API', category: 'CMS', usage: 'Publication de pages et articles de blog' },
       { name: 'DataForSEO', category: 'SEO', usage: 'Données de mots-clés et SERP pour le brief' },
-      { name: 'Google PageSpeed', category: 'Performance', usage: 'Validation Core Web Vitals post-publication' },
     ],
-    pricingTitle: 'Content Architect inclus dans votre forfait',
-    pricingSubtitle: 'Pas de surcoût — la création de contenu fait partie de votre abonnement',
+    pricingTitle: 'Content Architect — Tarification',
+    pricingSubtitle: 'Accessible à tous en crédits, illimité en abonnement',
     plans: [
+      {
+        name: 'Crédits',
+        price: '5',
+        priceUnit: 'crédits',
+        period: '/ page',
+        pages: 'Pay-as-you-go',
+        features: [
+          '1 page avec 2 images IA',
+          '7 CMS supportés',
+          'Schema.org & meta générés',
+          'Publication en un clic',
+          'Pas de brouillons sauvegardés',
+        ],
+        highlight: false,
+        cta: 'Acheter des crédits',
+        ctaLink: '/tarifs',
+      },
       {
         name: 'Pro Agency',
         price: '59€',
+        priceUnit: '',
         period: '/mois',
         pages: '100 pages/mois',
         features: [
           '100 pages créées par mois',
-          '7 CMS supportés',
-          'Images IA incluses',
+          'Images IA illimitées (2/page)',
           'Brief éditorial automatique',
+          'Brouillons sauvegardés par URL',
           'Schema.org & meta générés',
           'Publication en un clic',
         ],
         highlight: false,
+        cta: 'Choisir Pro Agency',
+        ctaLink: '/pro-agency',
       },
       {
         name: 'Pro Agency +',
-        price: '89€',
+        price: '99€',
+        priceUnit: '',
         period: '/mois',
         pages: '150 pages/mois',
         features: [
           '150 pages créées par mois',
-          '7 CMS supportés',
-          'Images IA incluses',
+          'Images IA illimitées (2/page)',
           'Brief éditorial automatique',
-          'Schema.org & meta générés',
-          'Publication en un clic',
+          'Brouillons sauvegardés par URL',
           'Priorité de génération',
           'Support prioritaire',
         ],
         highlight: true,
+        cta: 'Choisir Pro Agency +',
+        ctaLink: '/pro-agency',
+      },
+      {
+        name: 'Enterprise',
+        price: '',
+        priceUnit: 'Sur demande',
+        period: '',
+        pages: 'Tout illimité',
+        features: [
+          'Pages et images illimitées',
+          'Utilisateurs sur mesure',
+          'Serveur dédié & isolé',
+          'Données dupliquées & isolées',
+          'SLA garanti',
+          'Onboarding personnalisé',
+        ],
+        highlight: false,
+        cta: 'Contactez-nous via l\'assistant IA',
+        ctaLink: '',
+        isEnterprise: true,
       },
     ],
     faqTitle: 'Questions fréquentes',
     faq: [
-      { q: 'Quel type de contenu Content Architect peut-il créer ?', a: 'Content Architect génère trois types de pages : articles de blog, pages produit et landing pages. Le type est détecté automatiquement depuis les signaux du Workbench ou peut être choisi manuellement.' },
-      { q: 'Les contenus sont-ils uniques et originaux ?', a: 'Oui. Chaque contenu est généré à partir d\'un brief éditorial unique basé sur votre site, votre secteur et vos données stratégiques. Le modèle Gemini 2.5 Pro produit du contenu original, sans copier de sources existantes.' },
-      { q: 'Comment fonctionne le fair use ?', a: 'Pro Agency inclut 100 pages/mois, Pro Agency+ inclut 150 pages/mois. Le compteur se réinitialise automatiquement le 1er de chaque mois. Les administrateurs bénéficient d\'un bypass automatique.' },
-      { q: 'Quels CMS sont supportés ?', a: 'WordPress (REST API), Shopify (Admin API), Drupal, Webflow, Wix, PrestaShop et Odoo. La connexion se fait en quelques clics depuis la console.' },
-      { q: 'Les images IA sont-elles incluses ?', a: 'Oui. Chaque article inclut une image cinématique générée par IA, avec alt text SEO optimisé et lazy loading. L\'image est stockée et injectée automatiquement.' },
-      { q: 'Le contenu est-il optimisé pour les moteurs IA (GEO) ?', a: 'Absolument. Content Architect génère du contenu citée par les LLM : données structurées schema.org, réponses directes en FAQ, et structure sémantique que les moteurs génératifs (Google SGE, ChatGPT, Perplexity) peuvent extraire et citer.' },
+      { q: 'Quel type de contenu Content Architect peut-il créer ?', a: 'Articles de blog, pages produit et landing pages. Le type est détecté automatiquement ou choisi manuellement.' },
+      { q: 'Combien coûte une page sans abonnement ?', a: '5 crédits par page, incluant le contenu et 2 images IA. Tous les utilisateurs avec des crédits peuvent utiliser Content Architect.' },
+      { q: 'Comment fonctionne le système d\'images ?', a: '3 moteurs IA (Imagen 3, FLUX, Ideogram) avec 12+ styles. Le routage est automatique selon le style choisi. Vous pouvez fournir une image de référence pour guider la génération.' },
+      { q: 'Les brouillons sont-ils disponibles pour tous ?', a: 'Les brouillons sont visibles par tous mais consultables uniquement avec un abonnement Pro Agency ou Pro Agency+.' },
+      { q: 'Comment fonctionne la publication CMS ?', a: 'Content Architect injecte uniquement le corps de la page (titre, HTML, méta, images). Le header, footer et styles sont gérés par votre thème CMS.' },
+      { q: 'Le contenu est-il optimisé pour les moteurs IA (GEO) ?', a: 'Oui. Structure E-E-A-T, schema.org, FAQ directes et structure sémantique que les moteurs génératifs peuvent citer.' },
     ],
     ctaFinal: {
       title: 'Prêt à automatiser votre création de contenu ?',
@@ -131,92 +189,138 @@ const t = {
   en: {
     meta: {
       title: 'Content Architect — Automated SEO & GEO Content Creation | Crawlers.fr',
-      description: 'Generate optimized SEO pages in 30 seconds. Direct publishing to 7 CMS. AI images, schema.org, smart editorial brief. Included in Pro Agency.',
+      description: 'Generate optimized SEO pages in 30 seconds. Publish to 7 CMS. Multi-engine AI images, schema.org, drafts, 5 credits/page or unlimited with Pro Agency.',
     },
     hero: {
       badge: 'Content Architect',
       title: 'Create SEO & GEO content',
       titleAccent: 'in seconds',
-      subtitle: 'The first French tool that generates fully optimized pages — content, AI images, structured data — and publishes them directly to your CMS.',
+      subtitle: 'Canva-like interface to generate optimized pages — content, multi-engine AI images, structured data — and publish to your CMS. Available to everyone from 5 credits.',
       cta: 'Start for free',
       ctaSecondary: 'View plans',
     },
     stats: [
       { value: '7', label: 'CMS supported', detail: 'WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop, Odoo' },
-      { value: '< 30s', label: 'per article', detail: 'Full generation with images and metadata' },
-      { value: '100%', label: 'SEO-ready', detail: 'Schema.org, meta, Open Graph, alt text' },
-      { value: '0', label: 'skill required', detail: 'Brief auto-calculated from your strategy' },
+      { value: '3', label: 'AI image engines', detail: 'Imagen 3, FLUX, Ideogram — 12+ styles' },
+      { value: '5 ₵', label: 'per page (no sub)', detail: 'Content + 2 AI images included' },
+      { value: '∞', label: 'with Pro Agency', detail: '100 pages/month (150 with Pro Agency+)' },
     ],
     workflowTitle: 'How it works',
-    workflowSubtitle: 'A 3-step workflow, fully automated',
+    workflowSubtitle: 'A 4-step workflow in a Canva-like interface',
     workflow: [
       {
         step: '01',
         title: 'Smart configuration',
-        desc: 'The editorial brief is auto-filled: target keyword, page type, tone, length, CTA, internal links — everything is calculated from your site identity card and strategic Workbench.',
-        features: ['Auto-fill from Identity Card', 'Site taxonomy loaded', 'Auto-generated slug', 'Page type detected (landing, article, product)'],
+        desc: 'Editorial brief auto-filled. In standalone, a Cocoon Strategist call generates recommendations (keywords, angle, visual prescriptions). Slug, page type and structure are auto-calculated.',
+        features: ['Auto-fill from Identity Card & Workbench', 'Visual prescriptions (style, placement, count)', 'Slug & page type auto-detected', 'Structure panel with editable H1, H2, keywords'],
       },
       {
         step: '02',
         title: 'Content generation',
-        desc: 'AI generates structured content of 800-1,500 words, SEO & GEO optimized: H1, H2, H3, FAQ, schema.org, meta description. The editorial brief constrains output to avoid hallucinations.',
-        features: ['800-1,500 structured words', 'FAQ and structured data', 'Pure Markdown (no raw HTML)', 'Controlled tone and editorial angle'],
+        desc: 'AI generates E-E-A-T structured content of 800-1,500 words: chapô, H1-H3, FAQ, sources, schema.org. The Structured Data panel lets you edit JSON-LD directly.',
+        features: ['800-1,500 E-E-A-T optimized words', 'Auto chapô, FAQ, sources', 'Editable structured data (JSON-LD)', 'Specific instructions zone (Syringe)'],
       },
       {
         step: '03',
-        title: 'AI Image & Publishing',
-        desc: 'A cinematic image is auto-generated and injected with optimized alt text. Publish in one click to your connected CMS — WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop or Odoo.',
-        features: ['Integrated cinematic AI image', 'Automatic SEO alt text', 'Direct multi-CMS publishing', 'Real-time preview'],
+        title: 'Multi-engine AI images',
+        desc: 'Smart routing to Imagen 3 (Photo, Cinematic), FLUX (Artistic, Flat, Watercolor…) or Ideogram (Typography, Infographic, B&W). Double-click assignment. 5 reference images per site.',
+        features: ['12+ visual styles (3 AI engines)', 'Reference image (Inspiration / Edit)', '2 images per content (Header + Body)', 'Auto alt text, caption, lazy-loading'],
       },
+      {
+        step: '04',
+        title: 'Drafts & Publishing',
+        desc: 'Save drafts (history per URL) and publish in one click to your CMS. Header, footer and styles are handled by your theme — only the body is injected.',
+        features: ['Drafts saved per URL', 'Real-time canvas preview', 'Direct CMS publishing (body only)', 'Cost shown in Publish button'],
+      },
+    ],
+    layoutTitle: 'Canva-style interface',
+    layoutSubtitle: 'A professional visual editor designed for SEO',
+    layoutFeatures: [
+      { icon: PanelLeft, name: 'Vertical toolbar', desc: '8 contextual panels: Prompt, Structure, Images, Structured Data, Draft, Library, Options, Tasks.' },
+      { icon: Layers, name: 'Contextual panel', desc: 'One open at a time. Editable fields (H1, H2, URL, keywords with badges). Flexible width 260-500px.' },
+      { icon: Syringe, name: 'Instructions zone', desc: 'Shared across all tools. Resizable field + sticky "Inject" button to refine generation.' },
+      { icon: Eye, name: 'Canvas Preview', desc: 'Right-side render zone, adjustable width via drag. Built-in "Save" and "Publish to CMS" buttons.' },
+      { icon: ImagePlus, name: 'Images panel', desc: 'Style selection, auto-routed AI engine. Double-click to assign Header or Body.' },
+      { icon: Save, name: 'Draft panel', desc: 'Version history per URL. One-click restore. Reserved for Pro Agency subscribers.' },
     ],
     toolsTitle: 'Tools powering Content Architect',
     toolsSubtitle: 'A complete ecosystem serving content creation',
     tools: [
-      { icon: Search, name: 'Strategic Workbench', desc: 'Provides keywords, quick wins, content gaps and priority recommendations from audits.' },
-      { icon: Database, name: 'Identity Card', desc: 'Auto-fills the brief with sector, tone, target audience and site taxonomy.' },
-      { icon: Brain, name: 'Content Brief Engine', desc: 'Calculates editorial constraints: length, H2/H3 count, angle, CTA and internal links.' },
-      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Text generation model. Produces structured Markdown with strict semantic control.' },
-      { icon: Image, name: 'AI Image Generator', desc: 'Creates unique cinematic illustrations, stored and auto-injected.' },
-      { icon: Globe, name: 'CMS Bridge', desc: 'One-click publishing via native APIs of 7 CMS: WordPress REST, Shopify Admin, etc.' },
+      { icon: Search, name: 'Strategic Workbench', desc: 'Keywords, quick wins, content gaps and priority recommendations from audits.' },
+      { icon: Database, name: 'Identity Card', desc: 'Auto-fills the brief: sector, tone, target audience, site taxonomy.' },
+      { icon: Brain, name: 'Cocoon Strategist', desc: 'Standalone strategic pre-call for rich recommendations including visual prescriptions.' },
+      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Text generation model. E-E-A-T structured Markdown with semantic control.' },
+      { icon: Image, name: 'AI Image Router', desc: 'Imagen 3 (Photo), FLUX (Artistic), Ideogram (Typo/Infographic). 12+ styles, reference image.' },
+      { icon: Globe, name: 'CMS Bridge', desc: 'Publishing via native APIs of 7 CMS. Body-only injection (header/footer managed by theme).' },
     ],
     apisTitle: 'APIs & Technologies',
     apisSubtitle: 'Transparent infrastructure — you know exactly what\'s used',
     apis: [
-      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'Structured SEO/GEO content generation' },
-      { name: 'BFL / Ideogram', category: 'AI Image', usage: 'Cinematic illustrations and editorial visuals' },
-      { name: 'WordPress REST API', category: 'CMS', usage: 'Article and page publishing' },
+      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'E-E-A-T structured SEO/GEO content generation' },
+      { name: 'Google Imagen 3', category: 'AI Image', usage: 'Photo and Cinematic styles, reference images' },
+      { name: 'FLUX (BFL)', category: 'AI Image', usage: 'Artistic, Flat, Watercolor and creative variants' },
+      { name: 'Ideogram', category: 'AI Image', usage: 'Typography, Infographic, B&W, Classic painting' },
+      { name: 'WordPress REST API', category: 'CMS', usage: 'Articles, pages and featured_media publishing' },
       { name: 'Shopify Admin API', category: 'CMS', usage: 'Blog post and page publishing' },
       { name: 'DataForSEO', category: 'SEO', usage: 'Keyword and SERP data for the brief' },
-      { name: 'Google PageSpeed', category: 'Performance', usage: 'Post-publication Core Web Vitals validation' },
     ],
-    pricingTitle: 'Content Architect included in your plan',
-    pricingSubtitle: 'No extra cost — content creation is part of your subscription',
+    pricingTitle: 'Content Architect — Pricing',
+    pricingSubtitle: 'Available to everyone via credits, unlimited with subscription',
     plans: [
+      {
+        name: 'Credits',
+        price: '5',
+        priceUnit: 'credits',
+        period: '/ page',
+        pages: 'Pay-as-you-go',
+        features: ['1 page with 2 AI images', '7 CMS supported', 'Schema.org & meta generated', 'One-click publishing', 'No saved drafts'],
+        highlight: false,
+        cta: 'Buy credits',
+        ctaLink: '/tarifs',
+      },
       {
         name: 'Pro Agency',
         price: '€59',
+        priceUnit: '',
         period: '/month',
         pages: '100 pages/month',
-        features: ['100 pages created per month', '7 CMS supported', 'AI images included', 'Automatic editorial brief', 'Schema.org & meta generated', 'One-click publishing'],
+        features: ['100 pages per month', 'Unlimited AI images (2/page)', 'Auto editorial brief', 'Drafts saved per URL', 'Schema.org & meta generated', 'One-click publishing'],
         highlight: false,
+        cta: 'Choose Pro Agency',
+        ctaLink: '/pro-agency',
       },
       {
         name: 'Pro Agency +',
-        price: '€89',
+        price: '€99',
+        priceUnit: '',
         period: '/month',
         pages: '150 pages/month',
-        features: ['150 pages created per month', '7 CMS supported', 'AI images included', 'Automatic editorial brief', 'Schema.org & meta generated', 'One-click publishing', 'Generation priority', 'Priority support'],
+        features: ['150 pages per month', 'Unlimited AI images (2/page)', 'Auto editorial brief', 'Drafts saved per URL', 'Generation priority', 'Priority support'],
         highlight: true,
+        cta: 'Choose Pro Agency +',
+        ctaLink: '/pro-agency',
+      },
+      {
+        name: 'Enterprise',
+        price: '',
+        priceUnit: 'Custom pricing',
+        period: '',
+        pages: 'Everything unlimited',
+        features: ['Unlimited pages & images', 'Custom number of users', 'Dedicated & isolated server', 'Duplicated & isolated data', 'Guaranteed SLA', 'Personalized onboarding'],
+        highlight: false,
+        cta: 'Contact us via AI assistant',
+        ctaLink: '',
+        isEnterprise: true,
       },
     ],
     faqTitle: 'Frequently asked questions',
     faq: [
-      { q: 'What types of content can Content Architect create?', a: 'Content Architect generates three page types: blog articles, product pages and landing pages. The type is auto-detected from Workbench signals or can be manually chosen.' },
-      { q: 'Is the content unique and original?', a: 'Yes. Each piece of content is generated from a unique editorial brief based on your site, sector and strategic data. Gemini 2.5 Pro produces original content without copying existing sources.' },
-      { q: 'How does fair use work?', a: 'Pro Agency includes 100 pages/month, Pro Agency+ includes 150 pages/month. The counter resets automatically on the 1st of each month.' },
-      { q: 'Which CMS are supported?', a: 'WordPress (REST API), Shopify (Admin API), Drupal, Webflow, Wix, PrestaShop and Odoo.' },
-      { q: 'Are AI images included?', a: 'Yes. Each article includes a cinematic AI-generated image with optimized SEO alt text and lazy loading.' },
-      { q: 'Is the content optimized for AI engines (GEO)?', a: 'Absolutely. Content Architect generates content cited by LLMs: schema.org structured data, direct FAQ answers, and semantic structure extractable by generative engines.' },
+      { q: 'What types of content can it create?', a: 'Blog articles, product pages and landing pages. Type is auto-detected or manually chosen.' },
+      { q: 'How much does a page cost without subscription?', a: '5 credits per page, including content and 2 AI images. All users with credits can use Content Architect.' },
+      { q: 'How does the image system work?', a: '3 AI engines (Imagen 3, FLUX, Ideogram) with 12+ styles. Routing is automatic based on style. You can provide a reference image.' },
+      { q: 'Are drafts available to everyone?', a: 'Drafts are visible to all but only accessible with a Pro Agency or Pro Agency+ subscription.' },
+      { q: 'How does CMS publishing work?', a: 'Content Architect injects only the page body (title, HTML, meta, images). Header, footer and styles are managed by your CMS theme.' },
+      { q: 'Is the content optimized for AI engines (GEO)?', a: 'Yes. E-E-A-T structure, schema.org, direct FAQ answers, and semantic structure extractable by generative engines.' },
     ],
     ctaFinal: {
       title: 'Ready to automate your content creation?',
@@ -227,92 +331,138 @@ const t = {
   es: {
     meta: {
       title: 'Content Architect — Creación de contenido SEO & GEO automatizada | Crawlers.fr',
-      description: 'Genera páginas SEO optimizadas en 30 segundos. Publicación directa en 7 CMS. Imágenes IA, schema.org, brief editorial inteligente. Incluido en Pro Agency.',
+      description: 'Genera páginas SEO optimizadas en 30 segundos. Publicación en 7 CMS. Imágenes IA multi-motor, schema.org, borradores, 5 créditos/página o ilimitado en Pro Agency.',
     },
     hero: {
       badge: 'Content Architect',
       title: 'Crea contenido SEO & GEO',
       titleAccent: 'en segundos',
-      subtitle: 'La primera herramienta francesa que genera páginas completamente optimizadas — contenido, imágenes IA, datos estructurados — y las publica directamente en tu CMS.',
+      subtitle: 'Interfaz estilo Canva para generar páginas optimizadas — contenido, imágenes IA multi-motor, datos estructurados — y publicarlas en tu CMS. Disponible desde 5 créditos.',
       cta: 'Comenzar gratis',
       ctaSecondary: 'Ver planes',
     },
     stats: [
       { value: '7', label: 'CMS soportados', detail: 'WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop, Odoo' },
-      { value: '< 30s', label: 'por artículo', detail: 'Generación completa con imágenes y metadatos' },
-      { value: '100%', label: 'SEO-ready', detail: 'Schema.org, meta, Open Graph, alt text' },
-      { value: '0', label: 'habilidad requerida', detail: 'Brief calculado automáticamente desde tu estrategia' },
+      { value: '3', label: 'Motores de imagen IA', detail: 'Imagen 3, FLUX, Ideogram — 12+ estilos' },
+      { value: '5 ₵', label: 'por página (sin abo)', detail: 'Contenido + 2 imágenes IA incluidas' },
+      { value: '∞', label: 'en Pro Agency', detail: '100 páginas/mes (150 en Pro Agency+)' },
     ],
     workflowTitle: 'Cómo funciona',
-    workflowSubtitle: 'Un flujo de trabajo en 3 pasos, completamente automatizado',
+    workflowSubtitle: 'Un flujo en 4 pasos en una interfaz estilo Canva',
     workflow: [
       {
         step: '01',
         title: 'Configuración inteligente',
-        desc: 'El brief editorial se llena automáticamente: palabra clave, tipo de página, tono, longitud, CTA, enlaces internos — todo se calcula desde la ficha de identidad de tu sitio.',
-        features: ['Auto-fill desde Identity Card', 'Taxonomía del sitio cargada', 'Slug auto-generado', 'Tipo de página detectado'],
+        desc: 'El brief editorial se completa automáticamente. En standalone, una llamada al Estratega Cocoon genera recomendaciones ricas incluyendo prescripciones visuales.',
+        features: ['Auto-fill desde Identity Card & Workbench', 'Prescripciones visuales (estilo, ubicación, cantidad)', 'Slug y tipo de página auto-detectados', 'Panel Estructura con H1, H2, palabras clave editables'],
       },
       {
         step: '02',
         title: 'Generación de contenido',
-        desc: 'La IA genera contenido estructurado de 800-1500 palabras, optimizado SEO y GEO: H1, H2, H3, FAQ, schema.org, meta descripción.',
-        features: ['800-1500 palabras estructuradas', 'FAQ y datos estructurados', 'Markdown puro', 'Tono y ángulo editorial controlados'],
+        desc: 'La IA genera contenido E-E-A-T de 800-1500 palabras: chapô, H1-H3, FAQ, fuentes, schema.org. Panel de datos estructurados editable.',
+        features: ['800-1500 palabras E-E-A-T', 'Chapô, FAQ, fuentes automáticas', 'Datos estructurados editables (JSON-LD)', 'Zona de instrucciones específicas'],
       },
       {
         step: '03',
-        title: 'Imagen IA y Publicación',
-        desc: 'Una imagen cinematográfica se genera e inyecta automáticamente. Publica en un clic en tu CMS conectado.',
-        features: ['Imagen cinematográfica IA', 'Alt text SEO automático', 'Publicación directa multi-CMS', 'Vista previa en tiempo real'],
+        title: 'Imágenes IA multi-motor',
+        desc: 'Routeo inteligente a Imagen 3 (Foto, Cinematográfica), FLUX (Artístico, Flat, Acuarela…) o Ideogram (Tipografía, Infografía). Asignación por doble clic.',
+        features: ['12+ estilos visuales (3 motores IA)', 'Imagen de referencia (Inspiración / Edición)', '2 imágenes por contenido', 'Alt text, caption, lazy-loading automáticos'],
       },
+      {
+        step: '04',
+        title: 'Borradores y Publicación',
+        desc: 'Guarda borradores por URL y publica en un clic. El header, footer y estilos son del tema — solo se inyecta el cuerpo.',
+        features: ['Borradores guardados por URL', 'Preview canvas en tiempo real', 'Publicación CMS directa', 'Costo mostrado en botón Publicar'],
+      },
+    ],
+    layoutTitle: 'Interfaz estilo Canva',
+    layoutSubtitle: 'Un editor visual profesional diseñado para SEO',
+    layoutFeatures: [
+      { icon: PanelLeft, name: 'Toolbar vertical', desc: '8 paneles contextuales: Prompt, Estructura, Imágenes, Datos estructurados, Borrador, Biblioteca, Opciones, Tareas.' },
+      { icon: Layers, name: 'Panel contextual', desc: 'Uno abierto a la vez. Campos editables con badges. Ancho flexible 260-500px.' },
+      { icon: Syringe, name: 'Zona de instrucciones', desc: 'Compartida entre herramientas. Campo redimensionable + botón sticky "Inyectar".' },
+      { icon: Eye, name: 'Canvas Preview', desc: 'Zona de renderizado derecha, ancho ajustable. Botones "Guardar" y "Publicar en CMS".' },
+      { icon: ImagePlus, name: 'Panel Imágenes', desc: 'Selección de estilo, motor IA auto-ruteado. Doble clic para asignar Encabezado o Cuerpo.' },
+      { icon: Save, name: 'Panel Borrador', desc: 'Historial por URL. Restauración en un clic. Reservado a suscriptores Pro Agency.' },
     ],
     toolsTitle: 'Herramientas que alimentan Content Architect',
     toolsSubtitle: 'Un ecosistema completo al servicio de la creación de contenido',
     tools: [
-      { icon: Search, name: 'Workbench Estratégico', desc: 'Proporciona palabras clave, quick wins, gaps de contenido y recomendaciones prioritarias.' },
-      { icon: Database, name: 'Identity Card', desc: 'Pre-rellena el brief con sector, tono, audiencia objetivo y taxonomía del sitio.' },
-      { icon: Brain, name: 'Content Brief Engine', desc: 'Calcula las restricciones editoriales: longitud, H2/H3, ángulo, CTA y enlaces internos.' },
-      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Modelo de generación de texto con control semántico estricto.' },
-      { icon: Image, name: 'Generador de imágenes IA', desc: 'Crea ilustraciones cinematográficas únicas, almacenadas e inyectadas automáticamente.' },
-      { icon: Globe, name: 'Bridge CMS', desc: 'Publicación en un clic vía APIs nativas de 7 CMS.' },
+      { icon: Search, name: 'Workbench Estratégico', desc: 'Palabras clave, quick wins, gaps y recomendaciones prioritarias.' },
+      { icon: Database, name: 'Identity Card', desc: 'Pre-rellena el brief: sector, tono, audiencia, taxonomía.' },
+      { icon: Brain, name: 'Estratega Cocoon', desc: 'Pre-llamada estratégica standalone con prescripciones visuales.' },
+      { icon: Cpu, name: 'Gemini 2.5 Pro', desc: 'Generación de texto E-E-A-T con control semántico.' },
+      { icon: Image, name: 'Router de imágenes IA', desc: 'Imagen 3, FLUX, Ideogram. 12+ estilos, imagen de referencia.' },
+      { icon: Globe, name: 'Bridge CMS', desc: 'Publicación vía APIs nativas. Solo inyección del cuerpo.' },
     ],
     apisTitle: 'APIs y Tecnologías',
     apisSubtitle: 'Infraestructura transparente — sabes exactamente qué se usa',
     apis: [
-      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'Generación de contenido SEO/GEO estructurado' },
-      { name: 'BFL / Ideogram', category: 'Imagen IA', usage: 'Ilustraciones cinematográficas y visuales editoriales' },
-      { name: 'WordPress REST API', category: 'CMS', usage: 'Publicación de artículos y páginas' },
-      { name: 'Shopify Admin API', category: 'CMS', usage: 'Publicación de páginas y artículos de blog' },
-      { name: 'DataForSEO', category: 'SEO', usage: 'Datos de palabras clave y SERP para el brief' },
-      { name: 'Google PageSpeed', category: 'Rendimiento', usage: 'Validación Core Web Vitals post-publicación' },
+      { name: 'Google Gemini 2.5 Pro', category: 'LLM', usage: 'Generación de contenido E-E-A-T SEO/GEO' },
+      { name: 'Google Imagen 3', category: 'Imagen IA', usage: 'Estilos Foto y Cinematográfico, imágenes de referencia' },
+      { name: 'FLUX (BFL)', category: 'Imagen IA', usage: 'Estilos Artístico, Flat, Acuarela y variantes' },
+      { name: 'Ideogram', category: 'Imagen IA', usage: 'Tipografía, Infografía, B&N, Pintura clásica' },
+      { name: 'WordPress REST API', category: 'CMS', usage: 'Publicación de artículos, páginas y featured_media' },
+      { name: 'Shopify Admin API', category: 'CMS', usage: 'Publicación de páginas y artículos' },
+      { name: 'DataForSEO', category: 'SEO', usage: 'Datos de palabras clave y SERP' },
     ],
-    pricingTitle: 'Content Architect incluido en tu plan',
-    pricingSubtitle: 'Sin costo adicional — la creación de contenido es parte de tu suscripción',
+    pricingTitle: 'Content Architect — Precios',
+    pricingSubtitle: 'Accesible a todos con créditos, ilimitado con suscripción',
     plans: [
+      {
+        name: 'Créditos',
+        price: '5',
+        priceUnit: 'créditos',
+        period: '/ página',
+        pages: 'Pay-as-you-go',
+        features: ['1 página con 2 imágenes IA', '7 CMS soportados', 'Schema.org y meta generados', 'Publicación en un clic', 'Sin borradores guardados'],
+        highlight: false,
+        cta: 'Comprar créditos',
+        ctaLink: '/tarifs',
+      },
       {
         name: 'Pro Agency',
         price: '59€',
+        priceUnit: '',
         period: '/mes',
         pages: '100 páginas/mes',
-        features: ['100 páginas creadas por mes', '7 CMS soportados', 'Imágenes IA incluidas', 'Brief editorial automático', 'Schema.org y meta generados', 'Publicación en un clic'],
+        features: ['100 páginas por mes', 'Imágenes IA ilimitadas (2/pág)', 'Brief editorial automático', 'Borradores guardados por URL', 'Schema.org y meta generados', 'Publicación en un clic'],
         highlight: false,
+        cta: 'Elegir Pro Agency',
+        ctaLink: '/pro-agency',
       },
       {
         name: 'Pro Agency +',
-        price: '89€',
+        price: '99€',
+        priceUnit: '',
         period: '/mes',
         pages: '150 páginas/mes',
-        features: ['150 páginas creadas por mes', '7 CMS soportados', 'Imágenes IA incluidas', 'Brief editorial automático', 'Schema.org y meta generados', 'Publicación en un clic', 'Prioridad de generación', 'Soporte prioritario'],
+        features: ['150 páginas por mes', 'Imágenes IA ilimitadas (2/pág)', 'Brief editorial automático', 'Borradores guardados por URL', 'Prioridad de generación', 'Soporte prioritario'],
         highlight: true,
+        cta: 'Elegir Pro Agency +',
+        ctaLink: '/pro-agency',
+      },
+      {
+        name: 'Enterprise',
+        price: '',
+        priceUnit: 'Bajo demanda',
+        period: '',
+        pages: 'Todo ilimitado',
+        features: ['Páginas e imágenes ilimitadas', 'Usuarios a medida', 'Servidor dedicado y aislado', 'Datos duplicados y aislados', 'SLA garantizado', 'Onboarding personalizado'],
+        highlight: false,
+        cta: 'Contáctenos vía asistente IA',
+        ctaLink: '',
+        isEnterprise: true,
       },
     ],
     faqTitle: 'Preguntas frecuentes',
     faq: [
-      { q: '¿Qué tipos de contenido puede crear?', a: 'Genera tres tipos: artículos, páginas de producto y landing pages.' },
-      { q: '¿El contenido es único?', a: 'Sí. Cada contenido se genera desde un brief editorial único basado en tu sitio y datos estratégicos.' },
-      { q: '¿Cómo funciona el fair use?', a: 'Pro Agency incluye 100 páginas/mes, Pro Agency+ 150 páginas/mes. El contador se reinicia el 1° de cada mes.' },
-      { q: '¿Qué CMS son soportados?', a: 'WordPress, Shopify, Drupal, Webflow, Wix, PrestaShop y Odoo.' },
-      { q: '¿Las imágenes IA están incluidas?', a: 'Sí. Cada artículo incluye una imagen cinematográfica generada por IA con alt text SEO.' },
-      { q: '¿Está optimizado para motores IA (GEO)?', a: 'Absolutamente. Genera schema.org, FAQ directas y estructura semántica que los motores generativos pueden extraer.' },
+      { q: '¿Qué tipos de contenido puede crear?', a: 'Artículos, páginas de producto y landing pages. Tipo auto-detectado o manual.' },
+      { q: '¿Cuánto cuesta sin suscripción?', a: '5 créditos por página, incluyendo contenido y 2 imágenes IA.' },
+      { q: '¿Cómo funciona el sistema de imágenes?', a: '3 motores IA (Imagen 3, FLUX, Ideogram) con 12+ estilos. Routeo automático según estilo.' },
+      { q: '¿Los borradores están disponibles para todos?', a: 'Visibles para todos pero accesibles solo con suscripción Pro Agency.' },
+      { q: '¿Cómo funciona la publicación CMS?', a: 'Solo se inyecta el cuerpo. Header, footer y estilos son del tema CMS.' },
+      { q: '¿Está optimizado para motores IA (GEO)?', a: 'Sí. Estructura E-E-A-T, schema.org, FAQ y estructura semántica extraíble.' },
     ],
     ctaFinal: {
       title: '¿Listo para automatizar tu creación de contenido?',
@@ -338,11 +488,11 @@ const ContentArchitectPage = memo(() => {
       <Helmet>
         <title>{tr.meta.title}</title>
         <meta name="description" content={tr.meta.description} />
-        <link rel="canonical" href="https://crawlers.lovable.app/content-architect" />
+        <link rel="canonical" href="https://crawlers.fr/content-architect" />
         <meta property="og:title" content={tr.meta.title} />
         <meta property="og:description" content={tr.meta.description} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.lovable.app/content-architect" />
+        <meta property="og:url" content="https://crawlers.fr/content-architect" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={tr.meta.title} />
         <meta name="twitter:description" content={tr.meta.description} />
@@ -354,10 +504,11 @@ const ContentArchitectPage = memo(() => {
           "operatingSystem": "Web",
           "description": tr.meta.description,
           "offers": [
-            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "59", "priceCurrency": "EUR", "url": "https://crawlers.lovable.app/content-architect" },
-            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "89", "priceCurrency": "EUR", "url": "https://crawlers.lovable.app/content-architect" },
+            { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per page" },
+            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "59", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "99", "priceCurrency": "EUR" },
           ],
-          "featureList": ["Automated SEO content generation", "AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization"],
+          "featureList": ["Automated SEO content generation", "Multi-engine AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization", "Canva-like editor"],
         })}</script>
       </Helmet>
 
@@ -459,6 +610,99 @@ const ContentArchitectPage = memo(() => {
           </div>
         </section>
 
+        {/* ═══ LAYOUT / INTERFACE ═══ */}
+        <section className="py-20 sm:py-28 border-t border-border bg-muted/10">
+          <div className="mx-auto max-w-5xl px-4">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.layoutTitle}</h2>
+              <p className="mt-3 text-muted-foreground">{tr.layoutSubtitle}</p>
+            </motion.div>
+
+            {/* Visual mockup */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="mb-14">
+              <Card className="border-emerald-500/20 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex h-72 sm:h-80">
+                    {/* Toolbar */}
+                    <div className="w-14 bg-muted/50 border-r border-border flex flex-col items-center py-4 gap-3">
+                      {[PenTool, Layers, ImagePlus, Code, Save, BookOpen, Settings, CheckCircle2].map((Icon, i) => (
+                        <div key={i} className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${i === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'text-muted-foreground hover:bg-muted'}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Panel */}
+                    <div className="w-56 sm:w-72 border-r border-border bg-card p-4 flex flex-col gap-3 overflow-hidden">
+                      <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                        Structure
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-7 rounded bg-muted/60 px-2 flex items-center text-xs text-muted-foreground">H1 — {language === 'fr' ? 'Titre de la page' : 'Page title'}</div>
+                        <div className="h-7 rounded bg-muted/60 px-2 flex items-center text-xs text-muted-foreground">H2 — {language === 'fr' ? 'Sous-titre 1' : 'Subtitle 1'}</div>
+                        <div className="h-7 rounded bg-muted/60 px-2 flex items-center text-xs text-muted-foreground">H2 — {language === 'fr' ? 'Sous-titre 2' : 'Subtitle 2'}</div>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap mt-2">
+                        {['SEO', 'E-E-A-T', 'FAQ'].map(tag => (
+                          <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                        ))}
+                      </div>
+                      <div className="mt-auto pt-3 border-t border-border">
+                        <div className="h-16 rounded bg-muted/40 border border-dashed border-border/60 flex items-center justify-center text-[10px] text-muted-foreground gap-1">
+                          <Syringe className="h-3 w-3" /> Instructions
+                        </div>
+                        <Button size="sm" className="w-full mt-2 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 text-white h-7">
+                          <Syringe className="h-3 w-3" /> {language === 'fr' ? 'Injecter' : 'Inject'}
+                        </Button>
+                      </div>
+                    </div>
+                    {/* Canvas */}
+                    <div className="flex-1 bg-background p-4 flex flex-col">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-medium text-muted-foreground">Canvas Preview</span>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1"><Save className="h-3 w-3" /> {language === 'fr' ? 'Enregistrer' : 'Save'}</Button>
+                          <Button size="sm" className="h-6 text-[10px] gap-1 bg-emerald-600 text-white"><Globe className="h-3 w-3" /> {language === 'fr' ? 'Publier · 5 ₵' : 'Publish · 5 ₵'}</Button>
+                        </div>
+                      </div>
+                      <div className="flex-1 rounded-lg border border-border/50 bg-muted/20 p-4 space-y-3 overflow-hidden">
+                        <div className="h-4 w-3/4 rounded bg-foreground/10" />
+                        <div className="h-3 w-full rounded bg-foreground/5" />
+                        <div className="h-3 w-5/6 rounded bg-foreground/5" />
+                        <div className="h-20 w-full rounded bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center">
+                          <ImagePlus className="h-6 w-6 text-emerald-500/30" />
+                        </div>
+                        <div className="h-3 w-full rounded bg-foreground/5" />
+                        <div className="h-3 w-2/3 rounded bg-foreground/5" />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Feature grid */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {tr.layoutFeatures.map((feat, i) => {
+                const Icon = feat.icon;
+                return (
+                  <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                    <Card className="h-full border-border/50 hover:border-emerald-500/20 transition-colors">
+                      <CardContent className="p-5">
+                        <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3">
+                          <Icon className="h-5 w-5 text-emerald-400" />
+                        </div>
+                        <h3 className="font-semibold text-sm text-foreground mb-1">{feat.name}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{feat.desc}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* ═══ TOOLS ═══ */}
         <section className="py-20 sm:py-28 border-t border-border bg-muted/20">
           <div className="mx-auto max-w-5xl px-4">
@@ -525,49 +769,71 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ PRICING ═══ */}
         <section id="pricing" className="py-20 sm:py-28 border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-4xl px-4">
+          <div className="mx-auto max-w-5xl px-4">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.pricingTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.pricingSubtitle}</p>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {tr.plans.map((plan, i) => (
                 <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-                  <Card className={`h-full relative overflow-hidden transition-colors ${plan.highlight ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10' : 'border-border/50'}`}>
+                  <Card className={`h-full relative overflow-hidden transition-colors ${plan.highlight ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10' : (plan as any).isEnterprise ? 'border-cyan-500/30' : 'border-border/50'}`}>
                     {plan.highlight && (
                       <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
                     )}
-                    <CardContent className="p-6">
-                      <div className="flex items-baseline justify-between mb-1">
-                        <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                    <CardContent className="p-5 flex flex-col h-full">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-base font-bold text-foreground">{plan.name}</h3>
                         {plan.highlight && <Star className="h-4 w-4 text-emerald-400" />}
+                        {(plan as any).isEnterprise && <Building2 className="h-4 w-4 text-cyan-400" />}
                       </div>
                       <div className="flex items-baseline gap-1 mb-1">
-                        <span className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{plan.price}</span>
-                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                        {plan.price ? (
+                          <>
+                            <span className={`text-2xl font-bold bg-gradient-to-r ${(plan as any).isEnterprise ? 'from-cyan-400 to-emerald-400' : 'from-emerald-400 to-teal-400'} bg-clip-text text-transparent`}>{plan.price}</span>
+                            {plan.priceUnit && <span className="text-xs text-muted-foreground">{plan.priceUnit}</span>}
+                            <span className="text-xs text-muted-foreground">{plan.period}</span>
+                          </>
+                        ) : (
+                          <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">{plan.priceUnit}</span>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">{language === 'fr' ? 'Sans engagement' : language === 'es' ? 'Sin compromiso' : 'No commitment'}</p>
 
-                      <Badge variant="outline" className="mt-3 mb-5 border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs">
+                      <Badge variant="outline" className={`mt-2 mb-4 text-xs ${(plan as any).isEnterprise ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-400' : 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400'}`}>
                         {plan.pages}
                       </Badge>
 
-                      <div className="space-y-2.5">
+                      <div className="space-y-2 flex-1">
                         {plan.features.map((f, j) => (
-                          <div key={j} className="flex items-start gap-2 text-sm">
-                            <Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                          <div key={j} className="flex items-start gap-2 text-xs">
+                            <Check className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${(plan as any).isEnterprise ? 'text-cyan-400' : 'text-emerald-400'}`} />
                             <span className="text-foreground/80">{f}</span>
                           </div>
                         ))}
                       </div>
 
-                      <Link to="/pro-agency" className="block mt-6">
-                        <Button className={`w-full gap-2 ${plan.highlight ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0' : ''}`} variant={plan.highlight ? 'default' : 'outline'}>
-                          {language === 'fr' ? 'Choisir ce forfait' : language === 'es' ? 'Elegir este plan' : 'Choose this plan'}
-                          <ArrowRight className="h-4 w-4" />
+                      {(plan as any).isEnterprise ? (
+                        <Button
+                          className="w-full mt-4 gap-2 text-xs bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white border-0"
+                          size="sm"
+                          onClick={() => {
+                            const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
+                            if (felixBtn) felixBtn.click();
+                            else window.location.href = '/#felix';
+                          }}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          {plan.cta}
                         </Button>
-                      </Link>
+                      ) : (
+                        <Link to={plan.ctaLink} className="block mt-4">
+                          <Button className={`w-full gap-2 text-xs ${plan.highlight ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0' : ''}`} variant={plan.highlight ? 'default' : 'outline'} size="sm">
+                            {plan.cta}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
