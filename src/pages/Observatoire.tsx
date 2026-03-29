@@ -553,6 +553,209 @@ const Observatoire = () => {
           </Card>
         </section>
 
+        {/* ═══ SECTORAL WATCH ═══ */}
+        <section className="container mx-auto max-w-6xl px-4 py-12 md:py-16" aria-label="Sectoral benchmarks">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg p-2 bg-primary/10 mt-0.5">
+                <Layers className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">{t.sectorTitle}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{t.sectorSubtitle}</p>
+              </div>
+            </div>
+            {sectorData.sectorNames.length > 0 && (
+              <Select value={selectedSector} onValueChange={setSelectedSector}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={t.sectorFilter} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t.sectorAll}</SelectItem>
+                  {sectorData.sectorNames.map(s => (
+                    <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {sectorData.loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
+            </div>
+          ) : sectorData.sectors.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                {t.sectorNoData}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Sector benchmark cards */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-primary" />
+                  {t.sectorBenchmarkTitle}
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {(() => {
+                    const filtered = selectedSector === 'all'
+                      ? sectorData.sectors
+                      : sectorData.sectors.filter(s => s.sector === selectedSector);
+                    // Group by sector, take latest period
+                    const latestBySector = new Map<string, typeof filtered[0]>();
+                    for (const row of filtered) {
+                      const existing = latestBySector.get(row.sector);
+                      if (!existing || row.period > existing.period) {
+                        latestBySector.set(row.sector, row);
+                      }
+                    }
+                    return Array.from(latestBySector.values()).map(row => (
+                      <Card key={`${row.sector}-${row.source}`} className="border-border/50 hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-semibold capitalize">{row.sector}</CardTitle>
+                            <Badge variant="secondary" className="text-xs">{row.total_scans} {t.sectorScans}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{row.period} · {row.source.replace('_', ' ')}</p>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            {[
+                              { label: 'JSON-LD', value: row.json_ld_rate, unit: '%' },
+                              { label: 'HTTPS', value: row.https_rate, unit: '%' },
+                              { label: 'Schema', value: row.schema_org_rate, unit: '%' },
+                              { label: 'Score SEO', value: row.avg_seo_score, unit: '' },
+                              { label: 'LCP', value: row.avg_lcp_ms, unit: 'ms' },
+                              { label: 'TTFB', value: row.avg_ttfb_ms, unit: 'ms' },
+                            ].map((m, j) => (
+                              <div key={j} className="py-1">
+                                <p className="text-xs text-muted-foreground">{m.label}</p>
+                                <p className="text-sm font-bold text-foreground">
+                                  {m.value != null ? `${m.value}${m.unit}` : '–'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Radar chart */}
+              {(() => {
+                const radarSectors = selectedSector === 'all'
+                  ? sectorData.sectorNames.slice(0, 5)
+                  : [selectedSector];
+                const latestPeriod = sectorData.sectors.reduce((max, s) => s.period > max ? s.period : max, '');
+                const radarMetrics = ['json_ld_rate', 'schema_org_rate', 'https_rate', 'mobile_friendly_rate', 'canonical_rate', 'meta_description_rate'] as const;
+                const radarData = radarMetrics.map(metric => {
+                  const point: Record<string, any> = { metric: (t.sectorMetrics as any)[metric] || metric };
+                  for (const sec of radarSectors) {
+                    const row = sectorData.sectors.find(s => s.sector === sec && s.period === latestPeriod && s.source === 'expert_audit')
+                      || sectorData.sectors.find(s => s.sector === sec && s.period === latestPeriod);
+                    point[sec] = row ? (row as any)[metric] ?? 0 : 0;
+                  }
+                  return point;
+                });
+                const radarColors = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+                if (radarData.some(d => Object.keys(d).length > 1)) {
+                  return (
+                    <Card className="mb-8 border-border/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                          {t.sectorRadarTitle}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={360}>
+                          <RadarChart data={radarData}>
+                            <PolarGrid className="stroke-border" />
+                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                            {radarSectors.map((sec, i) => (
+                              <Radar key={sec} name={sec.charAt(0).toUpperCase() + sec.slice(1)} dataKey={sec}
+                                stroke={radarColors[i % radarColors.length]} fill={radarColors[i % radarColors.length]}
+                                fillOpacity={0.15} strokeWidth={2} />
+                            ))}
+                            <Legend />
+                            <Tooltip contentStyle={{
+                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px', color: 'hsl(var(--foreground))',
+                            }} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Sector trend bar chart */}
+              {(() => {
+                const filteredTrends = selectedSector === 'all'
+                  ? sectorData.trends
+                  : sectorData.trends.filter(t => t.sector === selectedSector);
+                // Group by period for bar chart
+                const periods = [...new Set(filteredTrends.map(t => t.period))].sort().slice(-6);
+                const barData = periods.map(period => {
+                  const rows = filteredTrends.filter(t => t.period === period);
+                  const avg = (field: keyof typeof rows[0]) => {
+                    const vals = rows.map(r => Number(r[field]) || 0);
+                    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+                  };
+                  return {
+                    period,
+                    json_ld_rate: avg('json_ld_rate'),
+                    https_rate: avg('https_rate'),
+                    schema_org_rate: avg('schema_org_rate'),
+                    avg_seo_score: avg('avg_seo_score'),
+                    scans: rows.reduce((s, r) => s + r.total_scans, 0),
+                  };
+                });
+
+                if (barData.length > 0) {
+                  return (
+                    <Card className="border-border/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                          {t.sectorTrendTitle}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                            <XAxis dataKey="period" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} domain={[0, 100]} unit="%" />
+                            <Tooltip contentStyle={{
+                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px', color: 'hsl(var(--foreground))',
+                            }} />
+                            <Legend />
+                            <Bar dataKey="json_ld_rate" name="JSON-LD" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="https_rate" name="HTTPS" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="schema_org_rate" name="Schema.org" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="avg_seo_score" name="Score SEO" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
+            </>
+          )}
+        </section>
+
         {/* Methodology */}
         <section className="bg-muted/30 border-y border-border">
           <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
