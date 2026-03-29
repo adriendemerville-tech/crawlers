@@ -105,6 +105,7 @@ export function FinancesDashboard() {
     dataforseoCalls: 0, openrouterCalls: 0, browserlessCalls: 0, firecrawlCalls: 0,
     spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
+    imageApiCalls: 0, imageApiCostEur: 0, imageByProvider: {},
   });
   const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
   const [allTimeRawEvents, setAllTimeRawEvents] = useState<{ created_at: string; cost: number }[]>([]);
