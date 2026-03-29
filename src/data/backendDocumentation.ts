@@ -552,6 +552,19 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
 | \`process-email-queue\` | ✅ | Worker file d'attente emails |
+| \`session-heartbeat\` | ✅ | Heartbeat de session active |
+| \`fly-health-check\` | ❌ | Health check renderer Fly.io |
+| \`fly-keepalive\` | ❌ | Keep-alive renderer Fly.io |
+| \`browserless-metrics\` | ✅ | Métriques d'utilisation Browserless |
+
+## Quiz Félix
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`felix-seo-quiz\` | ✅ | Génération de quiz SEO hebdomadaire par Félix |
+| \`felix-weekly-quiz-notif\` | ✅ | Notification hebdomadaire quiz Félix |
+| \`normalize-quiz-options\` | ✅ | Normalisation des options de quiz |
+| \`sync-quiz-crawlers\` | ✅ | Synchronisation quiz avec données crawl |
 
 ## Pipeline & Automation
 
@@ -567,11 +580,15 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`content-perf-aggregator\` | ✅ | CRON hebdo — agrégation anonyme corrélations prompt→performance (T+30/T+90) |
 | \`content-freshness\` | ✅ | Détection de contenu obsolète |
 | \`content-pruning\` | ✅ | Analyse de contenu à élaguer |
+| \`firehose-actions\` | ✅ | Actions du firehose d'événements |
 | \`link-intersection\` | ✅ | Intersection de backlinks concurrents |
 | \`broken-link-building\` | ✅ | Opportunités de link building sur liens cassés |
 | \`brand-mentions\` | ✅ | Détection de mentions de marque non liées |
+| \`backlink-scanner\` | ✅ | Scan backlinks approfondi |
+| \`check-backlinks\` | ✅ | Vérification backlinks rapide |
 | \`url-structure-analyzer\` | ✅ | Analyse de structure d'URLs |
-| \`robots-generator\` | ✅ | Générateur de robots.txt optimisé |
+| \`submit-sitemap\` | ✅ | Soumission sitemap aux moteurs de recherche |
+| \`haloscan-connector\` | ✅ | Connecteur Haloscan |
 
 ## E-commerce
 
