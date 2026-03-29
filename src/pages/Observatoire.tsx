@@ -282,6 +282,8 @@ const Observatoire = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const stats = useObservatoryStats();
+  const sectorData = useObservatorySectors();
+  const [selectedSector, setSelectedSector] = useState<string>('all');
 
   useCanonicalHreflang('/observatoire');
 
