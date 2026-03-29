@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useObservatoryStats } from '@/hooks/useObservatoryStats';
+import { useObservatorySectors } from '@/hooks/useObservatorySectors';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Code2, Timer, AlertTriangle, TrendingUp, TrendingDown,
@@ -16,9 +18,9 @@ import {
   Link2, Globe, ShieldCheck, Smartphone, MonitorSmartphone,
   Box, Network, Image, ImageOff, Palette, FileCode,
   Gauge, Zap, LayoutDashboard, MousePointerClick,
-  BookOpen, FlaskConical, HelpCircle, ArrowRight
+  BookOpen, FlaskConical, HelpCircle, ArrowRight, Layers, PieChart
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, RadialBarChart, RadialBar } from 'recharts';
 
 // ─── Translations ──────────────────────────────────────────
 const translations = {
