@@ -60,7 +60,7 @@ export type GscGranularity = 'daily' | 'weekly' | 'monthly';
 export function useMyTracking() {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
-  const { isAgencyPro } = useCredits();
+  const { isAgencyPro, planType } = useCredits();
   const { isAdmin } = useAdmin();
   const { isDemoMode } = useDemoMode();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -427,6 +427,8 @@ export function useMyTracking() {
 
   const checkRefreshExhausted = useCallback(async (siteId: string): Promise<boolean> => {
     if (isAdmin) return false;
+    // Pro Agency+ users bypass daily refresh limits for LLM benchmark/depth
+    if (planType === 'agency_premium') return false;
     const since = getParis5amBoundary();
     const { count } = await supabase
       .from('user_stats_history')
@@ -434,7 +436,7 @@ export function useMyTracking() {
       .eq('tracked_site_id', siteId)
       .gte('recorded_at', since);
     return (count ?? 0) >= 2;
-  }, [isAdmin, getParis5amBoundary]);
+  }, [isAdmin, planType, getParis5amBoundary]);
 
   const canRefreshSite = useCallback(async (siteId: string): Promise<boolean> => {
     const exhausted = await checkRefreshExhausted(siteId);

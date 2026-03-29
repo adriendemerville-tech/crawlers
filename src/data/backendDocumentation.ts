@@ -1148,6 +1148,7 @@ Référentiel de tous les indicateurs calculés par la plateforme, avec leur sou
 | **Taux de citation LLM** | Pourcentage de requêtes avec citation explicite. |
 | **Volumes LLM estimés** | Trafic potentiel par LLM via \`market_trends\`. |
 | **LLM Depth** | Test approfondi en 3 itérations conversationnelles. |
+| **Fair Use LLM** | Pro Agency+ : rafraîchissements illimités côté front, cache serveur de 2h pour optimiser les coûts API. |
 
 ---
 

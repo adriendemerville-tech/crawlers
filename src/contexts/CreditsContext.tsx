@@ -8,6 +8,7 @@ interface CreditsContextType {
   planType: string;
   subscriptionStatus: string | null;
   isAgencyPro: boolean;
+  isAgencyPremium: boolean;
   refreshBalance: () => Promise<void>;
   useCredit: (description?: string, amount?: number) => Promise<{ success: boolean; newBalance?: number; error?: string }>;
 }
@@ -114,9 +115,10 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const isAgencyPro = ['agency_pro', 'agency_premium'].includes(planType) && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
+  const isAgencyPremium = planType === 'agency_premium' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
   return (
-    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, refreshBalance, useCredit }}>
+    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, isAgencyPremium, refreshBalance, useCredit }}>
       {children}
     </CreditsContext.Provider>
   );

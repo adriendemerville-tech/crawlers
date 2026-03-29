@@ -117,7 +117,8 @@ const CGVU = () => {
                 <li><strong>Pack Lite</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
                 
-                <li><strong>Abonnement Pro Agency</strong> (59 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses.</li>
+                <li><strong>Abonnement Pro Agency</strong> (59 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses, 100 créations de pages/mois (Content Architect) ;</li>
+                <li><strong>Abonnement Pro Agency +</strong> (99 €/mois) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
               </ul>
             </section>
 

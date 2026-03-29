@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { RefreshCw, Loader2, Brain, Info, HelpCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
 
 const LLM_ORDER = ['ChatGPT', 'Gemini', 'Perplexity'] as const;
 
@@ -96,6 +97,7 @@ function formatWeekLabel(dateStr: string, lang: string): string {
 
 export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVisibilityDashboardProps) {
   const { language } = useLanguage();
+  const { isAgencyPremium } = useCredits();
   const t = translations[language] || translations.fr;
 
   const [scores, setScores] = useState<VisibilityScore[]>([]);
@@ -132,6 +134,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
     if (refreshing) return;
     setRefreshing(true);
     try {
+      // Pro Agency+ gets frontend animation every time but backend cache (2h) throttles actual API calls
       const { error } = await supabase.functions.invoke('calculate-llm-visibility', {
         body: { tracked_site_id: trackedSiteId, user_id: userId },
       });
