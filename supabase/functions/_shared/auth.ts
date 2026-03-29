@@ -10,7 +10,7 @@ export interface AuthContext {
   userId: string;
   email: string;
   isAdmin: boolean;
-  planType: 'free' | 'agency_pro';
+  planType: 'free' | 'agency_pro' | 'agency_premium';
   subscriptionStatus: string | null;
   supabase: ReturnType<typeof getServiceClient>;
   userClient: ReturnType<typeof getUserClient>;
