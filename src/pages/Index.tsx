@@ -635,6 +635,16 @@ const Index = () => {
           <TrustBanner />
         </Suspense>
 
+        {/* Product Showcase — Screenshots */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <ProductShowcaseSection />
+        </Suspense>
+
+        {/* Google Cross Data — SEA→SEO Bridge */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <GoogleCrossDataSection />
+        </Suspense>
+
         <Suspense fallback={<SectionSkeleton />}>
           <MomentumSection />
         </Suspense>
@@ -647,16 +657,6 @@ const Index = () => {
         {/* Content Architect */}
         <Suspense fallback={<SectionSkeleton />}>
           <ContentArchitectSection />
-        </Suspense>
-
-        {/* Product Showcase — Screenshots */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <ProductShowcaseSection />
-        </Suspense>
-
-        {/* Google Cross Data — SEA→SEO Bridge */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <GoogleCrossDataSection />
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
