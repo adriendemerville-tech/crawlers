@@ -460,12 +460,13 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`apply-affiliate\` | ✅ | Applique un code affilié |
 | \`apply-retention-offer\` | ✅ | Applique une offre de rétention |
 | \`manage-team\` | ✅ | Gestion équipe agence |
-| \`check-email-exists\` | ✅ | Vérifie l'existence d'un email |
 | \`send-password-reset\` | ✅ | Envoie un lien de réinitialisation |
 | \`send-verification-code\` | ✅ | Envoie un code de vérification email |
 | \`verify-email-code\` | ✅ | Vérifie un code email |
 | \`admin-update-plan\` | ✅ | MAJ plan utilisateur (admin) |
 | \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
+| \`submit-bug-report\` | ✅ | Soumission de signalement utilisateur |
+| \`admin-backend-query\` | ✅ | Requête backend admin (mode créateur) |
 
 ## Intégrations Google
 
