@@ -713,6 +713,79 @@ const Index = () => {
         <MobileLexiqueButton />
         
 
+        {/* CTA Marina — Rapport SEO & GEO complet */}
+        <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-cyan-950/10 via-background to-blue-950/10 py-14 md:py-20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
+          <div className="relative container mx-auto max-w-4xl px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="flex-1 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <Anchor className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold text-primary tracking-wide uppercase">Marina</span>
+                </div>
+                <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl mb-3">
+                  {language === 'fr' ? 'Un rapport SEO & GEO complet en 3 minutes' : language === 'es' ? 'Un informe SEO y GEO completo en 3 minutos' : 'A complete SEO & GEO report in 3 minutes'}
+                </h2>
+                <p className="text-muted-foreground mb-4 max-w-lg">
+                  {language === 'fr'
+                    ? 'Entrez une URL. Marina génère un rapport professionnel de 15+ pages : audit technique, stratégie GEO, visibilité IA, cocoon sémantique. Idéal comme lead magnet pour vos prospects.'
+                    : language === 'es'
+                    ? 'Ingrese una URL. Marina genera un informe profesional de más de 15 páginas: auditoría técnica, estrategia GEO, visibilidad IA, cocoon semántico.'
+                    : 'Enter a URL. Marina generates a 15+ page professional report: technical audit, GEO strategy, AI visibility, semantic cocoon. Perfect as a lead magnet for your prospects.'}
+                </p>
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  {[
+                    { icon: Search, label: language === 'fr' ? 'Audit technique' : 'Technical audit' },
+                    { icon: Globe, label: language === 'fr' ? 'Score GEO' : 'GEO Score' },
+                    { icon: Brain, label: language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility' },
+                  ].map((f, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 border border-border/50">
+                      <f.icon className="w-3 h-3 text-primary" /> {f.label}
+                    </span>
+                  ))}
+                </div>
+                <div className="pt-2">
+                  <Link to="/marina">
+                    <Button
+                      size="lg"
+                      className="gap-2 bg-gradient-to-r from-primary to-cyan-600 hover:from-primary/90 hover:to-cyan-600/90 text-primary-foreground px-8 py-3 text-base font-bold shadow-md"
+                    >
+                      <Anchor className="h-5 w-5" />
+                      {language === 'fr' ? 'Générer un rapport Marina' : language === 'es' ? 'Generar un informe Marina' : 'Generate a Marina report'}
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-full md:w-[360px]">
+                <div className="rounded-2xl border border-primary/20 bg-card/50 backdrop-blur-sm p-6 shadow-2xl shadow-primary/5">
+                  <div className="text-center mb-4">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+                      <Anchor className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-foreground text-lg">5 crédits / rapport</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {language === 'fr' ? '5 crédits offerts à l\'inscription' : '5 free credits on signup'}
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    {[
+                      language === 'fr' ? '15+ pages de données actionnables' : '15+ pages of actionable data',
+                      language === 'fr' ? 'API disponible pour votre site' : 'API available for your site',
+                      language === 'fr' ? 'Inclus dans Pro Agency' : 'Included in Pro Agency',
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Matrice — Freelance SEO */}
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.06),transparent_60%)]" />
