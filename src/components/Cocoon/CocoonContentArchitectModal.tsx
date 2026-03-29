@@ -727,7 +727,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             </div>
 
             <div className="shrink-0 p-4 border-t border-white/10">
-              <Button onClick={handleGenerate} disabled={loading || !url || !keyword} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
+              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
                 {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />Génération…</> : <><Send className="w-3.5 h-3.5 mr-2" />Générer la structure</>}
               </Button>
             </div>
