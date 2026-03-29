@@ -535,6 +535,11 @@ Deno.serve(async (req: Request) => {
         if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
             try {
+              // ── Skip cms-push-code: it's auto-chained after generate-corrective-code ──
+              if (funcName === 'cms-push-code') {
+                console.log(`[AutopilotEngine] Skipping standalone cms-push-code for ${site.domain} (auto-triggered after generate-corrective-code)`);
+                continue;
+              }
               // ── Special handling for iktracker-actions: iterate over cms_actions ──
               if (funcName === 'iktracker-actions' && Array.isArray(decision.action.payload?.cms_actions)) {
                 // ── Guard: max 10 CMS actions per cycle ──
