@@ -377,6 +377,8 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
           nodes={[]}
           domain="crawlers.fr"
           trackedSiteId=""
+          demoMode={true}
+        />
         />
       </Suspense>
     )}

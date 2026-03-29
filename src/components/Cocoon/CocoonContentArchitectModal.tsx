@@ -147,7 +147,43 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [keywordCloudSuggestions, setKeywordCloudSuggestions] = useState<{ keyword: string; position: number; search_volume: number }[]>([]);
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
 
-  // Compute full URL
+  // ── Demo mode: pre-fill everything ──
+  useEffect(() => {
+    if (!isOpen || !demoMode) return;
+    setDirectory('/blog');
+    setSlug('plateforme-seo-geo-ia-crawlers');
+    setKeyword('outil SEO IA français');
+    setPageType('article');
+    setLength('long');
+    setH1Field(DEMO_RESULT.content_structure.recommended_h1);
+    setH2Fields(DEMO_RESULT.content_structure.sections.map(s => s.title));
+    setKeywordTags(['audit SEO', 'cocon sémantique', 'Content Architect', 'audit GEO', 'maillage interne', 'SEO IA']);
+    setPrompt('Rédiger une présentation complète de Crawlers.fr mettant en avant l\'approche tout-en-un SEO+GEO, le pilotage IA et la tarification à crédits. Inclure des données structurées SoftwareApplication. Ton expert mais accessible.');
+    setTone('Expert, accessible, orienté ROI');
+    setCtaLink('https://crawlers.fr/pricing');
+    setCompetitorUrl('https://semrush.com');
+    setResult(DEMO_RESULT);
+    setOriginalResult(JSON.parse(JSON.stringify(DEMO_RESULT)));
+    setGeneratedImages(DEMO_IMAGES);
+    setImageIterations(2);
+    setDirectories([
+      { path: '/', label: 'Racine', category: null },
+      { path: '/blog', label: 'Blog', category: 'blog' },
+      { path: '/produits', label: 'Produits', category: 'product' },
+      { path: '/landing', label: 'Landing pages', category: 'landing' },
+    ]);
+    setKeywordCloudSuggestions([
+      { keyword: 'audit SEO gratuit', position: 3, search_volume: 2400 },
+      { keyword: 'outil SEO français', position: 5, search_volume: 1800 },
+      { keyword: 'cocon sémantique', position: 7, search_volume: 1200 },
+      { keyword: 'Content Architect SEO', position: 12, search_volume: 880 },
+      { keyword: 'audit GEO', position: 4, search_volume: 720 },
+      { keyword: 'maillage interne automatique', position: 15, search_volume: 590 },
+    ]);
+    setStrategistDone(true);
+    setActivePanel(null);
+  }, [isOpen, demoMode]);
+
   const url = useMemo(() => {
     if (!domain) return '';
     const base = `https://${domain}`;
