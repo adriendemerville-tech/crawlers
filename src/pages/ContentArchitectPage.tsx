@@ -167,7 +167,7 @@ const t = {
           'Onboarding personnalisé',
         ],
         highlight: false,
-        cta: 'Contactez-nous via l\'assistant IA',
+        cta: 'Nous contacter',
         ctaLink: '',
         isEnterprise: true,
       },
