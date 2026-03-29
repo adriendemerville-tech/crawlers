@@ -343,9 +343,9 @@ export function Header() {
               onClick={() => setShowContentArchitect(true)}
               className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
             >
-              <PenLine className="h-4 w-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
+              <PenLine className="h-3.5 w-3.5" />
               <span className="text-sm font-semibold">Content</span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full leading-none">beta</span>
             </Button>
           )}
 
