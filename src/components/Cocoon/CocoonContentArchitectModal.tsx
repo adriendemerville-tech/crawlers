@@ -34,6 +34,7 @@ interface CocoonContentArchitectModalProps {
   draftData?: Record<string, any> | null;
   prefillUrl?: string;
   isExistingPage?: boolean;
+  demoMode?: boolean;
 }
 
 const PAGE_TYPES = [
@@ -52,7 +53,66 @@ const LENGTHS = [
   { value: 'pillar', label: 'Pilier (3000+ mots)' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false }: CocoonContentArchitectModalProps) {
+const DEMO_RESULT = {
+  content_structure: {
+    recommended_h1: 'Crawlers.fr — L\'outil SEO français qui automatise votre croissance organique',
+    introduction: 'Crawlers.fr est la première plateforme SEO & GEO française qui combine audit technique, stratégie de contenu et maillage interne dans un cockpit unifié. Conçu pour les freelances, agences et e-commerçants, il transforme les diagnostics en actions concrètes grâce à l\'intelligence artificielle.',
+    tldr_summary: 'Crawlers.fr centralise audit SEO, Content Architect, cocon sémantique et monitoring dans un seul outil. Pilotage IA, déploiement CMS en un clic, tarification à crédits flexible.',
+    sections: [
+      { title: 'Audit technique complet en 3 minutes', body_text: 'L\'audit SEO de Crawlers analyse plus de 180 critères techniques : vitesse (Core Web Vitals, INP, LCP, CLS), indexation, balisage sémantique, données structurées, accessibilité et sécurité. Chaque diagnostic génère un plan d\'action priorisé avec des correctifs déployables en un clic via l\'intégration CMS native.', word_count: 280 },
+      { title: 'Content Architect : rédaction IA optimisée E-E-A-T', body_text: 'Le module Content Architect génère des contenus SEO complets — chapô, FAQ, sources, données structurées — à partir d\'un simple mot-clé. Il s\'appuie sur Gemini 2.5 Pro pour la rédaction et intègre un système de génération d\'images IA multi-modèles (Imagen 3, FLUX, Ideogram).', word_count: 320 },
+      { title: 'Cocon sémantique & maillage intelligent', body_text: 'Le Stratège Cocoon cartographie votre site en graphe orienté pondéré, détecte les pages orphelines, les cannibalisation et les gaps sémantiques. Il prescrit un maillage interne optimisé avec ancres contextualisées et déploiement automatique via WordPress ou Shopify.', word_count: 260 },
+      { title: 'Marina : audit GEO pour l\'ère de l\'IA', body_text: 'Marina évalue la visibilité de votre marque dans les réponses des IA génératives (ChatGPT, Gemini, Perplexity). Le rapport couvre la citabilité, l\'autorité perçue, les biais de reformulation et propose des recommandations concrètes pour améliorer votre présence dans les moteurs de réponse IA.', word_count: 300 },
+      { title: 'Tarification flexible à crédits', body_text: 'Crawlers fonctionne sur un modèle à crédits : chaque action (audit, génération, analyse) consomme un nombre défini de crédits. Les plans vont du gratuit (50 crédits) au Pro Agency (2000 crédits/mois). Un système de recharge permet d\'ajuster la consommation à la demande.', word_count: 220 },
+    ],
+    faq: [
+      { question: 'Crawlers remplace-t-il Semrush ou Ahrefs ?', answer: 'Crawlers se positionne en complément opérationnel : là où Semrush/Ahrefs excellent en data brute, Crawlers transforme les données en actions déployables avec un pilotage IA intégré.' },
+      { question: 'Comment fonctionne le déploiement CMS ?', answer: 'Connectez votre WordPress ou Shopify via l\'onglet APIs externes. Crawlers pousse directement les contenus, métadonnées et images en brouillon sur votre CMS.' },
+    ],
+    media_recommendations: [
+      { type: 'hero', description: 'Dashboard Crawlers avec métriques SEO' },
+      { type: 'infographic', description: 'Workflow : Audit → Stratégie → Contenu → Déploiement' },
+    ],
+    hn_hierarchy: [
+      { level: 'h1', text: 'Crawlers.fr — L\'outil SEO français qui automatise votre croissance organique' },
+      { level: 'h2', text: 'Audit technique complet en 3 minutes' },
+      { level: 'h2', text: 'Content Architect : rédaction IA optimisée E-E-A-T' },
+      { level: 'h2', text: 'Cocon sémantique & maillage intelligent' },
+      { level: 'h2', text: 'Marina : audit GEO pour l\'ère de l\'IA' },
+      { level: 'h2', text: 'Tarification flexible à crédits' },
+    ],
+  },
+  seo_metadata: {
+    meta_title: 'Crawlers.fr — Plateforme SEO & GEO IA | Audit, Contenu, Cocon',
+    meta_description: 'Crawlers automatise votre SEO : audit technique, rédaction IA E-E-A-T, cocon sémantique et monitoring GEO. L\'outil français tout-en-un pour freelances et agences.',
+    og_title: 'Crawlers.fr — Votre cockpit SEO & GEO intelligent',
+    og_description: 'Audit, contenu, maillage, monitoring : tout dans un seul outil propulsé par l\'IA.',
+  },
+  internal_linking: {
+    recommended_internal_links: 4,
+    anchor_strategy: [
+      { anchor: 'audit SEO complet', target: '/audit-expert' },
+      { anchor: 'cocon sémantique', target: '/cocoon' },
+      { anchor: 'audit GEO Marina', target: '/marina' },
+      { anchor: 'Content Architect', target: '/content-architect' },
+    ],
+  },
+  structured_data: {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Crawlers.fr',
+    applicationCategory: 'SEO Tool',
+    operatingSystem: 'Web',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', description: 'Freemium avec crédits' },
+  },
+};
+
+const DEMO_IMAGES: import('./ImageStylePicker').GeneratedImageItem[] = [
+  { dataUri: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', style: 'corporate' as any, placement: 'header' },
+  { dataUri: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', style: 'infographic' as any, placement: 'body' },
+];
+
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const [activePanel, setActivePanel] = useState<PanelId | null>('prompt');
@@ -87,7 +147,43 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [keywordCloudSuggestions, setKeywordCloudSuggestions] = useState<{ keyword: string; position: number; search_volume: number }[]>([]);
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
 
-  // Compute full URL
+  // ── Demo mode: pre-fill everything ──
+  useEffect(() => {
+    if (!isOpen || !demoMode) return;
+    setDirectory('/blog');
+    setSlug('plateforme-seo-geo-ia-crawlers');
+    setKeyword('outil SEO IA français');
+    setPageType('article');
+    setLength('long');
+    setH1Field(DEMO_RESULT.content_structure.recommended_h1);
+    setH2Fields(DEMO_RESULT.content_structure.sections.map(s => s.title));
+    setKeywordTags(['audit SEO', 'cocon sémantique', 'Content Architect', 'audit GEO', 'maillage interne', 'SEO IA']);
+    setPrompt('Rédiger une présentation complète de Crawlers.fr mettant en avant l\'approche tout-en-un SEO+GEO, le pilotage IA et la tarification à crédits. Inclure des données structurées SoftwareApplication. Ton expert mais accessible.');
+    setTone('Expert, accessible, orienté ROI');
+    setCtaLink('https://crawlers.fr/pricing');
+    setCompetitorUrl('https://semrush.com');
+    setResult(DEMO_RESULT);
+    setOriginalResult(JSON.parse(JSON.stringify(DEMO_RESULT)));
+    setGeneratedImages(DEMO_IMAGES);
+    setImageIterations(2);
+    setDirectories([
+      { path: '/', label: 'Racine', category: null },
+      { path: '/blog', label: 'Blog', category: 'blog' },
+      { path: '/produits', label: 'Produits', category: 'product' },
+      { path: '/landing', label: 'Landing pages', category: 'landing' },
+    ]);
+    setKeywordCloudSuggestions([
+      { keyword: 'audit SEO gratuit', position: 3, search_volume: 2400 },
+      { keyword: 'outil SEO français', position: 5, search_volume: 1800 },
+      { keyword: 'cocon sémantique', position: 7, search_volume: 1200 },
+      { keyword: 'Content Architect SEO', position: 12, search_volume: 880 },
+      { keyword: 'audit GEO', position: 4, search_volume: 720 },
+      { keyword: 'maillage interne automatique', position: 15, search_volume: 590 },
+    ]);
+    setStrategistDone(true);
+    setActivePanel(null);
+  }, [isOpen, demoMode]);
+
   const url = useMemo(() => {
     if (!domain) return '';
     const base = `https://${domain}`;
