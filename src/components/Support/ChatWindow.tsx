@@ -184,6 +184,25 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     }
   }, [autoStartCrawlersQuiz]);
 
+  // Auto-start enterprise contact flow
+  useEffect(() => {
+    if (autoEnterpriseContact && !autoEnterpriseTriggered.current) {
+      autoEnterpriseTriggered.current = true;
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: "J'aimerais discuter d'une offre Crawlers pour mon entreprise",
+        timestamp: new Date().toISOString(),
+      };
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🏢 **Offre Enterprise — Sur mesure**\n\nAvec plaisir ! Pour vous préparer une proposition adaptée, j'ai besoin de quelques informations. Répondez aux 7 questions ci-dessous 👇",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg, assistantMsg]);
+      setShowEnterpriseQuiz(true);
+    }
+  }, [autoEnterpriseContact]);
+
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
   useEffect(() => {
