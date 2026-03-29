@@ -367,6 +367,58 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   }, [trackedSiteId, isOpen]);
 
   // ── Auto-fill from draft data (from Cocoon assistant extraction) ──
+  // ── Silent Stratège pre-call when no draft data (from /console) ──
+  const runStrategestPreCall = useCallback(async () => {
+    if (!trackedSiteId || !domain || strategistDone) return;
+    setStrategistLoading(true);
+    try {
+      // 1. Call cocoon-strategist for a quick diagnostic
+      const { data: stratData, error: stratError } = await supabase.functions.invoke('cocoon-strategist', {
+        body: { tracked_site_id: trackedSiteId, domain, task_budget: 3, lang: language },
+      });
+      if (stratError || !stratData) {
+        console.warn('[ContentArchitect] Stratège pre-call failed:', stratError);
+        return;
+      }
+
+      // 2. Build a summary from the strategy tasks for extract-architect-fields
+      const tasks = stratData?.strategy?.tasks || stratData?.tasks || [];
+      const editorialTasks = tasks.filter((t: any) => t.execution_mode === 'content_architect');
+      const summaryParts = editorialTasks.slice(0, 5).map((t: any) =>
+        `- ${t.title}: ${t.description || ''} (URLs: ${(t.affected_urls || []).join(', ')})`
+      );
+      const stratSummary = summaryParts.length > 0
+        ? `Recommandations stratégiques :\n${summaryParts.join('\n')}`
+        : `Diagnostic stratégique : ${tasks.length} tâches prescrites pour ${domain}`;
+
+      // 3. Call extract-architect-fields with the strategy summary
+      const { data: extractData, error: extractError } = await supabase.functions.invoke('extract-architect-fields', {
+        body: {
+          message_content: stratSummary,
+          domain,
+          tracked_site_id: trackedSiteId,
+          language,
+        },
+      });
+      if (extractError || !extractData?.draft) {
+        console.warn('[ContentArchitect] Extract fields failed:', extractError);
+        return;
+      }
+
+      // 4. Apply the enriched draft to column 2 fields
+      applyDraft(extractData.draft);
+      toast.success(t3(language,
+        'Brief enrichi par le Stratège',
+        'Brief enriched by Strategist',
+        'Brief enriquecido por el Estratega'), { duration: 3000 });
+    } catch (err) {
+      console.warn('[ContentArchitect] Stratège pre-call error:', err);
+    } finally {
+      setStrategistLoading(true);
+      setStrategistDone(true);
+    }
+  }, [trackedSiteId, domain, strategistDone, language]);
+
   useEffect(() => {
     if (!isOpen) return;
     const draft = draftData;
@@ -380,7 +432,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           .limit(1)
           .maybeSingle()
           .then(({ data }) => {
-            if (data?.draft_data) applyDraft(data.draft_data as Record<string, any>);
+            if (data?.draft_data) {
+              applyDraft(data.draft_data as Record<string, any>);
+            } else {
+              // No existing draft AND no Stratège draftData → run Stratège pre-call
+              runStrategestPreCall();
+            }
           });
       }
       return;
