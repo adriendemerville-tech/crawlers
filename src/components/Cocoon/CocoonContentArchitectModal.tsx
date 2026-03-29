@@ -53,6 +53,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [generatedImages, setGeneratedImages] = useState<import('./ImageStylePicker').GeneratedImageItem[]>([]);
   const [imageIterations, setImageIterations] = useState(0);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
+  const [strategistLoading, setStrategistLoading] = useState(false);
+  const [strategistDone, setStrategistDone] = useState(false);
 
   // Workflow step: 1=config, 2=content generated, 3=images available
   const workflowStep = useMemo(() => {
