@@ -520,6 +520,8 @@ export default function ProAgency() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '5 000 pages crawlées/mois' : language === 'es' ? '5 000 páginas/mes' : '5,000 pages/month'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '10 pages par scan' : language === 'es' ? '10 páginas por escaneo' : '10 pages per scan'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? 'Audits & codes correctifs illimités' : language === 'es' ? 'Auditorías y código ilimitados' : 'Unlimited audits & corrective code'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? '100 créations de pages (Content Architect)' : language === 'es' ? '100 creaciones de páginas (Content Architect)' : '100 page creations (Content Architect)'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? 'Google Business (GBP/GMB)' : language === 'es' ? 'Google Business (GBP/GMB)' : 'Google Business (GBP/GMB)'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {language === 'fr' ? 'Marque blanche + 3 comptes' : language === 'es' ? 'Marca blanca + 3 cuentas' : 'White label + 3 accounts'}</li>
                 </ul>
                 <Button
@@ -556,6 +558,8 @@ export default function ProAgency() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '50 000 pages crawlées/mois' : language === 'es' ? '50 000 páginas/mes' : '50,000 pages/month'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '50 pages par scan' : language === 'es' ? '50 páginas por escaneo' : '50 pages per scan'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? 'Audits & codes correctifs illimités' : language === 'es' ? 'Auditorías y código ilimitados' : 'Unlimited audits & corrective code'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? '150 créations de pages (Content Architect)' : language === 'es' ? '150 creaciones de páginas (Content Architect)' : '150 page creations (Content Architect)'}</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? 'Google Business (GBP/GMB)' : language === 'es' ? 'Google Business (GBP/GMB)' : 'Google Business (GBP/GMB)'}</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {language === 'fr' ? 'Marque blanche + 3 comptes' : language === 'es' ? 'Marca blanca + 3 cuentas' : 'White label + 3 accounts'}</li>
                 </ul>
                 <Button
