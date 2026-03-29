@@ -161,6 +161,13 @@ function computeKeywordPlacement(
   };
 }
 
+interface ImageRecommendation {
+  suggested_styles: string[];   // e.g. ['photo', 'infographic', 'flat_illustration']
+  image_count: number;          // 1-3
+  placements: ('header' | 'body')[];
+  reasoning: string;
+}
+
 interface StrategicTask {
   id: string;
   action_type: ActionType;
@@ -174,6 +181,7 @@ interface StrategicTask {
   depends_on: string[]; // task ids that must complete first
   estimated_impact: 'high' | 'medium' | 'low';
   metadata?: Record<string, any>;
+  image_recommendation?: ImageRecommendation;
 }
 
 interface ConflictResolution {
@@ -258,6 +266,78 @@ const LABELS: Record<string, Record<string, string>> = {
     optimize_kw_placement: 'Optimizar la ubicación de la palabra clave en el título',
   },
 };
+
+// ═══════════════════════════════════════════════════════════
+// IMAGE RECOMMENDATION ENGINE
+// Determines optimal visual strategy per page type & identity
+// ═══════════════════════════════════════════════════════════
+
+const PAGE_TYPE_IMAGE_MAP: Record<string, { styles: string[]; count: number; placements: ('header' | 'body')[] }> = {
+  article:  { styles: ['photo', 'infographic'],           count: 2, placements: ['header', 'body'] },
+  product:  { styles: ['photo', 'cinematic'],              count: 2, placements: ['header', 'body'] },
+  landing:  { styles: ['cinematic', 'flat_illustration'],  count: 1, placements: ['header'] },
+  faq:      { styles: ['flat_illustration', 'infographic'],count: 1, placements: ['body'] },
+  category: { styles: ['photo'],                           count: 1, placements: ['header'] },
+  homepage: { styles: ['cinematic', 'photo'],              count: 1, placements: ['header'] },
+  pillar:   { styles: ['infographic', 'photo'],            count: 3, placements: ['header', 'body'] },
+};
+
+const SECTOR_STYLE_OVERRIDES: Record<string, string[]> = {
+  'food':         ['photo', 'cinematic'],
+  'restaurant':   ['photo', 'cinematic'],
+  'tech':         ['flat_illustration', 'infographic'],
+  'saas':         ['flat_illustration', 'infographic'],
+  'fashion':      ['photo', 'cinematic', 'artistic'],
+  'luxury':       ['cinematic', 'artistic'],
+  'health':       ['photo', 'flat_illustration'],
+  'education':    ['infographic', 'flat_illustration'],
+  'finance':      ['infographic', 'typography'],
+  'real_estate':  ['photo', 'cinematic'],
+  'travel':       ['photo', 'cinematic', 'watercolor'],
+  'art':          ['artistic', 'watercolor', 'classic_painting'],
+};
+
+function computeImageRecommendation(
+  pageType: string,
+  contentLength: string | null,
+  sector: string | null,
+  lang: string,
+): ImageRecommendation {
+  const base = PAGE_TYPE_IMAGE_MAP[pageType] || PAGE_TYPE_IMAGE_MAP['article'];
+  let styles = [...base.styles];
+  let count = base.count;
+  const placements = [...base.placements];
+
+  // Override styles based on sector
+  if (sector) {
+    const sectorLower = sector.toLowerCase();
+    for (const [key, overrideStyles] of Object.entries(SECTOR_STYLE_OVERRIDES)) {
+      if (sectorLower.includes(key)) {
+        styles = overrideStyles;
+        break;
+      }
+    }
+  }
+
+  // More images for longer content
+  if (contentLength === 'long' || contentLength === 'pillar') {
+    count = Math.min(count + 1, 3);
+    if (!placements.includes('body')) placements.push('body');
+  }
+
+  const reasonings: Record<string, string> = {
+    fr: `${count} image(s) recommandée(s) en style ${styles.join('/')} — placement: ${placements.join(' + ')}`,
+    en: `${count} image(s) recommended in ${styles.join('/')} style — placement: ${placements.join(' + ')}`,
+    es: `${count} imagen(es) recomendada(s) en estilo ${styles.join('/')} — ubicación: ${placements.join(' + ')}`,
+  };
+
+  return {
+    suggested_styles: styles,
+    image_count: count,
+    placements,
+    reasoning: reasonings[lang] || reasonings['fr'],
+  };
+}
 
 function label(key: string, lang: string): string {
   return LABELS[lang]?.[key] || LABELS['fr'][key] || key;
@@ -591,9 +671,16 @@ Deno.serve(async (req) => {
 
     const activeFindings = allFindings.filter(f => !f._suppressed);
 
+    const sectorForImages = siteIdentityData?.market_sector || strategicSerpData?.market_sector || null;
+
     for (const finding of activeFindings) {
-      const tasks = findingToTasks(finding, lang, taskCounter);
+      const tasks = findingToTasks(finding, lang, taskCounter, sectorForImages);
       for (const task of tasks) {
+        // Auto-inject image recommendation for content_architect tasks
+        if (task.execution_mode === 'content_architect' && !task.image_recommendation) {
+          const guessedPageType = task.action_type === 'create_content' ? 'article' : 'article';
+          task.image_recommendation = computeImageRecommendation(guessedPageType, null, sectorForImages, lang);
+        }
         rawTasks.push(task);
         taskCounter++;
       }
@@ -915,7 +1002,7 @@ Deno.serve(async (req) => {
 // ═══════════════════════════════════════════════════════════════
 // MAPPING: Finding → Strategic Task(s)
 // ═══════════════════════════════════════════════════════════════
-function findingToTasks(finding: any, lang: string, counter: number): StrategicTask[] {
+function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null): StrategicTask[] {
   const tasks: StrategicTask[] = [];
   const baseId = `strat_${counter}`;
   const cat = finding.category || '';

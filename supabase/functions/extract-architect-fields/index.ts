@@ -135,7 +135,10 @@ Extract a JSON with these fields (all optional except keyword):
   "cta_suggestion": "${p.fieldDescs.cta_suggestion}",
   "competitor_insights": "${p.fieldDescs.competitor_insights}",
   "priority_actions": ["${p.fieldDescs.priority_actions}"],
-  "custom_prompt": "${p.fieldDescs.custom_prompt}"
+  "custom_prompt": "${p.fieldDescs.custom_prompt}",
+  "image_styles": ["photo|cinematic|infographic|flat_illustration|artistic|watercolor|typography"],
+  "image_count": 1,
+  "image_placements": ["header|body"]
 }
 
 ${p.outro}`;
