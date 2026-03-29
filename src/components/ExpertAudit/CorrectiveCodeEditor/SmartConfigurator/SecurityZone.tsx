@@ -42,7 +42,7 @@ export function SecurityZone({
 
       {showPayment && siteUrl && (
         <>
-          <Separator className="my-4" />
+          <Separator className="my-2" />
         </>
       )}
 
