@@ -523,6 +523,13 @@ export function AnalyticsDashboard() {
           description="Conversations IA Cocoon"
         />
         <StatCard 
+          title="Contenus générés" 
+          value={stats.contentsGenerated} 
+          icon={PenTool}
+          variant="success"
+          description="Pages Content Architect"
+        />
+        <StatCard 
           title="Fiches GMB" 
           value={stats.gmbConnected} 
           icon={Globe}
