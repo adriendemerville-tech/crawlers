@@ -11,6 +11,7 @@ import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-ma
 import keywordsAudit from '@/assets/screenshots/crawlers.fr_intelligence-mots-cles-seo.png';
 import architectCode from '@/assets/screenshots/crawlers.fr_architecte-code-correctif-seo.png';
 import gmbReviews from '@/assets/screenshots/crawlers.fr_google-business-profile-avis.png';
+import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
 
 /** Animated screenshot card with 3D perspective tilt */
 function ShowcaseCard({
@@ -222,7 +223,7 @@ const ProductShowcaseSection = memo(() => {
           ],
     },
     {
-      image: architectCode,
+      image: contentArchitectPreview,
       title: 'Content Architect',
       subtitle: language === 'fr' ? 'Génération IA · Publication CMS' : 'AI Generation · CMS Publishing',
       description: language === 'fr'
