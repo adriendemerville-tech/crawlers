@@ -1,6 +1,5 @@
 import { PenLine } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
-import { Textarea } from '@/components/ui/textarea';
 
 interface ContentArchitectPromptPanelProps {
   trackedSiteId?: string;
@@ -32,16 +31,8 @@ export function ContentArchitectPromptPanel({
         />
       </div>
 
-      {/* Prompt textarea */}
-      <div className="flex-1 flex flex-col p-3 gap-2">
-        <label className="text-[10px] text-white/40 uppercase tracking-wider">Instructions spécifiques</label>
-        <Textarea
-          value={prompt}
-          onChange={e => setPrompt(e.target.value)}
-          placeholder="Ex: Inclure un tableau comparatif, citer des sources…"
-          className="flex-1 bg-white/5 border-white/10 text-white text-xs resize-none min-h-[100px]"
-        />
-      </div>
+      {/* Prompt textarea moved to shared instructions zone */}
+      <div className="flex-1" />
     </div>
   );
 }
