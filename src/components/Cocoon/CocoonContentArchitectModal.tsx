@@ -408,6 +408,23 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     if (originalResult) { setResult(JSON.parse(JSON.stringify(originalResult))); toast.info('Contenu restauré à la version originale'); }
   }, [originalResult]);
 
+  const handleSaveDraft = useCallback(async () => {
+    if (!domain || !trackedSiteId) return;
+    setSavingDraft(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+      const draftData2 = { url, keyword, page_type: pageType, result_snapshot: result, saved_at: new Date().toISOString() };
+      const { error } = await supabase.from('cocoon_architect_drafts').insert({
+        user_id: user.id, domain, tracked_site_id: trackedSiteId,
+        draft_data: draftData2, source_message: `Brouillon — ${keyword || url}`,
+      });
+      if (error) throw error;
+      toast.success('Brouillon enregistré');
+    } catch (err: any) { toast.error(err.message || 'Erreur'); }
+    finally { setSavingDraft(false); }
+  }, [domain, trackedSiteId, url, keyword, pageType, result]);
+
   const handleTogglePanel = useCallback((panelId: PanelId) => {
     setActivePanel(prev => prev === panelId ? null : panelId);
   }, []);
