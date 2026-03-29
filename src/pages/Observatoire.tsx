@@ -174,6 +174,20 @@ const translations = {
     ctaTitle: "Compare su sitio con los promedios nacionales",
     ctaDesc: "Lance una auditoría SEO & GEO experta gratuita y descubra su posición frente al web francés.",
     ctaButton: "Iniciar mi auditoría gratuita",
+    sectorTitle: "Vigilancia sectorial",
+    sectorSubtitle: "Benchmarks por sector — datos agregados y anonimizados",
+    sectorFilter: "Filtrar por sector",
+    sectorAll: "Todos los sectores",
+    sectorScans: "auditorías analizadas",
+    sectorNoData: "No hay datos sectoriales disponibles. Aparecerán tras la próxima agregación.",
+    sectorTrendTitle: "Evolución por sector",
+    sectorRadarTitle: "Radar SEO por sector",
+    sectorBenchmarkTitle: "Benchmarks sectoriales",
+    sectorMetrics: {
+      json_ld_rate: "JSON-LD", schema_org_rate: "Schema.org", https_rate: "HTTPS",
+      mobile_friendly_rate: "Móvil", canonical_rate: "Canonical", meta_description_rate: "Meta Desc",
+      avg_seo_score: "Score SEO", avg_lcp_ms: "LCP (ms)", avg_ttfb_ms: "TTFB (ms)",
+    },
   },
 };
 
