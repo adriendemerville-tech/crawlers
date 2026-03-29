@@ -604,7 +604,7 @@ const Observatoire = () => {
                       ? sectorData.sectors
                       : sectorData.sectors.filter(s => s.sector === selectedSector);
                     // Group by sector, take latest period
-                    const latestBySector = new Map<string, typeof filtered[0]>();
+                    const latestBySector = new Map<string, (typeof sectorData.sectors)[number]>();
                     for (const row of filtered) {
                       const existing = latestBySector.get(row.sector);
                       if (!existing || row.period > existing.period) {
