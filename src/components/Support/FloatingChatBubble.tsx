@@ -23,6 +23,7 @@ export function FloatingChatBubble() {
   const [showBounce, setShowBounce] = useState(false);
   const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
   const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
+  const [autoEnterpriseContact, setAutoEnterpriseContact] = useState(false);
   const [isMuted, setIsMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
@@ -52,6 +53,16 @@ export function FloatingChatBubble() {
     }, 20000);
     return () => clearTimeout(timer);
   }, [location.pathname, isMuted]);
+
+  // Listen for enterprise contact event from pricing pages
+  useEffect(() => {
+    const handler = () => {
+      setAutoEnterpriseContact(true);
+      setIsOpen(true);
+    };
+    window.addEventListener('felix-enterprise-contact', handler);
+    return () => window.removeEventListener('felix-enterprise-contact', handler);
+  }, []);
 
   // Suggest Crawlers quiz to non-logged users on home after 5s
   // Auto-hide the bubble after 10s but keep the notification badge
@@ -214,10 +225,11 @@ export function FloatingChatBubble() {
           </div>
         }>
           <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); }}
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
             autoStartCrawlersQuiz={autoStartCrawlersQuiz}
+            autoEnterpriseContact={autoEnterpriseContact}
           />
         </Suspense>
       )}

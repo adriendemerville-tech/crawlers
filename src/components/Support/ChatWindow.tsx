@@ -20,6 +20,7 @@ import { captureScreenContext } from '@/utils/screenContext';
 import { AutonomyDiagnostic } from './AutonomyDiagnostic';
 import { SeoQuiz } from './SeoQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
+import { EnterpriseQuiz } from './EnterpriseQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
@@ -52,6 +53,7 @@ interface ChatWindowProps {
   triggerOnboarding?: boolean;
   onOnboardingConsumed?: () => void;
   autoStartCrawlersQuiz?: boolean;
+  autoEnterpriseContact?: boolean;
 }
 
 // NLP detection for bug/problem intent
@@ -125,7 +127,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact }: ChatWindowProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
@@ -153,6 +155,10 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [quizSuggested, setQuizSuggested] = useState(false);
   const [quizSuggestionPending, setQuizSuggestionPending] = useState(false);
 
+  // Enterprise contact quiz state
+  const [showEnterpriseQuiz, setShowEnterpriseQuiz] = useState(false);
+  const autoEnterpriseTriggered = useRef(false);
+
   // Auto-start Crawlers quiz when triggered from bubble suggestion
   const autoQuizTriggered = useRef(false);
   useEffect(() => {
@@ -177,6 +183,25 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         .finally(() => setQuizLoading(false));
     }
   }, [autoStartCrawlersQuiz]);
+
+  // Auto-start enterprise contact flow
+  useEffect(() => {
+    if (autoEnterpriseContact && !autoEnterpriseTriggered.current) {
+      autoEnterpriseTriggered.current = true;
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: "J'aimerais discuter d'une offre Crawlers pour mon entreprise",
+        timestamp: new Date().toISOString(),
+      };
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🏢 **Offre Enterprise — Sur mesure**\n\nAvec plaisir ! Pour vous préparer une proposition adaptée, j'ai besoin de quelques informations. Répondez aux 7 questions ci-dessous 👇",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg, assistantMsg]);
+      setShowEnterpriseQuiz(true);
+    }
+  }, [autoEnterpriseContact]);
 
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
@@ -414,6 +439,22 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     // Check if user is expressing a bug intent
     if (bugReportMode === 'idle' && detectBugIntent(messageText)) {
       setBugReportMode('prompt');
+    }
+
+    // Enterprise contact detection
+    const enterpriseKeywords = ['offre entreprise', 'offre enterprise', 'offre crawlers pour mon entreprise', 'plan enterprise', 'enterprise plan'];
+    const isEnterprise = enterpriseKeywords.some(kw => messageText.toLowerCase().includes(kw));
+    if (isEnterprise && !showEnterpriseQuiz) {
+      const userMsg: ChatMessage = { role: 'user', content: messageText, timestamp: new Date().toISOString() };
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🏢 **Offre Enterprise — Sur mesure**\n\nAvec plaisir ! Pour vous préparer une proposition adaptée, j'ai besoin de quelques informations. Répondez aux 7 questions ci-dessous 👇",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg, assistantMsg]);
+      setNewMessage('');
+      setShowEnterpriseQuiz(true);
+      return;
     }
 
     // Crawlers quiz detection — check BEFORE generic quiz
@@ -954,7 +995,27 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   </div>
                 )}
 
-                {/* Quiz validation for admin creators */}
+                {/* Enterprise contact quiz */}
+                {showEnterpriseQuiz && (
+                  <div className="flex justify-start w-full">
+                    <div className="max-w-[95%] w-full">
+                      <EnterpriseQuiz
+                        userId={user?.id}
+                        onComplete={(summary) => {
+                          setShowEnterpriseQuiz(false);
+                          const resultMsg: ChatMessage = {
+                            role: 'assistant',
+                            content: summary,
+                            timestamp: new Date().toISOString(),
+                          };
+                          setMessages(prev => [...prev, resultMsg]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+
                 {showQuizValidation && isAdmin && (
                   <div className="flex justify-start w-full">
                     <div className="max-w-[95%] w-full">

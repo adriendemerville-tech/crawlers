@@ -1021,10 +1021,7 @@ export default function Tarifs() {
                       size="lg"
                       className="w-full gap-2 font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white shadow-lg shadow-emerald-500/25"
                       onClick={() => {
-                        // Open Felix chat
-                        const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
-                        if (felixBtn) felixBtn.click();
-                        else window.location.href = '/#felix';
+                        window.dispatchEvent(new CustomEvent('felix-enterprise-contact'));
                       }}
                     >
                       <MessageCircle className="h-4 w-4" />
