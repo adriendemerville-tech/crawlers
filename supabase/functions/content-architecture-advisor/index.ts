@@ -43,6 +43,7 @@ interface AdvisorInput {
   target_internal_links?: { url: string; anchor_text?: string; reason?: string }[]
   cannibalization_data?: { keyword: string; competing_urls: string[]; severity: string }[]
   silo_context?: { cluster_name: string; existing_pages: string[]; gap_description?: string }
+  target_audience_segment?: 'primary' | 'secondary' | 'untapped' | 'all'
 }
 
 Deno.serve(async (req) => {
