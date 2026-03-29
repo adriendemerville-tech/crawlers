@@ -438,7 +438,31 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
             </div>
           </CardHeader>
           <CardContent className="space-y-0 pt-2">
-            <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.wordCount} ok={wordCountOk} detail={`~${scores.semantic.wordCount} ${t.words}`} />
+            {isSPA && (
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">{t.spaDetected}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5 rounded-md bg-success/10 border border-success/20 px-2.5 py-1.5">
+                    <Search className="h-3 w-3 text-success shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-success block">{t.spaGoogleView}</span>
+                      <span className="text-[10px] font-mono text-success/80">~{scores.semantic.wordCount} {t.words}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-md bg-destructive/10 border border-destructive/20 px-2.5 py-1.5">
+                    <EyeOff className="h-3 w-3 text-destructive shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-destructive block">{t.spaLlmView}</span>
+                      <span className="text-[10px] font-mono text-destructive/80">~{staticWordCount} {t.words}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.wordCount} ok={wordCountOk} detail={isSPA ? `🔍 ~${scores.semantic.wordCount} | 🤖 ~${staticWordCount} ${t.words}` : `~${scores.semantic.wordCount} ${t.words}`} />
             {!isHomepage && <StatusRow icon={<BarChart3 className="h-3.5 w-3.5" />} label={t.textRatio} ok={densityOk} detail={contentDensity ? `${contentDensity.ratio}%` : undefined} />}
             <StatusRow icon={<Link2 className="h-3.5 w-3.5" />} label={t.linkProfile} ok={hasLinks} detail={linkProfile ? `${linkProfile.internal} ${t.internal} / ${linkProfile.external} ${t.external}` : undefined} />
             
