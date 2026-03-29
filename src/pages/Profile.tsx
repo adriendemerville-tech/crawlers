@@ -226,6 +226,15 @@ function ProfileContent() {
                   <FileEdit className="h-4 w-4" />
                   <span className="hidden sm:inline">Brouillons</span>
                 </TabsTrigger>
+                {isProUser && (
+                  <TabsTrigger
+                    value="reports-tab"
+                    className="flex-1 gap-2"
+                  >
+                    <FileBox className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.myReports}</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="marina" className="flex-1 gap-2">
                   <Anchor className="h-4 w-4" />
                   <span className="hidden sm:inline">Marina</span>
@@ -244,15 +253,6 @@ function ProfileContent() {
                   <span className="hidden sm:inline">Google Business</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                {isProUser && (
-                  <TabsTrigger
-                    value="reports-tab"
-                    className="flex-1 gap-2"
-                  >
-                    <FileBox className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.myReports}</span>
-                  </TabsTrigger>
-                )}
                 {isAdmin && (
                   <TabsTrigger
                     value="bundle"
