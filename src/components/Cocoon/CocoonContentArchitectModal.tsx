@@ -112,6 +112,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
   const [directories, setDirectories] = useState<{ path: string; label: string; category: string | null }[]>([]);
+  // Column 2 editable fields
+  const [h1Field, setH1Field] = useState('');
+  const [h2Fields, setH2Fields] = useState<string[]>(['']);
 
   // Compute full URL from domain + directory + slug
   const url = useMemo(() => {
@@ -485,6 +488,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       setResult(resData);
       setOriginalResult(JSON.parse(JSON.stringify(resData)));
 
+      // Populate H1/H2 fields from result
+      if (resData?.content_structure?.recommended_h1) {
+        setH1Field(resData.content_structure.recommended_h1);
+      }
+      const sections = resData?.content_structure?.sections || [];
+      if (sections.length > 0) {
+        setH2Fields(sections.map((s: any) => s.title || '').filter(Boolean));
+      }
+
       // Auto-update slug from generated H1 if slug was auto-generated
       if (!isExistingPage && !autoFilled.has('slug_manual') && resData?.content_structure?.recommended_h1) {
         const newSlug = generateSlugFromKeyword(resData.content_structure.recommended_h1);
@@ -754,28 +766,74 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
             <ScrollArea className="flex-1 p-4">
               {!result && !loading && (
-                <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden border border-white/10">
-                  {url ? (
-                    <>
-                      <iframe
-                        src={url}
-                        className="w-full h-full absolute inset-0 opacity-30 pointer-events-none"
-                        sandbox="allow-scripts"
-                        title="Aperçu du site cible"
+                <div className="space-y-4">
+                  {/* H1 / H2 editable fields — always visible */}
+                  <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] text-white/50 uppercase tracking-wider">H1</label>
+                      <Input
+                        value={h1Field}
+                        onChange={e => setH1Field(e.target.value)}
+                        placeholder={t3(language, 'Titre principal de la page (H1)', 'Main page title (H1)', 'Título principal de la página (H1)')}
+                        className="bg-white/5 border-white/10 text-white text-sm h-9 font-semibold"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-                        <div className="text-center space-y-2">
-                          <FileText className="w-8 h-8 text-white/15 mx-auto" />
-                          <p className="text-sm text-white/30">Prêt à générer du contenu</p>
-                          <p className="text-[10px] text-white/15">Le contenu apparaîtra ici avec le style de votre site</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-white/20 text-sm">
-                      Remplissez les champs et lancez la génération
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center justify-between">
+                        H2
+                        <button
+                          onClick={() => setH2Fields(prev => [...prev, ''])}
+                          className="text-[10px] text-[#fbbf24]/60 hover:text-[#fbbf24] normal-case"
+                        >+ {t3(language, 'Ajouter H2', 'Add H2', 'Añadir H2')}</button>
+                      </label>
+                      {h2Fields.map((h2, i) => (
+                        <div key={i} className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-white/20 shrink-0 w-5">#{i + 1}</span>
+                          <Input
+                            value={h2}
+                            onChange={e => {
+                              const updated = [...h2Fields];
+                              updated[i] = e.target.value;
+                              setH2Fields(updated);
+                            }}
+                            placeholder={`H2 #${i + 1}`}
+                            className="bg-white/5 border-white/10 text-white text-xs h-8 flex-1"
+                          />
+                          {h2Fields.length > 1 && (
+                            <button
+                              onClick={() => setH2Fields(prev => prev.filter((_, j) => j !== i))}
+                              className="text-white/20 hover:text-white/40 text-xs p-1"
+                            >×</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Site preview placeholder */}
+                  <div className="relative w-full min-h-[300px] rounded-lg overflow-hidden border border-white/10">
+                    {url ? (
+                      <>
+                        <iframe
+                          src={url}
+                          className="w-full h-full absolute inset-0 opacity-30 pointer-events-none min-h-[300px]"
+                          sandbox="allow-scripts"
+                          title="Aperçu du site cible"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+                          <div className="text-center space-y-2">
+                            <FileText className="w-8 h-8 text-white/15 mx-auto" />
+                            <p className="text-sm text-white/30">{t3(language, 'Prêt à générer du contenu', 'Ready to generate content', 'Listo para generar contenido')}</p>
+                            <p className="text-[10px] text-white/15">{t3(language, 'Le contenu apparaîtra ici avec le style de votre site', 'Content will appear here with your site style', 'El contenido aparecerá aquí con el estilo de su sitio')}</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center h-full min-h-[300px] text-white/20 text-sm">
+                        {t3(language, 'Remplissez les champs et lancez la génération', 'Fill in the fields and launch generation', 'Rellene los campos y lance la generación')}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               {loading && (
@@ -788,26 +846,67 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
               {result && (
                 <div className="space-y-4 text-white/80">
+                  {/* Editable H1 / H2 fields */}
+                  <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] text-white/50 uppercase tracking-wider">H1</label>
+                      <Input
+                        value={h1Field}
+                        onChange={e => {
+                          setH1Field(e.target.value);
+                          if (result?.content_structure) {
+                            const updated = { ...result };
+                            updated.content_structure.recommended_h1 = e.target.value;
+                            setResult(updated);
+                          }
+                        }}
+                        className="bg-white/5 border-white/10 text-white text-sm h-9 font-semibold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center justify-between">
+                        H2
+                        <button
+                          onClick={() => setH2Fields(prev => [...prev, ''])}
+                          className="text-[10px] text-[#fbbf24]/60 hover:text-[#fbbf24] normal-case"
+                        >+ {t3(language, 'Ajouter H2', 'Add H2', 'Añadir H2')}</button>
+                      </label>
+                      {h2Fields.map((h2, i) => (
+                        <div key={i} className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-white/20 shrink-0 w-5">#{i + 1}</span>
+                          <Input
+                            value={h2}
+                            onChange={e => {
+                              const updated = [...h2Fields];
+                              updated[i] = e.target.value;
+                              setH2Fields(updated);
+                              // Sync back to result sections
+                              if (result?.content_structure?.sections?.[i]) {
+                                const updatedResult = { ...result };
+                                updatedResult.content_structure.sections[i].title = e.target.value;
+                                setResult(updatedResult);
+                              }
+                            }}
+                            placeholder={`H2 #${i + 1}`}
+                            className="bg-white/5 border-white/10 text-white text-xs h-8 flex-1"
+                          />
+                          {h2Fields.length > 1 && (
+                            <button
+                              onClick={() => setH2Fields(prev => prev.filter((_, j) => j !== i))}
+                              className="text-white/20 hover:text-white/40 text-xs p-1"
+                            >×</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-5">
                     {/* Meta title preview */}
                     {result.metadata_enrichment?.meta_title && (
                       <div className="text-[11px] text-[#fbbf24]/50 font-mono truncate">
-                        🔍 {result.metadata_enrichment.meta_title}
+                        {result.metadata_enrichment.meta_title}
                       </div>
-                    )}
-
-                    {/* H1 */}
-                    {result.content_structure?.recommended_h1 && (
-                      <h1
-                        className="text-2xl font-bold text-white outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={e => {
-                          const updated = { ...result };
-                          updated.content_structure.recommended_h1 = e.currentTarget.textContent || '';
-                          setResult(updated);
-                        }}
-                      >{result.content_structure.recommended_h1}</h1>
                     )}
 
                     {/* Meta description */}
