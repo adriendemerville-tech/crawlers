@@ -276,7 +276,7 @@ const CGVU = () => {
               </p>
               <ul>
                 <li><strong>Pro Agency</strong> : 59 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
-                <li><strong>Pro Agency +</strong> : 89 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
+                <li><strong>Pro Agency +</strong> : 99 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
               </ul>
               <p className="mt-2">
                 Le paiement est prélevé automatiquement chaque mois via Stripe. L'utilisateur peut résilier à tout moment sans frais ni pénalités.
@@ -298,7 +298,7 @@ const CGVU = () => {
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
                 <li>Support prioritaire.</li>
               </ul>
-              <p className="font-semibold mt-4">Pro Agency + (89€/mois) :</p>
+              <p className="font-semibold mt-4">Pro Agency + (99€/mois) :</p>
               <ul>
                 <li>Tout Pro Agency inclus ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 100 000 pages/mois ;</li>
