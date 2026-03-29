@@ -54,7 +54,7 @@ const t = {
       {
         step: '03',
         title: 'Images IA multi-moteurs',
-        desc: 'Routage intelligent vers Imagen 3 (Photo, Cinématique), FLUX (Artistic, Flat, Aquarelle…) ou Ideogram (Typographie, Infographie, N&B). Assignation par double-clic. Bibliothèque de 5 images de référence par site.',
+        desc: 'Routage intelligent vers Imagen 3 (Photo, Cinématique), FLUX (Artistic, Flat, Aquarelle…) ou Ideogram (Typographie, Infographie, N&B). Assignation par double-clic. Bibliothèque de 30 images de référence par site.',
         features: ['12+ styles visuels (3 moteurs IA)', 'Image de référence (Inspiration / Édition)', '2 images par contenu (Entête + Corps)', 'Alt text, caption, lazy-loading automatiques'],
       },
       {

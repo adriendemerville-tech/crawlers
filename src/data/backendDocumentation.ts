@@ -1426,7 +1426,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Adaptation sectorielle** : le style est automatiquement adapté au secteur du site (food→photo, tech→flat, luxury→cinematic, etc.)
 - **Multi-formats** : header, body, hero, thumbnail
 - **Fair use** : Max 2 images par contenu, 3 itérations par génération
-- **Bibliothèque** : 5 images max/site, stockées 24h dans le storage (\\\`image-references/generated/\\\`)
+- **Bibliothèque** : 30 images max/site, stockées 24h dans le storage (\\\`image-references/generated/\\\`)
 - **Image de référence** : Mode Inspiration ou Édition → force le routage vers Imagen 3 (multimodal)
 - **Recommandations style** : Suggère les styles les plus utilisés par utilisateur et URL (\\\`image_style_preferences\\\`)
 - **CMS** : Intégration HTML accessible (alt, caption, lazy-loading) et upload \\\`featured_media\\\` WordPress (base64 ou URL publique)

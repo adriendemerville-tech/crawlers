@@ -38,7 +38,7 @@ const ALL_STYLES: StyleOption[] = [
 
 const MAX_IMAGES = 2;
 const MAX_ITERATIONS = 3;
-const MAX_REFS = 5;
+const MAX_REFS = 30;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 
 export interface GeneratedImageItem {
