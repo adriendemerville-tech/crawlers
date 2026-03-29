@@ -26,7 +26,7 @@ const t = {
       badge: 'Content Architect',
       title: 'Créez du contenu SEO & GEO',
       titleAccent: 'en quelques secondes',
-      subtitle: 'Interface Canva-like pour générer des pages optimisées — contenu, images IA multi-moteurs, données structurées — et les publier sur votre CMS. Accessible à tous dès 5 crédits.',
+      subtitle: 'Chez Crawlers.fr, notre approche consiste à combiner intelligence artificielle et expertise SEO dans une interface Canva-like. Content Architect génère des pages optimisées E-E-A-T — contenu, images IA multi-moteurs (Imagen 3, FLUX, Ideogram), données structurées schema.org — et les publie sur 7 CMS en un clic. Accessible à tous dès 5 crédits, ou illimité avec Pro Agency.',
       cta: 'Commencer gratuitement',
       ctaSecondary: 'Voir les forfaits',
     },
@@ -195,7 +195,7 @@ const t = {
       badge: 'Content Architect',
       title: 'Create SEO & GEO content',
       titleAccent: 'in seconds',
-      subtitle: 'Canva-like interface to generate optimized pages — content, multi-engine AI images, structured data — and publish to your CMS. Available to everyone from 5 credits.',
+      subtitle: 'At Crawlers.fr, our approach combines AI and SEO expertise in a Canva-like interface. Content Architect generates E-E-A-T optimized pages — content, multi-engine AI images (Imagen 3, FLUX, Ideogram), schema.org structured data — and publishes to 7 CMS in one click. Available to everyone from 5 credits, or unlimited with Pro Agency.',
       cta: 'Start for free',
       ctaSecondary: 'View plans',
     },
@@ -509,6 +509,15 @@ const ContentArchitectPage = memo(() => {
             { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "99", "priceCurrency": "EUR" },
           ],
           "featureList": ["Automated SEO content generation", "Multi-engine AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization", "Canva-like editor"],
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": tr.faq.map(item => ({
+            "@type": "Question",
+            "name": item.q,
+            "acceptedAnswer": { "@type": "Answer", "text": item.a }
+          }))
         })}</script>
       </Helmet>
 
