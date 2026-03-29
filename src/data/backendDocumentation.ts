@@ -478,9 +478,13 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
 | \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
 | \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
+| \`gmb-local-competitors\` | ✅ | Analyse concurrents locaux Google Maps |
+| \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
+| \`dataforseo-balance\` | ✅ | Solde du compte DataForSEO |
 | \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+| \`llm-visibility-lite\` | ❌ | Visibilité LLM allégée (sans auth) |
 
 ## CMS & Bridges externes
 
