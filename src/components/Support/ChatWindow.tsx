@@ -20,6 +20,7 @@ import { captureScreenContext } from '@/utils/screenContext';
 import { AutonomyDiagnostic } from './AutonomyDiagnostic';
 import { SeoQuiz } from './SeoQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
+import { EnterpriseQuiz } from './EnterpriseQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 
 function CopyButton({ text }: { text: string }) {
@@ -52,6 +53,7 @@ interface ChatWindowProps {
   triggerOnboarding?: boolean;
   onOnboardingConsumed?: () => void;
   autoStartCrawlersQuiz?: boolean;
+  autoEnterpriseContact?: boolean;
 }
 
 // NLP detection for bug/problem intent
@@ -125,7 +127,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact }: ChatWindowProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
