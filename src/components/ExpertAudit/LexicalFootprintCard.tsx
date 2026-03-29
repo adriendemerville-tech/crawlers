@@ -53,7 +53,7 @@ function DistanceGauge({ label, target, color }: { label: string; target: Jargon
               key={i}
               className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/30"
             >
-              {term}
+              {typeof term === 'string' ? term : (term as any)?.term || JSON.stringify(term)}
             </span>
           ))}
         </div>
