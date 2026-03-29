@@ -144,6 +144,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
 
   useEffect(() => {
