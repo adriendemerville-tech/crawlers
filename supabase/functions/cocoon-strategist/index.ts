@@ -671,9 +671,16 @@ Deno.serve(async (req) => {
 
     const activeFindings = allFindings.filter(f => !f._suppressed);
 
+    const sectorForImages = siteIdentityData?.market_sector || strategicSerpData?.market_sector || null;
+
     for (const finding of activeFindings) {
-      const tasks = findingToTasks(finding, lang, taskCounter);
+      const tasks = findingToTasks(finding, lang, taskCounter, sectorForImages);
       for (const task of tasks) {
+        // Auto-inject image recommendation for content_architect tasks
+        if (task.execution_mode === 'content_architect' && !task.image_recommendation) {
+          const guessedPageType = task.action_type === 'create_content' ? 'article' : 'article';
+          task.image_recommendation = computeImageRecommendation(guessedPageType, null, sectorForImages, lang);
+        }
         rawTasks.push(task);
         taskCounter++;
       }
