@@ -147,6 +147,11 @@ const translations = {
     jsonLdExplain: 'JSON-LD is the "native language" of AI for validating the expertise announced in your titles.',
     formatExplain: 'Text/HTML ratio and link profiles are essential criteria for landing in AI-generated summaries.',
     health: 'Health',
+    spaGoogleView: 'Google View',
+    spaLlmView: 'LLM View',
+    spaGoogleNote: 'Googlebot renders JS and sees the full content.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot don\'t render JS.',
+    spaDetected: 'SPA site detected — dual reading',
   },
   es: {
     sectionTitle: 'La Técnica al servicio de la Adquisición (SEO & IA)',
@@ -183,6 +188,11 @@ const translations = {
     jsonLdExplain: 'JSON-LD es el "lenguaje nativo" de la IA para validar la experiencia anunciada en sus títulos.',
     formatExplain: 'El ratio texto/HTML y el perfil de enlaces son criterios esenciales para aparecer en resúmenes generados por IA.',
     health: 'Salud',
+    spaGoogleView: 'Vista Google',
+    spaLlmView: 'Vista LLM',
+    spaGoogleNote: 'Googlebot ejecuta JS y ve el contenido completo.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot no renderizan JS.',
+    spaDetected: 'Sitio SPA detectado — doble lectura',
   },
 };
 
