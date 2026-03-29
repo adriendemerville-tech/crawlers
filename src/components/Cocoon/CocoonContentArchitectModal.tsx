@@ -890,7 +890,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 )}
               </div>
             </div>
+            </ScrollArea>
 
+            {/* Sticky footer: Générer la page */}
+            <div className="shrink-0 p-3 border-t border-white/10">
+              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
+                {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{t3(language, 'Génération…', 'Generating…', 'Generando…')}</> : <><Send className="w-3.5 h-3.5 mr-2" />{t3(language, 'Générer la page', 'Generate page', 'Generar página')}</>}
+              </Button>
+            </div>
+          </div>
+
+          {/* Column 3 — Preview (exclusively) */}
+          <div className="flex-1 flex flex-col overflow-hidden">
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                 <span className="text-xs text-white/60">Aperçu de la structure</span>
