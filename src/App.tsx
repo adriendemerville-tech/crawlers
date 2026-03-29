@@ -164,6 +164,7 @@ const App = () => (
                           <Route path="/aide" element={<Aide />} />
                           <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
                           <Route path="/marina" element={<MarinaPage />} />
+                          <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
