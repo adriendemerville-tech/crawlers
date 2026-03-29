@@ -99,13 +99,9 @@ export default function Marina() {
 
     try {
       // Deduct credits
-      const { data: creditResult } = await supabase.rpc('use_credit', {
-        p_user_id: user.id,
-        p_description: `Rapport Marina — ${url.trim()}`,
-        p_amount: CREDIT_COST,
-      });
-      if (creditResult && !(creditResult as any).success) {
-        toast.error((creditResult as any).error || 'Erreur de débit');
+      const creditResult = await useCredit(`Rapport Marina — ${url.trim()}`, CREDIT_COST);
+      if (!creditResult.success) {
+        toast.error(creditResult.error || 'Erreur de débit');
         setLoading(false);
         return;
       }
