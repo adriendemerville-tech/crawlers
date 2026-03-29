@@ -282,14 +282,14 @@ const ProductShowcaseSection = memo(() => {
       <div className="relative mx-auto max-w-6xl px-4 space-y-8">
         {/* Section header */}
         <div className="text-center mb-16 sm:mb-24">
-          <Badge variant="outline" className="mb-4 border-primary/30 bg-primary/5 text-primary px-3 py-1 text-xs font-semibold">
+          <Badge variant="outline" className="mb-4 border-violet-500/30 bg-violet-500/5 text-violet-500 px-3 py-1 text-xs font-semibold">
             <Eye className="w-3.5 h-3.5 mr-1.5" />
             {language === 'fr' ? 'Découvrir la plateforme' : 'Discover the platform'}
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground font-display">
             {language === 'fr' ? 'Tout ce dont vous avez besoin,' : 'Everything you need,'}
             <br />
-            <span className="text-primary font-extrabold">
+            <span className="text-violet-500 font-extrabold">
               {language === 'fr' ? 'au même endroit.' : 'in one place.'}
             </span>
           </h2>
