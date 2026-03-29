@@ -787,10 +787,10 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             </div>
           </div>
 
-          {/* Center column — H1/H2 fields + preview */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* H1/H2 fields — always visible at top of column 2 */}
-            <div className="shrink-0 p-4 pb-2 space-y-3 border-b border-white/10">
+          {/* Column 2 — H1/H2/Keywords structure fields */}
+          <div className="w-[300px] shrink-0 border-r border-white/10 flex flex-col overflow-hidden">
+            <ScrollArea className="flex-1">
+            <div className="p-4 pb-2 space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider">H1</label>
                 <Input
