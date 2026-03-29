@@ -220,6 +220,10 @@ function ProfileContent() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
+                <TabsTrigger value="drafts" className="flex-1 gap-2">
+                  <FileEdit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Brouillons</span>
+                </TabsTrigger>
                 <TabsTrigger
                   value="gmb"
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
