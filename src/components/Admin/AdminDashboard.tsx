@@ -29,6 +29,9 @@ import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
+const CocoonContentArchitectModal = lazy(() =>
+  import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
