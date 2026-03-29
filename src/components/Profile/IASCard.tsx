@@ -9,6 +9,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Lock, Activity, ArrowRight, RefreshCw, Loader2, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format, subMonths, subWeeks, startOfWeek, startOfMonth, parseISO } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';
@@ -115,6 +117,9 @@ export function IASCard({ trackedSiteId, userId, domain, isPremium, onUpgrade }:
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const locale = getLocale(language);
+  const { isAdmin } = useAdmin();
+  const navigate = useNavigate();
+  const hasAccess = isPremium || isAdmin;
 
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -525,19 +530,19 @@ export function IASCard({ trackedSiteId, userId, domain, isPremium, onUpgrade }:
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isPremium ? (
+        {hasAccess ? (
           content
         ) : (
           <div className="relative">
-            <div className="blur-md pointer-events-none select-none" aria-hidden>
+            <div className="blur-[4px] pointer-events-none select-none" aria-hidden>
               {content}
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/30 backdrop-blur-sm rounded-lg">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Lock className="h-6 w-6 text-primary" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/30 backdrop-blur-[2px] rounded-lg">
+              <div className="h-12 w-12 rounded-full bg-[hsl(263,70%,38%)]/10 flex items-center justify-center">
+                <Lock className="h-6 w-6 text-[hsl(263,70%,38%)]" />
               </div>
               <p className="text-sm text-muted-foreground text-center max-w-[200px]">{t.upgradeDesc}</p>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={onUpgrade}>
+              <Button size="sm" className="bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white" onClick={() => navigate('/tarifs')}>
                 {t.upgrade}
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
