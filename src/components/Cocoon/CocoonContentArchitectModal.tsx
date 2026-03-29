@@ -35,6 +35,7 @@ interface CocoonContentArchitectModalProps {
   prefillUrl?: string;
   isExistingPage?: boolean;
   demoMode?: boolean;
+  colorTheme?: 'cocoon' | 'green';
 }
 
 const PAGE_TYPES = [
@@ -112,7 +113,7 @@ const DEMO_IMAGES: import('./ImageStylePicker').GeneratedImageItem[] = [
   { dataUri: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', style: 'infographic' as any, placement: 'body' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false, colorTheme = 'cocoon' }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const [activePanel, setActivePanel] = useState<PanelId | null>('prompt');
