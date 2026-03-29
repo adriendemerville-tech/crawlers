@@ -94,11 +94,12 @@ Deno.serve(async (req) => {
       // Fetch Google Ads accounts (customer IDs)
       let customerId = '';
       let accountName = '';
+      const developerToken = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
       try {
         const adsResp = await fetch('https://googleads.googleapis.com/v18/customers:listAccessibleCustomers', {
           headers: { 
             Authorization: `Bearer ${tokens.access_token}`,
-            'developer-token': 'test', // For listing accessible customers
+            'developer-token': developerToken || '',
           },
         });
         if (adsResp.ok) {
