@@ -20,6 +20,7 @@ import { ContentArchitectOptionsPanel } from './ContentArchitectOptionsPanel';
 import { ContentArchitectStructuredDataPanel } from './ContentArchitectStructuredDataPanel';
 import { ContentArchitectDraftPanel } from './ContentArchitectDraftPanel';
 import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
+import { ContentArchitectTasksPanel } from './ContentArchitectTasksPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
 
 interface CocoonContentArchitectModalProps {
@@ -514,6 +515,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     competitorUrl={competitorUrl} setCompetitorUrl={setCompetitorUrl}
                     ctaLink={ctaLink} setCtaLink={setCtaLink} photoUrl={photoUrl} setPhotoUrl={setPhotoUrl}
                     tone={tone} setTone={setTone} autoFilled={autoFilled}
+                  />
+                )}
+                {activePanel === 'tasks' && (
+                  <ContentArchitectTasksPanel
+                    domain={domain} trackedSiteId={trackedSiteId}
+                    onApplyTask={(task) => {
+                      setPrompt(prev => prev ? `${prev}\n\n${task.title}: ${task.description}` : `${task.title}: ${task.description}`);
+                      toast.success('Tâche injectée dans les instructions');
+                    }}
                   />
                 )}
               </div>
