@@ -1272,7 +1272,7 @@ export default function SiteCrawl() {
                         value={[maxPages]}
                         onValueChange={([val]) => setMaxPages(val)}
                         min={10}
-                        max={isAdmin ? 50 : (isAgencyPlus ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(50, Math.max(10, totalEstimatedPages)) : 50) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20))}
+                        max={isAdmin ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (isAgencyPlus ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20))}
                         step={isAdmin || isAgencyPlus ? 10 : 5}
                         disabled={isLoading}
                         className="flex-1"
