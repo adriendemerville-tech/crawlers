@@ -19,6 +19,7 @@ import {
   Brain,
   Swords,
   ScanSearch,
+  PenTool,
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -56,6 +57,7 @@ interface AnalyticsStats {
   cocoonGenerated: number;
   cocoonChatSessions: number;
   gmbConnected: number;
+  contentsGenerated: number;
 }
 
 
@@ -114,6 +116,7 @@ export function AnalyticsDashboard() {
     cocoonGenerated: 0,
     cocoonChatSessions: 0,
     gmbConnected: 0,
+    contentsGenerated: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
@@ -172,6 +175,7 @@ export function AnalyticsDashboard() {
         cocoonGenerated: 0,
         cocoonChatSessions: 0,
         gmbConnected: 0,
+        contentsGenerated: 0,
       };
 
       // Count multi-page crawls from site_crawls table (30 days)
@@ -198,6 +202,13 @@ export function AnalyticsDashboard() {
         .from('gmb_locations')
         .select('*', { count: 'exact', head: true });
       newStats.gmbConnected = gmbCount || 0;
+
+      // Count contents generated (30 days)
+      const { count: contentsCount } = await supabase
+        .from('content_generation_logs')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo);
+      newStats.contentsGenerated = contentsCount || 0;
 
       setStats(newStats);
 
@@ -510,6 +521,13 @@ export function AnalyticsDashboard() {
           value={stats.cocoonChatSessions} 
           icon={Brain}
           description="Conversations IA Cocoon"
+        />
+        <StatCard 
+          title="Contenus générés" 
+          value={stats.contentsGenerated} 
+          icon={PenTool}
+          variant="success"
+          description="Pages Content Architect"
         />
         <StatCard 
           title="Fiches GMB" 

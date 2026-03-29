@@ -20,6 +20,7 @@ import {
   Gauge,
   Server,
   ChevronDown,
+  ImageIcon,
 } from 'lucide-react';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -72,6 +73,9 @@ interface TokenUsageStats {
   flyPlaywrightCalls: number;
   flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
+  imageApiCalls: number;
+  imageApiCostEur: number;
+  imageByProvider: Record<string, number>;
 }
 
 export function FinancesDashboard() {
@@ -102,6 +106,7 @@ export function FinancesDashboard() {
     dataforseoCalls: 0, openrouterCalls: 0, browserlessCalls: 0, firecrawlCalls: 0,
     spiderCalls: 0, spiderEstimatedCost: 0,
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
+    imageApiCalls: 0, imageApiCostEur: 0, imageByProvider: {},
   });
   const [allTimeTokenUsage, setAllTimeTokenUsage] = useState<TokenUsageStats | null>(null);
   const [allTimeRawEvents, setAllTimeRawEvents] = useState<{ created_at: string; cost: number }[]>([]);
@@ -201,6 +206,25 @@ export function FinancesDashboard() {
     const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
     const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
 
+    // Image API cost calculation
+    // imagen3 = Lovable AI gateway (free), flux = BFL API (~$0.04/image), ideogram = Ideogram API (~$0.08/image)
+    const IMAGE_COST_USD: Record<string, number> = { imagen3: 0, flux: 0.04, ideogram: 0.08 };
+    let imageApiCalls = 0;
+    let imageApiCostUsd = 0;
+    const imageByProvider: Record<string, number> = {};
+    tokenEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const fn = (data.function_name as string) || '';
+      if (fn === 'generate-image') {
+        const provider = (data.model as string) || 'unknown';
+        imageApiCalls++;
+        imageByProvider[provider] = (imageByProvider[provider] || 0) + 1;
+        imageApiCostUsd += IMAGE_COST_USD[provider] || 0;
+      }
+    });
+    const imageApiCostEur = imageApiCostUsd * 0.92;
+
     return {
       totalTokens, promptTokens, completionTokens,
       callCount: tokenEvents.length, byFunction, byModel,
@@ -208,6 +232,7 @@ export function FinancesDashboard() {
       dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
       spiderCalls, spiderEstimatedCost,
       flyPlaywrightCalls, flyEstimatedCost, byApiService,
+      imageApiCalls, imageApiCostEur, imageByProvider,
     };
   }, []);
 
@@ -446,7 +471,7 @@ export function FinancesDashboard() {
       </Card>
 
       {/* Business Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-emerald-500/30">
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground">Abonnés payants</CardTitle>
@@ -496,6 +521,25 @@ export function FinancesDashboard() {
             </CardContent>
           </Card>
         )}
+        <Card className="border-pink-500/30">
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Dépenses Images IA</CardTitle>
+            <ImageIcon className="h-3.5 w-3.5 text-pink-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">
+              {(allTimeTokenUsage?.imageApiCostEur ?? tokenUsage.imageApiCostEur).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {(allTimeTokenUsage?.imageApiCalls ?? tokenUsage.imageApiCalls).toLocaleString('fr-FR')} images
+              {(() => {
+                const providers = allTimeTokenUsage?.imageByProvider ?? tokenUsage.imageByProvider;
+                const parts = Object.entries(providers).map(([p, c]) => `${p}: ${c}`);
+                return parts.length > 0 ? ` (${parts.join(', ')})` : '';
+              })()}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Spending Evolution Chart */}
