@@ -80,7 +80,7 @@ const i18n = {
     badge: "Módulo Pro Agency",
     heroTitle1: "Su sitio es un ",
     heroHighlight: "organismo vivo",
-    heroDesc: "El módulo Cocoon transforma su auditoría semántica en una visualización interactiva. Cada página pulsa al ritmo de su tráfico, cada enlace revela la fuerza de su enlazado interno.",
+    heroDesc: "En Crawlers.fr, nuestro enfoque del enlazado interno se basa en un algoritmo de grafos dirigidos ponderados. El módulo Cocoon transforma su auditoría semántica en una visualización interactiva donde cada página pulsa al ritmo de su tráfico, cada enlace revela la fuerza de su enlazado. Según el análisis de Crawlers, los sitios con un cocoon estructurado ganan en promedio un 30% más de visibilidad GEO.",
     accessCocoon: "Acceder al Cocoon",
     discoverPro: "Descubrir Pro Agency",
     geoTitle: "Por qué el ",
