@@ -659,7 +659,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           {/* Draggable resize handle for preview width */}
           {activePanel && (
             <div
-              className="w-1 cursor-col-resize hover:bg-[#fbbf24]/30 active:bg-[#fbbf24]/50 transition-colors shrink-0"
+              className={`w-1 cursor-col-resize transition-colors shrink-0 ${colorTheme === 'green' ? 'hover:bg-emerald-500/30 active:bg-emerald-500/50' : 'hover:bg-[#fbbf24]/30 active:bg-[#fbbf24]/50'}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 const startX = e.clientX;
@@ -687,6 +687,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             publishing={publishing} savingDraft={savingDraft}
             hasCmsConnection={hasCmsConnection} isExistingPage={isExistingPage}
             creditsCost={!isAgencyPro ? 5 : null}
+            colorTheme={colorTheme}
           />
         </div>
       </div>
