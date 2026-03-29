@@ -770,27 +770,13 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
             </div>
 
-            <div className="shrink-0 p-4 border-t border-white/10 space-y-2">
-              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
-                {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{t3(language, 'Génération…', 'Generating…', 'Generando…')}</> : <><Send className="w-3.5 h-3.5 mr-2" />{t3(language, 'Générer la page', 'Generate page', 'Generar página')}</>}
-              </Button>
-              {result && (
-                <div className="flex gap-2">
-                  <Button onClick={handleResetEdits} variant="ghost" size="sm" className="flex-1 text-white/40 hover:text-white/60 text-[10px] h-7">
-                    <RotateCcw className="w-3 h-3 mr-1" />{t3(language, 'Réinitialiser', 'Reset', 'Reiniciar')}
-                  </Button>
-                  <Button onClick={handleGenerate} disabled={loading} variant="ghost" size="sm" className="flex-1 text-[#fbbf24]/60 hover:text-[#fbbf24] text-[10px] h-7">
-                    <Send className="w-3 h-3 mr-1" />{t3(language, 'Régénérer', 'Regenerate', 'Regenerar')}
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Center column — H1/H2 fields + preview */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* H1/H2 fields — always visible at top of column 2 */}
-            <div className="shrink-0 p-4 pb-2 space-y-3 border-b border-white/10">
+
+          {/* Column 2 — H1/H2/Keywords structure fields */}
+          <div className="w-[300px] shrink-0 border-r border-white/10 flex flex-col overflow-hidden">
+            <ScrollArea className="flex-1">
+            <div className="p-4 pb-2 space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider">H1</label>
                 <Input
@@ -890,7 +876,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 )}
               </div>
             </div>
+            </ScrollArea>
 
+            {/* Sticky footer: Générer la page */}
+            <div className="shrink-0 p-3 border-t border-white/10">
+              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
+                {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{t3(language, 'Génération…', 'Generating…', 'Generando…')}</> : <><Send className="w-3.5 h-3.5 mr-2" />{t3(language, 'Générer la page', 'Generate page', 'Generar página')}</>}
+              </Button>
+            </div>
+          </div>
+
+          {/* Column 3 — Preview (exclusively) */}
+          <div className="flex-1 flex flex-col overflow-hidden">
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                 <span className="text-xs text-white/60">Aperçu de la structure</span>
