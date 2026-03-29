@@ -440,7 +440,12 @@ Deno.serve(async (req: Request) => {
             console.log(`[AutopilotEngine] Injected ${routedCmsActions.all.length} routed CMS actions into execute phase for ${site.domain}`);
           } else if (!hasCmsActions) {
             // ═══ FALLBACK: Build CMS actions from pending recommendations ═══
-            console.log(`[AutopilotEngine] No CMS actions available for ${site.domain}, building fallback from recommendations`);
+            // IMPORTANT: Only build META corrections (update-page) from recommendations.
+            // Content creation (create-post) is NEVER done in fallback because recommendations
+            // contain SEO strategy descriptions, NOT actual articles about the site's business topic.
+            // Editorial content must ONLY be created via prescribe V2 dual-prompt engine which
+            // has the full site identity context (sector, products, audience) to produce on-topic articles.
+            console.log(`[AutopilotEngine] No CMS actions available for ${site.domain}, building fallback META-ONLY from recommendations`);
             try {
               const { data: recos } = await supabase
                 .from('audit_recommendations_registry')
@@ -456,7 +461,6 @@ Deno.serve(async (req: Request) => {
                 for (const reco of recos) {
                   const cat = (reco.category || '').toLowerCase();
                   const isMeta = ['seo', 'meta_tags', 'technique', 'technical'].includes(cat) || reco.fix_type === 'meta';
-                  const isContent = ['contenu', 'content', 'content_gap', 'thin_content', 'eeat', 'autorité', 'identité', 'social'].includes(cat);
 
                   if (isMeta) {
                     const pageKey = normalizePageKey(reco.url) || 'homepage';
@@ -468,32 +472,17 @@ Deno.serve(async (req: Request) => {
                         ...(reco.fix_data?.meta_title ? { meta_title: reco.fix_data.meta_title } : {}),
                       },
                     });
-                  } else if (isContent) {
-                    const slug = (reco.title || 'article')
-                      .toLowerCase()
-                      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                      .replace(/[^a-z0-9]+/g, '-')
-                      .replace(/^-|-$/g, '')
-                      .slice(0, 60);
-                    fallbackCmsActions.push({
-                      action: 'create-post',
-                      body: {
-                        title: reco.title,
-                        slug,
-                        content: `<p>${reco.description || reco.prompt_summary || ''}</p>`,
-                        excerpt: (reco.description || '').slice(0, 200),
-                        status: 'draft',
-                        meta_description: (reco.description || '').slice(0, 155),
-                        author_name: 'Équipe IKtracker',
-                        category: 'Guides',
-                      },
-                    });
                   }
+                  // Content recommendations (contenu, content_gap, eeat, autorité, identité, social)
+                  // are SKIPPED here. They should be handled by prescribe V2 which has the full
+                  // site identity context to generate on-topic content, not SEO strategy articles.
                 }
 
                 if (fallbackCmsActions.length > 0) {
                   decision.action.payload.cms_actions = fallbackCmsActions;
-                  console.log(`[AutopilotEngine] Fallback: built ${fallbackCmsActions.length} CMS actions from recommendations for ${site.domain}`);
+                  console.log(`[AutopilotEngine] Fallback: built ${fallbackCmsActions.length} META-ONLY CMS actions from recommendations for ${site.domain}`);
+                } else {
+                  console.log(`[AutopilotEngine] Fallback: no META recommendations found for ${site.domain}, skipping content creation (requires prescribe V2)`);
                 }
               }
             } catch (fallbackErr) {
