@@ -96,7 +96,7 @@ const i18n = {
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La première plateforme française SEO + GEO full-stack',
-    trustText: "Crawlers.fr est la première plateforme française à couvrir l'intégralité de la boucle SEO et GEO : audit technique, correctif généré automatiquement, déploiement en 30 secondes, et mesure d'impact réelle à T+30, T+60 et T+90 jours.\n\nDeux assistants IA spécialisés vous accompagnent à chaque étape : le Stratège Cocoon pour l'analyse de votre graphe sémantique 3D, et Félix pour exploiter toute la profondeur de votre data SEO et GEO. La gestion de votre fiche Google Business Profile est intégrée nativement.",
+    trustText: "Crawlers.fr est la première plateforme française à couvrir l'intégralité de la boucle SEO et GEO : audit technique, correctif généré automatiquement, déploiement en 30 secondes, et mesure d'impact réelle à T+30, T+60 et T+90 jours.\n\nDeux assistants IA spécialisés vous accompagnent à chaque étape : le Stratège Cocoon pour l'analyse de votre graphe sémantique 3D, et Félix pour exploiter toute la profondeur de votre data SEO et GEO. La gestion de votre fiche Google Business (GBP/GMB) est intégrée nativement.",
     trustDoubt: "Des doutes ? Les fonctions back-end de Crawlers.fr",
     trustDoubtLine2: "sont consultables sur demande.",
     trustApiTitle: 'Intégrations natives',
@@ -139,7 +139,7 @@ const i18n = {
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'AI-assisted content creation', row7: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: 'The first French full-stack SEO + GEO platform',
-    trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business Profile management is natively integrated.',
+    trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business (GBP/GMB) management is natively integrated.',
     trustDoubt: 'Any doubts? Crawlers.fr back-end functions',
     trustDoubtLine2: 'are available for review on request.',
     trustApiTitle: 'Native integrations',
@@ -182,7 +182,7 @@ const i18n = {
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Creación de contenido asistida', row7: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
     trustTitle: 'La primera plataforma francesa full-stack SEO + GEO',
-    trustText: 'Crawlers.fr es la primera plataforma francesa en cubrir todo el ciclo SEO y GEO: auditoría técnica, corrección generada automáticamente, despliegue en 30 segundos y medición de impacto real a T+30, T+60 y T+90 días.\n\nDos asistentes IA especializados te acompañan en cada etapa: el Estratega Cocoon para el análisis de tu grafo semántico 3D, y el Asistente Crawlers para aprovechar toda la profundidad de tus datos SEO y GEO. La gestión de Google Business Profile está integrada nativamente.',
+    trustText: 'Crawlers.fr es la primera plataforma francesa en cubrir todo el ciclo SEO y GEO: auditoría técnica, corrección generada automáticamente, despliegue en 30 segundos y medición de impacto real a T+30, T+60 y T+90 días.\n\nDos asistentes IA especializados te acompañan en cada etapa: el Estratega Cocoon para el análisis de tu grafo semántico 3D, y el Asistente Crawlers para aprovechar toda la profundidad de tus datos SEO y GEO. La gestión de Google Business (GBP/GMB) está integrada nativamente.',
     trustDoubt: '¿Dudas? Las funciones back-end de Crawlers.fr',
     trustDoubtLine2: 'son consultables bajo solicitud.',
     trustApiTitle: 'Integraciones nativas',
@@ -364,7 +364,7 @@ const competitorFeatures = [
   { key: 'code_correctif', fr: 'Code correctif dynamique', en: 'Dynamic corrective code', es: 'Código correctivo dinámico' },
   { key: 'content_creation', fr: 'Création de contenu assistée', en: 'AI-assisted content creation', es: 'Creación de contenido asistida' },
   { key: 'maintenance', fr: 'Maintenance SEO & GEO automatisée', en: 'Automated SEO & GEO maintenance', es: 'Mantenimiento SEO & GEO automatizado' },
-  { key: 'gmb', fr: 'Gestion Google Business Profile', en: 'Google Business Profile management', es: 'Gestión Google Business Profile' },
+  { key: 'gmb', fr: 'Gestion Google Business (GBP/GMB)', en: 'Google Business (GBP/GMB) management', es: 'Gestión Google Business (GBP/GMB)' },
   { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
 ];
 
@@ -461,7 +461,7 @@ HybridSection.displayName = 'HybridSection';
 const googleApis = [
   'Google Search Console',
   'Google Analytics 4',
-  'Google Business Profile',
+  'Google Business (GBP/GMB)',
   'Google Ads',
   'Google PageSpeed Insights',
 ];
