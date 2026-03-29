@@ -834,6 +834,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
           {/* Column 2 — H1/H2/Keywords structure fields */}
           <div className="w-[300px] shrink-0 border-r border-white/10 flex flex-col overflow-hidden">
+            {strategistLoading && !strategistDone && (
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-[#fbbf24]/20 bg-[#fbbf24]/5">
+                <Loader2 className="w-3 h-3 animate-spin text-[#fbbf24]" />
+                <span className="text-[10px] text-[#fbbf24]/70">{t3(language, 'Analyse stratégique en cours…', 'Strategic analysis in progress…', 'Análisis estratégico en curso…')}</span>
+              </div>
+            )}
             <ScrollArea className="flex-1">
             <div className="p-4 pb-2 space-y-3">
               <div className="space-y-1.5">
