@@ -752,7 +752,7 @@ export function MyActionPlans() {
                         isArchived={isArchived}
                         onToggle={toggleTask}
                         onOpenArchitect={() => handleOpenArchitect(plan, task)}
-                        onOpenContentArchitect={() => handleOpenContentArchitect(plan)}
+                        onOpenContentArchitect={() => handleOpenContentArchitect(plan, task)}
                         getPriorityColor={getPriorityColor}
                         getPriorityLabel={getPriorityLabel}
                         architectLabel={t.architect}
