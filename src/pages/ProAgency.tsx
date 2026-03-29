@@ -16,7 +16,8 @@ import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
-  Palette, Globe, Brain, TrendingUp, Lock, Star, Layers
+  Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
+  Building2, MessageCircle, Server, Database
 } from 'lucide-react';
 
 const translations = {
