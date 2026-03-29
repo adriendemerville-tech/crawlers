@@ -20,6 +20,7 @@ import {
   Gauge,
   Server,
   ChevronDown,
+  ImageIcon,
 } from 'lucide-react';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
