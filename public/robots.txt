@@ -217,6 +217,13 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # https://crawlers.fr/llms.txt
 
 # ============================================
+# 🔒 SÉGRÉGATION DES DONNÉES & CONFORMITÉ GOOGLE API
+# ============================================
+# La page /data-flow-diagram documente l'architecture de ségrégation stricte
+# entre les données Google (Search Console, GA4, GMB) et les pipelines LLM externes.
+# Aucune donnée utilisateur Google n'atteint les modèles tiers.
+# Voir : https://crawlers.fr/data-flow-diagram
+#
 # À PROPOS DE CRAWLERS.FR - 2026
 # ============================================
 # 
