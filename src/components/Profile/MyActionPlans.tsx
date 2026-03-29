@@ -942,10 +942,14 @@ export function MyActionPlans() {
             onClose={() => {
               setIsContentArchitectOpen(false);
               setContentArchitectPlan(null);
+              setContentArchitectDraft(null);
             }}
             nodes={[]}
             domain={(() => { try { return new URL(contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`).hostname.replace('www.', ''); } catch { return contentArchitectPlan.url; } })()}
-            trackedSiteId=""
+            trackedSiteId={contentArchitectTrackedSiteId}
+            draftData={contentArchitectDraft}
+            prefillUrl={contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`}
+            isExistingPage={!!contentArchitectDraft?.keyword}
           />
         </Suspense>
       )}
