@@ -678,6 +678,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/aide"/>
   </url>
 
+  <!-- Data Flow Diagram — Ségrégation des données, conformité Google API -->
+  <url>
+    <loc>https://crawlers.fr/data-flow-diagram</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/data-flow-diagram"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/data-flow-diagram?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/data-flow-diagram?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/data-flow-diagram"/>
+  </url>
+
   <!-- Reset Password -->
   <url>
     <loc>https://crawlers.fr/reset-password</loc>
