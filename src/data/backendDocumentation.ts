@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,21 +51,23 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  175 fonctions serverless + 37 modules partagés         │
+│  190+ fonctions serverless + 37 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
-│  - Cocoon diagnostics (4 axes) + Stratège                │
-│  - Content Architect + CMS publish                       │
-│  - CMS bridges (WordPress, Drupal, Shopify, Wix)         │
+│  - Image generation (Imagen 3, FLUX, Ideogram routing)   │
+│  - Cocoon diagnostics (5 axes) + Stratège                │
+│  - Content Architect + CMS publish + crédits             │
+│  - CMS bridges (WordPress, Drupal, Shopify, Wix, Odoo)   │
 │  - Google integrations (Ads, GSC, GA4, GTM, GMB)         │
-│  - Anomaly detection + notification system               │
+│  - Anomaly detection + Drop Detector + notification      │
+│  - Quiz SEO Félix (hebdo, notifications, sync)           │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  149 tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  149+ tables avec RLS, fonctions PL/pgSQL, triggers     │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +79,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 175 fonctions serverless + 37 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 190+ fonctions serverless + 37 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -317,7 +319,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (175 fonctions)
+# API — Edge Functions (190+ fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
