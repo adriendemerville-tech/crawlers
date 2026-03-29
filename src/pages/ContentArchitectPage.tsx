@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
