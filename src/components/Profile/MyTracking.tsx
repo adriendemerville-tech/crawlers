@@ -647,7 +647,7 @@ export function MyTracking() {
                         <LLMVisibilityDashboard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
 
                         {/* LLM Depth */}
-                        <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} key={h.llmBenchmarkRefreshKey} />
+                        <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
 
                         {/* IAS */}
                         <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
