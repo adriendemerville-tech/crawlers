@@ -659,7 +659,7 @@ Deno.serve(async (req) => {
       // If native push failed, fallback to widget.js
       if (!result.success) {
         console.log(`[cms-push-code] Native push to ${cmsConn.platform} failed, falling back to widget.js`);
-        const fallbackResult = await fallbackToWidgetRules(supabase, site.id, user.id, input.code_minified || code, label);
+        const fallbackResult = await fallbackToWidgetRules(supabase, site.id, effectiveUserId, input.code_minified || code, label);
         result = {
           ...fallbackResult,
           detail: `${cmsConn.platform} native push failed (${result.detail}). ${fallbackResult.detail}`,
