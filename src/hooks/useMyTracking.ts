@@ -60,7 +60,7 @@ export type GscGranularity = 'daily' | 'weekly' | 'monthly';
 export function useMyTracking() {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
-  const { isAgencyPro } = useCredits();
+  const { isAgencyPro, planType } = useCredits();
   const { isAdmin } = useAdmin();
   const { isDemoMode } = useDemoMode();
   const [searchParams, setSearchParams] = useSearchParams();
