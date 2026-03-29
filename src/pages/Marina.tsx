@@ -12,6 +12,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
@@ -29,8 +30,11 @@ export default function Marina() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
   const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const [reportHtml, setReportHtml] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   // Poll job progress via fetch
 
@@ -271,12 +275,31 @@ export default function Marina() {
                     <CardContent className="p-6 text-center">
                       <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
                       <h3 className="font-semibold text-foreground mb-2">Rapport prêt !</h3>
-                      <a href={reportUrl} target="_blank" rel="noopener noreferrer">
-                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                          <FileText className="w-4 h-4 mr-2" /> Consulter le rapport
-                          <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                        </Button>
-                      </a>
+                      <Button
+                        onClick={async () => {
+                          if (reportHtml) {
+                            setShowReportModal(true);
+                            return;
+                          }
+                          setLoadingReport(true);
+                          try {
+                            const resp = await fetch(reportUrl);
+                            const html = await resp.text();
+                            setReportHtml(html);
+                            setShowReportModal(true);
+                          } catch {
+                            // Fallback: open in new tab
+                            window.open(reportUrl, '_blank');
+                          } finally {
+                            setLoadingReport(false);
+                          }
+                        }}
+                        disabled={loadingReport}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                      >
+                        {loadingReport ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                        Consulter le rapport
+                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -524,6 +547,15 @@ async function generateReport(url) {
       </main>
 
       <Footer />
+
+      {reportHtml && (
+        <MarinaReportPreviewModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          htmlContent={reportHtml}
+          domain={url.trim().replace(/^https?:\/\//, '').split('/')[0]}
+        />
+      )}
     </>
   );
 }
