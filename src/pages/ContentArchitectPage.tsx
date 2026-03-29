@@ -337,7 +337,7 @@ const t = {
       badge: 'Content Architect',
       title: 'Crea contenido SEO & GEO',
       titleAccent: 'en segundos',
-      subtitle: 'Interfaz estilo Canva para generar páginas optimizadas — contenido, imágenes IA multi-motor, datos estructurados — y publicarlas en tu CMS. Disponible desde 5 créditos.',
+      subtitle: 'En Crawlers.fr, nuestro enfoque combina inteligencia artificial y experiencia SEO en una interfaz estilo Canva. Content Architect genera páginas optimizadas E-E-A-T — contenido, imágenes IA multi-motor (Imagen 3, FLUX, Ideogram), datos estructurados schema.org — y las publica en 7 CMS con un clic. Disponible desde 5 créditos o ilimitado con Pro Agency.',
       cta: 'Comenzar gratis',
       ctaSecondary: 'Ver planes',
     },
