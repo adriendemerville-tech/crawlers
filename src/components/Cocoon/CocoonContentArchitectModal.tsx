@@ -488,6 +488,15 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       setResult(resData);
       setOriginalResult(JSON.parse(JSON.stringify(resData)));
 
+      // Populate H1/H2 fields from result
+      if (resData?.content_structure?.recommended_h1) {
+        setH1Field(resData.content_structure.recommended_h1);
+      }
+      const sections = resData?.content_structure?.sections || [];
+      if (sections.length > 0) {
+        setH2Fields(sections.map((s: any) => s.title || '').filter(Boolean));
+      }
+
       // Auto-update slug from generated H1 if slug was auto-generated
       if (!isExistingPage && !autoFilled.has('slug_manual') && resData?.content_structure?.recommended_h1) {
         const newSlug = generateSlugFromKeyword(resData.content_structure.recommended_h1);
