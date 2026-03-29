@@ -1,6 +1,5 @@
 import { PenLine } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
-import { Textarea } from '@/components/ui/textarea';
 
 interface ContentArchitectPromptPanelProps {
   trackedSiteId?: string;
