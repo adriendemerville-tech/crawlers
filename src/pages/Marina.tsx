@@ -332,6 +332,8 @@ const translations = {
 export default function Marina() {
   const { user } = useAuth();
   const { balance: credits, refreshBalance: refreshCredits, useCredit } = useCredits();
+  const { language } = useLanguage();
+  const t = translations[language as keyof typeof translations] || translations.fr;
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
