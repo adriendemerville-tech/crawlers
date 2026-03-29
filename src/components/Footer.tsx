@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network } from 'lucide-react';
+import { memo, useState } from 'react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -228,42 +228,56 @@ function FooterComponent() {
 
   const allArticles = blogArticles;
 
+  const { pathname } = useLocation();
+  const isPublicPage = pathname === '/' || pathname.startsWith('/blog') || pathname.startsWith('/landing') || pathname.startsWith('/pro-agency') || pathname.startsWith('/audit-expert') || pathname === '/pricing' || pathname === '/about';
+  const [resourcesOpen, setResourcesOpen] = useState(isPublicPage);
+
   return (
     <>
       {allArticles.length > 0 && (
         <section className="border-t border-border bg-muted/20">
           <div className="mx-auto max-w-7xl px-4 py-8">
-            <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => setResourcesOpen(!resourcesOpen)}
+              className="flex items-center gap-2 mb-4 w-full text-left group"
+            >
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Ressources & Guides', 'Resources & Guides', 'Recursos y Guías')}
               </h3>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {allArticles.map((article) => (
-                <a
-                  key={article.slug}
-                  href={`/blog/${article.slug}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="group flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                >
-                  <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2">
-                    {article.title[language] || article.title.fr}
-                  </span>
-                </a>
-              ))}
-            </div>
-            <div className="mt-4 text-center">
-              <SmartLink
-                to="/blog"
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-              >
-                {t3(language, 'Voir tous les articles', 'View all articles', 'Ver todos los artículos')}
-                <span aria-hidden="true">→</span>
-              </SmartLink>
-            </div>
+              {!isPublicPage && (
+                <ChevronUp className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ml-auto ${resourcesOpen ? '' : 'rotate-180'}`} />
+              )}
+            </button>
+            {resourcesOpen && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {allArticles.map((article) => (
+                    <a
+                      key={article.slug}
+                      href={`/blog/${article.slug}`}
+                      target="_blank"
+                      rel="noopener"
+                      className="group flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2">
+                        {article.title[language] || article.title.fr}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+                <div className="mt-4 text-center">
+                  <SmartLink
+                    to="/blog"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    {t3(language, 'Voir tous les articles', 'View all articles', 'Ver todos los artículos')}
+                    <span aria-hidden="true">→</span>
+                  </SmartLink>
+                </div>
+              </>
+            )}
           </div>
         </section>
       )}
