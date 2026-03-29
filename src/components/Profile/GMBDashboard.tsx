@@ -694,7 +694,7 @@ function SortableLocationItem({ loc, isSelected, onSelect }: {
 
 // ─── Main Component ────────────────────────────────────────────
 
-export function GMBDashboard() {
+export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [activeTab, setActiveTab] = useState('stats');
@@ -721,7 +721,18 @@ export function GMBDashboard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isGated ? 'relative' : ''}`}>
+      {isGated && (
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <div className="sticky top-4 flex justify-center pointer-events-auto">
+            <Badge className="bg-violet-600/90 text-white gap-1.5 px-4 py-1.5 text-sm shadow-lg backdrop-blur-sm">
+              <Store className="h-4 w-4" />
+              {language === 'fr' ? 'Données simulées — Abonnez-vous pour connecter votre compte Google Business' 
+                : 'Simulated data — Subscribe to connect your Google Business account'}
+            </Badge>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-4">
         {/* Location sidebar — only shown when 2+ locations */}
@@ -744,6 +755,7 @@ export function GMBDashboard() {
               variant="ghost"
               size="sm"
               className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
+              disabled={isGated}
               onClick={() => {
                 const msg = (language === 'fr')
                   ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
