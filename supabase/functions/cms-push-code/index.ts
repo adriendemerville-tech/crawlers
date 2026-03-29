@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
