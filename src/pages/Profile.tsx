@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } 
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,7 @@ const MyReportsTab = lazy(() => import('@/components/Profile/MyReportsTab').then
 const BundleOptionTab = lazy(() => import('@/components/Profile/BundleOptionTab').then(m => ({ default: m.BundleOptionTab })));
 const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
 const MarinaConsoleTab = lazy(() => import('@/components/Profile/MarinaConsoleTab').then(m => ({ default: m.MarinaConsoleTab })));
+const SeaSeoBridgeTab = lazy(() => import('@/components/Profile/SeaSeoBridgeTab').then(m => ({ default: m.SeaSeoBridgeTab })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
@@ -229,6 +230,12 @@ function ProfileContent() {
                   <Anchor className="h-4 w-4" />
                   <span className="hidden sm:inline">Marina</span>
                 </TabsTrigger>
+                {isProUser && (
+                  <TabsTrigger value="sea-seo" className="flex-1 gap-2">
+                    <Target className="h-4 w-4" />
+                    <span className="hidden sm:inline">SEA→SEO</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
                   value="gmb"
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
@@ -321,6 +328,12 @@ function ProfileContent() {
                 <TabsContent value="marina">
                   <MarinaConsoleTab />
                 </TabsContent>
+
+                {isProUser && (
+                  <TabsContent value="sea-seo">
+                    <SeaSeoBridgeTab />
+                  </TabsContent>
+                )}
 
                 <TabsContent value="gmb">
                   <GMBDashboard isGated={!isProUser} />
