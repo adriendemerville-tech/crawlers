@@ -45,17 +45,9 @@ export function EnterpriseQuiz({ userId, onComplete }: EnterpriseQuizProps) {
   const handleSubmit = async (finalAnswers: Record<string, string>) => {
     setSubmitting(true);
     try {
-      // Save to support_messages as admin-visible notification
       const summary = QUESTIONS.map(q => `**${q.label}** : ${finalAnswers[q.id] || '—'}`).join('\n');
 
-      await supabase.from('support_messages').insert({
-        conversation_id: null as any,
-        content: `🏢 **Demande Enterprise**\n\n${summary}`,
-        is_admin: false,
-        sender_name: finalAnswers.name || 'Prospect Enterprise',
-      } as any);
-
-      // Also insert into analytics_events for tracking
+      // Save to analytics_events for admin tracking
       await supabase.from('analytics_events').insert({
         event_type: 'enterprise_contact',
         user_id: userId || null,
