@@ -636,8 +636,44 @@ async function prescribeWithDualPrompts(context: {
   const techItems = items.filter((it: any) => it.tier <= 3);
   const contentItems = items.filter((it: any) => it.tier >= 4);
 
+  // ── Parse client_targets for readable injection ──
+  let parsedTargetsPrimary = '';
+  let parsedTargetsSecondary = '';
+  if (context.siteInfo?.client_targets) {
+    try {
+      const ct = typeof context.siteInfo.client_targets === 'string'
+        ? JSON.parse(context.siteInfo.client_targets)
+        : context.siteInfo.client_targets;
+      if (ct?.primary?.[0]) {
+        const p = ct.primary[0];
+        const market = Object.keys(p).find(k => k !== 'confidence' && k !== 'evidence' && k !== 'geo_country' && k !== 'geo_scope' && k !== 'intent' && k !== 'market' && k !== 'maturity');
+        parsedTargetsPrimary = p.market ? `${p.market}` : '';
+        if (market && p[market]) {
+          const details = p[market];
+          parsedTargetsPrimary += details.age_range ? ` (${details.age_range})` : '';
+          parsedTargetsPrimary += details.csp ? ` — ${details.csp}` : '';
+          parsedTargetsPrimary += details.segment ? ` — ${details.segment}` : '';
+        }
+        if (p.intent) parsedTargetsPrimary += ` | Intent: ${p.intent}`;
+      }
+      if (ct?.secondary?.[0]) {
+        const s = ct.secondary[0];
+        const market = Object.keys(s).find(k => k !== 'confidence' && k !== 'evidence' && k !== 'geo_country' && k !== 'geo_scope' && k !== 'intent' && k !== 'market' && k !== 'maturity');
+        parsedTargetsSecondary = s.market ? `${s.market}` : '';
+        if (market && s[market]) {
+          const details = s[market];
+          parsedTargetsSecondary += details.segment ? ` — ${details.segment}` : '';
+          parsedTargetsSecondary += details.role ? ` (${details.role})` : '';
+        }
+        if (s.intent) parsedTargetsSecondary += ` | Intent: ${s.intent}`;
+      }
+    } catch (e) {
+      console.warn('[Parménion] Failed to parse client_targets:', e);
+    }
+  }
+
   const siteCtx = context.siteInfo
-    ? `Site: ${context.siteInfo.site_name || context.domain} | Secteur: ${context.siteInfo.market_sector || '?'} | Cibles: ${context.siteInfo.client_targets || '?'}`
+    ? `Site: ${context.siteInfo.site_name || context.domain} | Secteur: ${context.siteInfo.market_sector || '?'} | Audience: ${context.siteInfo.target_audience || '?'}`
     : `Site: ${context.domain}`;
   const kwCtx = context.siteKeywords.length > 0
     ? `Mots-clés du site: ${context.siteKeywords.slice(0, 30).join(', ')}`
