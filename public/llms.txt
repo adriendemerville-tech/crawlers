@@ -262,6 +262,8 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int√
 - **Matrice d'Audit** : https://crawlers.fr/matrice
 - **Int√©gration GTM** : https://crawlers.fr/integration-gtm
 - **Pro Agency** : https://crawlers.fr/pro-agency
+- **Marina** : https://crawlers.fr/marina
+- **Content Architect** : https://crawlers.fr/content-architect
 - **Tarifs** : https://crawlers.fr/tarifs
 - **Serveur MCP** : https://crawlers.fr/functions/v1/mcp-server
 - **Blog** : https://crawlers.fr/blog
