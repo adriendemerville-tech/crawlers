@@ -123,6 +123,31 @@ async function pushToWordPress(conn: CmsConnection, input: PushDraftInput): Prom
   const headers = wpAuthHeaders(conn);
   const endpoint = input.content_type === 'page' ? 'pages' : 'posts';
 
+  // Anti-duplicate: check if a post/page with this slug already exists
+  if (input.slug) {
+    try {
+      const checkResp = await fetch(`${baseUrl}/wp-json/wp/v2/${endpoint}?slug=${encodeURIComponent(input.slug)}&status=any`, {
+        headers,
+        signal: AbortSignal.timeout(10000),
+      });
+      if (checkResp.ok) {
+        const existing = await checkResp.json();
+        if (Array.isArray(existing) && existing.length > 0) {
+          console.log(`[cms-push-draft] WordPress ${endpoint} with slug "${input.slug}" already exists (id: ${existing[0].id}), skipping creation`);
+          return {
+            success: true,
+            platform: 'wordpress',
+            cms_id: String(existing[0].id),
+            url: existing[0].link,
+            detail: `Already exists (id: ${existing[0].id})`,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn(`[cms-push-draft] Slug check failed, proceeding with creation:`, e);
+    }
+  }
+
   const payload: Record<string, unknown> = {
     title: input.title,
     content: input.body,
