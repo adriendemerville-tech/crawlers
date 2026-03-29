@@ -101,7 +101,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   }, [isOpen, trackedSiteId]);
 
   // Form fields
-  const [url, setUrl] = useState('');
+  const [directory, setDirectory] = useState('');
+  const [slug, setSlug] = useState('');
   const [keyword, setKeyword] = useState('');
   const [pageType, setPageType] = useState('article');
   const [length, setLength] = useState('medium');
@@ -110,6 +111,80 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [photoUrl, setPhotoUrl] = useState('');
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
+  const [directories, setDirectories] = useState<{ path: string; label: string; category: string | null }[]>([]);
+
+  // Compute full URL from domain + directory + slug
+  const url = useMemo(() => {
+    if (!domain) return '';
+    const base = `https://${domain}`;
+    const dir = directory && directory !== '/' ? directory : '';
+    const s = slug ? `/${slug}` : '';
+    return `${base}${dir}${s}`;
+  }, [domain, directory, slug]);
+
+  // Helper to set url (for backward compat with prefillUrl etc.)
+  const setUrl = useCallback((newUrl: string) => {
+    try {
+      const u = new URL(newUrl);
+      const pathParts = u.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+      if (pathParts.length >= 2) {
+        setDirectory('/' + pathParts.slice(0, -1).join('/'));
+        setSlug(pathParts[pathParts.length - 1]);
+      } else if (pathParts.length === 1) {
+        setDirectory('/');
+        setSlug(pathParts[0]);
+      } else {
+        setDirectory('/');
+        setSlug('');
+      }
+    } catch {
+      // Not a valid URL, ignore
+    }
+  }, []);
+
+  // Load directories from site_taxonomy
+  useEffect(() => {
+    if (!trackedSiteId || !isOpen) return;
+    supabase
+      .from('site_taxonomy')
+      .select('path_pattern, label, category')
+      .eq('tracked_site_id', trackedSiteId)
+      .order('page_count', { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const dirs = data.map(d => ({
+            path: d.path_pattern.endsWith('/') ? d.path_pattern.slice(0, -1) : d.path_pattern,
+            label: d.label,
+            category: d.category,
+          }));
+          // Add root if not present
+          if (!dirs.some(d => d.path === '' || d.path === '/')) {
+            dirs.unshift({ path: '/', label: 'Racine', category: null });
+          }
+          setDirectories(dirs);
+        } else {
+          // Fallback default directories
+          setDirectories([
+            { path: '/', label: 'Racine', category: null },
+            { path: '/blog', label: 'Blog', category: 'blog' },
+            { path: '/produits', label: 'Produits', category: 'product' },
+          ]);
+        }
+      });
+  }, [trackedSiteId, isOpen]);
+
+  // Generate slug from keyword
+  const generateSlugFromKeyword = useCallback((kw: string): string => {
+    return kw
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 80);
+  }, []);
 
   // Track which fields were auto-filled (so we don't overwrite user edits)
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
