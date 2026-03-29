@@ -417,35 +417,26 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-[98vw] max-w-[1600px] h-[92vh] bg-[#0f0a1e] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-        {/* Header */}
+        {/* Header — compact, no publish here */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
           <div className="flex items-center gap-3">
-            <FileText className="w-4 h-4 text-[#fbbf24]" />
+            <FileText className="w-4 h-4 text-[#fbbf24] stroke-[1.5]" />
             <span className="text-sm font-semibold text-white">Content Architect</span>
             {result && (
               <div className="flex items-center gap-2 ml-3">
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Type className="w-2.5 h-2.5 mr-1" />H1: {counters.h1}</Badge>
+                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Type className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />H1: {counters.h1}</Badge>
                 <Badge variant="outline" className="text-[10px] border-white/20 text-white/60">H2: {counters.h2}</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Hash className="w-2.5 h-2.5 mr-1" />{counters.chars.toLocaleString()} car.</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Image className="w-2.5 h-2.5 mr-1" />{counters.medias}</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Link2 className="w-2.5 h-2.5 mr-1" />{counters.links}</Badge>
+                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Hash className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.chars.toLocaleString()} car.</Badge>
+                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Image className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.medias}</Badge>
+                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Link2 className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.links}</Badge>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {result && (
-              <Button onClick={handlePublish} disabled={publishing || !result} size="sm"
-                className={hasCmsConnection ? 'bg-emerald-500 hover:bg-emerald-600 text-white font-semibold h-7 text-xs' : 'bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 h-7 text-xs'}>
-                {publishing ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />Envoi…</> : hasCmsConnection ? <><Upload className="w-3 h-3 mr-1.5" />{isExistingPage ? 'Mettre à jour' : 'Publier'}{isEdited ? ' ✎' : ''}</> : <><Plug className="w-3 h-3 mr-1.5" />Connecter CMS</>}
-              </Button>
-            )}
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"><X className="w-4 h-4 text-white/50" /></button>
-          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"><X className="w-4 h-4 text-white/50" /></button>
         </div>
 
         {/* Body: Toolbar + Panel + Canvas */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Icon toolbar */}
           <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} />
 
           {/* Expandable panel */}
@@ -453,13 +444,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             <div className="w-[320px] shrink-0 border-r border-white/10 flex flex-col bg-[#0d0819] animate-in slide-in-from-left-2 duration-200">
               {activePanel === 'prompt' && (
                 <ContentArchitectPromptPanel
-                  trackedSiteId={trackedSiteId}
-                  pageType={pageType}
-                  prompt={prompt}
-                  setPrompt={setPrompt}
-                  domain={domain}
-                  url={url}
-                  setUrl={setUrl}
+                  trackedSiteId={trackedSiteId} pageType={pageType} prompt={prompt} setPrompt={setPrompt}
+                  domain={domain} url={url} setUrl={setUrl}
                   onSelectPreset={(preset, site) => {
                     if (preset.prompt_text) setPrompt(preset.prompt_text);
                     setPageType(preset.page_type === 'landing' ? 'landing' : preset.page_type === 'product' ? 'product' : 'article');
@@ -469,64 +455,46 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
               {activePanel === 'structure' && (
                 <ContentArchitectStructurePanel
-                  domain={domain || ''}
-                  directory={directory}
+                  domain={domain || ''} directory={directory}
                   setDirectory={(v) => { setDirectory(v); setAutoFilled(prev => new Set(prev).add('directory_manual')); }}
-                  directories={directories}
-                  slug={slug}
+                  directories={directories} slug={slug}
                   setSlug={(v) => { setSlug(v); setAutoFilled(prev => new Set(prev).add('slug_manual')); }}
-                  keyword={keyword}
-                  setKeyword={setKeyword}
-                  pageType={pageType}
+                  keyword={keyword} setKeyword={setKeyword} pageType={pageType}
                   setPageType={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}
-                  length={length}
-                  setLength={setLength}
-                  h1Field={h1Field}
-                  setH1Field={setH1Field}
-                  h2Fields={h2Fields}
-                  setH2Fields={setH2Fields}
-                  keywordTags={keywordTags}
-                  setKeywordTags={setKeywordTags}
-                  keywordCloudSuggestions={keywordCloudSuggestions}
-                  autoFilled={autoFilled}
-                  isExistingPage={isExistingPage}
-                  detectPageTypeFromDirectory={detectPageTypeFromDirectory}
-                  result={result}
-                  setResult={setResult}
-                  loading={loading}
-                  onGenerate={handleGenerate}
-                  strategistLoading={strategistLoading}
-                  strategistDone={strategistDone}
-                  language={language}
-                  pageTypes={PAGE_TYPES}
-                  lengths={LENGTHS}
+                  length={length} setLength={setLength} h1Field={h1Field} setH1Field={setH1Field}
+                  h2Fields={h2Fields} setH2Fields={setH2Fields} keywordTags={keywordTags} setKeywordTags={setKeywordTags}
+                  keywordCloudSuggestions={keywordCloudSuggestions} autoFilled={autoFilled} isExistingPage={isExistingPage}
+                  detectPageTypeFromDirectory={detectPageTypeFromDirectory} result={result} setResult={setResult}
+                  loading={loading} onGenerate={handleGenerate} strategistLoading={strategistLoading}
+                  strategistDone={strategistDone} language={language} pageTypes={PAGE_TYPES} lengths={LENGTHS}
                 />
+              )}
+              {activePanel === 'structured-data' && (
+                <ContentArchitectStructuredDataPanel result={result} setResult={setResult} />
               )}
               {activePanel === 'images' && (
                 <ContentArchitectImagePanel
-                  workflowStep={workflowStep}
-                  pageType={pageType}
-                  trackedSiteId={trackedSiteId}
-                  targetUrl={url}
-                  identityCard={identityCard}
-                  generatedImages={generatedImages}
-                  imageIterations={imageIterations}
+                  workflowStep={workflowStep} pageType={pageType} trackedSiteId={trackedSiteId} targetUrl={url}
+                  identityCard={identityCard} generatedImages={generatedImages} imageIterations={imageIterations}
                   onImageGenerated={(dataUri, style) => { setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]); setImageIterations(prev => prev + 1); }}
                   onImageRemoved={(index) => { setGeneratedImages(prev => prev.filter((_, i) => i !== index)); }}
                   onImagePlacement={(index, placement) => { setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img)); }}
                 />
               )}
+              {activePanel === 'draft' && (
+                <ContentArchitectDraftPanel
+                  domain={domain} trackedSiteId={trackedSiteId} result={result} keyword={keyword} url={url} pageType={pageType}
+                  onLoadDraft={applyDraft}
+                />
+              )}
+              {activePanel === 'library' && (
+                <ContentArchitectLibraryPanel trackedSiteId={trackedSiteId} domain={domain} />
+              )}
               {activePanel === 'options' && (
                 <ContentArchitectOptionsPanel
-                  competitorUrl={competitorUrl}
-                  setCompetitorUrl={setCompetitorUrl}
-                  ctaLink={ctaLink}
-                  setCtaLink={setCtaLink}
-                  photoUrl={photoUrl}
-                  setPhotoUrl={setPhotoUrl}
-                  tone={tone}
-                  setTone={setTone}
-                  autoFilled={autoFilled}
+                  competitorUrl={competitorUrl} setCompetitorUrl={setCompetitorUrl}
+                  ctaLink={ctaLink} setCtaLink={setCtaLink} photoUrl={photoUrl} setPhotoUrl={setPhotoUrl}
+                  tone={tone} setTone={setTone} autoFilled={autoFilled}
                 />
               )}
             </div>
@@ -534,16 +502,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
           {/* Canvas / Preview */}
           <ContentArchitectPreview
-            result={result}
-            setResult={setResult}
-            loading={loading}
-            url={url}
-            isEdited={isEdited}
-            onResetEdits={handleResetEdits}
-            showGuide={showGuide}
-            setShowGuide={setShowGuide}
-            language={language}
-            counters={counters}
+            result={result} setResult={setResult} loading={loading} url={url}
+            isEdited={isEdited} onResetEdits={handleResetEdits}
+            showGuide={showGuide} setShowGuide={setShowGuide} language={language} counters={counters}
+            onSaveDraft={handleSaveDraft} onPublish={handlePublish}
+            publishing={publishing} savingDraft={savingDraft}
+            hasCmsConnection={hasCmsConnection} isExistingPage={isExistingPage}
           />
         </div>
       </div>
