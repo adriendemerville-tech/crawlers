@@ -979,7 +979,27 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   </div>
                 )}
 
-                {/* Quiz validation for admin creators */}
+                {/* Enterprise contact quiz */}
+                {showEnterpriseQuiz && (
+                  <div className="flex justify-start w-full">
+                    <div className="max-w-[95%] w-full">
+                      <EnterpriseQuiz
+                        userId={user?.id}
+                        onComplete={(summary) => {
+                          setShowEnterpriseQuiz(false);
+                          const resultMsg: ChatMessage = {
+                            role: 'assistant',
+                            content: summary,
+                            timestamp: new Date().toISOString(),
+                          };
+                          setMessages(prev => [...prev, resultMsg]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+
                 {showQuizValidation && isAdmin && (
                   <div className="flex justify-start w-full">
                     <div className="max-w-[95%] w-full">
