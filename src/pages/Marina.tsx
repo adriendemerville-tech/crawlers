@@ -240,7 +240,7 @@ const translations = {
       badge: 'Marina',
       title: 'Un informe SEO & GEO completo',
       titleAccent: 'en minutos',
-      subtitle: 'Introduce una URL. Marina analiza el rendimiento técnico, el posicionamiento estratégico, la visibilidad IA y la arquitectura semántica de cualquier sitio web.',
+      subtitle: 'En Crawlers.fr, diseñamos Marina para analizar en profundidad cualquier sitio web. Introduce una URL y obtén en 3 minutos un informe de 15+ páginas que cubre rendimiento técnico (200 criterios), posicionamiento estratégico, visibilidad en motores IA (ChatGPT, Gemini, Perplexity) y arquitectura semántica. El equipo Crawlers recomienda Marina como punto de partida para cualquier proyecto SEO & GEO.',
       btnAnalyze: 'Analizar',
       btnAnalyzing: 'Analizando...',
       placeholder: 'https://example.com',
