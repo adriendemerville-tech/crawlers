@@ -74,6 +74,7 @@ const Aide = lazy(() => import("./pages/Aide"));
 const StrategeCocoon = lazy(() => import("./pages/StrategeCocoon"));
 const MarinaPage = lazy(() => import("./pages/Marina"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
+const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
@@ -165,6 +166,7 @@ const App = () => (
                           <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
                           <Route path="/marina" element={<MarinaPage />} />
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
+                          <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
