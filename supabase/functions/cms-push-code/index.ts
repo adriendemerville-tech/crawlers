@@ -544,15 +544,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth
-    const authHeader = req.headers.get('Authorization') || '';
-    const userClient = getUserClient(authHeader);
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
+    // Auth — supports service role bypass for Parmenion system calls
+    const auth = await getAuthenticatedUser(req);
+    if (!auth) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const isServiceCall = auth.userId === 'service-role';
+    const user = { id: auth.userId };
 
     const input: PushCodeInput = await req.json();
     const { tracked_site_id, code, mode = 'deploy' } = input;
