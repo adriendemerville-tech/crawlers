@@ -51,6 +51,7 @@ const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersS
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
+const ContentArchitectPage = lazy(() => import("./pages/ContentArchitectPage"));
 const Faq = lazy(() => import("./pages/Faq"));
 const Methodologie = lazy(() => import("./pages/Methodologie"));
 const CGVU = lazy(() => import("./pages/CGVU"));
