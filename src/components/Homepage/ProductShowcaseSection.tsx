@@ -199,7 +199,7 @@ const ProductShowcaseSection = memo(() => {
     },
     {
       image: architectCode,
-      title: language === 'fr' ? 'Architecte · Code Correctif' : 'Architect · Corrective Code',
+      title: 'Code Architect',
       subtitle: language === 'fr' ? 'Génération IA · Injection sécurisée' : 'AI Generation · Secure Injection',
       description: language === 'fr'
         ? 'L\'Architecte génère un script correctif sur-mesure pour votre site : Schema.org, anti-hallucination IA, performance PageSpeed et contenu sémantique. Chaque fix est configurable, prévisualisable et injectable en un clic sur votre CMS.'
