@@ -95,6 +95,54 @@ async function deletePost(apiKey: string, slug: string) {
   return callIktracker('DELETE', `/posts/${slug}`, apiKey)
 }
 
+// ── Code Injection (via /cms-push-code alias) ──
+
+async function getInjectionHead(apiKey: string) {
+  return callIktracker('GET', '/cms-push-code/head', apiKey)
+}
+
+async function putInjectionHead(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', '/cms-push-code/head', apiKey, body)
+}
+
+async function getInjectionBodyEnd(apiKey: string) {
+  return callIktracker('GET', '/cms-push-code/body-end', apiKey)
+}
+
+async function putInjectionBodyEnd(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', '/cms-push-code/body-end', apiKey, body)
+}
+
+async function getInjectionPage(apiKey: string, pageKey: string) {
+  return callIktracker('GET', `/cms-push-code/page/${pageKey}`, apiKey)
+}
+
+async function putInjectionPage(apiKey: string, pageKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', `/cms-push-code/page/${pageKey}`, apiKey, body)
+}
+
+// ── SEO (robots.txt, sitemap, redirects) ──
+
+async function getRobotsTxt(apiKey: string) {
+  return callIktracker('GET', '/seo/robots-txt', apiKey)
+}
+
+async function putRobotsTxt(apiKey: string, content: string) {
+  return callIktracker('PUT', '/seo/robots-txt', apiKey, { content })
+}
+
+async function getRedirects(apiKey: string) {
+  return callIktracker('GET', '/seo/redirects', apiKey)
+}
+
+async function createRedirect(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('POST', '/seo/redirects', apiKey, body)
+}
+
+async function deleteRedirect(apiKey: string, redirectId: string) {
+  return callIktracker('DELETE', `/seo/redirects/${redirectId}`, apiKey)
+}
+
 // ── Autopilot: Events ──
 
 async function pushEvent(apiKey: string, body: Record<string, unknown>) {
