@@ -134,6 +134,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
     if (refreshing) return;
     setRefreshing(true);
     try {
+      // Pro Agency+ gets frontend animation every time but backend cache (2h) throttles actual API calls
       const { error } = await supabase.functions.invoke('calculate-llm-visibility', {
         body: { tracked_site_id: trackedSiteId, user_id: userId },
       });
