@@ -727,8 +727,8 @@ export function generateExpertReportHTML(
       strategicSections.push(sectionCard(
         rl.marketIntelligence,
         '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-        `${mi.sophistication ? `${labelValue(rl.sophisticationLevel, mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
-         ${mi.semantic_gap ? `${labelValue('Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
+        `${mi.sophistication ? `${labelValue(rl.sophisticationLevel, (mi.sophistication.level ?? '—') + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
+         ${mi.semantic_gap ? `${labelValue('Position vs Leader', (mi.semantic_gap.current_position ?? '—') + ' → ' + (mi.semantic_gap.leader_position ?? '—'))}${labelValue('Gap', (mi.semantic_gap.gap_distance != null ? mi.semantic_gap.gap_distance + ' pts' : '—'))}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
          ${textBlock(mi.positioning_verdict || '')}`
       ));
     }
@@ -788,14 +788,14 @@ export function generateExpertReportHTML(
       const aeoColor = aeoScore >= 70 ? '#166534' : aeoScore >= 40 ? '#92400e' : '#991b1b';
       const aeoBg = aeoScore >= 70 ? '#dcfce7' : aeoScore >= 40 ? '#fef3c7' : '#fee2e2';
       const criteriaRows = [
-        { label: 'Schema.org', passed: hasRelevantSchema },
-        { label: language === 'fr' ? 'Titres interrogatifs' : 'Interrogative headings', passed: hasInterrogativeHn },
-        { label: language === 'fr' ? 'Pyramide inversée' : 'Inverted pyramid', passed: hasInvertedPyramid },
-        { label: language === 'fr' ? 'Formats extractibles' : 'Extractable formats', passed: hasExtractable },
-        { label: 'TTFB / FCP', passed: hasFastTTFB },
-        { label: 'DOM', passed: contentOk },
-        { label: 'E-E-A-T', passed: hasEEAT },
-        { label: language === 'fr' ? 'Maillage sémantique' : 'Semantic links', passed: hasSemanticLinks },
+        { label: 'Schema.org', passed: hasRelevantSchema, tip: language === 'fr' ? 'Ajoutez FAQPage, Article ou HowTo en JSON-LD pour structurer vos réponses.' : 'Add FAQPage, Article or HowTo in JSON-LD to structure your answers.' },
+        { label: language === 'fr' ? 'Titres interrogatifs' : 'Interrogative headings', passed: hasInterrogativeHn, tip: language === 'fr' ? 'Reformulez vos H2/H3 comme des questions : "Comment…?", "Pourquoi…?"' : 'Rephrase H2/H3 as questions: "How…?", "Why…?"' },
+        { label: language === 'fr' ? 'Pyramide inversée' : 'Inverted pyramid', passed: hasInvertedPyramid, tip: language === 'fr' ? 'Répondez à la question principale dès les 100 premiers mots.' : 'Answer the main question within the first 100 words.' },
+        { label: language === 'fr' ? 'Formats extractibles' : 'Extractable formats', passed: hasExtractable, tip: language === 'fr' ? 'Ajoutez des tableaux, listes à puces ou encadrés de définition.' : 'Add tables, bullet lists or definition boxes.' },
+        { label: 'TTFB / FCP', passed: hasFastTTFB, tip: language === 'fr' ? 'Visez un FCP < 1.2s. Activez le cache, compressez les images en WebP.' : 'Target FCP < 1.2s. Enable caching, compress images to WebP.' },
+        { label: 'DOM', passed: contentOk, tip: language === 'fr' ? 'Le contenu principal doit être visible sans JavaScript (SSR ou pré-rendu).' : 'Main content must be visible without JavaScript (SSR or pre-rendering).' },
+        { label: 'E-E-A-T', passed: hasEEAT, tip: language === 'fr' ? 'Ajoutez une bio auteur, des citations d\'experts et un schéma Person/Organization.' : 'Add author bio, expert citations and Person/Organization schema.' },
+        { label: language === 'fr' ? 'Maillage sémantique' : 'Semantic links', passed: hasSemanticLinks, tip: language === 'fr' ? 'Liez au moins 2-3 pages internes avec des ancres descriptives.' : 'Link at least 2-3 internal pages with descriptive anchors.' },
       ];
       strategicSections.push(sectionCard(
         aeoLabel, '#0891b2', 'linear-gradient(135deg, #ecfeff, #f0fdfa)',
@@ -803,9 +803,10 @@ export function generateExpertReportHTML(
           <div style="padding: 12px 20px; background: ${aeoBg}; border-radius: 12px; text-align: center;">
             <div style="font-size: 28px; font-weight: 700; color: ${aeoColor};">${aeoScore}/100</div>
           </div>
+          <p style="font-size: 11px; color: #6b7280; flex: 1;">Score calculé sur ${criteria.length} critères techniques et éditoriaux vérifiant la compatibilité du contenu avec les moteurs de réponse IA (Position Zéro, SGE, assistants vocaux).</p>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">${criteriaRows.map(c =>
-          `<div style="display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12px;"><span style="font-size: 13px;">${c.passed ? '✅' : '❌'}</span><span style="color: #374151;">${c.label}</span></div>`
+        <div style="display: grid; grid-template-columns: 1fr; gap: 4px;">${criteriaRows.map(c =>
+          `<div style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; font-size: 12px; background: ${c.passed ? 'rgba(220,252,231,0.3)' : 'rgba(254,226,226,0.3)'}; border-radius: 6px;"><span style="font-size: 13px; flex-shrink: 0; margin-top: 1px;">${c.passed ? '✅' : '❌'}</span><div><span style="color: #374151; font-weight: 600;">${c.label}</span>${!c.passed ? `<div style="font-size: 11px; color: #92400e; margin-top: 2px;">→ ${c.tip}</div>` : ''}</div></div>`
         ).join('')}</div>`
       ));
     }
@@ -912,11 +913,12 @@ export function generateExpertReportHTML(
       strategicSections.push(sectionCard(
         rl.lexicalFootprint,
         '#d97706', '#fffbeb',
-        `${labelValue('Score', lf.score + '/100')}
+        `${labelValue('Score', (lf.score != null ? lf.score : '—') + '/100')}
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
-          <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.jargon}</div><div style="font-size: 20px; font-weight: 700; color: #92400e;">${Math.round(lf.jargonRatio * 100)}%</div></div>
-          <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.concrete}</div><div style="font-size: 20px; font-weight: 700; color: #166534;">${Math.round(lf.concreteRatio * 100)}%</div></div>
-        </div>`
+          <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.jargon}</div><div style="font-size: 20px; font-weight: 700; color: #92400e;">${lf.jargonRatio != null ? (lf.jargonRatio <= 1 ? Math.round(lf.jargonRatio * 100) : Math.round(lf.jargonRatio)) : '—'}%</div></div>
+          <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.concrete}</div><div style="font-size: 20px; font-weight: 700; color: #166534;">${lf.concreteRatio != null ? (lf.concreteRatio <= 1 ? Math.round(lf.concreteRatio * 100) : Math.round(lf.concreteRatio)) : '—'}%</div></div>
+        </div>
+        <p style="font-size: 10px; color: #9ca3af; margin-top: 6px; font-style: italic;">Ratio = proportion de termes techniques (Jargon) vs factuels (Concret) dans le contenu analysé. Réf. : 10-25% Jargon / 40-60% Concret pour un site B2B.</p>`
       ));
     }
 
