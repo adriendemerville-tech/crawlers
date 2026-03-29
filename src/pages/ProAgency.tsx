@@ -664,11 +664,9 @@ export default function ProAgency() {
                 <Button
                   size="lg"
                   onClick={() => {
-                    const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
-                    if (felixBtn) felixBtn.click();
-                    else window.location.href = '/#felix';
+                    window.dispatchEvent(new CustomEvent('felix-enterprise-contact'));
                   }}
-                  className="w-full max-w-xs mx-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20 px-8 py-3 text-center justify-center"
+                  className="w-full max-w-xs mx-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20 px-8 py-4 text-center justify-center"
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
                   {(t as any).enterpriseCta}
