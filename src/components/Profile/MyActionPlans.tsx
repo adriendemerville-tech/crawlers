@@ -303,6 +303,8 @@ export function MyActionPlans() {
   // Content Architect modal state
   const [isContentArchitectOpen, setIsContentArchitectOpen] = useState(false);
   const [contentArchitectPlan, setContentArchitectPlan] = useState<ActionPlan | null>(null);
+  const [contentArchitectDraft, setContentArchitectDraft] = useState<Record<string, any> | null>(null);
+  const [contentArchitectTrackedSiteId, setContentArchitectTrackedSiteId] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -590,7 +592,32 @@ export function MyActionPlans() {
     setIsArchitectOpen(true);
   };
 
-  const handleOpenContentArchitect = (plan: ActionPlan) => {
+  const handleOpenContentArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
+    const domain = (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })();
+
+    // Look up trackedSiteId
+    const { data: siteData } = await supabase
+      .from('tracked_sites')
+      .select('id')
+      .eq('domain', domain)
+      .eq('user_id', user!.id)
+      .limit(1)
+      .maybeSingle();
+
+    setContentArchitectTrackedSiteId(siteData?.id || '');
+
+    // Build draftData from task
+    const keyword = extractKeywordFromTitle(task.title);
+    const isExisting = ['title_optimization', 'meta_description', 'heading_structure'].some(t => task.category?.toLowerCase().includes(t));
+    const draft: Record<string, any> = {
+      url: plan.url.startsWith('http') ? plan.url : `https://${plan.url}`,
+      keyword: keyword || '',
+      custom_prompt: `${task.title}\n${(task as any).description || ''}`.trim(),
+      page_type: isExisting ? 'article' : 'article',
+      priority_actions: [task.title],
+    };
+
+    setContentArchitectDraft(draft);
     setContentArchitectPlan(plan);
     setIsContentArchitectOpen(true);
   };
