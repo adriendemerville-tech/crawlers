@@ -547,6 +547,15 @@ async function generateReport(url) {
       </main>
 
       <Footer />
+
+      {reportHtml && (
+        <MarinaReportPreviewModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          htmlContent={reportHtml}
+          domain={url.trim().replace(/^https?:\/\//, '').split('/')[0]}
+        />
+      )}
     </>
   );
 }
