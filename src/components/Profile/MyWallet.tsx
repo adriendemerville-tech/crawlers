@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Radar, Globe, Bot } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Radar, Globe, Bot, Store, PenTool } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -588,7 +588,7 @@ export function MyWallet() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
             <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
               <span className="text-xs font-medium leading-tight">
@@ -623,6 +623,18 @@ export function MyWallet() {
               <Headphones className="h-3.5 w-3.5 text-violet-500 shrink-0" />
               <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
+              <Store className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium leading-tight">
+                {language === 'fr' ? 'Google Business' : 'Google Business'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
+              <PenTool className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium leading-tight">
+                {language === 'fr' ? '100 créations de page inclus' : language === 'es' ? '100 creaciones de página' : '100 page creations included'}
               </span>
             </div>
           </div>
