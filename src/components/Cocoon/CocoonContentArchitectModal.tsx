@@ -34,6 +34,7 @@ interface CocoonContentArchitectModalProps {
   draftData?: Record<string, any> | null;
   prefillUrl?: string;
   isExistingPage?: boolean;
+  demoMode?: boolean;
 }
 
 const PAGE_TYPES = [
