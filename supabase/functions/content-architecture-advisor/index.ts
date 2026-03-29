@@ -108,25 +108,91 @@ Deno.serve(async (req) => {
     const serviceClientForPlan = getServiceClient()
     const { data: userProfile } = await serviceClientForPlan
       .from('profiles')
-      .select('plan_type, subscription_status')
+      .select('plan_type, subscription_status, credits_balance')
       .eq('user_id', user.id)
       .single()
 
-    const planType = (userProfile?.plan_type === 'agency_premium' &&
-      (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling'))
+    const isActiveSubscriber = (
+      (userProfile?.plan_type === 'agency_pro' || userProfile?.plan_type === 'agency_premium') &&
+      (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling')
+    )
+
+    const planType = userProfile?.plan_type === 'agency_premium' && isActiveSubscriber
       ? 'agency_premium'
-      : (userProfile?.plan_type === 'agency_pro' &&
-        (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling'))
+      : userProfile?.plan_type === 'agency_pro' && isActiveSubscriber
         ? 'agency_pro' : 'free'
 
     const monthlyFairUse = await checkMonthlyFairUse(user.id, 'content_creation', planType)
+
+    // For non-subscribers: if monthly quota exhausted, allow if they have credits (5 per page)
+    const CONTENT_CREDIT_COST = 5
+    let creditsDeducted = false
+
     if (!monthlyFairUse.allowed) {
-      return new Response(JSON.stringify({
-        error: 'Monthly content creation limit reached',
-        details: monthlyFairUse,
-      }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Subscribers → hard block at quota
+      if (isActiveSubscriber) {
+        return new Response(JSON.stringify({
+          error: 'Monthly content creation limit reached',
+          details: monthlyFairUse,
+        }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      // Non-subscribers → check credits
+      const currentBalance = userProfile?.credits_balance ?? 0
+      if (currentBalance < CONTENT_CREDIT_COST) {
+        return new Response(JSON.stringify({
+          error: 'Crédits insuffisants',
+          credits_required: CONTENT_CREDIT_COST,
+          credits_balance: currentBalance,
+          details: monthlyFairUse,
+        }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      // Deduct credits
+      const { data: creditResult } = await serviceClientForPlan.rpc('use_credit', {
+        p_user_id: user.id,
+        p_description: `Content Architect: ${keyword} (${page_type})`,
+        p_amount: CONTENT_CREDIT_COST,
       })
+      if (creditResult && !(creditResult as any).success) {
+        return new Response(JSON.stringify({
+          error: 'Erreur déduction crédits',
+          details: creditResult,
+        }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      creditsDeducted = true
+      console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${(creditResult as any)?.new_balance})`)
+    } else if (!isActiveSubscriber) {
+      // Non-subscriber within free monthly quota: still deduct credits
+      const currentBalance = userProfile?.credits_balance ?? 0
+      if (currentBalance < CONTENT_CREDIT_COST) {
+        return new Response(JSON.stringify({
+          error: 'Crédits insuffisants',
+          credits_required: CONTENT_CREDIT_COST,
+          credits_balance: currentBalance,
+        }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: creditResult } = await serviceClientForPlan.rpc('use_credit', {
+        p_user_id: user.id,
+        p_description: `Content Architect: ${keyword} (${page_type})`,
+        p_amount: CONTENT_CREDIT_COST,
+      })
+      if (creditResult && !(creditResult as any).success) {
+        return new Response(JSON.stringify({
+          error: 'Erreur déduction crédits',
+          details: creditResult,
+        }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      creditsDeducted = true
+      console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${(creditResult as any)?.new_balance})`)
     }
 
     const domain = extractDomain(url)
