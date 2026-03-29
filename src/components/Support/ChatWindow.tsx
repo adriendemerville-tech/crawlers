@@ -502,6 +502,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           user_id: user?.id || null,
           guest_mode: !user,
           screen_context: screenContext,
+          language,
         },
       });
 
