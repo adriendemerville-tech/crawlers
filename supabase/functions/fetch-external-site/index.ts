@@ -82,13 +82,46 @@ Deno.serve(async (req) => {
     const finalUrl = response.url || targetUrl;
     const baseUrl = new URL(finalUrl);
 
-    // Check if this is a SPA — if so, try Browserless for rendered HTML, with Fly.io fallback
+    // Check if this is a SPA — cascade: Spider.cloud → Browserless → Firecrawl (dernier recours)
     if (isSPAHtml(html)) {
       console.log(`[fetch-external-site] SPA detected for ${finalUrl}. Trying JS rendering...`);
       
       let rendered = false;
+
+      // ── Étape 1 : Spider.cloud (peu coûteux, bon rendu JS) ──
+      const spiderKey = Deno.env.get('SPIDER_API_KEY');
+      if (!rendered && spiderKey) {
+        try {
+          console.log(`[fetch-external-site] 🕷️ Trying Spider.cloud...`);
+          const spiderResp = await fetch('https://api.spider.cloud/crawl', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${spiderKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: finalUrl, limit: 1, return_format: 'raw', request: 'http' }),
+            signal: AbortSignal.timeout(30000),
+          });
+          if (spiderResp.ok) {
+            const spiderData = await spiderResp.json();
+            const page = Array.isArray(spiderData) ? spiderData[0] : spiderData;
+            const spiderHtml = page?.content || '';
+            if (spiderHtml.length > html.length) {
+              console.log(`[fetch-external-site] ✅ Spider.cloud success (${spiderHtml.length} chars vs ${html.length} static)`);
+              html = spiderHtml;
+              rendered = true;
+            }
+          } else {
+            console.log(`[fetch-external-site] ⚠️ Spider.cloud error: ${spiderResp.status}`);
+          }
+        } catch (spiderErr: any) {
+          console.log(`[fetch-external-site] ⚠️ Spider.cloud failed: ${spiderErr.message}`);
+        }
+      }
+
+      // ── Étape 2 : Browserless (headless Chrome) ──
       const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
-      if (RENDERING_KEY) {
+      if (!rendered && RENDERING_KEY) {
         try {
           const renderUrl = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`;
           const renderResponse = await fetch(renderUrl, {
@@ -112,47 +145,16 @@ Deno.serve(async (req) => {
               html = renderedHtml;
               rendered = true;
             }
-          } else if (renderResponse.status === 429 || renderResponse.status >= 500) {
-            console.log(`[fetch-external-site] ⚠️ Browserless ${renderResponse.status} — trying Fly.io fallback`);
           } else {
-            console.log(`[fetch-external-site] ⚠️ Rendering error: ${renderResponse.status}`);
+            console.log(`[fetch-external-site] ⚠️ Browserless error: ${renderResponse.status}`);
           }
         } catch (renderErr: any) {
-          console.log(`[fetch-external-site] ⚠️ Browserless failed: ${renderErr.message} — trying Fly.io fallback`);
+          console.log(`[fetch-external-site] ⚠️ Browserless failed: ${renderErr.message}`);
         }
       }
 
-      // Fly.io Playwright fallback
       if (!rendered) {
-        const flyUrl = Deno.env.get('FLY_RENDERER_URL');
-        const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
-        if (flyUrl) {
-          try {
-            console.log(`[fetch-external-site] 🔄 Falling back to Fly.io Playwright`);
-            const flyResponse = await fetch(`${flyUrl}/render`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(flySecret ? { 'x-secret': flySecret } : {}),
-              },
-              body: JSON.stringify({ url: finalUrl, timeout: 30000, waitFor: 3000 }),
-              signal: AbortSignal.timeout(45000),
-            });
-            if (flyResponse.ok) {
-              const flyHtml = await flyResponse.text();
-              if (flyHtml.length > html.length) {
-                console.log(`[fetch-external-site] ✅ Fly.io success (${flyHtml.length} chars)`);
-                html = flyHtml;
-              }
-            } else {
-              console.log(`[fetch-external-site] ⚠️ Fly.io error: ${flyResponse.status}`);
-            }
-          } catch (flyErr: any) {
-            console.log(`[fetch-external-site] ⚠️ Fly.io failed: ${flyErr.message}`);
-          }
-        } else {
-          console.log('[fetch-external-site] ⚠️ No rendering service available for SPA');
-        }
+        console.log('[fetch-external-site] ⚠️ No rendering service succeeded for SPA');
       }
     }
 
