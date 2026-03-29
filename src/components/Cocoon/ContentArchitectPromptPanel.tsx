@@ -1,6 +1,6 @@
+import { PenLine } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ContentArchitectPromptPanelProps {
   trackedSiteId?: string;
@@ -18,8 +18,9 @@ export function ContentArchitectPromptPanel({
 }: ContentArchitectPromptPanelProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/70">📝 Prompt & Presets</h3>
+      <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
+        <PenLine className="w-3.5 h-3.5 text-white/50 stroke-[1.5]" />
+        <h3 className="text-xs font-semibold text-white/70">Prompt & Presets</h3>
       </div>
 
       {/* Site presets */}
