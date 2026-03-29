@@ -144,6 +144,22 @@ const translations = {
   },
 };
 
+// Content-related categories that can be opened in Content Architect
+const CONTENT_CATEGORIES = new Set([
+  'contenu', 'content_gap', 'title_optimization', 'meta_description',
+  'heading_structure', 'internal_link', 'content', 'sémantique',
+]);
+
+function isContentTask(task: ActionPlanTask): boolean {
+  const cat = (task.category || '').toLowerCase();
+  return CONTENT_CATEGORIES.has(cat) || cat.includes('contenu') || cat.includes('content');
+}
+
+function extractKeywordFromTitle(title: string): string {
+  const match = title.match(/[«"„]([^»""]+)[»""]/) || title.match(/pour\s+"([^"]+)"/) || title.match(/avec\s+"([^"]+)"/);
+  return match ? match[1] : '';
+}
+
 // Sortable task item component
 function SortableTaskItem({
   task,
@@ -184,12 +200,14 @@ function SortableTaskItem({
     opacity: isDragging ? 0.8 : undefined,
   };
 
+  const showContentArchitect = !task.isCompleted && !isArchived && isContentTask(task);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
+        "group flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
         getPriorityColor(task.priority),
         task.isCompleted && "opacity-50",
         isDragging && "shadow-lg ring-2 ring-primary/20"
@@ -235,31 +253,35 @@ function SortableTaskItem({
           )}
         </div>
       </div>
-      {!task.isCompleted && !isArchived && (
-        <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
+        {showContentArchitect && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenContentArchitect}
-            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2"
+            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Ouvrir dans Content Architect"
           >
             <PenLine className="h-3 w-3" />
             <span className="hidden xl:inline">{contentArchitectLabel}</span>
           </Button>
+        )}
+        {!task.isCompleted && !isArchived && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenArchitect}
-            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Wand2 className="h-3 w-3" />
             <span className="hidden xl:inline">{architectLabel}</span>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
+
 
 export function MyActionPlans() {
   const { user } = useAuth();
