@@ -144,6 +144,22 @@ const translations = {
   },
 };
 
+// Content-related categories that can be opened in Content Architect
+const CONTENT_CATEGORIES = new Set([
+  'contenu', 'content_gap', 'title_optimization', 'meta_description',
+  'heading_structure', 'internal_link', 'content', 'sémantique',
+]);
+
+function isContentTask(task: ActionPlanTask): boolean {
+  const cat = (task.category || '').toLowerCase();
+  return CONTENT_CATEGORIES.has(cat) || cat.includes('contenu') || cat.includes('content');
+}
+
+function extractKeywordFromTitle(title: string): string {
+  const match = title.match(/[«"„]([^»""]+)[»""]/) || title.match(/pour\s+"([^"]+)"/) || title.match(/avec\s+"([^"]+)"/);
+  return match ? match[1] : '';
+}
+
 // Sortable task item component
 function SortableTaskItem({
   task,
@@ -184,12 +200,14 @@ function SortableTaskItem({
     opacity: isDragging ? 0.8 : undefined,
   };
 
+  const showContentArchitect = !task.isCompleted && !isArchived && isContentTask(task);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
+        "group flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
         getPriorityColor(task.priority),
         task.isCompleted && "opacity-50",
         isDragging && "shadow-lg ring-2 ring-primary/20"
@@ -235,31 +253,35 @@ function SortableTaskItem({
           )}
         </div>
       </div>
-      {!task.isCompleted && !isArchived && (
-        <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
+        {showContentArchitect && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenContentArchitect}
-            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2"
+            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Ouvrir dans Content Architect"
           >
             <PenLine className="h-3 w-3" />
             <span className="hidden xl:inline">{contentArchitectLabel}</span>
           </Button>
+        )}
+        {!task.isCompleted && !isArchived && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenArchitect}
-            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2"
+            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Wand2 className="h-3 w-3" />
             <span className="hidden xl:inline">{architectLabel}</span>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
+
 
 export function MyActionPlans() {
   const { user } = useAuth();
@@ -281,6 +303,8 @@ export function MyActionPlans() {
   // Content Architect modal state
   const [isContentArchitectOpen, setIsContentArchitectOpen] = useState(false);
   const [contentArchitectPlan, setContentArchitectPlan] = useState<ActionPlan | null>(null);
+  const [contentArchitectDraft, setContentArchitectDraft] = useState<Record<string, any> | null>(null);
+  const [contentArchitectTrackedSiteId, setContentArchitectTrackedSiteId] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -568,7 +592,32 @@ export function MyActionPlans() {
     setIsArchitectOpen(true);
   };
 
-  const handleOpenContentArchitect = (plan: ActionPlan) => {
+  const handleOpenContentArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
+    const domain = (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })();
+
+    // Look up trackedSiteId
+    const { data: siteData } = await supabase
+      .from('tracked_sites')
+      .select('id')
+      .eq('domain', domain)
+      .eq('user_id', user!.id)
+      .limit(1)
+      .maybeSingle();
+
+    setContentArchitectTrackedSiteId(siteData?.id || '');
+
+    // Build draftData from task
+    const keyword = extractKeywordFromTitle(task.title);
+    const isExisting = ['title_optimization', 'meta_description', 'heading_structure'].some(t => task.category?.toLowerCase().includes(t));
+    const draft: Record<string, any> = {
+      url: plan.url.startsWith('http') ? plan.url : `https://${plan.url}`,
+      keyword: keyword || '',
+      custom_prompt: `${task.title}\n${(task as any).description || ''}`.trim(),
+      page_type: isExisting ? 'article' : 'article',
+      priority_actions: [task.title],
+    };
+
+    setContentArchitectDraft(draft);
     setContentArchitectPlan(plan);
     setIsContentArchitectOpen(true);
   };
@@ -703,7 +752,7 @@ export function MyActionPlans() {
                         isArchived={isArchived}
                         onToggle={toggleTask}
                         onOpenArchitect={() => handleOpenArchitect(plan, task)}
-                        onOpenContentArchitect={() => handleOpenContentArchitect(plan)}
+                        onOpenContentArchitect={() => handleOpenContentArchitect(plan, task)}
                         getPriorityColor={getPriorityColor}
                         getPriorityLabel={getPriorityLabel}
                         architectLabel={t.architect}
@@ -893,10 +942,14 @@ export function MyActionPlans() {
             onClose={() => {
               setIsContentArchitectOpen(false);
               setContentArchitectPlan(null);
+              setContentArchitectDraft(null);
             }}
             nodes={[]}
             domain={(() => { try { return new URL(contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`).hostname.replace('www.', ''); } catch { return contentArchitectPlan.url; } })()}
-            trackedSiteId=""
+            trackedSiteId={contentArchitectTrackedSiteId}
+            draftData={contentArchitectDraft}
+            prefillUrl={contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`}
+            isExistingPage={!!contentArchitectDraft?.keyword}
           />
         </Suspense>
       )}
