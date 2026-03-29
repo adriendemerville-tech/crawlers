@@ -207,6 +207,8 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
   const linkProfile = insights?.linkProfile;
   const semanticConsistency = insights?.semanticConsistency;
   const misplacedHeadTags: string[] = (rawData?.htmlAnalysis as any)?.misplacedHeadTags || [];
+  const isSPA = result.isSPA === true;
+  const staticWordCount: number = (rawData?.htmlAnalysis as any)?.staticWordCount ?? scores.semantic.wordCount;
 
   // ── Compute bloc scores ──
   const bloc1Items = [
