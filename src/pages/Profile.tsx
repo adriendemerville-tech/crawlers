@@ -230,6 +230,12 @@ function ProfileContent() {
                   <Anchor className="h-4 w-4" />
                   <span className="hidden sm:inline">Marina</span>
                 </TabsTrigger>
+                {isProUser && (
+                  <TabsTrigger value="sea-seo" className="flex-1 gap-2">
+                    <Target className="h-4 w-4" />
+                    <span className="hidden sm:inline">SEA→SEO</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
                   value="gmb"
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
