@@ -458,8 +458,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   }, [result]);
 
   const handleGenerate = useCallback(async () => {
-    if (!url || !keyword) {
-      toast.error('URL et mot-clé requis');
+    if (!keyword || (!directory && !slug)) {
+      toast.error('Mot-clé et répertoire/slug requis');
       return;
     }
     setLoading(true);
@@ -484,12 +484,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       const resData = data?.data || data;
       setResult(resData);
       setOriginalResult(JSON.parse(JSON.stringify(resData)));
+
+      // Auto-update slug from generated H1 if slug was auto-generated
+      if (!isExistingPage && !autoFilled.has('slug_manual') && resData?.content_structure?.recommended_h1) {
+        const newSlug = generateSlugFromKeyword(resData.content_structure.recommended_h1);
+        if (newSlug) setSlug(newSlug);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Erreur');
     } finally {
       setLoading(false);
     }
-  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone]);
+  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone, isExistingPage, directory, slug]);
 
   const isEdited = useMemo(() => {
     if (!result || !originalResult) return false;
