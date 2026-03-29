@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
   }
   const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
 
   const REDIRECT_URI = `${supabaseUrl}/functions/v1/google-ads-connector`;
 
