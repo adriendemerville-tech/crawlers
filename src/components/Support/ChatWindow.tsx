@@ -155,6 +155,10 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [quizSuggested, setQuizSuggested] = useState(false);
   const [quizSuggestionPending, setQuizSuggestionPending] = useState(false);
 
+  // Enterprise contact quiz state
+  const [showEnterpriseQuiz, setShowEnterpriseQuiz] = useState(false);
+  const autoEnterpriseTriggered = useRef(false);
+
   // Auto-start Crawlers quiz when triggered from bubble suggestion
   const autoQuizTriggered = useRef(false);
   useEffect(() => {
