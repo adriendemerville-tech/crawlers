@@ -367,5 +367,18 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       </div>
       </AdminAnalyticsProvider>
     </AdminProvider>
+
+    {showContentArchitect && (
+      <Suspense fallback={null}>
+        <CocoonContentArchitectModal
+          isOpen={showContentArchitect}
+          onClose={() => setShowContentArchitect(false)}
+          nodes={[]}
+          domain="crawlers.fr"
+          trackedSiteId=""
+        />
+      </Suspense>
+    )}
+    </>
   );
 }
