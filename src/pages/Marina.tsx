@@ -198,7 +198,7 @@ export default function Marina() {
                 </div>
                 {!user && (
                   <div className="mt-4">
-                    <Link to="/auth">
+                    <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
                       <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                         Connectez-vous pour lancer un rapport <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
@@ -425,16 +425,26 @@ async function generateReport(url) {
                 Besoin d'aide pour l'intégration ?
               </p>
               <div className="flex items-center justify-center gap-3">
-                <Link to="/app/console">
-                  <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
-                    <Key className="w-4 h-4 mr-2" /> Obtenir ma clé API
-                  </Button>
-                </Link>
-                <Link to="/tarifs">
-                  <Button variant="outline" className="border-border">
-                    <CreditCard className="w-4 h-4 mr-2" /> Recharger mes crédits
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/app/console">
+                      <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+                        <Key className="w-4 h-4 mr-2" /> Obtenir ma clé API
+                      </Button>
+                    </Link>
+                    <Link to="/tarifs">
+                      <Button variant="outline" className="border-border">
+                        <CreditCard className="w-4 h-4 mr-2" /> Recharger mes crédits
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                      Créer un compte pour commencer <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -451,9 +461,15 @@ async function generateReport(url) {
                   <h3 className="font-semibold text-foreground">À l'unité</h3>
                   <p className="text-2xl font-bold text-primary mt-1">5 crédits</p>
                   <p className="text-xs text-muted-foreground mt-1">par rapport Marina</p>
-                  <Link to="/tarifs" className="mt-3 inline-block">
-                    <Button size="sm" variant="outline" className="text-xs">Acheter des crédits</Button>
-                  </Link>
+                  {user ? (
+                    <Link to="/tarifs" className="mt-3 inline-block">
+                      <Button size="sm" variant="outline" className="text-xs">Acheter des crédits</Button>
+                    </Link>
+                  ) : (
+                    <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')} className="mt-3 inline-block">
+                      <Button size="sm" variant="outline" className="text-xs">S'inscrire — 5 crédits offerts</Button>
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
               <Card className="border-primary/30 bg-primary/5">
