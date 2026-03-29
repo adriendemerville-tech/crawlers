@@ -1913,7 +1913,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               if (buttons.length === 0) return null;
 
               return (
-                <div className="mb-2 flex gap-2">
+                <div className="mb-2 flex gap-2 pr-6">
                   {buttons}
                 </div>
               );
