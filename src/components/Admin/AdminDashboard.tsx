@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -29,6 +29,9 @@ import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
+const CocoonContentArchitectModal = lazy(() =>
+  import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -141,6 +144,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
 
   useEffect(() => {
@@ -275,6 +279,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   };
 
   return (
+    <>
     <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers, isAuditor }}>
       <AdminAnalyticsProvider>
       <div className="space-y-3">
@@ -345,6 +350,13 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                     Simulé
                   </Badge>
                 )}
+                <button
+                  onClick={() => setShowContentArchitect(true)}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                >
+                  <PenLine className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Content Architect (crawlers.fr)</span>
+                </button>
               </div>
             )}
           </nav>
@@ -356,5 +368,18 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       </div>
       </AdminAnalyticsProvider>
     </AdminProvider>
+
+    {showContentArchitect && (
+      <Suspense fallback={null}>
+        <CocoonContentArchitectModal
+          isOpen={showContentArchitect}
+          onClose={() => setShowContentArchitect(false)}
+          nodes={[]}
+          domain="crawlers.fr"
+          trackedSiteId=""
+        />
+      </Suspense>
+    )}
+    </>
   );
 }
