@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 200/mo)
+    // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 150/mo)
     const serviceClientForPlan = getServiceClient()
     const { data: userProfile } = await serviceClientForPlan
       .from('profiles')

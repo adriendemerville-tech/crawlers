@@ -409,7 +409,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (Perplexity, maillage auto, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) — Fair use mensuel : 5 free / 100 Pro / 200 Pro+ |
+| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) — Fair use mensuel : 5 free / 100 Pro / 150 Pro+ |
 | \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
 | \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP pages+posts, Drupal pages+articles, Shopify pages+articles, Odoo, PrestaShop, IKtracker) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
@@ -1360,7 +1360,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
 - **Indexabilité** : Les contenus générés incluent systématiquement \\\`<meta name="robots" content="index, follow">\\\` et \\\`isAccessibleForFree: true\\\` dans le schema.org
 - **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker. Paramètre \\\`content_type: "page" | "post"\\\`
-- **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 200/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
+- **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 150/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
 - **Routeur CMS** : Parménion utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
 - **ContentBrief déterministe** : Le module \\\`_shared/contentBrief.ts\\\` calcule les contraintes éditoriales (longueur, ton, H2/H3, angle, CTA, liens internes) avant l'appel LLM
 - **Presets utilisateur** : Prompts custom par site et type de page (\\\`content_prompt_presets\\\`), appelables depuis Cocoon ou Content

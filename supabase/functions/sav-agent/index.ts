@@ -242,7 +242,7 @@ Accessible via Code Architect > onglet "Contenu", le Content Architect génère 
 - Structure éditoriale (résumé, tableau LLM, FAQ, sources, CTA)
 - Calendrier éditorial (Admin uniquement)
 - **Publication CMS** : Les contenus générés peuvent être publiés directement en brouillon sur le CMS du client (WordPress, Shopify, Drupal, Odoo, PrestaShop, IKtracker). Supporte la création d'**articles** ET de **pages statiques** selon le CMS.
-- **Limites mensuelles** : 5 contenus/mois (Free), 100 contenus/mois (Pro Agency), 200 contenus/mois (Pro Agency+). Renouvellement automatique le 1er du mois.
+- **Limites mensuelles** : 5 contenus/mois (Free), 100 contenus/mois (Pro Agency), 150 contenus/mois (Pro Agency+). Renouvellement automatique le 1er du mois.
 
 ## Crédits & Abonnement
 - 25 crédits offerts à l'inscription.
