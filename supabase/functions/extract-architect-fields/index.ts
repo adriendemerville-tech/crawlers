@@ -147,8 +147,8 @@ ${p.outro}`;
         user: extractionPrompt,
         model: 'google/gemini-2.5-flash-lite',
       });
-    } catch {
-      console.error("[extract-architect-fields] Failed to parse AI response:", rawContent.slice(0, 200));
+    } catch (e) {
+      console.error("[extract-architect-fields] Failed to parse AI response:", e);
       draftData = {};
     }
 
