@@ -193,7 +193,7 @@ const translations = {
 
 // ─── Icon & style maps ──────────────────────────────────────
 const booleanIcons: Record<string, any> = {
-  has_json_ld: Code2, has_sitemap: Map, has_robots_txt: FileText,
+  has_json_ld: Code2, has_sitemap: MapIcon, has_robots_txt: FileText,
   has_meta_description: FileText, has_open_graph: Share2,
   has_twitter_cards: Twitter, has_canonical: Link2, has_hreflang: Globe,
   has_https: ShieldCheck, is_mobile_friendly: Smartphone, has_viewport_meta: MonitorSmartphone,
