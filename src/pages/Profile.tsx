@@ -225,6 +225,10 @@ function ProfileContent() {
                   <FileEdit className="h-4 w-4" />
                   <span className="hidden sm:inline">Brouillons</span>
                 </TabsTrigger>
+                <TabsTrigger value="marina" className="flex-1 gap-2">
+                  <Anchor className="h-4 w-4" />
+                  <span className="hidden sm:inline">Marina</span>
+                </TabsTrigger>
                 <TabsTrigger
                   value="gmb"
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
@@ -312,6 +316,10 @@ function ProfileContent() {
 
                 <TabsContent value="drafts">
                   <MyDrafts />
+                </TabsContent>
+
+                <TabsContent value="marina">
+                  <MarinaConsoleTab />
                 </TabsContent>
 
                 <TabsContent value="gmb">
