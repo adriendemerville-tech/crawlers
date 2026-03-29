@@ -43,6 +43,7 @@ interface AdvisorInput {
   target_internal_links?: { url: string; anchor_text?: string; reason?: string }[]
   cannibalization_data?: { keyword: string; competing_urls: string[]; severity: string }[]
   silo_context?: { cluster_name: string; existing_pages: string[]; gap_description?: string }
+  target_audience_segment?: 'primary' | 'secondary' | 'untapped' | 'all'
 }
 
 Deno.serve(async (req) => {
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     const body: AdvisorInput = await req.json()
-    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context } = body
+    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment = 'primary' } = body
 
     if (!url || !keyword || !page_type) {
       return new Response(JSON.stringify({ error: 'Missing url, keyword, or page_type' }), {
@@ -689,13 +690,53 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     const briefBlock = briefToPromptBlock(contentBrief)
     console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}`)
 
+    // ── Parse client_targets for audience context ──
+    let audienceBlock = ''
+    if (siteIdentity?.targets) {
+      try {
+        const ct = typeof siteIdentity.targets === 'string' ? JSON.parse(siteIdentity.targets) : siteIdentity.targets
+        const describeSegment = (arr: any[]): string => {
+          if (!arr?.[0]) return ''
+          const item = arr[0]
+          const market = item.market || ''
+          const sub = Object.values(item).find((v: any) => typeof v === 'object' && v !== null && !Array.isArray(v) && ('csp' in v || 'segment' in v || 'role' in v)) as any
+          let desc = market
+          if (sub) {
+            if (sub.csp) desc += ` — ${sub.csp}`
+            if (sub.segment) desc += ` — ${sub.segment}`
+            if (sub.age_range) desc += ` (${sub.age_range})`
+          }
+          if (item.intent) desc += ` | Intent: ${item.intent}`
+          return desc
+        }
+        const primary = describeSegment(ct.primary)
+        const secondary = describeSegment(ct.secondary)
+        const untapped = describeSegment(ct.untapped)
+
+        if (target_audience_segment === 'primary' && primary) {
+          audienceBlock = `\n⛔ CONTEXTE SECTORIEL OBLIGATOIRE:\nLe site traite de : ${siteIdentity?.sector || siteIdentity?.target_audience || 'inconnu'}.\nSa cible prioritaire est : ${primary}.\n${secondary ? `Sa cible secondaire est : ${secondary}.` : ''}\nNe JAMAIS produire de contenu hors-sujet. Chaque section DOIT traiter du secteur ci-dessus.\n`
+        } else if (target_audience_segment === 'secondary' && secondary) {
+          audienceBlock = `\n⛔ CONTEXTE SECTORIEL OBLIGATOIRE:\nLe site traite de : ${siteIdentity?.sector || 'inconnu'}.\nCe contenu cible SPÉCIFIQUEMENT la cible secondaire : ${secondary}.\n${primary ? `La cible prioritaire est : ${primary} (contexte global).` : ''}\nNe JAMAIS produire de contenu hors-sujet.\n`
+        } else if (target_audience_segment === 'untapped' && untapped) {
+          audienceBlock = `\n⛔ CONTEXTE SECTORIEL OBLIGATOIRE:\nLe site traite de : ${siteIdentity?.sector || 'inconnu'}.\nCe contenu cible une OPPORTUNITÉ non exploitée : ${untapped}.\nLe contenu doit ouvrir ce nouveau segment tout en restant cohérent avec le métier du site.\nNe JAMAIS produire de contenu hors-sujet.\n`
+        } else {
+          audienceBlock = `\n⛔ CONTEXTE SECTORIEL OBLIGATOIRE:\nLe site traite de : ${siteIdentity?.sector || 'inconnu'}.\n${primary ? `Cible prioritaire : ${primary}.` : ''}\n${secondary ? `Cible secondaire : ${secondary}.` : ''}\nNe JAMAIS produire de contenu hors-sujet.\n`
+        }
+      } catch (e) {
+        console.warn('[content-advisor] Failed to parse client_targets:', e)
+        audienceBlock = siteIdentity?.sector ? `\n⛔ Le site traite de : ${siteIdentity.sector}. Ne JAMAIS produire de contenu hors-sujet.\n` : ''
+      }
+    } else if (siteIdentity?.sector || siteIdentity?.target_audience) {
+      audienceBlock = `\n⛔ CONTEXTE SECTORIEL OBLIGATOIRE:\nLe site traite de : ${siteIdentity?.sector || 'inconnu'}.\n${siteIdentity?.target_audience ? `Audience : ${siteIdentity.target_audience}.` : ''}\nNe JAMAIS produire de contenu hors-sujet.\n`
+    }
+
     const userPrompt = `Analyse et recommande l'architecture de contenu optimale pour:
 
 **Page cible:** ${url}
 **Mot-clé principal:** ${keyword}  
 **Type de page:** ${page_type}
 **Langue:** ${language_code}
-
+${audienceBlock}
 ${briefBlock}
 
 ${strategic_objectives?.length ? `

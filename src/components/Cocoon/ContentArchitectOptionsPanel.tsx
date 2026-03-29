@@ -1,6 +1,10 @@
-import { Settings } from 'lucide-react';
+import { Settings, Users, Target } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+
+export type AudienceSegment = 'primary' | 'secondary' | 'untapped' | 'all';
 
 interface ContentArchitectOptionsPanelProps {
   competitorUrl: string;
@@ -12,10 +16,25 @@ interface ContentArchitectOptionsPanelProps {
   tone: string;
   setTone: (v: string) => void;
   autoFilled: Set<string>;
+  audienceSegment: AudienceSegment;
+  setAudienceSegment: (v: AudienceSegment) => void;
+  audienceDetails?: {
+    primary?: string;
+    secondary?: string;
+    untapped?: string;
+  };
 }
+
+const AUDIENCE_OPTIONS: { value: AudienceSegment; label: string; description: string }[] = [
+  { value: 'primary', label: 'Cible prioritaire', description: 'Audience principale du site' },
+  { value: 'secondary', label: 'Cible secondaire', description: 'Audience complémentaire' },
+  { value: 'untapped', label: 'Opportunités', description: 'Segments non encore exploités' },
+  { value: 'all', label: 'Toutes les cibles', description: 'Contenu multi-audience' },
+];
 
 export function ContentArchitectOptionsPanel({
   competitorUrl, setCompetitorUrl, ctaLink, setCtaLink, photoUrl, setPhotoUrl, tone, setTone, autoFilled,
+  audienceSegment, setAudienceSegment, audienceDetails,
 }: ContentArchitectOptionsPanelProps) {
   return (
     <div className="flex flex-col h-full">
@@ -25,6 +44,54 @@ export function ContentArchitectOptionsPanel({
       </div>
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
+          {/* Audience Segment Selector */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-white/40 uppercase tracking-wider flex items-center gap-1">
+              <Target className="w-3 h-3 stroke-[1.5]" />
+              Cible du contenu
+            </label>
+            <Select value={audienceSegment} onValueChange={(v) => setAudienceSegment(v as AudienceSegment)}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AUDIENCE_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <div className="flex items-center gap-2">
+                      <span>{opt.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Show audience detail for selected segment */}
+            {audienceDetails && audienceSegment !== 'all' && audienceDetails[audienceSegment] && (
+              <div className="mt-1 p-2 rounded-md bg-white/5 border border-white/10">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Users className="w-3 h-3 text-emerald-400/70 stroke-[1.5]" />
+                  <span className="text-[9px] text-white/50 uppercase tracking-wider">
+                    {audienceSegment === 'primary' ? 'Prioritaire' : audienceSegment === 'secondary' ? 'Secondaire' : 'Opportunité'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-white/60 leading-relaxed">{audienceDetails[audienceSegment]}</p>
+              </div>
+            )}
+            {audienceSegment === 'all' && audienceDetails && (
+              <div className="mt-1 space-y-1">
+                {audienceDetails.primary && (
+                  <Badge variant="outline" className="text-[9px] border-emerald-500/30 text-emerald-400/70 mr-1">
+                    P: {audienceDetails.primary.substring(0, 50)}…
+                  </Badge>
+                )}
+                {audienceDetails.secondary && (
+                  <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-400/70 mr-1">
+                    S: {audienceDetails.secondary.substring(0, 50)}…
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-1">
             <label className="text-[10px] text-white/40 uppercase tracking-wider flex items-center gap-1">
               URL concurrent

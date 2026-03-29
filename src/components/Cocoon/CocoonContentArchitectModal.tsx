@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useCredits } from '@/contexts/CreditsContext';
+import type { AudienceSegment } from './ContentArchitectOptionsPanel';
 import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash, Syringe } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
@@ -147,6 +148,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [keywordTags, setKeywordTags] = useState<string[]>([]);
   const [keywordCloudSuggestions, setKeywordCloudSuggestions] = useState<{ keyword: string; position: number; search_volume: number }[]>([]);
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
+  const [audienceSegment, setAudienceSegment] = useState<AudienceSegment>('primary');
+  const [audienceDetails, setAudienceDetails] = useState<{ primary?: string; secondary?: string; untapped?: string }>({});
 
   // ── Demo mode: pre-fill everything ──
   useEffect(() => {
@@ -332,8 +335,33 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   // ── Identity card + workbench auto-fills ──
   useEffect(() => {
     if (!trackedSiteId || !isOpen) return;
-    supabase.from('tracked_sites').select('identity_card, domain' as any).eq('id', trackedSiteId).maybeSingle()
+    supabase.from('tracked_sites').select('identity_card, domain, market_sector, target_audience, client_targets' as any).eq('id', trackedSiteId).maybeSingle()
       .then(({ data }: any) => {
+        // Parse client_targets for audience segment details
+        if (data?.client_targets) {
+          try {
+            const ct = typeof data.client_targets === 'string' ? JSON.parse(data.client_targets) : data.client_targets;
+            const parseSegment = (arr: any[]): string => {
+              if (!arr?.[0]) return '';
+              const item = arr[0];
+              const market = item.market || '';
+              const sub = Object.values(item).find((v: any) => typeof v === 'object' && v !== null && !Array.isArray(v) && ('csp' in v || 'segment' in v || 'role' in v)) as any;
+              let desc = market;
+              if (sub) {
+                if (sub.csp) desc += ` — ${sub.csp}`;
+                if (sub.segment) desc += ` — ${sub.segment}`;
+                if (sub.age_range) desc += ` (${sub.age_range})`;
+              }
+              if (item.intent) desc += ` | ${item.intent}`;
+              return desc;
+            };
+            setAudienceDetails({
+              primary: parseSegment(ct.primary),
+              secondary: parseSegment(ct.secondary),
+              untapped: parseSegment(ct.untapped),
+            });
+          } catch (e) { console.warn('[ContentArchitect] Failed to parse client_targets:', e); }
+        }
         if (!data?.identity_card) return;
         const ic = data.identity_card as Record<string, any>;
         setIdentityCard(ic);
@@ -469,7 +497,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     setLoading(true); setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('content-architecture-advisor', {
-        body: { url, keyword, keywords: keywordTags, page_type: pageType, tracked_site_id: trackedSiteId, content_length: length, custom_prompt: prompt, cta_link: ctaLink, photo_url: photoUrl, competitor_url: competitorUrl, tone },
+        body: { url, keyword, keywords: keywordTags, page_type: pageType, tracked_site_id: trackedSiteId, content_length: length, custom_prompt: prompt, cta_link: ctaLink, photo_url: photoUrl, competitor_url: competitorUrl, tone, target_audience_segment: audienceSegment },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -614,6 +642,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     competitorUrl={competitorUrl} setCompetitorUrl={setCompetitorUrl}
                     ctaLink={ctaLink} setCtaLink={setCtaLink} photoUrl={photoUrl} setPhotoUrl={setPhotoUrl}
                     tone={tone} setTone={setTone} autoFilled={autoFilled}
+                    audienceSegment={audienceSegment} setAudienceSegment={setAudienceSegment}
+                    audienceDetails={audienceDetails}
                   />
                 )}
                 {activePanel === 'tasks' && (
