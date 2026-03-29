@@ -738,6 +738,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                 <span className="text-xs text-white/60">Aperçu de la structure</span>
+                {url && <span className="text-[10px] text-white/30 font-mono truncate ml-auto">{url}</span>}
               </div>
             )}
 
