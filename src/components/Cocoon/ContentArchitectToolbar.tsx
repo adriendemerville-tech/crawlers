@@ -23,11 +23,28 @@ interface ContentArchitectToolbarProps {
   activePanel: PanelId | null;
   onTogglePanel: (id: PanelId) => void;
   hasResult: boolean;
+  colorTheme?: 'cocoon' | 'green';
 }
 
-export function ContentArchitectToolbar({ activePanel, onTogglePanel, hasResult }: ContentArchitectToolbarProps) {
+const themes = {
+  cocoon: {
+    bg: 'bg-[#0a0616]',
+    active: 'bg-[#fbbf24]/15 text-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.1)]',
+    inactive: 'text-white/30 hover:bg-white/5 hover:text-white/60',
+    border: 'border-white/10',
+  },
+  green: {
+    bg: 'bg-[#0b1a14]',
+    active: 'bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]',
+    inactive: 'text-white/30 hover:bg-white/5 hover:text-white/60',
+    border: 'border-white/10',
+  },
+};
+
+export function ContentArchitectToolbar({ activePanel, onTogglePanel, hasResult, colorTheme = 'cocoon' }: ContentArchitectToolbarProps) {
+  const t = themes[colorTheme];
   return (
-    <div className="w-[56px] shrink-0 border-r border-white/10 flex flex-col items-center py-3 gap-0.5 bg-[#0a0616]">
+    <div className={`w-[56px] shrink-0 border-r ${t.border} flex flex-col items-center py-3 gap-0.5 ${t.bg}`}>
       {TOOLBAR_ITEMS.map(item => {
         const Icon = item.icon;
         const isActive = activePanel === item.id;
@@ -36,9 +53,7 @@ export function ContentArchitectToolbar({ activePanel, onTogglePanel, hasResult 
             key={item.id}
             onClick={() => onTogglePanel(item.id)}
             className={`w-11 h-11 rounded-lg flex flex-col items-center justify-center gap-[3px] transition-all duration-150 ${
-              isActive
-                ? 'bg-[#fbbf24]/15 text-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.1)]'
-                : 'text-white/30 hover:bg-white/5 hover:text-white/60'
+              isActive ? t.active : t.inactive
             }`}
             title={item.label}
           >
