@@ -557,7 +557,7 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'llms-interroges',
         title: 'Quels LLMs Crawlers.fr interroge-t-il ?',
-        content: `6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).`,
+        content: `5 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic) et Mistral.`,
       },
       {
         id: 'support',
