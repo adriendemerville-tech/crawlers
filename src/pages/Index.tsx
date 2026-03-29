@@ -45,6 +45,7 @@ const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m =>
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
+const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
@@ -646,6 +647,11 @@ const Index = () => {
         {/* Content Architect */}
         <Suspense fallback={<SectionSkeleton />}>
           <ContentArchitectSection />
+        </Suspense>
+
+        {/* Google Cross Data — SEA→SEO Bridge */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <GoogleCrossDataSection />
         </Suspense>
 
         {/* Product Showcase — Screenshots */}
