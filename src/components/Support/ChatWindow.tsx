@@ -249,7 +249,24 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     conversationIdRef.current = conversationId;
   }, [conversationId]);
 
-  // Check for resolved bug reports on mount
+  // React to language changes: inject a system hint so Félix switches language immediately
+  const prevLanguageRef = useRef(language);
+  useEffect(() => {
+    if (prevLanguageRef.current === language) return;
+    prevLanguageRef.current = language;
+    const langName = language === 'fr' ? 'français' : language === 'es' ? 'español' : 'English';
+    const switchMsg: ChatMessage = {
+      role: 'assistant',
+      content: language === 'fr'
+        ? `🌐 Je passe en **${langName}**. Comment puis-je vous aider ?`
+        : language === 'es'
+        ? `🌐 Cambio a **${langName}**. ¿En qué puedo ayudarle?`
+        : `🌐 Switching to **${langName}**. How can I help you?`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, switchMsg]);
+  }, [language]);
+
   useEffect(() => {
     if (!user) return;
     const checkResolvedBugs = async () => {
@@ -502,6 +519,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           user_id: user?.id || null,
           guest_mode: !user,
           screen_context: screenContext,
+          language,
         },
       });
 

@@ -350,7 +350,7 @@ serve(async (req) => {
       });
     }
 
-    const { messages, conversation_id, user_id, guest_mode, screen_context } = body;
+    const { messages, conversation_id, user_id, guest_mode, screen_context, language: clientLanguage } = body;
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
@@ -1122,7 +1122,12 @@ ${screen_context}
       memoryPrompt = getMemoryExtractionPrompt();
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
+    // Inject explicit language override from client UI
+    const langHint = clientLanguage && clientLanguage !== 'fr'
+      ? `\n\n# LANGUE OBLIGATOIRE\nL'utilisateur a choisi la langue "${clientLanguage === 'es' ? 'español' : 'English'}" dans l'interface. Tu DOIS répondre UNIQUEMENT dans cette langue. Ne réponds JAMAIS en français sauf si l'utilisateur écrit en français.\n`
+      : '';
+
+    const fullSystemPrompt = SYSTEM_PROMPT + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
