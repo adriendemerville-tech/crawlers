@@ -279,6 +279,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   };
 
   return (
+    <>
     <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers, isAuditor }}>
       <AdminAnalyticsProvider>
       <div className="space-y-3">
