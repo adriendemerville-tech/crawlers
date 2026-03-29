@@ -1659,14 +1659,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '9.0.0',
-  lastUpdated: '2026-03-28',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
-  totalEdgeFunctions: 175,
+  version: '10.0.0',
+  lastUpdated: '2026-03-29',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
+  totalEdgeFunctions: 190,
   totalSharedModules: 37,
-  totalTables: '149',
-  totalLinesOfCode: '211 600+',
+  totalTables: '149+',
+  totalLinesOfCode: '215 000+',
   totalMigrations: 245,
   totalPages: 41,
-  totalComponents: 311,
+  totalComponents: 315,
 };
