@@ -82,6 +82,15 @@ export function useStructuredData() {
           "url": "https://crawlers.fr",
           "logo": "https://crawlers.fr/favicon.svg",
           "foundingDate": "2026",
+          "founder": {
+            "@type": "Person",
+            "name": "Mukesh Bagri",
+            "jobTitle": "Fondateur & CTO",
+            "url": "https://crawlers.fr/a-propos",
+            "sameAs": [
+              "https://www.linkedin.com/in/mukesh-bagri/"
+            ]
+          },
           "description": "Éditeur de la plateforme d'audit SEO, GEO et visibilité IA Crawlers.fr. Premier outil francophone couvrant simultanément SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables.",
           "areaServed": ["FR", "BE", "CH", "CA"],
           "knowsAbout": [
@@ -95,7 +104,9 @@ export function useStructuredData() {
             "E-E-A-T"
           ],
           "sameAs": [
-            "https://crawlers.fr"
+            "https://www.linkedin.com/company/crawlers-fr/",
+            "https://crawlers.fr/a-propos",
+            "https://crawlers.fr/methodologie"
           ]
         }
       },
