@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
         scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
         scopes.push('https://www.googleapis.com/auth/business.manage');
         scopes.push('https://www.googleapis.com/auth/indexing');
-        scopes.push('https://www.googleapis.com/auth/adwords.readonly');
+        // Google Ads uses a separate OAuth flow via google-ads-connector
       }
 
       const params = new URLSearchParams({
