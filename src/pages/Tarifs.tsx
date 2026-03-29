@@ -117,6 +117,7 @@ const translations = {
     agencyPremiumFeatures: [
       'Tout Pro Agency inclus',
       'Crawl : 50 000 pages/mois',
+      'Benchmark LLM & Profondeur LLM illimités',
       '100 URL suivis inclus',
       'Priorité file de crawl',
       '3 comptes inclus (2 collaborateurs)',
@@ -220,6 +221,7 @@ const translations = {
     agencyPremiumFeatures: [
       'Everything in Pro Agency',
       'Crawl: 50,000 pages/month',
+      'Unlimited LLM Benchmark & Depth',
       '100 tracked URLs included',
       'Priority crawl queue',
       '3 accounts included (2 collaborators)',
@@ -324,6 +326,7 @@ const translations = {
     agencyPremiumFeatures: [
       'Todo lo de Pro Agency',
       'Crawl: 50 000 páginas/mes',
+      'Benchmark LLM y Profundidad LLM ilimitados',
       '100 URL seguidos incluidos',
       'Prioridad en cola de crawl',
       '3 cuentas incluidas (2 colaboradores)',
