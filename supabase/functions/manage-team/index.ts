@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const isAdmin = !!adminRole;
-    const isAgencyPro = profile?.plan_type === "agency_pro" || profile?.plan_type === "agency_premium";
-    const isAgencyPremium = profile?.plan_type === "agency_premium";
+    const isAgencyPro = isAdmin || profile?.plan_type === "agency_pro" || profile?.plan_type === "agency_premium";
+    const isAgencyPremium = isAdmin || profile?.plan_type === "agency_premium";
 
     if (!isAdmin && !isAgencyPro) {
       return new Response(

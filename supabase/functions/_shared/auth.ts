@@ -10,7 +10,7 @@ export interface AuthContext {
   userId: string;
   email: string;
   isAdmin: boolean;
-  planType: 'free' | 'agency_pro';
+  planType: 'free' | 'agency_pro' | 'agency_premium';
   subscriptionStatus: string | null;
   supabase: ReturnType<typeof getServiceClient>;
   userClient: ReturnType<typeof getUserClient>;
@@ -42,7 +42,7 @@ export async function getAuthenticatedUser(req: Request): Promise<AuthContext | 
       userId: 'service-role',
       email: 'system@crawlers.fr',
       isAdmin: true,
-      planType: 'agency_pro',
+      planType: 'agency_premium',
       subscriptionStatus: 'active',
       supabase,
       userClient,
@@ -68,14 +68,19 @@ export async function getAuthenticatedUser(req: Request): Promise<AuthContext | 
   const profile = profileResult.data;
   const isAdmin = adminResult.data === true;
 
+  const isActivePremium = profile?.plan_type === 'agency_premium' &&
+    (profile?.subscription_status === 'active' || profile?.subscription_status === 'canceling');
   const isActivePro = profile?.plan_type === 'agency_pro' &&
     (profile?.subscription_status === 'active' || profile?.subscription_status === 'canceling');
+
+  // Admins are treated as agency_premium
+  const effectivePlan = isAdmin ? 'agency_premium' : (isActivePremium ? 'agency_premium' : (isActivePro ? 'agency_pro' : 'free'));
 
   return {
     userId: user.id,
     email: user.email || '',
     isAdmin,
-    planType: isActivePro ? 'agency_pro' : 'free',
+    planType: effectivePlan as 'free' | 'agency_pro' | 'agency_premium',
     subscriptionStatus: profile?.subscription_status || null,
     supabase,
     userClient,

@@ -447,8 +447,8 @@ export default function SiteCrawl() {
       return localStorage.getItem('crawl_last_url') || '';
     } catch { return ''; }
   });
-  const isAgencyPlus = planType === 'agency_premium';
-  const maxSliderCap = isAdmin ? 50 : (isAgencyPlus ? 50 : 20);
+  const isAgencyPlus = isAdmin || planType === 'agency_premium';
+  const maxSliderCap = isAgencyPlus ? 50 : 20;
   const [maxPages, setMaxPages] = useState(maxSliderCap);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
