@@ -14,6 +14,7 @@ import {
   PanelLeft, Eye, Syringe, ImagePlus, Server
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
 
 /* ─── Translations ─── */
 const t = {
@@ -557,6 +558,18 @@ const ContentArchitectPage = memo(() => {
                   {tr.hero.ctaSecondary}
                 </Button>
               </a>
+            </motion.div>
+
+            {/* Screenshot */}
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-4xl">
+              <div className="rounded-xl border border-border shadow-2xl shadow-emerald-500/10 overflow-hidden">
+                <img
+                  src={contentArchitectPreview}
+                  alt="Content Architect — Interface de création de contenu SEO avec images IA et publication CMS"
+                  className="w-full h-auto"
+                  loading="eager"
+                />
+              </div>
             </motion.div>
           </div>
         </section>
