@@ -349,6 +349,13 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                     Simulé
                   </Badge>
                 )}
+                <button
+                  onClick={() => setShowContentArchitect(true)}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                >
+                  <PenLine className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Content Architect (crawlers.fr)</span>
+                </button>
               </div>
             )}
           </nav>
