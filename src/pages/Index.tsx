@@ -649,14 +649,14 @@ const Index = () => {
           <ContentArchitectSection />
         </Suspense>
 
-        {/* Google Cross Data — SEA→SEO Bridge */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <GoogleCrossDataSection />
-        </Suspense>
-
         {/* Product Showcase — Screenshots */}
         <Suspense fallback={<SectionSkeleton />}>
           <ProductShowcaseSection />
+        </Suspense>
+
+        {/* Google Cross Data — SEA→SEO Bridge */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <GoogleCrossDataSection />
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
