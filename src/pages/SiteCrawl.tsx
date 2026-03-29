@@ -720,10 +720,10 @@ export default function SiteCrawl() {
         const total = Math.max(indexed || 0, sitemapTotal || 0);
         if (total > 0) {
           setTotalEstimatedPages(total);
-          // Auto-cap slider
-          const capMax = maxSliderCap;
-          if (maxPages > Math.min(capMax, total)) {
-            setMaxPages(Math.min(capMax, total));
+          // Auto-cap slider — for pro agency users, cap is the sitemap total
+          const capMax = (isAgencyPlus || isAdmin) ? total : Math.min(maxSliderCap, total);
+          if (maxPages > capMax) {
+            setMaxPages(capMax);
           }
         }
       } catch {
@@ -1272,7 +1272,7 @@ export default function SiteCrawl() {
                         value={[maxPages]}
                         onValueChange={([val]) => setMaxPages(val)}
                         min={10}
-                        max={isAdmin ? 50 : (isAgencyPlus ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(50, Math.max(10, totalEstimatedPages)) : 50) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20))}
+                        max={isAdmin ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (isAgencyPlus ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20))}
                         step={isAdmin || isAgencyPlus ? 10 : 5}
                         disabled={isLoading}
                         className="flex-1"
