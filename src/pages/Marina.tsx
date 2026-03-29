@@ -142,8 +142,43 @@ export default function Marina() {
   return (
     <>
       <Helmet>
-        <title>Marina — Rapport SEO & GEO complet en un clic | Crawlers.fr</title>
-        <meta name="description" content="Générez un rapport SEO & GEO professionnel de 15+ pages en quelques minutes. Audit technique, stratégique, cocoon sémantique. 5 crédits par rapport." />
+        <html lang="fr" />
+        <title>Marina — Rapport SEO & GEO automatisé en 3 minutes | Crawlers.fr</title>
+        <meta name="description" content="Générez un rapport SEO & GEO professionnel de 15+ pages en 3 minutes. Audit technique 200 points, visibilité IA, cocoon sémantique. 5 crédits/rapport. API embed disponible." />
+        <link rel="canonical" href="https://crawlers.fr/marina" />
+        <meta property="og:title" content="Marina — Rapport SEO & GEO automatisé | Crawlers.fr" />
+        <meta property="og:description" content="Audit technique, stratégique, visibilité LLM et cocoon sémantique en un clic. Embarquez Marina sur votre site via l'API." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://crawlers.fr/marina" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Marina — Rapport SEO & GEO automatisé | Crawlers.fr" />
+        <meta name="twitter:description" content="Rapport SEO/GEO de 15+ pages en 3 minutes. API embed pour agences." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Marina by Crawlers.fr",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "description": "Pipeline d'audit SEO & GEO automatisé. Génère un rapport professionnel de 15+ pages en 3 minutes : audit technique, stratégique, visibilité IA, cocoon sémantique.",
+          "url": "https://crawlers.fr/marina",
+          "offers": [
+            { "@type": "Offer", "name": "Rapport unitaire", "price": "2.50", "priceCurrency": "EUR", "description": "5 crédits par rapport" },
+            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "59", "priceCurrency": "EUR", "description": "Marina inclus" },
+          ],
+          "featureList": [
+            "Audit technique SEO 200 points",
+            "Score GEO & Visibilité LLM",
+            "Audit stratégique concurrentiel",
+            "Analyse Cocoon sémantique",
+            "Rapport HTML 15+ pages",
+            "API Embed pour intégration tierce"
+          ],
+          "publisher": {
+            "@type": "Organization",
+            "name": "Crawlers.fr",
+            "url": "https://crawlers.fr"
+          }
+        })}</script>
       </Helmet>
 
       <Header />
