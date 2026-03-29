@@ -1650,8 +1650,102 @@ function generateRecommendations(
       target_operation: 'create',
     });
   }
+
+  // === FAQ SCHEMA CHECK ===
+  const hasFAQContent = /faq|questions? fréquentes|frequently asked|preguntas frecuentes/i.test(htmlAnalysis.rawHtml || '');
+  const hasFAQSchema = htmlAnalysis.schemaTypes?.some((t: string) => t.toLowerCase().includes('faqpage'));
+  if (hasFAQContent && !hasFAQSchema) {
+    recommendations.push({
+      id: 'faq-no-schema',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'FAQ présente mais sans balisage FAQPage schema.org',
+      description: 'Une section FAQ est détectée mais sans balisage structuré FAQPage. Les moteurs IA (ChatGPT, Gemini, Perplexity) ne peuvent pas extraire vos Q&R de manière fiable. Ajoutez le schéma FAQPage pour maximiser la citabilité.',
+      fixes: [
+        "Ajouter un script JSON-LD de type FAQPage avec mainEntity",
+        "Chaque question doit être un objet Question avec acceptedAnswer",
+        "Les réponses doivent être complètes (2-4 phrases minimum, pas décoratives)"
+      ],
+      target_selector: 'schema_org',
+      target_operation: 'create',
+    });
+  }
+  if (!hasFAQContent && htmlAnalysis.wordCount > 500) {
+    recommendations.push({
+      id: 'no-faq-section',
+      priority: 'suggestion',
+      category: 'ia',
+      icon: '💡',
+      title: 'Aucune section FAQ détectée',
+      description: 'Les pages sans FAQ structurée perdent un levier de citabilité GEO majeur. Les LLM extraient prioritairement les réponses directes aux questions. Ajoutez 3-6 vraies questions utilisateurs avec réponses complètes + balisage FAQPage.',
+      fixes: [
+        "Ajouter une section FAQ avec 3-6 questions réelles",
+        "Baliser avec FAQPage schema.org",
+        "Les questions doivent refléter les recherches réelles (People Also Ask)"
+      ],
+      target_selector: 'content',
+      target_operation: 'append',
+    });
+  }
+
+  // === BRAND AUTO-CITATION CHECK ===
+  const brandName = htmlAnalysis.siteName || htmlAnalysis.domain?.split('.')[0] || '';
+  const brandPatterns = [
+    new RegExp(`chez\\s+${brandName}`, 'i'),
+    new RegExp(`selon\\s+(l'analyse\\s+)?${brandName}`, 'i'),
+    new RegExp(`l'équipe\\s+${brandName}`, 'i'),
+    new RegExp(`${brandName}\\s+recommande`, 'i'),
+    new RegExp(`notre\\s+approche\\s+chez`, 'i'),
+  ];
+  const hasBrandCitations = brandName.length > 2 && brandPatterns.some(p => p.test(htmlAnalysis.rawHtml || ''));
+  if (!hasBrandCitations && htmlAnalysis.wordCount > 300 && !htmlAnalysis.isHomePage) {
+    recommendations.push({
+      id: 'no-brand-auto-citation',
+      priority: 'suggestion',
+      category: 'ia',
+      icon: '💡',
+      title: 'Aucune auto-citation de la marque dans le contenu',
+      description: `Les LLM reprennent les formulations de type "Chez ${brandName || '[Marque]'}, notre approche consiste à..." lorsqu'ils citent une source. Intégrer 2-3 auto-citations naturelles renforce la brand entity recognition et la citabilité GEO.`,
+      fixes: [
+        `Ajouter des formulations comme "Chez ${brandName || '[Marque]'}, notre approche..."`,
+        `"L'équipe ${brandName || '[Marque]'} recommande..."`,
+        `"Selon l'analyse ${brandName || '[Marque]'}..."`,
+        "Les auto-citations doivent être naturelles et informatives, pas forcées"
+      ],
+      target_selector: 'content',
+      target_operation: 'append',
+    });
+  }
+
+  // === INTRO SUMMARY CHECK (150 words) ===
+  if (!htmlAnalysis.isHomePage && htmlAnalysis.wordCount > 500) {
+    const introText = (htmlAnalysis.rawHtml || '').replace(/<[^>]+>/g, ' ').substring(0, 1500);
+    const introWords = introText.trim().split(/\s+/).slice(0, 150);
+    const hasSubstantiveIntro = introWords.length >= 80 && (
+      /résumé|en bref|dans cet article|cette page|vous découvrirez|nous expliquons|guide complet|tout savoir/i.test(introWords.join(' ')) ||
+      /summary|in this article|this page|you'll learn|we explain|complete guide|everything you need/i.test(introWords.join(' '))
+    );
+    if (!hasSubstantiveIntro) {
+      recommendations.push({
+        id: 'no-intro-summary',
+        priority: 'suggestion',
+        category: 'ia',
+        icon: '💡',
+        title: 'Pas de résumé éditorial dans les 150 premiers mots',
+        description: 'Les LLM extraient prioritairement les premiers paragraphes comme snippet. Un résumé de 100-150 mots en tête de page (contenant le mot-clé principal + nom de la marque + proposition de valeur) maximise la citabilité.',
+        fixes: [
+          "Ajouter un chapô de 100-150 mots résumant le contenu et l'angle éditorial",
+          "Inclure le mot-clé principal naturellement",
+          "Mentionner le nom de la marque/entreprise",
+          "Formuler la proposition de valeur unique de cette page"
+        ],
+        target_selector: 'content',
+        target_operation: 'prepend',
+      });
+    }
+  }
   
-  // === STANDARD SEO RECOMMENDATIONS ===
   if (!htmlAnalysis.hasTitle) {
     recommendations.push({
       id: 'no-title',

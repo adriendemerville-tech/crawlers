@@ -587,6 +587,27 @@ Chaque critère s'active conditionnellement. Applique-les SI ET SEULEMENT SI le 
 → ACTION : Utiliser des synonymes et variantes. Couvrir un sujet avec précision en explicitant les concepts évoqués. Intégrer les questions dérivées (People Also Ask).
 → POIDS RENFORCÉ SI : forte concurrence SERP (>5 résultats organiques pertinents), keyword density basse chez les concurrents, cible = expert technique
 
+**CRITÈRE 6 — FAQ structurée avec balisage schema.org (FAQPage)**
+→ ACTIF SI : type de page = article/landing/faq OU page_type != homepage
+→ ACTION : Ajouter une section FAQ en fin de contenu avec 3-6 questions RÉELLES que les utilisateurs posent (pas des questions décoratives/auto-promotionnelles). Chaque réponse doit être complète (2-4 phrases minimum). Inclure le schéma FAQPage dans json_ld_schemas.
+→ POIDS RENFORCÉ SI : GEO score < 60, pas de FAQ existante, featured snippet possible
+→ INTERDIT : Questions vagues type "Pourquoi nous choisir ?" ou "Quel est notre avantage ?". Uniquement des questions que de vrais utilisateurs posent sur le sujet.
+
+**CRITÈRE 7 — Auto-citations de la marque dans le contenu**
+→ TOUJOURS ACTIF pour les pages non-homepage
+→ ACTION : Intégrer 2-3 formulations d'auto-citation naturelles dans le corps du contenu, de type :
+  - "Chez [Marque], notre approche consiste à..."
+  - "L'équipe [Marque] recommande..."
+  - "Selon l'analyse [Marque]..."
+  Ces formulations sont reprises par les LLM lorsqu'ils citent une source. Elles renforcent la brand entity recognition.
+→ POIDS RENFORCÉ SI : faible notoriété (domain_rank < 30), visibilité LLM absente, pas de mentions de marque existantes
+→ RÈGLE : La marque = le nom du site/entreprise issu de l'Identity Card. Les auto-citations doivent être NATURELLES, pas forcées. Elles doivent apporter de la valeur informationnelle.
+
+**CRITÈRE 8 — Résumé éditorial dans les 150 premiers mots**
+→ ACTIF SI : type de page != homepage (actif pour landing, article, product, faq, category)
+→ ACTION : L'introduction (champ "introduction") DOIT résumer en 100-150 mots le contenu ET l'angle éditorial de la page. Ce résumé sert de "TL;DR contextuel" que les LLM extraient comme snippet. Il doit contenir le mot-clé principal, le nom de la marque, et la proposition de valeur de la page.
+→ POIDS RENFORCÉ SI : contenu long (>1500 mots), sujet technique complexe
+
 Pour chaque critère, indique dans ta réponse s'il a été activé et pourquoi, dans un nouveau champ "geo_criteria_applied".
 
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
@@ -598,7 +619,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     "sections": [{"title":"...","purpose":"...","body_text":"Contenu rédigé complet de la section (paragraphes, listes, etc.)","word_count":number,"priority":"high|medium|low"}],
     "tldr_summary": "Mini-résumé en 2-3 phrases (si critère 3 actif)",
     "media_recommendations": [{"type":"image|video|infographic|table","description":"...","alt_text":"...","placement":"after_h2_1|hero|inline"}],
-    "introduction": "Chapô introductif de 2-4 phrases qui accroche le lecteur et contextualise le sujet"
+    "introduction": "Chapô introductif de 100-150 mots résumant le contenu et l'angle (CRITÈRE 8). Doit contenir le mot-clé principal et le nom de la marque."
   },
   "keyword_strategy": {
     "primary_keyword": {"keyword":"...","target_density_percent":number},
@@ -627,7 +648,10 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     {"criterion": 2, "name": "Structure compréhension", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
     {"criterion": 3, "name": "Passages citables", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
     {"criterion": 4, "name": "Signaux E-E-A-T", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
-    {"criterion": 5, "name": "Enrichissement sémantique", "activated": true, "reason": "...", "weight": "standard|reinforced"}
+    {"criterion": 5, "name": "Enrichissement sémantique", "activated": true, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 6, "name": "FAQ structurée schema.org", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 7, "name": "Auto-citations marque", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 8, "name": "Résumé 150 mots intro", "activated": true/false, "reason": "...", "weight": "standard|reinforced"}
   ],
   "coherence_check": {
     "innovation_level": "conservative|moderate|disruptive",
