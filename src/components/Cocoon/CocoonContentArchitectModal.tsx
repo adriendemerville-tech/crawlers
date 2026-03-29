@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useCredits } from '@/contexts/CreditsContext';
 import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash, Syringe } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
@@ -53,6 +54,7 @@ const LENGTHS = [
 
 export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
+  const { isAgencyPro } = useCredits();
   const [activePanel, setActivePanel] = useState<PanelId | null>('prompt');
   const [viewMode, setViewMode] = useState<'page' | 'code'>('page');
   const [showGuide, setShowGuide] = useState(false);
@@ -587,6 +589,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             onSaveDraft={handleSaveDraft} onPublish={handlePublish}
             publishing={publishing} savingDraft={savingDraft}
             hasCmsConnection={hasCmsConnection} isExistingPage={isExistingPage}
+            creditsCost={!isAgencyPro ? 5 : null}
           />
         </div>
       </div>

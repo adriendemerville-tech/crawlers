@@ -20,11 +20,12 @@ interface ContentArchitectPreviewProps {
   savingDraft?: boolean;
   hasCmsConnection?: boolean;
   isExistingPage?: boolean;
+  creditsCost?: number | null;
 }
 
 export function ContentArchitectPreview({
   result, setResult, loading, url, isEdited, onResetEdits, showGuide, setShowGuide, language, counters,
-  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage,
+  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage, creditsCost,
 }: ContentArchitectPreviewProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -46,7 +47,7 @@ export function ContentArchitectPreview({
                 ? 'h-7 px-3 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold gap-1.5'
                 : 'h-7 px-3 text-[10px] bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 gap-1.5'}>
               {publishing ? <Loader2 className="w-3 h-3 animate-spin" /> : hasCmsConnection ? <Upload className="w-3 h-3 stroke-[1.5]" /> : <Plug className="w-3 h-3 stroke-[1.5]" />}
-              {hasCmsConnection ? (isExistingPage ? 'Mettre à jour' : 'Publier') : 'Connecter CMS'}
+              {hasCmsConnection ? (isExistingPage ? 'Mettre à jour' : `Publier${creditsCost ? ` (${creditsCost} crédits)` : ''}`) : 'Connecter CMS'}
             </Button>
           )}
         </div>
