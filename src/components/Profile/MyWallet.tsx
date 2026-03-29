@@ -646,11 +646,16 @@ export function MyWallet() {
               onClick={async () => {
                 setSubscribeLoading(true);
                 try {
-                  const { data, error } = await supabase.functions.invoke('stripe-actions', {
+                  const resp = await supabase.functions.invoke('stripe-actions', {
                     body: { action: 'subscription', returnUrl: window.location.href }
                   });
-                  if (error) throw error;
-                  if (data?.url) window.open(data.url, '_blank', 'noopener');
+                  if (resp.error) {
+                    let msg = String(resp.error);
+                    try { const ctx = await (resp.error as any).context?.json(); if (ctx?.error) msg = ctx.error; } catch {}
+                    throw new Error(msg);
+                  }
+                  if (resp.data?.url) window.open(resp.data.url, '_blank', 'noopener');
+                  else throw new Error(resp.data?.error || 'Aucune URL de paiement reçue');
                 } catch (err) {
                   toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
                 } finally {
