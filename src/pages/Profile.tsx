@@ -329,6 +329,12 @@ function ProfileContent() {
                   <MarinaConsoleTab />
                 </TabsContent>
 
+                {isProUser && (
+                  <TabsContent value="sea-seo">
+                    <SeaSeoBridgeTab />
+                  </TabsContent>
+                )}
+
                 <TabsContent value="gmb">
                   <GMBDashboard isGated={!isProUser} />
                 </TabsContent>
