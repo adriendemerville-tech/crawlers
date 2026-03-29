@@ -461,7 +461,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Outils MCP gratuits (sans authentification)',
         content: `<ul class="list-disc pl-6 space-y-1">
 <li><strong>check_geo_score</strong> — Score GEO (0-100) pour l'optimisation moteurs IA</li>
-<li><strong>check_llm_visibility</strong> — Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama</li>
+<li><strong>check_llm_visibility</strong> — Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral</li>
 <li><strong>check_ai_crawlers</strong> — Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)</li>
 </ul>`,
       },
@@ -557,7 +557,7 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'llms-interroges',
         title: 'Quels LLMs Crawlers.fr interroge-t-il ?',
-        content: `6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).`,
+        content: `5 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic) et Mistral.`,
       },
       {
         id: 'support',
