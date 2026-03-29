@@ -351,8 +351,9 @@ function performSelfAudit(doc: HTMLDocument, htmlLength: number): SelfAuditResul
 // ==================== SMART FETCHER WITH CASCADING WAF BYPASS ====================
 
 /**
- * Cascade: stealthFetch → Browserless → Fly.io Playwright → Firecrawl
- * Each layer handles a different level of anti-bot protection.
+ * Cascade optimisée (75% natif / 22% Spider / 3% Firecrawl) :
+ * stealthFetch → Spider.cloud → Browserless → Firecrawl
+ * Fly.io Playwright conservé comme helper mais retiré de la cascade principale.
  */
 
 async function tryBrowserless(url: string): Promise<string | null> {
