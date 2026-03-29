@@ -189,16 +189,20 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   // Track which fields were auto-filled (so we don't overwrite user edits)
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
 
-  // ── Auto-detect page type from URL pattern ──
-  const detectPageTypeFromUrl = useCallback((targetUrl: string): string | null => {
-    const lower = targetUrl.toLowerCase();
+  // ── Auto-detect page type from directory ──
+  const detectPageTypeFromDirectory = useCallback((dir: string, cat: string | null): string | null => {
+    if (cat === 'blog' || cat === 'article' || cat === 'news') return 'article';
+    if (cat === 'product' || cat === 'shop') return 'product';
+    if (cat === 'faq' || cat === 'help') return 'faq';
+    if (cat === 'landing') return 'landing';
+    if (cat === 'category' || cat === 'collection') return 'category';
+    const lower = dir.toLowerCase();
     if (/\/(blog|article|post|news|actualit|actu)\b/i.test(lower)) return 'article';
     if (/\/(produit|product|shop|boutique|item)\b/i.test(lower)) return 'product';
     if (/\/(faq|aide|help|support)\b/i.test(lower)) return 'faq';
     if (/\/(landing|lp|offre|promo)\b/i.test(lower)) return 'landing';
     if (/\/(categori|collection|rayon)\b/i.test(lower)) return 'category';
-    // Root URL → homepage
-    try { const u = new URL(targetUrl); if (u.pathname === '/' || u.pathname === '') return 'homepage'; } catch {}
+    if (dir === '/' || dir === '') return 'homepage';
     return null;
   }, []);
 
@@ -348,16 +352,40 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     applyDraft(draft);
   }, [isOpen, draftData, trackedSiteId, domain]);
 
-  // ── Auto-detect page type from URL when URL changes ──
+  // ── Auto-detect page type from directory when directory changes ──
   useEffect(() => {
-    if (!url || autoFilled.has('pageType_manual')) return;
-    const detected = detectPageTypeFromUrl(url);
+    if (!directory || autoFilled.has('pageType_manual')) return;
+    const dirInfo = directories.find(d => d.path === directory);
+    const detected = detectPageTypeFromDirectory(directory, dirInfo?.category || null);
     if (detected && detected !== pageType) {
       setPageType(detected);
-      // Also suggest appropriate length
       setLength(suggestLengthFromType(detected));
     }
-  }, [url]);
+  }, [directory, directories]);
+
+  // ── Auto-generate slug from keyword for new pages ──
+  useEffect(() => {
+    if (!keyword || isExistingPage || autoFilled.has('slug_manual')) return;
+    const newSlug = generateSlugFromKeyword(keyword);
+    if (newSlug) setSlug(newSlug);
+  }, [keyword, isExistingPage]);
+
+  // ── Auto-select directory from page type for new pages ──
+  useEffect(() => {
+    if (isExistingPage || !directories.length || autoFilled.has('directory_manual')) return;
+    const typeToCategory: Record<string, string[]> = {
+      article: ['blog', 'article', 'news'],
+      product: ['product', 'shop'],
+      landing: ['landing'],
+      faq: ['faq', 'help'],
+      category: ['category', 'collection'],
+    };
+    const cats = typeToCategory[pageType] || [];
+    const match = directories.find(d => d.category && cats.includes(d.category));
+    if (match && match.path !== directory) {
+      setDirectory(match.path);
+    }
+  }, [pageType, directories, isExistingPage]);
 
   // ── Auto-inject default preset + merge diagnostics ──
   useEffect(() => {
