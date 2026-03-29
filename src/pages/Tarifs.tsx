@@ -113,7 +113,7 @@ const translations = {
     agencyLoginRequired: 'Connectez-vous pour vous abonner',
     agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Crawl intensif pour sites à fort volume',
-    agencyPremiumPrice: '89€',
+    agencyPremiumPrice: '99€',
     agencyPremiumFeatures: [
       'Tout Pro Agency inclus',
       'Crawl : 50 000 pages/mois',
@@ -121,7 +121,7 @@ const translations = {
       'Priorité file de crawl',
       '3 comptes inclus (2 collaborateurs)',
     ],
-    agencyPremiumCta: "S'abonner · 89€/mois",
+    agencyPremiumCta: "S'abonner · 99€/mois",
     or: 'ou',
   },
   en: {
@@ -216,7 +216,7 @@ const translations = {
     agencyLoginRequired: 'Log in to subscribe',
     agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Intensive crawling for high-volume sites',
-    agencyPremiumPrice: '€89',
+    agencyPremiumPrice: '€99',
     agencyPremiumFeatures: [
       'Everything in Pro Agency',
       'Crawl: 50,000 pages/month',
@@ -224,7 +224,7 @@ const translations = {
       'Priority crawl queue',
       '3 accounts included (2 collaborators)',
     ],
-    agencyPremiumCta: 'Subscribe · €89/mo',
+    agencyPremiumCta: 'Subscribe · €99/mo',
     or: 'or',
   },
   es: {
@@ -320,7 +320,7 @@ const translations = {
     agencyLoginRequired: 'Inicia sesión para suscribirte',
     agencyPremiumTitle: 'Pro Agency +',
     agencyPremiumSubtitle: 'Crawl intensivo para sitios de gran volumen',
-    agencyPremiumPrice: '89€',
+    agencyPremiumPrice: '99€',
     agencyPremiumFeatures: [
       'Todo lo de Pro Agency',
       'Crawl: 50 000 páginas/mes',
@@ -328,7 +328,7 @@ const translations = {
       'Prioridad en cola de crawl',
       '3 cuentas incluidas (2 colaboradores)',
     ],
-    agencyPremiumCta: 'Suscribirse · 89€/mes',
+    agencyPremiumCta: 'Suscribirse · 99€/mes',
     or: 'o',
   },
 };
