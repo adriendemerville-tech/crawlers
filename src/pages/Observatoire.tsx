@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -8,17 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useObservatoryStats } from '@/hooks/useObservatoryStats';
+import { useObservatorySectors, type SectorData } from '@/hooks/useObservatorySectors';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Code2, Timer, AlertTriangle, TrendingUp, TrendingDown,
-  BarChart3, Activity, Map, FileText, Share2, Twitter,
+  BarChart3, Activity, Map as MapIcon, FileText, Share2, Twitter,
   Link2, Globe, ShieldCheck, Smartphone, MonitorSmartphone,
   Box, Network, Image, ImageOff, Palette, FileCode,
   Gauge, Zap, LayoutDashboard, MousePointerClick,
-  BookOpen, FlaskConical, HelpCircle, ArrowRight
+  BookOpen, FlaskConical, HelpCircle, ArrowRight, Layers, PieChart
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 // ─── Translations ──────────────────────────────────────────
 const translations = {
@@ -62,6 +64,20 @@ const translations = {
     ctaTitle: "Comparez votre site aux moyennes nationales",
     ctaDesc: "Lancez un audit SEO & GEO expert gratuit et découvrez où vous vous situez par rapport au web français.",
     ctaButton: "Lancer mon audit gratuit",
+    sectorTitle: "Veille sectorielle",
+    sectorSubtitle: "Benchmarks par secteur d'activité — données agrégées et anonymisées",
+    sectorFilter: "Filtrer par secteur",
+    sectorAll: "Tous les secteurs",
+    sectorScans: "audits analysés",
+    sectorNoData: "Aucune donnée sectorielle disponible. Les données apparaîtront après les prochaines agrégations.",
+    sectorTrendTitle: "Évolution par secteur",
+    sectorRadarTitle: "Radar SEO par secteur",
+    sectorBenchmarkTitle: "Benchmarks sectoriels",
+    sectorMetrics: {
+      json_ld_rate: "JSON-LD", schema_org_rate: "Schema.org", https_rate: "HTTPS",
+      mobile_friendly_rate: "Mobile", canonical_rate: "Canonical", meta_description_rate: "Meta Desc",
+      avg_seo_score: "Score SEO", avg_lcp_ms: "LCP (ms)", avg_ttfb_ms: "TTFB (ms)",
+    },
   },
   en: {
     title: "The French Web Observatory",
@@ -103,6 +119,20 @@ const translations = {
     ctaTitle: "Benchmark your site against national averages",
     ctaDesc: "Run a free expert SEO & GEO audit and discover where you stand compared to the French web.",
     ctaButton: "Start my free audit",
+    sectorTitle: "Sector Watch",
+    sectorSubtitle: "Benchmarks by industry — aggregated and anonymized data",
+    sectorFilter: "Filter by sector",
+    sectorAll: "All sectors",
+    sectorScans: "audits analyzed",
+    sectorNoData: "No sectoral data available yet. Data will appear after the next aggregation.",
+    sectorTrendTitle: "Sector trends",
+    sectorRadarTitle: "SEO Radar by sector",
+    sectorBenchmarkTitle: "Sector benchmarks",
+    sectorMetrics: {
+      json_ld_rate: "JSON-LD", schema_org_rate: "Schema.org", https_rate: "HTTPS",
+      mobile_friendly_rate: "Mobile", canonical_rate: "Canonical", meta_description_rate: "Meta Desc",
+      avg_seo_score: "SEO Score", avg_lcp_ms: "LCP (ms)", avg_ttfb_ms: "TTFB (ms)",
+    },
   },
   es: {
     title: "El Observatorio del Web Francés",
@@ -144,12 +174,26 @@ const translations = {
     ctaTitle: "Compare su sitio con los promedios nacionales",
     ctaDesc: "Lance una auditoría SEO & GEO experta gratuita y descubra su posición frente al web francés.",
     ctaButton: "Iniciar mi auditoría gratuita",
+    sectorTitle: "Vigilancia sectorial",
+    sectorSubtitle: "Benchmarks por sector — datos agregados y anonimizados",
+    sectorFilter: "Filtrar por sector",
+    sectorAll: "Todos los sectores",
+    sectorScans: "auditorías analizadas",
+    sectorNoData: "No hay datos sectoriales disponibles. Aparecerán tras la próxima agregación.",
+    sectorTrendTitle: "Evolución por sector",
+    sectorRadarTitle: "Radar SEO por sector",
+    sectorBenchmarkTitle: "Benchmarks sectoriales",
+    sectorMetrics: {
+      json_ld_rate: "JSON-LD", schema_org_rate: "Schema.org", https_rate: "HTTPS",
+      mobile_friendly_rate: "Móvil", canonical_rate: "Canonical", meta_description_rate: "Meta Desc",
+      avg_seo_score: "Score SEO", avg_lcp_ms: "LCP (ms)", avg_ttfb_ms: "TTFB (ms)",
+    },
   },
 };
 
 // ─── Icon & style maps ──────────────────────────────────────
 const booleanIcons: Record<string, any> = {
-  has_json_ld: Code2, has_sitemap: Map, has_robots_txt: FileText,
+  has_json_ld: Code2, has_sitemap: MapIcon, has_robots_txt: FileText,
   has_meta_description: FileText, has_open_graph: Share2,
   has_twitter_cards: Twitter, has_canonical: Link2, has_hreflang: Globe,
   has_https: ShieldCheck, is_mobile_friendly: Smartphone, has_viewport_meta: MonitorSmartphone,
@@ -238,6 +282,8 @@ const Observatoire = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const stats = useObservatoryStats();
+  const sectorData = useObservatorySectors();
+  const [selectedSector, setSelectedSector] = useState<string>('all');
 
   useCanonicalHreflang('/observatoire');
 
@@ -505,6 +551,209 @@ const Observatoire = () => {
               )}
             </CardContent>
           </Card>
+        </section>
+
+        {/* ═══ SECTORAL WATCH ═══ */}
+        <section className="container mx-auto max-w-6xl px-4 py-12 md:py-16" aria-label="Sectoral benchmarks">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg p-2 bg-primary/10 mt-0.5">
+                <Layers className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">{t.sectorTitle}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{t.sectorSubtitle}</p>
+              </div>
+            </div>
+            {sectorData.sectorNames.length > 0 && (
+              <Select value={selectedSector} onValueChange={setSelectedSector}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={t.sectorFilter} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t.sectorAll}</SelectItem>
+                  {sectorData.sectorNames.map(s => (
+                    <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {sectorData.loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
+            </div>
+          ) : sectorData.sectors.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                {t.sectorNoData}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Sector benchmark cards */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-primary" />
+                  {t.sectorBenchmarkTitle}
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {(() => {
+                    const filtered = selectedSector === 'all'
+                      ? sectorData.sectors
+                      : sectorData.sectors.filter(s => s.sector === selectedSector);
+                    // Group by sector, take latest period
+                    const latestBySector = new Map<string, SectorData>();
+                    for (const row of filtered) {
+                      const existing = latestBySector.get(row.sector);
+                      if (!existing || row.period > existing.period) {
+                        latestBySector.set(row.sector, row);
+                      }
+                    }
+                    return Array.from(latestBySector.values()).map(row => (
+                      <Card key={`${row.sector}-${row.source}`} className="border-border/50 hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-semibold capitalize">{row.sector}</CardTitle>
+                            <Badge variant="secondary" className="text-xs">{row.total_scans} {t.sectorScans}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{row.period} · {row.source.replace('_', ' ')}</p>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            {[
+                              { label: 'JSON-LD', value: row.json_ld_rate, unit: '%' },
+                              { label: 'HTTPS', value: row.https_rate, unit: '%' },
+                              { label: 'Schema', value: row.schema_org_rate, unit: '%' },
+                              { label: 'Score SEO', value: row.avg_seo_score, unit: '' },
+                              { label: 'LCP', value: row.avg_lcp_ms, unit: 'ms' },
+                              { label: 'TTFB', value: row.avg_ttfb_ms, unit: 'ms' },
+                            ].map((m, j) => (
+                              <div key={j} className="py-1">
+                                <p className="text-xs text-muted-foreground">{m.label}</p>
+                                <p className="text-sm font-bold text-foreground">
+                                  {m.value != null ? `${m.value}${m.unit}` : '–'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Radar chart */}
+              {(() => {
+                const radarSectors = selectedSector === 'all'
+                  ? sectorData.sectorNames.slice(0, 5)
+                  : [selectedSector];
+                const latestPeriod = sectorData.sectors.reduce((max, s) => s.period > max ? s.period : max, '');
+                const radarMetrics = ['json_ld_rate', 'schema_org_rate', 'https_rate', 'mobile_friendly_rate', 'canonical_rate', 'meta_description_rate'] as const;
+                const radarData = radarMetrics.map(metric => {
+                  const point: Record<string, any> = { metric: (t.sectorMetrics as any)[metric] || metric };
+                  for (const sec of radarSectors) {
+                    const row = sectorData.sectors.find(s => s.sector === sec && s.period === latestPeriod && s.source === 'expert_audit')
+                      || sectorData.sectors.find(s => s.sector === sec && s.period === latestPeriod);
+                    point[sec] = row ? (row as any)[metric] ?? 0 : 0;
+                  }
+                  return point;
+                });
+                const radarColors = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+                if (radarData.some(d => Object.keys(d).length > 1)) {
+                  return (
+                    <Card className="mb-8 border-border/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                          {t.sectorRadarTitle}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={360}>
+                          <RadarChart data={radarData}>
+                            <PolarGrid className="stroke-border" />
+                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                            {radarSectors.map((sec, i) => (
+                              <Radar key={sec} name={sec.charAt(0).toUpperCase() + sec.slice(1)} dataKey={sec}
+                                stroke={radarColors[i % radarColors.length]} fill={radarColors[i % radarColors.length]}
+                                fillOpacity={0.15} strokeWidth={2} />
+                            ))}
+                            <Legend />
+                            <Tooltip contentStyle={{
+                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px', color: 'hsl(var(--foreground))',
+                            }} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Sector trend bar chart */}
+              {(() => {
+                const filteredTrends = selectedSector === 'all'
+                  ? sectorData.trends
+                  : sectorData.trends.filter(t => t.sector === selectedSector);
+                // Group by period for bar chart
+                const periods = [...new Set(filteredTrends.map(t => t.period))].sort().slice(-6);
+                const barData = periods.map(period => {
+                  const rows = filteredTrends.filter(t => t.period === period);
+                  const avg = (field: keyof typeof rows[0]) => {
+                    const vals = rows.map(r => Number(r[field]) || 0);
+                    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+                  };
+                  return {
+                    period,
+                    json_ld_rate: avg('json_ld_rate'),
+                    https_rate: avg('https_rate'),
+                    schema_org_rate: avg('schema_org_rate'),
+                    avg_seo_score: avg('avg_seo_score'),
+                    scans: rows.reduce((s, r) => s + r.total_scans, 0),
+                  };
+                });
+
+                if (barData.length > 0) {
+                  return (
+                    <Card className="border-border/50 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                          {t.sectorTrendTitle}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                            <XAxis dataKey="period" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} domain={[0, 100]} unit="%" />
+                            <Tooltip contentStyle={{
+                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px', color: 'hsl(var(--foreground))',
+                            }} />
+                            <Legend />
+                            <Bar dataKey="json_ld_rate" name="JSON-LD" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="https_rate" name="HTTPS" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="schema_org_rate" name="Schema.org" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="avg_seo_score" name="Score SEO" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                return null;
+              })()}
+            </>
+          )}
         </section>
 
         {/* Methodology */}
