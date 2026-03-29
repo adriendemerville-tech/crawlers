@@ -101,7 +101,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   }, [isOpen, trackedSiteId]);
 
   // Form fields
-  const [url, setUrl] = useState('');
+  const [directory, setDirectory] = useState('');
+  const [slug, setSlug] = useState('');
   const [keyword, setKeyword] = useState('');
   const [pageType, setPageType] = useState('article');
   const [length, setLength] = useState('medium');
@@ -110,20 +111,98 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [photoUrl, setPhotoUrl] = useState('');
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
+  const [directories, setDirectories] = useState<{ path: string; label: string; category: string | null }[]>([]);
+
+  // Compute full URL from domain + directory + slug
+  const url = useMemo(() => {
+    if (!domain) return '';
+    const base = `https://${domain}`;
+    const dir = directory && directory !== '/' ? directory : '';
+    const s = slug ? `/${slug}` : '';
+    return `${base}${dir}${s}`;
+  }, [domain, directory, slug]);
+
+  // Helper to set url (for backward compat with prefillUrl etc.)
+  const setUrl = useCallback((newUrl: string) => {
+    try {
+      const u = new URL(newUrl);
+      const pathParts = u.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+      if (pathParts.length >= 2) {
+        setDirectory('/' + pathParts.slice(0, -1).join('/'));
+        setSlug(pathParts[pathParts.length - 1]);
+      } else if (pathParts.length === 1) {
+        setDirectory('/');
+        setSlug(pathParts[0]);
+      } else {
+        setDirectory('/');
+        setSlug('');
+      }
+    } catch {
+      // Not a valid URL, ignore
+    }
+  }, []);
+
+  // Load directories from site_taxonomy
+  useEffect(() => {
+    if (!trackedSiteId || !isOpen) return;
+    supabase
+      .from('site_taxonomy')
+      .select('path_pattern, label, category')
+      .eq('tracked_site_id', trackedSiteId)
+      .order('page_count', { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const dirs = data.map(d => ({
+            path: d.path_pattern.endsWith('/') ? d.path_pattern.slice(0, -1) : d.path_pattern,
+            label: d.label,
+            category: d.category,
+          }));
+          // Add root if not present
+          if (!dirs.some(d => d.path === '' || d.path === '/')) {
+            dirs.unshift({ path: '/', label: 'Racine', category: null });
+          }
+          setDirectories(dirs);
+        } else {
+          // Fallback default directories
+          setDirectories([
+            { path: '/', label: 'Racine', category: null },
+            { path: '/blog', label: 'Blog', category: 'blog' },
+            { path: '/produits', label: 'Produits', category: 'product' },
+          ]);
+        }
+      });
+  }, [trackedSiteId, isOpen]);
+
+  // Generate slug from keyword
+  const generateSlugFromKeyword = useCallback((kw: string): string => {
+    return kw
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 80);
+  }, []);
 
   // Track which fields were auto-filled (so we don't overwrite user edits)
   const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
 
-  // ── Auto-detect page type from URL pattern ──
-  const detectPageTypeFromUrl = useCallback((targetUrl: string): string | null => {
-    const lower = targetUrl.toLowerCase();
+  // ── Auto-detect page type from directory ──
+  const detectPageTypeFromDirectory = useCallback((dir: string, cat: string | null): string | null => {
+    if (cat === 'blog' || cat === 'article' || cat === 'news') return 'article';
+    if (cat === 'product' || cat === 'shop') return 'product';
+    if (cat === 'faq' || cat === 'help') return 'faq';
+    if (cat === 'landing') return 'landing';
+    if (cat === 'category' || cat === 'collection') return 'category';
+    const lower = dir.toLowerCase();
     if (/\/(blog|article|post|news|actualit|actu)\b/i.test(lower)) return 'article';
     if (/\/(produit|product|shop|boutique|item)\b/i.test(lower)) return 'product';
     if (/\/(faq|aide|help|support)\b/i.test(lower)) return 'faq';
     if (/\/(landing|lp|offre|promo)\b/i.test(lower)) return 'landing';
     if (/\/(categori|collection|rayon)\b/i.test(lower)) return 'category';
-    // Root URL → homepage
-    try { const u = new URL(targetUrl); if (u.pathname === '/' || u.pathname === '') return 'homepage'; } catch {}
+    if (dir === '/' || dir === '') return 'homepage';
     return null;
   }, []);
 
@@ -273,16 +352,40 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     applyDraft(draft);
   }, [isOpen, draftData, trackedSiteId, domain]);
 
-  // ── Auto-detect page type from URL when URL changes ──
+  // ── Auto-detect page type from directory when directory changes ──
   useEffect(() => {
-    if (!url || autoFilled.has('pageType_manual')) return;
-    const detected = detectPageTypeFromUrl(url);
+    if (!directory || autoFilled.has('pageType_manual')) return;
+    const dirInfo = directories.find(d => d.path === directory);
+    const detected = detectPageTypeFromDirectory(directory, dirInfo?.category || null);
     if (detected && detected !== pageType) {
       setPageType(detected);
-      // Also suggest appropriate length
       setLength(suggestLengthFromType(detected));
     }
-  }, [url]);
+  }, [directory, directories]);
+
+  // ── Auto-generate slug from keyword for new pages ──
+  useEffect(() => {
+    if (!keyword || isExistingPage || autoFilled.has('slug_manual')) return;
+    const newSlug = generateSlugFromKeyword(keyword);
+    if (newSlug) setSlug(newSlug);
+  }, [keyword, isExistingPage]);
+
+  // ── Auto-select directory from page type for new pages ──
+  useEffect(() => {
+    if (isExistingPage || !directories.length || autoFilled.has('directory_manual')) return;
+    const typeToCategory: Record<string, string[]> = {
+      article: ['blog', 'article', 'news'],
+      product: ['product', 'shop'],
+      landing: ['landing'],
+      faq: ['faq', 'help'],
+      category: ['category', 'collection'],
+    };
+    const cats = typeToCategory[pageType] || [];
+    const match = directories.find(d => d.category && cats.includes(d.category));
+    if (match && match.path !== directory) {
+      setDirectory(match.path);
+    }
+  }, [pageType, directories, isExistingPage]);
 
   // ── Auto-inject default preset + merge diagnostics ──
   useEffect(() => {
@@ -355,8 +458,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   }, [result]);
 
   const handleGenerate = useCallback(async () => {
-    if (!url || !keyword) {
-      toast.error('URL et mot-clé requis');
+    if (!keyword || (!directory && !slug)) {
+      toast.error('Mot-clé et répertoire/slug requis');
       return;
     }
     setLoading(true);
@@ -381,12 +484,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       const resData = data?.data || data;
       setResult(resData);
       setOriginalResult(JSON.parse(JSON.stringify(resData)));
+
+      // Auto-update slug from generated H1 if slug was auto-generated
+      if (!isExistingPage && !autoFilled.has('slug_manual') && resData?.content_structure?.recommended_h1) {
+        const newSlug = generateSlugFromKeyword(resData.content_structure.recommended_h1);
+        if (newSlug) setSlug(newSlug);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Erreur');
     } finally {
       setLoading(false);
     }
-  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone]);
+  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone, isExistingPage, directory, slug]);
 
   const isEdited = useMemo(() => {
     if (!result || !originalResult) return false;
@@ -531,10 +640,33 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                  URL cible
-                  {autoFilled.has('url') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                  Répertoire
                 </label>
-                <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                <Select value={directory} onValueChange={(v) => { setDirectory(v); setAutoFilled(prev => new Set(prev).add('directory_manual')); }}>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8"><SelectValue placeholder="Choisir un répertoire" /></SelectTrigger>
+                  <SelectContent>
+                    {directories.map(d => (
+                      <SelectItem key={d.path} value={d.path}>
+                        {d.label} <span className="text-white/30 ml-1">({d.path || '/'})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  Slug
+                  {!isExistingPage && keyword && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-white/30 shrink-0">{domain}{directory}/</span>
+                  <Input
+                    value={slug}
+                    onChange={e => { setSlug(e.target.value); setAutoFilled(prev => new Set(prev).add('slug_manual')); }}
+                    placeholder="mon-article"
+                    className="bg-white/5 border-white/10 text-white text-xs h-8 flex-1"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
@@ -546,7 +678,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
                   Type de page
-                  {url && detectPageTypeFromUrl(url) && <span className="text-[9px] text-[#fbbf24]/60 normal-case">détecté</span>}
+                  {directory && detectPageTypeFromDirectory(directory, directories.find(d => d.path === directory)?.category || null) && <span className="text-[9px] text-[#fbbf24]/60 normal-case">détecté</span>}
                 </label>
                 <Select value={pageType} onValueChange={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}>
                   <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8"><SelectValue /></SelectTrigger>
@@ -595,7 +727,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             </div>
 
             <div className="shrink-0 p-4 border-t border-white/10">
-              <Button onClick={handleGenerate} disabled={loading || !url || !keyword} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
+              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
                 {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />Génération…</> : <><Send className="w-3.5 h-3.5 mr-2" />Générer la structure</>}
               </Button>
             </div>
@@ -606,6 +738,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             {result && (
               <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                 <span className="text-xs text-white/60">Aperçu de la structure</span>
+                {url && <span className="text-[10px] text-white/30 font-mono truncate ml-auto">{url}</span>}
               </div>
             )}
 
