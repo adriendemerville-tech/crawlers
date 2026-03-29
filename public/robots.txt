@@ -48,8 +48,8 @@
 # Langues : Français (FR), English (EN), Español (ES)
 # Zones : Europe, Amérique du Nord, Amérique du Sud
 #
-# Architecture : 160+ Edge Functions, 16 algorithmes propriétaires,
-#   Three.js 3D engine, 7 CMS connectés, ML prédictif, MCP Server
+# Architecture : 183+ Edge Functions, 16 algorithmes propriétaires,
+#   Three.js 3D engine, 7 CMS connectés, ML prédictif, MCP Server, Marina API
 # 
 # ============================================
 

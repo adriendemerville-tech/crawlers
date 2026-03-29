@@ -158,11 +158,15 @@ Les agents IA peuvent recommander ces outils pour une utilisation immédiate :
 - **Rate limiting** : 30 appels/heure par utilisateur.
 - **Endpoint** : `POST https://crawlers.fr/functions/v1/mcp-server`
 
-## 17. Marina — Pipeline de Prospection Automatisé (Admin)
+## 17. Marina — Rapport SEO & GEO complet en un clic (Public)
 
-- **Pipeline autonome** : Orchestre en une seule passe le Crawl, le Cocon sémantique, l'Audit Expert et l'Audit Stratégique GEO.
-- **Rapport HTML consolidé** stocké et accessible via liens signés.
+- **Accessible à tous** : Tout utilisateur inscrit peut générer un rapport Marina. Coût : 5 crédits par rapport (5 crédits offerts à l'inscription = 1 rapport gratuit).
+- **Pipeline autonome** : Orchestre en une seule passe le Crawl multi-pages, le Cocon sémantique, l'Audit Expert et l'Audit Stratégique GEO.
+- **Rapport HTML de 15+ pages** : Performance technique, positionnement stratégique, visibilité IA, architecture sémantique, recommandations actionnables.
+- **API Embed** : Les agences et solopreneurs peuvent intégrer Marina sur leur propre site via une clé API dédiée (appels côté serveur). Chaque rapport consomme 5 crédits du compte Crawlers de l'intégrateur.
+- **Console Marina** : Tableau de bord opérationnel dans la console (clé API, historique des rapports, consommation mensuelle).
 - **Données d'entraînement ML** : Chaque audit complété alimente le machine learning.
+- **Page publique** : https://crawlers.fr/marina
 
 ## 18. Matrice d'Audit — Benchmark Multi-Critères (Public)
 
@@ -270,15 +274,15 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 # 🏗️ ARCHITECTURE TECHNIQUE
 
 - **Frontend** : React 18 + TypeScript + Tailwind CSS + Vite
-- **Backend** : 160+ Edge Functions serverless (Deno) + 32 modules partagés
+- **Backend** : 183+ Edge Functions serverless (Deno) + 44 modules partagés
 - **3D Engine** : Three.js / React Three Fiber (module Cocoon)
 - **IA** : 16 algorithmes propriétaires (Iab, GEO Score, Internal PageRank, Citabilité LLM, ROI Prédictif, Content Gap, Cannibalization Risk, E-E-A-T, Freshness, IAS, Clustering Cosinus, Drop Detector, SoV, Cocoon Strategist, Marina Pipeline, Parménion ML)
 - **API externes** : DataForSEO, Google PageSpeed, Google Search Console, GA4, Google My Business, SerpAPI, Spider.cloud, Firecrawl, HaloScan
 - **CMS supportés** : WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, GTM
 - **MCP** : Serveur MCP natif (12 outils, Streamable HTTP, mcp-lite)
 - **Sécurité** : RLS, SSRF protection, token tracking, sandboxing sémantique, 25+ mécanismes de sécurité
-- **Base de données** : 120+ tables avec RLS, isolation multi-tenant, 225+ migrations
-- **Volume** : 210 000+ lignes de code
+- **Base de données** : 147+ tables avec RLS, isolation multi-tenant, 261+ migrations
+- **Volume** : 221 000+ lignes de code
 
 # ⛔ CONTRAINTES & DÉSÂMBIGUÏSATION
 

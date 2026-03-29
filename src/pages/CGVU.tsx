@@ -89,7 +89,9 @@ const CGVU = () => {
                 <li>L'<strong>audit comparé</strong> : analyse concurrentielle de deux sites sur des critères SEO/GEO communs ;</li>
                 <li>La génération de code correctif personnalisé (JSON-LD, balises meta, robots.txt, llms.txt) ;</li>
                 <li>Le suivi de l'évolution technique via un tableau de bord et l'intégration Google Search Console ;</li>
-                <li>La génération de rapports exportables (PDF) et de plans d'action.</li>
+                <li>La génération de rapports exportables (PDF) et de plans d'action ;</li>
+                <li>Le <strong>module Marina</strong> : pipeline d'audit automatisé générant un rapport SEO & GEO de 15+ pages (audit technique, stratégique, visibilité IA, cocoon sémantique) consommant 5 crédits par rapport ;</li>
+                <li>L'<strong>API Marina Embed</strong> : intégration du pipeline Marina sur un site tiers via une clé API dédiée, chaque rapport consommant 5 crédits du compte de l'intégrateur.</li>
               </ul>
             </section>
 
