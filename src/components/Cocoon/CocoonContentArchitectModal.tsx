@@ -115,6 +115,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   // Column 2 editable fields
   const [h1Field, setH1Field] = useState('');
   const [h2Fields, setH2Fields] = useState<string[]>(['']);
+  const [keywordTags, setKeywordTags] = useState<string[]>([]);
+  const [keywordCloudSuggestions, setKeywordCloudSuggestions] = useState<{ keyword: string; position: number; search_volume: number }[]>([]);
 
   // Compute full URL from domain + directory + slug
   const url = useMemo(() => {
@@ -160,18 +162,47 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             label: d.label,
             category: d.category,
           }));
-          // Add root if not present
           if (!dirs.some(d => d.path === '' || d.path === '/')) {
             dirs.unshift({ path: '/', label: 'Racine', category: null });
           }
           setDirectories(dirs);
         } else {
-          // Fallback default directories
           setDirectories([
             { path: '/', label: 'Racine', category: null },
             { path: '/blog', label: 'Blog', category: 'blog' },
             { path: '/produits', label: 'Produits', category: 'product' },
           ]);
+        }
+      });
+  }, [trackedSiteId, isOpen]);
+
+  // Load keyword cloud from serp_snapshots for auto-suggestions
+  useEffect(() => {
+    if (!trackedSiteId || !isOpen) return;
+    supabase
+      .from('serp_snapshots')
+      .select('sample_keywords')
+      .eq('tracked_site_id', trackedSiteId)
+      .order('measured_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data?.sample_keywords && Array.isArray(data.sample_keywords)) {
+          const kws = data.sample_keywords
+            .filter((k: any) => k?.keyword)
+            .sort((a: any, b: any) => (a.position || 999) - (b.position || 999))
+            .slice(0, 30)
+            .map((k: any) => ({
+              keyword: k.keyword,
+              position: k.position || 0,
+              search_volume: k.search_volume || k.volume || 0,
+            }));
+          setKeywordCloudSuggestions(kws);
+          // Auto-fill keyword tags if empty
+          if (keywordTags.length === 0 && kws.length > 0) {
+            const autoKws = kws.slice(0, 5).map((k: any) => k.keyword);
+            setKeywordTags(autoKws);
+          }
         }
       });
   }, [trackedSiteId, isOpen]);
@@ -682,7 +713,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                  Mot-clé cible
+                  Mot-clé principal
                   {autoFilled.has('keyword') && <span className="text-[9px] text-[#fbbf24]/60 normal-case">auto</span>}
                 </label>
                 <Input value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="mot-clé principal" className="bg-white/5 border-white/10 text-white text-xs h-8" />
@@ -809,6 +840,53 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     )}
                   </div>
                 ))}
+              </div>
+
+              {/* Keyword tags — auto-filled from keyword cloud */}
+              <div className="space-y-2">
+                <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center justify-between">
+                  Mots-clés cibles
+                  {keywordCloudSuggestions.length > 0 && (
+                    <span className="text-[9px] text-[#fbbf24]/60 normal-case">{keywordCloudSuggestions.length} suggestions</span>
+                  )}
+                </label>
+                <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+                  {keywordTags.map((tag, i) => (
+                    <span
+                      key={`${tag}-${i}`}
+                      className="group inline-flex items-center gap-1 bg-[#fbbf24]/10 text-[#fbbf24] border border-[#fbbf24]/20 rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#fbbf24]/20"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => setKeywordTags(prev => prev.filter((_, j) => j !== i))}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#fbbf24]/60 hover:text-[#fbbf24] ml-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {/* Suggestions from keyword cloud */}
+                {keywordCloudSuggestions.filter(s => !keywordTags.includes(s.keyword)).length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-white/30">Suggestions (nuage de mots-clés) :</span>
+                    <div className="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto">
+                      {keywordCloudSuggestions
+                        .filter(s => !keywordTags.includes(s.keyword))
+                        .slice(0, 15)
+                        .map((s, i) => (
+                          <button
+                            key={`sug-${i}`}
+                            onClick={() => setKeywordTags(prev => [...prev, s.keyword])}
+                            className="text-[10px] bg-white/5 text-white/40 hover:text-white/70 hover:bg-white/10 border border-white/10 rounded-full px-2 py-0.5 transition-colors"
+                            title={`Pos: #${s.position} — Vol: ${s.search_volume}/m`}
+                          >
+                            + {s.keyword}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
