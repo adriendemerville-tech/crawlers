@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
 import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
