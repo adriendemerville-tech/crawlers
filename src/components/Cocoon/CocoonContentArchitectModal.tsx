@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash, Syringe } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
