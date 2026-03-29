@@ -3,7 +3,7 @@ import { motion, useInView } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap, Code2, Lock
+  BarChart3, Network, Search, MapPin, TrendingUp, Shield, Eye, Zap, Code2, Lock, PenTool
 } from 'lucide-react';
 
 import consoleDashboard from '@/assets/screenshots/crawlers.fr_console-seo-monitoring-dashboard.png';
@@ -222,13 +222,38 @@ const ProductShowcaseSection = memo(() => {
           ],
     },
     {
+      image: architectCode,
+      title: 'Content Architect',
+      subtitle: language === 'fr' ? 'Génération IA · Publication CMS' : 'AI Generation · CMS Publishing',
+      description: language === 'fr'
+        ? 'Générez des pages SEO complètes en quelques secondes : structure Hn, FAQ, schema.org, méta-données et images IA. Publiez directement sur WordPress, Shopify, Webflow, Drupal, Wix, PrestaShop ou Odoo.'
+        : 'Generate complete SEO pages in seconds: Hn structure, FAQ, schema.org, metadata and AI images. Publish directly to WordPress, Shopify, Webflow, Drupal, Wix, PrestaShop or Odoo.',
+      badge: 'Content',
+      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      icon: PenTool,
+      tiltDirection: 'right' as const,
+      features: language === 'fr'
+        ? [
+            'Brief éditorial intelligent : ton, longueur, CTA, liens internes auto-calculés',
+            'Images IA cinématiques générées et injectées avec alt text et lazy loading',
+            'Publication directe sur 7 CMS en un clic',
+            'Inclus dans Pro Agency (100 pages/mois) et Pro Agency+ (150 pages/mois)',
+          ]
+        : [
+            'Smart editorial brief: tone, length, CTA, internal links auto-calculated',
+            'Cinematic AI images generated and injected with alt text and lazy loading',
+            'Direct publishing to 7 CMS in one click',
+            'Included in Pro Agency (100 pages/mo) and Pro Agency+ (150 pages/mo)',
+          ],
+    },
+    {
       image: gmbReviews,
-      title: language === 'fr' ? 'Google Business Profile' : 'Google Business Profile',
+      title: language === 'fr' ? 'Google Business (GBP/GMB)' : 'Google Business (GBP/GMB)',
       subtitle: language === 'fr' ? 'Avis · Fiches · Concurrence locale' : 'Reviews · Listings · Local Competition',
       description: language === 'fr'
-        ? 'Gérez vos fiches Google Business Profile directement depuis Crawlers. Suivez vos avis, répondez aux clients et analysez la concurrence locale — le tout intégré à votre stratégie SEO globale.'
-        : 'Manage your Google Business Profile listings directly from Crawlers. Track reviews, respond to customers and analyze local competition — all integrated into your global SEO strategy.',
-      badge: 'GMB',
+        ? 'Gérez vos fiches Google Business directement depuis Crawlers. Suivez vos avis, répondez aux clients et analysez la concurrence locale — le tout intégré à votre stratégie SEO globale.'
+        : 'Manage your Google Business listings directly from Crawlers. Track reviews, respond to customers and analyze local competition — all integrated into your global SEO strategy.',
+      badge: 'GBP/GMB',
       badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
       icon: MapPin,
       tiltDirection: 'right' as const,
@@ -237,13 +262,13 @@ const ProductShowcaseSection = memo(() => {
             'Gestion multi-établissements (Paris, Lyon…)',
             'Suivi des avis et réponses directement depuis la console',
             'Analyse de la concurrence locale par zone',
-            'Statistiques d\'engagement et visibilité GMB',
+            'Statistiques d\'engagement et visibilité GBP/GMB',
           ]
         : [
             'Multi-location management (Paris, Lyon…)',
             'Review tracking and responses directly from the console',
             'Local competition analysis by area',
-            'GMB engagement and visibility statistics',
+            'GBP/GMB engagement and visibility statistics',
           ],
     },
   ];
