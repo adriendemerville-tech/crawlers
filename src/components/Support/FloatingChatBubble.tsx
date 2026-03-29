@@ -54,6 +54,16 @@ export function FloatingChatBubble() {
     return () => clearTimeout(timer);
   }, [location.pathname, isMuted]);
 
+  // Listen for enterprise contact event from pricing pages
+  useEffect(() => {
+    const handler = () => {
+      setAutoEnterpriseContact(true);
+      setIsOpen(true);
+    };
+    window.addEventListener('felix-enterprise-contact', handler);
+    return () => window.removeEventListener('felix-enterprise-contact', handler);
+  }, []);
+
   // Suggest Crawlers quiz to non-logged users on home after 5s
   // Auto-hide the bubble after 10s but keep the notification badge
   const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
@@ -215,10 +225,11 @@ export function FloatingChatBubble() {
           </div>
         }>
           <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); }}
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
             autoStartCrawlersQuiz={autoStartCrawlersQuiz}
+            autoEnterpriseContact={autoEnterpriseContact}
           />
         </Suspense>
       )}
