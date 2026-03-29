@@ -641,12 +641,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     style={{ height: '80px' }}
                   />
                 </div>
-                <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#0d0819]">
+                <div className={`px-3 pb-2 pt-1 sticky bottom-0 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
                   <Button
                     size="sm"
                     onClick={handleGenerate}
                     disabled={loading || !keyword}
-                    className="w-full bg-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/30 border border-[#fbbf24]/30 text-xs gap-1.5"
+                    className={`w-full text-xs gap-1.5 ${colorTheme === 'green' ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/30 border border-[#fbbf24]/30'}`}
                   >
                     <Syringe className="w-3 h-3 stroke-[1.5]" />
                     Injecter
