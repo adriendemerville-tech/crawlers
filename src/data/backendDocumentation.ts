@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor, générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -51,21 +51,23 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  175 fonctions serverless + 37 modules partagés         │
+│  190+ fonctions serverless + 37 modules partagés        │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
-│  - Cocoon diagnostics (4 axes) + Stratège                │
-│  - Content Architect + CMS publish                       │
-│  - CMS bridges (WordPress, Drupal, Shopify, Wix)         │
+│  - Image generation (Imagen 3, FLUX, Ideogram routing)   │
+│  - Cocoon diagnostics (5 axes) + Stratège                │
+│  - Content Architect + CMS publish + crédits             │
+│  - CMS bridges (WordPress, Drupal, Shopify, Wix, Odoo)   │
 │  - Google integrations (Ads, GSC, GA4, GTM, GMB)         │
-│  - Anomaly detection + notification system               │
+│  - Anomaly detection + Drop Detector + notification      │
+│  - Quiz SEO Félix (hebdo, notifications, sync)           │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  149 tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  149+ tables avec RLS, fonctions PL/pgSQL, triggers     │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
@@ -77,7 +79,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 175 fonctions serverless + 37 modules partagés |
+| Backend | Supabase Edge Functions (Deno) | 190+ fonctions serverless + 37 modules partagés |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs, plugins |
@@ -317,7 +319,7 @@ Toutes les tables utilisateur ont RLS activé. Patterns :
     title: 'API / Endpoints',
     icon: 'Plug',
     content: `
-# API — Edge Functions (175 fonctions)
+# API — Edge Functions (190+ fonctions)
 
 Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/functions/v1/<nom>\`.
 
@@ -408,12 +410,19 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (Perplexity, maillage auto, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
+| \`generate-image\` | ✅ | 0 | Génération d'images IA multi-moteurs (Imagen 3, FLUX, Ideogram) |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) — Fair use mensuel : 5 free / 100 Pro / 150 Pro+ |
+| \`content-architecture-advisor\` | ✅ | 5* | Recommandations architecture de contenu (5 critères GEO) — *5 crédits pour non-abonnés, inclus pour Pro Agency/Pro Agency+ |
 | \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
 | \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP pages+posts, Drupal pages+articles, Shopify pages+articles, Odoo, PrestaShop, IKtracker) |
+| \`cms-push-draft\` | ✅ | 0 | Push brouillon CMS (v2, multi-format) |
+| \`cms-push-code\` | ✅ | 0 | Push code correctif vers CMS |
+| \`cms-push-redirect\` | ✅ | 0 | Push redirections vers CMS |
+| \`cms-patch-content\` | ✅ | 0 | Patch contenu existant sur CMS |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
+| \`parse-matrix-geo\` | ✅ | 0 | Parsing matrice GEO |
+| \`parse-matrix-hybrid\` | ✅ | 0 | Parsing matrice hybride |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
 | \`process-script-queue\` | ✅ | 0 | File d'attente FIFO multi-pages pour Scribe |
 
@@ -451,12 +460,13 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`apply-affiliate\` | ✅ | Applique un code affilié |
 | \`apply-retention-offer\` | ✅ | Applique une offre de rétention |
 | \`manage-team\` | ✅ | Gestion équipe agence |
-| \`check-email-exists\` | ✅ | Vérifie l'existence d'un email |
 | \`send-password-reset\` | ✅ | Envoie un lien de réinitialisation |
 | \`send-verification-code\` | ✅ | Envoie un code de vérification email |
 | \`verify-email-code\` | ✅ | Vérifie un code email |
 | \`admin-update-plan\` | ✅ | MAJ plan utilisateur (admin) |
 | \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
+| \`submit-bug-report\` | ✅ | Soumission de signalement utilisateur |
+| \`admin-backend-query\` | ✅ | Requête backend admin (mode créateur) |
 
 ## Intégrations Google
 
@@ -468,9 +478,13 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
 | \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
 | \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
+| \`gmb-local-competitors\` | ✅ | Analyse concurrents locaux Google Maps |
+| \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
+| \`dataforseo-balance\` | ✅ | Solde du compte DataForSEO |
 | \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+| \`llm-visibility-lite\` | ❌ | Visibilité LLM allégée (sans auth) |
 
 ## CMS & Bridges externes
 
@@ -538,6 +552,19 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
 | \`process-email-queue\` | ✅ | Worker file d'attente emails |
+| \`session-heartbeat\` | ✅ | Heartbeat de session active |
+| \`fly-health-check\` | ❌ | Health check renderer Fly.io |
+| \`fly-keepalive\` | ❌ | Keep-alive renderer Fly.io |
+| \`browserless-metrics\` | ✅ | Métriques d'utilisation Browserless |
+
+## Quiz Félix
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| \`felix-seo-quiz\` | ✅ | Génération de quiz SEO hebdomadaire par Félix |
+| \`felix-weekly-quiz-notif\` | ✅ | Notification hebdomadaire quiz Félix |
+| \`normalize-quiz-options\` | ✅ | Normalisation des options de quiz |
+| \`sync-quiz-crawlers\` | ✅ | Synchronisation quiz avec données crawl |
 
 ## Pipeline & Automation
 
@@ -553,11 +580,15 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`content-perf-aggregator\` | ✅ | CRON hebdo — agrégation anonyme corrélations prompt→performance (T+30/T+90) |
 | \`content-freshness\` | ✅ | Détection de contenu obsolète |
 | \`content-pruning\` | ✅ | Analyse de contenu à élaguer |
+| \`firehose-actions\` | ✅ | Actions du firehose d'événements |
 | \`link-intersection\` | ✅ | Intersection de backlinks concurrents |
 | \`broken-link-building\` | ✅ | Opportunités de link building sur liens cassés |
 | \`brand-mentions\` | ✅ | Détection de mentions de marque non liées |
+| \`backlink-scanner\` | ✅ | Scan backlinks approfondi |
+| \`check-backlinks\` | ✅ | Vérification backlinks rapide |
 | \`url-structure-analyzer\` | ✅ | Analyse de structure d'URLs |
-| \`robots-generator\` | ✅ | Générateur de robots.txt optimisé |
+| \`submit-sitemap\` | ✅ | Soumission sitemap aux moteurs de recherche |
+| \`haloscan-connector\` | ✅ | Connecteur Haloscan |
 
 ## E-commerce
 
@@ -1355,12 +1386,13 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 ## Content Architecture Advisor
 
 - **Edge Function** : \\\`content-architecture-advisor\\\`
-- **Accès** : Admin only (onglet Content dans Console), masqué en démo
+- **Accès** : Tous les utilisateurs avec site tracké. Masqué en démo
 - **Monitoré par** : Agent CTO
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
 - **Indexabilité** : Les contenus générés incluent systématiquement \\\`<meta name="robots" content="index, follow">\\\` et \\\`isAccessibleForFree: true\\\` dans le schema.org
 - **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker. Paramètre \\\`content_type: "page" | "post"\\\`
+- **Tarification** : Abonnés Pro Agency / Pro Agency+ : inclus dans le quota mensuel (100/150 pages). Non-abonnés : **5 crédits** par page (couvre LLM + 2 images). Le bouton Publier affiche le coût \\\`Publier (5 crédits)\\\` pour les non-abonnés
 - **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 150/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
 - **Routeur CMS** : Parménion utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
 - **ContentBrief déterministe** : Le module \\\`_shared/contentBrief.ts\\\` calcule les contraintes éditoriales (longueur, ton, H2/H3, angle, CTA, liens internes) avant l'appel LLM
@@ -1383,11 +1415,21 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Hors /cocoon** (Console, Code Architect) : Félix (SAV) peut guider l'utilisateur dans Content Architect, expliquer les panneaux, suggérer des instructions et prendre la main si nécessaire
 - **Pré-appel stratégique** : hors /cocoon, Content Architect effectue un pré-appel silencieux au \\\`cocoon-strategist\\\` pour pré-remplir la structure (H1, H2, mots-clés), garantissant une précision identique
 
-### Génération d'images IA
+### Génération d'images IA (v3 — multi-moteurs)
 
-- **Styles supportés** : photo, cinematic, flat_illustration, infographic, watercolor, artistic, classic_painting, typography
+- **Edge Function** : \\\`generate-image\\\`
+- **Routeur intelligent** : Le style demandé route automatiquement vers le moteur optimal :
+  - **Imagen 3** (Google) : Photo, Cinématique — rendu photoréaliste. Forcé aussi quand une image de référence est utilisée (mode multimodal)
+  - **FLUX** : Artistic, Flat Illustration, Watercolor — styles artistiques et illustrations
+  - **Ideogram** : Typography, Infographic, Noir & Blanc, Peinture classique — texte lisible et compositions complexes
+- **Styles supportés** : photo, cinematic, flat_illustration, infographic, watercolor, artistic, classic_painting, typography, black_and_white
 - **Adaptation sectorielle** : le style est automatiquement adapté au secteur du site (food→photo, tech→flat, luxury→cinematic, etc.)
 - **Multi-formats** : header, body, hero, thumbnail
+- **Fair use** : Max 2 images par contenu, 3 itérations par génération
+- **Bibliothèque** : 5 images max/site, stockées 24h dans le storage (\\\`image-references/generated/\\\`)
+- **Image de référence** : Mode Inspiration ou Édition → force le routage vers Imagen 3 (multimodal)
+- **Recommandations style** : Suggère les styles les plus utilisés par utilisateur et URL (\\\`image_style_preferences\\\`)
+- **CMS** : Intégration HTML accessible (alt, caption, lazy-loading) et upload \\\`featured_media\\\` WordPress (base64 ou URL publique)
 - **Moteur de recommandation** : \\\`computeImageRecommendation\\\` dans le stratège calcule le nombre, le style et le placement optimaux par type de page et secteur
 
 ### Pipeline de corrélation prompt→performance
@@ -1617,14 +1659,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '9.0.0',
-  lastUpdated: '2026-03-28',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
-  totalEdgeFunctions: 175,
+  version: '10.0.0',
+  lastUpdated: '2026-03-29',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
+  totalEdgeFunctions: 190,
   totalSharedModules: 37,
-  totalTables: '149',
-  totalLinesOfCode: '211 600+',
+  totalTables: '149+',
+  totalLinesOfCode: '215 000+',
   totalMigrations: 245,
   totalPages: 41,
-  totalComponents: 311,
+  totalComponents: 315,
 };

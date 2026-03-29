@@ -20,34 +20,44 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
     'snapshot-audit-impact', 'measure-audit-impact', 'generate-corrective-code',
     'strategic-orchestrator', 'strategic-crawl', 'strategic-market',
     'strategic-competitors', 'strategic-synthesis',
+    'check-meta-tags', 'check-structured-data', 'check-eeat',
+    'check-content-quality', 'check-images', 'check-direct-answer',
   ],
   'Cocoon & Maillage': [
     'calculate-cocoon-logic', 'cocoon-chat', 'calculate-internal-pagerank',
     'persist-cocoon-session', 'cocoon-deploy-links',
+    'cocoon-auto-linking', 'cocoon-batch-deploy',
   ],
   'Diagnostics Cocoon': [
-    'cocoon-diag-authority', 'cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure',
+    'cocoon-diag-authority', 'cocoon-diag-content', 'cocoon-diag-semantic',
+    'cocoon-diag-structure', 'cocoon-diag-subdomains',
   ],
   'Stratège & Content Architect': [
-    'cocoon-strategist', 'content-architecture-advisor', 'extract-architect-fields', 'cms-publish-draft',
+    'cocoon-strategist', 'content-architecture-advisor', 'extract-architect-fields',
+    'cms-publish-draft', 'cms-push-draft', 'cms-push-code', 'cms-push-redirect', 'cms-patch-content',
+    'generate-image',
   ],
   'Crawl & Analyse': [
     'crawl-site', 'process-crawl-queue', 'fetch-sitemap-tree', 'check-pagespeed',
     'validate-url', 'fetch-external-site', 'scan-wp',
+    'check-backlinks', 'backlink-scanner', 'url-structure-analyzer', 'submit-sitemap',
   ],
   'LLM & Visibilité IA': [
     'check-llm', 'check-llm-depth', 'calculate-llm-visibility', 'calculate-llm-volumes',
-    'refresh-llm-visibility-all', 'check-geo', 'calculate-sov',
+    'refresh-llm-visibility-all', 'check-geo', 'calculate-sov', 'llm-visibility-lite',
   ],
   'SERP & Data': [
     'fetch-serp-kpis', 'generate-more-keywords', 'generate-target-queries',
     'update-market-trends', 'check-crawlers', 'fetch-news', 'serpapi-actions',
+    'dataforseo-balance',
   ],
   'Intégrations Google': [
     'gsc-auth', 'fetch-ga4-data', 'google-ads-connector', 'gtm-actions', 'gmb-actions',
+    'gmb-places-autocomplete', 'gmb-local-competitors', 'gmb-optimization',
   ],
   'Anomalies & Monitoring': [
-    'detect-anomalies', 'health-check', 'check-widget-health',
+    'detect-anomalies', 'health-check', 'check-widget-health', 'drop-detector',
+    'fly-health-check', 'fly-keepalive', 'browserless-metrics', 'session-heartbeat',
   ],
   'Paiement & Abonnement': [
     'create-checkout', 'create-credit-checkout', 'create-subscription-session',
@@ -57,23 +67,25 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   'Utilisateurs & Auth': [
     'ensure-profile', 'auth-actions', 'delete-account', 'restore-archived-user',
     'send-password-reset', 'send-verification-code', 'verify-email-code',
-    'check-email-exists', 'verify-turnstile', 'manage-team', 'admin-update-plan',
+    'verify-turnstile', 'manage-team', 'admin-update-plan',
+    'submit-bug-report',
   ],
   'Scripts & Déploiement': [
     'serve-client-script', 'get-final-script', 'process-script-queue', 'dry-run-script',
-    'download-plugin', 'watchdog-scripts', 'update-config', 'wpsync', 'sdk-status', 'widget-connect',
+    'download-plugin', 'update-config', 'wpsync', 'sdk-status', 'widget-connect',
     'verify-injection', 'archive-solution',
   ],
   'CMS & Bridges': [
     'drupal-actions', 'iktracker-actions', 'register-cms-webhook',
     'webhook-shopify-orders', 'webhook-woo-orders',
-    'odoo-connector', 'prestashop-connector',
+    'odoo-connector', 'prestashop-connector', 'haloscan-connector',
   ],
   'Autopilote & Parménion': [
     'autopilot-engine', 'parmenion-orchestrator', 'parmenion-feedback',
   ],
   'Outils tiers (Bundle)': [
     'gtmetrix-actions', 'rankmath-actions', 'linkwhisper-actions',
+    'matomo-connector',
   ],
   'Email & Notifications': [
     'process-email-queue', 'auth-email-hook', 'generate-blog-from-news',
@@ -90,9 +102,20 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   ],
   'IAS & Metrics': [
     'calculate-ias', 'extract-pdf-data', 'parse-doc-matrix',
+    'parse-matrix-geo', 'parse-matrix-hybrid',
+  ],
+  'Quiz Félix': [
+    'felix-seo-quiz', 'felix-weekly-quiz-notif', 'normalize-quiz-options', 'sync-quiz-crawlers',
+  ],
+  'Pipeline & Orchestration': [
+    'marina', 'firehose-actions', 'api-balances',
+    'seasonality-detector', 'content-perf-aggregator',
+    'content-freshness', 'content-pruning',
+    'link-intersection', 'broken-link-building', 'brand-mentions',
   ],
   'Admin & Debug': [
     'kill-all-viewers', 'run-backend-tests', 'view-function-source',
+    'admin-backend-query',
   ],
 };
 
