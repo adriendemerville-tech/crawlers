@@ -205,6 +205,25 @@ export function FinancesDashboard() {
     const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
     const spiderEstimatedCost = spiderCalls * 0.001 * 0.92;
 
+    // Image API cost calculation
+    // imagen3 = Lovable AI gateway (free), flux = BFL API (~$0.04/image), ideogram = Ideogram API (~$0.08/image)
+    const IMAGE_COST_USD: Record<string, number> = { imagen3: 0, flux: 0.04, ideogram: 0.08 };
+    let imageApiCalls = 0;
+    let imageApiCostUsd = 0;
+    const imageByProvider: Record<string, number> = {};
+    tokenEvents.forEach(e => {
+      const data = e.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const fn = (data.function_name as string) || '';
+      if (fn === 'generate-image') {
+        const provider = (data.model as string) || 'unknown';
+        imageApiCalls++;
+        imageByProvider[provider] = (imageByProvider[provider] || 0) + 1;
+        imageApiCostUsd += IMAGE_COST_USD[provider] || 0;
+      }
+    });
+    const imageApiCostEur = imageApiCostUsd * 0.92;
+
     return {
       totalTokens, promptTokens, completionTokens,
       callCount: tokenEvents.length, byFunction, byModel,
@@ -212,6 +231,7 @@ export function FinancesDashboard() {
       dataforseoCalls, openrouterCalls, browserlessCalls, firecrawlCalls,
       spiderCalls, spiderEstimatedCost,
       flyPlaywrightCalls, flyEstimatedCost, byApiService,
+      imageApiCalls, imageApiCostEur, imageByProvider,
     };
   }, []);
 
