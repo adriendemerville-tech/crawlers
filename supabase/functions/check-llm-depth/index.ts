@@ -765,14 +765,14 @@ Deno.serve(async (req) => {
           ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
         }
 
-        // Write to shared domain cache (24h TTL)
+        // Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h)
         if (!allEmpty) {
           await sb.from('domain_data_cache').upsert({
             domain,
             data_type: 'llm_depth',
             week_start_date: null,
             result_data: finalData,
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
           }, { onConflict: 'domain,data_type,week_start_date' })
         }
 

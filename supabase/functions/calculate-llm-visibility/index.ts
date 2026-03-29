@@ -504,14 +504,14 @@ Deno.serve(async (req) => {
 
     console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
 
-    // ── Write to shared domain cache ──
+    // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
     const cachePayload = { scores, week_start_date: weekStart }
     await supabase.from('domain_data_cache').upsert({
       domain: site.domain,
       data_type: 'llm_visibility',
       week_start_date: weekStart,
       result_data: cachePayload,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     }, { onConflict: 'domain,data_type,week_start_date' })
 
     return new Response(JSON.stringify({ data: cachePayload }), {
