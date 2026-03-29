@@ -142,6 +142,7 @@ const App = () => (
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
+                          <Route path="/content-architect" element={<ContentArchitectPage />} />
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
                           <Route path="/cgvu" element={<CGVU />} />
