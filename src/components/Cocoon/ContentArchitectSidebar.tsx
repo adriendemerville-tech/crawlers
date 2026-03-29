@@ -339,19 +339,21 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                 </p>
               )}
 
-              {/* Single preset: click to use directly */}
+              {/* Single preset: click to apply */}
               {presets.length === 1 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setSelectedPresetId(presets[0].id);
-                    if (activeSite) onSelectPreset(presets[0], activeSite);
-                  }}
-                  className="w-full h-6 text-[9px] text-[#fbbf24]/60 hover:text-[#fbbf24] hover:bg-[#fbbf24]/5"
-                >
-                  Utiliser ce prompt →
-                </Button>
+                <div className="sticky bottom-0 pt-2 pb-1 bg-[#0f0a1e]/90 backdrop-blur-sm border-t border-white/5">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedPresetId(presets[0].id);
+                      if (activeSite) onSelectPreset(presets[0], activeSite);
+                    }}
+                    className="w-full h-7 text-[10px] text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 font-semibold"
+                  >
+                    Appliquer
+                  </Button>
+                </div>
               )}
             </div>
           </ScrollArea>
