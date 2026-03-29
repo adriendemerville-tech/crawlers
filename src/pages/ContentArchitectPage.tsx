@@ -524,6 +524,7 @@ const ContentArchitectPage = memo(() => {
         })}</script>
       </Helmet>
 
+      <Header />
       <div className="min-h-screen bg-background">
         {/* ═══ HERO ═══ */}
         <section className="relative overflow-hidden border-b border-border pt-20 pb-24 sm:pt-28 sm:pb-32">
@@ -905,6 +906,7 @@ const ContentArchitectPage = memo(() => {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 });
