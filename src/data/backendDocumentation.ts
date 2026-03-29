@@ -1369,6 +1369,27 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Sidebar multi-sites** : Menu vertical avec liste des sites trackés, onglets Landing Page / Produit / Article Blog par site
 - **Logging performance** : Chaque génération est instrumentée dans \\\`content_generation_logs\\\` (features du brief, pas le texte du prompt)
 
+### Interface UI (layout Canva v5)
+
+- **Toolbar verticale gauche** (56px, icônes Lucide stroke-1.5) : 7 panneaux — Prompt, Structure (H1/H2/URL/mots-clés avec badges), Images (génération IA multi-styles : photo, cinematic, flat, infographic, watercolor, artistic), Données structurées (meta title/description, JSON-LD, robots, canonical), Brouillon (sauvegarde/historique), Bibliothèque (galerie images+pages créées), Options
+- **Panneau contextuel** (centre, 260-500px redimensionnable) : un seul ouvert à la fois, sticky footer avec boutons d'action
+- **Zone "Instructions spécifiques"** : partagée entre tous les panneaux, redimensionnable en hauteur (60-300px), bouton "Injecter" (icône Syringe) en sticky footer
+- **Preview/Canvas** (droite, pleine largeur quand panneau fermé) : rendu temps réel avec spinner de rechargement, édition directe, boutons "Enregistrer" (brouillon) et "Publier vers le CMS" en haut à droite
+- **Handle de drag** entre panneau et preview pour ajuster la largeur
+
+### Gouvernance agents
+
+- **Dans /cocoon** : le Stratège Cocoon pilote Content Architect, prescrit les contenus et prend la main
+- **Hors /cocoon** (Console, Code Architect) : Félix (SAV) peut guider l'utilisateur dans Content Architect, expliquer les panneaux, suggérer des instructions et prendre la main si nécessaire
+- **Pré-appel stratégique** : hors /cocoon, Content Architect effectue un pré-appel silencieux au \\\`cocoon-strategist\\\` pour pré-remplir la structure (H1, H2, mots-clés), garantissant une précision identique
+
+### Génération d'images IA
+
+- **Styles supportés** : photo, cinematic, flat_illustration, infographic, watercolor, artistic, classic_painting, typography
+- **Adaptation sectorielle** : le style est automatiquement adapté au secteur du site (food→photo, tech→flat, luxury→cinematic, etc.)
+- **Multi-formats** : header, body, hero, thumbnail
+- **Moteur de recommandation** : \\\`computeImageRecommendation\\\` dans le stratège calcule le nombre, le style et le placement optimaux par type de page et secteur
+
 ### Pipeline de corrélation prompt→performance
 
 - **Collecte** : À chaque génération, les features du brief (ton, angle, longueur, H2, CTA, liens internes, signaux E-E-A-T, passages GEO) sont logguées dans \\\`content_generation_logs\\\`
