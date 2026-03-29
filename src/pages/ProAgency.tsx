@@ -549,7 +549,7 @@ export default function ProAgency() {
             </div>
 
             {/* Side-by-side plan cards */}
-            <div className="grid gap-6 md:grid-cols-2 mb-12">
+            <div className="grid gap-6 md:grid-cols-3 mb-12">
               {/* Pro Agency Card */}
               <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
@@ -636,6 +636,49 @@ export default function ProAgency() {
                   {t.ctaSubscribe}
                 </Button>
               </div>
+
+              {/* Enterprise Card */}
+              <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-card to-card p-8 flex flex-col">
+                <div className="absolute -top-3 right-6">
+                  <Badge className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-xs px-3 py-1 border-0">
+                    🏢 Enterprise
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">{(t as any).enterpriseTitle}</h3>
+                </div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-transparent">{(t as any).enterprisePrice}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">{(t as any).compTargetEnterprise}</p>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+                  {((t as any).enterpriseFeatures || []).map((feat: string, i: number) => {
+                    const icons = [Infinity, Users, Server, Database, Shield, Headphones];
+                    const Icon = icons[i] || CheckCircle2;
+                    return (
+                      <li key={i} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-emerald-500 shrink-0" />
+                        {feat}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
+                    if (felixBtn) felixBtn.click();
+                    else window.location.href = '/#felix';
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  {(t as any).enterpriseCta}
+                </Button>
+              </div>
             </div>
 
             {/* Detailed comparison table */}
@@ -643,10 +686,11 @@ export default function ProAgency() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    {t.compHeader.map((h, i) => (
-                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 1 ? 'text-violet-500' : ''} ${i === 2 ? 'text-amber-500' : ''}`}>
+                     {t.compHeader.map((h, i) => (
+                      <th key={i} className={`px-4 py-3 text-left font-semibold text-foreground ${i === 1 ? 'text-violet-500' : ''} ${i === 2 ? 'text-amber-500' : ''} ${i === 3 ? 'text-emerald-500' : ''}`}>
                         {i === 1 && <Crown className="inline h-4 w-4 mr-1 text-violet-500" />}
                         {i === 2 && <Crown className="inline h-4 w-4 mr-1 text-amber-500" />}
+                        {i === 3 && <Building2 className="inline h-4 w-4 mr-1 text-emerald-500" />}
                         {h}
                       </th>
                     ))}
@@ -658,6 +702,7 @@ export default function ProAgency() {
                       <td className="px-4 py-3 font-medium text-foreground">{row[0]}</td>
                       <td className="px-4 py-3 text-violet-400">{row[1]}</td>
                       <td className="px-4 py-3 font-semibold text-amber-400">{row[2]}</td>
+                      <td className="px-4 py-3 font-semibold text-emerald-400">{row[3]}</td>
                     </tr>
                   ))}
                   {/* Target profile row */}
@@ -665,6 +710,7 @@ export default function ProAgency() {
                     <td className="px-4 py-3 font-semibold text-foreground">{t.compTargetLabel}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{t.compTargetPro}</td>
                     <td className="px-4 py-3 text-sm text-amber-400/80">{t.compTargetPlus}</td>
+                    <td className="px-4 py-3 text-sm text-emerald-400/80">{(t as any).compTargetEnterprise}</td>
                   </tr>
                 </tbody>
               </table>
