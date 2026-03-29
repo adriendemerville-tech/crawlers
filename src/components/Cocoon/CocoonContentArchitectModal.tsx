@@ -112,6 +112,9 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [competitorUrl, setCompetitorUrl] = useState('');
   const [tone, setTone] = useState('');
   const [directories, setDirectories] = useState<{ path: string; label: string; category: string | null }[]>([]);
+  // Column 2 editable fields
+  const [h1Field, setH1Field] = useState('');
+  const [h2Fields, setH2Fields] = useState<string[]>(['']);
 
   // Compute full URL from domain + directory + slug
   const url = useMemo(() => {
