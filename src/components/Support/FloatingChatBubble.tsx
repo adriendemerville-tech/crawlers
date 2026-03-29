@@ -23,6 +23,7 @@ export function FloatingChatBubble() {
   const [showBounce, setShowBounce] = useState(false);
   const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
   const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
+  const [autoEnterpriseContact, setAutoEnterpriseContact] = useState(false);
   const [isMuted, setIsMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
