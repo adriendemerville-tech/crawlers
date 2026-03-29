@@ -72,6 +72,9 @@ interface TokenUsageStats {
   flyPlaywrightCalls: number;
   flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
+  imageApiCalls: number;
+  imageApiCostEur: number;
+  imageByProvider: Record<string, number>;
 }
 
 export function FinancesDashboard() {
