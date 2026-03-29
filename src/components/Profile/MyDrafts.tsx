@@ -312,6 +312,7 @@ export function MyDrafts() {
             trackedSiteId={modalDraft.tracked_site_id || ''}
             draftData={modalDraft.draft_data}
             prefillUrl={modalDraft.draft_data?.url}
+            colorTheme="green"
           />
         </Suspense>
       )}

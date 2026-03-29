@@ -536,6 +536,7 @@ export function Header() {
             nodes={[]}
             domain=""
             trackedSiteId=""
+            colorTheme="green"
           />
         </Suspense>,
         document.body
