@@ -345,6 +345,7 @@ export function Header() {
             >
               <PenLine className="h-4 w-4" />
               <span className="text-sm font-semibold">Content</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full leading-none">beta</span>
             </Button>
           )}
 
