@@ -3,6 +3,33 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { t3 } from '@/utils/i18n';
 
+const themes = {
+  cocoon: {
+    accent: '#fbbf24',
+    accentClass: 'text-[#fbbf24]',
+    accentBg: 'bg-[#fbbf24]/5',
+    accentBorder: 'border-[#fbbf24]/20',
+    accentLabel: 'text-[#fbbf24]/60',
+    accentStrong: 'text-[#fbbf24]',
+    accentMuted: 'text-[#fbbf24]/70',
+    accentFocusRing: 'focus:ring-[#fbbf24]/40',
+    accentBorderL: 'border-[#fbbf24]/30',
+    guideBg: 'bg-[#1a1035]',
+  },
+  green: {
+    accent: '#10b981',
+    accentClass: 'text-emerald-400',
+    accentBg: 'bg-emerald-500/5',
+    accentBorder: 'border-emerald-500/20',
+    accentLabel: 'text-emerald-400/60',
+    accentStrong: 'text-emerald-400',
+    accentMuted: 'text-emerald-400/70',
+    accentFocusRing: 'focus:ring-emerald-400/40',
+    accentBorderL: 'border-emerald-500/30',
+    guideBg: 'bg-[#0b1a14]',
+  },
+};
+
 interface ContentArchitectPreviewProps {
   result: any;
   setResult: (v: any) => void;
@@ -21,17 +48,20 @@ interface ContentArchitectPreviewProps {
   hasCmsConnection?: boolean;
   isExistingPage?: boolean;
   creditsCost?: number | null;
+  colorTheme?: 'cocoon' | 'green';
 }
 
 export function ContentArchitectPreview({
   result, setResult, loading, url, isEdited, onResetEdits, showGuide, setShowGuide, language, counters,
-  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage, creditsCost,
+  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage, creditsCost, colorTheme = 'cocoon',
 }: ContentArchitectPreviewProps) {
+  const t = themes[colorTheme];
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Preview header with save/publish */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
-        <span className="text-xs text-white/60">{result ? 'Aperçu de la structure' : 'Canvas'}</span>
+        <span className="text-xs text-white/60">{result ? 'Aperçu de la structure' : 'Canvas Preview'}</span>
         {url && <span className="text-[10px] text-white/30 font-mono truncate flex-1 text-right">{url}</span>}
         <div className="flex items-center gap-1.5 ml-auto shrink-0">
           {onSaveDraft && (
@@ -47,7 +77,7 @@ export function ContentArchitectPreview({
                 ? 'h-7 px-3 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold gap-1.5'
                 : 'h-7 px-3 text-[10px] bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 gap-1.5'}>
               {publishing ? <Loader2 className="w-3 h-3 animate-spin" /> : hasCmsConnection ? <Upload className="w-3 h-3 stroke-[1.5]" /> : <Plug className="w-3 h-3 stroke-[1.5]" />}
-              {hasCmsConnection ? (isExistingPage ? 'Mettre à jour' : `Publier${creditsCost ? ` (${creditsCost} crédits)` : ''}`) : 'Connecter CMS'}
+              {hasCmsConnection ? (isExistingPage ? 'Mettre à jour' : `Publier${creditsCost ? ` · ${creditsCost} ₵` : ''}`) : 'Connecter CMS'}
             </Button>
           )}
         </div>
@@ -76,7 +106,7 @@ export function ContentArchitectPreview({
         {loading && (
           <div className="flex items-center justify-center h-full min-h-[400px]">
             <div className="text-center space-y-3">
-              <Loader2 className="w-6 h-6 animate-spin text-[#fbbf24] mx-auto" />
+              <Loader2 className={`w-6 h-6 animate-spin ${t.accentClass} mx-auto`} />
               <p className="text-xs text-white/40">Génération en cours…</p>
             </div>
           </div>
@@ -86,20 +116,20 @@ export function ContentArchitectPreview({
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-5">
               {/* Meta title */}
               {result.metadata_enrichment?.meta_title && (
-                <div className="text-[11px] text-[#fbbf24]/50 font-mono truncate">{result.metadata_enrichment.meta_title}</div>
+                <div className={`text-[11px] font-mono truncate ${t.accentLabel}`}>{result.metadata_enrichment.meta_title}</div>
               )}
               {/* Meta description */}
               {result.metadata_enrichment?.meta_description && (
-                <p className="text-sm text-white/50 italic border-l-2 border-[#fbbf24]/30 pl-3 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
+                <p className={`text-sm text-white/50 italic border-l-2 ${t.accentBorderL} pl-3 outline-none ${t.accentFocusRing} rounded`}
                   contentEditable suppressContentEditableWarning
                   onBlur={e => { const u = { ...result }; u.metadata_enrichment.meta_description = e.currentTarget.textContent || ''; setResult(u); }}
                 >{result.metadata_enrichment.meta_description}</p>
               )}
               {/* TL;DR */}
               {result.content_structure?.tldr_summary && (
-                <div className="p-3 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
-                  <p className="text-xs text-[#fbbf24]/60 uppercase tracking-wider mb-1">TL;DR</p>
-                  <p className="text-sm text-white/70 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded"
+                <div className={`p-3 rounded-lg ${t.accentBg} border ${t.accentBorder}`}>
+                  <p className={`text-xs uppercase tracking-wider mb-1 ${t.accentLabel}`}>TL;DR</p>
+                  <p className={`text-sm text-white/70 outline-none ${t.accentFocusRing} rounded`}
                     contentEditable suppressContentEditableWarning
                     onBlur={e => { const u = { ...result }; u.content_structure.tldr_summary = e.currentTarget.textContent || ''; setResult(u); }}
                   >{result.content_structure.tldr_summary}</p>
@@ -107,7 +137,7 @@ export function ContentArchitectPreview({
               )}
               {/* Introduction */}
               {result.content_structure?.introduction && (
-                <p className="text-sm text-white/60 leading-relaxed outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded border-l-2 border-emerald-500/30 pl-3"
+                <p className={`text-sm text-white/60 leading-relaxed outline-none ${t.accentFocusRing} rounded border-l-2 border-emerald-500/30 pl-3`}
                   contentEditable suppressContentEditableWarning
                   onBlur={e => { const u = { ...result }; u.content_structure.introduction = e.currentTarget.textContent || ''; setResult(u); }}
                 >{result.content_structure.introduction}</p>
@@ -133,7 +163,7 @@ export function ContentArchitectPreview({
               {(result.content_structure?.sections || []).map((s: any, i: number) => (
                 <div key={i} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white/90 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                    <h2 className={`text-lg font-semibold text-white/90 outline-none ${t.accentFocusRing} rounded px-1 -mx-1`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; u.content_structure.sections[i].title = e.currentTarget.textContent || ''; setResult(u); }}
                     >{s.title}</h2>
@@ -143,7 +173,7 @@ export function ContentArchitectPreview({
                     </div>
                   </div>
                   {s.body_text ? (
-                    <div className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded pl-2 border-l border-white/5"
+                    <div className={`text-sm text-white/60 leading-relaxed whitespace-pre-wrap outline-none ${t.accentFocusRing} rounded pl-2 border-l border-white/5`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; u.content_structure.sections[i].body_text = e.currentTarget.textContent || ''; setResult(u); }}
                     >{s.body_text}</div>
@@ -165,7 +195,7 @@ export function ContentArchitectPreview({
                 <div className="space-y-2 mt-4">
                   <p className="text-[10px] text-white/30 uppercase tracking-wider">Sous-sections H3</p>
                   {(result.content_structure.hn_hierarchy || []).filter((h: any) => h.level === 'h3').map((hn: any, i: number) => (
-                    <h3 key={i} className="text-base font-medium text-white/70 ml-4 outline-none focus:ring-1 focus:ring-[#fbbf24]/40 rounded px-1 -mx-1"
+                    <h3 key={i} className={`text-base font-medium text-white/70 ml-4 outline-none ${t.accentFocusRing} rounded px-1 -mx-1`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; const idx = u.content_structure.hn_hierarchy.indexOf(hn); if (idx >= 0) u.content_structure.hn_hierarchy[idx].text = e.currentTarget.textContent || ''; setResult(u); }}
                     >{hn.text}</h3>
@@ -174,10 +204,10 @@ export function ContentArchitectPreview({
               )}
               {/* Keyword strategy */}
               {result.keyword_strategy?.primary_keyword && (
-                <div className="p-3 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20 space-y-2">
+                <div className={`p-3 rounded-lg ${t.accentBg} border ${t.accentBorder} space-y-2`}>
                   <div>
-                    <span className="text-xs text-[#fbbf24]/70">Mot-clé principal : </span>
-                    <span className="text-sm font-semibold text-[#fbbf24]">{result.keyword_strategy.primary_keyword.keyword}</span>
+                    <span className={`text-xs ${t.accentMuted}`}>Mot-clé principal : </span>
+                    <span className={`text-sm font-semibold ${t.accentStrong}`}>{result.keyword_strategy.primary_keyword.keyword}</span>
                     <span className="text-xs text-white/40 ml-2">densité : {result.keyword_strategy.primary_keyword.target_density_percent}%</span>
                   </div>
                   {result.keyword_strategy.secondary_keywords?.length > 0 && (
@@ -263,7 +293,7 @@ export function ContentArchitectPreview({
               Mode d'emploi
             </button>
             {showGuide && (
-              <div className="absolute bottom-full right-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
+              <div className={`absolute bottom-full right-0 mb-1 w-80 p-3 rounded-lg ${t.guideBg} border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10`}>
                 <p className="font-medium text-white/80">Comment ça marche ?</p>
                 <ol className="list-decimal list-inside space-y-1">
                   <li>Ouvrez le panneau Prompt pour vos instructions</li>

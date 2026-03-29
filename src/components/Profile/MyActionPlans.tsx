@@ -950,6 +950,7 @@ export function MyActionPlans() {
             draftData={contentArchitectDraft}
             prefillUrl={contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`}
             isExistingPage={!!contentArchitectDraft?.keyword}
+            colorTheme="green"
           />
         </Suspense>
       )}

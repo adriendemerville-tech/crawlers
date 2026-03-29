@@ -35,6 +35,7 @@ interface CocoonContentArchitectModalProps {
   prefillUrl?: string;
   isExistingPage?: boolean;
   demoMode?: boolean;
+  colorTheme?: 'cocoon' | 'green';
 }
 
 const PAGE_TYPES = [
@@ -112,7 +113,7 @@ const DEMO_IMAGES: import('./ImageStylePicker').GeneratedImageItem[] = [
   { dataUri: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', style: 'infographic' as any, placement: 'body' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false, colorTheme = 'cocoon' }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const [activePanel, setActivePanel] = useState<PanelId | null>('prompt');
@@ -532,11 +533,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-[98vw] max-w-[1600px] h-[92vh] bg-[#0f0a1e] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+      <div className={`w-[98vw] max-w-[1600px] h-[92vh] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl ${colorTheme === 'green' ? 'bg-[#0b1a14]' : 'bg-[#0f0a1e]'}`}>
         {/* Header — compact, no publish here */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
+        <div className={`flex items-center justify-between px-4 py-2 border-b border-white/10 ${colorTheme === 'green' ? 'bg-gradient-to-r from-[#0d2218] to-[#0b1a14]' : 'bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]'}`}>
           <div className="flex items-center gap-3">
-            <FileText className="w-4 h-4 text-[#fbbf24] stroke-[1.5]" />
+            <FileText className={`w-4 h-4 stroke-[1.5] ${colorTheme === 'green' ? 'text-emerald-400' : 'text-[#fbbf24]'}`} />
             <span className="text-sm font-semibold text-white">Content Architect</span>
             {result && (
               <div className="flex items-center gap-2 ml-3">
@@ -553,11 +554,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
         {/* Body: Toolbar + Panel + Resizable Preview */}
         <div className="flex-1 flex overflow-hidden">
-          <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} />
+          <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} colorTheme={colorTheme} />
 
           {/* Expandable panel + shared instructions */}
           {activePanel && (
-            <div className="w-[320px] shrink-0 border-r border-white/10 flex flex-col bg-[#0d0819] animate-in slide-in-from-left-2 duration-200">
+            <div className={`w-[320px] shrink-0 border-r border-white/10 flex flex-col animate-in slide-in-from-left-2 duration-200 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
               {/* Panel content area */}
               <div className="flex-1 overflow-y-auto min-h-0">
                 {activePanel === 'prompt' && (
@@ -640,12 +641,12 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     style={{ height: '80px' }}
                   />
                 </div>
-                <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#0d0819]">
+                <div className={`px-3 pb-2 pt-1 sticky bottom-0 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
                   <Button
                     size="sm"
                     onClick={handleGenerate}
                     disabled={loading || !keyword}
-                    className="w-full bg-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/30 border border-[#fbbf24]/30 text-xs gap-1.5"
+                    className={`w-full text-xs gap-1.5 ${colorTheme === 'green' ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/30 border border-[#fbbf24]/30'}`}
                   >
                     <Syringe className="w-3 h-3 stroke-[1.5]" />
                     Injecter
@@ -658,7 +659,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           {/* Draggable resize handle for preview width */}
           {activePanel && (
             <div
-              className="w-1 cursor-col-resize hover:bg-[#fbbf24]/30 active:bg-[#fbbf24]/50 transition-colors shrink-0"
+              className={`w-1 cursor-col-resize transition-colors shrink-0 ${colorTheme === 'green' ? 'hover:bg-emerald-500/30 active:bg-emerald-500/50' : 'hover:bg-[#fbbf24]/30 active:bg-[#fbbf24]/50'}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 const startX = e.clientX;
@@ -686,6 +687,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
             publishing={publishing} savingDraft={savingDraft}
             hasCmsConnection={hasCmsConnection} isExistingPage={isExistingPage}
             creditsCost={!isAgencyPro ? 5 : null}
+            colorTheme={colorTheme}
           />
         </div>
       </div>
