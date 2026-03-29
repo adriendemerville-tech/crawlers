@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -543,15 +544,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth
-    const authHeader = req.headers.get('Authorization') || '';
-    const userClient = getUserClient(authHeader);
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
+    // Auth — supports service role bypass for Parmenion system calls
+    const auth = await getAuthenticatedUser(req);
+    if (!auth) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const isServiceCall = auth.userId === 'service-role';
+    const user = { id: auth.userId };
 
     const input: PushCodeInput = await req.json();
     const { tracked_site_id, code, mode = 'deploy' } = input;
@@ -577,17 +578,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Security: verify ownership
-    const ownershipCheck = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
-      scriptType: 'corrective_code',
-      payloadPreview: (input.code_minified || input.code).substring(0, 200),
-      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
-    });
-
-    if (!ownershipCheck.allowed) {
-      return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Security: verify ownership (skip for service role — Parmenion acts on behalf of site owner)
+    if (!isServiceCall) {
+      const ownershipCheck = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
+        scriptType: 'corrective_code',
+        payloadPreview: (input.code_minified || input.code).substring(0, 200),
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
       });
+
+      if (!ownershipCheck.allowed) {
+        return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     if (mode === 'preview') {
@@ -612,10 +615,13 @@ Deno.serve(async (req) => {
     let result: PushResult;
     const label = input.label || `Crawlers SEO Fix (${input.fixes_summary?.length || 0} corrections)`;
 
+    // For service role calls, use the site owner's user_id for rule ownership
+    const effectiveUserId = isServiceCall ? site.user_id : user.id;
+
     if (!cmsConn) {
       // No CMS → widget.js fallback
       console.log(`[cms-push-code] No CMS connection for site ${tracked_site_id}, using widget fallback`);
-      result = await fallbackToWidgetRules(supabase, site.id, user.id, input.code_minified || code, label);
+      result = await fallbackToWidgetRules(supabase, site.id, effectiveUserId, input.code_minified || code, label);
     } else {
       console.log(`[cms-push-code] Pushing code to ${cmsConn.platform} for ${site.domain}`);
       
@@ -653,7 +659,7 @@ Deno.serve(async (req) => {
       // If native push failed, fallback to widget.js
       if (!result.success) {
         console.log(`[cms-push-code] Native push to ${cmsConn.platform} failed, falling back to widget.js`);
-        const fallbackResult = await fallbackToWidgetRules(supabase, site.id, user.id, input.code_minified || code, label);
+        const fallbackResult = await fallbackToWidgetRules(supabase, site.id, effectiveUserId, input.code_minified || code, label);
         result = {
           ...fallbackResult,
           detail: `${cmsConn.platform} native push failed (${result.detail}). ${fallbackResult.detail}`,
