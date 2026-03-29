@@ -1415,11 +1415,21 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Hors /cocoon** (Console, Code Architect) : Félix (SAV) peut guider l'utilisateur dans Content Architect, expliquer les panneaux, suggérer des instructions et prendre la main si nécessaire
 - **Pré-appel stratégique** : hors /cocoon, Content Architect effectue un pré-appel silencieux au \\\`cocoon-strategist\\\` pour pré-remplir la structure (H1, H2, mots-clés), garantissant une précision identique
 
-### Génération d'images IA
+### Génération d'images IA (v3 — multi-moteurs)
 
-- **Styles supportés** : photo, cinematic, flat_illustration, infographic, watercolor, artistic, classic_painting, typography
+- **Edge Function** : \\\`generate-image\\\`
+- **Routeur intelligent** : Le style demandé route automatiquement vers le moteur optimal :
+  - **Imagen 3** (Google) : Photo, Cinématique — rendu photoréaliste. Forcé aussi quand une image de référence est utilisée (mode multimodal)
+  - **FLUX** : Artistic, Flat Illustration, Watercolor — styles artistiques et illustrations
+  - **Ideogram** : Typography, Infographic, Noir & Blanc, Peinture classique — texte lisible et compositions complexes
+- **Styles supportés** : photo, cinematic, flat_illustration, infographic, watercolor, artistic, classic_painting, typography, black_and_white
 - **Adaptation sectorielle** : le style est automatiquement adapté au secteur du site (food→photo, tech→flat, luxury→cinematic, etc.)
 - **Multi-formats** : header, body, hero, thumbnail
+- **Fair use** : Max 2 images par contenu, 3 itérations par génération
+- **Bibliothèque** : 5 images max/site, stockées 24h dans le storage (\\\`image-references/generated/\\\`)
+- **Image de référence** : Mode Inspiration ou Édition → force le routage vers Imagen 3 (multimodal)
+- **Recommandations style** : Suggère les styles les plus utilisés par utilisateur et URL (\\\`image_style_preferences\\\`)
+- **CMS** : Intégration HTML accessible (alt, caption, lazy-loading) et upload \\\`featured_media\\\` WordPress (base64 ou URL publique)
 - **Moteur de recommandation** : \\\`computeImageRecommendation\\\` dans le stratège calcule le nombre, le style et le placement optimaux par type de page et secteur
 
 ### Pipeline de corrélation prompt→performance
