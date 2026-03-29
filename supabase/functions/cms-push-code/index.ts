@@ -578,17 +578,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Security: verify ownership
-    const ownershipCheck = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
-      scriptType: 'corrective_code',
-      payloadPreview: (input.code_minified || input.code).substring(0, 200),
-      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
-    });
-
-    if (!ownershipCheck.allowed) {
-      return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Security: verify ownership (skip for service role — Parmenion acts on behalf of site owner)
+    if (!isServiceCall) {
+      const ownershipCheck = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
+        scriptType: 'corrective_code',
+        payloadPreview: (input.code_minified || input.code).substring(0, 200),
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
       });
+
+      if (!ownershipCheck.allowed) {
+        return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     if (mode === 'preview') {
