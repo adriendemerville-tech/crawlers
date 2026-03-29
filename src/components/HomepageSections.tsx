@@ -91,7 +91,8 @@ const i18n = {
     row3: 'Carte d\'identité sémantique',
     row4: 'Cocon sémantique IA',
     row5: 'Code correctif dynamique',
-    row6: 'Maintenance SEO & GEO automatisée',
+    row6: 'Création de contenu assistée',
+    row7: 'Maintenance SEO & GEO automatisée',
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La première plateforme française SEO + GEO full-stack',
@@ -135,7 +136,7 @@ const i18n = {
     hybridSubtitle: "Classic SEO tools analyze your site for Google. Crawlers.fr is the first French tool combining optimization for traditional search engines AND generative engines (ChatGPT, Gemini, Perplexity, Claude). This hybrid approach guarantees maximum visibility, regardless of the search channel used by your prospects.",
     colSeo: 'Classic SEO', colCrawlers: 'Crawlers.fr',
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
-    row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'Automated SEO & GEO maintenance',
+    row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'AI-assisted content creation', row7: 'Automated SEO & GEO maintenance',
     hybridCta: 'Try for free',
     trustTitle: 'The first French full-stack SEO + GEO platform',
     trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business Profile management is natively integrated.',
@@ -178,7 +179,7 @@ const i18n = {
     hybridSubtitle: 'Las herramientas SEO clásicas analizan tu sitio para Google. Crawlers.fr es la primera herramienta francófona que combina optimización para motores tradicionales Y motores generativos (ChatGPT, Gemini, Perplexity, Claude).',
     colSeo: 'SEO clásico', colCrawlers: 'Crawlers.fr',
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
-    row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Mantenimiento SEO & GEO automatizado',
+    row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Creación de contenido asistida', row7: 'Mantenimiento SEO & GEO automatizado',
     hybridCta: 'Probar gratis',
     trustTitle: 'La primera plataforma francesa full-stack SEO + GEO',
     trustText: 'Crawlers.fr es la primera plataforma francesa en cubrir todo el ciclo SEO y GEO: auditoría técnica, corrección generada automáticamente, despliegue en 30 segundos y medición de impacto real a T+30, T+60 y T+90 días.\n\nDos asistentes IA especializados te acompañan en cada etapa: el Estratega Cocoon para el análisis de tu grafo semántico 3D, y el Asistente Crawlers para aprovechar toda la profundidad de tus datos SEO y GEO. La gestión de Google Business Profile está integrada nativamente.',
@@ -361,6 +362,7 @@ const competitorFeatures = [
   { key: 'identite', fr: 'Carte d\'identité sémantique', en: 'Semantic identity card', es: 'Tarjeta de identidad semántica' },
   { key: 'cocon', fr: 'Cocon sémantique IA', en: 'AI semantic cocoon', es: 'Cocón semántico IA' },
   { key: 'code_correctif', fr: 'Code correctif dynamique', en: 'Dynamic corrective code', es: 'Código correctivo dinámico' },
+  { key: 'content_creation', fr: 'Création de contenu assistée', en: 'AI-assisted content creation', es: 'Creación de contenido asistida' },
   { key: 'maintenance', fr: 'Maintenance SEO & GEO automatisée', en: 'Automated SEO & GEO maintenance', es: 'Mantenimiento SEO & GEO automatizado' },
   { key: 'gmb', fr: 'Gestion Google Business Profile', en: 'Google Business Profile management', es: 'Gestión Google Business Profile' },
   { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
@@ -373,6 +375,7 @@ const competitorMatrix: Record<string, (boolean | 'partial')[]> = {
   identite: [false, false, false, false, false, true],
   cocon: [false, 'partial', false, false, false, true],
   code_correctif: [false, false, false, false, false, true],
+  content_creation: [false, 'partial', false, false, false, true],
   maintenance: [false, false, false, false, false, true],
   gmb: [false, false, 'partial', false, false, true],
   assistants: [false, false, false, false, false, true],
@@ -383,8 +386,8 @@ const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'BotRank', 'Mete
 const HybridSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
-  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6];
-  const seoHas = [true, false, false, false, false, false];
+  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7];
+  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false];
   const lang = language as 'fr' | 'en' | 'es';
 
   return (
