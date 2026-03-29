@@ -1,5 +1,6 @@
-import { FileText, Code2, Image, Link2, ChevronUp, RotateCcw, Loader2 } from 'lucide-react';
+import { FileText, Code2, Image, Link2, ChevronUp, RotateCcw, Loader2, Save, Upload, Plug } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { t3 } from '@/utils/i18n';
 
 interface ContentArchitectPreviewProps {
@@ -13,19 +14,43 @@ interface ContentArchitectPreviewProps {
   setShowGuide: (v: boolean) => void;
   language: string;
   counters: { h1: number; h2: number; h3: number; chars: number; medias: number; links: number };
+  onSaveDraft?: () => void;
+  onPublish?: () => void;
+  publishing?: boolean;
+  savingDraft?: boolean;
+  hasCmsConnection?: boolean;
+  isExistingPage?: boolean;
 }
 
 export function ContentArchitectPreview({
   result, setResult, loading, url, isEdited, onResetEdits, showGuide, setShowGuide, language, counters,
+  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage,
 }: ContentArchitectPreviewProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {result && (
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
-          <span className="text-xs text-white/60">Aperçu de la structure</span>
-          {url && <span className="text-[10px] text-white/30 font-mono truncate ml-auto">{url}</span>}
+      {/* Preview header with save/publish */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
+        <span className="text-xs text-white/60">{result ? 'Aperçu de la structure' : 'Canvas'}</span>
+        {url && <span className="text-[10px] text-white/30 font-mono truncate flex-1 text-right">{url}</span>}
+        <div className="flex items-center gap-1.5 ml-auto shrink-0">
+          {onSaveDraft && (
+            <Button onClick={onSaveDraft} disabled={savingDraft} size="sm" variant="ghost"
+              className="h-7 px-2.5 text-[10px] text-white/50 hover:text-white/80 hover:bg-white/5 gap-1.5">
+              {savingDraft ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3 stroke-[1.5]" />}
+              Enregistrer
+            </Button>
+          )}
+          {onPublish && result && (
+            <Button onClick={onPublish} disabled={publishing} size="sm"
+              className={hasCmsConnection
+                ? 'h-7 px-3 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold gap-1.5'
+                : 'h-7 px-3 text-[10px] bg-white/10 hover:bg-white/15 text-white/60 border border-white/10 gap-1.5'}>
+              {publishing ? <Loader2 className="w-3 h-3 animate-spin" /> : hasCmsConnection ? <Upload className="w-3 h-3 stroke-[1.5]" /> : <Plug className="w-3 h-3 stroke-[1.5]" />}
+              {hasCmsConnection ? (isExistingPage ? 'Mettre à jour' : 'Publier') : 'Connecter CMS'}
+            </Button>
+          )}
         </div>
-      )}
+      </div>
 
       <ScrollArea className="flex-1 p-4">
         {!result && !loading && (

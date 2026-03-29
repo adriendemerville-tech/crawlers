@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { Lock, Image as ImageIcon } from 'lucide-react';
 import { ImageColumn, type GeneratedImageItem } from './ImageStylePicker';
 
 interface ContentArchitectImagePanelProps {
@@ -34,8 +34,9 @@ export function ContentArchitectImagePanel({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/70">🖼️ Images</h3>
+      <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
+        <ImageIcon className="w-3.5 h-3.5 text-white/50 stroke-[1.5]" />
+        <h3 className="text-xs font-semibold text-white/70">Images</h3>
       </div>
       <div className="flex-1 overflow-hidden">
         <ImageColumn

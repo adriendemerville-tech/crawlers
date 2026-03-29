@@ -1,4 +1,4 @@
-import { Loader2, Send, X } from 'lucide-react';
+import { Loader2, Send, X, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,8 +48,9 @@ export function ContentArchitectStructurePanel({
 }: ContentArchitectStructurePanelProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/70">🏗️ Structure de la page</h3>
+      <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
+        <Layers className="w-3.5 h-3.5 text-white/50 stroke-[1.5]" />
+        <h3 className="text-xs font-semibold text-white/70">Structure de la page</h3>
       </div>
 
       {strategistLoading && !strategistDone && (
