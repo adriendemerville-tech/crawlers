@@ -5,7 +5,7 @@ import {
   DoorOpen, Brain, Sparkles, Shield, Bot, FileCode2,
   CheckCircle2, XCircle, AlertTriangle, Lock,
   FileText, Hash, AlignLeft, Code2, Link2,
-  HelpCircle, BarChart3
+  HelpCircle, BarChart3, Eye, EyeOff, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ExpertAuditResult } from '@/types/expertAudit';
@@ -106,6 +106,11 @@ const translations = {
     jsonLdExplain: "Le JSON-LD est le \"langage maternel\" de l\u2019IA pour valider l\u2019expertise annoncée dans vos titres.",
     formatExplain: "Le ratio texte/HTML et le profil de liens sont des critères essentiels pour atterrir dans les résumés générés par l\u2019IA.",
     health: 'Santé',
+    spaGoogleView: 'Vue Google',
+    spaLlmView: 'Vue LLM',
+    spaGoogleNote: 'Googlebot exécute le JS et voit le contenu rendu.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot ne rendent pas le JS.',
+    spaDetected: 'Site SPA détecté — double lecture',
   },
   en: {
     sectionTitle: 'How Technical SEO Powers Acquisition (SEO & AI)',
@@ -142,6 +147,11 @@ const translations = {
     jsonLdExplain: 'JSON-LD is the "native language" of AI for validating the expertise announced in your titles.',
     formatExplain: 'Text/HTML ratio and link profiles are essential criteria for landing in AI-generated summaries.',
     health: 'Health',
+    spaGoogleView: 'Google View',
+    spaLlmView: 'LLM View',
+    spaGoogleNote: 'Googlebot renders JS and sees the full content.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot don\'t render JS.',
+    spaDetected: 'SPA site detected — dual reading',
   },
   es: {
     sectionTitle: 'La Técnica al servicio de la Adquisición (SEO & IA)',
@@ -178,6 +188,11 @@ const translations = {
     jsonLdExplain: 'JSON-LD es el "lenguaje nativo" de la IA para validar la experiencia anunciada en sus títulos.',
     formatExplain: 'El ratio texto/HTML y el perfil de enlaces son criterios esenciales para aparecer en resúmenes generados por IA.',
     health: 'Salud',
+    spaGoogleView: 'Vista Google',
+    spaLlmView: 'Vista LLM',
+    spaGoogleNote: 'Googlebot ejecuta JS y ve el contenido completo.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot no renderizan JS.',
+    spaDetected: 'Sitio SPA detectado — doble lectura',
   },
 };
 
@@ -192,6 +207,8 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
   const linkProfile = insights?.linkProfile;
   const semanticConsistency = insights?.semanticConsistency;
   const misplacedHeadTags: string[] = (rawData?.htmlAnalysis as any)?.misplacedHeadTags || [];
+  const isSPA = result.isSPA === true;
+  const staticWordCount: number = (rawData?.htmlAnalysis as any)?.staticWordCount ?? scores.semantic.wordCount;
 
   // ── Compute bloc scores ──
   const bloc1Items = [
@@ -336,6 +353,30 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
             </div>
           </CardHeader>
           <CardContent className="space-y-0 pt-2">
+            {isSPA && (
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">{t.spaDetected}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5 rounded-md bg-success/10 border border-success/20 px-2.5 py-1.5">
+                    <Search className="h-3 w-3 text-success shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-success block">{t.spaGoogleView}</span>
+                      <span className="text-[9px] text-muted-foreground leading-tight block">{t.spaGoogleNote}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-md bg-destructive/10 border border-destructive/20 px-2.5 py-1.5">
+                    <EyeOff className="h-3 w-3 text-destructive shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-destructive block">{t.spaLlmView}</span>
+                      <span className="text-[9px] text-muted-foreground leading-tight block">{t.spaLlmNote}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.title} ok={scores.semantic.hasTitle && scores.semantic.titleLength <= 70} detail={scores.semantic.hasTitle ? `${scores.semantic.titleLength} ${t.chars}` : undefined} />
             <StatusRow icon={<AlignLeft className="h-3.5 w-3.5" />} label={t.metaDesc} ok={scores.semantic.hasMetaDesc} detail={scores.semantic.hasMetaDesc ? `${scores.semantic.metaDescLength} ${t.chars}` : undefined} />
             <StatusRow icon={<Hash className="h-3.5 w-3.5" />} label={t.h1} ok={scores.semantic.hasUniqueH1} detail={!scores.semantic.hasUniqueH1 ? `${scores.semantic.h1Count}` : undefined} />
@@ -397,7 +438,31 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
             </div>
           </CardHeader>
           <CardContent className="space-y-0 pt-2">
-            <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.wordCount} ok={wordCountOk} detail={`~${scores.semantic.wordCount} ${t.words}`} />
+            {isSPA && (
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">{t.spaDetected}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5 rounded-md bg-success/10 border border-success/20 px-2.5 py-1.5">
+                    <Search className="h-3 w-3 text-success shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-success block">{t.spaGoogleView}</span>
+                      <span className="text-[10px] font-mono text-success/80">~{scores.semantic.wordCount} {t.words}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-md bg-destructive/10 border border-destructive/20 px-2.5 py-1.5">
+                    <EyeOff className="h-3 w-3 text-destructive shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-destructive block">{t.spaLlmView}</span>
+                      <span className="text-[10px] font-mono text-destructive/80">~{staticWordCount} {t.words}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.wordCount} ok={wordCountOk} detail={isSPA ? `🔍 ~${scores.semantic.wordCount} | 🤖 ~${staticWordCount} ${t.words}` : `~${scores.semantic.wordCount} ${t.words}`} />
             {!isHomepage && <StatusRow icon={<BarChart3 className="h-3.5 w-3.5" />} label={t.textRatio} ok={densityOk} detail={contentDensity ? `${contentDensity.ratio}%` : undefined} />}
             <StatusRow icon={<Link2 className="h-3.5 w-3.5" />} label={t.linkProfile} ok={hasLinks} detail={linkProfile ? `${linkProfile.internal} ${t.internal} / ${linkProfile.external} ${t.external}` : undefined} />
             
