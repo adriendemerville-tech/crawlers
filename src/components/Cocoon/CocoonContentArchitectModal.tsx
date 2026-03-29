@@ -770,22 +770,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
             </div>
 
-            <div className="shrink-0 p-4 border-t border-white/10 space-y-2">
-              <Button onClick={handleGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
-                {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{t3(language, 'Génération…', 'Generating…', 'Generando…')}</> : <><Send className="w-3.5 h-3.5 mr-2" />{t3(language, 'Générer la page', 'Generate page', 'Generar página')}</>}
-              </Button>
-              {result && (
-                <div className="flex gap-2">
-                  <Button onClick={handleResetEdits} variant="ghost" size="sm" className="flex-1 text-white/40 hover:text-white/60 text-[10px] h-7">
-                    <RotateCcw className="w-3 h-3 mr-1" />{t3(language, 'Réinitialiser', 'Reset', 'Reiniciar')}
-                  </Button>
-                  <Button onClick={handleGenerate} disabled={loading} variant="ghost" size="sm" className="flex-1 text-[#fbbf24]/60 hover:text-[#fbbf24] text-[10px] h-7">
-                    <Send className="w-3 h-3 mr-1" />{t3(language, 'Régénérer', 'Regenerate', 'Regenerar')}
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
+
 
           {/* Column 2 — H1/H2/Keywords structure fields */}
           <div className="w-[300px] shrink-0 border-r border-white/10 flex flex-col overflow-hidden">
