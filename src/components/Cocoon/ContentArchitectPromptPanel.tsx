@@ -22,17 +22,14 @@ export function ContentArchitectPromptPanel({
         <h3 className="text-xs font-semibold text-white/70">Prompt & Presets</h3>
       </div>
 
-      {/* Site presets */}
-      <div className="border-b border-white/10 max-h-[45%] overflow-hidden">
+      {/* Site presets — fills all remaining space */}
+      <div className="flex-1 overflow-hidden">
         <ContentArchitectSidebar
           selectedSiteId={trackedSiteId}
           selectedPageType={pageType === 'landing' || pageType === 'product' || pageType === 'article' ? pageType : undefined}
           onSelectPreset={onSelectPreset}
         />
       </div>
-
-      {/* Prompt textarea moved to shared instructions zone */}
-      <div className="flex-1" />
     </div>
   );
 }
