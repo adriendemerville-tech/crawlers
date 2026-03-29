@@ -19,6 +19,7 @@ import {
   Brain,
   Swords,
   ScanSearch,
+  PenTool,
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -56,6 +57,7 @@ interface AnalyticsStats {
   cocoonGenerated: number;
   cocoonChatSessions: number;
   gmbConnected: number;
+  contentsGenerated: number;
 }
 
 
