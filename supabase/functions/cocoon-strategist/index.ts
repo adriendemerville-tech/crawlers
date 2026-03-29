@@ -995,7 +995,7 @@ Deno.serve(async (req) => {
 // ═══════════════════════════════════════════════════════════════
 // MAPPING: Finding → Strategic Task(s)
 // ═══════════════════════════════════════════════════════════════
-function findingToTasks(finding: any, lang: string, counter: number): StrategicTask[] {
+function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null): StrategicTask[] {
   const tasks: StrategicTask[] = [];
   const baseId = `strat_${counter}`;
   const cat = finding.category || '';
