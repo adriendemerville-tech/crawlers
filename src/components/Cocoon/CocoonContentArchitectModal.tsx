@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { X, FileText, Code2, ChevronUp, Plug, Send, Loader2, Image, Link2, Type, Hash, PenLine, RotateCcw, Upload, Lock, Layers, Settings, ImageIcon, LayoutTemplate } from 'lucide-react';
+import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,9 @@ import { ContentArchitectPromptPanel } from './ContentArchitectPromptPanel';
 import { ContentArchitectStructurePanel } from './ContentArchitectStructurePanel';
 import { ContentArchitectImagePanel } from './ContentArchitectImagePanel';
 import { ContentArchitectOptionsPanel } from './ContentArchitectOptionsPanel';
+import { ContentArchitectStructuredDataPanel } from './ContentArchitectStructuredDataPanel';
+import { ContentArchitectDraftPanel } from './ContentArchitectDraftPanel';
+import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
 
 interface CocoonContentArchitectModalProps {
@@ -56,6 +59,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [result, setResult] = useState<any>(null);
   const [originalResult, setOriginalResult] = useState<any>(null);
   const [publishing, setPublishing] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<import('./ImageStylePicker').GeneratedImageItem[]>([]);
   const [imageIterations, setImageIterations] = useState(0);
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
