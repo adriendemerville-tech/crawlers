@@ -43,6 +43,7 @@ const IdentityFirstSection = lazy(() => import('@/components/HomepageSections').
 const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
+const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -640,6 +641,11 @@ const Index = () => {
         {/* AI Agents — Félix & Stratège Cocoon */}
         <Suspense fallback={<SectionSkeleton />}>
           <AIAgentsSection />
+        </Suspense>
+
+        {/* Content Architect */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <ContentArchitectSection />
         </Suspense>
 
         {/* Product Showcase — Screenshots */}
