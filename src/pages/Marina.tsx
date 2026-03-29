@@ -32,21 +32,8 @@ export default function Marina() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Poll job progress
-  useEffect(() => {
-    if (!jobId) return;
-    const interval = setInterval(async () => {
-      try {
-        const { data } = await supabase.functions.invoke('marina', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          body: null,
-        });
-        // Use fetch directly for GET with query params
-      } catch {}
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [jobId]);
+  // Poll job progress via fetch
+
 
   // Poll with fetch
   useEffect(() => {
