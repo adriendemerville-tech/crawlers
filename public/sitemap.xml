@@ -731,4 +731,24 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/console"/>
   </url>
 
+  <!-- À propos — E-E-A-T, fondateur, mission -->
+  <url>
+    <loc>https://crawlers.fr/a-propos</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/a-propos"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/a-propos"/>
+  </url>
+
+  <!-- Audit Sémantique — Landing page SEO -->
+  <url>
+    <loc>https://crawlers.fr/audit-semantique</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-semantique"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-semantique"/>
+  </url>
+
 </urlset>
