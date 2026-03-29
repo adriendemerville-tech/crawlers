@@ -116,6 +116,7 @@ export function AnalyticsDashboard() {
     cocoonGenerated: 0,
     cocoonChatSessions: 0,
     gmbConnected: 0,
+    contentsGenerated: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
@@ -174,6 +175,7 @@ export function AnalyticsDashboard() {
         cocoonGenerated: 0,
         cocoonChatSessions: 0,
         gmbConnected: 0,
+        contentsGenerated: 0,
       };
 
       // Count multi-page crawls from site_crawls table (30 days)
