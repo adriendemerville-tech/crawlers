@@ -102,6 +102,7 @@ const translations = {
       'Audit expert illimité',
       'Code correctif illimité',
       'Correctif multi-pages',
+      'Content Architect : 100 contenus/mois',
       'Crawl : 5 000 pages/mois incluses',
       '30 URL suivis inclus',
       'Marque Blanche (White Label)',
@@ -117,6 +118,7 @@ const translations = {
     agencyPremiumPrice: '99€',
     agencyPremiumFeatures: [
       'Tout Pro Agency inclus',
+      'Content Architect : 150 contenus/mois',
       'Crawl : 50 000 pages/mois',
       'Benchmark LLM & Profondeur LLM illimités',
       '100 URL suivis inclus',
@@ -219,6 +221,7 @@ const translations = {
       'Unlimited expert audit',
       'Unlimited corrective code',
       'Multi-page corrective code',
+      'Content Architect: 100 pages/month',
       'Crawl: 5,000 pages/month included',
       '30 tracked URLs included',
       'White Label option',
@@ -234,6 +237,7 @@ const translations = {
     agencyPremiumPrice: '€99',
     agencyPremiumFeatures: [
       'Everything in Pro Agency',
+      'Content Architect: 150 pages/month',
       'Crawl: 50,000 pages/month',
       'Unlimited LLM Benchmark & Depth',
       '100 tracked URLs included',
@@ -336,6 +340,7 @@ const translations = {
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
       'Correctivo multi-páginas',
+      'Content Architect: 100 contenidos/mes',
       'Crawl: 5 000 páginas/mes incluidas',
       '30 URL seguidos incluidos',
       'Opción Marca Blanca',
@@ -351,6 +356,7 @@ const translations = {
     agencyPremiumPrice: '99€',
     agencyPremiumFeatures: [
       'Todo lo de Pro Agency',
+      'Content Architect: 150 contenidos/mes',
       'Crawl: 50 000 páginas/mes',
       'Benchmark LLM y Profundidad LLM ilimitados',
       '100 URL seguidos incluidos',
