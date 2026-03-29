@@ -309,6 +309,10 @@ function ProfileContent() {
                   </TabsContent>
                 )}
 
+                <TabsContent value="drafts">
+                  <MyDrafts />
+                </TabsContent>
+
                 <TabsContent value="gmb">
                   <GMBDashboard isGated={!isProUser} />
                 </TabsContent>
