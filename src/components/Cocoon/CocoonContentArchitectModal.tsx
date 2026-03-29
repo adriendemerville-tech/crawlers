@@ -503,6 +503,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
         body: {
           url,
           keyword,
+          keywords: keywordTags,
           page_type: pageType,
           tracked_site_id: trackedSiteId,
           content_length: length,
