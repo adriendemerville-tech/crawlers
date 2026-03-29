@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
-  CheckCircle2, Zap, CreditCard, FileText, Code2, 
+  CheckCircle2, Zap, CreditCard, FileText, Code2, PenTool,
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
   ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database
