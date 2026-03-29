@@ -639,11 +639,6 @@ export default function ProAgency() {
 
               {/* Enterprise Card */}
               <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-card to-card p-8 flex flex-col">
-                <div className="absolute -top-3 right-6">
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-xs px-3 py-1 border-0">
-                    🏢 Enterprise
-                  </Badge>
-                </div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center">
                     <Building2 className="h-5 w-5 text-white" />
