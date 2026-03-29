@@ -5,10 +5,16 @@ import { corsHeaders } from '../_shared/cors.ts'
  * iktracker-actions
  * 
  * Pont API entre Crawlers et l'API Content d'IKtracker.
- * Permet de lire/modifier les articles de blog et les pages statiques.
+ * Permet de lire/modifier les articles de blog, pages statiques,
+ * injecter du code correctif (head/body-end/page), gérer le SEO
+ * (robots.txt, redirects) et piloter le registre Autopilot.
  * 
  * Actions: list-pages, get-page, update-page, create-page, delete-page,
  *          list-posts, get-post, create-post, update-post, delete-post,
+ *          push-code-head, push-code-body, push-code-page,
+ *          get-injection-head, get-injection-body-end, get-injection-page,
+ *          get-robots-txt, update-robots-txt, list-redirects, create-redirect, delete-redirect,
+ *          push-event, autopilot-registry, autopilot-health, autopilot-events, autopilot-summary,
  *          test-connection
  */
 
@@ -93,6 +99,54 @@ async function updatePost(apiKey: string, slug: string, updates: Record<string, 
 
 async function deletePost(apiKey: string, slug: string) {
   return callIktracker('DELETE', `/posts/${slug}`, apiKey)
+}
+
+// ── Code Injection (via /cms-push-code alias) ──
+
+async function getInjectionHead(apiKey: string) {
+  return callIktracker('GET', '/cms-push-code/head', apiKey)
+}
+
+async function putInjectionHead(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', '/cms-push-code/head', apiKey, body)
+}
+
+async function getInjectionBodyEnd(apiKey: string) {
+  return callIktracker('GET', '/cms-push-code/body-end', apiKey)
+}
+
+async function putInjectionBodyEnd(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', '/cms-push-code/body-end', apiKey, body)
+}
+
+async function getInjectionPage(apiKey: string, pageKey: string) {
+  return callIktracker('GET', `/cms-push-code/page/${pageKey}`, apiKey)
+}
+
+async function putInjectionPage(apiKey: string, pageKey: string, body: Record<string, unknown>) {
+  return callIktracker('PUT', `/cms-push-code/page/${pageKey}`, apiKey, body)
+}
+
+// ── SEO (robots.txt, sitemap, redirects) ──
+
+async function getRobotsTxt(apiKey: string) {
+  return callIktracker('GET', '/seo/robots-txt', apiKey)
+}
+
+async function putRobotsTxt(apiKey: string, content: string) {
+  return callIktracker('PUT', '/seo/robots-txt', apiKey, { content })
+}
+
+async function getRedirects(apiKey: string) {
+  return callIktracker('GET', '/seo/redirects', apiKey)
+}
+
+async function createRedirect(apiKey: string, body: Record<string, unknown>) {
+  return callIktracker('POST', '/seo/redirects', apiKey, body)
+}
+
+async function deleteRedirect(apiKey: string, redirectId: string) {
+  return callIktracker('DELETE', `/seo/redirects/${redirectId}`, apiKey)
 }
 
 // ── Autopilot: Events ──
@@ -206,6 +260,65 @@ Deno.serve(async (req) => {
         break
       case 'autopilot-summary':
         result = await getAutopilotSummary(apiKey)
+        break
+
+      // ── Code Injection ──
+      case 'get-injection-head':
+        result = await getInjectionHead(apiKey)
+        break
+      case 'push-code-head':
+        result = await putInjectionHead(apiKey, {
+          content: params.code || params.content,
+          label: params.label || 'Crawlers SEO Fix',
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'get-injection-body-end':
+        result = await getInjectionBodyEnd(apiKey)
+        break
+      case 'push-code-body':
+        result = await putInjectionBodyEnd(apiKey, {
+          content: params.code || params.content,
+          label: params.label || 'Crawlers SEO Fix',
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'get-injection-page':
+        if (!params.page_key) throw new Error('page_key required')
+        result = await getInjectionPage(apiKey, params.page_key)
+        break
+      case 'push-code-page':
+        if (!params.page_key) throw new Error('page_key required')
+        result = await putInjectionPage(apiKey, params.page_key, {
+          content: params.code || params.content,
+          label: params.label,
+          is_active: params.is_active !== false,
+        })
+        break
+
+      // ── SEO ──
+      case 'get-robots-txt':
+        result = await getRobotsTxt(apiKey)
+        break
+      case 'update-robots-txt':
+        if (!params.content) throw new Error('content required')
+        result = await putRobotsTxt(apiKey, params.content)
+        break
+      case 'list-redirects':
+        result = await getRedirects(apiKey)
+        break
+      case 'create-redirect':
+        if (!params.source_path || !params.target_url) throw new Error('source_path and target_url required')
+        result = await createRedirect(apiKey, {
+          source_path: params.source_path,
+          target_url: params.target_url,
+          status_code: params.status_code || 301,
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'delete-redirect':
+        if (!params.redirect_id) throw new Error('redirect_id required')
+        result = await deleteRedirect(apiKey, params.redirect_id)
         break
 
       default:
