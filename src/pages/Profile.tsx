@@ -219,15 +219,14 @@ function ProfileContent() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                {isProUser && (
-                  <TabsTrigger
-                    value="gmb"
-                    className="flex-1 gap-2"
-                  >
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                    <span className="hidden sm:inline">GMB</span>
-                  </TabsTrigger>
-                )}
+                <TabsTrigger
+                  value="gmb"
+                  className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
+                >
+                  <Store className="h-4 w-4 text-muted-foreground" />
+                  <span className="hidden sm:inline">Google Business</span>
+                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </TabsTrigger>
                 {isProUser && (
                   <TabsTrigger
                     value="reports-tab"
@@ -305,11 +304,9 @@ function ProfileContent() {
                   </TabsContent>
                 )}
 
-                {isProUser && (
-                  <TabsContent value="gmb">
-                    <GMBDashboard />
-                  </TabsContent>
-                )}
+                <TabsContent value="gmb">
+                  <GMBDashboard isGated={!isProUser} />
+                </TabsContent>
 
                 {isProUser && (
                   <TabsContent value="reports-tab">
