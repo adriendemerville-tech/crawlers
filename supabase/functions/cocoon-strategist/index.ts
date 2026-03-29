@@ -13,6 +13,13 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
  * 4. Persiste dans cocoon_strategy_plans
  * 5. Renvoie le plan + résumé pour l'assistant Cocoon
  * 
+ * Content Architect awareness (v5 — layout Canva):
+ * - Les tâches execution_mode='content_architect' sont routées vers le Content Architect UI
+ * - L'UI dispose de 7 panneaux: Prompt, Structure, Images, Données structurées, Brouillon, Bibliothèque, Options
+ * - Le stratège prescrit des image_recommendation (styles, count, placements) adaptées au secteur
+ * - Le stratège peut prendre la main dans /cocoon pour guider l'utilisateur dans Content Architect
+ * - Hors /cocoon, c'est Félix (SAV) qui assiste l'utilisateur dans Content Architect
+ * 
  * Input: { tracked_site_id, domain, force_refresh?: boolean, lang?: 'fr'|'en'|'es', task_budget?: number }
  * Output: { strategy, diagnostics_summary, conflicts_resolved, plan_id }
  */
