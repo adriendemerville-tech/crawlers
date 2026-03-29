@@ -14,7 +14,7 @@ import { useObservatorySectors, type SectorData } from '@/hooks/useObservatorySe
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Code2, Timer, AlertTriangle, TrendingUp, TrendingDown,
-  BarChart3, Activity, Map, FileText, Share2, Twitter,
+  BarChart3, Activity, Map as MapIcon, FileText, Share2, Twitter,
   Link2, Globe, ShieldCheck, Smartphone, MonitorSmartphone,
   Box, Network, Image, ImageOff, Palette, FileCode,
   Gauge, Zap, LayoutDashboard, MousePointerClick,
