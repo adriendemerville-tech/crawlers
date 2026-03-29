@@ -235,10 +235,6 @@ function ProfileContent() {
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="marina" className="flex-1 gap-2">
-                  <Anchor className="h-4 w-4" />
-                  <span className="hidden sm:inline">Marina</span>
-                </TabsTrigger>
                 {isProUser && (
                   <TabsTrigger value="sea-seo" className="flex-1 gap-2">
                     <Target className="h-4 w-4" />
@@ -252,6 +248,10 @@ function ProfileContent() {
                   <Store className="h-4 w-4 text-muted-foreground" />
                   <span className="hidden sm:inline">Google Business</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </TabsTrigger>
+                <TabsTrigger value="marina" className="flex-1 gap-2">
+                  <Anchor className="h-4 w-4" />
+                  <span className="hidden sm:inline">Marina</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger
