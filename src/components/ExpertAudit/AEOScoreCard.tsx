@@ -247,15 +247,18 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * i, duration: 0.3 }}
-                className="flex items-center gap-2.5 rounded-md bg-muted/40 px-3 py-2"
+                className={`flex items-start gap-2.5 rounded-md px-3 py-2 ${criterion.passed ? 'bg-success/5' : 'bg-destructive/5'}`}
               >
                 {criterion.passed ? (
-                  <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                 ) : (
-                  <XCircle className="h-4 w-4 text-destructive shrink-0" />
+                  <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground leading-tight">{criterion.label}</p>
+                  <p className={`text-[11px] leading-snug mt-0.5 ${criterion.passed ? 'text-muted-foreground/60' : 'text-destructive/70'}`}>
+                    {criterion.explanation}
+                  </p>
                 </div>
               </motion.div>
             ))}
