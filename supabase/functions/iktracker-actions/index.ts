@@ -256,6 +256,65 @@ Deno.serve(async (req) => {
         result = await getAutopilotSummary(apiKey)
         break
 
+      // ── Code Injection ──
+      case 'get-injection-head':
+        result = await getInjectionHead(apiKey)
+        break
+      case 'push-code-head':
+        result = await putInjectionHead(apiKey, {
+          content: params.code || params.content,
+          label: params.label || 'Crawlers SEO Fix',
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'get-injection-body-end':
+        result = await getInjectionBodyEnd(apiKey)
+        break
+      case 'push-code-body':
+        result = await putInjectionBodyEnd(apiKey, {
+          content: params.code || params.content,
+          label: params.label || 'Crawlers SEO Fix',
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'get-injection-page':
+        if (!params.page_key) throw new Error('page_key required')
+        result = await getInjectionPage(apiKey, params.page_key)
+        break
+      case 'push-code-page':
+        if (!params.page_key) throw new Error('page_key required')
+        result = await putInjectionPage(apiKey, params.page_key, {
+          content: params.code || params.content,
+          label: params.label,
+          is_active: params.is_active !== false,
+        })
+        break
+
+      // ── SEO ──
+      case 'get-robots-txt':
+        result = await getRobotsTxt(apiKey)
+        break
+      case 'update-robots-txt':
+        if (!params.content) throw new Error('content required')
+        result = await putRobotsTxt(apiKey, params.content)
+        break
+      case 'list-redirects':
+        result = await getRedirects(apiKey)
+        break
+      case 'create-redirect':
+        if (!params.source_path || !params.target_url) throw new Error('source_path and target_url required')
+        result = await createRedirect(apiKey, {
+          source_path: params.source_path,
+          target_url: params.target_url,
+          status_code: params.status_code || 301,
+          is_active: params.is_active !== false,
+        })
+        break
+      case 'delete-redirect':
+        if (!params.redirect_id) throw new Error('redirect_id required')
+        result = await deleteRedirect(apiKey, params.redirect_id)
+        break
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
           status: 400,
