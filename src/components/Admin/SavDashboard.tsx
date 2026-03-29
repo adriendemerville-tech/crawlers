@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Phone, Clock, RefreshCw, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, Phone, Clock, RefreshCw, User, ChevronDown, ChevronUp, Target, AlertTriangle, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -23,22 +23,56 @@ interface SavConversation {
   updated_at: string;
 }
 
+interface QualityStats {
+  avgScore: number | null;
+  totalScored: number;
+  escalations: number;
+  repeatedIntents: number;
+  avgMessages: number;
+}
+
 export function SavDashboard() {
   const [conversations, setConversations] = useState<SavConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [qualityStats, setQualityStats] = useState<QualityStats>({
+    avgScore: null, totalScored: 0, escalations: 0, repeatedIntents: 0, avgMessages: 0,
+  });
 
   const fetchConversations = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('sav_conversations')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(100);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    if (!error && data) {
-      setConversations(data as SavConversation[]);
+    const [convResult, qualityResult] = await Promise.all([
+      supabase
+        .from('sav_conversations')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(100),
+      supabase
+        .from('sav_quality_scores' as any)
+        .select('precision_score, escalated_to_phone, repeated_intent_count, user_message_count')
+        .gte('scored_at', sevenDaysAgo),
+    ]);
+
+    if (!convResult.error && convResult.data) {
+      setConversations(convResult.data as SavConversation[]);
     }
+
+    if (!qualityResult.error && qualityResult.data) {
+      const scores = qualityResult.data as any[];
+      const scored = scores.length;
+      const avgScore = scored > 0
+        ? Math.round(scores.reduce((a, q) => a + (q.precision_score || 0), 0) / scored)
+        : null;
+      const escalations = scores.filter(q => q.escalated_to_phone).length;
+      const repeatedIntents = scores.filter(q => q.repeated_intent_count > 0).length;
+      const avgMessages = scored > 0
+        ? Math.round(scores.reduce((a, q) => a + (q.user_message_count || 0), 0) / scored * 10) / 10
+        : 0;
+      setQualityStats({ avgScore, totalScored: scored, escalations, repeatedIntents, avgMessages });
+    }
+
     setLoading(false);
   };
 
@@ -84,6 +118,46 @@ export function SavDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quality Scoring (7 derniers jours) */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Scoring précision Félix (7 jours)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="text-center">
+              <p className={cn(
+                'text-2xl font-bold',
+                qualityStats.avgScore !== null && qualityStats.avgScore >= 70 ? 'text-emerald-500' :
+                qualityStats.avgScore !== null && qualityStats.avgScore >= 50 ? 'text-amber-500' : 'text-destructive'
+              )}>
+                {qualityStats.avgScore !== null ? `${qualityStats.avgScore}%` : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground">Score moyen</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{qualityStats.totalScored}</p>
+              <p className="text-xs text-muted-foreground">Évaluées</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-destructive">{qualityStats.escalations}</p>
+              <p className="text-xs text-muted-foreground">Escalades tél.</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-amber-500">{qualityStats.repeatedIntents}</p>
+              <p className="text-xs text-muted-foreground">Intent répétés</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{qualityStats.avgMessages}</p>
+              <p className="text-xs text-muted-foreground">Msg moy./conv</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Conversations list */}
       <Card>
