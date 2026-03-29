@@ -203,6 +203,13 @@ export function AnalyticsDashboard() {
         .select('*', { count: 'exact', head: true });
       newStats.gmbConnected = gmbCount || 0;
 
+      // Count contents generated (30 days)
+      const { count: contentsCount } = await supabase
+        .from('content_generation_logs')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo);
+      newStats.contentsGenerated = contentsCount || 0;
+
       setStats(newStats);
 
 
