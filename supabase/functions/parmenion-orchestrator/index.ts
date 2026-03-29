@@ -817,10 +817,16 @@ ${keywordEnrichment.promptBlock}
 ITEMS À TRAITER (par ordre de priorité):
 ${buildItemsList(contentItems)}
 
+CONTEXTE SECTORIEL OBLIGATOIRE:
+Le site traite de : ${context.siteInfo?.market_sector || 'inconnu'}.
+${parsedTargetsPrimary ? `Sa cible prioritaire est : ${parsedTargetsPrimary}.` : ''}
+${parsedTargetsSecondary ? `Sa cible secondaire est : ${parsedTargetsSecondary}.` : ''}
+${context.siteInfo?.products_services ? `Ses produits/services : ${context.siteInfo.products_services}.` : ''}
+⛔ Ne JAMAIS produire de contenu hors-sujet. Chaque article DOIT traiter du secteur ci-dessus. INTERDIT de créer du contenu générique sur le SEO, le marketing digital ou tout autre sujet non lié au métier du site.
+
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
-- Le contenu DOIT être pertinent pour le secteur du site (${context.siteInfo?.market_sector || 'inconnu'}). INTERDIT de créer du contenu hors-sujet ou générique sur le SEO.
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
 - FORMAT OBLIGATOIRE: tout le contenu DOIT être en **Markdown** (pas de HTML). Utilise ## pour H2, ### pour H3, **gras**, *italique*, - pour listes, [ancre](url) pour liens, > pour citations.
