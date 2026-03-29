@@ -410,12 +410,19 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`generate-infotainment\` | ✅ | 0 | Contenu de patience (loading) |
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles v2 (Perplexity, maillage auto, traductions EN/ES) |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
+| \`generate-image\` | ✅ | 0 | Génération d'images IA multi-moteurs (Imagen 3, FLUX, Ideogram) |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
-| \`content-architecture-advisor\` | ✅ | 0 | Recommandations architecture de contenu (5 critères GEO) — Fair use mensuel : 5 free / 100 Pro / 150 Pro+ |
+| \`content-architecture-advisor\` | ✅ | 5* | Recommandations architecture de contenu (5 critères GEO) — *5 crédits pour non-abonnés, inclus pour Pro Agency/Pro Agency+ |
 | \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
 | \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP pages+posts, Drupal pages+articles, Shopify pages+articles, Odoo, PrestaShop, IKtracker) |
+| \`cms-push-draft\` | ✅ | 0 | Push brouillon CMS (v2, multi-format) |
+| \`cms-push-code\` | ✅ | 0 | Push code correctif vers CMS |
+| \`cms-push-redirect\` | ✅ | 0 | Push redirections vers CMS |
+| \`cms-patch-content\` | ✅ | 0 | Patch contenu existant sur CMS |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
+| \`parse-matrix-geo\` | ✅ | 0 | Parsing matrice GEO |
+| \`parse-matrix-hybrid\` | ✅ | 0 | Parsing matrice hybride |
 | \`voice-identity-enrichment\` | ✅ | 0 | Enrichissement carte d'identité par la voix |
 | \`process-script-queue\` | ✅ | 0 | File d'attente FIFO multi-pages pour Scribe |
 
