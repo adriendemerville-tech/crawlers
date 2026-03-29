@@ -14,6 +14,7 @@
   "logo_url": "https://crawlers.fr/favicon.svg",
   "contact_email": "contact@crawlers.fr",
   "legal_info_url": "https://crawlers.fr/mentions-legales",
+  "about_url": "https://crawlers.fr/a-propos",
   "pricing_model": {
     "type": "freemium",
     "free_features": [
