@@ -5,10 +5,16 @@ import { corsHeaders } from '../_shared/cors.ts'
  * iktracker-actions
  * 
  * Pont API entre Crawlers et l'API Content d'IKtracker.
- * Permet de lire/modifier les articles de blog et les pages statiques.
+ * Permet de lire/modifier les articles de blog, pages statiques,
+ * injecter du code correctif (head/body-end/page), gérer le SEO
+ * (robots.txt, redirects) et piloter le registre Autopilot.
  * 
  * Actions: list-pages, get-page, update-page, create-page, delete-page,
  *          list-posts, get-post, create-post, update-post, delete-post,
+ *          push-code-head, push-code-body, push-code-page,
+ *          get-injection-head, get-injection-body-end, get-injection-page,
+ *          get-robots-txt, update-robots-txt, list-redirects, create-redirect, delete-redirect,
+ *          push-event, autopilot-registry, autopilot-health, autopilot-events, autopilot-summary,
  *          test-connection
  */
 
