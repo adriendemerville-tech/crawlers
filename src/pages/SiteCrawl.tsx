@@ -720,10 +720,10 @@ export default function SiteCrawl() {
         const total = Math.max(indexed || 0, sitemapTotal || 0);
         if (total > 0) {
           setTotalEstimatedPages(total);
-          // Auto-cap slider
-          const capMax = maxSliderCap;
-          if (maxPages > Math.min(capMax, total)) {
-            setMaxPages(Math.min(capMax, total));
+          // Auto-cap slider — for pro agency users, cap is the sitemap total
+          const capMax = (isAgencyPlus || isAdmin) ? total : Math.min(maxSliderCap, total);
+          if (maxPages > capMax) {
+            setMaxPages(capMax);
           }
         }
       } catch {
