@@ -648,7 +648,10 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     {"criterion": 2, "name": "Structure compréhension", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
     {"criterion": 3, "name": "Passages citables", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
     {"criterion": 4, "name": "Signaux E-E-A-T", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
-    {"criterion": 5, "name": "Enrichissement sémantique", "activated": true, "reason": "...", "weight": "standard|reinforced"}
+    {"criterion": 5, "name": "Enrichissement sémantique", "activated": true, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 6, "name": "FAQ structurée schema.org", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 7, "name": "Auto-citations marque", "activated": true/false, "reason": "...", "weight": "standard|reinforced"},
+    {"criterion": 8, "name": "Résumé 150 mots intro", "activated": true/false, "reason": "...", "weight": "standard|reinforced"}
   ],
   "coherence_check": {
     "innovation_level": "conservative|moderate|disruptive",
