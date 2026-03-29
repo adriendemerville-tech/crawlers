@@ -273,6 +273,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Zap className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Indice IAS' : language === 'es' ? 'Índice IAS' : 'SAI Index'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Network className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Architecte de Cocon & GEO' : language === 'es' ? 'Arquitecto Cocon & GEO' : 'Cocoon Architect & GEO'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><FileText className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Content Architect : 100 pages créés inclus' : language === 'es' ? 'Content Architect: 100 páginas creadas incluidas' : 'Content Architect: 100 pages created included'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
@@ -332,6 +333,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Audits & correctifs ∞' : language === 'es' ? 'Auditorías & correctivos ∞' : 'Audits & fixes ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Slider 50 pages/crawl' : language === 'es' ? 'Slider 50 páginas/crawl' : 'Slider 50 pages/crawl'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Network className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Cocon & Stratège ∞' : language === 'es' ? 'Cocon & Estratega ∞' : 'Cocoon & Strategist ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Content Architect : 150 pages créés inclus' : language === 'es' ? 'Content Architect: 150 páginas creadas incluidas' : 'Content Architect: 150 pages created included'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
