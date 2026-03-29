@@ -525,8 +525,19 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     if (draft.custom_prompt) { setPrompt(draft.custom_prompt); setAutoFilled(prev => new Set(prev).add('prompt')); }
     if (draft.cta_suggestion) { setCtaLink(draft.cta_suggestion); setAutoFilled(prev => new Set(prev).add('ctaLink')); }
     if (draft.competitor_url) { setCompetitorUrl(draft.competitor_url); setAutoFilled(prev => new Set(prev).add('competitorUrl')); }
+    // Populate column 2 structured fields
     if (draft.h1_suggestion) {
-      if (!draft.custom_prompt) setPrompt(`H1 suggéré : ${draft.h1_suggestion}`);
+      setH1Field(draft.h1_suggestion);
+    }
+    if (draft.secondary_keywords?.length) {
+      setKeywordTags(prev => {
+        const merged = new Set([...prev, ...draft.secondary_keywords]);
+        return Array.from(merged);
+      });
+    }
+    if (draft.priority_actions?.length && !draft.custom_prompt) {
+      setPrompt(draft.priority_actions.join('\n'));
+      setAutoFilled(prev => new Set(prev).add('prompt'));
     }
   };
 
