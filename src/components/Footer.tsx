@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network } from 'lucide-react';
+import { memo, useState } from 'react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
