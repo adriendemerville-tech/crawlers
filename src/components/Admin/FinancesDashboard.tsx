@@ -521,6 +521,25 @@ export function FinancesDashboard() {
             </CardContent>
           </Card>
         )}
+        <Card className="border-pink-500/30">
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Dépenses Images IA</CardTitle>
+            <ImageIcon className="h-3.5 w-3.5 text-pink-500" />
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">
+              {(allTimeTokenUsage?.imageApiCostEur ?? tokenUsage.imageApiCostEur).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {(allTimeTokenUsage?.imageApiCalls ?? tokenUsage.imageApiCalls).toLocaleString('fr-FR')} images
+              {(() => {
+                const providers = allTimeTokenUsage?.imageByProvider ?? tokenUsage.imageByProvider;
+                const parts = Object.entries(providers).map(([p, c]) => `${p}: ${c}`);
+                return parts.length > 0 ? ` (${parts.join(', ')})` : '';
+              })()}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Spending Evolution Chart */}
