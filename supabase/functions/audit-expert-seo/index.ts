@@ -544,7 +544,23 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
     needsFallback = true;
   }
   
-  // ── ÉTAPE 2 : Browserless.io (headless Chrome — résout les challenges JS) ──
+  // ── ÉTAPE 2 : Spider.cloud (peu coûteux, rend le JS, bonne couverture) ──
+  const spiderHtml = await trySpider(url);
+  if (spiderHtml) {
+    const doc = new DOMParser().parseFromString(spiderHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, spiderHtml.length);
+      if (selfAudit.isReliable || spiderHtml.length > (html?.length || 0)) {
+        return {
+          html: spiderHtml,
+          renderingMode: 'dynamic_rendered',
+          selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.85) },
+        };
+      }
+    }
+  }
+  
+  // ── ÉTAPE 3 : Browserless.io (headless Chrome — résout les challenges JS lourds) ──
   const browserlessHtml = await tryBrowserless(url);
   if (browserlessHtml) {
     const doc = new DOMParser().parseFromString(browserlessHtml, 'text/html');
@@ -559,38 +575,8 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
       }
     }
   }
-  
-  // ── ÉTAPE 3 : Fly.io Playwright (fallback headless si Browserless échoue) ──
-  const flyHtml = await tryFlyPlaywright(url);
-  if (flyHtml) {
-    const doc = new DOMParser().parseFromString(flyHtml, 'text/html');
-    if (doc) {
-      const selfAudit = performSelfAudit(doc, flyHtml.length);
-      if (selfAudit.isReliable || flyHtml.length > (html?.length || 0)) {
-        return {
-          html: flyHtml,
-          renderingMode: 'dynamic_rendered',
-          selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.80) },
-        };
-      }
-    }
-  }
-  
-  // ── ÉTAPE 4 : Spider.cloud (API ~20x moins chère, prioritaire) ──
-  const spiderHtml = await trySpider(url);
-  if (spiderHtml) {
-    const doc = new DOMParser().parseFromString(spiderHtml, 'text/html');
-    if (doc) {
-      const selfAudit = performSelfAudit(doc, spiderHtml.length);
-      return {
-        html: spiderHtml,
-        renderingMode: 'dynamic_rendered',
-        selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.80) },
-      };
-    }
-  }
 
-  // ── ÉTAPE 5 : Firecrawl (fallback payant, dernier recours anti-WAF) ──
+  // ── ÉTAPE 4 : Firecrawl (dernier recours anti-WAF, ~3% des pages) ──
   const firecrawlHtml = await tryFirecrawl(url);
   if (firecrawlHtml) {
     const doc = new DOMParser().parseFromString(firecrawlHtml, 'text/html');
