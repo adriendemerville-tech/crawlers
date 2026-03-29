@@ -854,61 +854,6 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               )}
               {result && (
                 <div className="space-y-4 text-white/80">
-                  {/* Editable H1 / H2 fields */}
-                  <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] text-white/50 uppercase tracking-wider">H1</label>
-                      <Input
-                        value={h1Field}
-                        onChange={e => {
-                          setH1Field(e.target.value);
-                          if (result?.content_structure) {
-                            const updated = { ...result };
-                            updated.content_structure.recommended_h1 = e.target.value;
-                            setResult(updated);
-                          }
-                        }}
-                        className="bg-white/5 border-white/10 text-white text-sm h-9 font-semibold"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] text-white/50 uppercase tracking-wider flex items-center justify-between">
-                        H2
-                        <button
-                          onClick={() => setH2Fields(prev => [...prev, ''])}
-                          className="text-[10px] text-[#fbbf24]/60 hover:text-[#fbbf24] normal-case"
-                        >+ {t3(language, 'Ajouter H2', 'Add H2', 'Añadir H2')}</button>
-                      </label>
-                      {h2Fields.map((h2, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-white/20 shrink-0 w-5">#{i + 1}</span>
-                          <Input
-                            value={h2}
-                            onChange={e => {
-                              const updated = [...h2Fields];
-                              updated[i] = e.target.value;
-                              setH2Fields(updated);
-                              // Sync back to result sections
-                              if (result?.content_structure?.sections?.[i]) {
-                                const updatedResult = { ...result };
-                                updatedResult.content_structure.sections[i].title = e.target.value;
-                                setResult(updatedResult);
-                              }
-                            }}
-                            placeholder={`H2 #${i + 1}`}
-                            className="bg-white/5 border-white/10 text-white text-xs h-8 flex-1"
-                          />
-                          {h2Fields.length > 1 && (
-                            <button
-                              onClick={() => setH2Fields(prev => prev.filter((_, j) => j !== i))}
-                              className="text-white/20 hover:text-white/40 text-xs p-1"
-                            >×</button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 space-y-5">
                     {/* Meta title preview */}
                     {result.metadata_enrichment?.meta_title && (
