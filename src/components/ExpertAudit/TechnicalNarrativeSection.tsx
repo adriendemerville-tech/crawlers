@@ -106,6 +106,11 @@ const translations = {
     jsonLdExplain: "Le JSON-LD est le \"langage maternel\" de l\u2019IA pour valider l\u2019expertise annoncée dans vos titres.",
     formatExplain: "Le ratio texte/HTML et le profil de liens sont des critères essentiels pour atterrir dans les résumés générés par l\u2019IA.",
     health: 'Santé',
+    spaGoogleView: 'Vue Google',
+    spaLlmView: 'Vue LLM',
+    spaGoogleNote: 'Googlebot exécute le JS et voit le contenu rendu.',
+    spaLlmNote: 'GPTBot, ClaudeBot, PerplexityBot ne rendent pas le JS.',
+    spaDetected: 'Site SPA détecté — double lecture',
   },
   en: {
     sectionTitle: 'How Technical SEO Powers Acquisition (SEO & AI)',
