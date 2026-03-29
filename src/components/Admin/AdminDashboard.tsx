@@ -379,7 +379,6 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
           trackedSiteId=""
           demoMode={true}
         />
-        />
       </Suspense>
     )}
     </>
