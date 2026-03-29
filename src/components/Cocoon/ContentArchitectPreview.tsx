@@ -20,6 +20,7 @@ interface ContentArchitectPreviewProps {
   savingDraft?: boolean;
   hasCmsConnection?: boolean;
   isExistingPage?: boolean;
+  creditsCost?: number | null;
 }
 
 export function ContentArchitectPreview({

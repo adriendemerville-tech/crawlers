@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useCredits } from '@/contexts/CreditsContext';
 import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash, Syringe } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
