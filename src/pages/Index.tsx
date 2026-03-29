@@ -643,6 +643,11 @@ const Index = () => {
           <AIAgentsSection />
         </Suspense>
 
+        {/* Content Architect */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <ContentArchitectSection />
+        </Suspense>
+
         {/* Product Showcase — Screenshots */}
         <Suspense fallback={<SectionSkeleton />}>
           <ProductShowcaseSection />
