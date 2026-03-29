@@ -289,7 +289,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       applyDraft(extractData.draft);
       toast.success(t3(language, 'Brief enrichi par le Stratège', 'Brief enriched by Strategist', 'Brief enriquecido por el Estratega'), { duration: 3000 });
     } catch (err) { console.warn('[ContentArchitect] Stratège pre-call error:', err); }
-    finally { setStrategistLoading(true); setStrategistDone(true); }
+    finally { setStrategistLoading(false); setStrategistDone(true); }
   }, [trackedSiteId, domain, strategistDone, language]);
 
   // ── Draft loading ──

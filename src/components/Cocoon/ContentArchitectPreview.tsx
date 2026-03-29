@@ -265,11 +265,11 @@ export function ContentArchitectPreview({
               <div className="absolute bottom-full right-0 mb-1 w-80 p-3 rounded-lg bg-[#1a1035] border border-white/10 shadow-xl text-xs text-white/60 space-y-2 z-10">
                 <p className="font-medium text-white/80">Comment ça marche ?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Ouvrez le panneau Prompt (📝) pour vos instructions</li>
-                  <li>Ouvrez Structure (🏗️) pour configurer la page</li>
+                  <li>Ouvrez le panneau Prompt pour vos instructions</li>
+                  <li>Ouvrez Structure pour configurer la page</li>
                   <li>Cliquez Générer — la preview s'affiche ici</li>
                   <li>Éditez le contenu directement dans la preview</li>
-                  <li>Ouvrez Images (🖼️) pour générer des visuels</li>
+                  <li>Ouvrez Images pour générer des visuels</li>
                   <li>Publiez via le bouton en haut à droite</li>
                 </ol>
               </div>
