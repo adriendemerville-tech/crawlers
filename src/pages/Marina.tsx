@@ -22,7 +22,7 @@ const CREDIT_COST = 5;
 
 export default function Marina() {
   const { user } = useAuth();
-  const { credits, refreshCredits } = useCredits();
+  const { balance: credits, refreshBalance: refreshCredits, useCredit } = useCredits();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
