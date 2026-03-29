@@ -170,6 +170,8 @@ const App = () => (
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
+                          <Route path="/a-propos" element={<APropos />} />
+                          <Route path="/audit-semantique" element={<AuditSemantique />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
                           <Route path="/profil" element={<Navigate to="/app/profil" replace />} />
