@@ -362,6 +362,7 @@ const competitorFeatures = [
   { key: 'identite', fr: 'Carte d\'identité sémantique', en: 'Semantic identity card', es: 'Tarjeta de identidad semántica' },
   { key: 'cocon', fr: 'Cocon sémantique IA', en: 'AI semantic cocoon', es: 'Cocón semántico IA' },
   { key: 'code_correctif', fr: 'Code correctif dynamique', en: 'Dynamic corrective code', es: 'Código correctivo dinámico' },
+  { key: 'content_creation', fr: 'Création de contenu assistée', en: 'AI-assisted content creation', es: 'Creación de contenido asistida' },
   { key: 'maintenance', fr: 'Maintenance SEO & GEO automatisée', en: 'Automated SEO & GEO maintenance', es: 'Mantenimiento SEO & GEO automatizado' },
   { key: 'gmb', fr: 'Gestion Google Business Profile', en: 'Google Business Profile management', es: 'Gestión Google Business Profile' },
   { key: 'assistants', fr: '2 assistants IA spécialisés', en: '2 specialized AI assistants', es: '2 asistentes IA especializados' },
@@ -374,6 +375,7 @@ const competitorMatrix: Record<string, (boolean | 'partial')[]> = {
   identite: [false, false, false, false, false, true],
   cocon: [false, 'partial', false, false, false, true],
   code_correctif: [false, false, false, false, false, true],
+  content_creation: [false, 'partial', false, false, false, true],
   maintenance: [false, false, false, false, false, true],
   gmb: [false, false, 'partial', false, false, true],
   assistants: [false, false, false, false, false, true],
@@ -384,8 +386,8 @@ const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'BotRank', 'Mete
 const HybridSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
-  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6];
-  const seoHas = [true, false, false, false, false, false];
+  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7];
+  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false];
   const lang = language as 'fr' | 'en' | 'es';
 
   return (
