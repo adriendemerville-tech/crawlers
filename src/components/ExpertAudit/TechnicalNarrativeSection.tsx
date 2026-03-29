@@ -5,7 +5,7 @@ import {
   DoorOpen, Brain, Sparkles, Shield, Bot, FileCode2,
   CheckCircle2, XCircle, AlertTriangle, Lock,
   FileText, Hash, AlignLeft, Code2, Link2,
-  HelpCircle, BarChart3
+  HelpCircle, BarChart3, Eye, EyeOff, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ExpertAuditResult } from '@/types/expertAudit';
