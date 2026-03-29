@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     const body: AdvisorInput = await req.json()
-    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context } = body
+    const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment = 'primary' } = body
 
     if (!url || !keyword || !page_type) {
       return new Response(JSON.stringify({ error: 'Missing url, keyword, or page_type' }), {
