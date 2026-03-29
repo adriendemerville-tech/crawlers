@@ -2049,17 +2049,14 @@ Deno.serve(async (req) => {
         });
         const { data: { user } } = await userSb.auth.getUser();
         if (user) {
-          const { data: isAdmin } = await sb.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-          if (isAdmin) {
-            isAuthorized = true;
-            userId = user.id;
-          }
+          isAuthorized = true;
+          userId = user.id;
         }
       }
     }
 
     if (!isAuthorized || !userId) {
-      return json({ error: 'Unauthorized. Use x-marina-key header or admin JWT.' }, 401);
+      return json({ error: 'Unauthorized. Use x-marina-key header or authenticate.' }, 401);
     }
 
     // ── List jobs ──
