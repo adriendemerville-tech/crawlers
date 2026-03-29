@@ -161,6 +161,13 @@ function computeKeywordPlacement(
   };
 }
 
+interface ImageRecommendation {
+  suggested_styles: string[];   // e.g. ['photo', 'infographic', 'flat_illustration']
+  image_count: number;          // 1-3
+  placements: ('header' | 'body')[];
+  reasoning: string;
+}
+
 interface StrategicTask {
   id: string;
   action_type: ActionType;
@@ -174,6 +181,7 @@ interface StrategicTask {
   depends_on: string[]; // task ids that must complete first
   estimated_impact: 'high' | 'medium' | 'low';
   metadata?: Record<string, any>;
+  image_recommendation?: ImageRecommendation;
 }
 
 interface ConflictResolution {
