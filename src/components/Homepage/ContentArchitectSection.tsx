@@ -154,7 +154,7 @@ export const ContentArchitectSection = memo(() => {
           transition={{ duration: 0.4, delay: 0.4 }}
           className="text-center"
         >
-          <Link to="/app/mes-sites">
+          <Link to="/content-architect">
             <Button
               size="lg"
               className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0 shadow-lg shadow-emerald-500/20"
