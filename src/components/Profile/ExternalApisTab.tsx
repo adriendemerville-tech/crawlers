@@ -155,6 +155,13 @@ export function ExternalApisTab() {
   const [rankMathConnected, setRankMathConnected] = useState(false);
   const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
 
+  // Matomo state
+  const [matomoDialogOpen, setMatomoDialogOpen] = useState(false);
+  const [matomoLoading, setMatomoLoading] = useState(false);
+  const [matomoConnected, setMatomoConnected] = useState(false);
+  const [matomoForm, setMatomoForm] = useState({ matomo_url: '', token_auth: '', site_id: '', tracked_site_id: '' });
+  const [trackedSites, setTrackedSites] = useState<{ id: string; domain: string }[]>([]);
+
   useEffect(() => {
     const checkWpConnection = async () => {
       const { data: { user } } = await supabase.auth.getUser();
