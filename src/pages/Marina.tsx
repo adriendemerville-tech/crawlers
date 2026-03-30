@@ -1125,6 +1125,48 @@ async function generateReport(url) {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* URL formats, Polling, Errors — 3 cols */}
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* URL formats */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refUrlFormats}</h4>
+                    <ul className="space-y-2">
+                      {t.api.refUrlFormatsList.map((item: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-0.5">•</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Polling */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refPolling}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t.api.refPollingDesc}</p>
+                    <p className="text-[11px] text-primary/80 mt-3 italic">💡 {t.api.refJsonNote}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Error codes */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refErrors}</h4>
+                    <div className="space-y-2">
+                      {t.api.refErrorsList.map((err: any) => (
+                        <div key={err.code} className="flex items-start gap-2 text-xs">
+                          <code className="px-1.5 py-0.5 bg-muted rounded font-mono text-primary text-[10px] shrink-0">{err.code}</code>
+                          <span className="text-muted-foreground">{err.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             {/* CTA */}
