@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type, Bold, Italic, Underline } from 'lucide-react';
+import { MarinaBrandingCard } from './MarinaBrandingCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 
@@ -738,7 +739,8 @@ export function BrandingTab() {
           </div>
         </CardContent>
       </Card>
-
+      {/* Marina Branding */}
+      <MarinaBrandingCard />
     </div>
   );
 }
