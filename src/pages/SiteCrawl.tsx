@@ -78,6 +78,8 @@ const crawlI18n = {
     runningCrawls: 'Crawl en cours',
     errorCrawl: 'Erreur lors du crawl',
     advancedOptions: 'Options avancées',
+    stopCrawl: 'Stopper',
+    crawlStopped: 'Crawl stoppé — données en cache conservées',
     crawlDepth: 'Profondeur max',
     depthUnlimited: 'Illimitée',
     depthLevel: 'Niveau',
