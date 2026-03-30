@@ -78,7 +78,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
