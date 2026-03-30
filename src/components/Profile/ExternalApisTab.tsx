@@ -504,6 +504,63 @@ export function ExternalApisTab() {
         </CardContent>
       </Card>
 
+      {/* Self-Hosted Analytics */}
+      {selfHostedServices.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'fr' ? 'Analytics auto-hébergé' : language === 'es' ? 'Analítica auto-alojada' : 'Self-Hosted Analytics'}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {language === 'fr'
+                ? 'Connectez votre instance Matomo pour importer les métriques de trafic.'
+                : language === 'es'
+                  ? 'Conecte su instancia Matomo para importar métricas de tráfico.'
+                  : 'Connect your Matomo instance to import traffic metrics.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {selfHostedServices.map(s => {
+                const isMatomoConnected = s.id === 'matomo' && matomoConnected;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => handleServiceClick(s)}
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                      isMatomoConnected
+                        ? 'border-green-500/40 bg-green-500/5'
+                        : 'border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                      dangerouslySetInnerHTML={{ __html: s.logoSvg }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{s.name}</span>
+                        {isMatomoConnected && (
+                          <Badge className="text-[10px] py-0 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            {t.connected}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <ExternalLink className="w-3 h-3" />
+                        {isMatomoConnected ? t.configure : language === 'fr' ? 'Connecter' : language === 'es' ? 'Conectar' : 'Connect'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* CMS Connection Dialog */}
       <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} cmsType={cmsDialogType} />
 
@@ -549,6 +606,91 @@ export function ExternalApisTab() {
                 <ShieldCheck className="w-4 h-4 mr-2" />
               )}
               {t.authorize}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Matomo Connection Dialog */}
+      <Dialog open={matomoDialogOpen} onOpenChange={setMatomoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-[#3152A0]" />
+              {language === 'fr' ? 'Connecter Matomo' : language === 'es' ? 'Conectar Matomo' : 'Connect Matomo'}
+            </DialogTitle>
+            <DialogDescription className="text-sm pt-2">
+              {language === 'fr'
+                ? 'Entrez les informations de votre instance Matomo pour synchroniser les métriques de trafic.'
+                : language === 'es'
+                  ? 'Ingrese la información de su instancia Matomo para sincronizar métricas de tráfico.'
+                  : 'Enter your Matomo instance details to sync traffic metrics.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+              </label>
+              <select
+                value={matomoForm.tracked_site_id}
+                onChange={e => setMatomoForm(f => ({ ...f, tracked_site_id: e.target.value }))}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">{language === 'fr' ? 'Sélectionner un site…' : 'Select a site…'}</option>
+                {trackedSites.map(s => (
+                  <option key={s.id} value={s.id}>{s.domain}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">URL Matomo</label>
+              <Input
+                placeholder="https://analytics.example.com"
+                value={matomoForm.matomo_url}
+                onChange={e => setMatomoForm(f => ({ ...f, matomo_url: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Token Auth</label>
+              <Input
+                type="password"
+                placeholder="token_auth Matomo"
+                value={matomoForm.token_auth}
+                onChange={e => setMatomoForm(f => ({ ...f, token_auth: e.target.value }))}
+              />
+              <p className="text-[11px] text-muted-foreground/70">
+                {language === 'fr'
+                  ? 'Trouvable dans Matomo → Administration → Personnel → Sécurité → Tokens API'
+                  : 'Found in Matomo → Administration → Personal → Security → API Tokens'}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'ID du site Matomo' : 'Matomo Site ID'}
+              </label>
+              <Input
+                type="number"
+                placeholder="1"
+                value={matomoForm.site_id}
+                onChange={e => setMatomoForm(f => ({ ...f, site_id: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={handleMatomoConnect}
+              disabled={matomoLoading || !matomoForm.matomo_url || !matomoForm.token_auth || !matomoForm.site_id || !matomoForm.tracked_site_id}
+              className="w-full"
+            >
+              {matomoLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+              )}
+              {language === 'fr' ? 'Tester et connecter' : language === 'es' ? 'Probar y conectar' : 'Test & connect'}
             </Button>
           </DialogFooter>
         </DialogContent>
