@@ -241,10 +241,10 @@ function FooterComponent() {
                       {link.isRoute ? (
                         <SmartLink
                           to={link.href}
-                          className={`group flex items-start gap-2 text-sm transition-colors ${(link as any).violet ? 'text-violet-500 hover:text-violet-400 font-medium' : link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                          className="group flex items-start gap-2 text-sm transition-colors text-muted-foreground hover:text-primary"
                           title={link.description}
                         >
-                          <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${(link as any).violet ? 'text-violet-500' : link.gold ? 'text-amber-500' : ''}`} />
+                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
                           <span>{link.label}</span>
                         </SmartLink>
                       ) : (
