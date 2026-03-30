@@ -278,7 +278,7 @@ function getToolbarHtml(domain: string, lang: string): string {
   <\/script>`;
 }
 
-
+function scoreColor(score: number, max: number): string {
   const pct = score / max * 100;
   if (pct >= 70) return '#22c55e';
   if (pct >= 40) return '#f59e0b';
