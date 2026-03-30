@@ -77,8 +77,8 @@ const translations = {
       },
       {
         icon: 'Users',
-        title: '3 comptes inclus',
-        description: 'Invitez vos collaborateurs et gérez votre équipe depuis une console centralisée.',
+        title: '2 comptes inclus',
+        description: 'Invitez un collaborateur et gérez votre équipe depuis une console centralisée.',
       },
       {
         icon: 'Headphones',
@@ -99,7 +99,7 @@ const translations = {
       ['URL suivis (tracking)', '30 inclus', '30 inclus', 'Illimité'],
       ['Correctif multi-pages', '✓', '✓', '✓'],
       ['Marque blanche', '✓', '✓', '✓'],
-      ['Multi-comptes', '3 comptes', '5 comptes', 'Sur mesure'],
+      ['Multi-comptes', '2 comptes', '3 comptes', 'Sur mesure'],
       ['Support prioritaire', '✓', '✓', 'SLA garanti'],
       ['Serveur dédié', '—', '—', '✓'],
       ['Données isolées', '—', '—', '✓'],
@@ -152,8 +152,8 @@ const translations = {
         a: 'Vous pouvez personnaliser vos rapports avec votre propre logo, vos couleurs et vos coordonnées. Vos clients ne verront jamais la marque Crawlers.fr.',
       },
       {
-        q: 'Les 3 comptes sont-ils des comptes indépendants ?',
-        a: 'Oui, chaque collaborateur a son propre accès avec ses identifiants. Le compte principal gère les permissions depuis la console.',
+        q: 'Les 2 comptes Pro Agency sont-ils des comptes indépendants ?',
+        a: 'Oui, chaque collaborateur a son propre accès avec ses identifiants. Le compte principal gère les permissions depuis la console. Pro Agency+ offre 3 comptes (2 collaborateurs).',
       },
       {
         q: 'Y a-t-il un engagement minimum ?',
