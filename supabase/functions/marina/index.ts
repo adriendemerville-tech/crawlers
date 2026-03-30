@@ -284,7 +284,9 @@ function getToolbarHtml(domain: string, lang: string): string {
 
     function marinaPrint() { window.print(); }
     function marinaCopyLink() {
-      var url = window.location.href;
+      var meta = document.querySelector('meta[name="marina-report-url"]');
+      var url = meta ? meta.getAttribute('content') : window.location.href;
+      if (!url || url === 'about:srcdoc') url = window.location.href;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(function() { showCopied(); });
       } else {
@@ -2139,6 +2141,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
+      // Inject the viewable report URL as a meta tag so the "Copy link" button works inside iframes
+      const viewUrl = `${SUPABASE_URL}/functions/v1/view-marina-report?id=${jobId}`;
+      html = html.replace('</head>', `<meta name="marina-report-url" content="${viewUrl}" />\n</head>`);
+
       const { error: uploadError } = await sb.storage
         .from('shared-reports')
         .upload(fileName, new Blob([html], { type: 'text/html' }), {
@@ -2154,8 +2160,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         .from('shared-reports')
         .createSignedUrl(fileName, 7 * 24 * 60 * 60);
 
-      // Build the inline-viewable URL (serves HTML with correct Content-Type)
-      const viewUrl = `${SUPABASE_URL}/functions/v1/view-marina-report?id=${jobId}`;
+      // viewUrl already defined above (injected into HTML meta tag)
 
       const resultData = {
         url,
