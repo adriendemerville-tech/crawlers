@@ -170,6 +170,8 @@ export function SmartConfigurator({
   const [showConnectSiteModal, setShowConnectSiteModal] = useState(false);
   const [wpSiteData, setWpSiteData] = useState<{ id: string; domain: string; apiKey: string; hasConfig: boolean } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasCmsConnectionForContent, setHasCmsConnectionForContent] = useState(false);
+  const [contentDelegationStatus, setContentDelegationStatus] = useState<'idle' | 'generating' | 'ready' | 'deployed'>('idle');
   
   const { language } = useLanguage();
   const { toast } = useToast();
