@@ -99,8 +99,18 @@ Deno.serve(async (req) => {
     const humanBrandName = brandConfidence >= 0.95 ? resolvedEntityName : domainSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     // ── Language ──
+    const normalizedLang = lang === 'fr' || lang === 'en' || lang === 'es'
+      ? lang
+      : businessContext?.languageCode === 'en' || businessContext?.languageCode === 'es'
+        ? businessContext.languageCode
+        : 'fr';
     const langMap: Record<string, string> = { fr: 'français', en: 'English', es: 'español' };
-    const langLabel = langMap[lang] || langMap[businessContext?.languageCode] || 'français';
+    const langLabel = langMap[normalizedLang] || 'français';
+    const strictLanguageInstruction = normalizedLang === 'en'
+      ? 'You MUST write the full analysis entirely in English. All narrative fields, summaries, recommendations and labels must be in English.'
+      : normalizedLang === 'es'
+        ? 'Debes redactar todo el análisis exclusivamente en español. Todos los textos narrativos, resúmenes, recomendaciones y etiquetas deben estar en español.'
+        : 'Tu DOIS rédiger toute l’analyse exclusivement en français. Tous les champs narratifs, résumés, recommandations et libellés doivent être en français.';
 
     // ── Build shared context ──
     let marketSection = '';
@@ -131,7 +141,7 @@ Deno.serve(async (req) => {
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
 
-    let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
+    let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🔒 CONSIGNE DE LANGUE: ${strictLanguageInstruction}\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
     if (competitors?.length > 0) {
       const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
       baseContext += `🏙️ CONCURRENTS:\n${compLines}\n`;
@@ -156,7 +166,7 @@ Deno.serve(async (req) => {
         const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
+          body: JSON.stringify({ model, messages: [{ role: 'system', content: `${strictLanguageInstruction}\n\n${systemPrompt}` }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
           signal: AbortSignal.timeout(timeoutMs),
         });
         if (!resp.ok) {
