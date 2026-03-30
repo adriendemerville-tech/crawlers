@@ -553,7 +553,7 @@ const DOC_SECTIONS: DocSection[] = [
   {
     id: 'agents-ia',
     icon: <Wrench className="h-4 w-4" />,
-    title: '9. Assistants IA intégrés',
+    title: '10. Assistants IA intégrés',
     subsections: [
       {
         id: 'felix',
@@ -598,7 +598,7 @@ const DOC_SECTIONS: DocSection[] = [
   {
     id: 'a-propos',
     icon: <Info className="h-4 w-4" />,
-    title: '10. À propos de Crawlers.fr',
+    title: '11. À propos de Crawlers.fr',
     subsections: [
       {
         id: 'quest-ce-que-crawlers',
