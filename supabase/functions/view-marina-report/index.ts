@@ -39,28 +39,27 @@ Deno.serve(async (req) => {
     const sb = getServiceClient();
     const fileName = `marina/${jobId}.html`;
 
-    const { data, error } = await sb.storage
+    // Create a signed URL that serves HTML with proper Content-Type
+    // (Supabase gateway overrides Content-Type on edge functions, so we redirect to storage)
+    const { data: signedData, error: signedError } = await sb.storage
       .from('shared-reports')
-      .download(fileName);
+      .createSignedUrl(fileName, 3600); // 1 hour validity
 
-    if (error || !data) {
-      console.error(`[view-marina-report] Storage error for ${fileName}:`, error);
+    if (signedError || !signedData?.signedUrl) {
+      console.error(`[view-marina-report] Signed URL error for ${fileName}:`, signedError);
       return new Response(JSON.stringify({ error: 'Report not found or expired' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const html = await data.text();
-
-    return new Response(html, {
-      status: 200,
+    // Redirect to the signed storage URL which serves HTML correctly
+    return new Response(null, {
+      status: 302,
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'inline',
-        'Cache-Control': 'public, max-age=3600',
+        'Location': signedData.signedUrl,
+        'Cache-Control': 'no-cache',
         'Access-Control-Allow-Origin': '*',
-        'X-Frame-Options': 'ALLOWALL',
       },
     });
   } catch (err) {
