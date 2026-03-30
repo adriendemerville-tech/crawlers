@@ -932,6 +932,138 @@ async function generateReport(url) {
               </div>
             </div>
 
+            {/* API Reference section — full width */}
+            <div className="mt-12 space-y-6">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" /> {t.api.refTitle}
+              </h3>
+
+              {/* Endpoint */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refEndpoint}</h4>
+                  <code className="block px-3 py-2 bg-muted rounded-md text-xs font-mono text-primary break-all">
+                    POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina
+                  </code>
+                </CardContent>
+              </Card>
+
+              {/* Headers */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refHeaders}</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">x-marina-key</code>
+                      <span className="text-muted-foreground">{t.api.refHeaderKey}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">Content-Type: application/json</code>
+                      <span className="text-muted-foreground">{t.api.refHeaderCt}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Response schemas */}
+              <Card className="border-border/50">
+                <CardContent className="p-5 space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground">{t.api.refResponses}</h4>
+                  
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespCreate}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "job_id": "uuid-string",
+  "status": "pending"
+}`}
+                    </pre>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespPolling}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "status": "processing",
+  "progress": 45,
+  "phase": "phase2"    // phase1 | phase2 | phase3
+}`}
+                    </pre>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespCompleted}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "success": true,
+  "status": "completed",
+  "data": {
+    "url": "https://example.com",
+    "domain": "example.com",
+    "language": "fr",
+    "report_url": "https://...signed-url...",
+    "report_path": "marina/uuid.html",
+    "expert_seo_score": 72,
+    "expert_seo_max": 100,
+    "strategic_score": 65,
+    "cocoon_nodes": 42,
+    "cocoon_clusters": 6,
+    "generated_at": "2026-03-30T10:00:00Z"
+  }
+}`}
+                    </pre>
+                    <p className="text-[11px] text-primary/80 mt-2 italic">💡 {t.api.refReportNote}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespFailed}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "status": "failed",
+  "error": "Error message"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Phases */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refPhases}</h4>
+                    <p className="text-xs text-muted-foreground mb-3">{t.api.refPhasesDesc}</p>
+                    <div className="space-y-2">
+                      {t.api.refPhasesList.map((p: any) => (
+                        <div key={p.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <code className="px-1.5 py-0.5 bg-muted rounded font-mono text-primary text-[10px]">{p.name}</code>
+                            <span className="text-muted-foreground">{p.label}</span>
+                          </div>
+                          <span className="text-foreground font-mono text-[10px]">{p.pct}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Limits */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refLimits}</h4>
+                    <ul className="space-y-2">
+                      {t.api.refLimitsList.map((item: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-0.5">•</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
             {/* CTA */}
             <div className="mt-10 text-center">
               <p className="text-sm text-muted-foreground mb-3">
