@@ -1517,6 +1517,11 @@ export function SmartConfigurator({
               <ScrollArea className="flex-1 min-h-0">
                 <TabsContent forceMount value="technical" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                   <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} onRequestAuth={() => { setShowConnectSiteModal(true); }} disabled={isCodeLocked} />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
+                  />
                 </TabsContent>
 
                 <TabsContent forceMount value="strategic" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
@@ -1526,6 +1531,11 @@ export function SmartConfigurator({
                     onUpdateData={updateFixData}
                     disabled={isCodeLocked}
                   />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
+                  />
                 </TabsContent>
 
                 <TabsContent forceMount value="generative" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
@@ -1534,6 +1544,11 @@ export function SmartConfigurator({
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}
                     disabled={isCodeLocked}
+                  />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
                   />
                 </TabsContent>
 
