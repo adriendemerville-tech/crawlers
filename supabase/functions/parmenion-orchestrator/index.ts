@@ -320,9 +320,11 @@ serve(async (req: Request) => {
       if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
       else if (currentPhase === 'prescribe') {
-        // Alternate between content and technical based on cycle parity
-        // Odd cycles → content-architecture-advisor, Even → generate-corrective-code
-        if (isIktracker && cycle_number % 2 === 1) {
+        // Force content if force_content_cycle or force_iktracker_article
+        if (forceContent) {
+          validatedFunctions.push('content-architecture-advisor');
+        } else if (cycle_number % 2 === 1) {
+          // Alternate: odd cycles → content, even → tech
           validatedFunctions.push('content-architecture-advisor');
         } else {
           validatedFunctions.push('generate-corrective-code');
