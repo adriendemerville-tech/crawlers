@@ -819,6 +819,16 @@ export default function Marina() {
                     <p className="text-xs text-muted-foreground mt-2">{t.hero.signupOffer}</p>
                   </div>
                 )}
+
+                {/* API doc link — always visible */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => { handleTabChange('api'); document.getElementById('marina-tabs')?.scrollIntoView({ behavior: 'smooth' }); }}
+                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+                  >
+                    <Terminal className="w-4 h-4" /> {t.hero.apiDocLink}
+                  </button>
+                </div>
               </div>
 
               {/* Progress */}
