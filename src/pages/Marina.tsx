@@ -986,6 +986,7 @@ async function generateReport(url) {
 #   "event": "marina.report.completed",
 #   "job_id": "abc-123",
 #   "report_url": "https://...",
+#   "report_view_url": "https://...",
 #   "expert_seo_score": 72,
 #   "expert_seo_max": 100,
 #   "domain": "example.com"
