@@ -242,6 +242,7 @@ const translations = {
       { label: 'GEO Score & AI Visibility', desc: 'Citability by ChatGPT, Gemini, Perplexity' },
       { label: 'Strategic audit', desc: 'Keyword positioning, competitor gaps, quick wins' },
       { label: 'Semantic Cocoon analysis', desc: 'Clusters, internal linking, content architecture' },
+      { label: 'Custom branding', desc: 'Logo, colors, CTA and custom text. Hide Crawlers branding for your clients.' },
     ],
     featuresTitle: 'What\'s in your report',
     preview: {
