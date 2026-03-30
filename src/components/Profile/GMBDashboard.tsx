@@ -937,7 +937,12 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="stats"><StatsTab t={t} /></TabsContent>
+            <TabsContent value="stats">
+              <div className="space-y-4">
+                <GmbPowerScoreCard trackedSiteId={null} />
+                <StatsTab t={t} />
+              </div>
+            </TabsContent>
             <TabsContent value="keywords">
               <GmbKeywordsTab
                 trackedSiteId={null}
