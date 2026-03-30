@@ -105,15 +105,16 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
 
   const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones];
 
-  return (
-    <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
-      <div className="mx-auto max-w-5xl px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{title || defaultTitle}</h2>
-          <p className="mt-3 text-muted-foreground">{subtitle || defaultSubtitle}</p>
-        </div>
+  const grid = (
+    <div className="grid gap-6 md:grid-cols-3">
+      {/* Pro Agency — Violet */}
+      {/* ... cards below ... */}
+    </div>
+  );
 
-        <div className="grid gap-6 md:grid-cols-3">
+  if (embedded) {
+    return (
+      <div className="grid gap-6 md:grid-cols-3">
           {/* Pro Agency — Violet */}
           <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
             <div className="flex items-center gap-3 mb-4">
