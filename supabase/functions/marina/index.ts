@@ -2160,8 +2160,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         .from('shared-reports')
         .createSignedUrl(fileName, 7 * 24 * 60 * 60);
 
-      // Build the inline-viewable URL (serves HTML with correct Content-Type)
-      const viewUrl = `${SUPABASE_URL}/functions/v1/view-marina-report?id=${jobId}`;
+      // viewUrl already defined above (injected into HTML meta tag)
 
       const resultData = {
         url,
