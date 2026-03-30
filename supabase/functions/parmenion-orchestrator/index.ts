@@ -669,8 +669,11 @@ async function prescribeWithDualPrompts(context: {
   if (!LOVABLE_API_KEY) return null;
 
   const items = context.scoredWorkbenchItems;
-  const techItems = items.filter((it: any) => it.tier <= 3);
-  const contentItems = items.filter((it: any) => it.tier >= 4);
+  // Use lane field from scoring function (dual-lane) or fallback to tier-based split
+  const techItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'tech');
+  const contentItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'content');
+  
+  console.log(`[Parménion] Prescribe V2 dual-lane: ${techItems.length} tech + ${contentItems.length} content items. Force content: ${context.force_content}`);
 
   // ── Parse client_targets for readable injection ──
   let parsedTargetsPrimary = '';
