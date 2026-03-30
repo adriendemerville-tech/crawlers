@@ -16,6 +16,7 @@ import {
   PanelLeft, Eye, Syringe, ImagePlus, Server
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PricingPlansSection } from '@/components/PricingPlansSection';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
 
 /* ─── Translations ─── */
