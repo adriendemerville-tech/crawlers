@@ -880,6 +880,18 @@ Deno.serve(async (req) => {
 
       // ── INNER LOOP: keep processing pages while time allows ──
       while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < MAX_GLOBAL_CONCURRENT) {
+        // ── Check if crawl was stopped by user ──
+        const { data: crawlCheck } = await supabase
+          .from('site_crawls')
+          .select('status')
+          .eq('id', job.crawl_id)
+          .single();
+        if (crawlCheck?.status === 'stopped') {
+          console.log(`[Worker] Job ${job.id}: 🛑 Crawl stopped by user — preserving ${alreadyProcessed} cached pages`);
+          await supabase.from('crawl_jobs').update({ status: 'cancelled' }).eq('id', job.id);
+          break;
+        }
+
         // Re-calibrate batch size based on page weight
         const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
         const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
