@@ -407,6 +407,7 @@ const translations = {
       { label: 'Puntuación GEO y Visibilidad IA', desc: 'Citabilidad por ChatGPT, Gemini, Perplexity' },
       { label: 'Auditoría estratégica', desc: 'Posicionamiento de palabras clave, gaps competitivos, quick wins' },
       { label: 'Análisis Cocoon semántico', desc: 'Clusters, enlazado interno, arquitectura de contenido' },
+      { label: 'Branding personalizable', desc: 'Logo, colores, CTA y textos personalizados. Oculte la marca Crawlers para sus clientes.' },
     ],
     featuresTitle: 'Qué incluye tu informe',
     preview: {
