@@ -16,6 +16,7 @@ import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommend
 import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
+import { CocoonBulkAutoLinking } from "@/components/Cocoon/CocoonBulkAutoLinking";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { CocoonOnboardingStepper, shouldShowOnboarding, incrementCocoonVisit } from "@/components/Cocoon/CocoonOnboardingStepper";
 import { AnimatePresence } from "framer-motion";
