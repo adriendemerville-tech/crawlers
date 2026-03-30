@@ -2168,9 +2168,20 @@ export default function SiteCrawl() {
                           {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
                         </div>
                       </div>
-                      <Badge variant="secondary" className="animate-pulse">
-                        {c.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                          onClick={(e) => { e.stopPropagation(); handleStopCrawl(c.id); }}
+                          title={t.stopCrawl}
+                        >
+                          <Square className="w-3 h-3 fill-destructive text-destructive" />
+                        </Button>
+                        <Badge variant="secondary" className="animate-pulse">
+                          {c.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
