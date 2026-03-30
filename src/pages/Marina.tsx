@@ -98,6 +98,8 @@ const translations = {
       getDesc: 'Interrogez l\'API avec le job_id reçu pour connaître l\'état d\'avancement et récupérer le rapport une fois terminé.',
       jsLabel: 'JavaScript — Exemple complet',
       jsDesc: 'Un exemple complet en JavaScript pour lancer un audit et attendre automatiquement le résultat via polling.',
+      webhookLabel: 'POST — Avec webhook (recommandé)',
+      webhookDesc: 'Ajoutez un callback_url pour recevoir le rapport automatiquement quand il est prêt — plus besoin de polling.',
       helpText: 'Besoin d\'aide pour l\'intégration ?',
       getApiKey: 'Obtenir ma clé API',
       rechargeCredits: 'Recharger mes crédits',
@@ -202,6 +204,8 @@ const translations = {
       getDesc: 'Query the API with the job_id to check the status and retrieve the report once completed.',
       jsLabel: 'JavaScript — Full example',
       jsDesc: 'A complete JavaScript example to launch an audit and automatically wait for the result via polling.',
+      webhookLabel: 'POST — With webhook (recommended)',
+      webhookDesc: 'Add a callback_url to receive the report automatically when ready — no polling needed.',
       helpText: 'Need help with integration?',
       getApiKey: 'Get my API key',
       rechargeCredits: 'Buy more credits',
@@ -306,6 +310,8 @@ const translations = {
       getDesc: 'Consulta la API con el job_id recibido para conocer el estado y obtener el informe una vez completado.',
       jsLabel: 'JavaScript — Ejemplo completo',
       jsDesc: 'Un ejemplo completo en JavaScript para lanzar una auditoría y esperar automáticamente el resultado.',
+      webhookLabel: 'POST — Con webhook (recomendado)',
+      webhookDesc: 'Agregue un callback_url para recibir el informe automáticamente cuando esté listo — sin polling.',
       helpText: '¿Necesitas ayuda con la integración?',
       getApiKey: 'Obtener mi clave API',
       rechargeCredits: 'Recargar créditos',
@@ -802,6 +808,47 @@ async function generateReport(url) {
       throw new Error(job.error);
   }
 }`}
+                  </pre>
+                </div>
+
+                {/* Webhook example */}
+                <p className="text-xs text-muted-foreground mt-2">{t.api.webhookDesc}</p>
+                <div className="relative">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                    <span className="text-[10px] text-muted-foreground font-mono">{t.api.webhookLabel}</span>
+                    <button
+                      onClick={() => copyCode(`curl -X POST \\
+  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  -H "x-marina-key: ${t.code.yourKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://example.com", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
+{`curl -X POST \\
+  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  -H "x-marina-key: ${t.code.yourKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://example.com",
+    "callback_url": "https://yoursite.com/api/marina-webhook"
+  }'
+
+# ${t.code.commentResponse}
+# {"job_id": "abc-123", "status": "pending"}
+
+# → Marina POST to your callback_url when done:
+# {
+#   "event": "marina.report.completed",
+#   "job_id": "abc-123",
+#   "report_url": "https://...",
+#   "expert_seo_score": 72,
+#   "expert_seo_max": 100,
+#   "domain": "example.com"
+# }`}
                   </pre>
                 </div>
               </div>
