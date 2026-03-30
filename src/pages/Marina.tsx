@@ -108,15 +108,36 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job terminé',
       refRespFailed: 'Job échoué',
-      refReportNote: 'Le champ report_url pointe vers un rapport HTML autonome de 15+ pages avec viewer intégré (impression, partage).',
-      refLimits: 'Limites',
+      refReportNote: 'Le champ report_url pointe vers un rapport HTML autonome de 15+ pages avec viewer intégré (impression, partage). Le rapport est intégrable en iframe.',
+      refLimits: 'Limites & comportement',
       refLimitsList: [
         'Coût : 5 crédits par rapport',
         'Durée : ~3 minutes par rapport',
         'Rate limit : 30 requêtes concurrentes max par IP',
         'Taille du site : pas de limite stricte, mais les sites > 500 pages peuvent allonger le temps de traitement',
         'Expiration du rapport : URL signée valide 7 jours',
+        'Expiration du job : les jobs non terminés sont nettoyés après 10 minutes',
+        'Le rapport est figé à la date de génération (pas de mise à jour)',
       ],
+      refUrlFormats: 'Formats d\'URL acceptés',
+      refUrlFormatsList: [
+        'URL complète avec protocole : https://example.com (recommandé)',
+        'Sous-domaines supportés : https://blog.example.com',
+        'Pages spécifiques : https://example.com/page — l\'audit couvre tout le domaine',
+        'Sans protocole : example.com (https:// ajouté automatiquement)',
+      ],
+      refPolling: 'Polling recommandé',
+      refPollingDesc: 'Interrogez le statut toutes les 5 secondes. Le champ progress va de 0 à 100 (linéaire). Utilisez de préférence le webhook (callback_url) pour éviter les problèmes d\'onglet inactif.',
+      refErrors: 'Codes d\'erreur',
+      refErrorsList: [
+        { code: '200', desc: 'Succès (y compris polling en cours)' },
+        { code: '400', desc: 'Paramètre manquant (url requise) ou callback_url invalide' },
+        { code: '401', desc: 'Clé API invalide ou manquante' },
+        { code: '402', desc: 'Crédits insuffisants' },
+        { code: '404', desc: 'Job non trouvé (job_id invalide ou expiré)' },
+        { code: '500', desc: 'Erreur serveur (site inaccessible, timeout crawl, etc.)' },
+      ],
+      refJsonNote: 'Les scores SEO et GEO sont disponibles en JSON dans la réponse du polling terminé (champ data). Le rapport HTML n\'est pas disponible en JSON.',
       codeTitle: 'Exemples d\'intégration',
       postLabel: 'POST — Lancer un audit',
       postDesc: 'Envoyez une requête POST avec l\'URL du site à auditer. Vous recevrez un identifiant de job pour suivre la progression.',
@@ -240,15 +261,36 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job completed',
       refRespFailed: 'Job failed',
-      refReportNote: 'The report_url field points to a standalone 15+ page HTML report with a built-in viewer (print, share).',
-      refLimits: 'Limits',
+      refReportNote: 'The report_url field points to a standalone 15+ page HTML report with a built-in viewer (print, share). The report can be embedded in an iframe.',
+      refLimits: 'Limits & behavior',
       refLimitsList: [
         'Cost: 5 credits per report',
         'Duration: ~3 minutes per report',
         'Rate limit: 30 concurrent requests max per IP',
         'Site size: no strict limit, but sites with 500+ pages may take longer',
         'Report expiration: signed URL valid for 7 days',
+        'Job expiration: unfinished jobs are cleaned up after 10 minutes',
+        'The report is frozen at the generation date (no updates)',
       ],
+      refUrlFormats: 'Accepted URL formats',
+      refUrlFormatsList: [
+        'Full URL with protocol: https://example.com (recommended)',
+        'Subdomains supported: https://blog.example.com',
+        'Specific pages: https://example.com/page — audit covers the entire domain',
+        'Without protocol: example.com (https:// added automatically)',
+      ],
+      refPolling: 'Recommended polling',
+      refPollingDesc: 'Poll every 5 seconds. The progress field goes from 0 to 100 (linear). Prefer using the webhook (callback_url) to avoid inactive tab issues.',
+      refErrors: 'Error codes',
+      refErrorsList: [
+        { code: '200', desc: 'Success (including polling in progress)' },
+        { code: '400', desc: 'Missing parameter (url required) or invalid callback_url' },
+        { code: '401', desc: 'Invalid or missing API key' },
+        { code: '402', desc: 'Insufficient credits' },
+        { code: '404', desc: 'Job not found (invalid or expired job_id)' },
+        { code: '500', desc: 'Server error (unreachable site, crawl timeout, etc.)' },
+      ],
+      refJsonNote: 'SEO and GEO scores are available as JSON in the completed polling response (data field). The HTML report is not available as JSON.',
       codeTitle: 'Integration examples',
       postLabel: 'POST — Start an audit',
       postDesc: 'Send a POST request with the URL to audit. You\'ll receive a job ID to track progress.',
@@ -372,15 +414,36 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job completado',
       refRespFailed: 'Job fallido',
-      refReportNote: 'El campo report_url apunta a un informe HTML autónomo de 15+ páginas con visor integrado (impresión, compartir).',
-      refLimits: 'Límites',
+      refReportNote: 'El campo report_url apunta a un informe HTML autónomo de 15+ páginas con visor integrado (impresión, compartir). El informe se puede integrar en un iframe.',
+      refLimits: 'Límites y comportamiento',
       refLimitsList: [
         'Costo: 5 créditos por informe',
         'Duración: ~3 minutos por informe',
         'Rate limit: 30 solicitudes concurrentes max por IP',
         'Tamaño del sitio: sin límite estricto, pero sitios con 500+ páginas pueden tardar más',
         'Expiración del informe: URL firmada válida 7 días',
+        'Expiración del job: los jobs no terminados se limpian después de 10 minutos',
+        'El informe está congelado a la fecha de generación (sin actualizaciones)',
       ],
+      refUrlFormats: 'Formatos de URL aceptados',
+      refUrlFormatsList: [
+        'URL completa con protocolo: https://example.com (recomendado)',
+        'Subdominios soportados: https://blog.example.com',
+        'Páginas específicas: https://example.com/page — la auditoría cubre todo el dominio',
+        'Sin protocolo: example.com (https:// añadido automáticamente)',
+      ],
+      refPolling: 'Polling recomendado',
+      refPollingDesc: 'Consultar cada 5 segundos. El campo progress va de 0 a 100 (lineal). Prefiera usar el webhook (callback_url) para evitar problemas con pestañas inactivas.',
+      refErrors: 'Códigos de error',
+      refErrorsList: [
+        { code: '200', desc: 'Éxito (incluyendo polling en curso)' },
+        { code: '400', desc: 'Parámetro faltante (url requerida) o callback_url inválido' },
+        { code: '401', desc: 'Clave API inválida o faltante' },
+        { code: '402', desc: 'Créditos insuficientes' },
+        { code: '404', desc: 'Job no encontrado (job_id inválido o expirado)' },
+        { code: '500', desc: 'Error del servidor (sitio inaccesible, timeout de crawl, etc.)' },
+      ],
+      refJsonNote: 'Los scores SEO y GEO están disponibles en JSON en la respuesta de polling completado (campo data). El informe HTML no está disponible en JSON.',
       codeTitle: 'Ejemplos de integración',
       postLabel: 'POST — Iniciar auditoría',
       postDesc: 'Envía una solicitud POST con la URL del sitio a auditar. Recibirás un ID de trabajo para seguir el progreso.',
@@ -1059,6 +1122,48 @@ async function generateReport(url) {
                         </li>
                       ))}
                     </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* URL formats, Polling, Errors — 3 cols */}
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* URL formats */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refUrlFormats}</h4>
+                    <ul className="space-y-2">
+                      {t.api.refUrlFormatsList.map((item: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-0.5">•</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Polling */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refPolling}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t.api.refPollingDesc}</p>
+                    <p className="text-[11px] text-primary/80 mt-3 italic">💡 {t.api.refJsonNote}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Error codes */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refErrors}</h4>
+                    <div className="space-y-2">
+                      {t.api.refErrorsList.map((err: any) => (
+                        <div key={err.code} className="flex items-start gap-2 text-xs">
+                          <code className="px-1.5 py-0.5 bg-muted rounded font-mono text-primary text-[10px] shrink-0">{err.code}</code>
+                          <span className="text-muted-foreground">{err.desc}</span>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
