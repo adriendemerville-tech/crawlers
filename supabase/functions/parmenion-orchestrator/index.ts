@@ -190,20 +190,53 @@ serve(async (req: Request) => {
         results: d.execution_results,
       }));
 
-    // ═══ PHASE 2b: ALGORITHMIC PRIORITY SCORING (prescribe phase) ═══
+    // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
+    const forceContent = force_content_cycle === true;
+    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : 30;
+    
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
-      const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
-        p_domain: domain,
-        p_user_id: userId,
-        p_limit: 8,
-      });
-      if (scoreErr) {
-        console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
-      } else {
-        scoredWorkbenchItems = scored || [];
-        console.log(`[Parménion] 📊 Scored ${scoredWorkbenchItems.length} workbench items. Top tier: ${scoredWorkbenchItems[0]?.tier ?? 'none'}, top score: ${scoredWorkbenchItems[0]?.total_score ?? 0}`);
+      
+      // Option B: Query BOTH lanes independently in parallel
+      const [techRes, contentRes] = await Promise.all([
+        supabase.rpc('score_workbench_priority', {
+          p_domain: domain,
+          p_user_id: userId,
+          p_limit: 8,
+          p_lane: 'tech',
+          p_force_content: false,
+        }),
+        supabase.rpc('score_workbench_priority', {
+          p_domain: domain,
+          p_user_id: userId,
+          p_limit: 8,
+          p_lane: 'content',
+          p_force_content: forceContent,
+        }),
+      ]);
+      
+      if (techRes.error) console.warn('[Parménion] Tech lane scoring failed:', techRes.error.message);
+      if (contentRes.error) console.warn('[Parménion] Content lane scoring failed:', contentRes.error.message);
+      
+      const techItems = techRes.data || [];
+      const contentItems = contentRes.data || [];
+      
+      // Option A: Budget partagé — allocate items proportionally
+      // Default: 70% tech budget, 30% content budget (configurable via content_budget_pct)
+      const totalSlots = 8;
+      const contentSlots = forceContent 
+        ? totalSlots  // Option D: force content → all slots to content
+        : Math.max(2, Math.round(totalSlots * budgetPct / 100));
+      const techSlots = forceContent ? 0 : totalSlots - contentSlots;
+      
+      const allocatedTech = techItems.slice(0, techSlots);
+      const allocatedContent = contentItems.slice(0, contentSlots);
+      scoredWorkbenchItems = [...allocatedTech, ...allocatedContent];
+      
+      console.log(`[Parménion] 📊 Dual-lane scoring: ${allocatedTech.length}/${techItems.length} tech (${techSlots} slots) + ${allocatedContent.length}/${contentItems.length} content (${contentSlots} slots). Force content: ${forceContent}, Budget: ${budgetPct}%`);
+      if (scoredWorkbenchItems.length > 0) {
+        console.log(`[Parménion] 📊 Top tech: tier ${allocatedTech[0]?.tier ?? 'none'} score ${allocatedTech[0]?.total_score ?? 0} | Top content: tier ${allocatedContent[0]?.tier ?? 'none'} score ${allocatedContent[0]?.total_score ?? 0}`);
       }
     }
 
