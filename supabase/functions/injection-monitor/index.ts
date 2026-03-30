@@ -48,47 +48,7 @@ async function fetchPageHTML(url: string): Promise<{ html: string; status: numbe
 
 // ── Script detection with hash ──
 
-function detectScript(html: string): {
-  found: boolean
-  snippet: string
-  detectedHash: string | null
-} {
-  const lower = html.toLowerCase()
-
-  // Find the script tag containing crawlers markers
-  for (const marker of SCRIPT_MARKERS) {
-    if (lower.includes(marker.toLowerCase())) {
-      // Try to extract the full script block
-      const markerIdx = lower.indexOf(marker.toLowerCase())
-      const scriptStartSearch = html.lastIndexOf('<script', markerIdx)
-      const scriptEndSearch = html.indexOf('</script>', markerIdx)
-
-      if (scriptStartSearch !== -1 && scriptEndSearch !== -1) {
-        const fullBlock = html.substring(scriptStartSearch, scriptEndSearch + 9)
-        // Extract just the content between <script> tags
-        const contentMatch = fullBlock.match(/<script[^>]*>([\s\S]*?)<\/script>/i)
-        const scriptContent = contentMatch?.[1]?.trim() || fullBlock
-
-        return {
-          found: true,
-          snippet: fullBlock.substring(0, 200),
-          detectedHash: scriptContent.length > 10 ? null, // will be computed async
-        }
-      }
-
-      // Fallback: just mark as found
-      const start = Math.max(0, markerIdx - 40)
-      const end = Math.min(html.length, markerIdx + 160)
-      return {
-        found: true,
-        snippet: html.substring(start, end).replace(/\s+/g, ' ').trim(),
-        detectedHash: null,
-      }
-    }
-  }
-
-  return { found: false, snippet: '', detectedHash: null }
-}
+// detectScript is handled by detectScriptWithHash below
 
 async function detectScriptWithHash(html: string): Promise<{
   found: boolean
