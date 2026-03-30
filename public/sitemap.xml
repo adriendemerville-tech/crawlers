@@ -751,4 +751,14 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-semantique"/>
   </url>
 
+  <!-- API & Intégrations -->
+  <url>
+    <loc>https://crawlers.fr/api-integrations</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/api-integrations"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/api-integrations"/>
+  </url>
+
 </urlset>

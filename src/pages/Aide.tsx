@@ -445,6 +445,39 @@ const DOC_SECTIONS: DocSection[] = [
     ],
   },
   {
+    id: 'api-integrations',
+    icon: <Code className="h-4 w-4" />,
+    title: '7b. API & Intégrations tierces',
+    subsections: [
+      {
+        id: 'api-list',
+        title: 'Quelles API puis-je connecter à Crawlers ?',
+        content: `<p>Crawlers propose 8 intégrations disponibles depuis <strong>Console → API Externes</strong> :</p>
+<ul class="list-disc pl-6 mt-2 space-y-1">
+<li><strong>Google Search Console</strong> — Clics, impressions, CTR, positions (OAuth)</li>
+<li><strong>Google Analytics 4</strong> — Visiteurs, sessions, taux de rebond (OAuth)</li>
+<li><strong>Google My Business</strong> — Fiches locales, avis, statistiques (OAuth)</li>
+<li><strong>Google Ads</strong> — Campagnes SEA pour le bridge SEA→SEO (OAuth)</li>
+<li><strong>Matomo</strong> — Alternative GA4 auto-hébergée (Token API)</li>
+<li><strong>CMS REST API</strong> — WordPress, Shopify, Webflow, Drupal, Wix, Odoo, PrestaShop</li>
+<li><strong>Rank Math SEO</strong> — Pilotage des meta SEO WordPress</li>
+<li><strong>Marina API</strong> — Rapports SEO/GEO en marque blanche (Clé API)</li>
+</ul>
+<p class="mt-2">Page complète : <a href="/api-integrations" class="text-primary underline">API & Intégrations</a></p>`,
+      },
+      {
+        id: 'api-data-usage',
+        title: 'Comment mes données sont-elles utilisées ?',
+        content: `Les données importées via les API sont <strong>anonymisées et agrégées</strong> avant toute utilisation par les modèles IA. Les données brutes (clics, sessions, positions) restent confinées derrière un <strong>Data Firewall</strong>. Seules des métriques agrégées alimentent les prédictions de trafic, les estimations de ROI et les recommandations personnalisées. Aucune donnée identifiable n'est partagée avec des tiers.`,
+      },
+      {
+        id: 'api-disconnect',
+        title: 'Puis-je déconnecter une API ?',
+        content: `Oui. Chaque intégration est <strong>déconnectable en un clic</strong> depuis Console → API Externes. La déconnexion est immédiate : les tokens OAuth sont supprimés et les données ne sont plus synchronisées. Les données historiques déjà agrégées (snapshots, prédictions) restent disponibles mais ne sont plus actualisées.`,
+      },
+    ],
+  },
+  {
     id: 'mcp',
     icon: <Code className="h-4 w-4" />,
     title: '8. Intégration MCP (Claude & IA)',
