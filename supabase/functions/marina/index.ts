@@ -1635,7 +1635,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       
       const domain = expertResult.data.domain;
       // Priority: explicit lang param > auto-detection from HTML > default 'en'
-      const autoDetectedLang = detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.html || '');
+      const autoDetectedLang = detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.rawHtml || '');
       const detectedLang = lang || autoDetectedLang || 'en';
       
       console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
