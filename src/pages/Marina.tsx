@@ -592,6 +592,13 @@ export default function Marina() {
           const data = await res.json();
           if (data.status === 'completed') {
             setReportUrl(data.data?.report_url || null);
+            // Auto-load into preview tab
+            const viewUrl = data.data?.report_view_url || data.data?.report_url;
+            if (viewUrl) {
+              fetch(viewUrl).then(r => r.ok ? r.text() : null).then(html => {
+                if (html) setDemoHtml(html);
+              }).catch(() => {});
+            }
             setLoading(false);
             setProgress(100);
             setPhase(t.phases.done);
