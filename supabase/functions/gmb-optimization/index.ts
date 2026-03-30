@@ -180,6 +180,90 @@ Deno.serve(async (req) => {
         break
       }
 
+      case 'compute-power-score': {
+        const powerInput: GmbPowerInput = {
+          completeness: {
+            name: locationData.name,
+            address: locationData.address,
+            phone: locationData.phone,
+            website: locationData.website,
+            category: locationData.category,
+            hours: locationData.hours,
+            description: locationData.description,
+            attributes_count: locationData.attributes_count,
+            services_count: locationData.services_count,
+          },
+          reputation: {
+            rating: locationData.rating ?? params.rating,
+            total_reviews: locationData.total_reviews ?? locationData.reviews_count ?? params.total_reviews,
+            review_reply_rate: locationData.review_reply_rate ?? params.review_reply_rate,
+          },
+          activity: {
+            has_recent_posts: locationData.has_recent_posts ?? params.has_recent_posts,
+            posts_last_30_days: locationData.posts_last_30_days ?? params.posts_last_30_days,
+            last_post_days_ago: params.last_post_days_ago,
+            last_review_reply_days_ago: params.last_review_reply_days_ago,
+          },
+          local_serp: {
+            local_pack_appearances: params.local_pack_appearances,
+            local_pack_avg_position: params.local_pack_avg_position,
+            total_local_keywords: params.total_local_keywords,
+          },
+          nap: {
+            name_matches_site: params.name_matches_site,
+            address_matches_site: params.address_matches_site,
+            phone_matches_site: params.phone_matches_site,
+            nap_score: params.nap_score,
+          },
+          media: {
+            photo_count: locationData.photo_count ?? params.photo_count,
+            has_logo: !!locationData.logo_url || params.has_logo,
+            has_cover: !!locationData.cover_url || params.has_cover,
+            has_video: params.has_video,
+            owner_photos: params.owner_photos,
+          },
+          trust: {
+            is_verified: locationData.is_verified ?? params.is_verified,
+            is_claimed: locationData.is_claimed ?? params.is_claimed,
+            years_active: params.years_active,
+            has_website_link: !!locationData.website,
+          },
+        };
+
+        const powerResult = computeGmbPowerScore(powerInput);
+
+        // Get tracked_site domain
+        const { data: siteRow } = await sb.from('tracked_sites').select('domain').eq('id', tracked_site_id).single();
+        const domain = siteRow?.domain || locationData.name || '';
+
+        const weekStart = getWeekStart();
+
+        // Upsert snapshot
+        await sb.from('gmb_power_snapshots').upsert({
+          tracked_site_id,
+          user_id: user.id,
+          domain,
+          total_score: powerResult.total_score,
+          grade: powerResult.grade,
+          completeness_score: powerResult.dimensions.completeness_score,
+          reputation_score: powerResult.dimensions.reputation_score,
+          activity_score: powerResult.dimensions.activity_score,
+          local_serp_score: powerResult.dimensions.local_serp_score,
+          nap_consistency_score: powerResult.dimensions.nap_consistency_score,
+          media_score: powerResult.dimensions.media_score,
+          trust_score: powerResult.dimensions.trust_score,
+          raw_data: powerResult.raw_data,
+          week_start_date: weekStart,
+        }, { onConflict: 'tracked_site_id,week_start_date' });
+
+        result = {
+          ...powerResult,
+          week_start_date: weekStart,
+          stored: true,
+        };
+        break;
+      }
+
       default:
         return err(`Unknown action: ${action}`)
     }
