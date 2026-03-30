@@ -243,8 +243,36 @@ serve(async (req: Request) => {
     // ═══ PHASE 3: LLM Decision ═══
     let decision: ParmenionDecision | null = null;
     
-    if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
+    if (currentPhase === 'prescribe' && (scoredWorkbenchItems.length > 0 || forceContent)) {
       // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools (with dual-lane support) ═══
+      // Also triggered when force_content_cycle or force_iktracker_article is set (even with empty workbench)
+      
+      // If workbench is empty but content is forced, create a synthetic content item
+      if (scoredWorkbenchItems.length === 0 && forceContent) {
+        console.log(`[Parménion] ⚠️ Workbench empty but force_content=true, creating synthetic content item`);
+        scoredWorkbenchItems.push({
+          id: '00000000-0000-0000-0000-000000000000',
+          title: `Création de contenu éditorial pour ${domain}`,
+          description: `Article de blog ou page de contenu pour renforcer l'autorité sémantique du site ${domain}`,
+          finding_category: 'missing_page',
+          severity: 'high',
+          target_url: `https://${domain}`,
+          target_selector: null,
+          target_operation: 'create',
+          action_type: 'content',
+          payload: { keyword: siteKeywords[0] || domain.replace(/\.\w+$/, '') },
+          source_type: 'forced_cycle',
+          tier: 9,
+          base_score: 75,
+          severity_bonus: 100,
+          aging_bonus: 0,
+          gate_malus: 0,
+          total_score: 175,
+          created_at: new Date().toISOString(),
+          lane: 'content',
+        });
+      }
+      
       decision = await prescribeWithDualPrompts({
         domain,
         cycle_number,
@@ -259,7 +287,7 @@ serve(async (req: Request) => {
         force_iktracker_article: force_iktracker_article === true,
       });
     } else {
-      // Non-prescribe phases or empty workbench: single LLM call
+      // Non-prescribe phases or empty workbench without forced content: single LLM call
       decision = await askParmenionLLM({
         domain,
         cycle_number,
@@ -292,9 +320,11 @@ serve(async (req: Request) => {
       if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
       else if (currentPhase === 'prescribe') {
-        // Alternate between content and technical based on cycle parity
-        // Odd cycles → content-architecture-advisor, Even → generate-corrective-code
-        if (isIktracker && cycle_number % 2 === 1) {
+        // Force content if force_content_cycle or force_iktracker_article
+        if (forceContent) {
+          validatedFunctions.push('content-architecture-advisor');
+        } else if (cycle_number % 2 === 1) {
+          // Alternate: odd cycles → content, even → tech
           validatedFunctions.push('content-architecture-advisor');
         } else {
           validatedFunctions.push('generate-corrective-code');
@@ -1302,7 +1332,10 @@ function buildPrescribeInstructions(context: { isIktracker: boolean; scoredWorkb
   if (items.length === 0) {
     return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
 Aucun item prioritaire n'a été identifié dans le workbench. 
-Utilise les recommandations en attente et les données d'audit brutes pour générer un correctif technique via generate-corrective-code.
+Alterne entre correctif technique et contenu éditorial :
+- Si le dernier cycle était technique → utilise content-architecture-advisor pour créer du contenu
+- Si le dernier cycle était contenu → utilise generate-corrective-code pour un correctif technique
+- En cas de doute, privilégie content-architecture-advisor (le contenu est sous-représenté)
 Fonctions autorisées: generate-corrective-code, content-architecture-advisor`;
   }
 

@@ -21,12 +21,14 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 │  │  1. AUDIT      → audit-expert-seo
 │  │
 │  │  2. DIAGNOSE   → cocoon-diag-* (content, semantic, structure, authority)
+│  │                  + ♻️ recyclage des items workbench consommés >24h
 │  │
 │  │  3. PRESCRIBE  → 2 prompts LLM parallèles :
 │  │                   • Lot TECHNIQUE (lane tech) → emit_code + emit_corrective_data
 │  │                   • Lot CONTENU (lane content) → emit_corrective_content + emit_editorial_content
 │  │                   (max 4 tool calls par prompt)
 │  │                   Budget: techSlots + contentSlots = 8 items max
+│  │                   Si force_content + workbench vide → item synthétique créé automatiquement
 │  │
 │  │  4. ROUTE      → inline, dispatch automatique par canal
 │  │
@@ -66,25 +68,29 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 - Configurable via `content_budget_pct` (0-100) dans `autopilot_configs`
 - Si `force_content_cycle` = true → 100% contenu (0 tech)
 
-### Dual-Lane Scoring (Option B)
-- `score_workbench_priority()` accepte un param `p_lane` ('tech', 'content', 'all')
-- Chaque lane est scorée indépendamment avec son propre classement
-- Le LLM reçoit les items des deux lanes en parallèle (2 prompts simultanés)
-- Résultat : du contenu est toujours produit, même si le score tech est bas
+### Dual-Lane Scoring — Filtrage par consommation (FIX v2.1)
+- `score_workbench_priority()` filtre les items **par lane** :
+  - Lane `tech` → exclut seulement les items avec `consumed_by_code = true`
+  - Lane `content` → exclut seulement les items avec `consumed_by_content = true`
+  - Lane `all` → exclut seulement si `consumed_by_code = true AND consumed_by_content = true`
+- **Avant le fix** : les deux flags étaient combinés en AND, ce qui excluait les items des deux lanes dès qu'un seul flag était true → workbench vide → pas de contenu
 
-### Forçage utilisateur (Option D)
-- Colonne `force_content_cycle` (boolean) dans `autopilot_configs`
-- Quand true : bypass du gate, 100% budget contenu, reset automatique après le cycle
-- Permet à l'utilisateur de déclencher un cycle contenu à la demande
+### Recyclage du workbench (FIX v2.1)
+- Après chaque phase `diagnose`, l'engine recycle les items `in_progress` consommés depuis >24h
+- Reset : `status = 'pending'`, `consumed_by_code = false`, `consumed_by_content = false`
+- Garantit que le workbench n'est jamais définitivement vidé
 
-### Scoring déterministe (`score_workbench_priority`)
-Formule : `base_score + severity_bonus + aging_bonus - gate_malus`
-- `base_score` : 1000 (tier 0) → 50 (tier 10)
-- `severity_bonus` : critical=200, high=100, medium=0, low=-50
-- `aging_bonus` : +10 par jour depuis la création (max 100)
-- `gate_malus` : -300 (tiers 5-6 si tech < gate_low) ou -500 (tiers 7+ si tech < gate_high)
+### Item synthétique pour force_content (FIX v2.1)
+- Si le workbench est vide mais `force_content_cycle` ou `force_iktracker_article` est actif
+- L'orchestrateur crée un item synthétique `missing_page` tier 9 avec le premier keyword du site
+- Garantit que prescribeWithDualPrompts est toujours appelé quand du contenu est forcé
 
-### Colonnes ajoutées à `autopilot_configs`
+### Fallback prescribe (FIX v2.1)
+- L'alternance tech/contenu est désormais systématique (cycles impairs → contenu, pairs → tech)
+- Si force_content → toujours `content-architecture-advisor`
+- Plus de biais systématique vers `generate-corrective-code`
+
+### Colonnes `autopilot_configs`
 | Colonne | Type | Défaut | Description |
 |---------|------|--------|-------------|
 | `force_content_cycle` | boolean | false | Forcer un cycle contenu (reset auto) |
