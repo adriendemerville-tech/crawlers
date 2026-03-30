@@ -1298,7 +1298,7 @@ function generateLegacyMarinaReport(
   const techHTML = generateTechSectionHTML(expertSeoData, lang, domain);
   const strategicHTML = generateStrategicSectionHTML(strategicData, lang, domain);
   const cocoonHTML = generateCocoonSectionHTML(cocoonData, lang, domain);
-  return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url);
+  return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url, branding);
 }
 
 // ─── Lite Stratège: quick LLM call for top 3 cocoon recommendations ───
