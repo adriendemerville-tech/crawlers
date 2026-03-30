@@ -1108,6 +1108,7 @@ function compileMarinaReport(
   <style>${getMarinaStyles()}</style>
 </head>
 <body>
+  ${getToolbarHtml(domain, lang)}
   <div class="container">
     <div class="header">
       <h1>${tr.title}</h1>
