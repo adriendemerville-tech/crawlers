@@ -2141,10 +2141,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
-      // Inject the viewable report URL as a meta tag so the "Copy link" button works inside iframes
-      const viewUrl = `${SUPABASE_URL}/functions/v1/view-marina-report?id=${jobId}`;
-      html = html.replace('</head>', `<meta name="marina-report-url" content="${viewUrl}" />\n</head>`);
 
+      // First upload without the meta tag to get the signed URL
       const { error: uploadError } = await sb.storage
         .from('shared-reports')
         .upload(fileName, new Blob([html], { type: 'text/html' }), {
@@ -2160,14 +2158,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         .from('shared-reports')
         .createSignedUrl(fileName, 7 * 24 * 60 * 60);
 
-      // viewUrl already defined above (injected into HTML meta tag)
+      // Now re-upload with the signed URL injected as meta tag for the "Copy link" button
+      const reportDownloadUrl = signedUrlData?.signedUrl || '';
+      if (reportDownloadUrl) {
+        html = html.replace('</head>', `<meta name="marina-report-url" content="${reportDownloadUrl}" />\n</head>`);
+        await sb.storage
+          .from('shared-reports')
+          .upload(fileName, new Blob([html], { type: 'text/html' }), {
+            contentType: 'text/html',
+            upsert: true,
+          });
+      }
 
       const resultData = {
         url,
         domain,
         language: detectedLang,
         report_url: signedUrlData?.signedUrl || null,
-        report_view_url: viewUrl,
+        report_view_url: signedUrlData?.signedUrl || null,
         report_path: fileName,
         expert_seo_score: expertData.totalScore,
         expert_seo_max: expertData.maxScore,
