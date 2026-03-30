@@ -2865,6 +2865,15 @@ Deno.serve(async (req) => {
 
     } else {
       // ═══ MONOLITHIC MODE: Content/Product/Deep pages (simpler JSON) ═══
+      // Inject factual citation scores into monolithic prompt too
+      const factualCitationMono = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: effectiveToolsData,
+        backlinkData: null,
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+      userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
+
       const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
       const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
