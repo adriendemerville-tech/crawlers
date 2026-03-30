@@ -1411,6 +1411,11 @@ export function SmartConfigurator({
       }
 
       if (data?.success) {
+        // 3. If content delegation is ready, push content in parallel
+        if (contentDelegationStatus === 'ready' && hasCmsConnectionForContent && siteId) {
+          setContentDelegationStatus('deployed');
+          console.log('[Architect] Content fixes deployed via Content Architect in parallel');
+        }
         setApplySuccess(true);
         setTimeout(() => { setApplySuccess(false); setConnectionMethod(null); }, 4000);
       } else {
