@@ -148,7 +148,7 @@ export function mergeParallelResults(resultA: any, resultB: any, resultC: any): 
 
     // From C: GEO & Scoring
     geo_citability: resultC?.geo_citability || { score: 0, readiness_level: 'basic', analysis: '', strengths: [], weaknesses: [], recommendations: [] },
-    llm_visibility: resultC?.llm_visibility || { citation_probability: 0, knowledge_graph_presence: 'absent', analysis: '', test_queries: [] },
+    llm_visibility: resultC?.llm_visibility || { citation_probability: 0, citation_breakdown: { serp_presence: 0, structured_data_quality: 0, content_quotability: 0, brand_authority: 0, content_freshness: 0, business_intent_match: 0, self_citation_signals: 0, knowledge_graph_signals: 0 }, knowledge_graph_presence: 'absent', analysis: '', test_queries: [] },
     conversational_intent: resultC?.conversational_intent || { ratio: 0, analysis: '', question_titles_detected: 0, total_titles_analyzed: 0, examples: [], recommendations: [] },
     zero_click_risk: resultC?.zero_click_risk || { at_risk_keywords: [], overall_risk_score: 0, analysis: '' },
     executive_roadmap: resultC?.executive_roadmap || [],
