@@ -1715,13 +1715,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       if (!trackedSiteId) {
         console.warn(`[Marina] No tracked_site for ${domain} — skipping crawl, going to phase 3`);
       } else {
-        // Check if we have a recent crawl
+        // Check if we have a recent crawl (< 12h) with enough pages
+        const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
         const { data: existingCrawls, error: existingCrawlError } = await sb
           .from('site_crawls' as any)
-          .select('id, crawled_pages, total_pages, status')
+          .select('id, crawled_pages, total_pages, status, created_at')
           .eq('domain', domain)
           .eq('user_id', parentJob.user_id)
           .eq('status', 'completed')
+          .gte('created_at', twelveHoursAgo)
           .order('created_at', { ascending: false })
           .limit(1);
 
@@ -1729,17 +1731,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn(`[Marina] Existing crawl lookup failed for ${domain}: ${existingCrawlError.message}`);
         }
 
-        const hasRecentCrawl = existingCrawls?.length && (existingCrawls[0] as any).crawled_pages > 1;
+        // Only reuse if recent AND has a reasonable number of pages (>= 10)
+        const recentCrawl = existingCrawls?.[0] as any;
+        const hasRecentCrawl = recentCrawl && recentCrawl.crawled_pages >= 10;
 
         if (!hasRecentCrawl) {
-          console.log(`[Marina] No multi-page crawl for ${domain}, launching real crawl (max 20 pages)...`);
+          const reason = recentCrawl 
+            ? `only ${recentCrawl.crawled_pages} pages (too few)` 
+            : 'no recent crawl (< 12h)';
+          console.log(`[Marina] ${reason} for ${domain}, launching real crawl (max 50 pages)...`);
           await updateProgress(67, 'multi_crawl');
 
           try {
             const crawlLaunchRes = await callFunction('crawl-site', {
               url: url,
-              maxPages: 20,
+              maxPages: 50,
               userId: parentJob.user_id,
+              forceRefresh: true,
             });
 
             if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
@@ -1798,7 +1806,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
           }
         } else {
-          console.log(`[Marina] Found existing crawl with ${(existingCrawls[0] as any).crawled_pages} pages — reusing`);
+          console.log(`[Marina] Found recent crawl with ${recentCrawl.crawled_pages} pages (< 12h) — reusing`);
         }
       }
 
