@@ -16,6 +16,7 @@ import {
   PanelLeft, Eye, Syringe, ImagePlus, Server
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PricingPlansSection } from '@/components/PricingPlansSection';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
 
 /* ─── Translations ─── */
@@ -793,79 +794,7 @@ const ContentArchitectPage = memo(() => {
         </section>
 
         {/* ═══ PRICING ═══ */}
-        <section id="pricing" className="py-20 sm:py-28 border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-5xl px-4">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.pricingTitle}</h2>
-              <p className="mt-3 text-muted-foreground">{tr.pricingSubtitle}</p>
-            </motion.div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {tr.plans.map((plan, i) => (
-                <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-                  <Card className={`h-full relative overflow-hidden transition-colors ${plan.highlight ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10' : (plan as any).isEnterprise ? 'border-cyan-500/30' : 'border-border/50'}`}>
-                    {plan.highlight && (
-                      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                    )}
-                    <CardContent className="p-5 flex flex-col h-full">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-base font-bold text-foreground">{plan.name}</h3>
-                        {plan.highlight && <Star className="h-4 w-4 text-emerald-400" />}
-                        {(plan as any).isEnterprise && <Building2 className="h-4 w-4 text-cyan-400" />}
-                      </div>
-                      <div className="flex items-baseline gap-1 mb-1">
-                        {plan.price ? (
-                          <>
-                            <span className={`text-2xl font-bold bg-gradient-to-r ${(plan as any).isEnterprise ? 'from-cyan-400 to-emerald-400' : 'from-emerald-400 to-teal-400'} bg-clip-text text-transparent`}>{plan.price}</span>
-                            {plan.priceUnit && <span className="text-xs text-muted-foreground">{plan.priceUnit}</span>}
-                            <span className="text-xs text-muted-foreground">{plan.period}</span>
-                          </>
-                        ) : (
-                          <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">{plan.priceUnit}</span>
-                        )}
-                      </div>
-
-                      <Badge variant="outline" className={`mt-2 mb-4 text-xs ${(plan as any).isEnterprise ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-400' : 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400'}`}>
-                        {plan.pages}
-                      </Badge>
-
-                      <div className="space-y-2 flex-1">
-                        {plan.features.map((f, j) => (
-                          <div key={j} className="flex items-start gap-2 text-xs">
-                            <Check className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${(plan as any).isEnterprise ? 'text-cyan-400' : 'text-emerald-400'}`} />
-                            <span className="text-foreground/80">{f}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {(plan as any).isEnterprise ? (
-                        <Button
-                          className="w-full mt-4 gap-2 text-xs bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white border-0"
-                          size="sm"
-                          onClick={() => {
-                            const felixBtn = document.querySelector('[data-felix-trigger]') as HTMLButtonElement;
-                            if (felixBtn) felixBtn.click();
-                            else window.location.href = '/#felix';
-                          }}
-                        >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          {plan.cta}
-                        </Button>
-                      ) : (
-                        <Link to={plan.ctaLink} className="block mt-4">
-                          <Button className={`w-full gap-2 text-xs ${plan.highlight ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0' : ''}`} variant={plan.highlight ? 'default' : 'outline'} size="sm">
-                            {plan.cta}
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Button>
-                        </Link>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <PricingPlansSection title={tr.pricingTitle} subtitle={tr.pricingSubtitle} />
 
         {/* ═══ FAQ ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">

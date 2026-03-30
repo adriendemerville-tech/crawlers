@@ -14,6 +14,7 @@ import {
   CheckCircle2, ArrowRight, Globe, MessageSquare, Image,
   Clock, Users, Search, Crown, Sparkles, Target, Award
 } from 'lucide-react';
+import { PricingPlansSection } from '@/components/PricingPlansSection';
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
@@ -418,51 +419,9 @@ export default function GoogleBusinessPage() {
         </section>
 
         {/* ── Pricing ── */}
-        <section className="py-16 md:py-24 border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-4xl px-4 text-center space-y-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t3(language, 'Tarification', 'Pricing', 'Precios')}
-            </h2>
-
-            <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <Card className="border-border">
-                <CardContent className="p-6 space-y-4 text-center">
-                  <Crown className="h-8 w-8 mx-auto text-amber-500" />
-                  <h3 className="text-lg font-bold text-foreground">Pro Agency</h3>
-                  <p className="text-3xl font-bold text-foreground">59 <span className="text-base text-muted-foreground">€/mois</span></p>
-                  <ul className="text-sm text-muted-foreground space-y-2 text-left">
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />{t3(language, 'Audits SEO/GEO illimités', 'Unlimited SEO/GEO audits', 'Auditorías SEO/GEO ilimitadas')}</li>
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />{t3(language, 'Crawl, Cocoon, Content Architect', 'Crawl, Cocoon, Content Architect', 'Crawl, Cocoon, Content Architect')}</li>
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-muted-foreground/40 mt-0.5 flex-shrink-0" /><span className="text-muted-foreground/60">{t3(language, 'Module Google Business non inclus', 'Google Business module not included', 'Módulo Google Business no incluido')}</span></li>
-                  </ul>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to="/tarifs">{t3(language, 'Voir le détail', 'View details', 'Ver detalles')}</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg">
-                  {t3(language, 'GBP INCLUS', 'GBP INCLUDED', 'GBP INCLUIDO')}
-                </div>
-                <CardContent className="p-6 space-y-4 text-center">
-                  <Crown className="h-8 w-8 mx-auto text-primary" />
-                  <h3 className="text-lg font-bold text-foreground">Pro Agency+</h3>
-                  <p className="text-3xl font-bold text-foreground">99 <span className="text-base text-muted-foreground">€/mois</span></p>
-                  <ul className="text-sm text-muted-foreground space-y-2 text-left">
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />{t3(language, 'Tout Pro Agency inclus', 'Everything in Pro Agency', 'Todo Pro Agency incluido')}</li>
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" /><strong>{t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)')}</strong></li>
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />{t3(language, '50 000 pages crawl/mois', '50,000 crawl pages/month', '50.000 páginas crawl/mes')}</li>
-                    <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />{t3(language, '3 comptes inclus', '3 accounts included', '3 cuentas incluidas')}</li>
-                  </ul>
-                  <Button asChild variant="hero" className="w-full">
-                    <Link to="/auth?returnTo=/console">{t3(language, 'Commencer', 'Get started', 'Comenzar')}</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
+        <PricingPlansSection
+          title={t3(language, 'Tarification', 'Pricing', 'Precios')}
+        />
 
         {/* ── FAQ (Schema.org FAQPage) ── */}
         <section className="py-16 md:py-24 border-t border-border">
