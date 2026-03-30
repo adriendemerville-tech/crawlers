@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, GraduationCap } from 'lucide-react';
+import { Star, GraduationCap, Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { ExpertiseSentiment } from '@/types/newAuditMetrics';
 
 interface ExpertiseSentimentCardProps {
@@ -37,6 +38,17 @@ export function ExpertiseSentimentCard({ data }: ExpertiseSentimentCardProps) {
         <p className="text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3 italic">
           {data.justification}
         </p>
+
+        {/* GBP Tip */}
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/50 border border-accent">
+          <Lightbulb className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-foreground leading-relaxed">
+            <span className="font-semibold">Astuce :</span> pour améliorer votre visibilité auprès des LLM, optimisez votre page Google Business à l'aide des outils Crawlers dans votre{' '}
+            <Link to="/app/console?tab=gbp" className="text-primary underline underline-offset-2 hover:text-primary/80 font-medium">
+              Console
+            </Link>.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
