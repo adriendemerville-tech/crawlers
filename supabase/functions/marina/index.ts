@@ -241,16 +241,23 @@ function getToolbarHtml(domain: string, lang: string): string {
   const linkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
   const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
+  const pdfIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
   return `
   <div class="marina-toolbar" id="marina-toolbar">
     <span class="marina-toolbar-title">${domain}</span>
-    <button class="primary" onclick="marinaPrint()" title="${tr.toolbarPrint}">
+    <button class="primary" onclick="marinaDownloadPDF()" id="marina-pdf-btn" title="${tr.toolbarPdf}">
+      ${pdfIcon}<span class="btn-label" id="marina-pdf-label">${tr.toolbarPdf}</span>
+    </button>
+    <button onclick="marinaPrint()" title="${tr.toolbarPrint}">
       ${printIcon}<span class="btn-label">${tr.toolbarPrint}</span>
     </button>
     <button onclick="marinaCopyLink()" id="marina-copy-btn" title="${tr.toolbarCopy}">
       ${linkIcon}<span class="btn-label" id="marina-copy-label">${tr.toolbarCopy}</span>
     </button>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"><\/script>
   <script>
     function marinaPrint() { window.print(); }
     function marinaCopyLink() {
@@ -274,6 +281,68 @@ function getToolbarHtml(domain: string, lang: string): string {
         btn.classList.remove('copied');
         label.textContent = '${tr.toolbarCopy}';
       }, 2000);
+    }
+    async function marinaDownloadPDF() {
+      var btn = document.getElementById('marina-pdf-btn');
+      var label = document.getElementById('marina-pdf-label');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      label.textContent = '…';
+      try {
+        var jsPDF = window.jspdf.jsPDF;
+        var container = document.querySelector('.container');
+        if (!container) throw new Error('No container');
+        var sections = Array.from(container.children);
+        var pdfW = 210, pdfH = 297, mTop = 15, mBot = 15, mSide = 10;
+        var usableH = pdfH - mTop - mBot;
+        var usableW = pdfW - mSide * 2;
+        var doc = new jsPDF('p', 'mm', 'a4');
+        var curY = mTop;
+        var first = true;
+        for (var i = 0; i < sections.length; i++) {
+          var sec = sections[i];
+          if (sec.classList && sec.classList.contains('marina-toolbar')) continue;
+          var canvas = await html2canvas(sec, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#f8fafc', logging: false });
+          var imgData = canvas.toDataURL('image/png');
+          var secW = usableW;
+          var secH = (canvas.height * secW) / canvas.width;
+          if (curY + secH <= pdfH - mBot) {
+            doc.addImage(imgData, 'PNG', mSide, curY, secW, secH);
+            curY += secH + 2;
+          } else if (secH <= usableH) {
+            if (!first || curY > mTop + 5) { doc.addPage(); curY = mTop; }
+            doc.addImage(imgData, 'PNG', mSide, curY, secW, secH);
+            curY += secH + 2;
+          } else {
+            var pxPerMm = canvas.height / secH;
+            var srcY = 0; var rem = secH;
+            while (rem > 0) {
+              var space = (pdfH - mBot) - curY;
+              var sliceH = Math.min(rem, space);
+              var slicePx = Math.round(sliceH * pxPerMm);
+              var sc = document.createElement('canvas');
+              sc.width = canvas.width; sc.height = slicePx;
+              var ctx = sc.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
+                doc.addImage(sc.toDataURL('image/png'), 'PNG', mSide, curY, secW, sliceH);
+              }
+              srcY += slicePx; rem -= sliceH; curY += sliceH;
+              if (rem > 0) { doc.addPage(); curY = mTop; }
+            }
+            curY += 2;
+          }
+          first = false;
+        }
+        var fname = 'marina_${domain.replace(/[^a-zA-Z0-9.-]/g, '_')}_' + new Date().toISOString().slice(0,10) + '.pdf';
+        doc.save(fname);
+      } catch(e) {
+        console.error('PDF error', e);
+        alert('PDF generation failed');
+      } finally {
+        btn.disabled = false;
+        label.textContent = '${tr.toolbarPdf}';
+      }
     }
   </` + `script>`;
 }
