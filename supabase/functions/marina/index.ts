@@ -24,9 +24,54 @@ import { callLovableAIText } from '../_shared/lovableAI.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-// ─── Language detection from HTML ───
+// ─── Language detection from site signals ───
+function detectLanguageFromText(text: string): string | null {
+  if (!text) return null;
+
+  const sample = ` ${text
+    .toLowerCase()
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[^\p{L}\p{N}\s'-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()} `;
+
+  if (!sample.trim()) return null;
+
+  const frWords = ['bonjour', 'nous', 'notre', 'votre', 'avec', 'pour', 'dans', 'les', 'des', 'une', 'est', 'traducteur', 'instantané', 'écouteurs', 'questions', 'fréquentes'];
+  const esWords = ['hola', 'nosotros', 'nuestro', 'para', 'sobre', 'esta', 'los', 'las', 'una', 'con', 'por', 'traductor', 'auriculares', 'preguntas', 'frecuentes'];
+  const enWords = ['hello', 'our', 'your', 'with', 'for', 'the', 'and', 'this', 'that', 'instant', 'translator', 'wireless', 'headphones', 'frequently', 'asked'];
+
+  const scoreWords = (words: string[]) => words.reduce((score, word) => score + (sample.includes(` ${word} `) ? 1 : 0), 0);
+
+  const scores = {
+    fr: scoreWords(frWords),
+    es: scoreWords(esWords),
+    en: scoreWords(enWords),
+  };
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const [bestLang, bestScore] = sorted[0] || [];
+  const secondScore = sorted[1]?.[1] ?? 0;
+
+  if (!bestLang || typeof bestScore !== 'number' || bestScore < 2) return null;
+  if (bestScore === secondScore) return null;
+
+  return bestLang;
+}
+
 function detectLanguage(html: string): string {
-  // Check <html lang="...">
+  const visibleSample = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, 4000);
+
+  const textDetected = detectLanguageFromText(visibleSample);
+  if (textDetected) return textDetected;
+
   const langAttr = html.match(/<html[^>]*\slang=["']([a-z]{2})/i);
   if (langAttr) {
     const lang = langAttr[1].toLowerCase();
@@ -34,18 +79,27 @@ function detectLanguage(html: string): string {
     if (lang === 'en') return 'en';
     if (lang === 'fr') return 'fr';
   }
-  
-  // Heuristic: check for common French/Spanish words in first 2000 chars
-  const sample = html.substring(0, 2000).toLowerCase();
-  const frWords = ['nous', 'notre', 'votre', 'avec', 'pour', 'dans', 'les', 'des', 'une', 'est'];
-  const esWords = ['nosotros', 'nuestro', 'para', 'sobre', 'esta', 'los', 'las', 'una', 'con', 'por'];
-  
-  const frScore = frWords.filter(w => sample.includes(` ${w} `)).length;
-  const esScore = esWords.filter(w => sample.includes(` ${w} `)).length;
-  
-  if (frScore > esScore && frScore >= 3) return 'fr';
-  if (esScore > frScore && esScore >= 3) return 'es';
-  return 'en'; // default to English if no French/Spanish detected
+
+  return 'fr';
+}
+
+function resolveReportLanguage(explicitLang: string | undefined, expertData: any): string {
+  if (explicitLang === 'fr' || explicitLang === 'en' || explicitLang === 'es') {
+    return explicitLang;
+  }
+
+  const htmlAnalysis = expertData?.rawData?.htmlAnalysis || {};
+  const prioritySignals = [
+    htmlAnalysis?.titleContent,
+    htmlAnalysis?.metaDescContent,
+    ...(Array.isArray(htmlAnalysis?.h1Contents) ? htmlAnalysis.h1Contents : []),
+    ...(Array.isArray(htmlAnalysis?.h2Contents) ? htmlAnalysis.h2Contents.slice(0, 6) : []),
+  ].filter(Boolean).join(' ');
+
+  const detectedFromPrioritySignals = detectLanguageFromText(prioritySignals);
+  if (detectedFromPrioritySignals) return detectedFromPrioritySignals;
+
+  return detectLanguage(htmlAnalysis?.rawHtml || '');
 }
 
 // ─── Helper: render any object/array as structured HTML ───
@@ -1443,8 +1497,14 @@ ${thinBlock}
 Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority 1"},{"title":"...","description":"...","priority":"Priority 2"},{"title":"...","description":"...","priority":"Priority 3"}]`;
 
   try {
+    const strictLanguageInstruction = lang === 'en'
+      ? 'You MUST respond entirely in English. All titles, descriptions and priority labels must be in English. Return valid JSON only.'
+      : lang === 'es'
+        ? 'Debes responder exclusivamente en español. Todos los títulos, descripciones y prioridades deben estar en español. Devuelve solo JSON válido.'
+        : 'Tu DOIS répondre exclusivement en français. Tous les titres, descriptions et niveaux de priorité doivent être en français. Retourne uniquement du JSON valide.';
+
     const content = await callLovableAIText({
-      system: 'You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.',
+      system: `${strictLanguageInstruction} You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.`,
       user: prompt,
       maxTokens: 2048,
       signal: AbortSignal.timeout(45_000),
@@ -1634,9 +1694,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       }
       
       const domain = expertResult.data.domain;
-      // Priority: explicit lang param > auto-detection from HTML > default 'en'
-      const autoDetectedLang = detectLanguage(expertResult.data?.rawData?.htmlAnalysis?.rawHtml || '');
-      const detectedLang = lang || autoDetectedLang || 'en';
+      // Priority: explicit lang param > visible SEO signals (title/meta/H1/H2) > HTML visible text > fallback FR
+      const detectedLang = resolveReportLanguage(lang, expertResult.data);
       
       console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
       await updateProgress(30, 'strategic_audit');
