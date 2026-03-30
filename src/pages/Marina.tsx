@@ -93,8 +93,11 @@ const translations = {
       securityDesc: 'Votre clé API est liée à votre compte. Chaque rapport généré via l\'API consomme 5 crédits de votre solde. Ne partagez jamais votre clé publiquement — faites les appels côté serveur uniquement.',
       codeTitle: 'Exemple d\'intégration',
       postLabel: 'POST — Lancer un audit',
+      postDesc: 'Envoyez une requête POST avec l\'URL du site à auditer. Vous recevrez un identifiant de job pour suivre la progression.',
       getLabel: 'GET — Suivre la progression',
+      getDesc: 'Interrogez l\'API avec le job_id reçu pour connaître l\'état d\'avancement et récupérer le rapport une fois terminé.',
       jsLabel: 'JavaScript — Exemple complet',
+      jsDesc: 'Un exemple complet en JavaScript pour lancer un audit et attendre automatiquement le résultat via polling.',
       helpText: 'Besoin d\'aide pour l\'intégration ?',
       getApiKey: 'Obtenir ma clé API',
       rechargeCredits: 'Recharger mes crédits',
@@ -194,8 +197,11 @@ const translations = {
       securityDesc: 'Your API key is linked to your account. Each report generated via API costs 5 credits. Never share your key publicly — make calls server-side only.',
       codeTitle: 'Integration example',
       postLabel: 'POST — Start an audit',
+      postDesc: 'Send a POST request with the URL to audit. You\'ll receive a job ID to track progress.',
       getLabel: 'GET — Track progress',
+      getDesc: 'Query the API with the job_id to check the status and retrieve the report once completed.',
       jsLabel: 'JavaScript — Full example',
+      jsDesc: 'A complete JavaScript example to launch an audit and automatically wait for the result via polling.',
       helpText: 'Need help with integration?',
       getApiKey: 'Get my API key',
       rechargeCredits: 'Buy more credits',
@@ -295,8 +301,11 @@ const translations = {
       securityDesc: 'Tu clave API está vinculada a tu cuenta. Cada informe generado vía API consume 5 créditos. Nunca compartas tu clave públicamente — haz las llamadas solo del lado del servidor.',
       codeTitle: 'Ejemplo de integración',
       postLabel: 'POST — Iniciar auditoría',
+      postDesc: 'Envía una solicitud POST con la URL del sitio a auditar. Recibirás un ID de trabajo para seguir el progreso.',
       getLabel: 'GET — Seguir progreso',
+      getDesc: 'Consulta la API con el job_id recibido para conocer el estado y obtener el informe una vez completado.',
       jsLabel: 'JavaScript — Ejemplo completo',
+      jsDesc: 'Un ejemplo completo en JavaScript para lanzar una auditoría y esperar automáticamente el resultado.',
       helpText: '¿Necesitas ayuda con la integración?',
       getApiKey: 'Obtener mi clave API',
       rechargeCredits: 'Recargar créditos',
@@ -690,6 +699,7 @@ export default function Marina() {
                 </h3>
 
                 {/* Start audit */}
+                <p className="text-xs text-muted-foreground">{t.api.postDesc}</p>
                 <div className="relative">
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.postLabel}</span>
@@ -717,9 +727,17 @@ ${t.code.commentResponse}
                 </div>
 
                 {/* Poll status */}
+                <p className="text-xs text-muted-foreground">{t.api.getDesc}</p>
                 <div className="relative">
-                  <div className="flex items-center px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.getLabel}</span>
+                    <button
+                      onClick={() => copyCode(`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
+  -H "x-marina-key: ${t.code.yourKey}"`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
@@ -734,9 +752,26 @@ ${t.code.commentDone}
                 </div>
 
                 {/* JS example */}
+                <p className="text-xs text-muted-foreground">{t.api.jsDesc}</p>
                 <div className="relative">
-                  <div className="flex items-center px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.jsLabel}</span>
+                    <button
+                      onClick={() => copyCode(`const API = "https://api.crawlers.fr/functions/v1/marina";
+const KEY = "${t.code.yourKey}";
+async function generateReport(url) {
+  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url }) }).then(r => r.json());
+  while (true) {
+    await new Promise(r => setTimeout(r, 5000));
+    const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
+    if (job.status === "completed") return job.data.report_url;
+    if (job.status === "failed") throw new Error(job.error);
+  }
+}`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`const API = "https://api.crawlers.fr/functions/v1/marina";
