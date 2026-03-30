@@ -566,7 +566,7 @@ const ContentArchitectPage = memo(() => {
             </motion.div>
 
             {/* Screenshot */}
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-4xl">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-5xl">
               <div className="rounded-xl border border-border shadow-2xl shadow-emerald-500/10 overflow-hidden">
                 <img
                   src={contentArchitectPreview}
