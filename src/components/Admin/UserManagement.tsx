@@ -365,6 +365,76 @@ export function UserManagement() {
     }
   };
 
+  // Create user handler
+  const handleCreateUser = async () => {
+    if (!createForm.email || !createForm.password) { toast.error('Email et mot de passe requis'); return; }
+    setCreateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: {
+          action: 'create-user',
+          email: createForm.email,
+          password: createForm.password,
+          first_name: createForm.first_name,
+          last_name: createForm.last_name,
+          persona_type: createForm.persona_type || null,
+          plan_type: createForm.plan_type || 'free',
+          credits_balance: parseInt(createForm.credits_balance) || 0,
+        },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Erreur');
+      toast.success(`Utilisateur ${createForm.email} créé avec succès`);
+      setCreateDialogOpen(false);
+      setCreateForm({ email: '', password: '', first_name: '', last_name: '', persona_type: '', plan_type: 'free', credits_balance: '0' });
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Create user error:', err);
+      toast.error(err.message || 'Erreur lors de la création');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  // Edit profile handler
+  const openEditDialog = (user: UserProfile) => {
+    setEditUser(user);
+    setEditForm({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      persona_type: user.persona_type || '',
+      plan_type: user.plan_type,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!editUser) return;
+    setEditLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: {
+          action: 'update-user-profile',
+          target_user_id: editUser.user_id,
+          first_name: editForm.first_name,
+          last_name: editForm.last_name,
+          email: editForm.email !== editUser.email ? editForm.email : undefined,
+          persona_type: editForm.persona_type || null,
+          plan_type: editForm.plan_type,
+        },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Erreur');
+      toast.success('Profil mis à jour');
+      setEditDialogOpen(false);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Update profile error:', err);
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Signup funnel counters
   const [funnelCounts, setFunnelCounts] = useState({ promptShown: 0, promptClosed: 0, signupAbandoned: 0, verificationSent: 0 });
   useEffect(() => {
