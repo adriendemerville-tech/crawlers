@@ -832,8 +832,8 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
             </>
           )}
 
-          {/* GBP Connect / Disconnect — bottom of sidebar */}
-          <div className="mt-auto pt-4 border-t border-border/40">
+          {/* GBP Connect / Disconnect — under add button */}
+          <div className="mt-3 pt-3 border-t border-border/40">
             {gbpConnected ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 px-1">
