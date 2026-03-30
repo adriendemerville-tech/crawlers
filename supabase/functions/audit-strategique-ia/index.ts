@@ -7,6 +7,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
+import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
 
 // Fonction pour générer un résumé promptable depuis le rapport stratégique
 function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
@@ -2826,9 +2827,17 @@ Deno.serve(async (req) => {
       // Build the shared context that all 3 calls need
       const sharedContext = userPrompt; // Already contains all data (market, E-E-A-T, tools, etc.)
 
+      // Compute factual citation scores from real data
+      const factualCitation = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: effectiveToolsData,
+        backlinkData: null, // Not fetched in this function yet
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+
       const userPromptA_full = buildUserPromptA(url, domain, sharedContext);
       const userPromptB_full = buildUserPromptB(url, domain, sharedContext);
-      const userPromptC_full = buildUserPromptC(url, domain, sharedContext);
+      const userPromptC_full = buildUserPromptC(url, domain, sharedContext, factualCitation.factual_summary);
 
       const parallelTimeout = Math.min(remainingMs, 150_000);
 
@@ -2856,6 +2865,15 @@ Deno.serve(async (req) => {
 
     } else {
       // ═══ MONOLITHIC MODE: Content/Product/Deep pages (simpler JSON) ═══
+      // Inject factual citation scores into monolithic prompt too
+      const factualCitationMono = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: effectiveToolsData,
+        backlinkData: null,
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+      userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
+
       const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 
       const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';

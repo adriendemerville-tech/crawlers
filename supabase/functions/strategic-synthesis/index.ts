@@ -8,6 +8,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
+import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -224,9 +225,17 @@ Deno.serve(async (req) => {
       // ═══ HOMEPAGE MODE: 3 parallel calls ═══
       console.log('🚀 [strategic-synthesis] Parallel mode: 3 focused LLM calls...');
 
+      // Compute factual citation scores from real data
+      const factualCitation = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: toolsData || null,
+        backlinkData: null,
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+
       const userPromptA = buildUserPromptA(url, domain, baseContext);
       const userPromptB = buildUserPromptB(url, domain, baseContext);
-      const userPromptC = buildUserPromptC(url, domain, baseContext);
+      const userPromptC = buildUserPromptC(url, domain, baseContext, factualCitation.factual_summary);
 
       const parallelTimeout = 150_000;
 
