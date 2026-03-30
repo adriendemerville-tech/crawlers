@@ -31,7 +31,9 @@ function AutoSaveIndicator({ status }: { status: 'idle' | 'saving' | 'saved' }) 
 
 export function MarinaBrandingCard() {
   const { user, profile, refreshProfile } = useAuth();
+  const { isAgencyPremium } = useCredits();
   const { language } = useLanguage();
+  const navigate = useNavigate();
 
   const [enabled, setEnabled] = useState(false);
   const [fullWhiteLabel, setFullWhiteLabel] = useState(false);
