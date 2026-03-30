@@ -180,6 +180,10 @@ function getTranslations(lang: string) {
       noData: 'Données non disponibles',
       poweredBy: 'Propulsé par Crawlers AI',
       cocoonPending: 'L\'analyse du cocon sémantique n\'a pas retourné de données pour ce site. Un crawl multi-pages est nécessaire.',
+      toolbarPdf: 'Télécharger PDF',
+      toolbarPrint: 'Imprimer',
+      toolbarCopy: 'Copier le lien',
+      toolbarCopied: 'Copié !',
     },
     en: {
       title: 'Complete SEO & GEO Report',
@@ -198,6 +202,10 @@ function getTranslations(lang: string) {
       noData: 'Data not available',
       poweredBy: 'Powered by Crawlers AI',
       cocoonPending: 'Semantic cocoon analysis returned no data. A multi-page crawl is required.',
+      toolbarPdf: 'Download PDF',
+      toolbarPrint: 'Print',
+      toolbarCopy: 'Copy link',
+      toolbarCopied: 'Copied!',
     },
     es: {
       title: 'Informe SEO y GEO Completo',
