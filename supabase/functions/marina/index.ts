@@ -1897,7 +1897,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
               // Poll until crawl completes — max 100s to stay within wall-clock
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 100_000;
+              const CRAWL_TIMEOUT_MS = 300_000;
               const CRAWL_POLL_MS = 5_000;
               let crawlDone = false;
 
