@@ -20,111 +20,20 @@ function FooterComponent() {
   const { t, language } = useLanguage();
 
   const toolsLinks = [
-    { 
-      icon: Bot, 
-      label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'),
-      href: '/',
-      description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: Globe, 
-      label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'),
-      href: '/',
-      description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: Brain, 
-      label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'),
-      href: '/',
-      description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: Gauge, 
-      label: 'PageSpeed',
-      href: '/',
-      description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: GitCompareArrows, 
-      label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'),
-      href: '/app/audit-compare',
-      description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: Radar, 
-      label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'),
-      href: '/audit-expert',
-      description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'),
-      gold: false,
-      isRoute: true
-    },
-    { 
-      icon: Radar, 
-      label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'),
-      href: '/audit-expert',
-      description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
-      gold: true,
-      isRoute: true
-    },
-    { 
-      icon: ScanSearch, 
-      label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'),
-      href: '/app/site-crawl',
-      description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'),
-      gold: true,
-      isRoute: true,
-      violet: true
-    },
-    { 
-      icon: Gauge, 
-      label: t3(language, 'Indice IAS', 'SAI Index', 'Índice IAS'),
-      href: '/indice-alignement-strategique',
-      description: t3(language, 'Alignement stratégique Brand / Non-Brand', 'Strategic Brand / Non-Brand alignment', 'Alineamiento estratégico Marca / Genérico'),
-      gold: true,
-      isRoute: true
-    },
-    {
-      icon: Network,
-      label: 'Cocoon',
-      href: '/app/cocoon',
-      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
-      gold: true,
-      isRoute: true
-    },
-    {
-      icon: Brain,
-      label: 'Code Architect',
-      href: '/architecte-generatif',
-      description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
-      gold: true,
-      isRoute: true
-    },
-    {
-      icon: Brain,
-      label: 'Content Architect',
-      href: '/content-architect',
-      description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'),
-      gold: true,
-      isRoute: true
-    },
-    {
-      icon: Globe,
-      label: 'Google Business',
-      href: '/google-business',
-      description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'),
-      gold: true,
-      isRoute: true
-    },
+    { icon: Bot, label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'), href: '/', description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'), isRoute: true },
+    { icon: Globe, label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'), href: '/', description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'), isRoute: true },
+    { icon: Brain, label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'), href: '/', description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'), isRoute: true },
+    { icon: Gauge, label: 'PageSpeed', href: '/', description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'), isRoute: true },
+    { icon: GitCompareArrows, label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'), href: '/app/audit-compare', description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'), isRoute: true },
+    { icon: Radar, label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'), href: '/audit-expert', description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'), isRoute: true },
+    { icon: Radar, label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'), href: '/audit-expert', description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'), isRoute: true },
+    { icon: ScanSearch, label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'), href: '/app/site-crawl', description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'), isRoute: true },
+    { icon: Gauge, label: t3(language, 'Indice IAS', 'SAI Index', 'Índice IAS'), href: '/indice-alignement-strategique', description: t3(language, 'Alignement stratégique Brand / Non-Brand', 'Strategic Brand / Non-Brand alignment', 'Alineamiento estratégico Marca / Genérico'), isRoute: true },
+    { icon: Network, label: 'Cocoon', href: '/app/cocoon', description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'), isRoute: true },
+    { icon: Brain, label: 'Code Architect', href: '/architecte-generatif', description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'), isRoute: true },
+    { icon: Brain, label: 'Content Architect', href: '/content-architect', description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'), isRoute: true },
+    { icon: Globe, label: 'Google Business', href: '/google-business', description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'), isRoute: true },
+    { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
   ];
 
   const resourcesLinks = [
