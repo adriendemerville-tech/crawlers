@@ -53,13 +53,14 @@ interface UserKpiModalProps {
   onToggleRole?: (userId: string, role: string) => void;
   onManageCredits?: (user: UserProfile) => void;
   onStripPro?: (user: UserProfile) => void;
+  onEditProfile?: (user: UserProfile) => void;
   adminUserIds?: Set<string>;
   viewerUserIds?: Set<string>;
   viewer2UserIds?: Set<string>;
   auditorUserIds?: Set<string>;
 }
 
-export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
+export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, onEditProfile, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
   const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
