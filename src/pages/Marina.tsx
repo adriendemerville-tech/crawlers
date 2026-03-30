@@ -1062,7 +1062,7 @@ export default function Marina() {
   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
    -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com"}'
+  -d '{"url": "https://example.com", "lang": "fr"}'
 
 ${t.code.commentResponse}
 # {"job_id": "abc-123", "status": "pending"}`}
