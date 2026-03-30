@@ -548,7 +548,7 @@ const ContentArchitectPage = memo(() => {
               </span>
             </motion.h1>
 
-            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
               {tr.hero.subtitle}
             </motion.p>
 
