@@ -851,6 +851,7 @@ async function generateReport(url) {
 # }`}
                   </pre>
                 </div>
+              </div>
             </div>
 
             {/* CTA */}
