@@ -1119,6 +1119,17 @@ export default function Cocoon() {
             </button>
           )}
 
+          {/* Bulk Auto-Linking button */}
+          {hasAccess && selectedSiteId && (
+            <button
+              onClick={() => setShowBulkAutoLink(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 backdrop-blur-md transition-all shrink-0"
+            >
+              <Wand2 className="w-4 h-4" />
+              <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Auto-Link All' : language === 'es' ? 'Auto-Enlace' : 'Auto-Maillage'}</span>
+            </button>
+          )}
+
           {/* Task Plan button — bottom right */}
           {hasAccess && selectedSiteId && (
             <button
