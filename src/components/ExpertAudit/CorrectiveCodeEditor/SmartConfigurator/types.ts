@@ -1,5 +1,7 @@
 // Types for Smart Configurator v2.0 - Architecte Génératif
 
+export type FixDeliveryChannel = 'code' | 'content';
+
 export interface FixConfig {
   id: string;
   category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic' | 'generative';
@@ -11,6 +13,8 @@ export interface FixConfig {
   isRecommended?: boolean;
   isPremium?: boolean; // Nécessite paiement
   locked?: boolean; // Grisé et non modifiable (ex: déjà installé)
+  /** Delivery channel: 'code' = JS injection, 'content' = CMS content via Content Architect */
+  deliveryChannel?: FixDeliveryChannel;
 }
 
 export interface AttributionConfig {
