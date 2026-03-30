@@ -852,18 +852,20 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
                 </button>
               </div>
             ) : (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
                 onClick={handleGbpConnect}
                 disabled={gbpLoading || isGated}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-200 w-full disabled:opacity-30 disabled:pointer-events-none"
               >
                 {gbpLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin shrink-0 opacity-40" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Plug className="h-3 w-3 shrink-0 opacity-40" />
+                  <Plug className="h-3.5 w-3.5" />
                 )}
-                <span className="text-left leading-tight tracking-wide">Google Business</span>
-              </button>
+                Google Business
+              </Button>
             )}
           </div>
         </div>
