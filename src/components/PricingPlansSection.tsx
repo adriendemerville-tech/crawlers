@@ -20,7 +20,7 @@ interface PricingPlansSectionProps {
   embedded?: boolean;
 }
 
-export function PricingPlansSection({ title, subtitle }: PricingPlansSectionProps) {
+export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansSectionProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
