@@ -91,6 +91,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Benchmark LLM & Profondeur LLM illimités', 'Unlimited LLM Benchmark & Depth', 'Benchmark LLM y Profundidad LLM ilimitados'),
     t3(language, '150 créations de pages (Content Architect)', '150 page creations (Content Architect)', '150 creaciones de páginas (Content Architect)'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
+    t3(language, 'API Marina en marque blanche complète', 'Marina API with full white label', 'API Marina con marca blanca completa'),
     t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
   ];
 
