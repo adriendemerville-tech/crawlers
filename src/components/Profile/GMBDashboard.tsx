@@ -862,9 +862,8 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
                 ) : (
                   <Store className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="text-left leading-tight">
-                  {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
-                </span>
+                <Plug className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-left leading-tight">Google Business</span>
               </button>
             )}
           </div>
