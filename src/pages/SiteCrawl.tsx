@@ -573,7 +573,7 @@ export default function SiteCrawl() {
 
   // Start polling when crawlResult changes to an active state
   useEffect(() => {
-    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error';
+    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error' && crawlResult.status !== 'stopped';
     
     if (!shouldPoll) {
       // Stop any existing polling
