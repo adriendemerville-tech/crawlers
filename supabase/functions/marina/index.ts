@@ -2051,7 +2051,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── Cocoon computation ───
       let cocoonResult: any = null;
-      const COCOON_TIMEOUT_MS = 90_000; // 90s — safe within wall-clock
+      const COCOON_TIMEOUT_MS = 270_000; // 270s — tripled for heavy sites
       try {
         cocoonResult = await Promise.race([
           (async () => {
