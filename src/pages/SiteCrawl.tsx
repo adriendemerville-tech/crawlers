@@ -1310,8 +1310,8 @@ export default function SiteCrawl() {
                     >
                       <Square className="w-3.5 h-3.5 fill-destructive text-destructive" />
                     </Button>
-                  )
-
+                  )}
+                </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
