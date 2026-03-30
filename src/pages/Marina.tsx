@@ -14,10 +14,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
-  BookOpen, CheckCircle2, CreditCard, Coins
+  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer
 } from 'lucide-react';
 
 const CREDIT_COST = 5;
