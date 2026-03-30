@@ -65,7 +65,7 @@ const AIAgentsSection = memo(() => {
     <section className="relative overflow-hidden border-t border-border py-16 sm:py-24">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-violet-950/5 via-background to-violet-950/10 dark:from-violet-950/20 dark:via-background dark:to-violet-950/30" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.04),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.04),transparent_70%)] bg-black/[0.13]" />
 
       <div className="relative mx-auto max-w-6xl px-4">
         {/* Header */}
@@ -100,7 +100,7 @@ const AIAgentsSection = memo(() => {
                   {language === 'fr' ? 'Assistant personnel' : language === 'es' ? 'Asistente personal' : 'Personal assistant'}
                 </p>
               </div>
-              <Badge className="ml-auto bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 text-[11px]">
+              <Badge className="ml-auto text-[#e0b44d] border-[#d6aa51] bg-[#1d283a]/[0.32] text-[11px]">
                 {language === 'fr' ? 'Gratuit' : language === 'es' ? 'Gratis' : 'Free'}
               </Badge>
             </div>
