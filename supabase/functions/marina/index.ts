@@ -256,9 +256,32 @@ function getToolbarHtml(domain: string, lang: string): string {
       ${linkIcon}<span class="btn-label" id="marina-copy-label">${tr.toolbarCopy}</span>
     </button>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"><\/script>
   <script>
+    var _pdfLibsLoaded = false;
+    var _pdfLibsLoading = false;
+    function loadPdfLibs() {
+      if (_pdfLibsLoaded || _pdfLibsLoading) return Promise.resolve();
+      _pdfLibsLoading = true;
+      return new Promise(function(resolve, reject) {
+        var s1 = document.createElement('script');
+        s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s1.crossOrigin = 'anonymous';
+        s1.onload = function() {
+          var s2 = document.createElement('script');
+          s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
+          s2.crossOrigin = 'anonymous';
+          s2.onload = function() { _pdfLibsLoaded = true; _pdfLibsLoading = false; resolve(); };
+          s2.onerror = function() { _pdfLibsLoading = false; reject(new Error('Failed to load jsPDF')); };
+          document.head.appendChild(s2);
+        };
+        s1.onerror = function() { _pdfLibsLoading = false; reject(new Error('Failed to load html2canvas')); };
+        document.head.appendChild(s1);
+      });
+    }
+    // Pre-load libs on page load
+    if (document.readyState === 'complete') { loadPdfLibs(); }
+    else { window.addEventListener('load', function() { loadPdfLibs(); }); }
+
     function marinaPrint() { window.print(); }
     function marinaCopyLink() {
       var url = window.location.href;
@@ -287,12 +310,20 @@ function getToolbarHtml(domain: string, lang: string): string {
       var label = document.getElementById('marina-pdf-label');
       if (btn.disabled) return;
       btn.disabled = true;
-      label.textContent = '…';
+      label.textContent = '${tr.toolbarLoading || '…'}';
       try {
+        await loadPdfLibs();
+        if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF not available');
+        if (typeof html2canvas === 'undefined') throw new Error('html2canvas not available');
         var jsPDF = window.jspdf.jsPDF;
         var container = document.querySelector('.container');
         if (!container) throw new Error('No container');
-        var sections = Array.from(container.children);
+        // Hide toolbar during capture
+        var toolbar = document.querySelector('.marina-toolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        var sections = Array.from(container.children).filter(function(el) {
+          return el.nodeType === 1 && (!el.classList || !el.classList.contains('marina-toolbar'));
+        });
         var pdfW = 210, pdfH = 297, mTop = 15, mBot = 15, mSide = 10;
         var usableH = pdfH - mTop - mBot;
         var usableW = pdfW - mSide * 2;
@@ -301,17 +332,30 @@ function getToolbarHtml(domain: string, lang: string): string {
         var first = true;
         for (var i = 0; i < sections.length; i++) {
           var sec = sections[i];
-          if (sec.classList && sec.classList.contains('marina-toolbar')) continue;
-          var canvas = await html2canvas(sec, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#f8fafc', logging: false });
-          var imgData = canvas.toDataURL('image/png');
+          try {
+            var canvas = await html2canvas(sec, { 
+              scale: 2, 
+              useCORS: true, 
+              allowTaint: true, 
+              backgroundColor: '#f8fafc', 
+              logging: false,
+              imageTimeout: 15000,
+              removeContainer: true
+            });
+          } catch(renderErr) {
+            console.warn('html2canvas failed for section', i, renderErr);
+            continue;
+          }
+          if (!canvas || canvas.width === 0 || canvas.height === 0) continue;
+          var imgData = canvas.toDataURL('image/jpeg', 0.92);
           var secW = usableW;
           var secH = (canvas.height * secW) / canvas.width;
           if (curY + secH <= pdfH - mBot) {
-            doc.addImage(imgData, 'PNG', mSide, curY, secW, secH);
+            doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
             curY += secH + 2;
           } else if (secH <= usableH) {
             if (!first || curY > mTop + 5) { doc.addPage(); curY = mTop; }
-            doc.addImage(imgData, 'PNG', mSide, curY, secW, secH);
+            doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
             curY += secH + 2;
           } else {
             var pxPerMm = canvas.height / secH;
@@ -325,7 +369,7 @@ function getToolbarHtml(domain: string, lang: string): string {
               var ctx = sc.getContext('2d');
               if (ctx) {
                 ctx.drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
-                doc.addImage(sc.toDataURL('image/png'), 'PNG', mSide, curY, secW, sliceH);
+                doc.addImage(sc.toDataURL('image/jpeg', 0.92), 'JPEG', mSide, curY, secW, sliceH);
               }
               srcY += slicePx; rem -= sliceH; curY += sliceH;
               if (rem > 0) { doc.addPage(); curY = mTop; }
@@ -334,11 +378,14 @@ function getToolbarHtml(domain: string, lang: string): string {
           }
           first = false;
         }
+        if (toolbar) toolbar.style.display = '';
         var fname = 'marina_${domain.replace(/[^a-zA-Z0-9.-]/g, '_')}_' + new Date().toISOString().slice(0,10) + '.pdf';
         doc.save(fname);
       } catch(e) {
         console.error('PDF error', e);
-        alert('PDF generation failed');
+        alert(e.message || 'PDF generation failed');
+        var toolbar2 = document.querySelector('.marina-toolbar');
+        if (toolbar2) toolbar2.style.display = '';
       } finally {
         btn.disabled = false;
         label.textContent = '${tr.toolbarPdf}';
