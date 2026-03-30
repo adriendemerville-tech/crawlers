@@ -86,12 +86,38 @@ const translations = {
       steps: [
         { step: '1', title: 'Obtenez votre clé API', desc: 'Depuis votre console Crawlers, générez une clé API Marina.' },
         { step: '2', title: 'Intégrez le formulaire', desc: 'Ajoutez un formulaire sur votre site qui envoie l\'URL à notre API.' },
-        { step: '3', title: 'Récupérez le rapport', desc: 'Pollez le job_id pour obtenir l\'URL du rapport HTML complet.' },
+        { step: '3', title: 'Récupérez le rapport', desc: 'Via webhook (recommandé) ou polling, récupérez l\'URL du rapport HTML.' },
         { step: '4', title: 'Impressionnez vos prospects', desc: 'Le rapport est prêt en ~3 min. 15+ pages de données actionnables.' },
       ],
       security: 'Sécurité',
       securityDesc: 'Votre clé API est liée à votre compte. Chaque rapport généré via l\'API consomme 5 crédits de votre solde. Ne partagez jamais votre clé publiquement — faites les appels côté serveur uniquement.',
-      codeTitle: 'Exemple d\'intégration',
+      refTitle: 'Référence API',
+      refEndpoint: 'Endpoint',
+      refHeaders: 'Headers requis',
+      refHeaderKey: 'Votre clé API Marina (obligatoire)',
+      refHeaderCt: 'Pour les requêtes POST',
+      refPhases: 'Phases du pipeline',
+      refPhasesDesc: 'Le rapport passe par 3 phases (~3 minutes au total) :',
+      refPhasesList: [
+        { name: 'phase1', label: 'Audit SEO technique (200 critères)', pct: '0–40%' },
+        { name: 'phase2', label: 'Audit stratégique GEO + visibilité IA', pct: '40–65%' },
+        { name: 'phase3', label: 'Crawl sémantique + Cocoon + génération rapport HTML', pct: '65–100%' },
+      ],
+      refResponses: 'Schémas de réponse',
+      refRespCreate: 'Création du job (POST)',
+      refRespPolling: 'Polling (GET ?job_id=xxx)',
+      refRespCompleted: 'Job terminé',
+      refRespFailed: 'Job échoué',
+      refReportNote: 'Le champ report_url pointe vers un rapport HTML autonome de 15+ pages avec viewer intégré (impression, partage).',
+      refLimits: 'Limites',
+      refLimitsList: [
+        'Coût : 5 crédits par rapport',
+        'Durée : ~3 minutes par rapport',
+        'Rate limit : 30 requêtes concurrentes max par IP',
+        'Taille du site : pas de limite stricte, mais les sites > 500 pages peuvent allonger le temps de traitement',
+        'Expiration du rapport : URL signée valide 7 jours',
+      ],
+      codeTitle: 'Exemples d\'intégration',
       postLabel: 'POST — Lancer un audit',
       postDesc: 'Envoyez une requête POST avec l\'URL du site à auditer. Vous recevrez un identifiant de job pour suivre la progression.',
       getLabel: 'GET — Suivre la progression',
@@ -192,12 +218,38 @@ const translations = {
       steps: [
         { step: '1', title: 'Get your API key', desc: 'From your Crawlers console, generate a Marina API key.' },
         { step: '2', title: 'Add the form', desc: 'Add a form on your site that sends the URL to our API.' },
-        { step: '3', title: 'Get the report', desc: 'Poll the job_id to get the full HTML report URL.' },
+        { step: '3', title: 'Get the report', desc: 'Via webhook (recommended) or polling, get the full HTML report URL.' },
         { step: '4', title: 'Impress your prospects', desc: 'Report ready in ~3 min. 15+ pages of actionable data.' },
       ],
       security: 'Security',
       securityDesc: 'Your API key is linked to your account. Each report generated via API costs 5 credits. Never share your key publicly — make calls server-side only.',
-      codeTitle: 'Integration example',
+      refTitle: 'API Reference',
+      refEndpoint: 'Endpoint',
+      refHeaders: 'Required headers',
+      refHeaderKey: 'Your Marina API key (required)',
+      refHeaderCt: 'For POST requests',
+      refPhases: 'Pipeline phases',
+      refPhasesDesc: 'The report goes through 3 phases (~3 minutes total):',
+      refPhasesList: [
+        { name: 'phase1', label: 'Technical SEO audit (200 criteria)', pct: '0–40%' },
+        { name: 'phase2', label: 'Strategic GEO audit + AI visibility', pct: '40–65%' },
+        { name: 'phase3', label: 'Semantic crawl + Cocoon + HTML report generation', pct: '65–100%' },
+      ],
+      refResponses: 'Response schemas',
+      refRespCreate: 'Job creation (POST)',
+      refRespPolling: 'Polling (GET ?job_id=xxx)',
+      refRespCompleted: 'Job completed',
+      refRespFailed: 'Job failed',
+      refReportNote: 'The report_url field points to a standalone 15+ page HTML report with a built-in viewer (print, share).',
+      refLimits: 'Limits',
+      refLimitsList: [
+        'Cost: 5 credits per report',
+        'Duration: ~3 minutes per report',
+        'Rate limit: 30 concurrent requests max per IP',
+        'Site size: no strict limit, but sites with 500+ pages may take longer',
+        'Report expiration: signed URL valid for 7 days',
+      ],
+      codeTitle: 'Integration examples',
       postLabel: 'POST — Start an audit',
       postDesc: 'Send a POST request with the URL to audit. You\'ll receive a job ID to track progress.',
       getLabel: 'GET — Track progress',
@@ -298,12 +350,38 @@ const translations = {
       steps: [
         { step: '1', title: 'Obtén tu clave API', desc: 'Desde tu consola Crawlers, genera una clave API Marina.' },
         { step: '2', title: 'Integra el formulario', desc: 'Añade un formulario en tu sitio que envíe la URL a nuestra API.' },
-        { step: '3', title: 'Obtén el informe', desc: 'Consulta el job_id para obtener la URL del informe HTML completo.' },
+        { step: '3', title: 'Obtén el informe', desc: 'Vía webhook (recomendado) o polling, obtén la URL del informe HTML.' },
         { step: '4', title: 'Impresiona a tus prospectos', desc: 'Informe listo en ~3 min. 15+ páginas de datos accionables.' },
       ],
       security: 'Seguridad',
       securityDesc: 'Tu clave API está vinculada a tu cuenta. Cada informe generado vía API consume 5 créditos. Nunca compartas tu clave públicamente — haz las llamadas solo del lado del servidor.',
-      codeTitle: 'Ejemplo de integración',
+      refTitle: 'Referencia API',
+      refEndpoint: 'Endpoint',
+      refHeaders: 'Headers requeridos',
+      refHeaderKey: 'Tu clave API Marina (obligatorio)',
+      refHeaderCt: 'Para solicitudes POST',
+      refPhases: 'Fases del pipeline',
+      refPhasesDesc: 'El informe pasa por 3 fases (~3 minutos en total):',
+      refPhasesList: [
+        { name: 'phase1', label: 'Auditoría SEO técnica (200 criterios)', pct: '0–40%' },
+        { name: 'phase2', label: 'Auditoría estratégica GEO + visibilidad IA', pct: '40–65%' },
+        { name: 'phase3', label: 'Crawl semántico + Cocoon + generación informe HTML', pct: '65–100%' },
+      ],
+      refResponses: 'Esquemas de respuesta',
+      refRespCreate: 'Creación del job (POST)',
+      refRespPolling: 'Polling (GET ?job_id=xxx)',
+      refRespCompleted: 'Job completado',
+      refRespFailed: 'Job fallido',
+      refReportNote: 'El campo report_url apunta a un informe HTML autónomo de 15+ páginas con visor integrado (impresión, compartir).',
+      refLimits: 'Límites',
+      refLimitsList: [
+        'Costo: 5 créditos por informe',
+        'Duración: ~3 minutos por informe',
+        'Rate limit: 30 solicitudes concurrentes max por IP',
+        'Tamaño del sitio: sin límite estricto, pero sitios con 500+ páginas pueden tardar más',
+        'Expiración del informe: URL firmada válida 7 días',
+      ],
+      codeTitle: 'Ejemplos de integración',
       postLabel: 'POST — Iniciar auditoría',
       postDesc: 'Envía una solicitud POST con la URL del sitio a auditar. Recibirás un ID de trabajo para seguir el progreso.',
       getLabel: 'GET — Seguir progreso',
@@ -311,7 +389,7 @@ const translations = {
       jsLabel: 'JavaScript — Ejemplo completo',
       jsDesc: 'Un ejemplo completo en JavaScript para lanzar una auditoría y esperar automáticamente el resultado.',
       webhookLabel: 'POST — Con webhook (recomendado)',
-      webhookDesc: 'Agregue un callback_url para recibir el informe automáticamente cuando esté listo — sin polling.',
+      webhookDesc: 'Agrega un callback_url para recibir el informe automáticamente cuando esté listo — sin polling.',
       helpText: '¿Necesitas ayuda con la integración?',
       getApiKey: 'Obtener mi clave API',
       rechargeCredits: 'Recargar créditos',
@@ -851,6 +929,138 @@ async function generateReport(url) {
 # }`}
                   </pre>
                 </div>
+              </div>
+            </div>
+
+            {/* API Reference section — full width */}
+            <div className="mt-12 space-y-6">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" /> {t.api.refTitle}
+              </h3>
+
+              {/* Endpoint */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refEndpoint}</h4>
+                  <code className="block px-3 py-2 bg-muted rounded-md text-xs font-mono text-primary break-all">
+                    POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina
+                  </code>
+                </CardContent>
+              </Card>
+
+              {/* Headers */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refHeaders}</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">x-marina-key</code>
+                      <span className="text-muted-foreground">{t.api.refHeaderKey}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">Content-Type: application/json</code>
+                      <span className="text-muted-foreground">{t.api.refHeaderCt}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Response schemas */}
+              <Card className="border-border/50">
+                <CardContent className="p-5 space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground">{t.api.refResponses}</h4>
+                  
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespCreate}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "job_id": "uuid-string",
+  "status": "pending"
+}`}
+                    </pre>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespPolling}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "status": "processing",
+  "progress": 45,
+  "phase": "phase2"    // phase1 | phase2 | phase3
+}`}
+                    </pre>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespCompleted}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "success": true,
+  "status": "completed",
+  "data": {
+    "url": "https://example.com",
+    "domain": "example.com",
+    "language": "fr",
+    "report_url": "https://...signed-url...",
+    "report_path": "marina/uuid.html",
+    "expert_seo_score": 72,
+    "expert_seo_max": 100,
+    "strategic_score": 65,
+    "cocoon_nodes": 42,
+    "cocoon_clusters": 6,
+    "generated_at": "2026-03-30T10:00:00Z"
+  }
+}`}
+                    </pre>
+                    <p className="text-[11px] text-primary/80 mt-2 italic">💡 {t.api.refReportNote}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-1">{t.api.refRespFailed}</p>
+                    <pre className="p-3 bg-muted rounded-md text-[11px] font-mono text-muted-foreground overflow-x-auto">
+{`{
+  "status": "failed",
+  "error": "Error message"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Phases */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refPhases}</h4>
+                    <p className="text-xs text-muted-foreground mb-3">{t.api.refPhasesDesc}</p>
+                    <div className="space-y-2">
+                      {t.api.refPhasesList.map((p: any) => (
+                        <div key={p.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <code className="px-1.5 py-0.5 bg-muted rounded font-mono text-primary text-[10px]">{p.name}</code>
+                            <span className="text-muted-foreground">{p.label}</span>
+                          </div>
+                          <span className="text-foreground font-mono text-[10px]">{p.pct}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Limits */}
+                <Card className="border-border/50">
+                  <CardContent className="p-5">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refLimits}</h4>
+                    <ul className="space-y-2">
+                      {t.api.refLimitsList.map((item: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-0.5">•</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
