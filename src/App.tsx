@@ -77,6 +77,7 @@ const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
 const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
+const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
@@ -172,6 +173,7 @@ const App = () => (
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="/a-propos" element={<APropos />} />
                           <Route path="/audit-semantique" element={<AuditSemantique />} />
+                          <Route path="/google-business" element={<GoogleBusinessPage />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
                           <Route path="/profil" element={<Navigate to="/app/profil" replace />} />
