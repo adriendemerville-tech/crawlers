@@ -218,7 +218,28 @@ export function ExternalApisTab() {
     loadMatomoData();
   }, [matomoDialogOpen]);
 
-  // Filter analytics services: Google Ads only visible when full access is on
+  // Check GBP connection status
+  useEffect(() => {
+    const checkGbpStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      try {
+        const { data, error } = await supabase.functions.invoke('gbp-auth', {
+          body: { action: 'status', user_id: user.id },
+        });
+        if (!error && data?.connected) {
+          setGbpConnected(true);
+          setGbpEmail(data.email || null);
+        } else {
+          setGbpConnected(false);
+          setGbpEmail(null);
+        }
+      } catch { /* ignore */ }
+    };
+    checkGbpStatus();
+  }, []);
+
+
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
     if (s.id === 'google-ads' && !fullGoogleAccess) return false;
