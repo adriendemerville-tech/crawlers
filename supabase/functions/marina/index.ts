@@ -275,7 +275,7 @@ function getToolbarHtml(domain: string, lang: string): string {
         label.textContent = '${tr.toolbarCopy}';
       }, 2000);
     }
-  <\/script>`;
+  </` + `script>`;
 }
 
 function scoreColor(score: number, max: number): string {
