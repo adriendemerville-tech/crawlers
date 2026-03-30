@@ -32,11 +32,11 @@ export function MarinaConsoleTab() {
     const load = async () => {
       setLoading(true);
       const { data } = await supabase
-        .from('site_config' as any)
-        .select('value')
-        .eq('key', `marina_api_key_${user.id}`)
+        .from('marina_api_keys' as any)
+        .select('api_key')
+        .eq('user_id', user.id)
         .maybeSingle();
-      if (data) setApiKey((data as any).value);
+      if (data) setApiKey((data as any).api_key);
       setLoading(false);
     };
     load();
@@ -76,6 +76,8 @@ export function MarinaConsoleTab() {
       if (json.key) {
         setApiKey(json.key);
         toast.success(t3(language, 'Clé API générée', 'API key generated', 'Clave API generada'));
+      } else if (json.error) {
+        toast.error(json.error);
       }
     } catch {
       toast.error('Erreur');
