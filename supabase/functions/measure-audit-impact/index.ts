@@ -325,6 +325,34 @@ Deno.serve(async (req) => {
           updatePayload[ga4Field] = ga4Current
         }
 
+        // ── GEO Visibility Snapshot ──────────────────────────────
+        // Capture LLM visibility at each phase (baseline, t30, t60, t90)
+        if (snapshot.tracked_site_id) {
+          try {
+            const geoResp = await fetch(
+              `${Deno.env.get('SUPABASE_URL')}/functions/v1/snapshot-geo-visibility`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                },
+                body: JSON.stringify({
+                  domain: snapshot.domain,
+                  tracked_site_id: snapshot.tracked_site_id,
+                  user_id: snapshot.user_id,
+                  measurement_phase: currentPhase,
+                  audit_impact_snapshot_id: snapshot.id,
+                }),
+              }
+            )
+            const geoResult = await geoResp.json()
+            console.log(`[measure] GEO snapshot ${currentPhase}: score=${geoResult.overall_score}, delta=${geoResult.delta_overall_score}`)
+          } catch (geoErr) {
+            console.warn(`[measure] GEO snapshot failed for ${snapshot.domain}:`, geoErr)
+          }
+        }
+
         // Schedule next measurement
         if (phase.nextDays) {
           const next = new Date()
