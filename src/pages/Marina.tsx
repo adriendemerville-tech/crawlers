@@ -109,6 +109,10 @@ const translations = {
       refHeaders: 'Headers requis',
       refHeaderKey: 'Votre clé API Marina (obligatoire)',
       refHeaderCt: 'Pour les requêtes POST',
+      refBodyTitle: 'Corps de la requête (JSON)',
+      refBodyUrl: 'URL du site à auditer (obligatoire)',
+      refBodyLang: 'Langue du rapport : "fr", "en" ou "es" (optionnel). Si omis, la langue est auto-détectée via l\'attribut <html lang="..."> du site, puis par heuristique de contenu. Défaut : "en".',
+      refBodyCallback: 'URL de webhook pour recevoir le rapport automatiquement (optionnel)',
       refPhases: 'Phases du pipeline',
       refPhasesDesc: 'Le rapport passe par 3 phases (~3 minutes au total) :',
       refPhasesList: [
@@ -274,6 +278,10 @@ const translations = {
       refHeaders: 'Required headers',
       refHeaderKey: 'Your Marina API key (required)',
       refHeaderCt: 'For POST requests',
+      refBodyTitle: 'Request body (JSON)',
+      refBodyUrl: 'URL of the site to audit (required)',
+      refBodyLang: 'Report language: "fr", "en" or "es" (optional). If omitted, the language is auto-detected from the site\'s <html lang="..."> attribute, then by content heuristic. Default: "en".',
+      refBodyCallback: 'Webhook URL to receive the report automatically (optional)',
       refPhases: 'Pipeline phases',
       refPhasesDesc: 'The report goes through 3 phases (~3 minutes total):',
       refPhasesList: [
@@ -439,6 +447,10 @@ const translations = {
       refHeaders: 'Headers requeridos',
       refHeaderKey: 'Tu clave API Marina (obligatorio)',
       refHeaderCt: 'Para solicitudes POST',
+      refBodyTitle: 'Cuerpo de la solicitud (JSON)',
+      refBodyUrl: 'URL del sitio a auditar (obligatorio)',
+      refBodyLang: 'Idioma del informe: "fr", "en" o "es" (opcional). Si se omite, el idioma se detecta automáticamente desde el atributo <html lang="..."> del sitio, luego por heurística de contenido. Por defecto: "en".',
+      refBodyCallback: 'URL de webhook para recibir el informe automáticamente (opcional)',
       refPhases: 'Fases del pipeline',
       refPhasesDesc: 'El informe pasa por 3 fases (~3 minutos en total):',
       refPhasesList: [
@@ -1039,7 +1051,7 @@ export default function Marina() {
   ${window.location.origin.replace('localhost:8080', 'tutlimtasnjabdfhpewu.supabase.co')}/functions/v1/marina \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com"}'`)}
+  -d '{"url": "https://example.com", "lang": "fr"}'`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1050,7 +1062,7 @@ export default function Marina() {
   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
    -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com"}'
+  -d '{"url": "https://example.com", "lang": "fr"}'
 
 ${t.code.commentResponse}
 # {"job_id": "abc-123", "status": "pending"}`}
@@ -1091,7 +1103,7 @@ ${t.code.commentDone}
                       onClick={() => copyCode(`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
 const KEY = "${t.code.yourKey}";
 async function generateReport(url) {
-  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url }) }).then(r => r.json());
+  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url, lang: "fr" }) }).then(r => r.json());
   while (true) {
     await new Promise(r => setTimeout(r, 5000));
     const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
@@ -1116,7 +1128,7 @@ async function generateReport(url) {
       "x-marina-key": KEY,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, lang: "fr" }),
   }).then(r => r.json());
 
   ${t.code.comment2}
@@ -1146,7 +1158,7 @@ async function generateReport(url) {
   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
+  -d '{"url": "https://example.com", "lang": "fr", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1159,6 +1171,7 @@ async function generateReport(url) {
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://example.com",
+    "lang": "fr",
     "callback_url": "https://yoursite.com/api/marina-webhook"
   }'
 
@@ -1208,6 +1221,26 @@ async function generateReport(url) {
                     <div className="flex items-start gap-3 text-xs">
                       <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">Content-Type: application/json</code>
                       <span className="text-muted-foreground">{t.api.refHeaderCt}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Request body */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refBodyTitle}</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">url</code>
+                      <span className="text-muted-foreground">{t.api.refBodyUrl}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">lang</code>
+                      <span className="text-muted-foreground">{t.api.refBodyLang}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">callback_url</code>
+                      <span className="text-muted-foreground">{t.api.refBodyCallback}</span>
                     </div>
                   </div>
                 </CardContent>
