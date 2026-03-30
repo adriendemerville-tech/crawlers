@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown } from 'lucide-react';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown, Pencil } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -53,13 +53,14 @@ interface UserKpiModalProps {
   onToggleRole?: (userId: string, role: string) => void;
   onManageCredits?: (user: UserProfile) => void;
   onStripPro?: (user: UserProfile) => void;
+  onEditProfile?: (user: UserProfile) => void;
   adminUserIds?: Set<string>;
   viewerUserIds?: Set<string>;
   viewer2UserIds?: Set<string>;
   auditorUserIds?: Set<string>;
 }
 
-export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
+export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, onEditProfile, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
   const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
@@ -325,6 +326,12 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
               <Button variant="outline" size="sm" className="gap-1.5 text-xs border-amber-500 text-amber-600" onClick={() => onStripPro(user)}>
                 <Crown className="h-3.5 w-3.5" />
                 Retirer Pro
+              </Button>
+            )}
+            {onEditProfile && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onEditProfile(user)}>
+                <Pencil className="h-3.5 w-3.5" />
+                Modifier
               </Button>
             )}
             {onDeleteUser && (

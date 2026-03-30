@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X, UserPlus, Pencil } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { PayingUsersTab } from './PayingUsersTab';
@@ -67,6 +68,17 @@ export function UserManagement() {
   const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
   const [showPendingTab, setShowPendingTab] = useState(false);
   const [showPayingTab, setShowPayingTab] = useState(false);
+
+  // Create user state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ email: '', password: '', first_name: '', last_name: '', persona_type: '', plan_type: 'free', credits_balance: '0' });
+  const [createLoading, setCreateLoading] = useState(false);
+
+  // Edit profile state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', persona_type: '', plan_type: '' });
+  const [editUser, setEditUser] = useState<UserProfile | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
@@ -353,6 +365,76 @@ export function UserManagement() {
     }
   };
 
+  // Create user handler
+  const handleCreateUser = async () => {
+    if (!createForm.email || !createForm.password) { toast.error('Email et mot de passe requis'); return; }
+    setCreateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: {
+          action: 'create-user',
+          email: createForm.email,
+          password: createForm.password,
+          first_name: createForm.first_name,
+          last_name: createForm.last_name,
+          persona_type: createForm.persona_type || null,
+          plan_type: createForm.plan_type || 'free',
+          credits_balance: parseInt(createForm.credits_balance) || 0,
+        },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Erreur');
+      toast.success(`Utilisateur ${createForm.email} créé avec succès`);
+      setCreateDialogOpen(false);
+      setCreateForm({ email: '', password: '', first_name: '', last_name: '', persona_type: '', plan_type: 'free', credits_balance: '0' });
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Create user error:', err);
+      toast.error(err.message || 'Erreur lors de la création');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  // Edit profile handler
+  const openEditDialog = (user: UserProfile) => {
+    setEditUser(user);
+    setEditForm({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      persona_type: user.persona_type || '',
+      plan_type: user.plan_type,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!editUser) return;
+    setEditLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-actions', {
+        body: {
+          action: 'update-user-profile',
+          target_user_id: editUser.user_id,
+          first_name: editForm.first_name,
+          last_name: editForm.last_name,
+          email: editForm.email !== editUser.email ? editForm.email : undefined,
+          persona_type: editForm.persona_type || null,
+          plan_type: editForm.plan_type,
+        },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Erreur');
+      toast.success('Profil mis à jour');
+      setEditDialogOpen(false);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Update profile error:', err);
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Signup funnel counters
   const [funnelCounts, setFunnelCounts] = useState({ promptShown: 0, promptClosed: 0, signupAbandoned: 0, verificationSent: 0 });
   useEffect(() => {
@@ -387,6 +469,15 @@ export function UserManagement() {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setCreateDialogOpen(true)}
+              className="gap-1.5"
+            >
+              <UserPlus className="h-4 w-4" />
+              Créer
+            </Button>
             <Button
               variant={showPayingTab ? 'default' : 'outline'}
               size="sm"
@@ -679,6 +770,9 @@ export function UserManagement() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(user)} title="Modifier le profil">
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                           <Dialog open={deleteDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setDeleteDialogOpen(open);
                             if (open) setSelectedUser(user);
@@ -738,6 +832,7 @@ export function UserManagement() {
         onToggleRole={(userId, role) => toggleRole(userId, role)}
         onManageCredits={(u: any) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
         onStripPro={(u: any) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
+        onEditProfile={(u: any) => { openEditDialog(u); setKpiModalOpen(false); }}
         adminUserIds={adminUserIds}
         viewerUserIds={viewerUserIds}
         viewer2UserIds={viewer2UserIds}
@@ -854,6 +949,142 @@ export function UserManagement() {
           userId={affiliateUser.user_id}
         />
       )}
+
+      {/* Create User Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Créer un compte utilisateur
+            </DialogTitle>
+            <DialogDescription>
+              Le compte sera créé avec l'email confirmé automatiquement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Prénom</Label>
+                <Input value={createForm.first_name} onChange={e => setCreateForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Prénom" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Nom</Label>
+                <Input value={createForm.last_name} onChange={e => setCreateForm(f => ({ ...f, last_name: e.target.value }))} placeholder="Nom" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Email *</Label>
+              <Input type="email" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Mot de passe *</Label>
+              <Input type="password" value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="Min. 6 caractères" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Persona</Label>
+                <Select value={createForm.persona_type} onValueChange={v => setCreateForm(f => ({ ...f, persona_type: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+                    <SelectItem value="seo_pro">SEO/SIO</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="ecommerce">Ecommerce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plan</Label>
+                <Select value={createForm.plan_type} onValueChange={v => setCreateForm(f => ({ ...f, plan_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="agency_pro">Pro Agency</SelectItem>
+                    <SelectItem value="agency_premium">Pro Agency+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Crédits initiaux</Label>
+              <Input type="number" value={createForm.credits_balance} onChange={e => setCreateForm(f => ({ ...f, credits_balance: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleCreateUser} disabled={createLoading || !createForm.email || !createForm.password}>
+              {createLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              Créer le compte
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Modifier le profil
+            </DialogTitle>
+            <DialogDescription>
+              {editUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Prénom</Label>
+                <Input value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Nom</Label>
+                <Input value={editForm.last_name} onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Email</Label>
+              <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Persona</Label>
+                <Select value={editForm.persona_type || 'none'} onValueChange={v => setEditForm(f => ({ ...f, persona_type: v === 'none' ? '' : v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+                    <SelectItem value="seo_pro">SEO/SIO</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="ecommerce">Ecommerce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plan</Label>
+                <Select value={editForm.plan_type} onValueChange={v => setEditForm(f => ({ ...f, plan_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="agency_pro">Pro Agency</SelectItem>
+                    <SelectItem value="agency_premium">Pro Agency+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleUpdateProfile} disabled={editLoading}>
+              {editLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
