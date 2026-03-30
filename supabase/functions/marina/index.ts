@@ -1540,7 +1540,7 @@ Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority
       system: `${strictLanguageInstruction} You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.`,
       user: prompt,
       maxTokens: 2048,
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(135_000),
     });
   
     // Extract JSON array from response
