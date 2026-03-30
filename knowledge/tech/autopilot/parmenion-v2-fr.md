@@ -1,81 +1,96 @@
 # Memory: tech/autopilot/parmenion-v2-fr
-Updated: 2026-03-28
+Updated: 2026-03-30
 
-## Autopilote Parménion v2 — Architecture complète
+## Autopilote Parménion v2 — Architecture complète (Dual-Lane)
 
 ### Vue d'ensemble
 
-L'Autopilote suit un double cycle :
-- **Macro-cycle** : rotation à travers la Pyramide de priorité (11 tiers, 2 par 2)
+L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + contenu) :
+- **Macro-cycle** : rotation à travers la Pyramide de priorité (11 tiers)
 - **Micro-cycle** : pipeline de 6 phases par itération
+- **Dual-Lane** : tech et contenu scorés et exécutés **indépendamment**
 
 ```
-┌─ MACRO-CYCLE (pyramide 11 tiers, rotation 2 par 2)
-│  Paire courante : tiers N et N+1
-│  Quand la pyramide est terminée → retour à tiers 0+1
+┌─ DUAL-LANE SCORING (tech ∥ contenu)
+│  Lane TECH : tiers 0-4 (accessibility → meta_tags)
+│  Lane CONTENT : tiers 5-10 (content → expansion)
+│  Budget partagé : 70% tech / 30% contenu (configurable)
 │
 │  ┌─ MICRO-CYCLE (Parménion)
 │  │
-│  │  1. AUDIT      → fonctions existantes nourrissent architect_workbench
-│  │                   (avec target_selector + target_operation)
+│  │  1. AUDIT      → audit-expert-seo
 │  │
-│  │  2. DIAGNOSE   → score_workbench_priority()
-│  │                   scoring déterministe, gate de qualité (tiers 5+ bloqués si score tech < 70)
-│  │                   → PAS de LLM
+│  │  2. DIAGNOSE   → cocoon-diag-* (content, semantic, structure, authority)
 │  │
 │  │  3. PRESCRIBE  → 2 prompts LLM parallèles :
-│  │                   • Lot TECHNIQUE (tiers 0-3) → emit_code + emit_corrective_data
-│  │                   • Lot CONTENU (tiers 4-10)  → emit_corrective_content + emit_editorial_content
+│  │                   • Lot TECHNIQUE (lane tech) → emit_code + emit_corrective_data
+│  │                   • Lot CONTENU (lane content) → emit_corrective_content + emit_editorial_content
 │  │                   (max 4 tool calls par prompt)
+│  │                   Budget: techSlots + contentSlots = 8 items max
 │  │
 │  │  4. ROUTE      → inline, dispatch automatique par canal
-│  │                   code/corrective_data → generate-corrective-code
-│  │                   corrective_content/editorial_content → iktracker-actions
 │  │
-│  │  5. EXECUTE    → iktracker-actions (CMS CRUD) ou generate-corrective-code (JS injectable)
+│  │  5. EXECUTE    → iktracker-actions / cms-push-draft / cms-patch-content / generate-corrective-code
 │  │                   Max 10 actions CMS par cycle
 │  │
 │  │  6. VALIDATE   → vérification post-déploiement
 │  └─
-└─ rotation vers les 2 tiers suivants
-```
+└─
 
 ### Pyramide de priorité (11 tiers)
 
-| Tier | Nom | Type |
-|------|-----|------|
-| 0 | Accessibilité | Technique |
-| 1 | Performance | Technique |
-| 2 | Crawl mineur | Technique |
-| 3 | Données GEO | Technique |
-| 4 | On-page mineur | Contenu |
-| 5 | On-page majeur | Contenu |
-| 6 | Maillage | Contenu |
-| 7 | Cannibalisation | Contenu |
-| 8 | Gap/Modification | Contenu |
-| 9 | Gap/Création | Contenu |
-| 10 | Expansion | Contenu |
+| Tier | Nom | Type | Lane |
+|------|-----|------|------|
+| 0 | Accessibilité | Technique | tech |
+| 1 | Performance | Technique | tech |
+| 2 | Crawl mineur | Technique | tech |
+| 3 | Données GEO | Technique | tech |
+| 4 | On-page mineur | Technique | tech |
+| 5 | On-page majeur | Contenu | content |
+| 6 | Maillage | Contenu | content |
+| 7 | Cannibalisation | Contenu | content |
+| 8 | Gap/Modification | Contenu | content |
+| 9 | Gap/Création | Contenu | content |
+| 10 | Expansion | Contenu | content |
 
-### Gate de qualité
-- Les tiers ≥ 5 sont bloqués tant que le score technique global est < 70
-- Le scoring ajoute un malus (-50 points) aux items dont le gate n'est pas satisfait
+### Gate progressif (v2)
+- Tiers 5-6 : bloqués si score tech < `gate_threshold_low` (défaut: 50)
+- Tiers 7+ : bloqués si score tech < `gate_threshold_high` (défaut: 70)
+- Gate malus : -300 (tiers 5-6) ou -500 (tiers 7+)
+- `force_content_cycle` = true → bypass total du gate (one-shot)
+- Seuils configurables par site dans `autopilot_configs`
+
+### Budget partagé (Option A)
+- Chaque cycle alloue N slots tech + M slots contenu
+- Par défaut : 70% tech / 30% contenu → sur 8 slots = 6 tech + 2 contenu
+- Configurable via `content_budget_pct` (0-100) dans `autopilot_configs`
+- Si `force_content_cycle` = true → 100% contenu (0 tech)
+
+### Dual-Lane Scoring (Option B)
+- `score_workbench_priority()` accepte un param `p_lane` ('tech', 'content', 'all')
+- Chaque lane est scorée indépendamment avec son propre classement
+- Le LLM reçoit les items des deux lanes en parallèle (2 prompts simultanés)
+- Résultat : du contenu est toujours produit, même si le score tech est bas
+
+### Forçage utilisateur (Option D)
+- Colonne `force_content_cycle` (boolean) dans `autopilot_configs`
+- Quand true : bypass du gate, 100% budget contenu, reset automatique après le cycle
+- Permet à l'utilisateur de déclencher un cycle contenu à la demande
 
 ### Scoring déterministe (`score_workbench_priority`)
 Formule : `base_score + severity_bonus + aging_bonus - gate_malus`
-- `base_score` : 100 - (tier × 10)
-- `severity_bonus` : critical=30, high=20, medium=10, low=0
-- `aging_bonus` : +1 par jour depuis la création (max 30)
-- `gate_malus` : -50 si tier ≥ 5 et score tech < 70
+- `base_score` : 1000 (tier 0) → 50 (tier 10)
+- `severity_bonus` : critical=200, high=100, medium=0, low=-50
+- `aging_bonus` : +10 par jour depuis la création (max 100)
+- `gate_malus` : -300 (tiers 5-6 si tech < gate_low) ou -500 (tiers 7+ si tech < gate_high)
 
-### Sources de données (audit → workbench)
-Les fonctions suivantes alimentent `architect_workbench` avec `target_selector` et `target_operation` :
-- `audit-expert-seo` : title, meta_description, h1, schema_org, a[href], sitemap_xml, robots_txt, etc.
-- `cocoon-diag-content` : content, h1, meta_description
-- `cocoon-diag-semantic` : content, h1, h2, meta_description
-- `cocoon-diag-structure` : canonical_url, sitemap_xml, robots_txt, a[href]
-- `cocoon-diag-authority` : a[href], backlink_profile
-- `strategic-synthesis` : inféré par `populate_architect_workbench`
-- `audit-compare` : inféré par `populate_architect_workbench`
+### Colonnes ajoutées à `autopilot_configs`
+| Colonne | Type | Défaut | Description |
+|---------|------|--------|-------------|
+| `force_content_cycle` | boolean | false | Forcer un cycle contenu (reset auto) |
+| `content_budget_pct` | integer | 30 | % du budget alloué au contenu |
+| `gate_threshold_low` | integer | 50 | Seuil gate pour tiers 5-6 |
+| `gate_threshold_high` | integer | 70 | Seuil gate pour tiers 7+ |
 
 ### 4 canaux LLM (tool calls)
 | Canal | Compatibilité | Destination |
@@ -85,18 +100,8 @@ Les fonctions suivantes alimentent `architect_workbench` avec `target_selector` 
 | `emit_corrective_content` | Lot contenu | iktracker-actions (H1, H2, paragraphes existants) |
 | `emit_editorial_content` | Lot contenu | iktracker-actions (nouveaux articles, nouvelles pages) |
 
-Règle : `emit_code` + `emit_corrective_data` dans le même prompt, `emit_corrective_content` + `emit_editorial_content` dans le même prompt. Le mélange technique/contenu est exclu.
-
-### Coordonnées de ciblage
-Chaque item du workbench porte :
-- `target_url` : URL de la page cible
-- `target_selector` : champ CMS ou sélecteur CSS (ex: `h1`, `meta_description`, `schema_org`, `content`, `a[href]`)
-- `target_operation` : action à effectuer (`replace`, `insert_after`, `append`, `create`, `delete_element`)
-
-### Fallback execute
-Si aucune action explicite n'est prescrite par le LLM, un mécanisme de fallback injecte des actions concrètes (update-page, create-post) basées sur les recommandations prioritaires du workbench.
-
 ### Limites
 - Max 10 actions CMS par cycle
 - Max 4 tool calls par prompt LLM
 - 2 prompts LLM max par micro-cycle (technique + contenu)
+- 8 items max scorés par cycle (répartis entre les 2 lanes)
