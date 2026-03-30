@@ -48,6 +48,7 @@ const translations = {
       credits: 'crédits',
       loginCta: 'Connectez-vous pour lancer un rapport',
       signupOffer: '5 crédits offerts à l\'inscription = 1 rapport gratuit',
+      apiDocLink: '📄 Documentation API Marina',
     },
     toasts: {
       enterUrl: 'Veuillez entrer une URL',
