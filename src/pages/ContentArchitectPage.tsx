@@ -794,7 +794,52 @@ const ContentArchitectPage = memo(() => {
         </section>
 
         {/* ═══ PRICING ═══ */}
-        <PricingPlansSection title={tr.pricingTitle} subtitle={tr.pricingSubtitle} />
+        <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{tr.pricingTitle}</h2>
+              <p className="mt-3 text-muted-foreground">{tr.pricingSubtitle}</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-4 items-start">
+              {/* Unit card */}
+              <div className="rounded-2xl border-2 border-border bg-card p-6 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-4">
+                  <CreditCoin size="lg" />
+                  <h3 className="text-lg font-bold text-foreground">
+                    {language === 'en' ? 'Pay per page' : language === 'es' ? 'Pago por página' : 'Paiement à l\'unité'}
+                  </h3>
+                </div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-extrabold text-foreground">5</span>
+                  <span className="text-lg text-muted-foreground">
+                    {language === 'en' ? 'credits' : language === 'es' ? 'créditos' : 'crédits'}
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-muted-foreground mb-4">
+                  {language === 'en' ? '/ page created' : language === 'es' ? '/ página creada' : '/ page créée'}
+                </p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {language === 'en' ? 'No subscription needed' : language === 'es' ? 'Sin suscripción' : 'Sans abonnement'}
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+                  {(tr.plans[0]?.features || []).map((f: string, i: number) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/tarifs">
+                  <Button variant="outline" size="lg" className="w-full font-semibold">
+                    <Coins className="h-5 w-5 mr-2" />
+                    {language === 'en' ? 'Buy credits' : language === 'es' ? 'Comprar créditos' : 'Acheter des crédits'}
+                  </Button>
+                </Link>
+              </div>
+              {/* 3 subscription cards — inline from PricingPlansSection logic */}
+            </div>
+          </div>
+        </section>
+        <PricingPlansSection />
 
         {/* ═══ FAQ ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
