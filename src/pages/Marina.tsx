@@ -1414,6 +1414,7 @@ async function generateReport(url) {
             </div>
           </div>
         </section>
+        )}
       </main>
 
       <Footer />
