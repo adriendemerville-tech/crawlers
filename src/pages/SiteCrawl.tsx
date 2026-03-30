@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -78,6 +78,8 @@ const crawlI18n = {
     runningCrawls: 'Crawl en cours',
     errorCrawl: 'Erreur lors du crawl',
     advancedOptions: 'Options avancées',
+    stopCrawl: 'Stopper',
+    crawlStopped: 'Crawl stoppé — données en cache conservées',
     crawlDepth: 'Profondeur max',
     depthUnlimited: 'Illimitée',
     depthLevel: 'Niveau',
@@ -149,6 +151,8 @@ const crawlI18n = {
     runningCrawls: 'Crawl in progress',
     errorCrawl: 'Crawl error',
     advancedOptions: 'Advanced options',
+    stopCrawl: 'Stop',
+    crawlStopped: 'Crawl stopped — cached data preserved',
     crawlDepth: 'Max depth',
     depthUnlimited: 'Unlimited',
     depthLevel: 'Level',
@@ -220,6 +224,8 @@ const crawlI18n = {
     runningCrawls: 'Crawl en curso',
     errorCrawl: 'Error de crawl',
     advancedOptions: 'Opciones avanzadas',
+    stopCrawl: 'Detener',
+    crawlStopped: 'Crawl detenido — datos en caché conservados',
     crawlDepth: 'Profundidad máx',
     depthUnlimited: 'Ilimitada',
     depthLevel: 'Nivel',
@@ -567,7 +573,7 @@ export default function SiteCrawl() {
 
   // Start polling when crawlResult changes to an active state
   useEffect(() => {
-    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error';
+    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error' && crawlResult.status !== 'stopped';
     
     if (!shouldPoll) {
       // Stop any existing polling
@@ -1036,7 +1042,40 @@ export default function SiteCrawl() {
     }
   }
 
-  // ── Sitemap export ────────────────────────────────────────
+  // ── Stop crawl (keep cached pages) ────────────────────────
+  async function handleStopCrawl(crawlId?: string) {
+    const targetId = crawlId || crawlResult?.id;
+    if (!targetId) return;
+    try {
+      await supabase
+        .from('site_crawls')
+        .update({ status: 'stopped', error_message: 'Stopped by user — cached data preserved' })
+        .eq('id', targetId);
+
+      // Stop polling
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        pollingCrawlIdRef.current = null;
+      }
+
+      // Update local state
+      if (!crawlId || crawlId === crawlResult?.id) {
+        setCrawlResult(prev => prev ? { ...prev, status: 'stopped' } : prev);
+        setIsLoading(false);
+        setPhase('');
+      }
+
+      // Update pastCrawls list
+      setPastCrawls(prev => prev.map(c => c.id === targetId ? { ...c, status: 'stopped' } : c));
+
+      toast.success(t.crawlStopped);
+    } catch (err: any) {
+      toast.error(err.message || 'Error stopping crawl');
+    }
+  }
+
+
   async function handleSitemapExport() {
     if (pages.length === 0) return;
     const domain = crawlResult?.domain || '';
@@ -1260,8 +1299,19 @@ export default function SiteCrawl() {
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
                   </Button>
+                  {isLoading && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleStopCrawl()}
+                      className="border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                      title={t.stopCrawl}
+                    >
+                      <Square className="w-3.5 h-3.5 fill-destructive text-destructive" />
+                    </Button>
+                  )}
                 </div>
-
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
@@ -2118,9 +2168,20 @@ export default function SiteCrawl() {
                           {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
                         </div>
                       </div>
-                      <Badge variant="secondary" className="animate-pulse">
-                        {c.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                          onClick={(e) => { e.stopPropagation(); handleStopCrawl(c.id); }}
+                          title={t.stopCrawl}
+                        >
+                          <Square className="w-3 h-3 fill-destructive text-destructive" />
+                        </Button>
+                        <Badge variant="secondary" className="animate-pulse">
+                          {c.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
