@@ -83,6 +83,8 @@ interface GmbData {
   completeness_score?: number;
   rating?: number;
   total_reviews?: number;
+  gmb_power_score?: number; // From gmbPowerScore.ts (0-100)
+  gmb_power_dimensions?: Record<string, number>;
   [key: string]: any;
 }
 
