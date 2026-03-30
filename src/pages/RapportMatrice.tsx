@@ -190,6 +190,14 @@ export default function RapportMatrice() {
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
             <h1 className="text-base sm:text-lg font-semibold truncate">Rapport Matrice d'audit — {data.url}</h1>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <Button onClick={handlePdfDownload} variant="outline" size="sm" className="gap-1.5" disabled={isGeneratingPdf}>
+                {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+              <Button onClick={handleShare} variant="outline" size="sm" className="gap-1.5" disabled={isSharing}>
+                {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                <span className="hidden sm:inline">{copied ? 'Copié !' : 'Partager'}</span>
+              </Button>
               <Button onClick={handleCsv} variant="outline" size="sm" className="gap-1.5">
                 <FileSpreadsheet className="h-4 w-4" /><span className="hidden sm:inline">CSV</span>
               </Button>
