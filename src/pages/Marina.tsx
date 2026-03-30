@@ -535,6 +535,44 @@ export default function Marina() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [demoHtml, setDemoHtml] = useState<string | null>(null);
+  const [loadingDemo, setLoadingDemo] = useState(false);
+  const [activeTab, setActiveTab] = useState('features');
+
+  // Load demo report from latest completed marina job
+  useEffect(() => {
+    if (!user) return;
+    const loadDemo = async () => {
+      setLoadingDemo(true);
+      try {
+        const { data: latestJob } = await supabase
+          .from('async_jobs')
+          .select('id, result_data')
+          .eq('user_id', user.id)
+          .eq('function_name', 'marina')
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestJob) {
+          const resultData = latestJob.result_data as any;
+          const viewUrl = resultData?.report_view_url;
+          const reportUrlFallback = resultData?.report_url;
+          const fetchUrl = viewUrl || reportUrlFallback;
+          if (fetchUrl) {
+            const resp = await fetch(fetchUrl);
+            if (resp.ok) {
+              setDemoHtml(await resp.text());
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Demo report load error:', e);
+      }
+      setLoadingDemo(false);
+    };
+    loadDemo();
+  }, [user]);
 
   // Poll job progress via fetch
 
