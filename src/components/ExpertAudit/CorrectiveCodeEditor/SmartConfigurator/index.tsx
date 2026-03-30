@@ -13,10 +13,12 @@ import {
   Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
+import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { ScribeTab } from './ScribeTab';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { t3 } from '@/utils/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -1833,96 +1835,45 @@ export function SmartConfigurator({
       </DialogContent>
     </Dialog>
 
-      {/* Connect Site Modal */}
+      {/* Connect Site Modal — multi-CMS */}
       <Dialog open={showConnectSiteModal} onOpenChange={setShowConnectSiteModal} modal={true}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
-          <div className="p-4 border-b bg-violet-50/50 dark:bg-violet-950/20">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <Cable className="w-4 h-4 text-violet-500" />
-              Brancher Crawlers.fr sur votre site
-            </h4>
-            <p className="text-xs text-muted-foreground mt-1">
-              Installez ce snippet via Google Tag Manager ou directement dans votre code pour activer le suivi en temps réel.
-            </p>
-          </div>
-          <div className="p-4 space-y-3">
-            <div>
-              <p className="text-xs font-medium mb-1.5">1. Récupérez votre clé API dans <span className="text-violet-600 dark:text-violet-400">Mon Profil → Mes Sites</span></p>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1.5">2. Ajoutez ce code dans une balise HTML personnalisée Google Tag Manager :</p>
-              <div className="relative group">
-                <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
-{`<script>
-  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";
-</script>
-<script src="https://crawlers.fr/widget.js" defer></script>`}
-                </pre>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`<script>\n  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`);
-                    sonnerToast.success('Code copié !');
-                  }}
-                >
-                  <Copy className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1">3. Déclenchez sur <span className="font-mono text-[11px] bg-muted px-1 py-0.5 rounded">All Pages</span></p>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1">4. Enregistrer puis publier la balise</p>
-            </div>
-            <Separator />
-            {/* Refresh / verify connection button */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 flex-1"
-                disabled={siteConnected === null}
-                onClick={async () => {
-                  setSiteConnected(null); // show spinner
-                  const result = await verifySiteConnected();
+        <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[85vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          {wpSiteData ? (
+            <WordPressConfigCard
+              siteId={wpSiteData.id}
+              siteDomain={wpSiteData.domain}
+              siteApiKey={wpSiteData.apiKey}
+              hasConfig={wpSiteData.hasConfig}
+              onConnectionSuccess={() => {
+                setShowConnectSiteModal(false);
+                setSiteConnected(null);
+                verifySiteConnected().then(result => {
                   setSiteConnected(result);
-                  if (result) {
-                    setConnectionMethod(result);
-                    sonnerToast.success(`Site branché via ${result === 'wordpress' ? 'WordPress' : 'GTM'}`);
-                  } else {
-                    sonnerToast.error('Aucune connexion détectée — vérifiez votre installation');
-                  }
-                }}
-              >
-                {siteConnected === null ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  if (result) setConnectionMethod(result);
+                });
+                fetchWpSiteData();
+                sonnerToast.success('Site branché avec succès !');
+              }}
+            />
+          ) : (
+            <div className="p-6 text-center space-y-3">
+              <Cable className="w-8 h-8 text-muted-foreground mx-auto" />
+              <p className="text-sm text-muted-foreground">
+                {t3(language,
+                  'Ajoutez d\'abord ce site dans Console → Mes Sites pour accéder aux options de connexion CMS.',
+                  'First add this site in Console → My Sites to access CMS connection options.',
+                  'Primero agregue este sitio en Consola → Mis Sitios para acceder a las opciones de conexión CMS.'
                 )}
-                Vérifier le branchement
+              </p>
+              <Button variant="outline" size="sm" onClick={async () => {
+                await autoTrackSite();
+                await fetchWpSiteData();
+              }}>
+                <Plug className="w-3.5 h-3.5 mr-1.5" />
+                {t3(language, 'Ajouter automatiquement', 'Add automatically', 'Agregar automáticamente')}
               </Button>
-              {siteConnected && siteConnected !== null && (
-                <Badge className="gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                  <Cable className="w-3 h-3" />
-                  Branché {siteConnected === 'wordpress' ? '(WordPress)' : '(GTM)'}
-                </Badge>
-              )}
-              {siteConnected === false && (
-                <Badge variant="outline" className="gap-1.5 text-destructive border-destructive/30">
-                  <AlertCircle className="w-3 h-3" />
-                  Non détecté
-                </Badge>
-              )}
             </div>
-            <Separator />
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
-              <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
-              <span>Sans Google Tag Manager ? Collez le snippet juste avant la balise <code className="font-mono bg-muted px-1 py-0.5 rounded">&lt;/head&gt;</code> de votre site.</span>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
