@@ -1035,6 +1035,7 @@ export type Database = {
           excluded_page_types: string[] | null
           excluded_subdomains: string[] | null
           force_content_cycle: boolean | null
+          force_iktracker_article: boolean | null
           gate_threshold_high: number | null
           gate_threshold_low: number | null
           id: string
@@ -1062,6 +1063,7 @@ export type Database = {
           excluded_page_types?: string[] | null
           excluded_subdomains?: string[] | null
           force_content_cycle?: boolean | null
+          force_iktracker_article?: boolean | null
           gate_threshold_high?: number | null
           gate_threshold_low?: number | null
           id?: string
@@ -1089,6 +1091,7 @@ export type Database = {
           excluded_page_types?: string[] | null
           excluded_subdomains?: string[] | null
           force_content_cycle?: boolean | null
+          force_iktracker_article?: boolean | null
           gate_threshold_high?: number | null
           gate_threshold_low?: number | null
           id?: string

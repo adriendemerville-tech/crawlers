@@ -1,0 +1,1 @@
+ALTER TABLE public.autopilot_configs ADD COLUMN IF NOT EXISTS force_iktracker_article boolean DEFAULT false;
