@@ -1375,8 +1375,10 @@ async function generateReport(url) {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Pricing reminder */}
+        {/* Tab: Pricing */}
+        {activeTab === 'pricing' && (
         <section className="py-12">
           <div className="mx-auto max-w-3xl px-4 text-center">
             <h2 className="text-xl font-bold text-foreground mb-4">{t.pricing.title}</h2>
