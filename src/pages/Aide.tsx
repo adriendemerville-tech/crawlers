@@ -66,6 +66,19 @@ const DOC_SECTIONS: DocSection[] = [
 <li>Les données (sessions, engagement, bounce rate) alimentent le Triangle Prédictif et les rapports de tracking</li>
 </ol>`,
       },
+      {
+        id: 'connecter-gbp',
+        title: 'Connecter Google Business Profile',
+        content: `<p>La connexion Google Business Profile (GBP/GMB) est <strong>séparée</strong> de la connexion Google Search Console / GA4 pour éviter les conflits de permissions.</p>
+<ol class="list-decimal pl-6 space-y-1 mt-2">
+<li>Depuis votre Console → onglet <strong>Google Business</strong>, cliquez sur le bouton <strong>"Connecter Google Business"</strong></li>
+<li>Autorisez l'accès via votre compte Google (le scope demandé est uniquement <code>business.manage</code>)</li>
+<li>Votre fiche d'établissement est automatiquement détectée et associée à votre site</li>
+<li>Vous pouvez déconnecter GBP indépendamment depuis Console → API Externes</li>
+</ol>
+<p class="mt-2 text-sm text-muted-foreground">La déconnexion GBP ne supprime pas votre connexion GSC/GA4, et inversement. Chaque service est indépendant.</p>
+<p class="mt-2"><strong>Pourquoi connecter GBP ?</strong> Une fiche Google Business bien optimisée améliore considérablement votre visibilité auprès des moteurs IA (ChatGPT, Gemini, Perplexity) et booste votre GEO Score.</p>`,
+      },
     ],
   },
   {

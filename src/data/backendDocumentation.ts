@@ -477,7 +477,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
 | \`google-ads-connector\` | ✅ | OAuth2 Google Ads + données campagnes |
 | \`gtm-actions\` | ✅ | Déploiement automatique widget via Google Tag Manager |
-| \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé) |
+| \`gmb-actions\` | ✅ | Google Business Profile : performance, reviews, location (API réelle + fallback simulé). Recherche prioritaire d'une connexion GBP dédiée (\`gbp:\` prefix) avant fallback sur les connexions Google génériques. |
+| \`gbp-auth\` | ✅ | OAuth2 dédié Google Business Profile (scope \`business.manage\`). Séparé de \`gsc-auth\` pour éviter les conflits de scopes. Actions : \`login\`, callback, \`disconnect\`, \`status\`. |
 | \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
 | \`gmb-local-competitors\` | ✅ | Analyse concurrents locaux Google Maps |
 | \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB |

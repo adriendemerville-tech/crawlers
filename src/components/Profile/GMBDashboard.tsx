@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import {
   Construction, Star, MapPin, Phone, Globe, Clock, Search, Map, MousePointerClick,
   Navigation, PhoneCall, Image, MessageSquare, Send, Flag, TrendingUp, Eye,
-  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical, Swords
+  ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical, Swords,
+  Plug, Unplug, Loader2
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
 import { GmbKeywordsTab } from './GmbKeywordsTab';
 import { useLanguage } from '@/contexts/LanguageContext';
