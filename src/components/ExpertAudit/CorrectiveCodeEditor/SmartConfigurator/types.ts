@@ -1,5 +1,7 @@
 // Types for Smart Configurator v2.0 - Architecte Génératif
 
+export type FixDeliveryChannel = 'code' | 'content';
+
 export interface FixConfig {
   id: string;
   category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic' | 'generative';
@@ -11,6 +13,8 @@ export interface FixConfig {
   isRecommended?: boolean;
   isPremium?: boolean; // Nécessite paiement
   locked?: boolean; // Grisé et non modifiable (ex: déjà installé)
+  /** Delivery channel: 'code' = JS injection, 'content' = CMS content via Content Architect */
+  deliveryChannel?: FixDeliveryChannel;
 }
 
 export interface AttributionConfig {
@@ -135,3 +139,25 @@ export const STRATEGIC_FIXES = {
     isRecommended: false,
   },
 } as const;
+
+/**
+ * Fix IDs that are pure content modifications — should route to Content Architect
+ * when a CMS connection is available, instead of generating JS injection code.
+ */
+export const CONTENT_CHANNEL_FIX_IDS = new Set([
+  'fix_title',
+  'fix_meta_desc',
+  'fix_h1',
+  'inject_faq',
+  'inject_blog_section',
+  'fix_missing_blog',
+  'fix_semantic_injection',
+]);
+
+/**
+ * Classify a fix as 'code' or 'content' delivery channel.
+ * Content fixes can be pushed directly via CMS API when a connection exists.
+ */
+export function classifyFixChannel(fixId: string): FixDeliveryChannel {
+  return CONTENT_CHANNEL_FIX_IDS.has(fixId) ? 'content' : 'code';
+}

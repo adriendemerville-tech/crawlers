@@ -32,7 +32,8 @@ import { GenerativeTab } from './GenerativeTab';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
 import { MultiPageRouter } from './MultiPageRouter';
-import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
+import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode, classifyFixChannel } from './types';
+import { ContentDelegationSection } from './ContentDelegationSection';
 import { toast as sonnerToast } from 'sonner';
 
 // Hallucination data can be in legacy or new format
@@ -169,6 +170,8 @@ export function SmartConfigurator({
   const [showConnectSiteModal, setShowConnectSiteModal] = useState(false);
   const [wpSiteData, setWpSiteData] = useState<{ id: string; domain: string; apiKey: string; hasConfig: boolean } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasCmsConnectionForContent, setHasCmsConnectionForContent] = useState(false);
+  const [contentDelegationStatus, setContentDelegationStatus] = useState<'idle' | 'generating' | 'ready' | 'deployed'>('idle');
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -346,8 +349,22 @@ export function SmartConfigurator({
     if (isOpen) {
       fetchWpSiteData();
       fetchAuditIntelligence();
+      // Check CMS connection for content delegation
+      if (user && siteDomain) {
+        const checkCms = async () => {
+          const siteId = activeSiteId || await (async () => {
+            const { data } = await supabase.from('tracked_sites').select('id').eq('user_id', user.id).eq('domain', siteDomain).maybeSingle();
+            return data?.id;
+          })();
+          if (siteId) {
+            const { data } = await supabase.from('cms_connections').select('id').eq('tracked_site_id', siteId).limit(1);
+            setHasCmsConnectionForContent((data?.length || 0) > 0);
+          }
+        };
+        checkCms();
+      }
     }
-  }, [isOpen, fetchWpSiteData, fetchAuditIntelligence]);
+  }, [isOpen, fetchWpSiteData, fetchAuditIntelligence, user, siteDomain, activeSiteId]);
 
   // Mark as ready once preloading finishes (one-way: stays true once set to avoid flicker on re-focus)
   useEffect(() => {
@@ -803,12 +820,15 @@ export function SmartConfigurator({
 
     fixes.push(...dynamicFixes);
 
+    // ═══ CLASSIFY DELIVERY CHANNEL (code vs content) ═══
     // Also pre-enable technical fixes that match unresolved registry recommendations
     return fixes.map(fix => {
+      const deliveryChannel = classifyFixChannel(fix.id);
+      const updated = { ...fix, deliveryChannel };
       if (unresolvedRecIds.has(fix.id) && !fix.enabled) {
-        return { ...fix, enabled: true, isRecommended: true };
+        return { ...updated, enabled: true, isRecommended: true };
       }
-      return fix;
+      return updated;
     });
   }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData, registryRecommendations, strategicRoadmap, savedAuditData]);
 
@@ -913,6 +933,8 @@ export function SmartConfigurator({
   }, []);
 
   // Generate the script via Edge Function
+  // Content-channel fixes are excluded from code generation when CMS is connected
+  // and handled by Content Architect in parallel
   const handleGenerate = useCallback(async () => {
     const enabledFixes = fixConfigs.filter(f => f.enabled);
     if (enabledFixes.length === 0) {
@@ -922,6 +944,30 @@ export function SmartConfigurator({
         variant: 'destructive',
       });
       return;
+    }
+
+    // Split fixes by delivery channel
+    const codeFixes = enabledFixes.filter(f => f.deliveryChannel !== 'content' || !hasCmsConnectionForContent);
+    const contentFixes = hasCmsConnectionForContent ? enabledFixes.filter(f => f.deliveryChannel === 'content') : [];
+
+    // If CMS connected and content fixes exist, trigger content preparation in background
+    if (contentFixes.length > 0) {
+      setContentDelegationStatus('generating');
+      // Content generation runs in parallel — fire and forget, results stored for deploy
+      supabase.functions.invoke('content-architecture-advisor', {
+        body: {
+          url: siteUrl,
+          keyword: contentFixes.map(f => f.label).join(', '),
+          instructions: contentFixes.map(f => `${f.label}: ${f.description}`).join('\n'),
+          language,
+          tracked_site_id: activeSiteId,
+        },
+      }).then(() => {
+        setContentDelegationStatus('ready');
+      }).catch((err) => {
+        console.error('[Architect] Content delegation error:', err);
+        setContentDelegationStatus('idle');
+      });
     }
 
     // Reset code and overlay before generating new code
@@ -989,9 +1035,14 @@ export function SmartConfigurator({
         }
       }
 
+      // Only send code-channel fixes to generate-corrective-code (content fixes handled by Content Architect)
+      const fixesForCodeGen = hasCmsConnectionForContent
+        ? fixConfigs.filter(f => f.deliveryChannel !== 'content' || !f.enabled)
+        : fixConfigs;
+
       const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
         body: {
-          fixes: fixConfigs,
+          fixes: fixesForCodeGen,
           siteName,
           siteUrl,
           language,
@@ -1360,6 +1411,11 @@ export function SmartConfigurator({
       }
 
       if (data?.success) {
+        // 3. If content delegation is ready, push content in parallel
+        if (contentDelegationStatus === 'ready' && hasCmsConnectionForContent && siteId) {
+          setContentDelegationStatus('deployed');
+          console.log('[Architect] Content fixes deployed via Content Architect in parallel');
+        }
         setApplySuccess(true);
         setTimeout(() => { setApplySuccess(false); setConnectionMethod(null); }, 4000);
       } else {
@@ -1497,6 +1553,11 @@ export function SmartConfigurator({
               <ScrollArea className="flex-1 min-h-0">
                 <TabsContent forceMount value="technical" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                   <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} onRequestAuth={() => { setShowConnectSiteModal(true); }} disabled={isCodeLocked} />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
+                  />
                 </TabsContent>
 
                 <TabsContent forceMount value="strategic" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
@@ -1506,6 +1567,11 @@ export function SmartConfigurator({
                     onUpdateData={updateFixData}
                     disabled={isCodeLocked}
                   />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
+                  />
                 </TabsContent>
 
                 <TabsContent forceMount value="generative" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
@@ -1514,6 +1580,11 @@ export function SmartConfigurator({
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}
                     disabled={isCodeLocked}
+                  />
+                  <ContentDelegationSection
+                    contentFixes={fixConfigs.filter(f => f.deliveryChannel === 'content')}
+                    hasCmsConnection={hasCmsConnectionForContent}
+                    contentStatus={contentDelegationStatus}
                   />
                 </TabsContent>
 
