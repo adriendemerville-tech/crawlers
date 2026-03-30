@@ -268,7 +268,7 @@ Deno.serve(async (req: Request) => {
     // ═══ Fetch active autopilot configs ═══
     let query = supabase
       .from('autopilot_configs')
-      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status')
+      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status, force_content_cycle, content_budget_pct')
       .eq('is_active', true);
 
     if (targetSiteId) {
