@@ -80,6 +80,11 @@ function FooterComponent() {
       href: '/observatoire',
       description: t3(language, 'Tendances SEO/GEO par secteur', 'SEO/GEO trends by sector', 'Tendencias SEO/GEO por sector')
     },
+    {
+      label: t3(language, 'API & Intégrations', 'API & Integrations', 'API e Integraciones'),
+      href: '/api-integrations',
+      description: t3(language, 'Toutes les API disponibles dans Crawlers', 'All APIs available in Crawlers', 'Todas las APIs disponibles en Crawlers')
+    },
   ];
 
   const technicalLinks = [
