@@ -142,13 +142,19 @@ Analyse de votre présence locale :
 - Recommandations de visibilité locale
 - Si GMB est connecté, les données réelles de votre fiche alimentent le diagnostic (au lieu d'estimations tierces)
 
-### Google My Business (GMB)
+### Google My Business (GMB / GBP)
 Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
 
-**Connexion :**
-1. Depuis Console > GMB ou Console > API, cliquez sur "Connecter Google My Business"
-2. Autorisez l'accès via votre compte Google (le même flux que GSC/GA4)
-3. Vos fiches d'établissement sont importées automatiquement
+**Connexion (séparée de GSC/GA4) :**
+1. Depuis Console > onglet Google Business, cliquez sur le bouton **"Connecter Google Business"** (icône prise)
+2. Autorisez l'accès via votre compte Google — le flux OAuth est **dédié GBP** (scope `business.manage` uniquement), séparé de la connexion GSC/GA4 pour éviter les conflits de permissions
+3. Vos fiches d'établissement sont automatiquement détectées et associées
+4. Vous pouvez également connecter/déconnecter GBP depuis Console > API Externes
+
+**Déconnexion :**
+- Depuis l'onglet GMB : bouton "Déconnecter" dans la bannière de connexion
+- Depuis Console > API Externes : bouton dédié GBP
+- La déconnexion GBP est **indépendante** de GSC/GA4 : déconnecter l'un n'affecte pas l'autre
 
 **Fonctionnalités :**
 - Consultation et réponse aux avis Google (note moyenne, tendance, historique)
@@ -159,6 +165,8 @@ Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
 - Les données GMB alimentent automatiquement l'Audit Local SEO et le diagnostic de la Stratégie 360°
 - **Suggestions de mots-clés** (onglet "Suggestions KW") : génère 5 mots-clés locaux stratégiques à partir du nom, de la catégorie et de la ville de l'établissement via SerpAPI. Chaque mot-clé peut être ajouté à un suivi local dédié (table `gmb_tracked_keywords`). Les résultats sont mis en cache 24h pour optimiser les coûts API.
 - **Concurrence locale** (onglet "Concurrence") : scanne les concurrents analogues sur Google Maps via Google Places API (autocomplete + détails). Affiche les concurrents avec leur note moyenne, nombre d'avis et adresse. Classification automatique : Goliath (#1), Concurrent direct (#2-3), Challenger (#4-7), Inspiration (#8+). Les concurrents peuvent être supprimés au survol de leur carte. Le rayon de recherche est estimé automatiquement selon la catégorie d'activité.
+
+**Pourquoi connecter GBP ?** Une fiche Google Business bien optimisée est l'un des meilleurs leviers pour améliorer sa visibilité auprès des moteurs IA (ChatGPT, Gemini, Perplexity) et booster son GEO Score.
 
 **Prérequis :** abonnement Pro Agency et compte Google propriétaire/gestionnaire de la fiche.
 
