@@ -308,7 +308,6 @@ export function ExternalApisTab() {
       }
       return;
     }
-    }
 
     if (service.id === 'matomo') {
       setMatomoDialogOpen(true);
