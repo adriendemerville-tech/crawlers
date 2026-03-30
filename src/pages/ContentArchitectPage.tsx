@@ -800,9 +800,9 @@ const ContentArchitectPage = memo(() => {
               <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{tr.pricingTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.pricingSubtitle}</p>
             </div>
-            <div className="grid gap-6 md:grid-cols-4 items-start">
-              {/* Unit card */}
-              <div className="rounded-2xl border-2 border-border bg-card p-6 flex flex-col h-full">
+            <div className="grid gap-6 md:grid-cols-4 items-stretch">
+              {/* Unit card — left */}
+              <div className="rounded-2xl border-2 border-border bg-card p-6 flex flex-col">
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCoin size="lg" />
                   <h3 className="text-lg font-bold text-foreground">
@@ -835,11 +835,13 @@ const ContentArchitectPage = memo(() => {
                   </Button>
                 </Link>
               </div>
-              {/* 3 subscription cards — inline from PricingPlansSection logic */}
+              {/* 3 subscription cards — from PricingPlansSection inline */}
+              <div className="md:col-span-3">
+                <PricingPlansSection title="" subtitle="" embedded />
+              </div>
             </div>
           </div>
         </section>
-        <PricingPlansSection />
 
         {/* ═══ FAQ ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
