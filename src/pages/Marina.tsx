@@ -719,7 +719,7 @@ export default function Marina() {
     generating_report: t.phases.generating_report,
   };
 
-  const featureIcons = [Search, Globe, Brain, Code2, Palette];
+  const featureIcons = [Search, Globe, Brain, Code2, Palette, Shield];
 
   return (
     <>
