@@ -123,10 +123,40 @@ function getMarinaStyles(): string {
     .toc-item:last-child { border-bottom: none; }
     .reco-card { padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:4px; }
     .marina-separator { height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 32px 0; border-radius: 2px; }
+    /* Floating toolbar */
+    .marina-toolbar {
+      position: sticky; top: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e5e7eb;
+      max-width: 900px; margin: 0 auto 0 auto;
+    }
+    .marina-toolbar-title {
+      margin-right: auto; font-size: 14px; font-weight: 600; color: #1e293b;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .marina-toolbar button {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+      background: white; color: #374151; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .marina-toolbar button:hover { background: #f3f4f6; border-color: #9ca3af; }
+    .marina-toolbar button.primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .marina-toolbar button.primary:hover { background: #2563eb; }
+    .marina-toolbar button svg { width: 16px; height: 16px; }
+    .marina-toolbar .copied { color: #22c55e; border-color: #22c55e; }
     @media print {
       body { padding: 0; }
       @page { margin: 15mm 10mm; }
       .section { break-inside: auto; }
+      .marina-toolbar { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      .marina-toolbar { gap: 4px; padding: 8px 12px; }
+      .marina-toolbar .btn-label { display: none; }
+      .marina-toolbar button { padding: 7px 10px; }
     }
   `;
 }
