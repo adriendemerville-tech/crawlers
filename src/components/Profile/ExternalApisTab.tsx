@@ -242,7 +242,6 @@ export function ExternalApisTab() {
 
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
-    if (s.id === 'google-ads' && !fullGoogleAccess) return false;
     return true;
   });
   const cmsServices = services.filter(s => s.category === 'cms');
