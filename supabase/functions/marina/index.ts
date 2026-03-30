@@ -2013,10 +2013,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .eq('user_id', parentJob.user_id)
           .single();
         
-        if (brandProfile?.marina_brand_enabled && (brandProfile.plan_type === 'agency_pro' || brandProfile.plan_type === 'agency_pro_plus')) {
+        if (brandProfile?.marina_brand_enabled && (brandProfile.plan_type === 'agency_pro' || brandProfile.plan_type === 'agency_premium')) {
+          const isPremium = brandProfile.plan_type === 'agency_premium';
           marinaBranding = {
             enabled: true,
-            fullWhiteLabel: brandProfile.marina_full_whitelabel || false,
+            fullWhiteLabel: isPremium && (brandProfile.marina_full_whitelabel || false),
             logoUrl: brandProfile.agency_logo_url,
             primaryColor: brandProfile.agency_primary_color,
             brandName: brandProfile.agency_brand_name,

@@ -79,6 +79,7 @@ const translations = {
       { label: 'Audit stratégique', desc: 'Positionnement mots-clés, gaps concurrentiels, quick wins' },
       { label: 'Analyse Cocoon sémantique', desc: 'Clusters, maillage interne, architecture de contenu' },
       { label: 'Branding personnalisable', desc: 'Logo, couleurs, CTA et textes personnalisés. Masquez la marque Crawlers pour vos clients.' },
+      { label: 'Marque blanche complète', desc: 'Suppression totale de la marque Crawlers.fr — disponible avec le plan Pro Agency+.' },
     ],
     featuresTitle: 'Ce que contient votre rapport',
     preview: {
@@ -249,6 +250,7 @@ const translations = {
       { label: 'Strategic audit', desc: 'Keyword positioning, competitor gaps, quick wins' },
       { label: 'Semantic Cocoon analysis', desc: 'Clusters, internal linking, content architecture' },
       { label: 'Custom branding', desc: 'Logo, colors, CTA and custom text. Hide Crawlers branding for your clients.' },
+      { label: 'Full White Label', desc: 'Complete removal of all Crawlers.fr branding — available with Pro Agency+ plan.' },
     ],
     featuresTitle: 'What\'s in your report',
     preview: {
@@ -419,6 +421,7 @@ const translations = {
       { label: 'Auditoría estratégica', desc: 'Posicionamiento de palabras clave, gaps competitivos, quick wins' },
       { label: 'Análisis Cocoon semántico', desc: 'Clusters, enlazado interno, arquitectura de contenido' },
       { label: 'Branding personalizable', desc: 'Logo, colores, CTA y textos personalizados. Oculte la marca Crawlers para sus clientes.' },
+      { label: 'Marca blanca completa', desc: 'Eliminación total de la marca Crawlers.fr — disponible con el plan Pro Agency+.' },
     ],
     featuresTitle: 'Qué incluye tu informe',
     preview: {
