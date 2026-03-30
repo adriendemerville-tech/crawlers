@@ -155,6 +155,11 @@ export function ExternalApisTab() {
   const [rankMathConnected, setRankMathConnected] = useState(false);
   const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
 
+  // GBP state
+  const [gbpConnected, setGbpConnected] = useState(false);
+  const [gbpEmail, setGbpEmail] = useState<string | null>(null);
+  const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
+
   // Matomo state
   const [matomoDialogOpen, setMatomoDialogOpen] = useState(false);
   const [matomoLoading, setMatomoLoading] = useState(false);
