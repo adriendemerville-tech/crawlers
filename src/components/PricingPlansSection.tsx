@@ -17,6 +17,7 @@ const t3 = (lang: string, fr: string, en: string, es: string) =>
 interface PricingPlansSectionProps {
   title?: string;
   subtitle?: string;
+  embedded?: boolean;
 }
 
 export function PricingPlansSection({ title, subtitle }: PricingPlansSectionProps) {

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
 
 /* ─── Translations ─── */
