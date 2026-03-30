@@ -249,6 +249,29 @@ export function ParmenionDashboard() {
             <Plus className="h-4 w-4" />
             Nouvelle action
           </Button>
+          <Button
+            variant={autopilotConfig?.force_iktracker_article ? 'default' : 'outline'}
+            size="sm"
+            className={cn("gap-2", autopilotConfig?.force_iktracker_article && "bg-amber-500 hover:bg-amber-600 text-black")}
+            disabled={!autopilotConfig?.config_id}
+            onClick={async () => {
+              const newVal = !autopilotConfig?.force_iktracker_article;
+              const { error } = await supabase
+                .from('autopilot_configs')
+                .update({ force_iktracker_article: newVal } as any)
+                .eq('id', autopilotConfig!.config_id);
+              if (!error) {
+                setAutopilotConfig(prev => prev ? { ...prev, force_iktracker_article: newVal } : prev);
+                toast({
+                  title: newVal ? '📝 Article IKtracker forcé' : '📝 Article IKtracker désactivé',
+                  description: newVal ? 'Parménion créera un article IKtracker à chaque cycle.' : 'Le mode article forcé est désactivé.',
+                });
+              }
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+            {autopilotConfig?.force_iktracker_article ? '📝 Article IK : ON' : 'Article IK'}
+          </Button>
           <Button variant="ghost" size="icon" onClick={fetchLogs}>
             <RefreshCw className="h-4 w-4" />
           </Button>
