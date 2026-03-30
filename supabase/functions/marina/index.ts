@@ -1937,7 +1937,7 @@ Deno.serve(async (req) => {
       const action = reqUrl.searchParams.get('action');
       
       if (action === 'generate_key') {
-        // Admin only: generate a new Marina API key
+        // Authenticated user: generate a Marina API key for their account
         const authHeader = req.headers.get('Authorization') || '';
         if (!authHeader) return json({ error: 'Unauthorized' }, 401);
         
@@ -1948,22 +1948,18 @@ Deno.serve(async (req) => {
         const { data: { user } } = await userSb.auth.getUser();
         if (!user) return json({ error: 'Unauthorized' }, 401);
         
-        // Check admin
-        const { data: isAdmin } = await sb.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-        if (!isAdmin) return json({ error: 'Admin only' }, 403);
-        
         const key = generateApiKey();
-        // Store key in marina_api_keys table or config
+        // Upsert into marina_api_keys table
         const { error: insertError } = await sb
-          .from('site_config' as any)
-          .upsert({ key: 'marina_api_key', value: key, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+          .from('marina_api_keys')
+          .upsert({ user_id: user.id, api_key: key, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
         
         if (insertError) {
           console.error('[Marina] Failed to store key:', insertError);
           return json({ error: 'Failed to store key' }, 500);
         }
         
-        return json({ success: true, api_key: key });
+        return json({ success: true, key });
       }
       
       // Poll job status
@@ -2023,21 +2019,15 @@ Deno.serve(async (req) => {
 
     const apiKey = req.headers.get('x-marina-key') || body.api_key;
     if (!isAuthorized && apiKey) {
-      const { data: configRow } = await sb
-        .from('site_config' as any)
-        .select('value')
-        .eq('key', 'marina_api_key')
+      const { data: keyRow } = await sb
+        .from('marina_api_keys')
+        .select('user_id')
+        .eq('api_key', apiKey)
         .single();
       
-      if (configRow && (configRow as any).value === apiKey) {
+      if (keyRow) {
         isAuthorized = true;
-        const { data: adminUser } = await sb
-          .from('user_roles' as any)
-          .select('user_id')
-          .eq('role', 'admin')
-          .limit(1)
-          .single();
-        userId = (adminUser as any)?.user_id;
+        userId = keyRow.user_id;
       }
     }
 

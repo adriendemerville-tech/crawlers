@@ -32,11 +32,11 @@ export function MarinaConsoleTab() {
     const load = async () => {
       setLoading(true);
       const { data } = await supabase
-        .from('site_config' as any)
-        .select('value')
-        .eq('key', `marina_api_key_${user.id}`)
+        .from('marina_api_keys' as any)
+        .select('api_key')
+        .eq('user_id', user.id)
         .maybeSingle();
-      if (data) setApiKey((data as any).value);
+      if (data) setApiKey((data as any).api_key);
       setLoading(false);
     };
     load();
