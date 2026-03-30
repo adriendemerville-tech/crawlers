@@ -67,7 +67,8 @@ export default function RapportMatrice() {
   const navigate = useNavigate();
   const [data, setData] = useState<MatriceReportData | null>(null);
   const [copied, setCopied] = useState(false);
-
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   // Admin guard
   useEffect(() => {
     if (!authLoading && !adminLoading) {
