@@ -478,6 +478,7 @@ const DOC_SECTIONS: DocSection[] = [
     ],
   },
   {
+    id: 'mcp',
     icon: <Code className="h-4 w-4" />,
     title: '8. Intégration MCP (Claude & IA)',
     subsections: [
