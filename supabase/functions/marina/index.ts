@@ -806,9 +806,42 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   let strategicHtml = '';
   if (strategicData) {
     const citProb = strategicData.citation_probability;
+    const breakdown = strategicData.citation_breakdown;
     const stratAnalysis = strategicData.analysis || strategicData.llm_analysis;
+    
+    // Build breakdown bars if available
+    let breakdownHtml = '';
+    if (breakdown && typeof breakdown === 'object') {
+      const signals = [
+        { key: 'serp_presence', label: 'Présence SERP', weight: '20%' },
+        { key: 'content_quotability', label: 'Citabilité contenu', weight: '15%' },
+        { key: 'business_intent_match', label: 'Intent. business', weight: '15%' },
+        { key: 'brand_authority', label: 'Autorité marque', weight: '15%' },
+        { key: 'structured_data_quality', label: 'Données struct.', weight: '10%' },
+        { key: 'self_citation_signals', label: 'Auto-citations', weight: '10%' },
+        { key: 'knowledge_graph_signals', label: 'Knowledge Graph', weight: '10%' },
+        { key: 'content_freshness', label: 'Fraîcheur', weight: '5%' },
+      ];
+      const rows = signals.map(s => {
+        const val = (breakdown as any)[s.key] ?? 0;
+        const color = val >= 60 ? '#22c55e' : val >= 30 ? '#f59e0b' : '#ef4444';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:11px;color:#6b7280;width:110px;flex-shrink:0;">${s.label} <span style="color:#9ca3af;font-size:10px;">(${s.weight})</span></span>
+          <div style="flex:1;background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden;">
+            <div style="width:${val}%;height:100%;background:${color};border-radius:4px;transition:width 0.3s;"></div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:${color};width:30px;text-align:right;">${val}</span>
+        </div>`;
+      }).join('');
+      breakdownHtml = `<div style="margin-top:10px;padding:10px;background:#fff;border-radius:6px;border:1px solid #e5e7eb;">
+        <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;">Décomposition du score</div>
+        ${rows}
+      </div>`;
+    }
+
     strategicHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-top:16px;text-align:left;">
       ${citProb != null ? `<div style="font-size:13px;margin-bottom:6px;"><strong>Probabilité de citation IA :</strong> <span style="font-weight:700;color:${citProb >= 60 ? '#22c55e' : citProb >= 30 ? '#f59e0b' : '#ef4444'};">${citProb}%</span></div>` : ''}
+      ${breakdownHtml}
       ${stratAnalysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;margin-top:8px;">${stratAnalysis}</div>` : ''}
     </div>`;
   }

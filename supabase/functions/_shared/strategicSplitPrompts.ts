@@ -106,7 +106,7 @@ export function buildUserPromptC(url: string, domain: string, baseContext: strin
 
 GÉNÈRE un JSON avec UNIQUEMENT ces clés:
 {"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
-"llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
+"llm_visibility":{"citation_probability":0-100,"citation_breakdown":{"serp_presence":0-100,"structured_data_quality":0-100,"content_quotability":0-100,"brand_authority":0-100,"content_freshness":0-100,"business_intent_match":0-100,"self_citation_signals":0-100,"knowledge_graph_signals":0-100},"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
 "conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles"],"recommendations":[]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
 "executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
@@ -117,6 +117,7 @@ GÉNÈRE un JSON avec UNIQUEMENT ces clés:
 "red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
 RÈGLES:
+- citation_probability: moyenne pondérée de citation_breakdown. Poids: serp_presence×20%, structured_data_quality×10%, content_quotability×15%, brand_authority×15%, content_freshness×5%, business_intent_match×15%, self_citation_signals×10%, knowledge_graph_signals×10%. Évalue chaque signal 0-100 d'après le contenu crawlé, les données SERP/backlinks/GMB si fournies. serp_presence=100 si top3, 70 si top10, 30 si top20, 0 sinon. business_intent_match: alignement entre contenu et intention commerciale réelle du secteur. self_citation_signals: présence de formulations "Chez [marque]..." dans le texte.
 - executive_roadmap: MIN 6 recs narratives dont ≥1 category "Social"
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots.
@@ -147,7 +148,7 @@ export function mergeParallelResults(resultA: any, resultB: any, resultC: any): 
 
     // From C: GEO & Scoring
     geo_citability: resultC?.geo_citability || { score: 0, readiness_level: 'basic', analysis: '', strengths: [], weaknesses: [], recommendations: [] },
-    llm_visibility: resultC?.llm_visibility || { citation_probability: 0, knowledge_graph_presence: 'absent', analysis: '', test_queries: [] },
+    llm_visibility: resultC?.llm_visibility || { citation_probability: 0, citation_breakdown: { serp_presence: 0, structured_data_quality: 0, content_quotability: 0, brand_authority: 0, content_freshness: 0, business_intent_match: 0, self_citation_signals: 0, knowledge_graph_signals: 0 }, knowledge_graph_presence: 'absent', analysis: '', test_queries: [] },
     conversational_intent: resultC?.conversational_intent || { ratio: 0, analysis: '', question_titles_detected: 0, total_titles_analyzed: 0, examples: [], recommendations: [] },
     zero_click_risk: resultC?.zero_click_risk || { at_risk_keywords: [], overall_risk_score: 0, analysis: '' },
     executive_roadmap: resultC?.executive_roadmap || [],

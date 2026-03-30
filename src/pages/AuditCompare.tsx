@@ -82,6 +82,16 @@ interface SiteAnalysis {
   weaknesses: string[];
   llm_visibility?: {
     citation_probability: number;
+    citation_breakdown?: {
+      serp_presence: number;
+      structured_data_quality: number;
+      content_quotability: number;
+      brand_authority: number;
+      content_freshness: number;
+      business_intent_match: number;
+      self_citation_signals: number;
+      knowledge_graph_signals: number;
+    };
     analysis: string;
     test_queries?: { query: string; purpose: string; target_llms: string[] }[];
   };
