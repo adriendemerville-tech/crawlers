@@ -107,89 +107,89 @@ Deno.serve(async (req) => {
 
     // Monthly content creation fair use (Pro Agency: 100/mo, Pro Agency+: 150/mo)
     const serviceClientForPlan = getServiceClient()
-    const { data: userProfile } = await serviceClientForPlan
-      .from('profiles')
-      .select('plan_type, subscription_status, credits_balance')
-      .eq('user_id', user.id)
-      .single()
 
-    const isActiveSubscriber = (
-      (userProfile?.plan_type === 'agency_pro' || userProfile?.plan_type === 'agency_premium') &&
-      (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling')
-    )
-
-    const planType = userProfile?.plan_type === 'agency_premium' && isActiveSubscriber
-      ? 'agency_premium'
-      : userProfile?.plan_type === 'agency_pro' && isActiveSubscriber
-        ? 'agency_pro' : 'free'
-
-    const monthlyFairUse = await checkMonthlyFairUse(user.id, 'content_creation', planType)
-
-    // For non-subscribers: if monthly quota exhausted, allow if they have credits (5 per page)
-    const CONTENT_CREDIT_COST = 5
+    // ── Service role bypass: Parménion (autopilot) never pays credits ──
     let creditsDeducted = false
+    const CONTENT_CREDIT_COST = 5
 
-    const deductCredits = async (): Promise<{ success: boolean; new_balance?: number; error?: string }> => {
-      const currentBalance = userProfile?.credits_balance ?? 0
-      if (currentBalance < CONTENT_CREDIT_COST) {
-        return { success: false, error: 'insufficient_credits' }
-      }
-      // Use atomic_credit_update (SECURITY DEFINER, no auth check)
-      const { data, error } = await serviceClientForPlan.rpc('atomic_credit_update', {
-        p_user_id: user!.id,
-        p_amount: -CONTENT_CREDIT_COST,
-      })
-      if (error || !(data as any)?.success) {
-        return { success: false, error: (data as any)?.error || error?.message || 'unknown' }
-      }
-      // Log the transaction
-      await serviceClientForPlan.from('credit_transactions').insert({
-        user_id: user!.id,
-        amount: -CONTENT_CREDIT_COST,
-        transaction_type: 'usage',
-        description: `Content Architect: ${keyword} (${page_type})`,
-      })
-      return { success: true, new_balance: (data as any).new_balance }
-    }
+    if (!isServiceRole) {
+      const { data: userProfile } = await serviceClientForPlan
+        .from('profiles')
+        .select('plan_type, subscription_status, credits_balance')
+        .eq('user_id', user.id)
+        .single()
 
-    if (!monthlyFairUse.allowed) {
-      // Subscribers → hard block at quota
-      if (isActiveSubscriber) {
-        return new Response(JSON.stringify({
-          error: 'Monthly content creation limit reached',
-          details: monthlyFairUse,
-        }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const isActiveSubscriber = (
+        (userProfile?.plan_type === 'agency_pro' || userProfile?.plan_type === 'agency_premium') &&
+        (userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'canceling')
+      )
+
+      const planType = userProfile?.plan_type === 'agency_premium' && isActiveSubscriber
+        ? 'agency_premium'
+        : userProfile?.plan_type === 'agency_pro' && isActiveSubscriber
+          ? 'agency_pro' : 'free'
+
+      const monthlyFairUse = await checkMonthlyFairUse(user.id, 'content_creation', planType)
+
+      const deductCredits = async (): Promise<{ success: boolean; new_balance?: number; error?: string }> => {
+        const currentBalance = userProfile?.credits_balance ?? 0
+        if (currentBalance < CONTENT_CREDIT_COST) {
+          return { success: false, error: 'insufficient_credits' }
+        }
+        const { data, error } = await serviceClientForPlan.rpc('atomic_credit_update', {
+          p_user_id: user!.id,
+          p_amount: -CONTENT_CREDIT_COST,
         })
-      }
-      // Non-subscribers → deduct credits
-      const result = await deductCredits()
-      if (!result.success) {
-        return new Response(JSON.stringify({
-          error: 'Crédits insuffisants',
-          credits_required: CONTENT_CREDIT_COST,
-          credits_balance: userProfile?.credits_balance ?? 0,
-          details: monthlyFairUse,
-        }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        if (error || !(data as any)?.success) {
+          return { success: false, error: (data as any)?.error || error?.message || 'unknown' }
+        }
+        await serviceClientForPlan.from('credit_transactions').insert({
+          user_id: user!.id,
+          amount: -CONTENT_CREDIT_COST,
+          transaction_type: 'usage',
+          description: `Content Architect: ${keyword} (${page_type})`,
         })
+        return { success: true, new_balance: (data as any).new_balance }
       }
-      creditsDeducted = true
-      console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
-    } else if (!isActiveSubscriber) {
-      // Non-subscriber within free monthly quota: still deduct credits
-      const result = await deductCredits()
-      if (!result.success) {
-        return new Response(JSON.stringify({
-          error: 'Crédits insuffisants',
-          credits_required: CONTENT_CREDIT_COST,
-          credits_balance: userProfile?.credits_balance ?? 0,
-        }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+
+      if (!monthlyFairUse.allowed) {
+        if (isActiveSubscriber) {
+          return new Response(JSON.stringify({
+            error: 'Monthly content creation limit reached',
+            details: monthlyFairUse,
+          }), {
+            status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+        const result = await deductCredits()
+        if (!result.success) {
+          return new Response(JSON.stringify({
+            error: 'Crédits insuffisants',
+            credits_required: CONTENT_CREDIT_COST,
+            credits_balance: userProfile?.credits_balance ?? 0,
+            details: monthlyFairUse,
+          }), {
+            status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+        creditsDeducted = true
+        console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
+      } else if (!isActiveSubscriber) {
+        const result = await deductCredits()
+        if (!result.success) {
+          return new Response(JSON.stringify({
+            error: 'Crédits insuffisants',
+            credits_required: CONTENT_CREDIT_COST,
+            credits_balance: userProfile?.credits_balance ?? 0,
+          }), {
+            status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+        creditsDeducted = true
+        console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
       }
-      creditsDeducted = true
-      console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
+    } else {
+      console.log(`[content-advisor] Service role call — skipping credit check (Parménion/autopilot)`)
     }
 
     const domain = extractDomain(url)
