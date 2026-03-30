@@ -314,13 +314,16 @@ Deno.serve(async (req) => {
 
       const gscData = await gscResp.json();
 
-      // Compute totals
-      let totalClicks = 0, totalImpressions = 0, totalPosition = 0;
+      // Compute totals (position weighted by impressions for accuracy)
+      let totalClicks = 0, totalImpressions = 0, weightedPositionSum = 0;
       const rows = gscData.rows || [];
       for (const row of rows) {
-        totalClicks += row.clicks || 0;
-        totalImpressions += row.impressions || 0;
-        totalPosition += row.position || 0;
+        const clicks = row.clicks || 0;
+        const impressions = row.impressions || 0;
+        const position = row.position || 0;
+        totalClicks += clicks;
+        totalImpressions += impressions;
+        weightedPositionSum += position * impressions;
       }
 
       return new Response(JSON.stringify({
