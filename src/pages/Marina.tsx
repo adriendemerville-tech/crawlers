@@ -894,7 +894,7 @@ ${t.code.commentInProgress}
 # {"status":"processing","progress":45,"phase":"phase2"}
 
 ${t.code.commentDone}
-# {"status":"completed","data":{"report_url":"..."}}`}
+# {"status":"completed","data":{"report_url":"...","report_view_url":"..."}}`}
                   </pre>
                 </div>
 
@@ -911,7 +911,7 @@ async function generateReport(url) {
   while (true) {
     await new Promise(r => setTimeout(r, 5000));
     const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
-    if (job.status === "completed") return job.data.report_url;
+    if (job.status === "completed") return job.data.report_view_url;
     if (job.status === "failed") throw new Error(job.error);
   }
 }`)}
@@ -944,7 +944,7 @@ async function generateReport(url) {
     ).then(r => r.json());
 
     if (job.status === "completed") 
-      return job.data.report_url;
+      return job.data.report_view_url;
     if (job.status === "failed") 
       throw new Error(job.error);
   }
