@@ -198,14 +198,30 @@ export function ExternalApisTab() {
     checkGoogleAccess();
   }, []);
 
+  // Load tracked sites + check existing Matomo connection
+  useEffect(() => {
+    const loadMatomoData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [sitesRes, matomoRes] = await Promise.all([
+        supabase.from('tracked_sites').select('id, domain').eq('user_id', user.id).order('domain'),
+        supabase.from('matomo_connections').select('id, tracked_site_id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
+      ]);
+      setTrackedSites((sitesRes.data || []) as { id: string; domain: string }[]);
+      if (matomoRes.data) setMatomoConnected(true);
+    };
+    loadMatomoData();
+  }, [matomoDialogOpen]);
+
   // Filter analytics services: Google Ads only visible when full access is on
-  // GA4 and GMB use gsc-auth which handles scopes server-side, so always show them
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
     if (s.id === 'google-ads' && !fullGoogleAccess) return false;
     return true;
   });
   const cmsServices = services.filter(s => s.category === 'cms');
+  const selfHostedServices = services.filter(s => s.category === 'self_hosted');
+
 
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
