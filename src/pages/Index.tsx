@@ -732,7 +732,7 @@ const Index = () => {
                   <span className="text-xs font-semibold text-primary tracking-wide uppercase">Marina</span>
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl mb-3">
-                  {language === 'fr' ? 'Un rapport SEO & GEO complet en 3 minutes' : language === 'es' ? 'Un informe SEO y GEO completo en 3 minutos' : 'A complete SEO & GEO report in 3 minutes'}
+                  {language === 'fr' ? 'Intégrez notre outil d\'audit sur votre site via l\'API Marina' : language === 'es' ? 'Integre nuestra herramienta de auditoría en su sitio a través de la API Marina' : 'Integrate our audit tool on your site via the Marina API'}
                 </h2>
                 <p className="text-muted-foreground mb-4 max-w-lg">
                   {language === 'fr'
