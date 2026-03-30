@@ -256,6 +256,7 @@ serve(async (req: Request) => {
         isIktracker,
         tracked_site_id,
         force_content: forceContent,
+        force_iktracker_article: force_iktracker_article === true,
       });
     } else {
       // Non-prescribe phases or empty workbench: single LLM call
@@ -662,6 +663,7 @@ async function prescribeWithDualPrompts(context: {
   isIktracker: boolean;
   tracked_site_id: string;
   force_content?: boolean;
+  force_iktracker_article?: boolean;
   user_id?: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
