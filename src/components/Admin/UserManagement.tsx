@@ -420,6 +420,7 @@ export function UserManagement() {
     setKpiModalOpen,
   });
 
+  const handleUpdateProfile = async () => {
     if (!editUser) return;
     setEditLoading(true);
     try {
