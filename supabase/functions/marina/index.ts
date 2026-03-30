@@ -2253,6 +2253,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
+      // Trigger next queued job
+      await triggerNextPendingJob();
+
       // ─── Webhook callback ───
       try {
         const { data: completedJob } = await sb.from('async_jobs')
