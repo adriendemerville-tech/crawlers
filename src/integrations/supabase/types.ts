@@ -4391,6 +4391,53 @@ export type Database = {
           },
         ]
       }
+      injection_monitor_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          detected_hash: string | null
+          domain: string
+          expected_hash: string | null
+          id: string
+          rule_id: string
+          status: string
+          tracked_site_id: string
+          url_checked: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          detected_hash?: string | null
+          domain: string
+          expected_hash?: string | null
+          id?: string
+          rule_id: string
+          status?: string
+          tracked_site_id: string
+          url_checked: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          detected_hash?: string | null
+          domain?: string
+          expected_hash?: string | null
+          id?: string
+          rule_id?: string
+          status?: string
+          tracked_site_id?: string
+          url_checked?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injection_monitor_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_depth_conversations: {
         Row: {
           created_at: string
@@ -6820,12 +6867,15 @@ export type Database = {
         Row: {
           created_at: string
           domain_id: string
+          expected_script_hash: string | null
           generated_at: string | null
           generation_error: string | null
           generation_status: string
           id: string
           is_active: boolean
           is_manually_edited: boolean | null
+          last_verification_status: string | null
+          last_verified_at: string | null
           payload_data: Json
           payload_type: string
           previous_payload_data: Json | null
@@ -6836,17 +6886,21 @@ export type Database = {
           updated_at: string
           url_pattern: string
           user_id: string
+          verification_failures_count: number | null
           version: number
         }
         Insert: {
           created_at?: string
           domain_id: string
+          expected_script_hash?: string | null
           generated_at?: string | null
           generation_error?: string | null
           generation_status?: string
           id?: string
           is_active?: boolean
           is_manually_edited?: boolean | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null
@@ -6857,17 +6911,21 @@ export type Database = {
           updated_at?: string
           url_pattern?: string
           user_id: string
+          verification_failures_count?: number | null
           version?: number
         }
         Update: {
           created_at?: string
           domain_id?: string
+          expected_script_hash?: string | null
           generated_at?: string | null
           generation_error?: string | null
           generation_status?: string
           id?: string
           is_active?: boolean
           is_manually_edited?: boolean | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null
@@ -6878,6 +6936,7 @@ export type Database = {
           updated_at?: string
           url_pattern?: string
           user_id?: string
+          verification_failures_count?: number | null
           version?: number
         }
         Relationships: [
