@@ -479,6 +479,25 @@ Deno.serve(async (req) => {
       ).join(' | ')
       console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score}% [${breakdown}]`)
 
+      // ── Save conversations for the Benchmark LLM modal ──
+      const convRows = prompts.map((prompt, i) => ({
+        tracked_site_id,
+        user_id,
+        llm_name: llm.name,
+        iteration: i + 1,
+        prompt_text: prompt,
+        response_summary: (responseTexts[i] || '').slice(0, 2000),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }))
+      // Delete old conversations for this LLM, then insert fresh ones
+      await supabase
+        .from('llm_depth_conversations')
+        .delete()
+        .eq('tracked_site_id', tracked_site_id)
+        .eq('user_id', user_id)
+        .eq('llm_name', llm.name)
+      await supabase.from('llm_depth_conversations').insert(convRows)
+
       return { llm_name: llm.name, score, promptDetails: promptScores, responseTexts }
     })
 
