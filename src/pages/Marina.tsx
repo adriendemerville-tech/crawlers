@@ -716,8 +716,8 @@ export default function Marina() {
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`curl -X POST \\
-  https://api.crawlers.fr/functions/v1/marina \\
-  -H "x-marina-key: ${t.code.yourKey}" \\
+  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com"}'
 
@@ -732,7 +732,7 @@ ${t.code.commentResponse}
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.getLabel}</span>
                     <button
-                      onClick={() => copyCode(`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
+                      onClick={() => copyCode(`curl "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina?job_id=abc-123" \\
   -H "x-marina-key: ${t.code.yourKey}"`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -740,7 +740,7 @@ ${t.code.commentResponse}
                     </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
-{`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
+{`curl "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina?job_id=abc-123" \\
   -H "x-marina-key: ${t.code.yourKey}"
 
 ${t.code.commentInProgress}
@@ -757,7 +757,7 @@ ${t.code.commentDone}
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.jsLabel}</span>
                     <button
-                      onClick={() => copyCode(`const API = "https://api.crawlers.fr/functions/v1/marina";
+                      onClick={() => copyCode(`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
 const KEY = "${t.code.yourKey}";
 async function generateReport(url) {
   const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url }) }).then(r => r.json());
@@ -774,7 +774,7 @@ async function generateReport(url) {
                     </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
-{`const API = "https://api.crawlers.fr/functions/v1/marina";
+{`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
 const KEY = "${t.code.yourKey}";
 
 async function generateReport(url) {
