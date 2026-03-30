@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ListTodo } from 'lucide-react';
 import { Recommendation } from '@/types/expertAudit';
 import { ActionPlanCard } from './ActionPlanCard';
 import { ActionPlanProgress } from './ActionPlanProgress';
 import { ActionPlanSaveButton, ActionPlanTask } from './ActionPlanSaveButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { autoSaveActionPlan } from '@/utils/autoSaveActionPlan';
 
 interface ActionPlanProps {
   recommendations: Recommendation[];
@@ -13,6 +15,7 @@ interface ActionPlanProps {
 }
 
 export function ActionPlan({ recommendations, url, auditType = 'technical' }: ActionPlanProps) {
+  const { user } = useAuth();
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const toggleComplete = (id: string) => {
@@ -55,6 +58,33 @@ export function ActionPlan({ recommendations, url, auditType = 'technical' }: Ac
     })),
     [recommendations, completedIds]
   );
+
+  // Auto-save on first render when recommendations are available
+  const hasAutoSaved = useRef(false);
+  useEffect(() => {
+    if (hasAutoSaved.current || !user || recommendations.length === 0) return;
+    hasAutoSaved.current = true;
+
+    let domain = url;
+    try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch {}
+    const title = auditType === 'technical' 
+      ? `Audit Technique SEO — ${domain}` 
+      : `Audit Stratégique GEO — ${domain}`;
+
+    autoSaveActionPlan({
+      userId: user.id,
+      url,
+      title,
+      auditType,
+      tasks: recommendations.map(rec => ({
+        id: rec.id,
+        title: rec.title,
+        priority: rec.priority,
+        category: rec.category,
+        isCompleted: false,
+      })),
+    }).catch(() => {});
+  }, [user, recommendations, url, auditType]);
 
   // Sort: incomplete critical first, then important, then optional, then completed
   const sortedRecommendations = useMemo(() => {

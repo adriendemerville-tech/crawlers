@@ -26,6 +26,7 @@ import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
 import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
+import { autoSaveActionPlan } from '@/utils/autoSaveActionPlan';
 
 const crawlI18n = {
   fr: {
@@ -620,6 +621,23 @@ export default function SiteCrawl() {
             supabase.functions.invoke('agent-cto', {
               body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
             }).catch(() => {});
+            // Auto-save crawl action plan
+            if (user && Array.isArray(sanitizedResult.ai_recommendations) && sanitizedResult.ai_recommendations.length > 0) {
+              const crawlTasks = sanitizedResult.ai_recommendations.map((rec: any, i: number) => ({
+                id: `crawl_${sanitizedResult.id}_${i}`,
+                title: typeof rec === 'string' ? rec : (rec?.title || rec?.recommendation || rec?.text || `Recommandation ${i + 1}`),
+                priority: (typeof rec === 'object' && rec?.priority) || 'important' as const,
+                category: (typeof rec === 'object' && rec?.category) || 'crawl',
+                isCompleted: false,
+              }));
+              autoSaveActionPlan({
+                userId: user.id,
+                url: sanitizedResult.url || `https://${sanitizedResult.domain}`,
+                title: `Crawl Multi-Pages — ${sanitizedResult.domain}`,
+                auditType: 'crawl',
+                tasks: crawlTasks,
+              }).catch(() => {});
+            }
           }
           if (sanitizedResult.status === 'error') {
             clearInterval(pollingIntervalRef.current!);
