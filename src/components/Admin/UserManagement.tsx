@@ -470,6 +470,15 @@ export function UserManagement() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant="default"
+              size="sm"
+              onClick={() => setCreateDialogOpen(true)}
+              className="gap-1.5"
+            >
+              <UserPlus className="h-4 w-4" />
+              Créer
+            </Button>
+            <Button
               variant={showPayingTab ? 'default' : 'outline'}
               size="sm"
               onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); }}
