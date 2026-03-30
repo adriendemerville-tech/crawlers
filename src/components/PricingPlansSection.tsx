@@ -17,9 +17,10 @@ const t3 = (lang: string, fr: string, en: string, es: string) =>
 interface PricingPlansSectionProps {
   title?: string;
   subtitle?: string;
+  embedded?: boolean;
 }
 
-export function PricingPlansSection({ title, subtitle }: PricingPlansSectionProps) {
+export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansSectionProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -104,6 +105,127 @@ export function PricingPlansSection({ title, subtitle }: PricingPlansSectionProp
 
   const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones];
 
+  const cards = (
+    <>
+      {/* Pro Agency — Violet */}
+      <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
+        <div className="flex items-center gap-3 mb-4">
+          <Crown className="h-7 w-7 text-violet-500" />
+          <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
+        </div>
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-4xl font-extrabold text-foreground">59€</span>
+          <span className="text-lg text-muted-foreground">/mois</span>
+        </div>
+        <p className="text-xs font-medium text-violet-500 mb-4">
+          {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          {t3(language, 'Freelances, consultants, petites agences (1-5 clients)', 'Freelancers, consultants, small agencies (1-5 clients)', 'Freelancers, consultores, pequeñas agencias (1-5 clientes)')}
+        </p>
+        <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+          {proFeatures.map((f, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {f}
+            </li>
+          ))}
+        </ul>
+        <Button
+          size="lg"
+          onClick={handleSubscribe}
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold"
+        >
+          {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
+          {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
+        </Button>
+      </div>
+
+      {/* Pro Agency + — Gold */}
+      <div className="relative rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-950/20 via-card to-card p-8 flex flex-col shadow-lg shadow-amber-500/5">
+        <div className="absolute -top-3 right-6">
+          <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-xs px-3 py-1 border-0">
+            ⚡ {t3(language, 'Volume', 'Volume', 'Volumen')}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
+            <Crown className="h-5 w-5 text-black" />
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Pro Agency +</h3>
+        </div>
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-4xl font-extrabold text-foreground">99€</span>
+          <span className="text-lg text-muted-foreground">/mois</span>
+        </div>
+        <p className="text-xs font-medium text-amber-500 mb-4">
+          {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          {t3(language, 'Agences structurées, équipes internes SEO (10+ clients)', 'Structured agencies, in-house SEO teams (10+ clients)', 'Agencias estructuradas, equipos internos SEO (10+ clientes)')}
+        </p>
+        <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+          {plusFeatures.map((f, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {f}
+            </li>
+          ))}
+        </ul>
+        <Button
+          size="lg"
+          onClick={handleSubscribePlus}
+          disabled={loadingPlus}
+          className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold shadow-lg shadow-amber-500/20"
+        >
+          {loadingPlus ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
+          {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
+        </Button>
+      </div>
+
+      {/* Enterprise — Green */}
+      <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-card to-card p-8 flex flex-col">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">Enterprise</h3>
+        </div>
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-transparent">
+            {t3(language, 'Sur demande', 'Custom pricing', 'Bajo demanda')}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          {t3(language, 'Grands comptes, organisations, équipes 20+', 'Large accounts, organizations, 20+ teams', 'Grandes cuentas, organizaciones, equipos 20+')}
+        </p>
+        <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
+          {enterpriseFeatures.map((f, i) => {
+            const Icon = enterpriseIcons[i] || CheckCircle2;
+            return (
+              <li key={i} className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-emerald-500 shrink-0" /> {f}
+              </li>
+            );
+          })}
+        </ul>
+        <Button
+          size="lg"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('felix-enterprise-contact'));
+          }}
+          className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20"
+        >
+          <MessageCircle className="h-5 w-5 mr-2" />
+          {t3(language, 'Contactez-nous', 'Contact us', 'Contáctenos')}
+        </Button>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="grid gap-6 md:grid-cols-3">{cards}</div>;
+  }
+
   return (
     <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4">
@@ -111,121 +233,7 @@ export function PricingPlansSection({ title, subtitle }: PricingPlansSectionProp
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{title || defaultTitle}</h2>
           <p className="mt-3 text-muted-foreground">{subtitle || defaultSubtitle}</p>
         </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Pro Agency — Violet */}
-          <div className="relative rounded-2xl border-2 border-violet-500/40 bg-card p-8 flex flex-col">
-            <div className="flex items-center gap-3 mb-4">
-              <Crown className="h-7 w-7 text-violet-500" />
-              <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
-            </div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-4xl font-extrabold text-foreground">59€</span>
-              <span className="text-lg text-muted-foreground">/mois</span>
-            </div>
-            <p className="text-xs font-medium text-violet-500 mb-4">
-              {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t3(language, 'Freelances, consultants, petites agences (1-5 clients)', 'Freelancers, consultants, small agencies (1-5 clients)', 'Freelancers, consultores, pequeñas agencias (1-5 clientes)')}
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
-              {proFeatures.map((f, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0" /> {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              size="lg"
-              onClick={handleSubscribe}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold"
-            >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
-              {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
-            </Button>
-          </div>
-
-          {/* Pro Agency + — Gold */}
-          <div className="relative rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-950/20 via-card to-card p-8 flex flex-col shadow-lg shadow-amber-500/5">
-            <div className="absolute -top-3 right-6">
-              <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-xs px-3 py-1 border-0">
-                ⚡ {t3(language, 'Volume', 'Volume', 'Volumen')}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
-                <Crown className="h-5 w-5 text-black" />
-              </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Pro Agency +</h3>
-            </div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-4xl font-extrabold text-foreground">99€</span>
-              <span className="text-lg text-muted-foreground">/mois</span>
-            </div>
-            <p className="text-xs font-medium text-amber-500 mb-4">
-              {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t3(language, 'Agences structurées, équipes internes SEO (10+ clients)', 'Structured agencies, in-house SEO teams (10+ clients)', 'Agencias estructuradas, equipos internos SEO (10+ clientes)')}
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
-              {plusFeatures.map((f, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" /> {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              size="lg"
-              onClick={handleSubscribePlus}
-              disabled={loadingPlus}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold shadow-lg shadow-amber-500/20"
-            >
-              {loadingPlus ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
-              {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
-            </Button>
-          </div>
-
-          {/* Enterprise — Green */}
-          <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-card to-card p-8 flex flex-col">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">Enterprise</h3>
-            </div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-3xl font-extrabold bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-transparent">
-                {t3(language, 'Sur demande', 'Custom pricing', 'Bajo demanda')}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t3(language, 'Grands comptes, organisations, équipes 20+', 'Large accounts, organizations, 20+ teams', 'Grandes cuentas, organizaciones, equipos 20+')}
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground mb-8 flex-1">
-              {enterpriseFeatures.map((f, i) => {
-                const Icon = enterpriseIcons[i] || CheckCircle2;
-                return (
-                  <li key={i} className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-emerald-500 shrink-0" /> {f}
-                  </li>
-                );
-              })}
-            </ul>
-            <Button
-              size="lg"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('felix-enterprise-contact'));
-              }}
-              className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold shadow-lg shadow-emerald-500/20"
-            >
-              <MessageCircle className="h-5 w-5 mr-2" />
-              {t3(language, 'Contactez-nous', 'Contact us', 'Contáctenos')}
-            </Button>
-          </div>
-        </div>
+        <div className="grid gap-6 md:grid-cols-3">{cards}</div>
       </div>
     </section>
   );
