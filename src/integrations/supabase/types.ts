@@ -2095,6 +2095,77 @@ export type Database = {
         }
         Relationships: []
       }
+      content_deploy_snapshots: {
+        Row: {
+          consecutive_failures: number | null
+          created_at: string
+          deployed_content_hash: string | null
+          deployed_h1: string | null
+          deployed_meta_desc: string | null
+          deployed_schema_types: string[] | null
+          deployed_title: string | null
+          domain: string
+          id: string
+          is_active: boolean | null
+          last_verification_status: string | null
+          last_verified_at: string | null
+          page_url: string
+          source_record_id: string | null
+          source_type: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consecutive_failures?: number | null
+          created_at?: string
+          deployed_content_hash?: string | null
+          deployed_h1?: string | null
+          deployed_meta_desc?: string | null
+          deployed_schema_types?: string[] | null
+          deployed_title?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
+          page_url: string
+          source_record_id?: string | null
+          source_type: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consecutive_failures?: number | null
+          created_at?: string
+          deployed_content_hash?: string | null
+          deployed_h1?: string | null
+          deployed_meta_desc?: string | null
+          deployed_schema_types?: string[] | null
+          deployed_title?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
+          page_url?: string
+          source_record_id?: string | null
+          source_type?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_deploy_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_generation_logs: {
         Row: {
           brief_angle: string | null
@@ -2223,6 +2294,86 @@ export type Database = {
           },
           {
             foreignKeyName: "content_generation_logs_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_monitor_log: {
+        Row: {
+          changed_elements: string[] | null
+          created_at: string
+          details: Json | null
+          detected_content_hash: string | null
+          detected_h1: string | null
+          detected_meta_desc: string | null
+          detected_schema_types: string[] | null
+          detected_title: string | null
+          domain: string
+          expected_content_hash: string | null
+          expected_h1: string | null
+          expected_meta_desc: string | null
+          expected_schema_types: string[] | null
+          expected_title: string | null
+          id: string
+          source_record_id: string | null
+          source_type: string
+          status: string
+          tracked_site_id: string
+          url_checked: string
+          user_id: string
+        }
+        Insert: {
+          changed_elements?: string[] | null
+          created_at?: string
+          details?: Json | null
+          detected_content_hash?: string | null
+          detected_h1?: string | null
+          detected_meta_desc?: string | null
+          detected_schema_types?: string[] | null
+          detected_title?: string | null
+          domain: string
+          expected_content_hash?: string | null
+          expected_h1?: string | null
+          expected_meta_desc?: string | null
+          expected_schema_types?: string[] | null
+          expected_title?: string | null
+          id?: string
+          source_record_id?: string | null
+          source_type: string
+          status?: string
+          tracked_site_id: string
+          url_checked: string
+          user_id: string
+        }
+        Update: {
+          changed_elements?: string[] | null
+          created_at?: string
+          details?: Json | null
+          detected_content_hash?: string | null
+          detected_h1?: string | null
+          detected_meta_desc?: string | null
+          detected_schema_types?: string[] | null
+          detected_title?: string | null
+          domain?: string
+          expected_content_hash?: string | null
+          expected_h1?: string | null
+          expected_meta_desc?: string | null
+          expected_schema_types?: string[] | null
+          expected_title?: string | null
+          id?: string
+          source_record_id?: string | null
+          source_type?: string
+          status?: string
+          tracked_site_id?: string
+          url_checked?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_monitor_log_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
