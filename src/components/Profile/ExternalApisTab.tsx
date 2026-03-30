@@ -283,9 +283,53 @@ export function ExternalApisTab() {
       return;
     }
 
+    if (service.id === 'matomo') {
+      setMatomoDialogOpen(true);
+      return;
+    }
+
     if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'odoo', 'prestashop'].includes(service.id)) {
       setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo' | 'prestashop');
       setCmsDialogOpen(true);
+    }
+  };
+
+  const handleMatomoConnect = async () => {
+    const { matomo_url, token_auth, site_id, tracked_site_id } = matomoForm;
+    if (!matomo_url || !token_auth || !site_id || !tracked_site_id) {
+      toast.error(language === 'fr' ? 'Remplissez tous les champs' : 'Fill all fields');
+      return;
+    }
+    setMatomoLoading(true);
+    try {
+      // Test connection
+      const { data, error } = await supabase.functions.invoke('matomo-connector', {
+        body: { action: 'test_connection', matomo_url, token_auth, site_id: parseInt(site_id) },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Connection failed');
+
+      // Save connection
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      await supabase.from('matomo_connections').upsert({
+        user_id: user.id,
+        tracked_site_id,
+        matomo_url,
+        auth_token: token_auth,
+        site_id: parseInt(site_id),
+        is_active: true,
+      } as any, { onConflict: 'tracked_site_id' });
+
+      setMatomoConnected(true);
+      setMatomoDialogOpen(false);
+      toast.success(language === 'fr' ? 'Matomo connecté !' : language === 'es' ? '¡Matomo conectado!' : 'Matomo connected!');
+    } catch (err: any) {
+      console.error('[ExternalApis] Matomo error:', err);
+      toast.error(err.message || 'Matomo connection error');
+    } finally {
+      setMatomoLoading(false);
     }
   };
 
