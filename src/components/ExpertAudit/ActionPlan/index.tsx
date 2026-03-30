@@ -15,6 +15,7 @@ interface ActionPlanProps {
 }
 
 export function ActionPlan({ recommendations, url, auditType = 'technical' }: ActionPlanProps) {
+  const { user } = useAuth();
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const toggleComplete = (id: string) => {
