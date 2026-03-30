@@ -810,7 +810,47 @@ async function generateReport(url) {
 }`}
                   </pre>
                 </div>
-              </div>
+
+                {/* Webhook example */}
+                <p className="text-xs text-muted-foreground mt-2">{t.api.webhookDesc}</p>
+                <div className="relative">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                    <span className="text-[10px] text-muted-foreground font-mono">{t.api.webhookLabel}</span>
+                    <button
+                      onClick={() => copyCode(`curl -X POST \\
+  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  -H "x-marina-key: ${t.code.yourKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://example.com", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
+{`curl -X POST \\
+  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  -H "x-marina-key: ${t.code.yourKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://example.com",
+    "callback_url": "https://yoursite.com/api/marina-webhook"
+  }'
+
+# ${t.code.commentResponse}
+# {"job_id": "abc-123", "status": "pending"}
+
+# → Marina POST to your callback_url when done:
+# {
+#   "event": "marina.report.completed",
+#   "job_id": "abc-123",
+#   "report_url": "https://...",
+#   "expert_seo_score": 72,
+#   "expert_seo_max": 100,
+#   "domain": "example.com"
+# }`}
+                  </pre>
+                </div>
             </div>
 
             {/* CTA */}
