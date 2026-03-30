@@ -3873,6 +3873,74 @@ export type Database = {
           },
         ]
       }
+      gmb_power_snapshots: {
+        Row: {
+          activity_score: number | null
+          completeness_score: number | null
+          created_at: string
+          domain: string
+          grade: string
+          id: string
+          local_serp_score: number | null
+          measured_at: string
+          media_score: number | null
+          nap_consistency_score: number | null
+          raw_data: Json | null
+          reputation_score: number | null
+          total_score: number
+          tracked_site_id: string
+          trust_score: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          activity_score?: number | null
+          completeness_score?: number | null
+          created_at?: string
+          domain: string
+          grade?: string
+          id?: string
+          local_serp_score?: number | null
+          measured_at?: string
+          media_score?: number | null
+          nap_consistency_score?: number | null
+          raw_data?: Json | null
+          reputation_score?: number | null
+          total_score?: number
+          tracked_site_id: string
+          trust_score?: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          activity_score?: number | null
+          completeness_score?: number | null
+          created_at?: string
+          domain?: string
+          grade?: string
+          id?: string
+          local_serp_score?: number | null
+          measured_at?: string
+          media_score?: number | null
+          nap_consistency_score?: number | null
+          raw_data?: Json | null
+          reputation_score?: number | null
+          total_score?: number
+          tracked_site_id?: string
+          trust_score?: number | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmb_power_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gmb_reviews: {
         Row: {
           comment: string | null
