@@ -378,6 +378,33 @@ Deno.serve(async (req: Request) => {
           let executionSuccess = true;
           const executionResults: any[] = [];
 
+        // ═══ POST-DIAGNOSE: Recycle stale consumed workbench items ═══
+        // After diagnose completes, reset items consumed >24h ago so prescribe has fresh items
+        if (phase === 'diagnose' && executionSuccess) {
+          try {
+            const { data: recycled, error: recycleErr } = await supabase
+              .from('architect_workbench')
+              .update({ 
+                status: 'pending', 
+                consumed_by_code: false, 
+                consumed_by_content: false,
+                consumed_at: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('domain', site.domain)
+              .eq('status', 'in_progress')
+              .lt('consumed_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+              .select('id');
+            
+            if (recycled && recycled.length > 0) {
+              console.log(`[AutopilotEngine] ♻️ Recycled ${recycled.length} stale workbench items for ${site.domain}`);
+            }
+            if (recycleErr) console.warn('[AutopilotEngine] Workbench recycle error:', recycleErr.message);
+          } catch (recycleE) {
+            console.warn('[AutopilotEngine] Workbench recycle exception:', recycleE);
+          }
+        }
+
         // ═══ INLINE ROUTING: After prescribe, detect V2 structured payload ═══
         if (phase === 'prescribe') {
           const payload = decision.action?.payload || {};
