@@ -78,7 +78,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -192,8 +192,8 @@ serve(async (req: Request) => {
 
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
-    const forceContent = force_content_cycle === true;
-    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : 30;
+    const forceContent = force_content_cycle === true || force_iktracker_article === true;
+    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30);
     
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
@@ -256,6 +256,7 @@ serve(async (req: Request) => {
         isIktracker,
         tracked_site_id,
         force_content: forceContent,
+        force_iktracker_article: force_iktracker_article === true,
       });
     } else {
       // Non-prescribe phases or empty workbench: single LLM call
@@ -662,6 +663,7 @@ async function prescribeWithDualPrompts(context: {
   isIktracker: boolean;
   tracked_site_id: string;
   force_content?: boolean;
+  force_iktracker_article?: boolean;
   user_id?: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -866,6 +868,7 @@ ${context.siteInfo?.products_services ? `Ses produits/services : ${context.siteI
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
+${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content avec action "create-post" pour créer UN NOUVEL ARTICLE de blog pertinent pour le secteur du site. Cette directive est prioritaire et NON NÉGOCIABLE — même si aucun gap n'est identifié, produis un article utile pour le référencement du site.\n` : ''}
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
 - FORMAT OBLIGATOIRE: tout le contenu DOIT être en **Markdown** (pas de HTML). Utilise ## pour H2, ### pour H3, **gras**, *italique*, - pour listes, [ancre](url) pour liens, > pour citations.
