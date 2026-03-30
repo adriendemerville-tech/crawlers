@@ -235,6 +235,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 |-------|-------------|---------------|
 | \`cms_connections\` | Connexions CMS (WP, Drupal, Shopify, Webflow, Wix) | \`tracked_site_id\`, \`platform\`, \`auth_method\`, \`status\`, \`capabilities\` |
 | \`google_ads_connections\` | Connexions Google Ads OAuth | \`user_id\`, \`tracked_site_id\`, \`customer_id\`, \`access_token\`, \`refresh_token\` |
+| \`google_connections\` | Connexions Google OAuth (GSC, GA4, GBP) | \`user_id\`, \`google_email\`, \`access_token\`, \`refresh_token\`, \`scopes\`. Les connexions GBP sont identifiées par un préfixe \`gbp:\` sur \`google_email\` pour les séparer des connexions GSC/GA4. |
 | \`tool_api_keys\` | Clés API outils tiers (GTmetrix, Rank Math, Link Whisper) | \`user_id\`, \`tool_name\`, \`api_key\`, \`tracked_site_id\` |
 | \`site_script_rules\` | Règles d'injection de scripts | \`domain_id\`, \`url_pattern\`, \`payload_type\`, \`payload_data\`, \`version\` |
 | \`site_script_rules_history\` | Historique de versionnement | \`rule_id\`, \`version\`, \`payload_data\` |
