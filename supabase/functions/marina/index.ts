@@ -1292,6 +1292,7 @@ function adjustColor(hex: string, amount: number): string {
 function generateLegacyMarinaReport(
   url: string, domain: string, lang: string,
   expertSeoData: any, strategicData: any, cocoonData: any | null,
+  branding?: MarinaBranding,
 ): string {
   // Generate each section individually then compile — same logic but inline
   const crawlHTML = generateCrawlSectionHTML(expertSeoData, lang, domain, url);
