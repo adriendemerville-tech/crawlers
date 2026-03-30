@@ -1540,7 +1540,7 @@ Respond in strict JSON: [{"title":"...","description":"...","priority":"Priority
       system: `${strictLanguageInstruction} You are a precise SEO strategist. Always respond with valid JSON arrays only. Each recommendation must reference specific URLs, clusters, or data points from the analysis.`,
       user: prompt,
       maxTokens: 2048,
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(135_000),
     });
   
     // Extract JSON array from response
@@ -1897,7 +1897,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
               // Poll until crawl completes — max 100s to stay within wall-clock
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 100_000;
+              const CRAWL_TIMEOUT_MS = 300_000;
               const CRAWL_POLL_MS = 5_000;
               let crawlDone = false;
 
@@ -2051,7 +2051,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── Cocoon computation ───
       let cocoonResult: any = null;
-      const COCOON_TIMEOUT_MS = 90_000; // 90s — safe within wall-clock
+      const COCOON_TIMEOUT_MS = 270_000; // 270s — tripled for heavy sites
       try {
         cocoonResult = await Promise.race([
           (async () => {
