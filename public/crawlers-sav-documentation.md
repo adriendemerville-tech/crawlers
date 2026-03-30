@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.4"
-date: "2026-03-26"
+version: "3.5"
+date: "2026-03-30"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -265,13 +265,35 @@ Suivi hebdomadaire de vos positions Google :
 - Agent SEO : optimisation automatique du contenu (blog : libre, landing pages : max 10% de modification)
 - Agent CTO : maintenance algorithmique automatique, self-critique et proposition de patches
 
-### Marina — Pipeline de Prospection (Admin)
-Marina est un pipeline backend autonome de prospection automatisée réservé aux administrateurs.
+### Marina — Pipeline de Prospection B2B
+Marina est un pipeline d'audit automatisé disponible via API publique et dashboard admin.
+
+**API publique Marina Embed :**
+- Endpoint : `POST /functions/v1/marina`
+- Authentification : header `x-marina-key` (clé API depuis Console)
+- Paramètres body JSON :
+  - `url` (obligatoire) : URL du site à auditer
+  - `lang` (optionnel) : langue du rapport — `"fr"`, `"en"` ou `"es"`. Si omis, la langue est auto-détectée via l'attribut `<html lang="...">` du site, puis par heuristique de contenu. Défaut : `"en"`.
+  - `callback_url` (optionnel) : URL de webhook pour recevoir le rapport automatiquement
+- Coût : 5 crédits par rapport
+- Durée : ~3 minutes, progression via polling (GET ?job_id=xxx) ou webhook
+- Deux URLs de rapport : `report_url` (téléchargement, expire 7j) et `report_view_url` (affichage iframe direct)
+
+**Fonctionnalités du rapport :**
 - Orchestre en une seule passe : Crawl, Cocon sémantique, Audit Expert SEO, Audit Stratégique GEO
-- Détecte automatiquement la langue du site (FR, EN, ES) pour adapter le rapport
-- Génère un rapport HTML consolidé stocké dans le bucket de rapports partagés, accessible via lien signé (7 jours)
-- Dashboard Admin : lancement de jobs, suivi de progression temps réel, suppression persistante
-- Collecte de données d'entraînement ML : scores structurés et signaux techniques bruts alimentent une table dédiée
+- Rapport HTML de 15+ pages avec toolbar interactive trilingue (FR/EN/ES)
+- Rapport généré dans la langue demandée (paramètre explicite prioritaire, auto-détection en fallback)
+- Stocké dans le bucket de rapports partagés, accessible via lien signé (7 jours)
+
+**Branding personnalisable (Pro Agency) :**
+- Configurable depuis Console → Branding → section Marina
+- Personnalisation de l'intro du rapport, du CTA (texte + URL)
+- Option pour masquer le badge Crawlers.fr
+- Les paramètres de branding sont appliqués à la génération du rapport
+
+**Dashboard Admin :**
+- Lancement de jobs, suivi de progression temps réel, suppression persistante
+- Collecte de données d'entraînement ML : scores structurés et signaux techniques bruts
 
 ---
 
