@@ -27,7 +27,21 @@ async function resolveGmbToken(userId: string, trackedSiteId: string): Promise<G
 
   let connectionId = site?.google_connection_id
 
-  // 2. If no explicit connection, scan google_connections for matching domain
+  // 2. If no explicit connection, look for a dedicated GBP connection (gbp: prefix)
+  if (!connectionId) {
+    const { data: gbpConns } = await sb
+      .from('google_connections')
+      .select('id, google_email, gmb_account_id, gmb_location_id')
+      .eq('user_id', userId)
+      .like('google_email', 'gbp:%')
+      .limit(1)
+
+    if (gbpConns && gbpConns.length > 0 && gbpConns[0].gmb_account_id) {
+      connectionId = gbpConns[0].id
+    }
+  }
+
+  // 3. If still no connection, scan google_connections for matching domain
   if (!connectionId && site?.domain) {
     const { data: conns } = await sb
       .from('google_connections')
