@@ -328,6 +328,12 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
                 Retirer Pro
               </Button>
             )}
+            {onEditProfile && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onEditProfile(user)}>
+                <Pencil className="h-3.5 w-3.5" />
+                Modifier
+              </Button>
+            )}
             {onDeleteUser && (
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto" onClick={() => onDeleteUser(user)}>
                 <Trash2 className="h-3.5 w-3.5" />
