@@ -14,10 +14,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
-  BookOpen, CheckCircle2, CreditCard, Coins
+  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer
 } from 'lucide-react';
 
 const CREDIT_COST = 5;
@@ -78,6 +79,17 @@ const translations = {
       { label: 'Analyse Cocoon sémantique', desc: 'Clusters, maillage interne, architecture de contenu' },
     ],
     featuresTitle: 'Ce que contient votre rapport',
+    preview: {
+      tabFeatures: 'Fonctionnalités',
+      tabPreview: 'Aperçu du rapport',
+      tabApi: 'API & Intégration',
+      tabPricing: 'Tarifs',
+      title: 'Découvrez un exemple de rapport Marina',
+      subtitle: 'Voici à quoi ressemble un rapport Marina généré automatiquement. 15+ pages d\'audit SEO, GEO et sémantique.',
+      loading: 'Chargement du rapport de démonstration...',
+      noDemo: 'Générez votre premier rapport pour voir le résultat ici.',
+      generateCta: 'Générer un rapport',
+    },
     api: {
       badge: 'API',
       title: 'Embarquez Marina sur votre site',
@@ -231,6 +243,17 @@ const translations = {
       { label: 'Semantic Cocoon analysis', desc: 'Clusters, internal linking, content architecture' },
     ],
     featuresTitle: 'What\'s in your report',
+    preview: {
+      tabFeatures: 'Features',
+      tabPreview: 'Report preview',
+      tabApi: 'API & Integration',
+      tabPricing: 'Pricing',
+      title: 'See a sample Marina report',
+      subtitle: 'Here\'s what an automatically generated Marina report looks like. 15+ pages of SEO, GEO, and semantic audit.',
+      loading: 'Loading demo report...',
+      noDemo: 'Generate your first report to see the result here.',
+      generateCta: 'Generate a report',
+    },
     api: {
       badge: 'API',
       title: 'Embed Marina on your website',
@@ -384,6 +407,17 @@ const translations = {
       { label: 'Análisis Cocoon semántico', desc: 'Clusters, enlazado interno, arquitectura de contenido' },
     ],
     featuresTitle: 'Qué incluye tu informe',
+    preview: {
+      tabFeatures: 'Funcionalidades',
+      tabPreview: 'Vista previa del informe',
+      tabApi: 'API e Integración',
+      tabPricing: 'Precios',
+      title: 'Descubre un ejemplo de informe Marina',
+      subtitle: 'Así se ve un informe Marina generado automáticamente. 15+ páginas de auditoría SEO, GEO y semántica.',
+      loading: 'Cargando informe de demostración...',
+      noDemo: 'Genera tu primer informe para ver el resultado aquí.',
+      generateCta: 'Generar un informe',
+    },
     api: {
       badge: 'API',
       title: 'Integra Marina en tu sitio web',
@@ -501,6 +535,44 @@ export default function Marina() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [demoHtml, setDemoHtml] = useState<string | null>(null);
+  const [loadingDemo, setLoadingDemo] = useState(false);
+  const [activeTab, setActiveTab] = useState('features');
+
+  // Load demo report from latest completed marina job
+  useEffect(() => {
+    if (!user) return;
+    const loadDemo = async () => {
+      setLoadingDemo(true);
+      try {
+        const { data: latestJob } = await supabase
+          .from('async_jobs')
+          .select('id, result_data')
+          .eq('user_id', user.id)
+          .eq('function_name', 'marina')
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestJob) {
+          const resultData = latestJob.result_data as any;
+          const viewUrl = resultData?.report_view_url;
+          const reportUrlFallback = resultData?.report_url;
+          const fetchUrl = viewUrl || reportUrlFallback;
+          if (fetchUrl) {
+            const resp = await fetch(fetchUrl);
+            if (resp.ok) {
+              setDemoHtml(await resp.text());
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Demo report load error:', e);
+      }
+      setLoadingDemo(false);
+    };
+    loadDemo();
+  }, [user]);
 
   // Poll job progress via fetch
 
@@ -520,6 +592,13 @@ export default function Marina() {
           const data = await res.json();
           if (data.status === 'completed') {
             setReportUrl(data.data?.report_url || null);
+            // Auto-load into preview tab
+            const viewUrl = data.data?.report_view_url || data.data?.report_url;
+            if (viewUrl) {
+              fetch(viewUrl).then(r => r.ok ? r.text() : null).then(html => {
+                if (html) setDemoHtml(html);
+              }).catch(() => {});
+            }
             setLoading(false);
             setProgress(100);
             setPhase(t.phases.done);
@@ -764,7 +843,30 @@ export default function Marina() {
           </div>
         </section>
 
-        {/* What's included */}
+        {/* Tabs navigation */}
+        <section className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto max-w-5xl px-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">
+                <TabsTrigger value="features" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Zap className="w-3.5 h-3.5" /> {t.preview.tabFeatures}
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Eye className="w-3.5 h-3.5" /> {t.preview.tabPreview}
+                </TabsTrigger>
+                <TabsTrigger value="api" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Terminal className="w-3.5 h-3.5" /> {t.preview.tabApi}
+                </TabsTrigger>
+                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Coins className="w-3.5 h-3.5" /> {t.preview.tabPricing}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </section>
+
+        {/* Tab: Features */}
+        {activeTab === 'features' && (
         <section className="py-16 border-b border-border">
           <div className="mx-auto max-w-5xl px-4">
             <h2 className="text-2xl font-bold text-foreground text-center mb-8">{t.featuresTitle}</h2>
@@ -790,8 +892,87 @@ export default function Marina() {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Embed / API section */}
+        {/* Tab: Preview */}
+        {activeTab === 'preview' && (
+        <section className="py-0 border-b border-border">
+          <div className="flex flex-col h-[calc(100vh-200px)]">
+            {/* Preview header — same style as MarinaReportPreviewModal */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-border bg-card">
+              <h2 className="text-sm font-semibold text-foreground">{t.preview.title}</h2>
+              <div className="flex items-center gap-2">
+                {demoHtml && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-xs"
+                      onClick={() => {
+                        const iframe = document.createElement('iframe');
+                        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+                        document.body.appendChild(iframe);
+                        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (!doc || !iframe.contentWindow) return;
+                        doc.open();
+                        doc.write(demoHtml);
+                        doc.close();
+                        setTimeout(() => {
+                          iframe.contentWindow?.print();
+                          setTimeout(() => document.body.removeChild(iframe), 1000);
+                        }, 500);
+                      }}
+                    >
+                      <Printer className="h-3.5 w-3.5" /> {language === 'en' ? 'Print' : language === 'es' ? 'Imprimir' : 'Imprimer'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-xs"
+                      onClick={() => {
+                        setReportHtml(demoHtml);
+                        setShowReportModal(true);
+                      }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> {language === 'en' ? 'Full screen' : language === 'es' ? 'Pantalla completa' : 'Plein écran'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Preview content */}
+            <div className="flex-1 overflow-auto bg-muted/30">
+              {loadingDemo ? (
+                <div className="flex items-center justify-center h-full gap-3 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">{t.preview.loading}</span>
+                </div>
+              ) : demoHtml ? (
+                <iframe srcDoc={demoHtml} className="w-full h-full border-0" title="Marina Report Preview" />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <FileText className="w-12 h-12 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">{t.preview.noDemo}</p>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-primary/30 text-primary"
+                    onClick={() => {
+                      setActiveTab('features');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    <Search className="w-4 h-4" /> {t.preview.generateCta}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* Tab: API */}
+        {activeTab === 'api' && (
         <section className="py-16 border-b border-border bg-muted/20">
           <div className="mx-auto max-w-5xl px-4">
             <div className="text-center mb-10">
@@ -1201,8 +1382,10 @@ async function generateReport(url) {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Pricing reminder */}
+        {/* Tab: Pricing */}
+        {activeTab === 'pricing' && (
         <section className="py-12">
           <div className="mx-auto max-w-3xl px-4 text-center">
             <h2 className="text-xl font-bold text-foreground mb-4">{t.pricing.title}</h2>
@@ -1238,6 +1421,7 @@ async function generateReport(url) {
             </div>
           </div>
         </section>
+        )}
       </main>
 
       <Footer />
