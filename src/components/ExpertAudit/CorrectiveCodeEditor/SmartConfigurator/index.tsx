@@ -1035,9 +1035,14 @@ export function SmartConfigurator({
         }
       }
 
+      // Only send code-channel fixes to generate-corrective-code (content fixes handled by Content Architect)
+      const fixesForCodeGen = hasCmsConnectionForContent
+        ? fixConfigs.filter(f => f.deliveryChannel !== 'content' || !f.enabled)
+        : fixConfigs;
+
       const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
         body: {
-          fixes: fixConfigs,
+          fixes: fixesForCodeGen,
           siteName,
           siteUrl,
           language,
