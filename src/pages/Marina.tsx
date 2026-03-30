@@ -1158,7 +1158,7 @@ async function generateReport(url) {
   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
+  -d '{"url": "https://example.com", "lang": "fr", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1171,6 +1171,7 @@ async function generateReport(url) {
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://example.com",
+    "lang": "fr",
     "callback_url": "https://yoursite.com/api/marina-webhook"
   }'
 
