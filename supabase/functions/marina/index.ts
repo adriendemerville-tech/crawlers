@@ -2334,6 +2334,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
     } catch (_) { /* ignore */ }
+
+    // Trigger next queued job even on failure
+    await triggerNextPendingJob();
   }
 }
 
