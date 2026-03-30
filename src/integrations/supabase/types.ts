@@ -3371,6 +3371,93 @@ export type Database = {
           },
         ]
       }
+      geo_visibility_snapshots: {
+        Row: {
+          audit_impact_snapshot_id: string | null
+          avg_sentiment_score: number | null
+          brand_mention_count: number | null
+          citation_rate: number | null
+          cited_count: number | null
+          created_at: string
+          delta_citation_rate: number | null
+          delta_overall_score: number | null
+          delta_sentiment: number | null
+          domain: string
+          id: string
+          market_sector: string | null
+          measured_at: string
+          measurement_phase: string
+          overall_score: number | null
+          prompts_used: Json | null
+          provider_scores: Json | null
+          recommendation_rate: number | null
+          total_models: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          audit_impact_snapshot_id?: string | null
+          avg_sentiment_score?: number | null
+          brand_mention_count?: number | null
+          citation_rate?: number | null
+          cited_count?: number | null
+          created_at?: string
+          delta_citation_rate?: number | null
+          delta_overall_score?: number | null
+          delta_sentiment?: number | null
+          domain: string
+          id?: string
+          market_sector?: string | null
+          measured_at?: string
+          measurement_phase?: string
+          overall_score?: number | null
+          prompts_used?: Json | null
+          provider_scores?: Json | null
+          recommendation_rate?: number | null
+          total_models?: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          audit_impact_snapshot_id?: string | null
+          avg_sentiment_score?: number | null
+          brand_mention_count?: number | null
+          citation_rate?: number | null
+          cited_count?: number | null
+          created_at?: string
+          delta_citation_rate?: number | null
+          delta_overall_score?: number | null
+          delta_sentiment?: number | null
+          domain?: string
+          id?: string
+          market_sector?: string | null
+          measured_at?: string
+          measurement_phase?: string
+          overall_score?: number | null
+          prompts_used?: Json | null
+          provider_scores?: Json | null
+          recommendation_rate?: number | null
+          total_models?: number | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_visibility_snapshots_audit_impact_snapshot_id_fkey"
+            columns: ["audit_impact_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "audit_impact_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geo_visibility_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gmb_local_competitors: {
         Row: {
           avg_rating: number | null
