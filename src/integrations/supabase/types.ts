@@ -4745,6 +4745,30 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marina_training_data: {
         Row: {
           broken_links_count: number | null
