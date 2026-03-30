@@ -192,8 +192,8 @@ serve(async (req: Request) => {
 
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
-    const forceContent = force_content_cycle === true;
-    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : 30;
+    const forceContent = force_content_cycle === true || force_iktracker_article === true;
+    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30);
     
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
