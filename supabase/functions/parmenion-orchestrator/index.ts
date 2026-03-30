@@ -244,7 +244,7 @@ serve(async (req: Request) => {
     let decision: ParmenionDecision | null = null;
     
     if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
-      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools ═══
+      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools (with dual-lane support) ═══
       decision = await prescribeWithDualPrompts({
         domain,
         cycle_number,
@@ -255,6 +255,7 @@ serve(async (req: Request) => {
         siteInfo,
         isIktracker,
         tracked_site_id,
+        force_content: forceContent,
       });
     } else {
       // Non-prescribe phases or empty workbench: single LLM call
