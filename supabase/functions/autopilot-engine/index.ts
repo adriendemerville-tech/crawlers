@@ -1091,6 +1091,8 @@ Deno.serve(async (req: Request) => {
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            // Reset force_content_cycle after use (one-shot toggle - Option D)
+            force_content_cycle: false,
           })
           .eq('id', config.id);
 
