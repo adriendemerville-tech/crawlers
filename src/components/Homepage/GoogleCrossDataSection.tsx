@@ -92,7 +92,7 @@ export const GoogleCrossDataSection = memo(() => (
                 <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
 
                 <div className="rounded-lg border border-primary/10 bg-primary/5 p-3">
-                  <p className="flex items-start gap-1.5 text-xs font-medium text-primary">
+                  <p className="flex items-start gap-1.5 text-xs font-medium text-[#895bf5]">
                     <Zap className="mt-0.5 h-3 w-3 shrink-0" />
                     {item.result}
                   </p>
