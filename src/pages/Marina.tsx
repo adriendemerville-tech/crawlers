@@ -964,7 +964,8 @@ export default function Marina() {
         </section>
         )}
 
-        {/* Embed / API section */}
+        {/* Tab: API */}
+        {activeTab === 'api' && (
         <section className="py-16 border-b border-border bg-muted/20">
           <div className="mx-auto max-w-5xl px-4">
             <div className="text-center mb-10">
