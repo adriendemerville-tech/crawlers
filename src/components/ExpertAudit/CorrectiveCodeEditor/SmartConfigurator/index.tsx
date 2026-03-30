@@ -32,7 +32,8 @@ import { GenerativeTab } from './GenerativeTab';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
 import { MultiPageRouter } from './MultiPageRouter';
-import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
+import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode, classifyFixChannel } from './types';
+import { ContentDelegationSection } from './ContentDelegationSection';
 import { toast as sonnerToast } from 'sonner';
 
 // Hallucination data can be in legacy or new format
@@ -803,12 +804,15 @@ export function SmartConfigurator({
 
     fixes.push(...dynamicFixes);
 
+    // ═══ CLASSIFY DELIVERY CHANNEL (code vs content) ═══
     // Also pre-enable technical fixes that match unresolved registry recommendations
     return fixes.map(fix => {
+      const deliveryChannel = classifyFixChannel(fix.id);
+      const updated = { ...fix, deliveryChannel };
       if (unresolvedRecIds.has(fix.id) && !fix.enabled) {
-        return { ...fix, enabled: true, isRecommended: true };
+        return { ...updated, enabled: true, isRecommended: true };
       }
-      return fix;
+      return updated;
     });
   }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData, registryRecommendations, strategicRoadmap, savedAuditData]);
 
