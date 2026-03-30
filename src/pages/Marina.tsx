@@ -881,7 +881,7 @@ export default function Marina() {
         {/* Tabs navigation */}
         <section className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
           <div className="mx-auto max-w-5xl px-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">
                 <TabsTrigger value="features" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Zap className="w-3.5 h-3.5" /> {t.preview.tabFeatures}
