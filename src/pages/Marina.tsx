@@ -836,7 +836,30 @@ export default function Marina() {
           </div>
         </section>
 
-        {/* What's included */}
+        {/* Tabs navigation */}
+        <section className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto max-w-5xl px-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">
+                <TabsTrigger value="features" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Zap className="w-3.5 h-3.5" /> {t.preview.tabFeatures}
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Eye className="w-3.5 h-3.5" /> {t.preview.tabPreview}
+                </TabsTrigger>
+                <TabsTrigger value="api" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Terminal className="w-3.5 h-3.5" /> {t.preview.tabApi}
+                </TabsTrigger>
+                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                  <Coins className="w-3.5 h-3.5" /> {t.preview.tabPricing}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </section>
+
+        {/* Tab: Features */}
+        {activeTab === 'features' && (
         <section className="py-16 border-b border-border">
           <div className="mx-auto max-w-5xl px-4">
             <h2 className="text-2xl font-bold text-foreground text-center mb-8">{t.featuresTitle}</h2>
@@ -862,6 +885,84 @@ export default function Marina() {
             </div>
           </div>
         </section>
+        )}
+
+        {/* Tab: Preview */}
+        {activeTab === 'preview' && (
+        <section className="py-0 border-b border-border">
+          <div className="flex flex-col h-[calc(100vh-200px)]">
+            {/* Preview header — same style as MarinaReportPreviewModal */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-border bg-card">
+              <h2 className="text-sm font-semibold text-foreground">{t.preview.title}</h2>
+              <div className="flex items-center gap-2">
+                {demoHtml && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-xs"
+                      onClick={() => {
+                        const iframe = document.createElement('iframe');
+                        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+                        document.body.appendChild(iframe);
+                        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (!doc || !iframe.contentWindow) return;
+                        doc.open();
+                        doc.write(demoHtml);
+                        doc.close();
+                        setTimeout(() => {
+                          iframe.contentWindow?.print();
+                          setTimeout(() => document.body.removeChild(iframe), 1000);
+                        }, 500);
+                      }}
+                    >
+                      <Printer className="h-3.5 w-3.5" /> {language === 'en' ? 'Print' : language === 'es' ? 'Imprimir' : 'Imprimer'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-xs"
+                      onClick={() => {
+                        setReportHtml(demoHtml);
+                        setShowReportModal(true);
+                      }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> {language === 'en' ? 'Full screen' : language === 'es' ? 'Pantalla completa' : 'Plein écran'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Preview content */}
+            <div className="flex-1 overflow-auto bg-muted/30">
+              {loadingDemo ? (
+                <div className="flex items-center justify-center h-full gap-3 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">{t.preview.loading}</span>
+                </div>
+              ) : demoHtml ? (
+                <iframe srcDoc={demoHtml} className="w-full h-full border-0" title="Marina Report Preview" />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <FileText className="w-12 h-12 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">{t.preview.noDemo}</p>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-primary/30 text-primary"
+                    onClick={() => {
+                      setActiveTab('features');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    <Search className="w-4 h-4" /> {t.preview.generateCta}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+        )}
 
         {/* Embed / API section */}
         <section className="py-16 border-b border-border bg-muted/20">
