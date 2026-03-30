@@ -552,7 +552,27 @@ export default function Marina() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
-  const [activeTab, setActiveTab] = useState('features');
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return ['features', 'preview', 'api', 'pricing'].includes(hash) ? hash : 'features';
+  });
+
+  // Sync tab with URL hash
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['features', 'preview', 'api', 'pricing'].includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    window.history.replaceState(null, '', `#${value}`);
+  };
 
   // Load demo report from latest completed marina job
   useEffect(() => {
