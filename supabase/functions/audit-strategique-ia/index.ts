@@ -7,6 +7,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
+import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
 
 // Fonction pour générer un résumé promptable depuis le rapport stratégique
 function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
