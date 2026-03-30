@@ -87,7 +87,7 @@ interface ServiceButton {
   name: string;
   logoSvg: string;
   available: boolean;
-  category: 'analytics' | 'cms';
+  category: 'analytics' | 'cms' | 'self_hosted';
 }
 
 const services: ServiceButton[] = [
