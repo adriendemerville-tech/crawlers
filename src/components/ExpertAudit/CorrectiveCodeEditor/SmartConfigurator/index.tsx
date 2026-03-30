@@ -933,6 +933,8 @@ export function SmartConfigurator({
   }, []);
 
   // Generate the script via Edge Function
+  // Content-channel fixes are excluded from code generation when CMS is connected
+  // and handled by Content Architect in parallel
   const handleGenerate = useCallback(async () => {
     const enabledFixes = fixConfigs.filter(f => f.enabled);
     if (enabledFixes.length === 0) {
@@ -942,6 +944,30 @@ export function SmartConfigurator({
         variant: 'destructive',
       });
       return;
+    }
+
+    // Split fixes by delivery channel
+    const codeFixes = enabledFixes.filter(f => f.deliveryChannel !== 'content' || !hasCmsConnectionForContent);
+    const contentFixes = hasCmsConnectionForContent ? enabledFixes.filter(f => f.deliveryChannel === 'content') : [];
+
+    // If CMS connected and content fixes exist, trigger content preparation in background
+    if (contentFixes.length > 0) {
+      setContentDelegationStatus('generating');
+      // Content generation runs in parallel — fire and forget, results stored for deploy
+      supabase.functions.invoke('content-architecture-advisor', {
+        body: {
+          url: siteUrl,
+          keyword: contentFixes.map(f => f.label).join(', '),
+          instructions: contentFixes.map(f => `${f.label}: ${f.description}`).join('\n'),
+          language,
+          tracked_site_id: activeSiteId,
+        },
+      }).then(() => {
+        setContentDelegationStatus('ready');
+      }).catch((err) => {
+        console.error('[Architect] Content delegation error:', err);
+        setContentDelegationStatus('idle');
+      });
     }
 
     // Reset code and overlay before generating new code
