@@ -108,7 +108,7 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job terminé',
       refRespFailed: 'Job échoué',
-      refReportNote: 'Le champ report_url pointe vers un rapport HTML autonome de 15+ pages avec viewer intégré (impression, partage). Le rapport est intégrable en iframe.',
+      refReportNote: 'Deux URLs sont fournies : report_url (téléchargement via URL signée, expire 7j) et report_view_url (affichage inline direct dans un navigateur ou iframe, sans workaround nécessaire). Utilisez report_view_url pour intégrer le rapport dans une iframe.',
       refLimits: 'Limites & comportement',
       refLimitsList: [
         'Coût : 5 crédits par rapport',
@@ -261,7 +261,7 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job completed',
       refRespFailed: 'Job failed',
-      refReportNote: 'The report_url field points to a standalone 15+ page HTML report with a built-in viewer (print, share). The report can be embedded in an iframe.',
+      refReportNote: 'Two URLs are provided: report_url (download via signed URL, expires in 7 days) and report_view_url (direct inline display in a browser or iframe, no workaround needed). Use report_view_url to embed the report in an iframe.',
       refLimits: 'Limits & behavior',
       refLimitsList: [
         'Cost: 5 credits per report',
@@ -414,7 +414,7 @@ const translations = {
       refRespPolling: 'Polling (GET ?job_id=xxx)',
       refRespCompleted: 'Job completado',
       refRespFailed: 'Job fallido',
-      refReportNote: 'El campo report_url apunta a un informe HTML autónomo de 15+ páginas con visor integrado (impresión, compartir). El informe se puede integrar en un iframe.',
+      refReportNote: 'Se proporcionan dos URLs: report_url (descarga con URL firmada, expira en 7 días) y report_view_url (visualización directa en navegador o iframe, sin workaround). Use report_view_url para incrustar el informe en un iframe.',
       refLimits: 'Límites y comportamiento',
       refLimitsList: [
         'Costo: 5 créditos por informe',
@@ -894,7 +894,7 @@ ${t.code.commentInProgress}
 # {"status":"processing","progress":45,"phase":"phase2"}
 
 ${t.code.commentDone}
-# {"status":"completed","data":{"report_url":"..."}}`}
+# {"status":"completed","data":{"report_url":"...","report_view_url":"..."}}`}
                   </pre>
                 </div>
 
@@ -911,7 +911,7 @@ async function generateReport(url) {
   while (true) {
     await new Promise(r => setTimeout(r, 5000));
     const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
-    if (job.status === "completed") return job.data.report_url;
+    if (job.status === "completed") return job.data.report_view_url;
     if (job.status === "failed") throw new Error(job.error);
   }
 }`)}
@@ -944,7 +944,7 @@ async function generateReport(url) {
     ).then(r => r.json());
 
     if (job.status === "completed") 
-      return job.data.report_url;
+      return job.data.report_view_url;
     if (job.status === "failed") 
       throw new Error(job.error);
   }
@@ -986,6 +986,7 @@ async function generateReport(url) {
 #   "event": "marina.report.completed",
 #   "job_id": "abc-123",
 #   "report_url": "https://...",
+#   "report_view_url": "https://...",
 #   "expert_seo_score": 72,
 #   "expert_seo_max": 100,
 #   "domain": "example.com"
@@ -1065,6 +1066,7 @@ async function generateReport(url) {
     "domain": "example.com",
     "language": "fr",
     "report_url": "https://...signed-url...",
+    "report_view_url": "https://...supabase.co/functions/v1/view-marina-report?id=uuid",
     "report_path": "marina/uuid.html",
     "expert_seo_score": 72,
     "expert_seo_max": 100,
