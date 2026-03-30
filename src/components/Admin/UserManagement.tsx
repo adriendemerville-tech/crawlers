@@ -69,6 +69,17 @@ export function UserManagement() {
   const [showPendingTab, setShowPendingTab] = useState(false);
   const [showPayingTab, setShowPayingTab] = useState(false);
 
+  // Create user state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ email: '', password: '', first_name: '', last_name: '', persona_type: '', plan_type: 'free', credits_balance: '0' });
+  const [createLoading, setCreateLoading] = useState(false);
+
+  // Edit profile state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', persona_type: '', plan_type: '' });
+  const [editUser, setEditUser] = useState<UserProfile | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
     try {
