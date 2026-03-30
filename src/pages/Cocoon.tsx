@@ -16,10 +16,11 @@ import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommend
 import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
+import { CocoonBulkAutoLinking } from "@/components/Cocoon/CocoonBulkAutoLinking";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { CocoonOnboardingStepper, shouldShowOnboarding, incrementCocoonVisit } from "@/components/Cocoon/CocoonOnboardingStepper";
 import { AnimatePresence } from "framer-motion";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2, FileBarChart, Wand2 } from "lucide-react";
 import { generateCocoonReport } from "@/components/Cocoon/CocoonReportGenerator";
 import { useSaveReport } from "@/hooks/useSaveReport";
 import { Slider } from "@/components/ui/slider";
@@ -211,6 +212,7 @@ export default function Cocoon() {
   const [showPrereqModal, setShowPrereqModal] = useState(false);
   const [showTaskPlan, setShowTaskPlan] = useState(false);
   const [showArchitect, setShowArchitect] = useState(false);
+  const [showBulkAutoLink, setShowBulkAutoLink] = useState(false);
   const [architectRecoText, setArchitectRecoText] = useState<string | undefined>();
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
@@ -948,7 +950,15 @@ export default function Cocoon() {
                 showClusters={cocoonFilters.showAllClusters}
                 colorIntensity={colorIntensity}
               />
-            )}
+        )}
+
+        {hasAccess && selectedSiteId && (
+          <CocoonBulkAutoLinking
+            open={showBulkAutoLink}
+            onOpenChange={setShowBulkAutoLink}
+            trackedSiteId={selectedSiteId}
+          />
+        )}
 
 
             {/* Controls moved to header settings popover */}
@@ -1114,6 +1124,17 @@ export default function Cocoon() {
             >
               <FileBarChart className="w-4 h-4" />
               <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Report' : language === 'es' ? 'Informe' : 'Rapport'}</span>
+            </button>
+          )}
+
+          {/* Bulk Auto-Linking button */}
+          {hasAccess && selectedSiteId && (
+            <button
+              onClick={() => setShowBulkAutoLink(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 backdrop-blur-md transition-all shrink-0"
+            >
+              <Wand2 className="w-4 h-4" />
+              <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Auto-Link All' : language === 'es' ? 'Auto-Enlace' : 'Auto-Maillage'}</span>
             </button>
           )}
 
