@@ -243,8 +243,36 @@ serve(async (req: Request) => {
     // ═══ PHASE 3: LLM Decision ═══
     let decision: ParmenionDecision | null = null;
     
-    if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
+    if (currentPhase === 'prescribe' && (scoredWorkbenchItems.length > 0 || forceContent)) {
       // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools (with dual-lane support) ═══
+      // Also triggered when force_content_cycle or force_iktracker_article is set (even with empty workbench)
+      
+      // If workbench is empty but content is forced, create a synthetic content item
+      if (scoredWorkbenchItems.length === 0 && forceContent) {
+        console.log(`[Parménion] ⚠️ Workbench empty but force_content=true, creating synthetic content item`);
+        scoredWorkbenchItems.push({
+          id: '00000000-0000-0000-0000-000000000000',
+          title: `Création de contenu éditorial pour ${domain}`,
+          description: `Article de blog ou page de contenu pour renforcer l'autorité sémantique du site ${domain}`,
+          finding_category: 'missing_page',
+          severity: 'high',
+          target_url: `https://${domain}`,
+          target_selector: null,
+          target_operation: 'create',
+          action_type: 'content',
+          payload: { keyword: siteKeywords[0] || domain.replace(/\.\w+$/, '') },
+          source_type: 'forced_cycle',
+          tier: 9,
+          base_score: 75,
+          severity_bonus: 100,
+          aging_bonus: 0,
+          gate_malus: 0,
+          total_score: 175,
+          created_at: new Date().toISOString(),
+          lane: 'content',
+        });
+      }
+      
       decision = await prescribeWithDualPrompts({
         domain,
         cycle_number,
@@ -259,7 +287,7 @@ serve(async (req: Request) => {
         force_iktracker_article: force_iktracker_article === true,
       });
     } else {
-      // Non-prescribe phases or empty workbench: single LLM call
+      // Non-prescribe phases or empty workbench without forced content: single LLM call
       decision = await askParmenionLLM({
         domain,
         cycle_number,
