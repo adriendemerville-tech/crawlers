@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
-  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer
+  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
 } from 'lucide-react';
 
 const CREDIT_COST = 5;
@@ -681,7 +681,7 @@ export default function Marina() {
     generating_report: t.phases.generating_report,
   };
 
-  const featureIcons = [Search, Globe, Brain, Code2];
+  const featureIcons = [Search, Globe, Brain, Code2, Palette];
 
   return (
     <>
