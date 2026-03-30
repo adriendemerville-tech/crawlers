@@ -3,7 +3,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
@@ -86,7 +87,7 @@ interface ServiceButton {
   name: string;
   logoSvg: string;
   available: boolean;
-  category: 'analytics' | 'cms';
+  category: 'analytics' | 'cms' | 'self_hosted';
 }
 
 const services: ServiceButton[] = [
@@ -105,6 +106,10 @@ const services: ServiceButton[] = [
   {
     id: 'gmb', name: 'Google My Business', category: 'analytics', available: true,
     logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4285F4" d="M22 12l-4-4v3H8V8l-4 4 4 4v-3h10v3z"/><path fill="#34A853" d="M12 22c5.523 0 10-4.477 10-10h-4a6 6 0 01-6 6v4z"/><path fill="#FBBC05" d="M2 12c0 5.523 4.477 10 10 10v-4a6 6 0 01-6-6H2z"/><path fill="#EA4335" d="M12 2C6.477 2 2 6.477 2 12h4a6 6 0 016-6V2z"/><path fill="#4285F4" d="M22 12c0-5.523-4.477-10-10-10v4a6 6 0 016 6h4z"/></svg>`,
+  },
+  {
+    id: 'matomo', name: 'Matomo', category: 'self_hosted' as const, available: true,
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#3152A0" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.5 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-4.5-3c-.83 0-1.5-.67-1.5-1.5S11.17 10.5 12 10.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-4.5-3C6.67 10.5 6 9.83 6 9s.67-1.5 1.5-1.5S9 8.17 9 9s-.67 1.5-1.5 1.5z"/></svg>`,
   },
   {
     id: 'wordpress', name: 'WordPress', category: 'cms', available: true,
@@ -150,6 +155,13 @@ export function ExternalApisTab() {
   const [rankMathConnected, setRankMathConnected] = useState(false);
   const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
 
+  // Matomo state
+  const [matomoDialogOpen, setMatomoDialogOpen] = useState(false);
+  const [matomoLoading, setMatomoLoading] = useState(false);
+  const [matomoConnected, setMatomoConnected] = useState(false);
+  const [matomoForm, setMatomoForm] = useState({ matomo_url: '', token_auth: '', site_id: '', tracked_site_id: '' });
+  const [trackedSites, setTrackedSites] = useState<{ id: string; domain: string }[]>([]);
+
   useEffect(() => {
     const checkWpConnection = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -186,14 +198,30 @@ export function ExternalApisTab() {
     checkGoogleAccess();
   }, []);
 
+  // Load tracked sites + check existing Matomo connection
+  useEffect(() => {
+    const loadMatomoData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [sitesRes, matomoRes] = await Promise.all([
+        supabase.from('tracked_sites').select('id, domain').eq('user_id', user.id).order('domain'),
+        supabase.from('matomo_connections').select('id, tracked_site_id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
+      ]);
+      setTrackedSites((sitesRes.data || []) as { id: string; domain: string }[]);
+      if (matomoRes.data) setMatomoConnected(true);
+    };
+    loadMatomoData();
+  }, [matomoDialogOpen]);
+
   // Filter analytics services: Google Ads only visible when full access is on
-  // GA4 and GMB use gsc-auth which handles scopes server-side, so always show them
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
     if (s.id === 'google-ads' && !fullGoogleAccess) return false;
     return true;
   });
   const cmsServices = services.filter(s => s.category === 'cms');
+  const selfHostedServices = services.filter(s => s.category === 'self_hosted');
+
 
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
@@ -255,9 +283,53 @@ export function ExternalApisTab() {
       return;
     }
 
+    if (service.id === 'matomo') {
+      setMatomoDialogOpen(true);
+      return;
+    }
+
     if (['wordpress', 'drupal', 'shopify', 'webflow', 'wix', 'odoo', 'prestashop'].includes(service.id)) {
       setCmsDialogType(service.id as 'wordpress' | 'drupal' | 'shopify' | 'webflow' | 'wix' | 'odoo' | 'prestashop');
       setCmsDialogOpen(true);
+    }
+  };
+
+  const handleMatomoConnect = async () => {
+    const { matomo_url, token_auth, site_id, tracked_site_id } = matomoForm;
+    if (!matomo_url || !token_auth || !site_id || !tracked_site_id) {
+      toast.error(language === 'fr' ? 'Remplissez tous les champs' : 'Fill all fields');
+      return;
+    }
+    setMatomoLoading(true);
+    try {
+      // Test connection
+      const { data, error } = await supabase.functions.invoke('matomo-connector', {
+        body: { action: 'test_connection', matomo_url, token_auth, site_id: parseInt(site_id) },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Connection failed');
+
+      // Save connection
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      await supabase.from('matomo_connections').upsert({
+        user_id: user.id,
+        tracked_site_id,
+        matomo_url,
+        auth_token: token_auth,
+        site_id: parseInt(site_id),
+        is_active: true,
+      } as any, { onConflict: 'tracked_site_id' });
+
+      setMatomoConnected(true);
+      setMatomoDialogOpen(false);
+      toast.success(language === 'fr' ? 'Matomo connecté !' : language === 'es' ? '¡Matomo conectado!' : 'Matomo connected!');
+    } catch (err: any) {
+      console.error('[ExternalApis] Matomo error:', err);
+      toast.error(err.message || 'Matomo connection error');
+    } finally {
+      setMatomoLoading(false);
     }
   };
 
@@ -432,6 +504,63 @@ export function ExternalApisTab() {
         </CardContent>
       </Card>
 
+      {/* Self-Hosted Analytics */}
+      {selfHostedServices.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'fr' ? 'Analytics auto-hébergé' : language === 'es' ? 'Analítica auto-alojada' : 'Self-Hosted Analytics'}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {language === 'fr'
+                ? 'Connectez votre instance Matomo pour importer les métriques de trafic.'
+                : language === 'es'
+                  ? 'Conecte su instancia Matomo para importar métricas de tráfico.'
+                  : 'Connect your Matomo instance to import traffic metrics.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {selfHostedServices.map(s => {
+                const isMatomoConnected = s.id === 'matomo' && matomoConnected;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => handleServiceClick(s)}
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                      isMatomoConnected
+                        ? 'border-green-500/40 bg-green-500/5'
+                        : 'border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                      dangerouslySetInnerHTML={{ __html: s.logoSvg }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{s.name}</span>
+                        {isMatomoConnected && (
+                          <Badge className="text-[10px] py-0 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            {t.connected}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <ExternalLink className="w-3 h-3" />
+                        {isMatomoConnected ? t.configure : language === 'fr' ? 'Connecter' : language === 'es' ? 'Conectar' : 'Connect'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* CMS Connection Dialog */}
       <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} cmsType={cmsDialogType} />
 
@@ -477,6 +606,91 @@ export function ExternalApisTab() {
                 <ShieldCheck className="w-4 h-4 mr-2" />
               )}
               {t.authorize}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Matomo Connection Dialog */}
+      <Dialog open={matomoDialogOpen} onOpenChange={setMatomoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-[#3152A0]" />
+              {language === 'fr' ? 'Connecter Matomo' : language === 'es' ? 'Conectar Matomo' : 'Connect Matomo'}
+            </DialogTitle>
+            <DialogDescription className="text-sm pt-2">
+              {language === 'fr'
+                ? 'Entrez les informations de votre instance Matomo pour synchroniser les métriques de trafic.'
+                : language === 'es'
+                  ? 'Ingrese la información de su instancia Matomo para sincronizar métricas de tráfico.'
+                  : 'Enter your Matomo instance details to sync traffic metrics.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+              </label>
+              <select
+                value={matomoForm.tracked_site_id}
+                onChange={e => setMatomoForm(f => ({ ...f, tracked_site_id: e.target.value }))}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">{language === 'fr' ? 'Sélectionner un site…' : 'Select a site…'}</option>
+                {trackedSites.map(s => (
+                  <option key={s.id} value={s.id}>{s.domain}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">URL Matomo</label>
+              <Input
+                placeholder="https://analytics.example.com"
+                value={matomoForm.matomo_url}
+                onChange={e => setMatomoForm(f => ({ ...f, matomo_url: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Token Auth</label>
+              <Input
+                type="password"
+                placeholder="token_auth Matomo"
+                value={matomoForm.token_auth}
+                onChange={e => setMatomoForm(f => ({ ...f, token_auth: e.target.value }))}
+              />
+              <p className="text-[11px] text-muted-foreground/70">
+                {language === 'fr'
+                  ? 'Trouvable dans Matomo → Administration → Personnel → Sécurité → Tokens API'
+                  : 'Found in Matomo → Administration → Personal → Security → API Tokens'}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'ID du site Matomo' : 'Matomo Site ID'}
+              </label>
+              <Input
+                type="number"
+                placeholder="1"
+                value={matomoForm.site_id}
+                onChange={e => setMatomoForm(f => ({ ...f, site_id: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={handleMatomoConnect}
+              disabled={matomoLoading || !matomoForm.matomo_url || !matomoForm.token_auth || !matomoForm.site_id || !matomoForm.tracked_site_id}
+              className="w-full"
+            >
+              {matomoLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+              )}
+              {language === 'fr' ? 'Tester et connecter' : language === 'es' ? 'Probar y conectar' : 'Test & connect'}
             </Button>
           </DialogFooter>
         </DialogContent>
