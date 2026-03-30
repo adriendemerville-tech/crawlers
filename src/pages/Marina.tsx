@@ -699,6 +699,7 @@ export default function Marina() {
                 </h3>
 
                 {/* Start audit */}
+                <p className="text-xs text-muted-foreground">{t.api.postDesc}</p>
                 <div className="relative">
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.postLabel}</span>
@@ -726,9 +727,17 @@ ${t.code.commentResponse}
                 </div>
 
                 {/* Poll status */}
+                <p className="text-xs text-muted-foreground">{t.api.getDesc}</p>
                 <div className="relative">
-                  <div className="flex items-center px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.getLabel}</span>
+                    <button
+                      onClick={() => copyCode(`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
+  -H "x-marina-key: ${t.code.yourKey}"`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
@@ -743,9 +752,26 @@ ${t.code.commentDone}
                 </div>
 
                 {/* JS example */}
+                <p className="text-xs text-muted-foreground">{t.api.jsDesc}</p>
                 <div className="relative">
-                  <div className="flex items-center px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.jsLabel}</span>
+                    <button
+                      onClick={() => copyCode(`const API = "https://api.crawlers.fr/functions/v1/marina";
+const KEY = "${t.code.yourKey}";
+async function generateReport(url) {
+  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url }) }).then(r => r.json());
+  while (true) {
+    await new Promise(r => setTimeout(r, 5000));
+    const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
+    if (job.status === "completed") return job.data.report_url;
+    if (job.status === "failed") throw new Error(job.error);
+  }
+}`)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`const API = "https://api.crawlers.fr/functions/v1/marina";
