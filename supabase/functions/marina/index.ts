@@ -2004,6 +2004,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       await updateProgress(85, 'generating_report');
 
+      // ─── Fetch user branding for white-label ───
+      let marinaBranding: MarinaBranding | undefined;
+      try {
+        const { data: brandProfile } = await sb
+          .from('profiles')
+          .select('marina_brand_enabled, marina_full_whitelabel, marina_custom_intro, marina_custom_cta_text, marina_custom_cta_url, marina_hide_crawlers_badge, agency_logo_url, agency_primary_color, agency_brand_name, agency_contact_email, agency_contact_phone, agency_report_footer_text, plan_type')
+          .eq('user_id', parentJob.user_id)
+          .single();
+        
+        if (brandProfile?.marina_brand_enabled && (brandProfile.plan_type === 'agency_pro' || brandProfile.plan_type === 'agency_pro_plus')) {
+          marinaBranding = {
+            enabled: true,
+            fullWhiteLabel: brandProfile.marina_full_whitelabel || false,
+            logoUrl: brandProfile.agency_logo_url,
+            primaryColor: brandProfile.agency_primary_color,
+            brandName: brandProfile.agency_brand_name,
+            customIntro: brandProfile.marina_custom_intro,
+            ctaText: brandProfile.marina_custom_cta_text,
+            ctaUrl: brandProfile.marina_custom_cta_url,
+            hideBadge: brandProfile.marina_hide_crawlers_badge || false,
+            contactEmail: brandProfile.agency_contact_email,
+            contactPhone: brandProfile.agency_contact_phone,
+            reportFooterText: brandProfile.agency_report_footer_text,
+          };
+          console.log(`[Marina] 🎨 White-label branding loaded (full=${marinaBranding.fullWhiteLabel})`);
+        }
+      } catch (brandErr) {
+        console.warn('[Marina] Branding fetch failed (non-fatal):', brandErr);
+      }
+
       // ─── Step 4: Generate HTML reports ───
       let html: string;
       
@@ -2037,7 +2067,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         html = compileMarinaReport(
           { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
-          detectedLang, domain, url,
+          detectedLang, domain, url, marinaBranding,
         );
 
         console.log(`[Marina] ✅ Compiled report from 4 sections`);
@@ -2048,7 +2078,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       } catch (compileError) {
         console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
-        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult);
+        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding);
       }
 
       // ─── Step 5: Store in shared-reports bucket ───
