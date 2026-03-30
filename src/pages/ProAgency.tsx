@@ -118,7 +118,7 @@ const translations = {
       'SLA garanti',
       'Onboarding personnalisé',
     ],
-    enterpriseCta: 'Contactez-nous via l\'assistant IA',
+    enterpriseCta: 'Contactez-nous',
     fromLabel: 'à partir de',
     // Use cases
     useCasesTitle: 'Pensé pour les professionnels',
@@ -227,7 +227,7 @@ const translations = {
       'Guaranteed SLA',
       'Personalized onboarding',
     ],
-    enterpriseCta: 'Contact us via AI assistant',
+    enterpriseCta: 'Contact us',
     fromLabel: 'from',
     useCasesTitle: 'Built for professionals',
     useCases: [
@@ -309,7 +309,7 @@ const translations = {
       'SLA garantizado',
       'Onboarding personalizado',
     ],
-    enterpriseCta: 'Contáctenos vía asistente IA',
+    enterpriseCta: 'Contáctenos',
     fromLabel: 'desde',
     useCasesTitle: 'Diseñado para profesionales',
     useCases: [
