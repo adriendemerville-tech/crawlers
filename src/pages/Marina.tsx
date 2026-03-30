@@ -1103,7 +1103,7 @@ ${t.code.commentDone}
                       onClick={() => copyCode(`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
 const KEY = "${t.code.yourKey}";
 async function generateReport(url) {
-  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url }) }).then(r => r.json());
+  const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url, lang: "fr" }) }).then(r => r.json());
   while (true) {
     await new Promise(r => setTimeout(r, 5000));
     const job = await fetch(\`\${API}?job_id=\${job_id}\`, { headers: { "x-marina-key": KEY } }).then(r => r.json());
@@ -1128,7 +1128,7 @@ async function generateReport(url) {
       "x-marina-key": KEY,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, lang: "fr" }),
   }).then(r => r.json());
 
   ${t.code.comment2}
@@ -1220,6 +1220,26 @@ async function generateReport(url) {
                     <div className="flex items-start gap-3 text-xs">
                       <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">Content-Type: application/json</code>
                       <span className="text-muted-foreground">{t.api.refHeaderCt}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Request body */}
+              <Card className="border-border/50">
+                <CardContent className="p-5">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refBodyTitle}</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">url</code>
+                      <span className="text-muted-foreground">{t.api.refBodyUrl}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">lang</code>
+                      <span className="text-muted-foreground">{t.api.refBodyLang}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-xs">
+                      <code className="px-2 py-1 bg-muted rounded font-mono text-primary shrink-0">callback_url</code>
+                      <span className="text-muted-foreground">{t.api.refBodyCallback}</span>
                     </div>
                   </div>
                 </CardContent>
