@@ -1299,7 +1299,18 @@ export default function SiteCrawl() {
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
                   </Button>
-                </div>
+                  {isLoading && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleStopCrawl()}
+                      className="border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                      title={t.stopCrawl}
+                    >
+                      <Square className="w-3.5 h-3.5 fill-destructive text-destructive" />
+                    </Button>
+                  )
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
