@@ -24,6 +24,7 @@ import { ContentArchitectDraftPanel } from './ContentArchitectDraftPanel';
 import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
 import { ContentArchitectTasksPanel } from './ContentArchitectTasksPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
+import { ContentArchitectProvider } from '@/contexts/ContentArchitectContext';
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
