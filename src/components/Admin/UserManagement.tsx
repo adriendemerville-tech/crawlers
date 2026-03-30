@@ -770,6 +770,9 @@ export function UserManagement() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(user)} title="Modifier le profil">
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                           <Dialog open={deleteDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setDeleteDialogOpen(open);
                             if (open) setSelectedUser(user);
