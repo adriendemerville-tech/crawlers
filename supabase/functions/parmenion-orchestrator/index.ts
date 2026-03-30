@@ -1330,7 +1330,10 @@ function buildPrescribeInstructions(context: { isIktracker: boolean; scoredWorkb
   if (items.length === 0) {
     return `## PHASE ACTUELLE: PRESCRIBE (GÉNÉRER LES CORRECTIFS)
 Aucun item prioritaire n'a été identifié dans le workbench. 
-Utilise les recommandations en attente et les données d'audit brutes pour générer un correctif technique via generate-corrective-code.
+Alterne entre correctif technique et contenu éditorial :
+- Si le dernier cycle était technique → utilise content-architecture-advisor pour créer du contenu
+- Si le dernier cycle était contenu → utilise generate-corrective-code pour un correctif technique
+- En cas de doute, privilégie content-architecture-advisor (le contenu est sous-représenté)
 Fonctions autorisées: generate-corrective-code, content-architecture-advisor`;
   }
 
