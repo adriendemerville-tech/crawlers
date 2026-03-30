@@ -2827,9 +2827,17 @@ Deno.serve(async (req) => {
       // Build the shared context that all 3 calls need
       const sharedContext = userPrompt; // Already contains all data (market, E-E-A-T, tools, etc.)
 
+      // Compute factual citation scores from real data
+      const factualCitation = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: effectiveToolsData,
+        backlinkData: null, // Not fetched in this function yet
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+
       const userPromptA_full = buildUserPromptA(url, domain, sharedContext);
       const userPromptB_full = buildUserPromptB(url, domain, sharedContext);
-      const userPromptC_full = buildUserPromptC(url, domain, sharedContext);
+      const userPromptC_full = buildUserPromptC(url, domain, sharedContext, factualCitation.factual_summary);
 
       const parallelTimeout = Math.min(remainingMs, 150_000);
 
