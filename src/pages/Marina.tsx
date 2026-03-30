@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
-  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer
+  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
 } from 'lucide-react';
 
 const CREDIT_COST = 5;
@@ -77,6 +77,7 @@ const translations = {
       { label: 'Score GEO & Visibilité IA', desc: 'Citabilité par ChatGPT, Gemini, Perplexity' },
       { label: 'Audit stratégique', desc: 'Positionnement mots-clés, gaps concurrentiels, quick wins' },
       { label: 'Analyse Cocoon sémantique', desc: 'Clusters, maillage interne, architecture de contenu' },
+      { label: 'Branding personnalisable', desc: 'Logo, couleurs, CTA et textes personnalisés. Masquez la marque Crawlers pour vos clients.' },
     ],
     featuresTitle: 'Ce que contient votre rapport',
     preview: {
@@ -241,6 +242,7 @@ const translations = {
       { label: 'GEO Score & AI Visibility', desc: 'Citability by ChatGPT, Gemini, Perplexity' },
       { label: 'Strategic audit', desc: 'Keyword positioning, competitor gaps, quick wins' },
       { label: 'Semantic Cocoon analysis', desc: 'Clusters, internal linking, content architecture' },
+      { label: 'Custom branding', desc: 'Logo, colors, CTA and custom text. Hide Crawlers branding for your clients.' },
     ],
     featuresTitle: 'What\'s in your report',
     preview: {
@@ -405,6 +407,7 @@ const translations = {
       { label: 'Puntuación GEO y Visibilidad IA', desc: 'Citabilidad por ChatGPT, Gemini, Perplexity' },
       { label: 'Auditoría estratégica', desc: 'Posicionamiento de palabras clave, gaps competitivos, quick wins' },
       { label: 'Análisis Cocoon semántico', desc: 'Clusters, enlazado interno, arquitectura de contenido' },
+      { label: 'Branding personalizable', desc: 'Logo, colores, CTA y textos personalizados. Oculte la marca Crawlers para sus clientes.' },
     ],
     featuresTitle: 'Qué incluye tu informe',
     preview: {
@@ -678,7 +681,7 @@ export default function Marina() {
     generating_report: t.phases.generating_report,
   };
 
-  const featureIcons = [Search, Globe, Brain, Code2];
+  const featureIcons = [Search, Globe, Brain, Code2, Palette];
 
   return (
     <>
