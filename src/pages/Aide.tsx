@@ -495,6 +495,62 @@ const DOC_SECTIONS: DocSection[] = [
     ],
   },
   {
+    id: 'marina',
+    icon: <Wrench className="h-4 w-4" />,
+    title: '9. Marina — Prospection B2B',
+    subsections: [
+      {
+        id: 'marina-overview',
+        title: "Qu'est-ce que Marina ?",
+        content: `Marina est un pipeline d'audit SEO/GEO automatisé qui génère un rapport HTML complet de 15+ pages en ~3 minutes. Il combine en une seule passe : audit technique (200 critères), audit stratégique GEO, visibilité IA (5 LLMs), et analyse de cocon sémantique.
+<p class="mt-2"><strong>Coût :</strong> 5 crédits par rapport.</p>
+<p class="mt-1"><strong>Page dédiée :</strong> <a href="/marina" class="text-primary underline">crawlers.fr/marina</a></p>`,
+      },
+      {
+        id: 'marina-api',
+        title: 'API Marina Embed — Intégration',
+        content: `<p>L'API Marina permet d'intégrer la génération de rapports sur votre propre site (lead magnet).</p>
+<p class="mt-2 font-semibold">Endpoint :</p>
+<code class="block px-3 py-2 bg-muted rounded-md text-xs font-mono mt-1">POST /functions/v1/marina</code>
+<p class="mt-3 font-semibold">Paramètres body (JSON) :</p>
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><code>url</code> (obligatoire) — URL du site à auditer</li>
+<li><code>lang</code> (optionnel) — Langue du rapport : <code>"fr"</code>, <code>"en"</code> ou <code>"es"</code>. Si omis, la langue est auto-détectée via l'attribut <code>&lt;html lang="..."&gt;</code> du site, puis par heuristique de contenu. Défaut : <code>"en"</code>.</li>
+<li><code>callback_url</code> (optionnel) — URL de webhook pour recevoir le rapport automatiquement</li>
+</ul>
+<p class="mt-2 font-semibold">Authentification :</p>
+<p class="mt-1">Header <code>x-marina-key</code> avec votre clé API Marina (depuis Console → API).</p>
+<p class="mt-2 font-semibold">Réponse :</p>
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><code>report_url</code> — URL signée de téléchargement (expire 7 jours)</li>
+<li><code>report_view_url</code> — URL d'affichage direct en iframe (recommandé)</li>
+</ul>`,
+      },
+      {
+        id: 'marina-lang',
+        title: 'Langue du rapport',
+        content: `Le rapport Marina est généré dans la langue spécifiée par le paramètre <code>lang</code>. Si ce paramètre n'est pas fourni :
+<ol class="list-decimal pl-6 mt-2 space-y-1">
+<li>L'API détecte l'attribut <code>&lt;html lang="..."&gt;</code> du site audité</li>
+<li>En l'absence d'attribut, une heuristique analyse le contenu des 2000 premiers caractères</li>
+<li>Si aucune langue n'est détectée, le rapport est généré en anglais par défaut</li>
+</ol>
+<p class="mt-2 text-sm text-muted-foreground">Conseil : passez toujours le paramètre <code>lang</code> explicitement pour garantir la langue souhaitée.</p>`,
+      },
+      {
+        id: 'marina-branding',
+        title: 'Branding personnalisable (Pro Agency)',
+        content: `Les abonnés Pro Agency peuvent personnaliser l'apparence des rapports Marina depuis <strong>Console → Branding → Marina</strong> :
+<ul class="list-disc pl-6 mt-2 space-y-1">
+<li>Introduction personnalisée du rapport (max 500 caractères)</li>
+<li>CTA personnalisé : texte et URL du bouton d'action</li>
+<li>Option pour masquer le badge/branding Crawlers.fr</li>
+</ul>
+<p class="mt-2 text-sm text-muted-foreground">Ces paramètres sont appliqués à chaque rapport généré via l'API ou le dashboard.</p>`,
+      },
+    ],
+  },
+  {
     id: 'agents-ia',
     icon: <Wrench className="h-4 w-4" />,
     title: '9. Assistants IA intégrés',
