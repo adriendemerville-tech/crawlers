@@ -5,8 +5,10 @@
  *   - score-profile: Calculates completeness score from location info
  *   - suggest-optimizations: Returns prioritized optimization suggestions
  *   - suggest-posts: Generates post ideas based on category & recent activity
+ *   - compute-power-score: Computes & stores the 7-dimension GMB power score
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
+import { computeGmbPowerScore, getWeekStart, type GmbPowerInput } from '../_shared/gmbPowerScore.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 function json(data: unknown, status = 200) {
