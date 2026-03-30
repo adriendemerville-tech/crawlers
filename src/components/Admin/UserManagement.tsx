@@ -410,7 +410,16 @@ export function UserManagement() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdateProfile = async () => {
+  const userActions = useUserActions({
+    setSelectedUser: setSelectedUser as any,
+    setDeleteDialogOpen,
+    setCreditDialogOpen,
+    setStripDialogOpen,
+    openEditDialog,
+    toggleRole,
+    setKpiModalOpen,
+  });
+
     if (!editUser) return;
     setEditLoading(true);
     try {
