@@ -1042,7 +1042,40 @@ export default function SiteCrawl() {
     }
   }
 
-  // ── Sitemap export ────────────────────────────────────────
+  // ── Stop crawl (keep cached pages) ────────────────────────
+  async function handleStopCrawl(crawlId?: string) {
+    const targetId = crawlId || crawlResult?.id;
+    if (!targetId) return;
+    try {
+      await supabase
+        .from('site_crawls')
+        .update({ status: 'stopped', error_message: 'Stopped by user — cached data preserved' })
+        .eq('id', targetId);
+
+      // Stop polling
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        pollingCrawlIdRef.current = null;
+      }
+
+      // Update local state
+      if (!crawlId || crawlId === crawlResult?.id) {
+        setCrawlResult(prev => prev ? { ...prev, status: 'stopped' } : prev);
+        setIsLoading(false);
+        setPhase('');
+      }
+
+      // Update pastCrawls list
+      setPastCrawls(prev => prev.map(c => c.id === targetId ? { ...c, status: 'stopped' } : c));
+
+      toast.success(t.crawlStopped);
+    } catch (err: any) {
+      toast.error(err.message || 'Error stopping crawl');
+    }
+  }
+
+
   async function handleSitemapExport() {
     if (pages.length === 0) return;
     const domain = crawlResult?.domain || '';
