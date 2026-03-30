@@ -294,19 +294,20 @@ export function ExternalApisTab() {
       setConnectingId(service.id);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        const { data, error } = await supabase.functions.invoke('gbp-auth', {
           body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
         });
         if (error) throw error;
         if (data?.auth_url) window.location.href = data.auth_url;
         else throw new Error('No auth URL returned');
       } catch (err) {
-        console.error('[ExternalApis] GMB auth error:', err);
-        toast.error(language === 'fr' ? 'Erreur de connexion GMB' : language === 'es' ? 'Error de conexión GMB' : 'GMB connection error');
+        console.error('[ExternalApis] GBP auth error:', err);
+        toast.error(language === 'fr' ? 'Erreur de connexion Google Business Profile' : language === 'es' ? 'Error de conexión Google Business Profile' : 'Google Business Profile connection error');
       } finally {
         setConnectingId(null);
       }
       return;
+    }
     }
 
     if (service.id === 'matomo') {
