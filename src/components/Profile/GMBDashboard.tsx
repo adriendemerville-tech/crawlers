@@ -797,8 +797,7 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
       )}
 
       <div className="flex gap-4">
-        {/* Location sidebar — only shown when 2+ locations */}
-        {showSidebar && (
+        {/* Location sidebar + GBP connect */}
         <div className="flex flex-col gap-1 shrink-0 w-44">
           {showSidebar && (
             <>
