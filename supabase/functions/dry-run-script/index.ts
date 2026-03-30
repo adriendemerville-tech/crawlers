@@ -115,7 +115,7 @@ async function runViaBrowserless(
   
   const browserlessPayload = {
     url: siteUrl,
-    gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 },
+    gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
     addScriptTag: [{ content: code }],
     waitForTimeout: 3000,
   };
