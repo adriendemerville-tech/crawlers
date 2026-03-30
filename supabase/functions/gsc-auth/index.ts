@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
         rows,
         total_clicks: totalClicks,
         total_impressions: totalImpressions,
-        avg_position: rows.length > 0 ? totalPosition / rows.length : 0,
+        avg_position: totalImpressions > 0 ? weightedPositionSum / totalImpressions : 0,
         date_range: {
           start: startDate.toISOString().split('T')[0],
           end: endDate.toISOString().split('T')[0],
