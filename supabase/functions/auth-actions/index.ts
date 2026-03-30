@@ -587,6 +587,108 @@ async function handleConfirmUser(body: any, req: Request) {
   return json({ success: true, user: { id: updatedUser.user.id, email: updatedUser.user.email } });
 }
 
+// ─── create-user (admin only) ───
+
+async function handleCreateUser(body: any, req: Request) {
+  const { email, password, first_name, last_name, persona_type, plan_type, credits_balance } = body;
+  if (!email || !password) return json({ error: 'Email and password required' }, 400);
+
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  // Create auth user with email confirmed
+  const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+    email: normalizeEmail(email),
+    password,
+    email_confirm: true,
+    user_metadata: {
+      first_name: first_name || '',
+      last_name: last_name || '',
+      persona_type: persona_type || null,
+    },
+  });
+
+  if (createError) {
+    console.error('Create user error:', createError);
+    return json({ error: createError.message }, 400);
+  }
+
+  // Create profile (the trigger may do it, but let's ensure with upsert)
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({
+      user_id: newUser.user.id,
+      email: normalizeEmail(email),
+      first_name: first_name || '',
+      last_name: last_name || '',
+      persona_type: persona_type || null,
+      plan_type: plan_type || 'free',
+      credits_balance: credits_balance || 0,
+    } as any, { onConflict: 'user_id' });
+
+  if (profileError) {
+    console.error('Create profile error:', profileError);
+    // User was created in auth but profile failed — not critical
+  }
+
+  return json({ success: true, user_id: newUser.user.id });
+}
+
+// ─── update-user-profile (admin only) ───
+
+async function handleUpdateUserProfile(body: any, req: Request) {
+  const { target_user_id, first_name, last_name, persona_type, plan_type, email: newEmail } = body;
+  if (!target_user_id) return json({ error: 'target_user_id required' }, 400);
+
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
+  const userClient = getUserClient(authHeader);
+  const { data: { user: caller } } = await userClient.auth.getUser();
+  if (!caller) return json({ error: 'Unauthorized' }, 401);
+
+  const supabase = getServiceClient();
+  const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+  if (!isAdmin) return json({ error: 'Admin access required' }, 403);
+
+  // Build update object — only include provided fields
+  const updates: Record<string, any> = {};
+  if (first_name !== undefined) updates.first_name = first_name;
+  if (last_name !== undefined) updates.last_name = last_name;
+  if (persona_type !== undefined) updates.persona_type = persona_type;
+  if (plan_type !== undefined) updates.plan_type = plan_type;
+  if (newEmail !== undefined) updates.email = normalizeEmail(newEmail);
+
+  if (Object.keys(updates).length === 0) return json({ error: 'No fields to update' }, 400);
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('user_id', target_user_id);
+
+  if (updateError) {
+    console.error('Update profile error:', updateError);
+    return json({ error: updateError.message }, 500);
+  }
+
+  // Also update auth email if changed
+  if (newEmail) {
+    await supabase.auth.admin.updateUserById(target_user_id, {
+      email: normalizeEmail(newEmail),
+    });
+  }
+
+  return json({ success: true });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
@@ -606,6 +708,8 @@ Deno.serve(async (req) => {
       case 'confirm-sdk-toggle':    return await handleConfirmSdkToggle(body, req);
       case 'list-pending-users':    return await handleListPendingUsers(req);
       case 'confirm-user':          return await handleConfirmUser(body, req);
+      case 'create-user':           return await handleCreateUser(body, req);
+      case 'update-user-profile':   return await handleUpdateUserProfile(body, req);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
