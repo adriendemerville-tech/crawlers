@@ -410,11 +410,12 @@ Le Stratège Cocoon est l'IA du module Cocon Sémantique, réservé aux abonnés
 - Si le problème persiste après 10 minutes, relancez un nouvel audit
 - Les sites avec JavaScript heavy ou protections anti-bot peuvent allonger le temps de traitement
 
-### GSC, GA4 ou GMB ne se connectent pas
+### GSC, GA4 ou GBP ne se connectent pas
 - Vérifiez que vous utilisez le bon compte Google (celui qui a accès à la propriété ou à l'établissement)
 - Acceptez tous les scopes OAuth demandés (ne décochez aucune permission)
 - Vérifiez que votre site est bien vérifié dans Google Search Console
-- Pour GMB : vérifiez que vous êtes propriétaire ou gestionnaire de la fiche dans Google Business Profile
+- **Pour GBP :** la connexion GBP utilise un flux OAuth **séparé** de GSC/GA4. Cliquez sur "Connecter Google Business" dans l'onglet GMB de la Console (et non dans la connexion GSC)
+- Pour GBP : vérifiez que vous êtes propriétaire ou gestionnaire de la fiche dans Google Business Profile
 - Déconnectez et reconnectez le compte Google depuis votre tableau de bord
 - Si l'erreur persiste, essayez avec un autre navigateur ou en navigation privée
 
