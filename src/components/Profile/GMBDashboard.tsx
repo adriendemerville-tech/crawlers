@@ -702,6 +702,65 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
   const [activeTab, setActiveTab] = useState('stats');
   const [orderedLocations, setOrderedLocations] = useState(SIMULATED_LOCATIONS);
   const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
+  const [gbpConnected, setGbpConnected] = useState(false);
+  const [gbpEmail, setGbpEmail] = useState<string | null>(null);
+  const [gbpLoading, setGbpLoading] = useState(false);
+  const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
+
+  // Check GBP connection status
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.functions.invoke('gbp-auth', {
+          body: { action: 'status', user_id: user.id },
+        });
+        if (data?.connected) {
+          setGbpConnected(true);
+          setGbpEmail(data.email || null);
+        }
+      } catch (_) { /* ignore */ }
+    })();
+  }, []);
+
+  const handleGbpConnect = async () => {
+    setGbpLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.functions.invoke('gbp-auth', {
+        body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
+      });
+      if (error) throw error;
+      if (data?.auth_url) window.location.href = data.auth_url;
+      else throw new Error('No auth URL');
+    } catch (err) {
+      console.error('[GMBDashboard] GBP connect error:', err);
+      toast.error(language === 'fr' ? 'Erreur de connexion GBP' : 'GBP connection error');
+    } finally {
+      setGbpLoading(false);
+    }
+  };
+
+  const handleGbpDisconnect = async () => {
+    setGbpDisconnecting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.functions.invoke('gbp-auth', {
+        body: { action: 'disconnect', user_id: user.id },
+      });
+      if (error) throw error;
+      setGbpConnected(false);
+      setGbpEmail(null);
+      toast.success(language === 'fr' ? 'Google Business Profile déconnecté' : 'GBP disconnected');
+    } catch (err) {
+      console.error('[GMBDashboard] GBP disconnect error:', err);
+      toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
+    } finally {
+      setGbpDisconnecting(false);
+    }
+  };
 
   const activeLocation = orderedLocations.find(l => l.id === selectedLocationId) || orderedLocations[0];
   const showSidebar = orderedLocations.length > 1;
@@ -724,6 +783,55 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
 
   return (
     <div className={`space-y-4 ${isGated ? 'relative' : ''}`}>
+      {/* GBP Connection Banner */}
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardContent className="p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Store className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Google Business Profile</p>
+              {gbpConnected ? (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  {language === 'fr' ? 'Connecté' : 'Connected'}
+                  {gbpEmail && <span className="ml-1 text-foreground/70">({gbpEmail.replace('gbp:', '')})</span>}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {language === 'fr' 
+                    ? 'Connectez votre fiche pour synchroniser les données réelles' 
+                    : 'Connect your listing to sync real data'}
+                </p>
+              )}
+            </div>
+          </div>
+          {gbpConnected ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={handleGbpDisconnect}
+              disabled={gbpDisconnecting}
+            >
+              {gbpDisconnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Unplug className="h-3.5 w-3.5" />}
+              {language === 'fr' ? 'Déconnecter' : 'Disconnect'}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={handleGbpConnect}
+              disabled={gbpLoading || isGated}
+            >
+              {gbpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plug className="h-3.5 w-3.5" />}
+              {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {isGated && (
         <div className="absolute inset-0 z-10 pointer-events-none">
           <div className="sticky top-4 flex justify-center pointer-events-auto">
