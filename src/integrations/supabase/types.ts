@@ -5640,6 +5640,11 @@ export type Database = {
           gsc_token_expiry: string | null
           id: string
           last_name: string
+          marina_brand_enabled: boolean | null
+          marina_custom_cta_text: string | null
+          marina_custom_cta_url: string | null
+          marina_custom_intro: string | null
+          marina_hide_crawlers_badge: boolean | null
           persona_type: string | null
           plan_type: string
           referral_code: string | null
@@ -5685,6 +5690,11 @@ export type Database = {
           gsc_token_expiry?: string | null
           id?: string
           last_name: string
+          marina_brand_enabled?: boolean | null
+          marina_custom_cta_text?: string | null
+          marina_custom_cta_url?: string | null
+          marina_custom_intro?: string | null
+          marina_hide_crawlers_badge?: boolean | null
           persona_type?: string | null
           plan_type?: string
           referral_code?: string | null
@@ -5730,6 +5740,11 @@ export type Database = {
           gsc_token_expiry?: string | null
           id?: string
           last_name?: string
+          marina_brand_enabled?: boolean | null
+          marina_custom_cta_text?: string | null
+          marina_custom_cta_url?: string | null
+          marina_custom_intro?: string | null
+          marina_hide_crawlers_badge?: boolean | null
           persona_type?: string | null
           plan_type?: string
           referral_code?: string | null
