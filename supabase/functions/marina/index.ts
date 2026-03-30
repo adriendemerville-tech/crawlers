@@ -284,7 +284,9 @@ function getToolbarHtml(domain: string, lang: string): string {
 
     function marinaPrint() { window.print(); }
     function marinaCopyLink() {
-      var url = window.location.href;
+      var meta = document.querySelector('meta[name="marina-report-url"]');
+      var url = meta ? meta.getAttribute('content') : window.location.href;
+      if (!url || url === 'about:srcdoc') url = window.location.href;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(function() { showCopied(); });
       } else {
