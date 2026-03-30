@@ -13,6 +13,7 @@ import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, Ale
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
+import { useUserActions } from '@/hooks/useUserActions';
 import { PayingUsersTab } from './PayingUsersTab';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
@@ -828,11 +829,11 @@ export function UserManagement() {
         user={kpiUser}
         open={kpiModalOpen}
         onOpenChange={setKpiModalOpen}
-        onDeleteUser={(u: any) => { setSelectedUser(u); setDeleteDialogOpen(true); setKpiModalOpen(false); }}
-        onToggleRole={(userId, role) => toggleRole(userId, role)}
-        onManageCredits={(u: any) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
-        onStripPro={(u: any) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
-        onEditProfile={(u: any) => { openEditDialog(u); setKpiModalOpen(false); }}
+        onDeleteUser={userActions.onDeleteUser}
+        onToggleRole={userActions.onToggleRole}
+        onManageCredits={userActions.onManageCredits}
+        onStripPro={userActions.onStripPro}
+        onEditProfile={userActions.onEditProfile}
         adminUserIds={adminUserIds}
         viewerUserIds={viewerUserIds}
         viewer2UserIds={viewer2UserIds}
