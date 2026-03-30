@@ -472,7 +472,7 @@ export function MarinaDashboard() {
   ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina \\
   -H "Content-Type: application/json" \\
   -H "x-marina-key: ${apiKey.slice(0, 12)}..." \\
-  -d '{"url": "https://example.com"}'`}
+  -d '{"url": "https://example.com", "lang": "fr"}'`}
               </pre>
             </div>
           )}
