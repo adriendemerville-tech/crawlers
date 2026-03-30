@@ -48,6 +48,7 @@ const translations = {
       credits: 'crédits',
       loginCta: 'Connectez-vous pour lancer un rapport',
       signupOffer: '5 crédits offerts à l\'inscription = 1 rapport gratuit',
+      apiDocLink: '📄 Documentation API Marina',
     },
     toasts: {
       enterUrl: 'Veuillez entrer une URL',
@@ -217,6 +218,7 @@ const translations = {
       credits: 'credits',
       loginCta: 'Sign in to generate a report',
       signupOffer: '5 free credits on signup = 1 free report',
+      apiDocLink: '📄 Marina API Documentation',
     },
     toasts: {
       enterUrl: 'Please enter a URL',
@@ -386,6 +388,7 @@ const translations = {
       credits: 'créditos',
       loginCta: 'Inicia sesión para generar un informe',
       signupOffer: '5 créditos gratis al registrarte = 1 informe gratis',
+      apiDocLink: '📄 Documentación API Marina',
     },
     toasts: {
       enterUrl: 'Introduce una URL',
@@ -552,7 +555,27 @@ export default function Marina() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
-  const [activeTab, setActiveTab] = useState('features');
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return ['features', 'preview', 'api', 'pricing'].includes(hash) ? hash : 'features';
+  });
+
+  // Sync tab with URL hash
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['features', 'preview', 'api', 'pricing'].includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    window.history.replaceState(null, '', `#${value}`);
+  };
 
   // Load demo report from latest completed marina job
   useEffect(() => {
@@ -796,6 +819,16 @@ export default function Marina() {
                     <p className="text-xs text-muted-foreground mt-2">{t.hero.signupOffer}</p>
                   </div>
                 )}
+
+                {/* API doc link — always visible */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => { handleTabChange('api'); document.getElementById('marina-tabs')?.scrollIntoView({ behavior: 'smooth' }); }}
+                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+                  >
+                    <Terminal className="w-4 h-4" /> {t.hero.apiDocLink}
+                  </button>
+                </div>
               </div>
 
               {/* Progress */}
@@ -859,9 +892,9 @@ export default function Marina() {
         </section>
 
         {/* Tabs navigation */}
-        <section className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <section id="marina-tabs" className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
           <div className="mx-auto max-w-5xl px-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">
                 <TabsTrigger value="features" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Zap className="w-3.5 h-3.5" /> {t.preview.tabFeatures}
