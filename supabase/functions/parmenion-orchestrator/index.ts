@@ -78,7 +78,7 @@ serve(async (req: Request) => {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct } = await req.json();
     if (!tracked_site_id || !domain) {
       return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -190,20 +190,53 @@ serve(async (req: Request) => {
         results: d.execution_results,
       }));
 
-    // ═══ PHASE 2b: ALGORITHMIC PRIORITY SCORING (prescribe phase) ═══
+    // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
+    const forceContent = force_content_cycle === true;
+    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : 30;
+    
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
-      const { data: scored, error: scoreErr } = await supabase.rpc('score_workbench_priority', {
-        p_domain: domain,
-        p_user_id: userId,
-        p_limit: 8,
-      });
-      if (scoreErr) {
-        console.warn('[Parménion] Workbench scoring failed:', scoreErr.message);
-      } else {
-        scoredWorkbenchItems = scored || [];
-        console.log(`[Parménion] 📊 Scored ${scoredWorkbenchItems.length} workbench items. Top tier: ${scoredWorkbenchItems[0]?.tier ?? 'none'}, top score: ${scoredWorkbenchItems[0]?.total_score ?? 0}`);
+      
+      // Option B: Query BOTH lanes independently in parallel
+      const [techRes, contentRes] = await Promise.all([
+        supabase.rpc('score_workbench_priority', {
+          p_domain: domain,
+          p_user_id: userId,
+          p_limit: 8,
+          p_lane: 'tech',
+          p_force_content: false,
+        }),
+        supabase.rpc('score_workbench_priority', {
+          p_domain: domain,
+          p_user_id: userId,
+          p_limit: 8,
+          p_lane: 'content',
+          p_force_content: forceContent,
+        }),
+      ]);
+      
+      if (techRes.error) console.warn('[Parménion] Tech lane scoring failed:', techRes.error.message);
+      if (contentRes.error) console.warn('[Parménion] Content lane scoring failed:', contentRes.error.message);
+      
+      const techItems = techRes.data || [];
+      const contentItems = contentRes.data || [];
+      
+      // Option A: Budget partagé — allocate items proportionally
+      // Default: 70% tech budget, 30% content budget (configurable via content_budget_pct)
+      const totalSlots = 8;
+      const contentSlots = forceContent 
+        ? totalSlots  // Option D: force content → all slots to content
+        : Math.max(2, Math.round(totalSlots * budgetPct / 100));
+      const techSlots = forceContent ? 0 : totalSlots - contentSlots;
+      
+      const allocatedTech = techItems.slice(0, techSlots);
+      const allocatedContent = contentItems.slice(0, contentSlots);
+      scoredWorkbenchItems = [...allocatedTech, ...allocatedContent];
+      
+      console.log(`[Parménion] 📊 Dual-lane scoring: ${allocatedTech.length}/${techItems.length} tech (${techSlots} slots) + ${allocatedContent.length}/${contentItems.length} content (${contentSlots} slots). Force content: ${forceContent}, Budget: ${budgetPct}%`);
+      if (scoredWorkbenchItems.length > 0) {
+        console.log(`[Parménion] 📊 Top tech: tier ${allocatedTech[0]?.tier ?? 'none'} score ${allocatedTech[0]?.total_score ?? 0} | Top content: tier ${allocatedContent[0]?.tier ?? 'none'} score ${allocatedContent[0]?.total_score ?? 0}`);
       }
     }
 
@@ -211,7 +244,7 @@ serve(async (req: Request) => {
     let decision: ParmenionDecision | null = null;
     
     if (currentPhase === 'prescribe' && scoredWorkbenchItems.length > 0) {
-      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools ═══
+      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools (with dual-lane support) ═══
       decision = await prescribeWithDualPrompts({
         domain,
         cycle_number,
@@ -222,6 +255,7 @@ serve(async (req: Request) => {
         siteInfo,
         isIktracker,
         tracked_site_id,
+        force_content: forceContent,
       });
     } else {
       // Non-prescribe phases or empty workbench: single LLM call
@@ -627,14 +661,19 @@ async function prescribeWithDualPrompts(context: {
   siteInfo: any;
   isIktracker: boolean;
   tracked_site_id: string;
+  force_content?: boolean;
+  user_id?: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const supabase = getServiceClient();
   if (!LOVABLE_API_KEY) return null;
 
   const items = context.scoredWorkbenchItems;
-  const techItems = items.filter((it: any) => it.tier <= 3);
-  const contentItems = items.filter((it: any) => it.tier >= 4);
+  // Use lane field from scoring function (dual-lane) or fallback to tier-based split
+  const techItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'tech');
+  const contentItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'content');
+  
+  console.log(`[Parménion] Prescribe V2 dual-lane: ${techItems.length} tech + ${contentItems.length} content items. Force content: ${context.force_content}`);
 
   // ── Parse client_targets for readable injection ──
   let parsedTargetsPrimary = '';

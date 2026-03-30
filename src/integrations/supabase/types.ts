@@ -1026,6 +1026,7 @@ export type Database = {
       autopilot_configs: {
         Row: {
           auto_pause_threshold: number | null
+          content_budget_pct: number | null
           cooldown_hours: number | null
           created_at: string | null
           diag_audit_complet: boolean | null
@@ -1033,6 +1034,9 @@ export type Database = {
           diag_stratege_cocoon: boolean | null
           excluded_page_types: string[] | null
           excluded_subdomains: string[] | null
+          force_content_cycle: boolean | null
+          gate_threshold_high: number | null
+          gate_threshold_low: number | null
           id: string
           implementation_mode: string | null
           is_active: boolean | null
@@ -1049,6 +1053,7 @@ export type Database = {
         }
         Insert: {
           auto_pause_threshold?: number | null
+          content_budget_pct?: number | null
           cooldown_hours?: number | null
           created_at?: string | null
           diag_audit_complet?: boolean | null
@@ -1056,6 +1061,9 @@ export type Database = {
           diag_stratege_cocoon?: boolean | null
           excluded_page_types?: string[] | null
           excluded_subdomains?: string[] | null
+          force_content_cycle?: boolean | null
+          gate_threshold_high?: number | null
+          gate_threshold_low?: number | null
           id?: string
           implementation_mode?: string | null
           is_active?: boolean | null
@@ -1072,6 +1080,7 @@ export type Database = {
         }
         Update: {
           auto_pause_threshold?: number | null
+          content_budget_pct?: number | null
           cooldown_hours?: number | null
           created_at?: string | null
           diag_audit_complet?: boolean | null
@@ -1079,6 +1088,9 @@ export type Database = {
           diag_stratege_cocoon?: boolean | null
           excluded_page_types?: string[] | null
           excluded_subdomains?: string[] | null
+          force_content_cycle?: boolean | null
+          gate_threshold_high?: number | null
+          gate_threshold_low?: number | null
           id?: string
           implementation_mode?: string | null
           is_active?: boolean | null
@@ -8472,29 +8484,60 @@ export type Database = {
         }[]
       }
       recalculate_reliability: { Args: never; Returns: undefined }
-      score_workbench_priority: {
-        Args: { p_domain: string; p_limit?: number; p_user_id: string }
-        Returns: {
-          action_type: string
-          aging_bonus: number
-          base_score: number
-          created_at: string
-          description: string
-          finding_category: string
-          gate_malus: number
-          id: string
-          payload: Json
-          severity: string
-          severity_bonus: number
-          source_type: string
-          target_operation: string
-          target_selector: string
-          target_url: string
-          tier: number
-          title: string
-          total_score: number
-        }[]
-      }
+      score_workbench_priority:
+        | {
+            Args: { p_domain: string; p_limit?: number; p_user_id: string }
+            Returns: {
+              action_type: string
+              aging_bonus: number
+              base_score: number
+              created_at: string
+              description: string
+              finding_category: string
+              gate_malus: number
+              id: string
+              payload: Json
+              severity: string
+              severity_bonus: number
+              source_type: string
+              target_operation: string
+              target_selector: string
+              target_url: string
+              tier: number
+              title: string
+              total_score: number
+            }[]
+          }
+        | {
+            Args: {
+              p_domain: string
+              p_force_content?: boolean
+              p_lane?: string
+              p_limit?: number
+              p_user_id: string
+            }
+            Returns: {
+              action_type: string
+              aging_bonus: number
+              base_score: number
+              created_at: string
+              description: string
+              finding_category: string
+              gate_malus: number
+              id: string
+              lane: string
+              payload: Json
+              severity: string
+              severity_bonus: number
+              source_type: string
+              target_operation: string
+              target_selector: string
+              target_url: string
+              tier: number
+              title: string
+              total_score: number
+            }[]
+          }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
         Returns: undefined
