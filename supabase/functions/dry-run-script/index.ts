@@ -115,7 +115,7 @@ async function runViaBrowserless(
   
   const browserlessPayload = {
     url: siteUrl,
-    gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 },
+    gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
     addScriptTag: [{ content: code }],
     waitForTimeout: 3000,
   };
@@ -127,7 +127,7 @@ async function runViaBrowserless(
       page.on('pageerror', (err) => jsErrors.push(err.message));
       page.on('error', (err) => jsErrors.push(err.message));
 
-      await page.goto('${siteUrl}', { waitUntil: 'networkidle2', timeout: 15000 });
+      await page.goto('${siteUrl}', { waitUntil: 'networkidle2', timeout: 45000 });
 
       // Inject the corrective script
       await page.addScriptTag({ content: ${JSON.stringify(code)} });

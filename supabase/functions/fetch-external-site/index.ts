@@ -132,9 +132,9 @@ Deno.serve(async (req) => {
               rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
               setJavaScriptEnabled: true,
               waitFor: 3000,
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
             }),
-            signal: AbortSignal.timeout(30000),
+            signal: AbortSignal.timeout(60000),
           });
           
           if (renderResponse.ok) {
