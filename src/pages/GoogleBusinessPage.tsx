@@ -366,6 +366,33 @@ export default function GoogleBusinessPage() {
           </div>
         </section>
 
+        {/* ── Why Crawlers manages GBP ── */}
+        <section className="py-16 md:py-24 border-t border-border">
+          <div className="mx-auto max-w-4xl px-4 space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center">
+              {t3(language,
+                'Pourquoi Crawlers intègre la gestion Google Business ?',
+                'Why does Crawlers include Google Business management?',
+                '¿Por qué Crawlers incluye la gestión de Google Business?'
+              )}
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              {t3(language,
+                'Bien gérer sa fiche Google Business Profile, c\'est aujourd\'hui l\'un des meilleurs moyens de se rendre visible des moteurs IA. Les moteurs génératifs comme ChatGPT, Gemini ou Perplexity puisent directement dans les données structurées des fiches d\'établissement pour construire leurs réponses locales. Une fiche GBP complète, cohérente et régulièrement mise à jour améliore considérablement votre GEO (Generative Engine Optimization) — c\'est-à-dire votre capacité à apparaître dans les réponses générées par l\'IA, pas seulement dans les résultats classiques de Google.',
+                'Managing your Google Business Profile well is now one of the best ways to become visible to AI engines. Generative engines like ChatGPT, Gemini and Perplexity pull directly from structured business listing data to build their local answers. A complete, consistent and regularly updated GBP listing dramatically improves your GEO (Generative Engine Optimization) — your ability to appear in AI-generated answers, not just traditional Google results.',
+                'Gestionar bien su ficha Google Business Profile es hoy uno de los mejores medios para hacerse visible ante los motores IA. Los motores generativos como ChatGPT, Gemini o Perplexity extraen directamente de los datos estructurados de las fichas de establecimiento para construir sus respuestas locales. Una ficha GBP completa, coherente y actualizada regularmente mejora considerablemente su GEO (Generative Engine Optimization).'
+              )}
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {t3(language,
+                'C\'est pourquoi Crawlers a intégré nativement le pilotage de votre fiche GBP dans sa console : score de complétude sur 42 critères, benchmark concurrentiel automatique, recommandations IA ciblées et déploiement direct — le tout connecté à vos audits SEO, votre maillage interne et votre stratégie de contenu pour un effet de levier maximal.',
+                'That\'s why Crawlers natively integrates GBP management into its console: completeness score across 42 criteria, automatic competitive benchmarking, targeted AI recommendations and direct deployment — all connected to your SEO audits, internal linking and content strategy for maximum leverage.',
+                'Por eso Crawlers ha integrado nativamente el pilotaje de su ficha GBP en su consola: score de completitud en 42 criterios, benchmark competitivo automático, recomendaciones IA dirigidas y despliegue directo — todo conectado a sus auditorías SEO, su enlazado interno y su estrategia de contenidos.'
+              )}
+            </p>
+          </div>
+        </section>
+
         {/* ── Competition ── */}
         <section className="py-16 md:py-24 border-t border-border">
           <div className="mx-auto max-w-5xl px-4">
