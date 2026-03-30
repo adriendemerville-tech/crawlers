@@ -225,9 +225,17 @@ Deno.serve(async (req) => {
       // ═══ HOMEPAGE MODE: 3 parallel calls ═══
       console.log('🚀 [strategic-synthesis] Parallel mode: 3 focused LLM calls...');
 
+      // Compute factual citation scores from real data
+      const factualCitation = computeFactualCitationScores({
+        rankingOverview,
+        crawlData: toolsData || null,
+        backlinkData: null,
+        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+      });
+
       const userPromptA = buildUserPromptA(url, domain, baseContext);
       const userPromptB = buildUserPromptB(url, domain, baseContext);
-      const userPromptC = buildUserPromptC(url, domain, baseContext);
+      const userPromptC = buildUserPromptC(url, domain, baseContext, factualCitation.factual_summary);
 
       const parallelTimeout = 150_000;
 
