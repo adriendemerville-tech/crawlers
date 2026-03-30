@@ -224,6 +224,10 @@ function getTranslations(lang: string) {
       noData: 'Datos no disponibles',
       poweredBy: 'Desarrollado por Crawlers AI',
       cocoonPending: 'El análisis del capullo semántico no devolvió datos.',
+      toolbarPdf: 'Descargar PDF',
+      toolbarPrint: 'Imprimir',
+      toolbarCopy: 'Copiar enlace',
+      toolbarCopied: '¡Copiado!',
     },
   };
   return t[lang as keyof typeof t] || t.fr;
