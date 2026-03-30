@@ -533,7 +533,7 @@ const ContentArchitectPage = memo(() => {
           <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/10 via-background to-background" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(160_60%_40%/0.08),transparent_60%)]" />
 
-          <div className="relative mx-auto max-w-5xl px-4 text-center">
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
               <Badge variant="outline" className="mb-6 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 gap-1.5">
                 <PenTool className="h-3 w-3" />
@@ -548,7 +548,7 @@ const ContentArchitectPage = memo(() => {
               </span>
             </motion.h1>
 
-            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
               {tr.hero.subtitle}
             </motion.p>
 
@@ -566,7 +566,7 @@ const ContentArchitectPage = memo(() => {
             </motion.div>
 
             {/* Screenshot */}
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-4xl">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-5xl">
               <div className="rounded-xl border border-border shadow-2xl shadow-emerald-500/10 overflow-hidden">
                 <img
                   src={contentArchitectPreview}
@@ -581,7 +581,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ STATS ═══ */}
         <section className="border-b border-border py-12 bg-muted/30">
-          <div className="mx-auto max-w-5xl px-4 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
             {tr.stats.map((s, i) => (
               <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i} className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{s.value}</p>
@@ -594,7 +594,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ WORKFLOW ═══ */}
         <section className="py-20 sm:py-28">
-          <div className="mx-auto max-w-5xl px-4">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.workflowTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.workflowSubtitle}</p>
@@ -639,7 +639,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ LAYOUT / INTERFACE ═══ */}
         <section className="py-20 sm:py-28 border-t border-border bg-muted/10">
-          <div className="mx-auto max-w-5xl px-4">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.layoutTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.layoutSubtitle}</p>
@@ -732,7 +732,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ TOOLS ═══ */}
         <section className="py-20 sm:py-28 border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-5xl px-4">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.toolsTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.toolsSubtitle}</p>
@@ -761,7 +761,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ APIS ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
-          <div className="mx-auto max-w-4xl px-4">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.apisTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.apisSubtitle}</p>
@@ -796,7 +796,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ PRICING ═══ */}
         <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
-          <div className="mx-auto max-w-6xl px-4">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{tr.pricingTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.pricingSubtitle}</p>
@@ -846,7 +846,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ FAQ ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
-          <div className="mx-auto max-w-3xl px-4">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.faqTitle}</h2>
             </motion.div>
@@ -868,7 +868,7 @@ const ContentArchitectPage = memo(() => {
 
         {/* ═══ CTA FINAL ═══ */}
         <section className="border-t border-border py-20 bg-gradient-to-b from-muted/30 to-background">
-          <div className="mx-auto max-w-3xl px-4 text-center">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{tr.ctaFinal.title}</h2>
               <p className="text-muted-foreground mb-8">{tr.ctaFinal.subtitle}</p>
