@@ -950,7 +950,15 @@ export default function Cocoon() {
                 showClusters={cocoonFilters.showAllClusters}
                 colorIntensity={colorIntensity}
               />
-            )}
+        )}
+
+        {hasAccess && selectedSiteId && (
+          <CocoonBulkAutoLinking
+            open={showBulkAutoLink}
+            onOpenChange={setShowBulkAutoLink}
+            trackedSiteId={selectedSiteId}
+          />
+        )}
 
 
             {/* Controls moved to header settings popover */}
