@@ -78,6 +78,7 @@ const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
 const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
+const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
