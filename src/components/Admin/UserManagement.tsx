@@ -91,6 +91,7 @@ export function UserManagement() {
     setKpiModalOpen,
   });
 
+  const fetchPendingUsers = async () => {
     setPendingLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('auth-actions', {
