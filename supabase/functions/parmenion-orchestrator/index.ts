@@ -661,6 +661,8 @@ async function prescribeWithDualPrompts(context: {
   siteInfo: any;
   isIktracker: boolean;
   tracked_site_id: string;
+  force_content?: boolean;
+  user_id?: string;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const supabase = getServiceClient();
