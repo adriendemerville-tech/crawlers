@@ -2334,6 +2334,56 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
   }
 }
 
+// ─── Queue: trigger next pending Marina job ───
+async function triggerNextPendingJob() {
+  try {
+    const sb = getServiceClient();
+    // Check if any job is already processing
+    const { data: running } = await sb
+      .from('async_jobs')
+      .select('id')
+      .eq('function_name', 'marina')
+      .in('status', ['processing'])
+      .limit(1);
+
+    if (running && running.length > 0) {
+      console.log(`[Marina] 🔄 Queue: another job still processing (${running[0].id}), skipping`);
+      return;
+    }
+
+    // Find oldest pending job
+    const { data: next } = await sb
+      .from('async_jobs')
+      .select('id, input_payload')
+      .eq('function_name', 'marina')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (!next || next.length === 0) {
+      console.log('[Marina] 🔄 Queue: no pending jobs');
+      return;
+    }
+
+    const nextJob = next[0];
+    const payload = nextJob.input_payload as any;
+    console.log(`[Marina] 🔄 Queue: starting next pending job ${nextJob.id} (${payload?.url})`);
+
+    fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'run_job', job_id: nextJob.id, url: payload?.url, lang: payload?.lang || null }),
+    }).catch(err => {
+      console.error('[Marina] Queue: self-invocation for next job failed:', err);
+    });
+  } catch (e) {
+    console.warn('[Marina] Queue: triggerNextPendingJob error:', e);
+  }
+}
+
 // ─── Main server ───
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
