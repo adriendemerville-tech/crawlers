@@ -117,6 +117,63 @@ export default function RapportMatrice() {
     setTimeout(() => { iframe.contentWindow?.print(); setTimeout(() => document.body.removeChild(iframe), 1000); }, 500);
   };
 
+  const handlePdfDownload = async () => {
+    if (!htmlContent) return;
+    setIsGeneratingPdf(true);
+    try {
+      const printFrame = document.createElement('iframe');
+      printFrame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+      document.body.appendChild(printFrame);
+      const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+      if (!doc || !printFrame.contentWindow) throw new Error('Cannot create iframe');
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+      await new Promise(r => setTimeout(r, 500));
+      printFrame.contentWindow.print();
+      setTimeout(() => document.body.removeChild(printFrame), 2000);
+      toast.success('Utilisez "Enregistrer en PDF" dans la boîte de dialogue d\'impression');
+    } catch {
+      toast.error('Erreur lors de la génération du PDF');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleShare = useCallback(async () => {
+    if (!data || !user) return;
+    setIsSharing(true);
+    try {
+      // Store the report in shared-reports bucket with a random ID
+      const shareId = crypto.randomUUID();
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+      const filePath = `matrice/${shareId}.html`;
+
+      const { error } = await supabase.storage
+        .from('shared-reports')
+        .upload(filePath, htmlBlob, { contentType: 'text/html', upsert: false });
+
+      if (error) throw error;
+
+      // Create a signed URL valid for 7 days
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from('shared-reports')
+        .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days
+
+      if (signedError || !signedData?.signedUrl) throw signedError || new Error('No URL');
+
+      await navigator.clipboard.writeText(signedData.signedUrl);
+      setCopied(true);
+      toast.success('Lien copié ! Valide 7 jours.');
+      setTimeout(() => setCopied(false), 3000);
+    } catch (err) {
+      console.error('[Share]', err);
+      toast.error('Erreur lors du partage');
+    } finally {
+      setIsSharing(false);
+    }
+  }, [data, user, htmlContent]);
+
   if (!data) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground">Aucun rapport à afficher.</p></div>;
   }
