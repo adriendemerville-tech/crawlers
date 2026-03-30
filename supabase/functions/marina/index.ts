@@ -2609,8 +2609,31 @@ Deno.serve(async (req) => {
       return json({ error: 'Failed to create job' }, 500);
     }
 
-    // Self-invocation: trigger a separate HTTP call that will run the pipeline
-    // This ensures the pipeline runs as the main task of its own function instance
+    // ── Queue-aware launch: only self-invoke if no other job is processing ──
+    const { data: runningJobs } = await sb
+      .from('async_jobs')
+      .select('id')
+      .eq('function_name', 'marina')
+      .in('status', ['processing'])
+      .neq('id', job.id)
+      .limit(1);
+
+    const hasRunningJob = runningJobs && runningJobs.length > 0;
+
+    if (hasRunningJob) {
+      console.log(`[Marina] 🔄 Queue: job ${job.id} queued (another job is processing)`);
+      // Count position in queue
+      const { count } = await sb
+        .from('async_jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('function_name', 'marina')
+        .eq('status', 'pending')
+        .lt('created_at', new Date().toISOString());
+
+      return json({ job_id: job.id, status: 'queued', queue_position: count || 1 });
+    }
+
+    // No running job — start immediately
     fetch(`${SUPABASE_URL}/functions/v1/marina`, {
       method: 'POST',
       headers: {
