@@ -83,6 +83,8 @@ interface GmbData {
   completeness_score?: number;
   rating?: number;
   total_reviews?: number;
+  gmb_power_score?: number; // From gmbPowerScore.ts (0-100)
+  gmb_power_dimensions?: Record<string, number>;
   [key: string]: any;
 }
 
@@ -230,10 +232,20 @@ export function computeFactualCitationScores(opts: {
   if (authority !== null) parts.push(`- brand_authority = ${authority}/100 (basé sur domain_rank=${opts.backlinkData?.domain_rank || 0}, referring_domains=${opts.backlinkData?.referring_domains || 0})`);
 
   if (opts.gmbData) {
+    const gmbPower = opts.gmbData.gmb_power_score;
     const gmbScore = opts.gmbData.completeness_score ?? 0;
     const gmbRating = opts.gmbData.rating ?? 0;
     const gmbReviews = opts.gmbData.total_reviews ?? 0;
-    parts.push(`- GMB: complétude=${gmbScore}%, note=${gmbRating}/5, ${gmbReviews} avis (utilise ces données pour knowledge_graph_signals et brand_authority si > valeur pré-calculée)`);
+    if (gmbPower != null) {
+      parts.push(`- GMB Power Score = ${gmbPower}/100 (score composite: complétude, réputation, activité, SERP local, NAP, médias, confiance)`);
+      const dims = opts.gmbData.gmb_power_dimensions;
+      if (dims) {
+        parts.push(`  Détail: complétude=${dims.completeness_score}, réputation=${dims.reputation_score}, activité=${dims.activity_score}, SERP local=${dims.local_serp_score}, NAP=${dims.nap_consistency_score}, médias=${dims.media_score}, confiance=${dims.trust_score}`);
+      }
+      parts.push(`  → Utilise ce score GMB pour knowledge_graph_signals (forte corrélation GMB ↔ Knowledge Panel) et pour pondérer brand_authority`);
+    } else {
+      parts.push(`- GMB: complétude=${gmbScore}%, note=${gmbRating}/5, ${gmbReviews} avis (utilise ces données pour knowledge_graph_signals et brand_authority si > valeur pré-calculée)`);
+    }
   }
 
   const nullSignals = Object.entries(breakdown).filter(([_, v]) => v === null).map(([k]) => k);

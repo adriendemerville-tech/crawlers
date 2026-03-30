@@ -16,6 +16,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
 import { GmbKeywordsTab } from './GmbKeywordsTab';
+import { GmbPowerScoreCard } from './GmbPowerScoreCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
@@ -936,7 +937,12 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="stats"><StatsTab t={t} /></TabsContent>
+            <TabsContent value="stats">
+              <div className="space-y-4">
+                <GmbPowerScoreCard trackedSiteId={null} />
+                <StatsTab t={t} />
+              </div>
+            </TabsContent>
             <TabsContent value="keywords">
               <GmbKeywordsTab
                 trackedSiteId={null}
