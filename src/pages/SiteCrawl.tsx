@@ -26,6 +26,7 @@ import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
 import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
+import { autoSaveActionPlan } from '@/utils/autoSaveActionPlan';
 
 const crawlI18n = {
   fr: {
