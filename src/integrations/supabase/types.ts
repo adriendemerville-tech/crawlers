@@ -5644,6 +5644,7 @@ export type Database = {
           marina_custom_cta_text: string | null
           marina_custom_cta_url: string | null
           marina_custom_intro: string | null
+          marina_full_whitelabel: boolean | null
           marina_hide_crawlers_badge: boolean | null
           persona_type: string | null
           plan_type: string
@@ -5694,6 +5695,7 @@ export type Database = {
           marina_custom_cta_text?: string | null
           marina_custom_cta_url?: string | null
           marina_custom_intro?: string | null
+          marina_full_whitelabel?: boolean | null
           marina_hide_crawlers_badge?: boolean | null
           persona_type?: string | null
           plan_type?: string
@@ -5744,6 +5746,7 @@ export type Database = {
           marina_custom_cta_text?: string | null
           marina_custom_cta_url?: string | null
           marina_custom_intro?: string | null
+          marina_full_whitelabel?: boolean | null
           marina_hide_crawlers_badge?: boolean | null
           persona_type?: string | null
           plan_type?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS marina_full_whitelabel boolean DEFAULT false;
