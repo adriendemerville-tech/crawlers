@@ -18,6 +18,7 @@ import {
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
   ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database
 } from 'lucide-react';
+import { PricingPlansSection } from '@/components/PricingPlansSection';
 import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.png';
 
 const translations = {
