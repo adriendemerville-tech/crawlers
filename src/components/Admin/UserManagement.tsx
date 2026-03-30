@@ -948,6 +948,142 @@ export function UserManagement() {
           userId={affiliateUser.user_id}
         />
       )}
+
+      {/* Create User Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Créer un compte utilisateur
+            </DialogTitle>
+            <DialogDescription>
+              Le compte sera créé avec l'email confirmé automatiquement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Prénom</Label>
+                <Input value={createForm.first_name} onChange={e => setCreateForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Prénom" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Nom</Label>
+                <Input value={createForm.last_name} onChange={e => setCreateForm(f => ({ ...f, last_name: e.target.value }))} placeholder="Nom" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Email *</Label>
+              <Input type="email" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Mot de passe *</Label>
+              <Input type="password" value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="Min. 6 caractères" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Persona</Label>
+                <Select value={createForm.persona_type} onValueChange={v => setCreateForm(f => ({ ...f, persona_type: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+                    <SelectItem value="seo_pro">SEO/SIO</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="ecommerce">Ecommerce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plan</Label>
+                <Select value={createForm.plan_type} onValueChange={v => setCreateForm(f => ({ ...f, plan_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="agency_pro">Pro Agency</SelectItem>
+                    <SelectItem value="agency_premium">Pro Agency+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Crédits initiaux</Label>
+              <Input type="number" value={createForm.credits_balance} onChange={e => setCreateForm(f => ({ ...f, credits_balance: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleCreateUser} disabled={createLoading || !createForm.email || !createForm.password}>
+              {createLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              Créer le compte
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Modifier le profil
+            </DialogTitle>
+            <DialogDescription>
+              {editUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Prénom</Label>
+                <Input value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Nom</Label>
+                <Input value={editForm.last_name} onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Email</Label>
+              <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Persona</Label>
+                <Select value={editForm.persona_type || 'none'} onValueChange={v => setEditForm(f => ({ ...f, persona_type: v === 'none' ? '' : v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+                    <SelectItem value="seo_pro">SEO/SIO</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="ecommerce">Ecommerce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plan</Label>
+                <Select value={editForm.plan_type} onValueChange={v => setEditForm(f => ({ ...f, plan_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="agency_pro">Pro Agency</SelectItem>
+                    <SelectItem value="agency_premium">Pro Agency+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleUpdateProfile} disabled={editLoading}>
+              {editLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
