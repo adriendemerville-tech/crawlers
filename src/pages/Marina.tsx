@@ -732,7 +732,7 @@ ${t.code.commentResponse}
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.getLabel}</span>
                     <button
-                      onClick={() => copyCode(`curl "https://api.crawlers.fr/functions/v1/marina?job_id=abc-123" \\
+                      onClick={() => copyCode(`curl "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina?job_id=abc-123" \\
   -H "x-marina-key: ${t.code.yourKey}"`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
