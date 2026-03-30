@@ -120,19 +120,25 @@ export function MarinaBrandingCard() {
 
       {enabled && (
         <CardContent className="space-y-5">
-          {/* Full White Label toggle */}
-          <div className="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
+          {/* Full White Label toggle — Pro Agency+ only */}
+          <div className={`p-4 rounded-lg border ${isAgencyPremium ? 'bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20' : 'bg-muted/30 border-border opacity-80'}`}>
             <div className="flex items-start gap-3">
               <Checkbox
                 id="full-wl"
                 checked={fullWhiteLabel}
                 onCheckedChange={(v) => setFullWhiteLabel(v === true)}
                 className="mt-0.5"
+                disabled={!isAgencyPremium}
               />
               <div className="flex-1">
                 <label htmlFor="full-wl" className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
                   <Shield className="h-4 w-4 text-primary" />
                   {t3(language, 'Marque blanche complète', 'Full White Label', 'Marca blanca completa')}
+                  {!isAgencyPremium && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 border border-amber-500/30">
+                      Pro Agency+
+                    </span>
+                  )}
                 </label>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t3(language,
@@ -141,7 +147,15 @@ export function MarinaBrandingCard() {
                     'Elimina TODA mención de Crawlers.fr de los informes Marina: logo, pie de página, textos, metadatos y código fuente. Sus clientes solo verán su marca.'
                   )}
                 </p>
-                {fullWhiteLabel && (!hasLogo || !hasColor || !hasBrandName) && (
+                {!isAgencyPremium && (
+                  <button
+                    onClick={() => navigate('/tarifs')}
+                    className="mt-2 text-xs text-primary hover:underline font-medium"
+                  >
+                    {t3(language, 'Passer au plan Pro Agency+ →', 'Upgrade to Pro Agency+ →', 'Cambiar al plan Pro Agency+ →')}
+                  </button>
+                )}
+                {isAgencyPremium && fullWhiteLabel && (!hasLogo || !hasColor || !hasBrandName) && (
                   <div className="mt-2 p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
                     ⚠️ {t3(language,
                       `Pour un résultat optimal, configurez ${[!hasLogo ? 'votre logo' : '', !hasColor ? 'votre couleur' : '', !hasBrandName ? 'votre nom de marque' : ''].filter(Boolean).join(', ')} dans la section Marque Blanche ci-dessus.`,
@@ -150,7 +164,7 @@ export function MarinaBrandingCard() {
                     )}
                   </div>
                 )}
-                {fullWhiteLabel && hasLogo && hasColor && hasBrandName && (
+                {isAgencyPremium && fullWhiteLabel && hasLogo && hasColor && hasBrandName && (
                   <div className="mt-2 p-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5" />
                     {t3(language,
