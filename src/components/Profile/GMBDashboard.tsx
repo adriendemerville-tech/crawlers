@@ -799,37 +799,77 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
       <div className="flex gap-4">
         {/* Location sidebar — only shown when 2+ locations */}
         {showSidebar && (
-          <div className="flex flex-col gap-1 shrink-0 w-40">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={orderedLocations.map(l => l.id)} strategy={verticalListSortingStrategy}>
-                {orderedLocations.map(loc => (
-                  <SortableLocationItem
-                    key={loc.id}
-                    loc={loc}
-                    isSelected={selectedLocationId === loc.id}
-                    onSelect={() => setSelectedLocationId(loc.id)}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+        <div className="flex flex-col gap-1 shrink-0 w-44">
+          {showSidebar && (
+            <>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={orderedLocations.map(l => l.id)} strategy={verticalListSortingStrategy}>
+                  {orderedLocations.map(loc => (
+                    <SortableLocationItem
+                      key={loc.id}
+                      loc={loc}
+                      isSelected={selectedLocationId === loc.id}
+                      onSelect={() => setSelectedLocationId(loc.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
-              disabled={isGated}
-              onClick={() => {
-                const msg = (language === 'fr')
-                  ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
-                  : 'Connect your Google Business Profile account to add a location.';
-                toast.info(msg);
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t.add}
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
+                disabled={isGated}
+                onClick={() => {
+                  const msg = (language === 'fr')
+                    ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
+                    : 'Connect your Google Business Profile account to add a location.';
+                  toast.info(msg);
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t.add}
+              </Button>
+            </>
+          )}
+
+          {/* GBP Connect / Disconnect — bottom of sidebar */}
+          <div className="mt-auto pt-4 border-t border-border/40">
+            {gbpConnected ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 px-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                  <span className="text-[10px] text-muted-foreground truncate">
+                    {gbpEmail ? gbpEmail.replace('gbp:', '') : (language === 'fr' ? 'Connecté' : 'Connected')}
+                  </span>
+                </div>
+                <button
+                  onClick={handleGbpDisconnect}
+                  disabled={gbpDisconnecting}
+                  className="flex items-center gap-1.5 px-1 py-1 text-[10px] text-muted-foreground/60 hover:text-destructive transition-colors duration-200 group"
+                >
+                  {gbpDisconnecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unplug className="h-3 w-3 group-hover:text-destructive" />}
+                  {language === 'fr' ? 'Déconnecter' : 'Disconnect'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleGbpConnect}
+                disabled={gbpLoading || isGated}
+                className="flex items-center gap-2 px-2 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200 w-full disabled:opacity-40 disabled:pointer-events-none"
+              >
+                {gbpLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                ) : (
+                  <Store className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="text-left leading-tight">
+                  {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
+                </span>
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Main content */}
         <div className="flex-1 min-w-0 space-y-4">
