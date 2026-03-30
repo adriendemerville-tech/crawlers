@@ -109,6 +109,10 @@ const translations = {
       refHeaders: 'Headers requis',
       refHeaderKey: 'Votre clé API Marina (obligatoire)',
       refHeaderCt: 'Pour les requêtes POST',
+      refBodyTitle: 'Corps de la requête (JSON)',
+      refBodyUrl: 'URL du site à auditer (obligatoire)',
+      refBodyLang: 'Langue du rapport : "fr", "en" ou "es" (optionnel). Si omis, la langue est auto-détectée via l\'attribut <html lang="..."> du site, puis par heuristique de contenu. Défaut : "en".',
+      refBodyCallback: 'URL de webhook pour recevoir le rapport automatiquement (optionnel)',
       refPhases: 'Phases du pipeline',
       refPhasesDesc: 'Le rapport passe par 3 phases (~3 minutes au total) :',
       refPhasesList: [
@@ -274,6 +278,10 @@ const translations = {
       refHeaders: 'Required headers',
       refHeaderKey: 'Your Marina API key (required)',
       refHeaderCt: 'For POST requests',
+      refBodyTitle: 'Request body (JSON)',
+      refBodyUrl: 'URL of the site to audit (required)',
+      refBodyLang: 'Report language: "fr", "en" or "es" (optional). If omitted, the language is auto-detected from the site\'s <html lang="..."> attribute, then by content heuristic. Default: "en".',
+      refBodyCallback: 'Webhook URL to receive the report automatically (optional)',
       refPhases: 'Pipeline phases',
       refPhasesDesc: 'The report goes through 3 phases (~3 minutes total):',
       refPhasesList: [
@@ -439,6 +447,10 @@ const translations = {
       refHeaders: 'Headers requeridos',
       refHeaderKey: 'Tu clave API Marina (obligatorio)',
       refHeaderCt: 'Para solicitudes POST',
+      refBodyTitle: 'Cuerpo de la solicitud (JSON)',
+      refBodyUrl: 'URL del sitio a auditar (obligatorio)',
+      refBodyLang: 'Idioma del informe: "fr", "en" o "es" (opcional). Si se omite, el idioma se detecta automáticamente desde el atributo <html lang="..."> del sitio, luego por heurística de contenido. Por defecto: "en".',
+      refBodyCallback: 'URL de webhook para recibir el informe automáticamente (opcional)',
       refPhases: 'Fases del pipeline',
       refPhasesDesc: 'El informe pasa por 3 fases (~3 minutos en total):',
       refPhasesList: [
