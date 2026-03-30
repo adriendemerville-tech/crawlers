@@ -177,8 +177,8 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
         'Content-Type': 'application/json',
         ...(flySecret ? { 'x-secret': flySecret } : {}),
       },
-      body: JSON.stringify({ url, timeout: 30000, waitFor: 3000 }),
-      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify({ url, timeout: 45000, waitFor: 3000 }),
+      signal: AbortSignal.timeout(60000),
     });
 
     if (response.ok) {

@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
               waitFor: 3000,
               gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
             }),
-            signal: AbortSignal.timeout(30000),
+            signal: AbortSignal.timeout(60000),
           });
           
           if (renderResponse.ok) {
