@@ -81,15 +81,6 @@ export function UserManagement() {
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
-  const userActions = useUserActions({
-    setSelectedUser,
-    setDeleteDialogOpen,
-    setCreditDialogOpen,
-    setStripDialogOpen,
-    openEditDialog: (u: any) => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', email: u.email || '', persona_type: u.persona_type || '', plan_type: u.plan_type || 'free' }); setEditDialogOpen(true); },
-    toggleRole,
-    setKpiModalOpen,
-  });
 
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
