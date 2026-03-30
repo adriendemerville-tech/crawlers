@@ -349,8 +349,22 @@ export function SmartConfigurator({
     if (isOpen) {
       fetchWpSiteData();
       fetchAuditIntelligence();
+      // Check CMS connection for content delegation
+      if (user && siteDomain) {
+        const checkCms = async () => {
+          const siteId = activeSiteId || await (async () => {
+            const { data } = await supabase.from('tracked_sites').select('id').eq('user_id', user.id).eq('domain', siteDomain).maybeSingle();
+            return data?.id;
+          })();
+          if (siteId) {
+            const { data } = await supabase.from('cms_connections').select('id').eq('tracked_site_id', siteId).limit(1);
+            setHasCmsConnectionForContent((data?.length || 0) > 0);
+          }
+        };
+        checkCms();
+      }
     }
-  }, [isOpen, fetchWpSiteData, fetchAuditIntelligence]);
+  }, [isOpen, fetchWpSiteData, fetchAuditIntelligence, user, siteDomain, activeSiteId]);
 
   // Mark as ready once preloading finishes (one-way: stays true once set to avoid flicker on re-focus)
   useEffect(() => {
