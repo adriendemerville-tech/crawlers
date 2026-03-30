@@ -218,6 +218,7 @@ const translations = {
       credits: 'credits',
       loginCta: 'Sign in to generate a report',
       signupOffer: '5 free credits on signup = 1 free report',
+      apiDocLink: '📄 Marina API Documentation',
     },
     toasts: {
       enterUrl: 'Please enter a URL',
