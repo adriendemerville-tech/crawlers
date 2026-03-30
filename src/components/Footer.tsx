@@ -103,9 +103,25 @@ function FooterComponent() {
     },
     {
       icon: Brain,
-      label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),
+      label: 'Code Architect',
       href: '/architecte-generatif',
       description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
+      gold: true,
+      isRoute: true
+    },
+    {
+      icon: Brain,
+      label: 'Content Architect',
+      href: '/content-architect',
+      description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'),
+      gold: true,
+      isRoute: true
+    },
+    {
+      icon: Globe,
+      label: 'Google Business',
+      href: '/google-business',
+      description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'),
       gold: true,
       isRoute: true
     },
