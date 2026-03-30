@@ -24,6 +24,7 @@ import { ContentArchitectDraftPanel } from './ContentArchitectDraftPanel';
 import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
 import { ContentArchitectTasksPanel } from './ContentArchitectTasksPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
+import { ContentArchitectProvider } from '@/contexts/ContentArchitectContext';
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
@@ -709,16 +710,18 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           )}
 
           {/* Canvas / Preview */}
-          <ContentArchitectPreview
-            result={result} setResult={setResult} loading={loading} url={url}
-            isEdited={isEdited} onResetEdits={handleResetEdits}
-            showGuide={showGuide} setShowGuide={setShowGuide} language={language} counters={counters}
-            onSaveDraft={handleSaveDraft} onPublish={handlePublish}
-            publishing={publishing} savingDraft={savingDraft}
-            hasCmsConnection={hasCmsConnection} isExistingPage={isExistingPage}
-            creditsCost={!isAgencyPro ? 5 : null}
-            colorTheme={colorTheme}
-          />
+          <ContentArchitectProvider value={{
+            result, setResult, loading, url,
+            isEdited, onResetEdits: handleResetEdits,
+            showGuide, setShowGuide, language, counters,
+            onSaveDraft: handleSaveDraft, onPublish: handlePublish,
+            publishing, savingDraft,
+            hasCmsConnection, isExistingPage,
+            creditsCost: !isAgencyPro ? 5 : null,
+            colorTheme,
+          }}>
+            <ContentArchitectPreview />
+          </ContentArchitectProvider>
         </div>
       </div>
     </div>

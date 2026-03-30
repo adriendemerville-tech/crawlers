@@ -2,6 +2,7 @@ import { FileText, Code2, Image, Link2, ChevronUp, RotateCcw, Loader2, Save, Upl
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { t3 } from '@/utils/i18n';
+import { useContentArchitect } from '@/contexts/ContentArchitectContext';
 
 const themes = {
   cocoon: {
@@ -30,31 +31,14 @@ const themes = {
   },
 };
 
-interface ContentArchitectPreviewProps {
-  result: any;
-  setResult: (v: any) => void;
-  loading: boolean;
-  url: string;
-  isEdited: boolean;
-  onResetEdits: () => void;
-  showGuide: boolean;
-  setShowGuide: (v: boolean) => void;
-  language: string;
-  counters: { h1: number; h2: number; h3: number; chars: number; medias: number; links: number };
-  onSaveDraft?: () => void;
-  onPublish?: () => void;
-  publishing?: boolean;
-  savingDraft?: boolean;
-  hasCmsConnection?: boolean;
-  isExistingPage?: boolean;
-  creditsCost?: number | null;
-  colorTheme?: 'cocoon' | 'green';
-}
+export function ContentArchitectPreview() {
+  const {
+    result, setResult, loading, url, isEdited, onResetEdits,
+    showGuide, setShowGuide, language, counters,
+    onSaveDraft, onPublish, publishing, savingDraft,
+    hasCmsConnection, isExistingPage, creditsCost, colorTheme,
+  } = useContentArchitect();
 
-export function ContentArchitectPreview({
-  result, setResult, loading, url, isEdited, onResetEdits, showGuide, setShowGuide, language, counters,
-  onSaveDraft, onPublish, publishing, savingDraft, hasCmsConnection, isExistingPage, creditsCost, colorTheme = 'cocoon',
-}: ContentArchitectPreviewProps) {
   const t = themes[colorTheme];
 
   return (
