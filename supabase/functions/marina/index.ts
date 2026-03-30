@@ -1147,44 +1147,95 @@ function extractBodyContent(html: string, options: { stripHeader?: boolean; stri
   return content.trim();
 }
 
+// ─── Branding type for white-label ───
+interface MarinaBranding {
+  enabled: boolean;
+  fullWhiteLabel: boolean;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  brandName?: string | null;
+  customIntro?: string | null;
+  ctaText?: string | null;
+  ctaUrl?: string | null;
+  hideBadge?: boolean;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  reportHeaderText?: string | null;
+  reportFooterText?: string | null;
+}
+
 // ─── Compile multiple section HTMLs into one final report ───
 function compileMarinaReport(
   sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string },
   lang: string,
   domain: string,
   url: string,
+  branding?: MarinaBranding,
 ): string {
   const tr = getTranslations(lang);
   const now = new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
 
-  // Extract body content with appropriate header/footer stripping:
-  // Crawl: keep header (via TOC), strip footer
-  // Tech: strip header, strip footer
-  // Strategic: strip header, strip footer
-  // Cocoon: strip header, keep footer
   const crawlContent = extractBodyContent(sectionHTMLs.crawl, { stripHeader: true, stripFooter: true });
   const techContent = extractBodyContent(sectionHTMLs.tech, { stripHeader: true, stripFooter: true });
   const strategicContent = extractBodyContent(sectionHTMLs.strategic, { stripHeader: true, stripFooter: true });
   const cocoonContent = extractBodyContent(sectionHTMLs.cocoon, { stripHeader: true, stripFooter: true });
+
+  // White-label: determine colors and texts
+  const isWL = branding?.enabled && branding?.fullWhiteLabel;
+  const headerColor = isWL && branding?.primaryColor ? branding.primaryColor : '#3b82f6';
+  const headerColorDark = isWL && branding?.primaryColor ? adjustColor(branding.primaryColor, -30) : '#1d4ed8';
+  const brandLabel = isWL && branding?.brandName ? branding.brandName : '';
+  const poweredByText = isWL ? '' : tr.poweredBy;
+  const footerLink = isWL ? '' : `<div style="margin-top:4px;"><a href="https://crawlers.fr">crawlers.fr</a></div>`;
+  const logoHtml = isWL && branding?.logoUrl 
+    ? `<img src="${branding.logoUrl}" alt="${brandLabel}" style="max-height:48px;max-width:200px;margin:0 auto 12px;display:block;" />`
+    : '';
+  const introHtml = branding?.enabled && branding?.customIntro
+    ? `<div class="section" style="border-left:4px solid ${headerColor};"><p style="font-size:14px;color:#374151;line-height:1.7;">${branding.customIntro}</p></div>`
+    : '';
+  const ctaHtml = branding?.enabled && branding?.ctaText && branding?.ctaUrl
+    ? `<div style="text-align:center;margin:24px 0;"><a href="${branding.ctaUrl}" target="_blank" rel="noopener" style="display:inline-block;padding:12px 32px;background:${headerColor};color:white;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;">${branding.ctaText}</a></div>`
+    : '';
+  const footerCustom = isWL && branding?.reportFooterText 
+    ? `<div style="margin-top:4px;font-size:11px;color:#9ca3af;">${branding.reportFooterText}</div>` 
+    : '';
+  const contactFooter = isWL && (branding?.contactEmail || branding?.contactPhone)
+    ? `<div style="margin-top:8px;font-size:11px;color:#9ca3af;">${[branding.contactEmail, branding.contactPhone].filter(Boolean).join(' • ')}</div>`
+    : '';
+
+  // Override CSS colors if white-label
+  const colorOverrides = isWL ? `
+    .header { background: linear-gradient(135deg, ${headerColor}, ${headerColorDark}) !important; }
+    .section-number { background: ${headerColor} !important; }
+    .footer a { color: ${headerColor} !important; }
+    .stat-card .value { color: ${headerColor} !important; }
+    .marina-toolbar button.primary { background: ${headerColor} !important; border-color: ${headerColor} !important; }
+    .marina-toolbar button.primary:hover { background: ${headerColorDark} !important; }
+    .marina-separator { background: linear-gradient(90deg, transparent, ${headerColor}, transparent) !important; }
+  ` : '';
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${tr.title} - ${domain}</title>
+  <title>${isWL && brandLabel ? `${brandLabel} — ` : ''}${tr.title} - ${domain}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>${getMarinaStyles()}</style>
+  <style>${getMarinaStyles()}${colorOverrides}</style>
 </head>
 <body>
   ${getToolbarHtml(domain, lang)}
   <div class="container">
     <div class="header">
+      ${logoHtml}
+      ${isWL && brandLabel ? `<div style="font-size:13px;opacity:0.85;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">${brandLabel}</div>` : ''}
       <h1>${tr.title}</h1>
       <div class="subtitle">${tr.generatedFor}: <strong>${domain}</strong></div>
       <div class="subtitle">${url}</div>
       <div class="date">${tr.generatedAt}: ${now}</div>
     </div>
+
+    ${introHtml}
 
     <!-- Table of Contents -->
     <div class="toc">
@@ -1212,26 +1263,43 @@ function compileMarinaReport(
     <!-- Section 4: Cocoon -->
     ${cocoonContent}
 
+    ${ctaHtml}
+
     <div class="footer">
-      <div>${tr.poweredBy}</div>
-      <div style="margin-top:4px;"><a href="https://crawlers.fr">crawlers.fr</a></div>
+      ${poweredByText ? `<div>${poweredByText}</div>` : ''}
+      ${footerLink}
+      ${footerCustom}
+      ${contactFooter}
+      ${isWL && brandLabel && !poweredByText ? `<div style="font-size:11px;color:#9ca3af;">© ${new Date().getFullYear()} ${brandLabel}</div>` : ''}
     </div>
   </div>
 </body>
 </html>`;
 }
 
+// ─── Helper: darken/lighten hex color ───
+function adjustColor(hex: string, amount: number): string {
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  const num = parseInt(c, 16);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+  const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+  return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
 // ─── LEGACY fallback: monolithic report generator (kept for resilience) ───
 function generateLegacyMarinaReport(
   url: string, domain: string, lang: string,
   expertSeoData: any, strategicData: any, cocoonData: any | null,
+  branding?: MarinaBranding,
 ): string {
   // Generate each section individually then compile — same logic but inline
   const crawlHTML = generateCrawlSectionHTML(expertSeoData, lang, domain, url);
   const techHTML = generateTechSectionHTML(expertSeoData, lang, domain);
   const strategicHTML = generateStrategicSectionHTML(strategicData, lang, domain);
   const cocoonHTML = generateCocoonSectionHTML(cocoonData, lang, domain);
-  return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url);
+  return compileMarinaReport({ crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML }, lang, domain, url, branding);
 }
 
 // ─── Lite Stratège: quick LLM call for top 3 cocoon recommendations ───
@@ -1936,6 +2004,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       await updateProgress(85, 'generating_report');
 
+      // ─── Fetch user branding for white-label ───
+      let marinaBranding: MarinaBranding | undefined;
+      try {
+        const { data: brandProfile } = await sb
+          .from('profiles')
+          .select('marina_brand_enabled, marina_full_whitelabel, marina_custom_intro, marina_custom_cta_text, marina_custom_cta_url, marina_hide_crawlers_badge, agency_logo_url, agency_primary_color, agency_brand_name, agency_contact_email, agency_contact_phone, agency_report_footer_text, plan_type')
+          .eq('user_id', parentJob.user_id)
+          .single();
+        
+        if (brandProfile?.marina_brand_enabled && (brandProfile.plan_type === 'agency_pro' || brandProfile.plan_type === 'agency_pro_plus')) {
+          marinaBranding = {
+            enabled: true,
+            fullWhiteLabel: brandProfile.marina_full_whitelabel || false,
+            logoUrl: brandProfile.agency_logo_url,
+            primaryColor: brandProfile.agency_primary_color,
+            brandName: brandProfile.agency_brand_name,
+            customIntro: brandProfile.marina_custom_intro,
+            ctaText: brandProfile.marina_custom_cta_text,
+            ctaUrl: brandProfile.marina_custom_cta_url,
+            hideBadge: brandProfile.marina_hide_crawlers_badge || false,
+            contactEmail: brandProfile.agency_contact_email,
+            contactPhone: brandProfile.agency_contact_phone,
+            reportFooterText: brandProfile.agency_report_footer_text,
+          };
+          console.log(`[Marina] 🎨 White-label branding loaded (full=${marinaBranding.fullWhiteLabel})`);
+        }
+      } catch (brandErr) {
+        console.warn('[Marina] Branding fetch failed (non-fatal):', brandErr);
+      }
+
       // ─── Step 4: Generate HTML reports ───
       let html: string;
       
@@ -1969,7 +2067,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         html = compileMarinaReport(
           { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
-          detectedLang, domain, url,
+          detectedLang, domain, url, marinaBranding,
         );
 
         console.log(`[Marina] ✅ Compiled report from 4 sections`);
@@ -1980,7 +2078,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       } catch (compileError) {
         console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
-        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult);
+        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding);
       }
 
       // ─── Step 5: Store in shared-reports bucket ───
