@@ -129,11 +129,11 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
-        waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 15000 },
-        waitForTimeout: 3000,
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 135000 },
+        waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 45000 },
+        waitForTimeout: 9000,
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(180000),
     });
 
     if (response.ok) {
