@@ -101,9 +101,13 @@ POSTURE: Analytique, prescriptif. Recommandations NARRATIVES: chaque action = pa
 
 Modules: GEO Citabilité, Visibilité LLM, Intent conversationnel, Risque Zéro-Clic, Roadmap exécutive, Quotabilité, Résilience au résumé, Empreinte lexicale, Sentiment d'expertise, Red Team.`;
 
-export function buildUserPromptC(url: string, domain: string, baseContext: string): string {
-  return `${baseContext}
+export function buildUserPromptC(url: string, domain: string, baseContext: string, factualCitationContext?: string): string {
+  const citationInjection = factualCitationContext
+    ? `\n${factualCitationContext}\n`
+    : '';
 
+  return `${baseContext}
+${citationInjection}
 GÉNÈRE un JSON avec UNIQUEMENT ces clés:
 {"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
 "llm_visibility":{"citation_probability":0-100,"citation_breakdown":{"serp_presence":0-100,"structured_data_quality":0-100,"content_quotability":0-100,"brand_authority":0-100,"content_freshness":0-100,"business_intent_match":0-100,"self_citation_signals":0-100,"knowledge_graph_signals":0-100},"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
@@ -117,7 +121,7 @@ GÉNÈRE un JSON avec UNIQUEMENT ces clés:
 "red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
 RÈGLES:
-- citation_probability: moyenne pondérée de citation_breakdown. Poids: serp_presence×20%, structured_data_quality×10%, content_quotability×15%, brand_authority×15%, content_freshness×5%, business_intent_match×15%, self_citation_signals×10%, knowledge_graph_signals×10%. Évalue chaque signal 0-100 d'après le contenu crawlé, les données SERP/backlinks/GMB si fournies. serp_presence=100 si top3, 70 si top10, 30 si top20, 0 sinon. business_intent_match: alignement entre contenu et intention commerciale réelle du secteur. self_citation_signals: présence de formulations "Chez [marque]..." dans le texte.
+- citation_probability: moyenne pondérée de citation_breakdown (serp_presence×20%, structured_data_quality×10%, content_quotability×15%, brand_authority×15%, content_freshness×5%, business_intent_match×15%, self_citation_signals×10%, knowledge_graph_signals×10%). Si des valeurs pré-calculées sont fournies ci-dessus, RECOPIE-LES telles quelles. N'évalue QUE les signaux marqués null. business_intent_match: alignement entre contenu et intention commerciale réelle du secteur. self_citation_signals: présence de formulations "Chez [marque]..." dans le texte.
 - executive_roadmap: MIN 6 recs narratives dont ≥1 category "Social"
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots.
