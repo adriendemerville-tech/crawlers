@@ -1952,6 +1952,32 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
+      // ─── Webhook callback ───
+      try {
+        const { data: completedJob } = await sb.from('async_jobs')
+          .select('input_payload')
+          .eq('id', jobId)
+          .single();
+        const callbackUrl = (completedJob?.input_payload as any)?.callback_url;
+        if (callbackUrl) {
+          console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
+          const webhookPayload = {
+            event: 'marina.report.completed',
+            job_id: jobId,
+            ...resultData,
+          };
+          const cbRes = await fetch(callbackUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(webhookPayload),
+          });
+          console.log(`[Marina] Webhook response: ${cbRes.status}`);
+        }
+      } catch (webhookErr) {
+        console.warn('[Marina] Webhook delivery failed:', webhookErr);
+        // Non-blocking: don't fail the job if webhook fails
+      }
+
       // ─── Step 6: Persist structured training data for ML ───
       try {
         const scores = expertData?.scores || {};
@@ -2195,8 +2221,20 @@ Deno.serve(async (req) => {
 
 
     // ── Start new pipeline ──
-    const { url: targetUrl, lang } = body;
+    const { url: targetUrl, lang, callback_url } = body;
     if (!targetUrl) return json({ error: 'url is required' }, 400);
+
+    // Validate callback_url if provided
+    if (callback_url) {
+      try {
+        const cbUrl = new URL(callback_url);
+        if (!['http:', 'https:'].includes(cbUrl.protocol)) {
+          return json({ error: 'callback_url must be http or https' }, 400);
+        }
+      } catch {
+        return json({ error: 'callback_url is not a valid URL' }, 400);
+      }
+    }
 
     // Create async job
     const { data: job, error: jobError } = await sb
@@ -2205,7 +2243,7 @@ Deno.serve(async (req) => {
         user_id: userId,
         function_name: 'marina',
         status: 'pending',
-        input_payload: { url: targetUrl, lang: lang || null },
+        input_payload: { url: targetUrl, lang: lang || null, callback_url: callback_url || null },
       })
       .select('id')
       .single();
