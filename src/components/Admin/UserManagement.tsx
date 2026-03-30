@@ -832,6 +832,7 @@ export function UserManagement() {
         onToggleRole={(userId, role) => toggleRole(userId, role)}
         onManageCredits={(u: any) => { setSelectedUser(u); setCreditDialogOpen(true); setKpiModalOpen(false); }}
         onStripPro={(u: any) => { setSelectedUser(u); setStripDialogOpen(true); setKpiModalOpen(false); }}
+        onEditProfile={(u: any) => { openEditDialog(u); setKpiModalOpen(false); }}
         adminUserIds={adminUserIds}
         viewerUserIds={viewerUserIds}
         viewer2UserIds={viewer2UserIds}
