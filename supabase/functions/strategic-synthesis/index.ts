@@ -141,7 +141,17 @@ Deno.serve(async (req) => {
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
 
+    // ── Sector disambiguation ──
+    const siteIdentityCtx = competitorsData?.siteIdentityContext || {};
+    const sectorLabel = siteIdentityCtx?.sector || businessContext?.sector || '';
+    const productsLabel = siteIdentityCtx?.products_services || businessContext?.productsServices || '';
+    const businessTypeLabel = siteIdentityCtx?.business_type || businessContext?.businessType || '';
+
     let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🔒 CONSIGNE DE LANGUE: ${strictLanguageInstruction}\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
+    if (sectorLabel || productsLabel) {
+      baseContext += `🏢 SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
+      baseContext += `⚠️ ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
+    }
     if (competitors?.length > 0) {
       const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
       baseContext += `🏙️ CONCURRENTS:\n${compLines}\n`;

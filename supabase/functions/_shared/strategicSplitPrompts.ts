@@ -65,6 +65,12 @@ RÈGLE CLASSIFICATION DES CONCURRENTS (scoring de similarité):
 - CHALLENGER: Même similarité, position INFÉRIEURE dans la SERP.
 - SOURCE D'INSPIRATION: Similarité entreprise ≥0.5, produit ≥0.5, première page SERP.
 
+RÈGLE ANTI-HOMONYMIE CONCURRENTS:
+- Les concurrents DOIVENT être dans le MÊME secteur d'activité que le site analysé (indiqué dans SECTEUR D'ACTIVITÉ).
+- JAMAIS de sites sur des personnalités politiques, culturelles ou médiatiques homonymes.
+- Si les données DataForSEO/SERP fournissent des concurrents, UTILISE-LES EN PRIORITÉ au lieu d'halluciner des concurrents.
+- Si aucun concurrent DataForSEO n'est fourni, cherche des acteurs dans le MÊME SECTEUR, PAS des résultats liés au nom de marque.
+
 RÈGLE MOTS-CLÉS: MIN 5 obligatoires avec strategic_analysis. JAMAIS le nom de marque. 100% génériques.
 Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>50). TOUJOURS 2-3 content_gaps.`;
 
