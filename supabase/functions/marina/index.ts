@@ -2141,6 +2141,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
+      // Inject the viewable report URL as a meta tag so the "Copy link" button works inside iframes
+      const viewUrl = `${SUPABASE_URL}/functions/v1/view-marina-report?id=${jobId}`;
+      html = html.replace('</head>', `<meta name="marina-report-url" content="${viewUrl}" />\n</head>`);
+
       const { error: uploadError } = await sb.storage
         .from('shared-reports')
         .upload(fileName, new Blob([html], { type: 'text/html' }), {
