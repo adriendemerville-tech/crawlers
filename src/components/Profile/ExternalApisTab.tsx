@@ -407,49 +407,99 @@ export function ExternalApisTab() {
     }
   };
 
+  const handleGbpDisconnect = async () => {
+    setGbpDisconnecting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.functions.invoke('gbp-auth', {
+        body: { action: 'disconnect', user_id: user.id },
+      });
+      if (error) throw error;
+      setGbpConnected(false);
+      setGbpEmail(null);
+      toast.success(language === 'fr' ? 'Google Business Profile déconnecté' : language === 'es' ? 'Google Business Profile desconectado' : 'Google Business Profile disconnected');
+    } catch (err) {
+      console.error('[ExternalApis] GBP disconnect error:', err);
+      toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
+    } finally {
+      setGbpDisconnecting(false);
+    }
+  };
+
   const renderServiceCard = (service: ServiceButton) => {
     const isConnecting = connectingId === service.id;
+    const isGbp = service.id === 'gmb';
+    const isGbpActive = isGbp && gbpConnected;
+
     return (
-      <button
-        key={service.id}
-        disabled={!service.available || isConnecting}
-        onClick={() => handleServiceClick(service)}
-        className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
-          service.available
-            ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
-            : 'border-border/50 opacity-50 cursor-not-allowed'
-        }`}
-      >
-        <div
-          className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
-          dangerouslySetInnerHTML={{ __html: service.logoSvg }}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">{service.name}</span>
-            {!service.available && (
-              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-muted-foreground/30">
-                {t.comingSoon}
-              </Badge>
+      <div key={service.id} className="relative">
+        <button
+          disabled={!service.available || isConnecting}
+          onClick={() => handleServiceClick(service)}
+          className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+            isGbpActive
+              ? 'border-emerald-500/40 bg-emerald-500/5'
+              : service.available
+                ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
+                : 'border-border/50 opacity-50 cursor-not-allowed'
+          }`}
+        >
+          <div
+            className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+            dangerouslySetInnerHTML={{ __html: service.logoSvg }}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">{service.name}</span>
+              {isGbpActive && (
+                <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  {t.connected}
+                </Badge>
+              )}
+              {!service.available && (
+                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-muted-foreground/30">
+                  {t.comingSoon}
+                </Badge>
+              )}
+            </div>
+            {isGbpActive && gbpEmail && (
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 block mt-0.5">{gbpEmail}</span>
+            )}
+            {service.available && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    {t.connecting}
+                  </>
+                ) : isGbpActive ? (
+                  <>
+                    <MapPin className="w-3 h-3" />
+                    {language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect'}
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="w-3 h-3" />
+                    {t.configure}
+                  </>
+                )}
+              </span>
             )}
           </div>
-          {service.available && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              {isConnecting ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  {t.connecting}
-                </>
-              ) : (
-                <>
-                  <ExternalLink className="w-3 h-3" />
-                  {t.configure}
-                </>
-              )}
-            </span>
-          )}
-        </div>
-      </button>
+        </button>
+        {isGbpActive && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleGbpDisconnect(); }}
+            disabled={gbpDisconnecting}
+            className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title={language === 'fr' ? 'Déconnecter GBP' : 'Disconnect GBP'}
+          >
+            {gbpDisconnecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unplug className="w-3.5 h-3.5" />}
+          </button>
+        )}
+      </div>
     );
   };
 
