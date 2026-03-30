@@ -76,6 +76,8 @@ export function MarinaConsoleTab() {
       if (json.key) {
         setApiKey(json.key);
         toast.success(t3(language, 'Clé API générée', 'API key generated', 'Clave API generada'));
+      } else if (json.error) {
+        toast.error(json.error);
       }
     } catch {
       toast.error('Erreur');
