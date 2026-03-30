@@ -123,10 +123,40 @@ function getMarinaStyles(): string {
     .toc-item:last-child { border-bottom: none; }
     .reco-card { padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:4px; }
     .marina-separator { height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 32px 0; border-radius: 2px; }
+    /* Floating toolbar */
+    .marina-toolbar {
+      position: sticky; top: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e5e7eb;
+      max-width: 900px; margin: 0 auto 0 auto;
+    }
+    .marina-toolbar-title {
+      margin-right: auto; font-size: 14px; font-weight: 600; color: #1e293b;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .marina-toolbar button {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+      background: white; color: #374151; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .marina-toolbar button:hover { background: #f3f4f6; border-color: #9ca3af; }
+    .marina-toolbar button.primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .marina-toolbar button.primary:hover { background: #2563eb; }
+    .marina-toolbar button svg { width: 16px; height: 16px; }
+    .marina-toolbar .copied { color: #22c55e; border-color: #22c55e; }
     @media print {
       body { padding: 0; }
       @page { margin: 15mm 10mm; }
       .section { break-inside: auto; }
+      .marina-toolbar { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      .marina-toolbar { gap: 4px; padding: 8px 12px; }
+      .marina-toolbar .btn-label { display: none; }
+      .marina-toolbar button { padding: 7px 10px; }
     }
   `;
 }
@@ -150,6 +180,10 @@ function getTranslations(lang: string) {
       noData: 'Données non disponibles',
       poweredBy: 'Propulsé par Crawlers AI',
       cocoonPending: 'L\'analyse du cocon sémantique n\'a pas retourné de données pour ce site. Un crawl multi-pages est nécessaire.',
+      toolbarPdf: 'Télécharger PDF',
+      toolbarPrint: 'Imprimer',
+      toolbarCopy: 'Copier le lien',
+      toolbarCopied: 'Copié !',
     },
     en: {
       title: 'Complete SEO & GEO Report',
@@ -168,6 +202,10 @@ function getTranslations(lang: string) {
       noData: 'Data not available',
       poweredBy: 'Powered by Crawlers AI',
       cocoonPending: 'Semantic cocoon analysis returned no data. A multi-page crawl is required.',
+      toolbarPdf: 'Download PDF',
+      toolbarPrint: 'Print',
+      toolbarCopy: 'Copy link',
+      toolbarCopied: 'Copied!',
     },
     es: {
       title: 'Informe SEO y GEO Completo',
@@ -186,9 +224,58 @@ function getTranslations(lang: string) {
       noData: 'Datos no disponibles',
       poweredBy: 'Desarrollado por Crawlers AI',
       cocoonPending: 'El análisis del capullo semántico no devolvió datos.',
+      toolbarPdf: 'Descargar PDF',
+      toolbarPrint: 'Imprimir',
+      toolbarCopy: 'Copiar enlace',
+      toolbarCopied: '¡Copiado!',
     },
   };
   return t[lang as keyof typeof t] || t.fr;
+}
+// ─── Generate floating toolbar HTML + JS ───
+function getToolbarHtml(domain: string, lang: string): string {
+  const tr = getTranslations(lang);
+  // SVG icons inline
+  const downloadIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const printIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
+  const linkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  return `
+  <div class="marina-toolbar" id="marina-toolbar">
+    <span class="marina-toolbar-title">${domain}</span>
+    <button class="primary" onclick="marinaPrint()" title="${tr.toolbarPrint}">
+      ${printIcon}<span class="btn-label">${tr.toolbarPrint}</span>
+    </button>
+    <button onclick="marinaCopyLink()" id="marina-copy-btn" title="${tr.toolbarCopy}">
+      ${linkIcon}<span class="btn-label" id="marina-copy-label">${tr.toolbarCopy}</span>
+    </button>
+  </div>
+  <script>
+    function marinaPrint() { window.print(); }
+    function marinaCopyLink() {
+      var url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() { showCopied(); });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showCopied(); } catch(e) {}
+        document.body.removeChild(ta);
+      }
+    }
+    function showCopied() {
+      var btn = document.getElementById('marina-copy-btn');
+      var label = document.getElementById('marina-copy-label');
+      btn.classList.add('copied');
+      label.textContent = '${tr.toolbarCopied}';
+      setTimeout(function() {
+        btn.classList.remove('copied');
+        label.textContent = '${tr.toolbarCopy}';
+      }, 2000);
+    }
+  </` + `script>`;
 }
 
 function scoreColor(score: number, max: number): string {
@@ -1021,6 +1108,7 @@ function compileMarinaReport(
   <style>${getMarinaStyles()}</style>
 </head>
 <body>
+  ${getToolbarHtml(domain, lang)}
   <div class="container">
     <div class="header">
       <h1>${tr.title}</h1>
