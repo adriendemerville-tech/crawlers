@@ -77,7 +77,7 @@ const ProductShowcaseSection = memo(() => {
     <section className="relative py-14 sm:py-20 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_50%)]" />
 
-      <div className="relative mx-auto max-w-5xl px-4">
+      <div className="relative mx-auto max-w-7xl px-4">
         {/* Section header */}
         <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4 border-violet-500/30 bg-violet-500/5 text-violet-500 px-3 py-1 text-xs font-semibold">
