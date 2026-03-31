@@ -87,7 +87,7 @@ function getFeatureColor(feature: string): string {
 }
 
 // ── Catalog view (marketplace) ──────────────────────────────────
-function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void }) {
+function BundleCatalog({ apis, onSubscribe, activeApiIds = [] }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void; activeApiIds?: string[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [segmentSort, setSegmentSort] = useState<'asc' | 'desc' | null>(null);
   const [featureSort, setFeatureSort] = useState<'asc' | 'desc' | null>(null);
