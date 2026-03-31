@@ -487,8 +487,10 @@ Veredictos posibles:
 🔵 reasoning_error — El LLM tiene datos correctos pero saca una CONCLUSIÓN LÓGICA ERRÓNEA.
 
 Devuelve JSON estructurado con:
-- discrepancies: Array de {field, original, corrected, impact, explanation, verdict, evidence}
+- discrepancies: Array de {field, original, corrected, impact, explanation, verdict, evidence, sourcePages: [{url, title, element, excerpt}]}
 - confusionSources, recommendations, analysisNarrative, verdictSummary
+
+CRÍTICO: Para cada discrepancia, identifica la(s) PÁGINA(S) EXACTA(S) y el ELEMENTO HTML preciso. Cita el extracto de texto exacto.
 
 Responde ÚNICAMENTE con JSON válido.`,
 
