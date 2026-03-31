@@ -359,13 +359,15 @@ Pour chaque incohérence, tu dois attribuer un VERDICT parmi :
    Evidence requise : explique la faille de raisonnement.
 
 Tu dois retourner un JSON structuré avec:
-- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string}
+- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, sourcePages: [{url: "URL de la page problématique", title: "titre de la page", element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "le texte exact qui pose problème"}]}
 - confusionSources: Array de strings décrivant les causes de confusion
 - recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
 - analysisNarrative: Un paragraphe de diagnostic
 - verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
 
-RÈGLE CRITIQUE : Base-toi TOUJOURS sur les données factuelles ci-dessous, jamais sur des suppositions.
+RÈGLE CRITIQUE : Pour chaque discrepancy, identifie la/les PAGE(S) EXACTE(S) du crawl où se situe le problème et l'ÉLÉMENT HTML précis (title, h1, meta_description, schema_org, body_content, canonical, og_tags).
+Cite l'extrait de texte exact qui induit en erreur ou qui est absent.
+Base-toi TOUJOURS sur les données factuelles ci-dessous, jamais sur des suppositions.
 
 Réponds UNIQUEMENT en JSON valide.`,
 
