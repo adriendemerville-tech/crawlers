@@ -159,6 +159,37 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [showEnterpriseQuiz, setShowEnterpriseQuiz] = useState(false);
   const autoEnterpriseTriggered = useRef(false);
 
+  // Hallucination diagnosis conversational flow
+  // idle → asked_details (after diagnosis response, asks "Veux-tu plus de précisions ?")
+  // asked_details → asked_fix (if user says no, asks "Veux-tu corriger à la source ?")
+  // asked_fix → idle (after user responds)
+  const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix'>('idle');
+  const hallucinationDiagTriggered = useRef(false);
+
+  // Listen for hallucination diagnosis trigger from FloatingChatBubble
+  useEffect(() => {
+    const handler = () => {
+      if (hallucinationDiagTriggered.current) return;
+      hallucinationDiagTriggered.current = true;
+
+      // Auto-inject Félix's diagnosis question as a user message + response
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: 'Oui, aide-moi à diagnostiquer cette hallucination.',
+        timestamp: new Date().toISOString(),
+      };
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: "🔍 **Diagnostic d'hallucination lancé !**\n\nJe vais analyser les données de votre site (crawl, métadonnées, Schema.org, contenu) et les croiser avec les assertions de l'IA pour identifier la source de l'erreur.\n\nLe diagnostic est en cours dans le panneau d'audit. Une fois terminé, vous verrez les résultats avec :\n- 📄 Les pages concernées\n- 🏷️ L'élément HTML en cause\n- 🎯 Le verdict (donnée trompeuse, absente, biais d'entraînement ou erreur de raisonnement)\n- 💬 Une explication détaillée\n\n**Veux-tu plus de précisions ?**",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMsg, assistantMsg]);
+      setHallucinationDiagFlow('asked_details');
+    };
+    window.addEventListener('felix-start-hallucination-diagnosis', handler);
+    return () => window.removeEventListener('felix-start-hallucination-diagnosis', handler);
+  }, []);
+
   // Auto-start Crawlers quiz when triggered from bubble suggestion
   const autoQuizTriggered = useRef(false);
   useEffect(() => {
