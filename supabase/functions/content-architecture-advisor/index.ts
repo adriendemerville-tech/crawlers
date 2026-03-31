@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const jobId = body._job_id
+    _jobId = jobId
     const jobSb = jobId ? getServiceClient() : null
 
     if (body.async === true && !jobId) {
