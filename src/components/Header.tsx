@@ -78,6 +78,8 @@ const translations = {
     wallet: 'My Wallet',
     credits: 'credits',
     logout: 'Log out',
+    myAccount: 'My account',
+    help: 'Help',
     login: 'Log in',
     signup: 'Sign up',
     back: 'Back',
