@@ -712,7 +712,9 @@ Deno.serve(async (req) => {
           if (originalValues[field] !== correctedValues[field] && correctedValues[field]) {
             // Determine verdict based on crawl data
             const verdict = determineVerdictFromCrawl(field, originalValues[field], correctedValues[field], crawlData);
-            discrepancies.push({
+            // Find source pages for this field in crawl data
+            const sourcePages = findSourcePagesForField(field, originalValues[field], crawlData);
+            const disc: Discrepancy = {
               field,
               original: originalValues[field] || '(non détecté)',
               corrected: correctedValues[field],
@@ -720,7 +722,12 @@ Deno.serve(async (req) => {
               explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`,
               verdict,
               evidence: verdict === 'absent_data' ? 'Donnée non trouvée dans le crawl' : 'Basé sur analyse du crawl',
-            });
+              sourcePages,
+            };
+            if (sourcePages.length > 0) {
+              disc.screenshotUrl = `https://image.thum.io/get/width/600/crop/800/${encodeURIComponent(sourcePages[0].url)}`;
+            }
+            discrepancies.push(disc);
           }
         }
 
