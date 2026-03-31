@@ -257,6 +257,7 @@ export function FloatingChatBubble() {
         <div
           className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
           style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+          onClick={() => { setShowGuestQuizSuggestion(false); setIsOpen(true); }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setShowGuestQuizSuggestion(false); }}
@@ -265,22 +266,7 @@ export function FloatingChatBubble() {
           >
             ✕
           </button>
-          🧠 Ça te dit de tester tes connaissances SEO en 2 min ?
-          <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => { setShowGuestQuizSuggestion(false); setAutoStartCrawlersQuiz(true); setIsOpen(true); }}
-                className="px-2.5 py-1 rounded-md bg-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity text-[#8121e8]"
-              >
-                D'accord !
-              </button>
-            <button
-              onClick={() => setShowGuestQuizSuggestion(false)}
-              className="px-2.5 py-1 rounded-md border border-primary-foreground/30 text-primary-foreground text-[11px] font-medium hover:bg-primary-foreground/10 transition-colors"
-            >
-              Plus tard.
-            </button>
-          </div>
-          
+          👋 En quoi puis-je t'être utile ?
         </div>
       )}
 

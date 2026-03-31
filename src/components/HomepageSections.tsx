@@ -341,14 +341,6 @@ const IdentityFirstSection = memo(() => {
           ))}
         </div>
 
-        <div className="text-center mt-10">
-          <Link to="/mes-sites">
-             <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-white/30 hover:from-violet-700 hover:to-amber-600 shadow-md">
-              {t.idCta}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
       </div>
     </section>
   );
@@ -418,30 +410,6 @@ const HybridSection = memo(() => {
           ))}
         </div>
 
-        {/* Table 2: Competitive comparison */}
-        <h3 className="text-xl font-bold text-foreground sm:text-2xl text-center mt-16 mb-6">
-          {lang === 'fr' ? 'Crawlers.fr face à la concurrence' : lang === 'es' ? 'Crawlers.fr frente a la competencia' : 'Crawlers.fr vs the competition'}
-        </h3>
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent pb-3">
-          <div className="overflow-hidden rounded-xl border border-border min-w-[900px]">
-            <div className="grid" style={{ gridTemplateColumns: `minmax(180px, 1.5fr) repeat(${competitors.length}, 1fr)` }}>
-              <div className="p-3 bg-muted/50">&nbsp;</div>
-              {competitors.map((c, i) => (
-                <div key={c} className={cn('p-3 text-center border-l border-border bg-muted/50 text-xs sm:text-sm font-semibold text-foreground', i === competitors.length - 1 && 'text-brand-violet font-bold')}>{c}</div>
-              ))}
-            </div>
-            {competitorFeatures.map((feat, i) => (
-              <div key={feat.key} className={cn('grid text-xs sm:text-sm', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')} style={{ gridTemplateColumns: `minmax(180px, 1.5fr) repeat(${competitors.length}, 1fr)` }}>
-                <div className="p-3 text-left text-foreground font-medium">{feat[lang] || feat.fr}</div>
-                {competitorMatrix[feat.key].map((has, j) => (
-                  <div key={j} className="p-3 flex items-center justify-center border-l border-border">
-                    {has === true ? <CheckCircle2 className={cn('h-4 w-4', j === competitors.length - 1 ? 'text-brand-violet' : 'text-success')} /> : has === 'partial' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <XCircle className="h-4 w-4 text-muted-foreground/40" />}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div className="text-center mt-10">
           <Link to="/">

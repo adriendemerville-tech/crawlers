@@ -161,7 +161,7 @@ function FooterComponent() {
 
   const { pathname } = useLocation();
   const isPublicPage = pathname === '/' || pathname.startsWith('/blog') || pathname.startsWith('/landing') || pathname.startsWith('/pro-agency') || pathname.startsWith('/audit-expert') || pathname === '/pricing' || pathname === '/about';
-  const [resourcesOpen, setResourcesOpen] = useState(isPublicPage);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
 
   return (
     <>
