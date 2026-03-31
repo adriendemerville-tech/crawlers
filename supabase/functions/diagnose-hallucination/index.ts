@@ -679,11 +679,22 @@ Deno.serve(async (req) => {
         diagnosis = {
           originalValues,
           correctedValues,
-          discrepancies: (parsed.discrepancies || []).map((d: any) => ({
-            ...d,
-            verdict: d.verdict || 'absent_data',
-            evidence: d.evidence || '',
-          })),
+          discrepancies: (parsed.discrepancies || []).map((d: any) => {
+            const disc: Discrepancy = {
+              ...d,
+              verdict: d.verdict || 'absent_data',
+              evidence: d.evidence || '',
+              sourcePages: Array.isArray(d.sourcePages) ? d.sourcePages : [],
+            };
+            // Add screenshot URL for the first source page if available
+            if (disc.sourcePages && disc.sourcePages.length > 0) {
+              const pageUrl = disc.sourcePages[0].url;
+              if (pageUrl) {
+                disc.screenshotUrl = `https://image.thum.io/get/width/600/crop/800/${encodeURIComponent(pageUrl)}`;
+              }
+            }
+            return disc;
+          }),
           confusionSources: parsed.confusionSources || [],
           recommendations: parsed.recommendations || [],
           analysisNarrative: parsed.analysisNarrative || '',
