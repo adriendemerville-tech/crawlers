@@ -58,6 +58,10 @@ export function IntelligenceHub() {
           <SupervisorErrorsRegistry />
         </TabsContent>
 
+        <TabsContent value="eeat" forceMount className="data-[state=inactive]:hidden">
+          <EeatScoringAdmin />
+        </TabsContent>
+
         <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
           <PredictionsDashboard />
         </TabsContent>
