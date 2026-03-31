@@ -43,6 +43,19 @@ export interface HallucinationDiagnosis {
   confusionSources: string[];
   recommendations: HallucinationRecommendation[];
   analysisNarrative: string;
+  verdictSummary?: {
+    misleading_data: number;
+    absent_data: number;
+    training_bias: number;
+    reasoning_error: number;
+  };
+}
+
+export interface DiscrepancySourcePage {
+  url: string;
+  title: string;
+  element: string; // "title" | "h1" | "meta_description" | "schema_org" | "body_content" | "canonical" | "og_tags"
+  excerpt: string;
 }
 
 export interface Discrepancy {
@@ -51,6 +64,10 @@ export interface Discrepancy {
   corrected: string;
   impact: 'high' | 'medium' | 'low';
   explanation: string;
+  verdict?: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
+  evidence?: string;
+  sourcePages?: DiscrepancySourcePage[];
+  screenshotUrl?: string;
 }
 
 export interface HallucinationRecommendation {

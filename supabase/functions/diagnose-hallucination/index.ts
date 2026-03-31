@@ -33,6 +33,13 @@ interface Discrepancy {
   explanation: string;
   verdict: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
   evidence?: string;
+  sourcePages?: Array<{
+    url: string;
+    title: string;
+    element: string; // e.g. "title", "h1", "meta_description", "schema_org", "body_content"
+    excerpt: string; // the problematic text excerpt
+  }>;
+  screenshotUrl?: string; // thumbnail of the page with the issue
 }
 
 interface HallucinationRecommendation {
@@ -81,6 +88,9 @@ interface CrawlSnapshot {
     wordCount: number;
     schemaTypes: string[];
     isIndexable: boolean;
+    bodyExcerpt: string;
+    canonicalUrl: string;
+    hasOg: boolean;
   }>;
 }
 
@@ -125,7 +135,7 @@ async function loadCrawlData(supabase: any, domain: string): Promise<CrawlSnapsh
     if (crawl?.id) {
       const { data: pages } = await supabase
         .from('crawl_pages')
-        .select('url, title, h1, meta_description, word_count, has_schema_org, is_indexable')
+        .select('url, title, h1, meta_description, word_count, has_schema_org, schema_org_types, is_indexable, body_text_truncated, canonical_url, has_og')
         .eq('crawl_id', crawl.id)
         .order('seo_score', { ascending: false })
         .limit(20);
@@ -140,8 +150,11 @@ async function loadCrawlData(supabase: any, domain: string): Promise<CrawlSnapsh
             h1: p.h1 || '',
             metaDescription: p.meta_description || '',
             wordCount: p.word_count || 0,
-            schemaTypes: [],
+            schemaTypes: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
             isIndexable: p.is_indexable !== false,
+            bodyExcerpt: (p.body_text_truncated || '').slice(0, 300),
+            canonicalUrl: p.canonical_url || '',
+            hasOg: p.has_og || false,
           })),
         };
       }
@@ -252,6 +265,10 @@ function formatFactualContextForPrompt(ctx: FactualContext): string {
       parts.push(`   Title: "${page.title}" | H1: "${page.h1}"`);
       parts.push(`   Meta: "${page.metaDescription?.slice(0, 120) || '(vide)'}"`);
       parts.push(`   ${page.wordCount} mots | Schema: ${page.schemaTypes.length > 0 ? page.schemaTypes.join(', ') : 'aucun'} | Indexable: ${page.isIndexable ? 'oui' : 'non'}`);
+      if (page.bodyExcerpt) {
+        parts.push(`   Extrait contenu: "${page.bodyExcerpt.slice(0, 200)}..."`);
+      }
+      if (page.canonicalUrl) parts.push(`   Canonical: ${page.canonicalUrl}`);
     }
   } else {
     parts.push('\n⚠️ AUCUNE DONNÉE DE CRAWL DISPONIBLE — le LLM n\'avait pas de données factuelles sur la structure du site.');
@@ -342,13 +359,15 @@ Pour chaque incohérence, tu dois attribuer un VERDICT parmi :
    Evidence requise : explique la faille de raisonnement.
 
 Tu dois retourner un JSON structuré avec:
-- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string}
+- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, sourcePages: [{url: "URL de la page problématique", title: "titre de la page", element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "le texte exact qui pose problème"}]}
 - confusionSources: Array de strings décrivant les causes de confusion
 - recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
 - analysisNarrative: Un paragraphe de diagnostic
 - verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
 
-RÈGLE CRITIQUE : Base-toi TOUJOURS sur les données factuelles ci-dessous, jamais sur des suppositions.
+RÈGLE CRITIQUE : Pour chaque discrepancy, identifie la/les PAGE(S) EXACTE(S) du crawl où se situe le problème et l'ÉLÉMENT HTML précis (title, h1, meta_description, schema_org, body_content, canonical, og_tags).
+Cite l'extrait de texte exact qui induit en erreur ou qui est absent.
+Base-toi TOUJOURS sur les données factuelles ci-dessous, jamais sur des suppositions.
 
 Réponds UNIQUEMENT en JSON valide.`,
 
@@ -405,13 +424,14 @@ For each discrepancy, assign a VERDICT:
 🔵 reasoning_error — The LLM has correct data but draws a WRONG LOGICAL CONCLUSION.
 
 Return structured JSON with:
-- discrepancies: Array of {field, original, corrected, impact, explanation, verdict, evidence}
+- discrepancies: Array of {field, original, corrected, impact, explanation, verdict, evidence, sourcePages: [{url, title, element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "exact problematic text"}]}
 - confusionSources: Array of strings
 - recommendations: Array of {id, category, priority, title, description, codeSnippet?}
 - analysisNarrative: Diagnosis paragraph
 - verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
 
-CRITICAL: Always base analysis on factual data below, never assumptions.
+CRITICAL: For each discrepancy, identify the EXACT PAGE(S) from crawl data and the precise HTML ELEMENT causing the issue. Quote the exact text excerpt.
+Always base analysis on factual data below, never assumptions.
 
 Respond ONLY with valid JSON.`,
 
@@ -467,8 +487,10 @@ Veredictos posibles:
 🔵 reasoning_error — El LLM tiene datos correctos pero saca una CONCLUSIÓN LÓGICA ERRÓNEA.
 
 Devuelve JSON estructurado con:
-- discrepancies: Array de {field, original, corrected, impact, explanation, verdict, evidence}
+- discrepancies: Array de {field, original, corrected, impact, explanation, verdict, evidence, sourcePages: [{url, title, element, excerpt}]}
 - confusionSources, recommendations, analysisNarrative, verdictSummary
+
+CRÍTICO: Para cada discrepancia, identifica la(s) PÁGINA(S) EXACTA(S) y el ELEMENTO HTML preciso. Cita el extracto de texto exacto.
 
 Responde ÚNICAMENTE con JSON válido.`,
 
@@ -657,11 +679,22 @@ Deno.serve(async (req) => {
         diagnosis = {
           originalValues,
           correctedValues,
-          discrepancies: (parsed.discrepancies || []).map((d: any) => ({
-            ...d,
-            verdict: d.verdict || 'absent_data',
-            evidence: d.evidence || '',
-          })),
+          discrepancies: (parsed.discrepancies || []).map((d: any) => {
+            const disc: Discrepancy = {
+              ...d,
+              verdict: d.verdict || 'absent_data',
+              evidence: d.evidence || '',
+              sourcePages: Array.isArray(d.sourcePages) ? d.sourcePages : [],
+            };
+            // Add screenshot URL for the first source page if available
+            if (disc.sourcePages && disc.sourcePages.length > 0) {
+              const pageUrl = disc.sourcePages[0].url;
+              if (pageUrl) {
+                disc.screenshotUrl = `https://image.thum.io/get/width/600/crop/800/${encodeURIComponent(pageUrl)}`;
+              }
+            }
+            return disc;
+          }),
           confusionSources: parsed.confusionSources || [],
           recommendations: parsed.recommendations || [],
           analysisNarrative: parsed.analysisNarrative || '',
@@ -679,7 +712,9 @@ Deno.serve(async (req) => {
           if (originalValues[field] !== correctedValues[field] && correctedValues[field]) {
             // Determine verdict based on crawl data
             const verdict = determineVerdictFromCrawl(field, originalValues[field], correctedValues[field], crawlData);
-            discrepancies.push({
+            // Find source pages for this field in crawl data
+            const sourcePages = findSourcePagesForField(field, originalValues[field], crawlData);
+            const disc: Discrepancy = {
               field,
               original: originalValues[field] || '(non détecté)',
               corrected: correctedValues[field],
@@ -687,7 +722,12 @@ Deno.serve(async (req) => {
               explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`,
               verdict,
               evidence: verdict === 'absent_data' ? 'Donnée non trouvée dans le crawl' : 'Basé sur analyse du crawl',
-            });
+              sourcePages,
+            };
+            if (sourcePages.length > 0) {
+              disc.screenshotUrl = `https://image.thum.io/get/width/600/crop/800/${encodeURIComponent(sourcePages[0].url)}`;
+            }
+            discrepancies.push(disc);
           }
         }
 
@@ -808,4 +848,47 @@ function determineVerdictFromCrawl(
   // If the corrected value IS in the crawl but AI missed it → training bias
   // If neither is present → absent data
   return 'training_bias';
+}
+
+function findSourcePagesForField(
+  field: string,
+  originalValue: string,
+  crawlData: CrawlSnapshot | null
+): Array<{ url: string; title: string; element: string; excerpt: string }> {
+  if (!crawlData || !originalValue) return [];
+
+  const searchTerms = originalValue.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  if (searchTerms.length === 0) return [];
+
+  const results: Array<{ url: string; title: string; element: string; excerpt: string }> = [];
+
+  for (const page of crawlData.pages) {
+    // Check each element for matches
+    const elements: Array<{ name: string; text: string }> = [
+      { name: 'title', text: page.title },
+      { name: 'h1', text: page.h1 },
+      { name: 'meta_description', text: page.metaDescription },
+      { name: 'body_content', text: page.bodyExcerpt || '' },
+      { name: 'schema_org', text: page.schemaTypes.join(', ') },
+    ];
+
+    for (const el of elements) {
+      if (!el.text) continue;
+      const elLower = el.text.toLowerCase();
+      const matchCount = searchTerms.filter(t => elLower.includes(t)).length;
+      if (matchCount > 0 && matchCount / searchTerms.length > 0.3) {
+        results.push({
+          url: page.url,
+          title: page.title,
+          element: el.name,
+          excerpt: el.text.slice(0, 200),
+        });
+        break; // One match per page is enough
+      }
+    }
+
+    if (results.length >= 3) break; // Cap at 3 source pages
+  }
+
+  return results;
 }
