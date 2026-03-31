@@ -126,7 +126,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots.
 - lexical_footprint: jargonRatio+concreteRatio=100. "jargon" = UNIQUEMENT formules vides/corporate.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
 - red_team: 3 failles/objections client sceptique.
 - JSON pur, sans virgules traînantes`;
 }

@@ -264,7 +264,7 @@ GÉNÈRE un JSON:
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
 "lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph","social_proof":{"has_testimonials":true/false,"has_reviews":true/false,"has_portfolio_links":true/false,"details":"1ph"}},
 "red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
 
 RÈGLES:
