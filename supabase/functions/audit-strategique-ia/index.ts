@@ -8,6 +8,7 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
+import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts'
 
 // Fonction pour générer un résumé promptable depuis le rapport stratégique
 function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
@@ -2508,6 +2509,7 @@ Deno.serve(async (req) => {
     let gmbData: GMBData | null = null;
     let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
     let ctaSeoSignalsForJargon: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    let preCrawlResult: PreCrawlResult | null = null;
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
@@ -2528,12 +2530,39 @@ Deno.serve(async (req) => {
       gmbData = cachedContext.gmbData || null;
       facebookPageInfo = cachedContext.facebookPageInfo || { pageUrl: null, pageName: null, found: false };
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
+      preCrawlResult = cachedContext.preCrawlData || null;
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
 
-      // ── WAVE 1: Metadata + Ranked Keywords (independent, parallel) ──
-      console.log('📊 WAVE 1: Metadata + Ranked Keywords (parallel)...');
-      const [metadataResult, rkOverviewResult] = await Promise.all([
+      // ── WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (independent, parallel) ──
+      console.log('📊 WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (parallel)...');
+
+      // Resolve tracked_site_id for pre-crawl (GA4 cross-reference)
+      let trackedSiteIdForCrawl: string | null = null;
+      let userIdForCrawl: string | null = null;
+      try {
+        const svcSb = getServiceClient();
+        const authHeader = req.headers.get('Authorization') || '';
+        if (authHeader) {
+          const userSb = getUserClient(authHeader);
+          const { data: { user: authUser } } = await userSb.auth.getUser();
+          if (authUser?.id) {
+            userIdForCrawl = authUser.id;
+            const { data: site } = await svcSb
+              .from('tracked_sites')
+              .select('id')
+              .ilike('domain', `%${domainWithoutWww}%`)
+              .eq('user_id', authUser.id)
+              .limit(1)
+              .maybeSingle();
+            if (site) trackedSiteIdForCrawl = site.id;
+          }
+        }
+      } catch (e) {
+        console.warn('[audit-strategique-ia] Could not resolve tracked_site for pre-crawl:', e);
+      }
+
+      const [metadataResult, rkOverviewResult, preCrawlRes] = await Promise.all([
         safe('metadata', () => extractPageMetadata(url)),
         safe('ranked_keywords', () => {
           // We need location code — default to France
@@ -2543,7 +2572,15 @@ Deno.serve(async (req) => {
           const locInfo = KNOWN_LOCATIONS[locKey] || KNOWN_LOCATIONS['france'];
           return fetchRankedKeywords(domain, locInfo.code, locInfo.lang);
         }),
+        safe('pre_crawl', () => preCrawlForAudit(getServiceClient(), domainWithoutWww, trackedSiteIdForCrawl, userIdForCrawl)),
       ]);
+      preCrawlResult = preCrawlRes as PreCrawlResult | null;
+
+      // Format pre-crawl context for injection into prompt
+      const preCrawlContext = preCrawlResult ? formatPreCrawlForPrompt(preCrawlResult as PreCrawlResult) : '';
+      if (preCrawlContext) {
+        console.log(`🕷️ Pre-crawl context: ${(preCrawlResult as PreCrawlResult).pages.length} pages (${(preCrawlResult as PreCrawlResult).source})`);
+      }
 
       pageContentContext = metadataResult?.context || '';
       brandSignals = metadataResult?.brandSignals || [];
@@ -2556,6 +2593,11 @@ Deno.serve(async (req) => {
       };
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
       rankingOverview = rkOverviewResult;
+
+      // ── Append pre-crawl context to page content ──
+      if (preCrawlContext) {
+        pageContentContext += '\n' + preCrawlContext;
+      }
 
       const context = detectBusinessContext(domain, pageContentContext);
 
@@ -2692,6 +2734,7 @@ Deno.serve(async (req) => {
       llmData: effectiveToolsData.llm,
       gmbData,
       facebookPageInfo,
+      preCrawlData: preCrawlResult || null,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
