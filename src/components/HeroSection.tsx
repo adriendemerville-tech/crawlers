@@ -49,15 +49,15 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative overflow-hidden px-4 py-10 sm:py-16">
+    <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-6">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
+        <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
       </div>
 
-      <div className="relative mx-auto max-w-4xl text-center">
+      <div className="relative mx-auto w-full max-w-5xl text-center">
         {/* Animated headline */}
-        <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-[1.1] sm:text-5xl lg:text-6xl font-display text-center">
+        <h1 className="mb-6 text-3xl font-extrabold tracking-tight leading-[1.15] sm:text-6xl lg:text-7xl font-display text-center">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
@@ -92,7 +92,7 @@ function HeroSectionComponent() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mb-4 text-lg font-medium font-display text-white sm:mb-6 sm:text-2xl">
+        <h2 className="mb-10 text-xl font-medium font-display text-white sm:mb-12 sm:text-3xl leading-relaxed">
           {language === 'es'
             ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
@@ -100,10 +100,9 @@ function HeroSectionComponent() {
               : 'Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
         </h2>
 
-
         {/* URL input + CTA Audit Expert */}
-        <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
-          <span className="hidden sm:inline-flex shrink-0 items-center text-xs font-semibold text-amber-400 uppercase tracking-wide">Étape 1</span>
+        <div className="mt-2 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-4" style={{ maxWidth: 'min(90%, 44rem)' }}>
+          <span className="hidden sm:inline-flex shrink-0 items-center text-sm font-semibold text-amber-400 uppercase tracking-wide">Étape 1</span>
           <div className="flex-1 relative">
             <Input
               type="text"
@@ -115,20 +114,19 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}`);
                 }
               }}
-              className="h-14 pl-4 pr-12 text-base placeholder:text-xs placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-16 rounded-xl pl-5 pr-14 text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
-            <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute right-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
           </div>
           <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}` : '/audit-expert'}>
             <Button
               variant="outline"
               size="lg"
-              className="h-14 gap-2 border-amber-400 border-2 px-8 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
+              className="h-16 gap-2 rounded-xl border-amber-400 border-2 px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
             >
-              
               <div className="flex flex-col items-start leading-tight">
-                <span className="font-bold text-amber-400">
+                <span className="font-bold text-amber-400 text-lg">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
                 <span className="text-xs font-normal text-muted-foreground">SEO-GEO. 5 min</span>
@@ -138,7 +136,7 @@ function HeroSectionComponent() {
         </div>
 
         {/* Audit Expert info */}
-        <p className="mt-3 text-xs font-medium text-muted-foreground text-center w-full">
+        <p className="mt-5 text-sm font-medium text-muted-foreground text-center w-full">
           {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
       </div>
