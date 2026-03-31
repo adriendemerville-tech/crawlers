@@ -2509,6 +2509,7 @@ Deno.serve(async (req) => {
     let gmbData: GMBData | null = null;
     let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
     let ctaSeoSignalsForJargon: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    let preCrawlResult: PreCrawlResult | null = null;
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
