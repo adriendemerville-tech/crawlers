@@ -51,6 +51,18 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
+  const reqUrl = new URL(req.url)
+  const pollJobId = reqUrl.searchParams.get('job_id')
+  if (pollJobId && req.method === 'GET') {
+    const sb = getServiceClient()
+    const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single()
+    if (!job) return new Response(JSON.stringify({ error: 'Job not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (job.status === 'completed') return new Response(JSON.stringify({ success: true, data: job.result_data, status: 'completed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (job.status === 'failed') return new Response(JSON.stringify({ error: job.error_message || 'Job failed', status: 'failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ status: job.status, progress: job.progress || 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  }
+
   const startTime = Date.now()
 
   try {
