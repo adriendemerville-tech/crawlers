@@ -103,7 +103,7 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert */}
         <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
-          <span className="hidden sm:inline-flex shrink-0 items-center text-xs font-semibold text-primary uppercase tracking-wide">Étape 1</span>
+          <span className="hidden sm:inline-flex shrink-0 items-center text-xs font-semibold text-amber-400 uppercase tracking-wide">Étape 1</span>
           <div className="flex-1 relative">
             <Input
               type="text"
@@ -138,7 +138,7 @@ function HeroSectionComponent() {
         </div>
 
         {/* Audit Expert info */}
-        <p className="mt-4 text-sm sm:text-base md:text-lg font-semibold text-foreground max-w-2xl mx-auto text-center">
+        <p className="mt-4 text-xs sm:text-sm font-medium text-muted-foreground max-w-2xl mx-auto text-center">
           {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
       </div>
