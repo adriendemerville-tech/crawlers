@@ -849,3 +849,46 @@ function determineVerdictFromCrawl(
   // If neither is present → absent data
   return 'training_bias';
 }
+
+function findSourcePagesForField(
+  field: string,
+  originalValue: string,
+  crawlData: CrawlSnapshot | null
+): Array<{ url: string; title: string; element: string; excerpt: string }> {
+  if (!crawlData || !originalValue) return [];
+
+  const searchTerms = originalValue.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  if (searchTerms.length === 0) return [];
+
+  const results: Array<{ url: string; title: string; element: string; excerpt: string }> = [];
+
+  for (const page of crawlData.pages) {
+    // Check each element for matches
+    const elements: Array<{ name: string; text: string }> = [
+      { name: 'title', text: page.title },
+      { name: 'h1', text: page.h1 },
+      { name: 'meta_description', text: page.metaDescription },
+      { name: 'body_content', text: page.bodyExcerpt || '' },
+      { name: 'schema_org', text: page.schemaTypes.join(', ') },
+    ];
+
+    for (const el of elements) {
+      if (!el.text) continue;
+      const elLower = el.text.toLowerCase();
+      const matchCount = searchTerms.filter(t => elLower.includes(t)).length;
+      if (matchCount > 0 && matchCount / searchTerms.length > 0.3) {
+        results.push({
+          url: page.url,
+          title: page.title,
+          element: el.name,
+          excerpt: el.text.slice(0, 200),
+        });
+        break; // One match per page is enough
+      }
+    }
+
+    if (results.length >= 3) break; // Cap at 3 source pages
+  }
+
+  return results;
+}
