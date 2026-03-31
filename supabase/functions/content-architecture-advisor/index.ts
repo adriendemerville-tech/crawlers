@@ -314,6 +314,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 2: Check workbench for cached keyword/SERP data before calling DataForSEO ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 20 }).eq('id', jobId)
     console.log(`[content-advisor] Step 2: Checking workbench for keyword data, then DataForSEO fallback`)
     
     let keywordData: any = null
