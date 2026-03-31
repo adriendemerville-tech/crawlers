@@ -88,6 +88,9 @@ interface CrawlSnapshot {
     wordCount: number;
     schemaTypes: string[];
     isIndexable: boolean;
+    bodyExcerpt: string;
+    canonicalUrl: string;
+    hasOg: boolean;
   }>;
 }
 
