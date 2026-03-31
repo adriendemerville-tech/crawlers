@@ -431,6 +431,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 3: Competitor scraping via Firecrawl (top 3 SERP) ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 35 }).eq('id', jobId)
     console.log(`[content-advisor] Step 3: Competitor scraping`)
     let competitorInsights: any[] = []
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
