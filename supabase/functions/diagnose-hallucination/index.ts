@@ -33,13 +33,14 @@ interface Discrepancy {
   explanation: string;
   verdict: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
   evidence?: string;
+  userExplanation?: string;
   sourcePages?: Array<{
     url: string;
     title: string;
-    element: string; // e.g. "title", "h1", "meta_description", "schema_org", "body_content"
-    excerpt: string; // the problematic text excerpt
+    element: string;
+    excerpt: string;
   }>;
-  screenshotUrl?: string; // thumbnail of the page with the issue
+  screenshotUrl?: string;
 }
 
 interface HallucinationRecommendation {
