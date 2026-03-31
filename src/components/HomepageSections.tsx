@@ -341,14 +341,6 @@ const IdentityFirstSection = memo(() => {
           ))}
         </div>
 
-        <div className="text-center mt-10">
-          <Link to="/mes-sites">
-             <Button variant="outline" className="gap-2 bg-gradient-to-br from-violet-600 to-amber-500 text-white border-white/30 hover:from-violet-700 hover:to-amber-600 shadow-md">
-              {t.idCta}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
       </div>
     </section>
   );
