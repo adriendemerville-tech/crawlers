@@ -241,6 +241,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: 'Automatisation',
       items: [
         { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
       ],
     },
