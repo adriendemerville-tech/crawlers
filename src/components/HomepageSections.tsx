@@ -253,9 +253,6 @@ MomentumSection.displayName = 'MomentumSection';
 
 /* ─── Section 2: Feature Showcase (redesigned — small icons, no card bg, more text) ─── */
 const features = [
-  { icon: Target, ctaLink: '/?tab=geo' },
-  { icon: FileSearch, ctaLink: '/audit-expert' },
-  { icon: Network, ctaLink: '/app/cocoon' },
   { icon: Layers, ctaLink: '/matrice' },
 ];
 
@@ -264,14 +261,11 @@ const FeatureShowcase = memo(() => {
   const { isAdmin } = useAdmin();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
   const allItems = [
-    { title: t.feat1Title, desc: t.feat1Desc, cta: t.feat1Cta },
-    { title: t.feat2Title, desc: t.feat2Desc, cta: t.feat2Cta },
-    { title: t.feat3Title, desc: t.feat3Desc, cta: t.feat3Cta },
     { title: t.feat4Title, desc: t.feat4Desc, cta: t.feat4Cta },
   ];
-  // Hide Matrice (index 3) for non-admins
-  const visibleFeatures = isAdmin ? features : features.filter((_, i) => i !== 3);
-  const items = isAdmin ? allItems : allItems.filter((_, i) => i !== 3);
+  // Hide Matrice for non-admins
+  const visibleFeatures = isAdmin ? features : [];
+  const items = isAdmin ? allItems : [];
 
   return (
     <section className="py-16 md:py-24">
