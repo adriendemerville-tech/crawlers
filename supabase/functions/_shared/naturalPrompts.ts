@@ -266,42 +266,43 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       "Which websites or media outlets would you recommend to follow this?",
     );
   } else {
-    if (products) {
-      prompts.push(
-        area
-          ? `I'm looking for ${products} in ${area} ${season}, any recommendations?`
-          : `I need ${products} ${season}, who would you recommend?`
-      );
-      prompts.push(`What's the best option for ${products} right now?`);
-    }
-    if (sector) {
-      prompts.push(`I need help with ${sector} ${season}, do you know any good providers?`);
-      if (target) {
-        prompts.push(`As a ${target}, I need ${sector}, what would you suggest?`);
-      }
-    }
-    if (target && products) {
-      prompts.push(`As a ${target}, I'm comparing ${products} options, what do you think?`);
-    }
-    if (entityType === 'ecommerce' && products) {
-      prompts.push(`I want to buy ${products} ${season}, what are the best sites?`);
-    }
-    if (entityType === 'saas') {
-      const tool = products || sector || 'a tool';
-      prompts.push(`Do you know a good software for ${tool}? I'm comparing solutions.`);
+    const mainNeed = products
+      ? products.split(',')[0].trim()
+      : sector || 'a professional service';
+
+    // Q1: Simple need
+    prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
+
+    // Q2: Simple alternative angle
+    if (entityType === 'ecommerce') {
+      prompts.push(`What's the best site to buy ${mainNeed}?`);
+    } else if (entityType === 'saas') {
+      prompts.push(`Do you know a good software for ${mainNeed}?`);
+    } else {
+      prompts.push(`What's the best option for ${mainNeed} right now?`);
     }
 
-    if (prompts.length === 0) {
-      const fb = sector || 'a professional service';
-      prompts.push(
-        `I need help with ${fb} ${season}, any ideas?`,
-        `What's the best for ${fb} right now?`,
-        `What would you recommend for ${fb}?`,
-      );
+    if (sector && sector !== mainNeed) {
+      prompts.push(`I need help with ${sector}, what would you recommend?`);
+    }
+
+    // Follow-ups: drip-feed one detail at a time
+    if (area) {
+      followUps.push(`What about in ${area}, any good ones?`);
+    }
+    if (target) {
+      followUps.push(`I'm a ${target}, does that change anything?`);
+    }
+    followUps.push(`Is there a free option ${season}?`);
+
+    const productParts = products.split(',').map(p => p.trim()).filter(Boolean);
+    if (productParts.length > 1) {
+      for (const part of productParts.slice(1, 3)) {
+        followUps.push(`And for ${part}, what's good?`);
+      }
     }
 
     followUps.push(
-      "Any other suggestions?",
       "If you had to pick just one, which would you recommend?",
     );
   }
