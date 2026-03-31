@@ -27,6 +27,7 @@ import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
+import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
