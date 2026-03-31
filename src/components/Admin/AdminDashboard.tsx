@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -27,6 +27,7 @@ import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
+import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
@@ -241,6 +242,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: 'Automatisation',
       items: [
         { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
       ],
     },
@@ -273,6 +275,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return <ParmenionDashboard />;
+      case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
       default: return <AnalyticsDashboard />;
     }
