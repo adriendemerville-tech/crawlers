@@ -527,10 +527,13 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         if (isYes) {
           const goMsg: ChatMessage = {
             role: 'assistant',
-            content: "🚀 **Parfait !** Je prépare les correctifs.\n\nRendez-vous dans la section **Scripts** de votre Console pour voir les corrections générées (métadonnées, Schema.org, balises OG). Vous pourrez les déployer en un clic via notre SDK ou les copier manuellement.\n\n💡 *Astuce : les corrections de Schema.org et métadonnées sont les plus efficaces pour corriger les hallucinations des LLMs.*",
+            content: "🚀 **Parfait !** Choisis le mode de correction adapté ci-dessous.\n\n🔘 **Content Architect** — pour corriger le contenu, les titres, H1, meta descriptions\n🔘 **Code Architect** — pour corriger le Schema.org, les balises OG, canonical, données structurées\n\n*Clique sur le bouton correspondant et le diagnostic sera pré-chargé automatiquement.*",
             timestamp: new Date().toISOString(),
           };
           setMessages(prev => [...prev, userMsg, goMsg]);
+          setNewMessage('');
+          setHallucinationDiagFlow('show_fix_buttons');
+          return;
         } else {
           const okMsg: ChatMessage = {
             role: 'assistant',
