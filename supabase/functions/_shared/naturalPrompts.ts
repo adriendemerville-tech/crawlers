@@ -324,32 +324,41 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
   const area = (ctx.commercial_area || '').trim();
 
   const prompts: string[] = [];
+  const followUps: string[] = [];
 
-  if (products) {
-    prompts.push(
-      area
-        ? `Busco ${products} en ${area} ${season}, ¿conoces buenos proveedores?`
-        : `Necesito ${products} ${season}, ¿a quién me recomiendas?`
-    );
-    prompts.push(`¿Cuál es la mejor opción para ${products} ahora mismo?`);
+  const mainNeed = products
+    ? products.split(',')[0].trim()
+    : sector || 'un servicio profesional';
+
+  prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
+  prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
+
+  if (sector && sector !== mainNeed) {
+    prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
   }
-  if (sector) {
-    prompts.push(`Necesito ayuda con ${sector} ${season}, ¿conoces buenos proveedores?`);
+
+  if (area) {
+    followUps.push(`¿Y en ${area}, conoces buenos?`);
   }
-  if (prompts.length === 0) {
-    const fb = sector || 'un servicio profesional';
-    prompts.push(
-      `Busco un buen proveedor para ${fb} ${season}, ¿alguna recomendación?`,
-      `¿Cuáles son los mejores en ${fb} ahora mismo?`,
-    );
+  if (target) {
+    followUps.push(`Soy ${target}, ¿cambia algo?`);
   }
+  followUps.push(`¿Hay alguna opción gratis ${season}?`);
+
+  const productParts = products.split(',').map(p => p.trim()).filter(Boolean);
+  if (productParts.length > 1) {
+    for (const part of productParts.slice(1, 3)) {
+      followUps.push(`¿Y para ${part}, qué hay de bueno?`);
+    }
+  }
+
+  followUps.push(
+    "Si tuvieras que elegir solo uno, ¿cuál recomendarías?",
+  );
 
   return {
     prompts: [...new Set(prompts)].slice(0, maxPrompts),
-    followUps: [
-      "¿Alguna otra sugerencia?",
-      "Si tuvieras que elegir solo uno, ¿cuál recomendarías?",
-    ],
+    followUps,
   };
 }
 
