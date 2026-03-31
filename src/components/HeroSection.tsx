@@ -57,7 +57,7 @@ function HeroSectionComponent() {
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
         {/* Animated headline */}
-        <h1 className="mb-6 text-3xl font-extrabold tracking-tight leading-[1.15] sm:text-6xl lg:text-7xl font-display text-center">
+        <h1 className="mb-6 text-2xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center whitespace-nowrap">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
