@@ -17,6 +17,7 @@ interface DetectedValues {
 
 interface DiagnoseRequest {
   domain: string;
+  url?: string;
   coreValueSummary: string;
   action: 'extract' | 'compare';
   originalValues?: DetectedValues;
@@ -30,6 +31,8 @@ interface Discrepancy {
   corrected: string;
   impact: 'high' | 'medium' | 'low';
   explanation: string;
+  verdict: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
+  evidence?: string;
 }
 
 interface HallucinationRecommendation {
@@ -48,7 +51,250 @@ interface HallucinationDiagnosis {
   confusionSources: string[];
   recommendations: HallucinationRecommendation[];
   analysisNarrative: string;
+  verdictSummary: {
+    misleading_data: number;
+    absent_data: number;
+    training_bias: number;
+    reasoning_error: number;
+  };
+  factualContext: FactualContext;
 }
+
+// ═══ Factual Context: toutes les données chargées pour le diagnostic ═══
+
+interface FactualContext {
+  crawlData: CrawlSnapshot | null;
+  auditData: AuditSnapshot | null;
+  identityCard: Record<string, unknown> | null;
+  rankingData: RankingSnapshot | null;
+  previousCorrections: PreviousCorrection[];
+}
+
+interface CrawlSnapshot {
+  source: 'site_crawl' | 'pre_crawl';
+  crawledAt: string;
+  pages: Array<{
+    url: string;
+    title: string;
+    h1: string;
+    metaDescription: string;
+    wordCount: number;
+    schemaTypes: string[];
+    isIndexable: boolean;
+  }>;
+}
+
+interface AuditSnapshot {
+  auditType: string;
+  createdAt: string;
+  brandPerception?: { sector?: string; targetAudience?: string; valueProposition?: string };
+  scores?: Record<string, number>;
+}
+
+interface RankingSnapshot {
+  totalRankedKeywords: number;
+  averagePosition: number;
+  topKeywords: Array<{ keyword: string; position: number; volume: number }>;
+}
+
+interface PreviousCorrection {
+  field: string;
+  original: string;
+  corrected: string;
+  correctedAt: string;
+}
+
+// ═══ Data loaders ═══
+
+async function loadCrawlData(supabase: any, domain: string): Promise<CrawlSnapshot | null> {
+  try {
+    // 1. Check site_crawls (full crawl < 30 days)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+
+    const { data: crawl } = await supabase
+      .from('site_crawls')
+      .select('id, created_at, status')
+      .eq('domain', domain)
+      .eq('status', 'completed')
+      .gte('created_at', cutoff.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (crawl?.id) {
+      const { data: pages } = await supabase
+        .from('crawl_pages')
+        .select('url, title, h1, meta_description, word_count, has_schema_org, is_indexable')
+        .eq('crawl_id', crawl.id)
+        .order('seo_score', { ascending: false })
+        .limit(20);
+
+      if (pages?.length) {
+        return {
+          source: 'site_crawl',
+          crawledAt: crawl.created_at,
+          pages: pages.map((p: any) => ({
+            url: p.url || '',
+            title: p.title || '',
+            h1: p.h1 || '',
+            metaDescription: p.meta_description || '',
+            wordCount: p.word_count || 0,
+            schemaTypes: [],
+            isIndexable: p.is_indexable !== false,
+          })),
+        };
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.warn('[diagnose] Crawl data load error:', e);
+    return null;
+  }
+}
+
+async function loadAuditData(supabase: any, domain: string): Promise<AuditSnapshot | null> {
+  try {
+    const { data: audit } = await supabase
+      .from('audit_raw_data')
+      .select('audit_type, created_at, raw_payload')
+      .eq('domain', domain)
+      .in('audit_type', ['strategic', 'strategic_parallel'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!audit) return null;
+
+    const payload = audit.raw_payload || {};
+    return {
+      auditType: audit.audit_type,
+      createdAt: audit.created_at,
+      brandPerception: payload.brand_perception || payload.brandPerception || undefined,
+      scores: payload.scores || undefined,
+    };
+  } catch (e) {
+    console.warn('[diagnose] Audit data load error:', e);
+    return null;
+  }
+}
+
+async function loadRankingData(supabase: any, domain: string): Promise<RankingSnapshot | null> {
+  try {
+    const { data: audit } = await supabase
+      .from('audit_raw_data')
+      .select('raw_payload')
+      .eq('domain', domain)
+      .in('audit_type', ['strategic', 'strategic_parallel'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!audit?.raw_payload?.keyword_positioning) return null;
+
+    const kp = audit.raw_payload.keyword_positioning;
+    return {
+      totalRankedKeywords: kp.total_ranked_keywords || 0,
+      averagePosition: kp.average_position || 0,
+      topKeywords: (kp.main_keywords || []).slice(0, 10).map((k: any) => ({
+        keyword: k.keyword,
+        position: k.current_rank,
+        volume: k.volume,
+      })),
+    };
+  } catch (e) {
+    console.warn('[diagnose] Ranking data load error:', e);
+    return null;
+  }
+}
+
+async function loadPreviousCorrections(supabase: any, domain: string): Promise<PreviousCorrection[]> {
+  try {
+    const { data } = await supabase
+      .from('hallucination_corrections')
+      .select('correction_data, created_at')
+      .ilike('domain', `%${domain}%`)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (!data?.length) return [];
+
+    const corrections: PreviousCorrection[] = [];
+    for (const row of data) {
+      const cd = row.correction_data;
+      if (cd?.discrepancies && Array.isArray(cd.discrepancies)) {
+        for (const d of cd.discrepancies) {
+          corrections.push({
+            field: d.field || '',
+            original: d.original || '',
+            corrected: d.corrected || '',
+            correctedAt: row.created_at,
+          });
+        }
+      }
+    }
+    return corrections;
+  } catch {
+    return [];
+  }
+}
+
+// ═══ Format factual context for LLM ═══
+
+function formatFactualContextForPrompt(ctx: FactualContext): string {
+  const parts: string[] = [];
+
+  if (ctx.crawlData) {
+    parts.push(`\n═══ DONNÉES CRAWLÉES (${ctx.crawlData.source}, ${ctx.crawlData.crawledAt}) ═══`);
+    for (const page of ctx.crawlData.pages.slice(0, 10)) {
+      parts.push(`📄 ${page.url}`);
+      parts.push(`   Title: "${page.title}" | H1: "${page.h1}"`);
+      parts.push(`   Meta: "${page.metaDescription?.slice(0, 120) || '(vide)'}"`);
+      parts.push(`   ${page.wordCount} mots | Schema: ${page.schemaTypes.length > 0 ? page.schemaTypes.join(', ') : 'aucun'} | Indexable: ${page.isIndexable ? 'oui' : 'non'}`);
+    }
+  } else {
+    parts.push('\n⚠️ AUCUNE DONNÉE DE CRAWL DISPONIBLE — le LLM n\'avait pas de données factuelles sur la structure du site.');
+  }
+
+  if (ctx.identityCard) {
+    parts.push(`\n═══ CARTE D'IDENTITÉ DU SITE ═══`);
+    const ic = ctx.identityCard;
+    if (ic.market_sector) parts.push(`Secteur: ${ic.market_sector}`);
+    if (ic.products_services) parts.push(`Produits: ${ic.products_services}`);
+    if (ic.target_audience) parts.push(`Cible: ${ic.target_audience}`);
+    if (ic.commercial_area) parts.push(`Zone: ${ic.commercial_area}`);
+    if (ic.identity_confidence) parts.push(`Confiance: ${ic.identity_confidence}`);
+  }
+
+  if (ctx.rankingData) {
+    parts.push(`\n═══ DONNÉES DE POSITIONNEMENT ═══`);
+    parts.push(`Total mots-clés positionnés: ${ctx.rankingData.totalRankedKeywords}`);
+    parts.push(`Position moyenne: ${ctx.rankingData.averagePosition}`);
+    if (ctx.rankingData.topKeywords.length > 0) {
+      parts.push(`Top mots-clés: ${ctx.rankingData.topKeywords.map(k => `"${k.keyword}" (pos ${k.position})`).join(', ')}`);
+    }
+  }
+
+  if (ctx.previousCorrections.length > 0) {
+    parts.push(`\n═══ CORRECTIONS PRÉCÉDENTES PAR L'UTILISATEUR ═══`);
+    for (const c of ctx.previousCorrections) {
+      parts.push(`  • ${c.field}: "${c.original}" → "${c.corrected}" (${c.correctedAt.split('T')[0]})`);
+    }
+  }
+
+  if (ctx.auditData?.brandPerception) {
+    parts.push(`\n═══ PERCEPTION DE MARQUE (audit ${ctx.auditData.auditType}) ═══`);
+    const bp = ctx.auditData.brandPerception;
+    if (bp.sector) parts.push(`Secteur détecté: ${bp.sector}`);
+    if (bp.targetAudience) parts.push(`Audience détectée: ${bp.targetAudience}`);
+    if (bp.valueProposition) parts.push(`Proposition de valeur détectée: ${bp.valueProposition}`);
+  }
+
+  return parts.join('\n');
+}
+
+// ═══ Translations ═══
 
 const translations = {
   fr: {
@@ -73,28 +319,41 @@ Résumé disponible:
 
 Extrais les informations structurées en JSON.`,
 
-    compareSystemPrompt: `Tu es un expert en GEO (Generative Engine Optimization) et en analyse de la perception des marques par les LLMs.
+    compareSystemPrompt: `Tu es un expert en GEO (Generative Engine Optimization) et diagnosticien d'hallucinations LLM.
 
-Ta mission: Comparer les informations détectées par l'IA avec les informations corrigées par l'utilisateur pour identifier:
-1. Les incohérences et leur impact sur la visibilité IA
-2. Les sources de confusion qui ont induit l'IA en erreur
-3. Des recommandations concrètes pour corriger la perception
+Ta mission : Comparer les informations détectées par l'IA avec les corrections de l'utilisateur, EN UTILISANT les données factuelles fournies (crawl, rankings, carte d'identité) pour identifier la CAUSE RACINE de chaque hallucination.
+
+Pour chaque incohérence, tu dois attribuer un VERDICT parmi :
+
+🔴 misleading_data — Le site CONTIENT une donnée, mais elle est ambiguë, contradictoire ou mal structurée, induisant le LLM en erreur.
+   Exemple : Title dit "Restaurant" mais le site vend des logiciels.
+   Evidence requise : cite le champ exact du crawl qui a induit l'erreur.
+
+🟡 absent_data — Le site NE FOURNIT PAS l'information. Le LLM a comblé le vide par déduction probabiliste.
+   Exemple : Pas de Schema.org → le LLM invente le type d'activité.
+   Evidence requise : note que le champ est vide/absent dans le crawl.
+
+🟠 training_bias — Le site fournit des données CLAIRES que le LLM ignore, substituant une information de ses données d'entraînement.
+   Exemple : Confusion avec un homonyme, ancienne activité du domaine.
+   Evidence requise : montre que le crawl est clair mais le LLM dit autre chose.
+
+🔵 reasoning_error — Le LLM a les bonnes données mais tire une CONCLUSION LOGIQUE FAUSSE.
+   Exemple : "15 liens internes = excellent maillage" alors que tous pointent vers la même page.
+   Evidence requise : explique la faille de raisonnement.
 
 Tu dois retourner un JSON structuré avec:
-- discrepancies: Array d'objets {field, original, corrected, impact: "high"|"medium"|"low", explanation}
+- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string}
 - confusionSources: Array de strings décrivant les causes de confusion
-- recommendations: Array d'objets {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
-- analysisNarrative: Un paragraphe expliquant pourquoi l'IA s'est trompée et ce qu'il faut changer
+- recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
+- analysisNarrative: Un paragraphe de diagnostic
+- verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
 
-Critères d'impact:
-- high: Erreur sur le cœur de métier, le secteur, ou la proposition de valeur
-- medium: Erreur sur la cible, le type d'entreprise, ou la zone géographique
-- low: Erreur mineure ou imprécision
+RÈGLE CRITIQUE : Base-toi TOUJOURS sur les données factuelles ci-dessous, jamais sur des suppositions.
 
 Réponds UNIQUEMENT en JSON valide.`,
 
-    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues) =>
-      `Analyse les écarts pour "${domain}".
+    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues, factualContext: string) =>
+      `Diagnostic d'hallucination pour "${domain}".
 
 VALEURS DÉTECTÉES PAR L'IA:
 ${JSON.stringify(original, null, 2)}
@@ -102,13 +361,15 @@ ${JSON.stringify(original, null, 2)}
 VALEURS CORRIGÉES PAR L'UTILISATEUR:
 ${JSON.stringify(corrected, null, 2)}
 
-Compare ces deux versions et génère:
-1. La liste des incohérences avec leur impact
-2. Les sources de confusion (pourquoi l'IA s'est trompée)
-3. Des recommandations techniques pour corriger la perception
-4. Une analyse narrative expliquant le problème
+${factualContext}
 
-Fournis un JSON complet.`
+Pour chaque écart entre les valeurs IA et les corrections utilisateur :
+1. Cherche dans les DONNÉES CRAWLÉES si le site contient une info trompeuse (misleading_data)
+2. Sinon, vérifie si l'info est tout simplement absente du site (absent_data)
+3. Si l'info crawlée est claire ET contredit la valeur IA → le LLM a ignoré les faits (training_bias)
+4. Si l'info est présente et correcte mais mal interprétée → erreur de raisonnement (reasoning_error)
+
+Fournis un JSON complet avec les verdicts.`,
   },
   en: {
     extractSystemPrompt: `You are a web content analysis expert. Extract key information from a website summary.
@@ -132,28 +393,30 @@ Available summary:
 
 Extract structured information as JSON.`,
 
-    compareSystemPrompt: `You are a GEO (Generative Engine Optimization) expert analyzing how LLMs perceive brands.
+    compareSystemPrompt: `You are a GEO (Generative Engine Optimization) expert and LLM hallucination diagnostician.
 
-Your mission: Compare AI-detected information with user-corrected information to identify:
-1. Discrepancies and their impact on AI visibility
-2. Confusion sources that misled the AI
-3. Concrete recommendations to correct perception
+Your mission: Compare AI-detected information with user corrections, USING the factual data provided (crawl, rankings, identity card) to identify the ROOT CAUSE of each hallucination.
 
-Return a structured JSON with:
-- discrepancies: Array of {field, original, corrected, impact: "high"|"medium"|"low", explanation}
-- confusionSources: Array of strings describing confusion causes
-- recommendations: Array of {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
-- analysisNarrative: A paragraph explaining why AI was wrong and what to change
+For each discrepancy, assign a VERDICT:
 
-Impact criteria:
-- high: Error on core business, sector, or value proposition
-- medium: Error on target, business type, or geographic area
-- low: Minor error or imprecision
+🔴 misleading_data — The site CONTAINS data, but it's ambiguous, contradictory or poorly structured, misleading the LLM.
+🟡 absent_data — The site DOES NOT provide the information. The LLM filled the gap by probabilistic deduction.
+🟠 training_bias — The site provides CLEAR data that the LLM ignores, substituting information from its training data.
+🔵 reasoning_error — The LLM has correct data but draws a WRONG LOGICAL CONCLUSION.
+
+Return structured JSON with:
+- discrepancies: Array of {field, original, corrected, impact, explanation, verdict, evidence}
+- confusionSources: Array of strings
+- recommendations: Array of {id, category, priority, title, description, codeSnippet?}
+- analysisNarrative: Diagnosis paragraph
+- verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
+
+CRITICAL: Always base analysis on factual data below, never assumptions.
 
 Respond ONLY with valid JSON.`,
 
-    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues) =>
-      `Analyze discrepancies for "${domain}".
+    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues, factualContext: string) =>
+      `Hallucination diagnosis for "${domain}".
 
 AI-DETECTED VALUES:
 ${JSON.stringify(original, null, 2)}
@@ -161,24 +424,26 @@ ${JSON.stringify(original, null, 2)}
 USER-CORRECTED VALUES:
 ${JSON.stringify(corrected, null, 2)}
 
-Compare these versions and generate:
-1. List of discrepancies with their impact
-2. Confusion sources (why AI was wrong)
-3. Technical recommendations to correct perception
-4. Narrative analysis explaining the problem
+${factualContext}
 
-Provide complete JSON.`
+For each gap between AI values and user corrections:
+1. Check CRAWL DATA for misleading info (misleading_data)
+2. Check if info is simply absent (absent_data)
+3. If crawl data is clear AND contradicts AI → training_bias
+4. If info is present and correct but misinterpreted → reasoning_error
+
+Provide complete JSON with verdicts.`,
   },
   es: {
     extractSystemPrompt: `Eres un experto en análisis de contenido web. Extrae información clave de un resumen de sitio web.
 
 Devuelve un JSON con estos campos:
-- sector: Sector de actividad (ej: "E-commerce", "SaaS", "Restauración")
-- country: País o zona geográfica (ej: "España", "Europa")
+- sector: Sector de actividad
+- country: País o zona geográfica
 - valueProposition: Propuesta de valor principal en 1-2 frases
-- targetAudience: Audiencia objetivo (ej: "Particulares 25-45 años", "PYMES")
-- businessAge: Antigüedad estimada (ej: "Startup", "10+ años")
-- businessType: Tipo de empresa (ej: "Pequeña empresa", "Gran empresa")
+- targetAudience: Audiencia objetivo
+- businessAge: Antigüedad estimada
+- businessType: Tipo de empresa
 - mainProducts: Productos/servicios principales
 
 Responde ÚNICAMENTE con JSON válido, sin markdown.`,
@@ -191,28 +456,24 @@ Resumen disponible:
 
 Extrae la información estructurada en JSON.`,
 
-    compareSystemPrompt: `Eres un experto en GEO (Generative Engine Optimization) analizando cómo los LLMs perciben las marcas.
+    compareSystemPrompt: `Eres un experto en GEO y diagnosticador de alucinaciones LLM.
 
-Tu misión: Comparar información detectada por IA con información corregida por el usuario para identificar:
-1. Discrepancias y su impacto en la visibilidad IA
-2. Fuentes de confusión que engañaron a la IA
-3. Recomendaciones concretas para corregir la percepción
+Tu misión: Comparar información detectada por IA con correcciones del usuario, USANDO los datos factuales proporcionados para identificar la CAUSA RAÍZ de cada alucinación.
 
-Devuelve un JSON estructurado con:
-- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation}
-- confusionSources: Array de strings describiendo causas de confusión
-- recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
-- analysisNarrative: Un párrafo explicando por qué la IA se equivocó y qué cambiar
+Veredictos posibles:
+🔴 misleading_data — El sitio CONTIENE datos ambiguos que confunden al LLM.
+🟡 absent_data — El sitio NO proporciona la información. El LLM la dedujo probabilísticamente.
+🟠 training_bias — El sitio tiene datos CLAROS que el LLM ignora.
+🔵 reasoning_error — El LLM tiene datos correctos pero saca una CONCLUSIÓN LÓGICA ERRÓNEA.
 
-Criterios de impacto:
-- high: Error en negocio principal, sector o propuesta de valor
-- medium: Error en target, tipo de empresa o zona geográfica
-- low: Error menor o imprecisión
+Devuelve JSON estructurado con:
+- discrepancies: Array de {field, original, corrected, impact, explanation, verdict, evidence}
+- confusionSources, recommendations, analysisNarrative, verdictSummary
 
 Responde ÚNICAMENTE con JSON válido.`,
 
-    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues) =>
-      `Analiza las discrepancias para "${domain}".
+    compareUserPrompt: (domain: string, original: DetectedValues, corrected: DetectedValues, factualContext: string) =>
+      `Diagnóstico de alucinación para "${domain}".
 
 VALORES DETECTADOS POR IA:
 ${JSON.stringify(original, null, 2)}
@@ -220,35 +481,26 @@ ${JSON.stringify(original, null, 2)}
 VALORES CORREGIDOS POR EL USUARIO:
 ${JSON.stringify(corrected, null, 2)}
 
-Compara estas versiones y genera:
-1. Lista de discrepancias con su impacto
-2. Fuentes de confusión (por qué la IA se equivocó)
-3. Recomendaciones técnicas para corregir la percepción
-4. Análisis narrativo explicando el problema
+${factualContext}
 
-Proporciona JSON completo.`
+Proporciona JSON completo con veredictos.`,
   }
 };
 
+// ═══ Utilities ═══
+
 function sanitizeJsonResponse(content: string): string {
-  // Remove markdown code blocks
   let jsonStr = content;
   const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (jsonMatch) {
     jsonStr = jsonMatch[1];
   }
-  
-  // Find the first { and last }
   const firstBrace = jsonStr.indexOf('{');
   const lastBrace = jsonStr.lastIndexOf('}');
-  
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
     jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
   }
-  
-  // Remove trailing commas before ] or }
   jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
-  
   return jsonStr.trim();
 }
 
@@ -266,21 +518,15 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
         { role: 'user', content: userPrompt }
       ],
       temperature: 0.3,
-      max_tokens: 3000,
+      max_tokens: 5000,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     console.error('AI gateway error:', response.status, errorText);
-    
-    if (response.status === 429) {
-      throw new Error('RATE_LIMIT');
-    }
-    if (response.status === 402) {
-      throw new Error('CREDITS_EXHAUSTED');
-    }
-    
+    if (response.status === 429) throw new Error('RATE_LIMIT');
+    if (response.status === 402) throw new Error('CREDITS_EXHAUSTED');
     throw new Error(`AI gateway error: ${response.status}`);
   }
 
@@ -288,6 +534,8 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
   trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-flash', data.usage);
   return data.choices?.[0]?.message?.content || '';
 }
+
+// ═══ Main handler ═══
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -313,28 +561,31 @@ Deno.serve(async (req) => {
     }
 
     const t = translations[lang] || translations.fr;
+    const supabase = getServiceClient();
+    const normalizedDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
 
-    // ── Fetch site identity card for enrichment ──
+    // ── Fetch site identity card ──
+    let identityCard: Record<string, unknown> | null = null;
     let identityHint = '';
     try {
-      const supabase = getServiceClient();
-      const ctx = await getSiteContext(supabase, { domain });
+      const ctx = await getSiteContext(supabase, { domain: normalizedDomain });
       if (ctx) {
+        identityCard = ctx;
         const parts: string[] = [];
         if (ctx.market_sector) parts.push(`Sector: ${ctx.market_sector}`);
         if (ctx.products_services) parts.push(`Products/Services: ${ctx.products_services}`);
         if (ctx.target_audience) parts.push(`Target: ${ctx.target_audience}`);
         if (ctx.commercial_area) parts.push(`Area: ${ctx.commercial_area}`);
         if (parts.length > 0) identityHint = `\n\nVerified site identity:\n${parts.join('\n')}`;
-        console.log(`[diagnose-hallucination] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+        console.log(`[diagnose] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
       }
     } catch (e) {
-      console.warn('[diagnose-hallucination] Could not fetch site context:', e);
+      console.warn('[diagnose] Could not fetch site context:', e);
     }
 
     // === ACTION: EXTRACT ===
     if (action === 'extract') {
-      console.log(`[Diagnose] Extracting values for: ${domain}`);
+      console.log(`[diagnose] Extracting values for: ${domain}`);
 
       const content = await callAI(
         t.extractSystemPrompt,
@@ -345,21 +596,14 @@ Deno.serve(async (req) => {
       try {
         const jsonStr = sanitizeJsonResponse(content);
         extractedValues = JSON.parse(jsonStr);
-      } catch (parseError) {
+      } catch {
         console.error('Failed to parse extract response:', content);
-        // Return empty values as fallback
         extractedValues = {
-          sector: '',
-          country: '',
+          sector: '', country: '',
           valueProposition: coreValueSummary?.substring(0, 200) || '',
-          targetAudience: '',
-          businessAge: '',
-          businessType: '',
-          mainProducts: '',
+          targetAudience: '', businessAge: '', businessType: '', mainProducts: '',
         };
       }
-
-      console.log(`[Diagnose] Extracted values for ${domain}`);
 
       return new Response(
         JSON.stringify({ success: true, extractedValues }),
@@ -367,7 +611,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // === ACTION: COMPARE ===
+    // === ACTION: COMPARE (enriched with factual data) ===
     if (action === 'compare') {
       if (!originalValues || !correctedValues) {
         return new Response(
@@ -376,41 +620,73 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log(`[Diagnose] Comparing values for: ${domain}`);
+      console.log(`[diagnose] Loading factual context for: ${normalizedDomain}`);
 
+      // ── Load ALL available data in parallel ──
+      const [crawlData, auditData, rankingData, previousCorrections] = await Promise.all([
+        loadCrawlData(supabase, normalizedDomain),
+        loadAuditData(supabase, normalizedDomain),
+        loadRankingData(supabase, normalizedDomain),
+        loadPreviousCorrections(supabase, normalizedDomain),
+      ]);
+
+      const factualContext: FactualContext = {
+        crawlData,
+        auditData,
+        identityCard,
+        rankingData,
+        previousCorrections,
+      };
+
+      console.log(`[diagnose] Context loaded — crawl: ${crawlData ? crawlData.pages.length + ' pages' : 'none'}, audit: ${auditData ? 'yes' : 'none'}, rankings: ${rankingData ? rankingData.totalRankedKeywords + ' kw' : 'none'}, prev corrections: ${previousCorrections.length}`);
+
+      // ── Format factual context for LLM prompt ──
+      const factualContextStr = formatFactualContextForPrompt(factualContext);
+
+      // ── Call LLM with enriched context ──
       const content = await callAI(
         t.compareSystemPrompt,
-        t.compareUserPrompt(domain, originalValues, correctedValues)
+        t.compareUserPrompt(domain, originalValues, correctedValues, factualContextStr)
       );
 
       let diagnosis: HallucinationDiagnosis;
       try {
         const jsonStr = sanitizeJsonResponse(content);
         const parsed = JSON.parse(jsonStr);
-        
+
         diagnosis = {
           originalValues,
           correctedValues,
-          discrepancies: parsed.discrepancies || [],
+          discrepancies: (parsed.discrepancies || []).map((d: any) => ({
+            ...d,
+            verdict: d.verdict || 'absent_data',
+            evidence: d.evidence || '',
+          })),
           confusionSources: parsed.confusionSources || [],
           recommendations: parsed.recommendations || [],
           analysisNarrative: parsed.analysisNarrative || '',
+          verdictSummary: parsed.verdictSummary || computeVerdictSummary(parsed.discrepancies || []),
+          factualContext,
         };
-      } catch (parseError) {
+      } catch {
         console.error('Failed to parse compare response:', content);
-        
-        // Generate fallback based on actual differences
+
+        // Fallback: generate diagnosis from raw field diffs
         const discrepancies: Discrepancy[] = [];
         const fields: (keyof DetectedValues)[] = ['sector', 'country', 'valueProposition', 'targetAudience', 'businessAge', 'businessType', 'mainProducts'];
-        
+
         for (const field of fields) {
           if (originalValues[field] !== correctedValues[field] && correctedValues[field]) {
+            // Determine verdict based on crawl data
+            const verdict = determineVerdictFromCrawl(field, originalValues[field], correctedValues[field], crawlData);
             discrepancies.push({
               field,
               original: originalValues[field] || '(non détecté)',
               corrected: correctedValues[field],
               impact: field === 'valueProposition' || field === 'sector' ? 'high' : 'medium',
-              explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`
+              explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`,
+              verdict,
+              evidence: verdict === 'absent_data' ? 'Donnée non trouvée dans le crawl' : 'Basé sur analyse du crawl',
             });
           }
         }
@@ -419,25 +695,21 @@ Deno.serve(async (req) => {
           originalValues,
           correctedValues,
           discrepancies,
-          confusionSources: discrepancies.length > 0 
+          confusionSources: discrepancies.length > 0
             ? ['Contenu de page insuffisant', 'Métadonnées imprécises', 'Manque de données structurées']
             : [],
-          recommendations: discrepancies.length > 0 
-            ? [{
-                id: 'add-schema',
-                category: 'schema',
-                priority: 'critical',
-                title: 'Ajouter des données structurées',
-                description: 'Injectez du JSON-LD avec les informations correctes pour guider les LLM.',
-              }]
+          recommendations: discrepancies.length > 0
+            ? [{ id: 'add-schema', category: 'schema', priority: 'critical', title: 'Ajouter des données structurées', description: 'Injectez du JSON-LD avec les informations correctes pour guider les LLM.' }]
             : [],
           analysisNarrative: discrepancies.length > 0
-            ? `L'IA a commis ${discrepancies.length} erreur(s) d'interprétation sur votre site. Ces erreurs sont probablement dues à un manque de clarté dans vos métadonnées et l'absence de données structurées explicites.`
-            : 'Aucune incohérence majeure détectée entre la perception IA et la réalité.',
+            ? `L'IA a commis ${discrepancies.length} erreur(s) d'interprétation. Diagnostic basé sur ${crawlData ? crawlData.pages.length + ' pages crawlées' : 'aucun crawl disponible'}.`
+            : 'Aucune incohérence majeure détectée.',
+          verdictSummary: computeVerdictSummary(discrepancies),
+          factualContext,
         };
       }
 
-      console.log(`[Diagnose] Comparison complete for ${domain}: ${diagnosis.discrepancies.length} discrepancies found`);
+      console.log(`[diagnose] Complete — ${diagnosis.discrepancies.length} discrepancies, verdicts: ${JSON.stringify(diagnosis.verdictSummary)}`);
 
       return new Response(
         JSON.stringify({ success: true, diagnosis }),
@@ -445,9 +717,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Legacy action (backward compatibility)
-    console.log(`[Diagnose] Legacy action for: ${domain}`);
-    
+    // Legacy action
     const content = await callAI(
       t.extractSystemPrompt,
       t.extractUserPrompt(domain, coreValueSummary)
@@ -474,23 +744,68 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const err = error as Error;
     console.error('Error diagnosing hallucination:', err);
-    
+
     if (err.message === 'RATE_LIMIT') {
       return new Response(
-        JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again later.' }),
+        JSON.stringify({ success: false, error: 'Rate limit exceeded.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     if (err.message === 'CREDITS_EXHAUSTED') {
       return new Response(
-        JSON.stringify({ success: false, error: 'AI credits exhausted. Please add credits.' }),
+        JSON.stringify({ success: false, error: 'AI credits exhausted.' }),
         { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
+
     return new Response(
       JSON.stringify({ success: false, error: err.message || 'Diagnosis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+// ═══ Helpers ═══
+
+function computeVerdictSummary(discrepancies: Discrepancy[]) {
+  return {
+    misleading_data: discrepancies.filter(d => d.verdict === 'misleading_data').length,
+    absent_data: discrepancies.filter(d => d.verdict === 'absent_data').length,
+    training_bias: discrepancies.filter(d => d.verdict === 'training_bias').length,
+    reasoning_error: discrepancies.filter(d => d.verdict === 'reasoning_error').length,
+  };
+}
+
+function determineVerdictFromCrawl(
+  field: string,
+  originalValue: string,
+  _correctedValue: string,
+  crawlData: CrawlSnapshot | null
+): Discrepancy['verdict'] {
+  if (!crawlData || crawlData.pages.length === 0) {
+    return 'absent_data';
+  }
+
+  // Check if the field's content can be found in crawl data
+  const allText = crawlData.pages.map(p =>
+    `${p.title} ${p.h1} ${p.metaDescription}`
+  ).join(' ').toLowerCase();
+
+  const originalLower = (originalValue || '').toLowerCase();
+
+  if (!originalLower) return 'absent_data';
+
+  // If the original AI value appears in the crawl → the site said something misleading
+  const originalWords = originalLower.split(/\s+/).filter(w => w.length > 3);
+  const matchCount = originalWords.filter(w => allText.includes(w)).length;
+  const matchRatio = originalWords.length > 0 ? matchCount / originalWords.length : 0;
+
+  if (matchRatio > 0.5) {
+    // The crawl contains words similar to what the AI detected → misleading data
+    return 'misleading_data';
+  }
+
+  // If the corrected value IS in the crawl but AI missed it → training bias
+  // If neither is present → absent data
+  return 'training_bias';
+}

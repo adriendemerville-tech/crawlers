@@ -31,6 +31,22 @@ L'Audit Stratégique GEO (v5) intègre une analyse profonde de la SERP et de l'a
 - **Méthodologie du score** : Un encadré "Méthodologie du scoring" est ajouté au rapport expliquant les 5 piliers (Performance, Sécurité, SEO, Accessibilité, Bonnes Pratiques) et la pondération /200.
 - **AEO détaillé** : Chaque critère AEO affiche désormais une explication + conseil correctif (dans le PDF et dans l'UI `AEOScoreCard`), au lieu d'une simple checklist binaire ❌/✅.
 
+## Diagnostic d'hallucinations (v5.2 — 2026-03-31)
+La fonction `diagnose-hallucination` charge TOUTES les données factuelles avant d'analyser :
+- **Crawl data** : `site_crawls` + `crawl_pages` (< 30 jours)
+- **Audit data** : `audit_raw_data` (brand_perception, scores)
+- **Ranking data** : keyword_positioning depuis audit stratégique
+- **Identity card** : `tracked_sites.identity_card` via `getSiteContext`
+- **Corrections précédentes** : `hallucination_corrections`
+
+4 verdicts par incohérence :
+- 🔴 `misleading_data` — donnée trompeuse dans le site
+- 🟡 `absent_data` — donnée absente, LLM comble le vide
+- 🟠 `training_bias` — LLM ignore les données claires du site
+- 🔵 `reasoning_error` — bonne donnée, mauvaise conclusion
+
+Le `verdictSummary` agrège le comptage par type. Le `factualContext` complet est retourné au front pour transparence.
+
 ## Tables impactées
 - `tracked_sites.client_targets` (jsonb) — cibles B2B/B2C
 - `tracked_sites.jargon_distance` (jsonb) — scores de distance + intentionnalité
