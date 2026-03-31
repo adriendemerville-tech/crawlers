@@ -92,7 +92,7 @@ function HeroSectionComponent() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
+        <h2 className="mb-4 text-lg font-medium font-display text-white sm:mb-6 sm:text-2xl">
           {language === 'es'
             ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
