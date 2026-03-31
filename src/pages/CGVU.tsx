@@ -36,6 +36,7 @@ const CGVU = () => {
         <title>Conditions Générales de Vente et d'Utilisation | Crawlers.fr</title>
         <meta name="description" content="CGVU de Crawlers.fr – Conditions générales de vente et d'utilisation de la plateforme d'audit SEO/GEO et de crédits d'analyse IA." />
         <link rel="canonical" href="https://crawlers.fr/cgvu" />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Header />
       <main className="flex-1 py-12">

@@ -529,68 +529,7 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique"/>
   </url>
 
-  <!-- ==================== PAGES LÉGALES ==================== -->
-
-  <url>
-    <loc>https://crawlers.fr/mentions-legales</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  
-  <url>
-    <loc>https://crawlers.fr/politique-confidentialite</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  
-  <url>
-    <loc>https://crawlers.fr/conditions-utilisation</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  
-  <url>
-    <loc>https://crawlers.fr/rgpd</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
-  <url>
-    <loc>https://crawlers.fr/cgvu</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
-  <!-- ==================== AUTHENTIFICATION ==================== -->
-
-  <!-- Inscription / Signup -->
-  <url>
-    <loc>https://crawlers.fr/signup</loc>
-    <lastmod>2026-03-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/signup"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/signup?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/signup?lang=es"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/signup"/>
-  </url>
-
-  <!-- Connexion / Auth -->
-  <url>
-    <loc>https://crawlers.fr/auth</loc>
-    <lastmod>2026-03-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/auth"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/auth?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/auth?lang=es"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/auth"/>
-  </url>
+  <!-- Pages légales et auth retirées du sitemap (noindex) -->
 
   <!-- ==================== FONCTIONNALITÉS PRO ==================== -->
 
