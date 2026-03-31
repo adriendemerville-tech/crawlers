@@ -1027,6 +1027,37 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   />
                 )}
 
+                {hallucinationDiagFlow === 'show_fix_buttons' && (
+                  <div className="flex justify-start">
+                    <div className="flex flex-col gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('open-hallucination-fix', { detail: { target: 'content' } }));
+                          const msg: ChatMessage = { role: 'assistant', content: "📝 **Content Architect** ouvert avec le diagnostic pré-chargé. Bonne correction !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, msg]);
+                          setHallucinationDiagFlow('idle');
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs font-medium hover:bg-primary/10 transition-colors"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        Ouvrir Content Architect
+                      </button>
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('open-hallucination-fix', { detail: { target: 'code' } }));
+                          const msg: ChatMessage = { role: 'assistant', content: "⚙️ **Code Architect** ouvert avec le diagnostic pré-chargé. Bonne correction !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, msg]);
+                          setHallucinationDiagFlow('idle');
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs font-medium hover:bg-primary/10 transition-colors"
+                      >
+                        <Code className="h-3.5 w-3.5 text-primary" />
+                        Ouvrir Code Architect
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {bugReportMode === 'prompt' && (
                   <div className="flex justify-start">
                     <button
