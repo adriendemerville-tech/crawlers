@@ -266,6 +266,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 10 }).eq('id', jobId)
     console.log(`[content-advisor] Step 1: Fetching site context + CMS + prompt template for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
