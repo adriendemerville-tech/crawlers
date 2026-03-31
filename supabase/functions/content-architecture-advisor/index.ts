@@ -1319,12 +1319,36 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
 
     console.log(`[content-advisor] Done in ${Date.now() - startTime}ms`)
 
+    // ── ASYNC JOB: Save result if running as background job ──
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({
+        status: 'completed',
+        result_data: result,
+        progress: 100,
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId)
+      console.log(`[content-advisor] Async job ${jobId} completed`)
+    }
+
     return new Response(JSON.stringify({ data: result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
     console.error('[content-advisor] Error:', error)
+
+    // ── ASYNC JOB: Mark as failed ──
+    if (typeof jobId !== 'undefined' && jobId) {
+      try {
+        const sb = getServiceClient()
+        await sb.from('async_jobs').update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          completed_at: new Date().toISOString(),
+        }).eq('id', jobId)
+      } catch (_) { /* ignore */ }
+    }
+
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
