@@ -75,14 +75,14 @@ const AIAgentsSection = memo(() => {
             {language === 'fr' ? 'Intelligence Artificielle Embarquée' : language === 'es' ? 'Inteligencia Artificial Integrada' : 'Built-in Artificial Intelligence'}
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground font-display">
-            {language === 'fr' ? 'Deux agents IA, deux missions' : language === 'es' ? 'Dos agentes IA, dos misiones' : 'Two AI agents, two missions'}
+            {language === 'fr' ? '2 agents IA, 2 atouts pour vous accompagner' : language === 'es' ? '2 agentes IA, 2 ventajas para acompañarle' : '2 AI agents, 2 assets to support you'}
           </h2>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
             {language === 'fr' 
-              ? 'Crawlers.fr intègre deux assistants intelligents pour vous accompagner à chaque étape : comprendre vos audits et piloter votre stratégie SEO.'
+              ? 'Ne travaillez pas seul : Crawlers.fr intègre deux assistants IA entraînés sur nos données. Une question sur un audit ou une stratégie ? Ils vous aideront à faire le bon choix.'
               : language === 'es'
-              ? 'Crawlers.fr integra dos asistentes inteligentes para acompañarle en cada paso: comprender sus auditorías y pilotar su estrategia SEO.'
-              : 'Crawlers.fr integrates two intelligent assistants to guide you at every step: understand your audits and pilot your SEO strategy.'}
+              ? 'No trabaje solo: Crawlers.fr integra dos asistentes IA entrenados con nuestros datos. ¿Una pregunta sobre una auditoría o una estrategia? Le ayudarán a tomar la decisión correcta.'
+              : 'Don\'t work alone: Crawlers.fr integrates two AI assistants trained on our data. Got a question about an audit or a strategy? They\'ll help you make the right call.'}
           </p>
         </div>
 
