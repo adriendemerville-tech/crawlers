@@ -395,7 +395,7 @@ export function BundleOptionTab() {
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {view === 'catalog' || !hasActiveApis ? (
-          <BundleCatalog apis={apis} onSubscribe={handleSubscribe} />
+          <BundleCatalog apis={apis} onSubscribe={handleSubscribe} activeApiIds={subscription?.selected_apis || []} />
         ) : (
           <div className="space-y-4">
             {(() => {
