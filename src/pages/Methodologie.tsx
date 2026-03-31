@@ -496,58 +496,6 @@ export default function Methodologie() {
           </div>
         </section>
 
-        {/* ── Tarification résumée ── */}
-        <section className="py-16 px-4">
-          <div className="mx-auto max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-center mb-10"
-            >
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {t3(language, 'Tarification simple', 'Simple Pricing', 'Precios simples')}
-              </h2>
-            </motion.div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                { plan: 'Freemium', price: t3(language, 'Gratuit', 'Free', 'Gratis'), features: ['Score GEO & Bots IA', 'Visibilité LLM', 'PageSpeed'], highlight: false },
-                { plan: 'Pro Agency', price: '59€/mois', features: ['Audits illimités', 'Crawl 5 000 pages', 'Cocon sémantique 3D', 'Tracking & monitoring'], highlight: true },
-                { plan: t3(language, 'Crédits', 'Credits', 'Créditos'), price: t3(language, 'À l\'unité', 'Pay-per-use', 'Por uso'), features: ['Audit comparé', 'Crawl ponctuel', 'Matrice d\'audit'], highlight: false },
-              ].map((p, i) => (
-                <motion.div
-                  key={p.plan}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <Card className={`h-full ${p.highlight ? 'border-primary/40 bg-primary/5 shadow-lg' : 'border-border/50'}`}>
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold text-foreground mb-1">{p.plan}</h3>
-                      <div className="text-2xl font-bold text-primary mb-4">{p.price}</div>
-                      <ul className="space-y-2">
-                        {p.features.map((f, j) => (
-                          <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-            <p className="text-center text-xs text-muted-foreground mt-4 italic">
-              {t3(language,
-                '* Offre de lancement garantie à vie pour les 100 premiers abonnés.',
-                '* Launch offer guaranteed for life for the first 100 subscribers.',
-                '* Oferta de lanzamiento garantizada de por vida para los primeros 100 suscriptores.'
-              )}
-            </p>
-          </div>
-        </section>
 
         {/* ── CTA Final ── */}
         <section className="py-16 px-4 bg-gradient-to-b from-primary/5 to-background border-t border-primary/10">
