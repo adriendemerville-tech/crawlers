@@ -359,7 +359,12 @@ Pour chaque incohérence, tu dois attribuer un VERDICT parmi :
    Evidence requise : explique la faille de raisonnement.
 
 Tu dois retourner un JSON structuré avec:
-- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, sourcePages: [{url: "URL de la page problématique", title: "titre de la page", element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "le texte exact qui pose problème"}]}
+- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, userExplanation: string, sourcePages: [{url, title, element, excerpt}]}
+  - userExplanation : un texte PÉDAGOGIQUE destiné à l'utilisateur final (non technique) qui explique en langage simple POURQUOI l'IA s'est trompée. 
+    - Si absent_data : explique que le site ne fournit pas assez d'informations sur ce point, donc l'IA a dû deviner. Propose ce que l'utilisateur peut ajouter concrètement.
+    - Si training_bias : explique que l'IA possède un historique ou des connaissances antérieures sur ce domaine qui contredisent la réalité actuelle du site. Précise que c'est une limitation connue des LLM et que renforcer les signaux du site corrigera ça.
+    - Si misleading_data : explique quel élément du site a induit l'IA en erreur et comment le corriger.
+    - Si reasoning_error : explique la faille de logique de l'IA de façon accessible.
 - confusionSources: Array de strings décrivant les causes de confusion
 - recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
 - analysisNarrative: Un paragraphe de diagnostic
