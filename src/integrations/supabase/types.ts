@@ -3150,6 +3150,54 @@ export type Database = {
           },
         ]
       }
+      eeat_scoring_criteria: {
+        Row: {
+          category: string
+          created_at: string
+          criterion_key: string
+          description: string | null
+          detection_config: Json
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          max_score: number
+          scoring_method: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          criterion_key: string
+          description?: string | null
+          detection_config?: Json
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          max_score?: number
+          scoring_method?: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          criterion_key?: string
+          description?: string | null
+          detection_config?: Json
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          max_score?: number
+          scoring_method?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string

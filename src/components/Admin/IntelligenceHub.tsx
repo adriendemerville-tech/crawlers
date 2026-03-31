@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Search, Brain, Shield, Bug } from 'lucide-react';
+import { Bot, Search, Brain, Shield, Bug, Award } from 'lucide-react';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { SeoAgentDashboard } from './SeoAgentDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
@@ -7,6 +7,7 @@ import { CtoSupervisor } from './CtoSupervisor';
 import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
 import { AssistantPrecisionCard } from './AssistantPrecisionCard';
 import { RecettageTab } from './RecettageTab';
+import { EeatScoringAdmin } from './EeatScoringAdmin';
 
 export function IntelligenceHub() {
   return (
@@ -28,6 +29,10 @@ export function IntelligenceHub() {
           <TabsTrigger value="supervisor" className="flex-1 gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Supervisor</span>
+          </TabsTrigger>
+          <TabsTrigger value="eeat" className="flex-1 gap-2">
+            <Award className="h-4 w-4" />
+            <span className="hidden sm:inline">E-E-A-T</span>
           </TabsTrigger>
           <TabsTrigger value="predictions" className="flex-1 gap-2">
             <Brain className="h-4 w-4" />
@@ -51,6 +56,10 @@ export function IntelligenceHub() {
           <AssistantPrecisionCard />
           <CtoSupervisor />
           <SupervisorErrorsRegistry />
+        </TabsContent>
+
+        <TabsContent value="eeat" forceMount className="data-[state=inactive]:hidden">
+          <EeatScoringAdmin />
         </TabsContent>
 
         <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
