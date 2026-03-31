@@ -22,6 +22,7 @@ const RGPD = () => {
         <meta property="og:locale:alternate" content="fr_FR" />
         <meta property="og:locale:alternate" content="en_US" />
         <meta property="og:locale:alternate" content="es_ES" />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Header />
       <main className="flex-1 py-12">
