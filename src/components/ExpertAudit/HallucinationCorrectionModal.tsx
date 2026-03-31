@@ -43,6 +43,12 @@ export interface HallucinationDiagnosis {
   confusionSources: string[];
   recommendations: HallucinationRecommendation[];
   analysisNarrative: string;
+  verdictSummary?: {
+    misleading_data: number;
+    absent_data: number;
+    training_bias: number;
+    reasoning_error: number;
+  };
 }
 
 export interface DiscrepancySourcePage {
