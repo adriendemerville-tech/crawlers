@@ -741,7 +741,7 @@ Deno.serve(async (req: Request) => {
                 }
                 continue;
               } else if (funcName === 'content-architecture-advisor') {
-                // ── Special handling for content-architecture-advisor: needs auth header ──
+                // ── Async handling for content-architecture-advisor ──
                 const payload = decision.action.payload || {};
                 const funcBody = {
                   url: payload.url || `https://${site.domain}`,
@@ -750,14 +750,14 @@ Deno.serve(async (req: Request) => {
                   tracked_site_id: config.tracked_site_id,
                   language_code: payload.language_code || 'fr',
                   location_code: payload.location_code || 2250,
-                  // Multi-objective fields
+                  async: true, // ← Force async mode
                   ...(payload.strategic_objectives && { strategic_objectives: payload.strategic_objectives }),
                   ...(payload.target_internal_links && { target_internal_links: payload.target_internal_links }),
                   ...(payload.cannibalization_data && { cannibalization_data: payload.cannibalization_data }),
                   ...(payload.silo_context && { silo_context: payload.silo_context }),
                 };
 
-                console.log(`[AutopilotEngine] Calling content-architecture-advisor for ${site.domain}, keyword: ${funcBody.keyword}`);
+                console.log(`[AutopilotEngine] Calling content-architecture-advisor (ASYNC) for ${site.domain}, keyword: ${funcBody.keyword}`);
 
                 const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
                   method: 'POST',
@@ -769,14 +769,72 @@ Deno.serve(async (req: Request) => {
                 });
 
                 const funcResult = await funcResponse.json().catch(() => ({}));
-                executionResults.push({
-                  function: funcName,
-                  status: funcResponse.ok ? 'success' : 'error',
-                  http_status: funcResponse.status,
-                  keyword: funcBody.keyword,
-                  result: funcResult,
-                });
-                if (!funcResponse.ok) executionSuccess = false;
+                
+                if (funcResponse.status === 202 && funcResult.job_id) {
+                  // Poll for result (max 5 minutes, every 10s)
+                  const jobId = funcResult.job_id;
+                  console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
+                  const pollDeadline = Date.now() + 5 * 60 * 1000;
+                  let jobResult: any = null;
+                  let jobStatus = 'pending';
+                  
+                  while (Date.now() < pollDeadline) {
+                    await new Promise(r => setTimeout(r, 10000)); // Wait 10s
+                    
+                    try {
+                      const pollResp = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor?job_id=${jobId}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
+                      });
+                      const pollData = await pollResp.json().catch(() => ({}));
+                      
+                      if (pollData.status === 'completed') {
+                        jobResult = pollData.data;
+                        jobStatus = 'completed';
+                        console.log(`[AutopilotEngine] content-architecture-advisor job ${jobId} completed`);
+                        break;
+                      } else if (pollData.status === 'failed') {
+                        jobStatus = 'failed';
+                        jobResult = { error: pollData.error || 'Job failed' };
+                        console.error(`[AutopilotEngine] content-architecture-advisor job ${jobId} failed: ${pollData.error}`);
+                        break;
+                      }
+                      // Still processing, continue polling
+                      console.log(`[AutopilotEngine] Job ${jobId} progress: ${pollData.progress || 0}%`);
+                    } catch (pollErr) {
+                      console.warn(`[AutopilotEngine] Poll error for job ${jobId}:`, pollErr);
+                    }
+                  }
+                  
+                  if (jobStatus === 'completed') {
+                    executionResults.push({
+                      function: funcName,
+                      status: 'success',
+                      http_status: 200,
+                      keyword: funcBody.keyword,
+                      result: { data: jobResult },
+                    });
+                  } else {
+                    executionResults.push({
+                      function: funcName,
+                      status: 'error',
+                      http_status: jobStatus === 'failed' ? 500 : 408,
+                      keyword: funcBody.keyword,
+                      result: jobResult || { error: 'Job timed out after 5 minutes' },
+                    });
+                    executionSuccess = false;
+                  }
+                } else {
+                  // Non-async fallback (shouldn't happen but safe)
+                  executionResults.push({
+                    function: funcName,
+                    status: funcResponse.ok ? 'success' : 'error',
+                    http_status: funcResponse.status,
+                    keyword: funcBody.keyword,
+                    result: funcResult,
+                  });
+                  if (!funcResponse.ok) executionSuccess = false;
+                }
               } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
                 // ── CMS Push Draft: unified draft push for non-IKTracker CMS ──
                 const MAX_CMS_ACTIONS = 10;
