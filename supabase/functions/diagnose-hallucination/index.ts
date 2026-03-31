@@ -265,6 +265,10 @@ function formatFactualContextForPrompt(ctx: FactualContext): string {
       parts.push(`   Title: "${page.title}" | H1: "${page.h1}"`);
       parts.push(`   Meta: "${page.metaDescription?.slice(0, 120) || '(vide)'}"`);
       parts.push(`   ${page.wordCount} mots | Schema: ${page.schemaTypes.length > 0 ? page.schemaTypes.join(', ') : 'aucun'} | Indexable: ${page.isIndexable ? 'oui' : 'non'}`);
+      if (page.bodyExcerpt) {
+        parts.push(`   Extrait contenu: "${page.bodyExcerpt.slice(0, 200)}..."`);
+      }
+      if (page.canonicalUrl) parts.push(`   Canonical: ${page.canonicalUrl}`);
     }
   } else {
     parts.push('\n⚠️ AUCUNE DONNÉE DE CRAWL DISPONIBLE — le LLM n\'avait pas de données factuelles sur la structure du site.');
