@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine, HelpCircle } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -58,6 +58,8 @@ const translations = {
     wallet: 'Mon Portefeuille',
     credits: 'crédits',
     logout: 'Déconnexion',
+    myAccount: 'Mon compte',
+    help: 'Aide',
     login: 'Connexion',
     signup: "S'inscrire",
     back: 'Retour',
@@ -76,6 +78,8 @@ const translations = {
     wallet: 'My Wallet',
     credits: 'credits',
     logout: 'Log out',
+    myAccount: 'My account',
+    help: 'Help',
     login: 'Log in',
     signup: 'Sign up',
     back: 'Back',
@@ -94,6 +98,8 @@ const translations = {
     wallet: 'Mi Billetera',
     credits: 'créditos',
     logout: 'Cerrar sesión',
+    myAccount: 'Mi cuenta',
+    help: 'Ayuda',
     login: 'Iniciar sesión',
     signup: 'Registrarse',
     back: 'Volver',
@@ -438,49 +444,30 @@ export function Header() {
                     onMouseLeave={handleMouseLeave}
                     onCloseAutoFocus={(e) => e.preventDefault()}
                   >
-                    {/* Console subtitle */}
-                    <div className="px-3 py-2">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.account}</p>
+                    {/* Profile card (non-clickable) */}
+                    <div className="flex w-full items-center justify-start gap-3 p-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
+                        {profile && (
+                          <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
                     </div>
-                    <DropdownMenuItem className="p-0" onSelect={() => navigateFromMenu('/app/console')}>
-                      <button type="button" className="flex w-full items-center justify-start gap-3 p-3 text-left cursor-pointer">
-                        <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                            {getInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
-                          {profile && (
-                            <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                        </div>
-                      </button>
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Console shortcut */}
                     <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=tracking')}>
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=settings')}>
-                        <Settings className="h-4 w-4" />
-                        {t.settings}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=reports')}>
-                        <FileText className="h-4 w-4" />
-                        {t.myReports}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=action-plans')}>
-                        <ClipboardList className="h-4 w-4" />
-                        {t.actionPlans}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=corrective-codes')}>
-                        <Code2 className="h-4 w-4" />
-                        {t.correctiveCodes}
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=pro-agency')}>
+                        <User className="h-4 w-4" />
+                        {t.myAccount}
                     </DropdownMenuItem>
                     {!isCollaborator && (
                       <>
@@ -491,6 +478,11 @@ export function Header() {
                         </DropdownMenuItem>
                       </>
                     )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => {}}>
+                        <HelpCircle className="h-4 w-4" />
+                        {t.help}
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
                       <LogOut className="h-4 w-4" />
