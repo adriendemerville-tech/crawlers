@@ -729,6 +729,7 @@ Deno.serve(async (req) => {
               explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`,
               verdict,
               evidence: verdict === 'absent_data' ? 'Donnée non trouvée dans le crawl' : 'Basé sur analyse du crawl',
+              userExplanation: generateFallbackUserExplanation(verdict, field, lang),
               sourcePages,
             };
             if (sourcePages.length > 0) {
