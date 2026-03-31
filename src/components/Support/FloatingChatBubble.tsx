@@ -265,7 +265,7 @@ export function FloatingChatBubble() {
           >
             ✕
           </button>
-          🧠 Ça te dit de tester tes connaissances SEO en 2 min ?
+          👋 En quoi puis-je t'être utile ?
           <div className="flex gap-2 mt-2">
               <button
                 onClick={() => { setShowGuestQuizSuggestion(false); setAutoStartCrawlersQuiz(true); setIsOpen(true); }}
