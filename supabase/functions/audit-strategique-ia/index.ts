@@ -2591,6 +2591,11 @@ Deno.serve(async (req) => {
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
       rankingOverview = rkOverviewResult;
 
+      // ── Append pre-crawl context to page content ──
+      if (preCrawlContext) {
+        pageContentContext += '\n' + preCrawlContext;
+      }
+
       const context = detectBusinessContext(domain, pageContentContext);
 
       // ── Fetch site identity card for enriched competitor search ──
