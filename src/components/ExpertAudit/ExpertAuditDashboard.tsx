@@ -271,8 +271,22 @@ export function ExpertAuditDashboard() {
   const [fromCocoon, setFromCocoon] = useState(false);
   const [cocoonDomain, setCocoonDomain] = useState<string>('');
   const [completedAuditsCount, setCompletedAuditsCount] = useState(0);
+  const [showContentArchitectFromDiag, setShowContentArchitectFromDiag] = useState(false);
 
-  // Fetch completed audits count for current user
+  // Listen for hallucination fix routing from Félix chat
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.target === 'code') {
+        setIsCodeEditorOpen(true);
+      } else if (detail?.target === 'content') {
+        setShowContentArchitectFromDiag(true);
+      }
+    };
+    window.addEventListener('open-hallucination-fix', handler);
+    return () => window.removeEventListener('open-hallucination-fix', handler);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     supabase
