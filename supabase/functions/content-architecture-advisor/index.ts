@@ -1345,7 +1345,7 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
     console.error('[content-advisor] Error:', error)
 
     // ── ASYNC JOB: Mark as failed ──
-    if (typeof jobId !== 'undefined' && jobId) {
+    if (_jobId) {
       try {
         const sb = getServiceClient()
         await sb.from('async_jobs').update({
