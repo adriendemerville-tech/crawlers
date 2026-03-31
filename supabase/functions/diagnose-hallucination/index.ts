@@ -424,13 +424,14 @@ For each discrepancy, assign a VERDICT:
 🔵 reasoning_error — The LLM has correct data but draws a WRONG LOGICAL CONCLUSION.
 
 Return structured JSON with:
-- discrepancies: Array of {field, original, corrected, impact, explanation, verdict, evidence}
+- discrepancies: Array of {field, original, corrected, impact, explanation, verdict, evidence, sourcePages: [{url, title, element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "exact problematic text"}]}
 - confusionSources: Array of strings
 - recommendations: Array of {id, category, priority, title, description, codeSnippet?}
 - analysisNarrative: Diagnosis paragraph
 - verdictSummary: {misleading_data: N, absent_data: N, training_bias: N, reasoning_error: N}
 
-CRITICAL: Always base analysis on factual data below, never assumptions.
+CRITICAL: For each discrepancy, identify the EXACT PAGE(S) from crawl data and the precise HTML ELEMENT causing the issue. Quote the exact text excerpt.
+Always base analysis on factual data below, never assumptions.
 
 Respond ONLY with valid JSON.`,
 
