@@ -1626,6 +1626,27 @@ export function ExpertAuditDashboard() {
           console.log('✅ Payment verified, buttons unlocked');
         }}
       />
+
+      {/* Content Architect from hallucination diagnosis */}
+      {showContentArchitectFromDiag && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitectFromDiag}
+            onClose={() => setShowContentArchitectFromDiag(false)}
+            nodes={[]}
+            domain={result?.domain || url}
+            prefillUrl={result?.url || url}
+            draftData={hallucinationDiagnosis ? {
+              hallucinationDiagnosis,
+              prefillPrompt: hallucinationDiagnosis.discrepancies
+                ?.filter((d: any) => ['title', 'h1', 'meta_description', 'body_content'].includes(d.sourcePages?.[0]?.element))
+                .map((d: any) => `Corriger "${d.field}" : "${d.original}" → "${d.corrected}" (${d.explanation})`)
+                .join('\n') || ''
+            } : null}
+            colorTheme="green"
+          />
+        </Suspense>
+      )}
     </div>
     </StrategicErrorBoundary>
   );
