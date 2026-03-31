@@ -220,6 +220,14 @@ function DiscrepancyCard({ disc, index, t, fieldLabel }: {
         </p>
       )}
 
+      {/* User-facing explanation — pedagogical */}
+      {disc.userExplanation && (
+        <div className="flex items-start gap-2 text-xs bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-2">
+          <MessageCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+          <p className="text-foreground/80 leading-relaxed">{disc.userExplanation}</p>
+        </div>
+      )}
+
       {/* Source pages + Screenshot expandable */}
       {(hasSourcePages || hasScreenshot) && (
         <div className="mt-2">
