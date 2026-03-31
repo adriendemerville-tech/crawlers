@@ -320,7 +320,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
 - lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
 - red_team: 3 failles/objections client sceptique.
 - missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site.
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP.
