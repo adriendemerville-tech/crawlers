@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       user = authUser
     }
 
-    const body: AdvisorInput = await req.json()
+    const body: AdvisorInput & { async?: boolean; _job_id?: string } = await req.json()
     const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment = 'primary' } = body
 
     if (!url || !keyword || !page_type) {
@@ -105,6 +105,54 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: `Invalid page_type. Must be one of: ${PAGE_TYPES.join(', ')}` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // ── ASYNC MODE: Enqueue and self-invoke ──
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+    const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const jobId = body._job_id
+    const jobSb = jobId ? getServiceClient() : null
+
+    if (body.async === true && !jobId) {
+      // Create async job and self-invoke
+      const sb = getServiceClient()
+      const { data: job, error: jobError } = await sb
+        .from('async_jobs')
+        .insert({
+          user_id: user.id,
+          function_name: 'content-architecture-advisor',
+          status: 'pending',
+          input_payload: { url, keyword, page_type, tracked_site_id, language_code, location_code, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment },
+        })
+        .select('id')
+        .single()
+
+      if (jobError || !job) {
+        return new Response(JSON.stringify({ error: 'Failed to create async job' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Fire-and-forget: self-invoke with _job_id
+      const syncBody = { ...body, async: false, _job_id: job.id }
+      fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncBody),
+      }).catch(err => console.error('[content-advisor] Async self-invoke failed:', err))
+
+      console.log(`[content-advisor] Async job created: ${job.id} for ${keyword}@${domain}`)
+      return new Response(JSON.stringify({ job_id: job.id, status: 'pending' }), {
+        status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // If processing a job, mark as processing
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId)
     }
 
     // Fair use check (hourly/daily) — skip for service role
