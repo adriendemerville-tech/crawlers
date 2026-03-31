@@ -163,7 +163,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   // idle → asked_details (after diagnosis response, asks "Veux-tu plus de précisions ?")
   // asked_details → asked_fix (if user says no, asks "Veux-tu corriger à la source ?")
   // asked_fix → idle (after user responds)
-  const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix'>('idle');
+  const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix' | 'show_fix_buttons'>('idle');
   const hallucinationDiagTriggered = useRef(false);
 
   // Listen for hallucination diagnosis trigger from FloatingChatBubble
