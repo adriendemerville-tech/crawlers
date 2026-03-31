@@ -28,6 +28,7 @@ import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
+const CocoonContentArchitectModal = lazy(() => import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
 import { ImageQualityCard } from './ImageQualityCard';
