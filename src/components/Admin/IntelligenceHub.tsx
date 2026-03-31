@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Search, Brain, Shield, Bug } from 'lucide-react';
+import { Bot, Search, Brain, Shield, Bug, Award } from 'lucide-react';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { SeoAgentDashboard } from './SeoAgentDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
@@ -7,6 +7,7 @@ import { CtoSupervisor } from './CtoSupervisor';
 import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
 import { AssistantPrecisionCard } from './AssistantPrecisionCard';
 import { RecettageTab } from './RecettageTab';
+import { EeatScoringAdmin } from './EeatScoringAdmin';
 
 export function IntelligenceHub() {
   return (
