@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -143,6 +143,21 @@ export function HallucinationCorrectionModal({
 }: HallucinationCorrectionModalProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const prevOpenRef = useRef(open);
+
+  // When modal closes, dispatch event so Félix can propose diagnosis
+  useEffect(() => {
+    if (prevOpenRef.current && !open) {
+      // Modal just closed — notify Félix after 2s
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('felix-hallucination-diagnosis', {
+          detail: { domain, url: domain }
+        }));
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+    prevOpenRef.current = open;
+  }, [open, domain]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);

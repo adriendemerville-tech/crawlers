@@ -64,6 +64,20 @@ export function FloatingChatBubble() {
     return () => window.removeEventListener('felix-enterprise-contact', handler);
   }, []);
 
+  // Listen for hallucination diagnosis suggestion (2s after modal close)
+  const [showHallucinationBubble, setShowHallucinationBubble] = useState(false);
+  useEffect(() => {
+    const handler = () => {
+      if (isMuted) return;
+      setShowHallucinationBubble(true);
+      playNotificationSound();
+      // Auto-hide after 15s
+      setTimeout(() => setShowHallucinationBubble(false), 15000);
+    };
+    window.addEventListener('felix-hallucination-diagnosis', handler);
+    return () => window.removeEventListener('felix-hallucination-diagnosis', handler);
+  }, [isMuted]);
+
   // Suggest Crawlers quiz to non-logged users on home after 5s
   // Auto-hide the bubble after 10s but keep the notification badge
   const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
@@ -270,6 +284,29 @@ export function FloatingChatBubble() {
         </div>
       )}
 
+      {/* Hallucination diagnosis suggestion bubble */}
+      {showHallucinationBubble && !isOpen && (
+        <div
+          className="fixed bottom-[72px] z-[110] max-w-[260px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group animate-bounce"
+          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+          onClick={() => {
+            setShowHallucinationBubble(false);
+            setIsOpen(true);
+            // Dispatch event so ChatWindow can auto-send the diagnosis question
+            setTimeout(() => window.dispatchEvent(new Event('felix-start-hallucination-diagnosis')), 300);
+          }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowHallucinationBubble(false); }}
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+          🔍 Veux-tu que je t'aide à diagnostiquer cette hallucination ?
+        </div>
+      )}
+
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
@@ -280,7 +317,7 @@ export function FloatingChatBubble() {
         <CrawlersLogo size={44} className="transition-opacity duration-300" />
       </button>
       {/* Notification Badge — outside button to avoid overflow clipping */}
-      {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion) && !isOpen && (
+      {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
         <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
           {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
         </span>
