@@ -94,10 +94,10 @@ function HeroSectionComponent() {
         {/* Tagline */}
         <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
           {language === 'es'
-            ? <>Audite su sitio. Afine la estrategia. Implemente el <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">código</code>.</>
+            ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
-              ? <>Audit your site. Refine the strategy. Implement the <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>
-              : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
+              ? 'Audit your site. Refine the strategy. Automate the solution.'
+              : 'Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
         </h2>
 
         {/* Description */}
