@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, ArrowRight, Lightbulb, BrainCircuit, 
-  CheckCircle2, XCircle, Code2, ExternalLink, FileText, ChevronDown, ChevronUp, Image as ImageIcon
+  CheckCircle2, XCircle, Code2, ExternalLink, FileText, ChevronDown, ChevronUp, Image as ImageIcon, MessageCircle
 } from 'lucide-react';
 import { HallucinationDiagnosis, Discrepancy, HallucinationRecommendation, DiscrepancySourcePage } from './HallucinationCorrectionModal';
 import { useLanguage } from '@/contexts/LanguageContext';
