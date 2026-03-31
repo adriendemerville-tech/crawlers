@@ -220,7 +220,7 @@ const translations = {
   },
 };
 
-export function ExpertAuditDashboard() {
+export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (loading: boolean) => void } = {}) {
   const state = useAuditState();
   const {
     url, setUrl,
@@ -256,6 +256,10 @@ export function ExpertAuditDashboard() {
     handleNavigateToTechnical,
     handleNavigateToStrategic,
   } = state;
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading || isStrategicLoading);
+  }, [isLoading, isStrategicLoading, onLoadingChange]);
   
   const { toast } = useToast();
   const { language } = useLanguage();

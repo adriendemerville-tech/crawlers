@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
@@ -60,6 +60,7 @@ const metaData = {
 };
 
 const ExpertAudit = () => {
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
   const { language } = useLanguage();
   const meta = metaData[language] || metaData.fr;
   const faqItems = faqSchemaData[language] || faqSchemaData.fr;
@@ -148,12 +149,16 @@ const ExpertAudit = () => {
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
-        <ExpertAuditDashboard />
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
-          <NewsCarousel />
-        </Suspense>
-        <ExpertAuditContent />
-        <ExpertAuditFAQ />
+        <ExpertAuditDashboard onLoadingChange={setIsAuditLoading} />
+        {!isAuditLoading && (
+          <>
+            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+              <NewsCarousel />
+            </Suspense>
+            <ExpertAuditContent />
+            <ExpertAuditFAQ />
+          </>
+        )}
       </main>
       <Suspense fallback={null}>
         <Footer />
