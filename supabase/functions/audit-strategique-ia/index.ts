@@ -2731,6 +2731,7 @@ Deno.serve(async (req) => {
       llmData: effectiveToolsData.llm,
       gmbData,
       facebookPageInfo,
+      preCrawlData: preCrawlResult || null,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
