@@ -580,6 +580,7 @@ RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout con
     }
 
 
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 65 }).eq('id', jobId)
     console.log(`[content-advisor] Step 5: LLM synthesis`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) {
