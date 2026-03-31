@@ -690,6 +690,7 @@ Deno.serve(async (req) => {
               ...d,
               verdict: d.verdict || 'absent_data',
               evidence: d.evidence || '',
+              userExplanation: d.userExplanation || generateFallbackUserExplanation(d.verdict || 'absent_data', d.field, lang),
               sourcePages: Array.isArray(d.sourcePages) ? d.sourcePages : [],
             };
             // Add screenshot URL for the first source page if available
