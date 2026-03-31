@@ -470,6 +470,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks + Workbench ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 50 }).eq('id', jobId)
     console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink/workbench data`)
     let existingAuditData: any = null
     let strategicAuditSerpData: any = null
