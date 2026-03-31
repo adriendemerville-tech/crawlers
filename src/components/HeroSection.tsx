@@ -103,6 +103,7 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert */}
         <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
+          <span className="hidden sm:inline-flex shrink-0 items-center text-xs font-semibold text-primary uppercase tracking-wide">Étape 1</span>
           <div className="flex-1 relative">
             <Input
               type="text"
