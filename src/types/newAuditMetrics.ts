@@ -75,6 +75,12 @@ export interface LexicalFootprint {
 export interface ExpertiseSentiment {
   rating: number; // 1-5
   justification: string;
+  social_proof?: {
+    has_testimonials: boolean;
+    has_reviews: boolean;
+    has_portfolio_links: boolean;
+    details?: string;
+  };
 }
 
 export interface RedTeamAnalysis {
