@@ -51,8 +51,21 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
+  const reqUrl = new URL(req.url)
+  const pollJobId = reqUrl.searchParams.get('job_id')
+  if (pollJobId && req.method === 'GET') {
+    const sb = getServiceClient()
+    const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single()
+    if (!job) return new Response(JSON.stringify({ error: 'Job not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (job.status === 'completed') return new Response(JSON.stringify({ success: true, data: job.result_data, status: 'completed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (job.status === 'failed') return new Response(JSON.stringify({ error: job.error_message || 'Job failed', status: 'failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ status: job.status, progress: job.progress || 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  }
+
   const startTime = Date.now()
 
+  let _jobId: string | undefined
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
@@ -80,7 +93,7 @@ Deno.serve(async (req) => {
       user = authUser
     }
 
-    const body: AdvisorInput = await req.json()
+    const body: AdvisorInput & { async?: boolean; _job_id?: string } = await req.json()
     const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment = 'primary' } = body
 
     if (!url || !keyword || !page_type) {
@@ -93,6 +106,55 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: `Invalid page_type. Must be one of: ${PAGE_TYPES.join(', ')}` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // ── ASYNC MODE: Enqueue and self-invoke ──
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+    const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const jobId = body._job_id
+    _jobId = jobId
+    const jobSb = jobId ? getServiceClient() : null
+
+    if (body.async === true && !jobId) {
+      // Create async job and self-invoke
+      const sb = getServiceClient()
+      const { data: job, error: jobError } = await sb
+        .from('async_jobs')
+        .insert({
+          user_id: user.id,
+          function_name: 'content-architecture-advisor',
+          status: 'pending',
+          input_payload: { url, keyword, page_type, tracked_site_id, language_code, location_code, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment },
+        })
+        .select('id')
+        .single()
+
+      if (jobError || !job) {
+        return new Response(JSON.stringify({ error: 'Failed to create async job' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Fire-and-forget: self-invoke with _job_id
+      const syncBody = { ...body, async: false, _job_id: job.id }
+      fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncBody),
+      }).catch(err => console.error('[content-advisor] Async self-invoke failed:', err))
+
+      console.log(`[content-advisor] Async job created: ${job.id} for ${keyword}@${domain}`)
+      return new Response(JSON.stringify({ job_id: job.id, status: 'pending' }), {
+        status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // If processing a job, mark as processing
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId)
     }
 
     // Fair use check (hourly/daily) — skip for service role
@@ -206,6 +268,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 10 }).eq('id', jobId)
     console.log(`[content-advisor] Step 1: Fetching site context + CMS + prompt template for ${domain}`)
     const siteContext = tracked_site_id
       ? await getSiteContext(serviceClient, { trackedSiteId: tracked_site_id, userId: user.id })
@@ -253,6 +316,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 2: Check workbench for cached keyword/SERP data before calling DataForSEO ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 20 }).eq('id', jobId)
     console.log(`[content-advisor] Step 2: Checking workbench for keyword data, then DataForSEO fallback`)
     
     let keywordData: any = null
@@ -369,6 +433,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 3: Competitor scraping via Firecrawl (top 3 SERP) ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 35 }).eq('id', jobId)
     console.log(`[content-advisor] Step 3: Competitor scraping`)
     let competitorInsights: any[] = []
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -407,6 +472,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 4: Existing audit data + Strategic audit SERP + GEO score + LLM visibility + Backlinks + Workbench ──
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 50 }).eq('id', jobId)
     console.log(`[content-advisor] Step 4: Fetching existing audit/strategic/GEO/LLM/backlink/workbench data`)
     let existingAuditData: any = null
     let strategicAuditSerpData: any = null
@@ -516,6 +582,7 @@ RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout con
     }
 
 
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 65 }).eq('id', jobId)
     console.log(`[content-advisor] Step 5: LLM synthesis`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) {
@@ -1259,12 +1326,36 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
 
     console.log(`[content-advisor] Done in ${Date.now() - startTime}ms`)
 
+    // ── ASYNC JOB: Save result if running as background job ──
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({
+        status: 'completed',
+        result_data: result,
+        progress: 100,
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId)
+      console.log(`[content-advisor] Async job ${jobId} completed`)
+    }
+
     return new Response(JSON.stringify({ data: result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
     console.error('[content-advisor] Error:', error)
+
+    // ── ASYNC JOB: Mark as failed ──
+    if (_jobId) {
+      try {
+        const sb = getServiceClient()
+        await sb.from('async_jobs').update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          completed_at: new Date().toISOString(),
+        }).eq('id', _jobId)
+      } catch (_) { /* ignore */ }
+    }
+
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
