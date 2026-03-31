@@ -174,7 +174,7 @@ function FooterComponent() {
             >
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {t3(language, 'Ressources & Guides', 'Resources & Guides', 'Recursos y Guías')}
+                {t3(language, 'Blog', 'Blog', 'Blog')}
               </h3>
               {!isPublicPage && (
                 <ChevronUp className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ml-auto ${resourcesOpen ? '' : 'rotate-180'}`} />
