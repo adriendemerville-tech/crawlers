@@ -94,20 +94,12 @@ function HeroSectionComponent() {
         {/* Tagline */}
         <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
           {language === 'es'
-            ? <>Audite su sitio. Afine la estrategia. Implemente el <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">código</code>.</>
+            ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
-              ? <>Audit your site. Refine the strategy. Implement the <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>
-              : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
+              ? 'Audit your site. Refine the strategy. Automate the solution.'
+              : 'Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
         </h2>
 
-        {/* Description */}
-        <p className="hidden sm:block mx-auto mb-8 max-w-2xl text-base sm:text-lg text-muted-foreground font-medium">
-          {language === 'es'
-            ? 'La única plataforma europea que cubre SEO clásico, GEO (Generative Engine Optimization) y SEO local en una sola herramienta.'
-            : language === 'en'
-              ? 'The only European platform covering classic SEO, GEO (Generative Engine Optimization) and local SEO in a single tool.'
-              : "La seule plateforme européenne qui couvre le SEO classique, le GEO (Generative Engine Optimization) et le SEO local dans un seul outil."}
-        </p>
 
         {/* URL input + CTA Audit Expert */}
         <div className="mt-6 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3" style={{ maxWidth: 'min(85%, 40rem)' }}>
