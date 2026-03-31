@@ -168,6 +168,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
   const specialties = (ctx.media_specialties || []) as string[];
   const isMedia = entityType === 'media' || entityType === 'blog';
 
+  // ── Progressive prompts: simple first, details drip-fed in follow-ups ──
   const prompts: string[] = [];
   const followUps: string[] = [];
 
@@ -189,46 +190,49 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
       "Tu me conseillerais quels sites ou médias pour suivre ça ?",
     );
   } else {
-    // Business / ecommerce / saas
-    if (products) {
-      prompts.push(
-        area
-          ? `Je cherche ${products} ${area} ${season}, t'as des idées ?`
-          : `Je cherche ${products} ${season}, t'as des idées ?`
-      );
-      prompts.push(`C'est quoi le mieux pour ${products} en ce moment ?`);
-    }
-    if (sector) {
-      prompts.push(`J'ai besoin d'un coup de main pour ${sector} ${season}, tu connais des bons ?`);
-      prompts.push(
-        target
-          ? `Je suis ${target} et j'ai besoin de ${sector}, tu recommandes quoi ?`
-          : `J'ai besoin de ${sector}, par quoi je commence ?`
-      );
-    }
-    if (target && products) {
-      prompts.push(`En tant que ${target}, j'hésite pour ${products}, tu me conseilles quoi ?`);
-    }
-    if (entityType === 'ecommerce' && products) {
-      prompts.push(`Je veux acheter ${products} ${season}, c'est quoi les meilleurs sites ?`);
-    }
-    if (entityType === 'saas') {
-      const tool = products || sector || 'un outil';
-      prompts.push(`Tu connais un bon logiciel pour ${tool} ? Je compare les solutions.`);
+    // ── Core need: extract the simplest possible need ──
+    const mainNeed = products
+      ? products.split(',')[0].trim()  // Only first product/service
+      : sector || 'un service professionnel';
+
+    // Q1: Ultra-simple, like a real user would type
+    prompts.push(`Je cherche un outil pour ${mainNeed}, t'as des idées ?`);
+
+    // Q2: Slightly different angle, still simple
+    if (entityType === 'ecommerce') {
+      prompts.push(`C'est quoi le meilleur site pour acheter ${mainNeed} ?`);
+    } else if (entityType === 'saas') {
+      prompts.push(`Tu connais un bon logiciel pour ${mainNeed} ?`);
+    } else {
+      prompts.push(`C'est quoi le mieux pour ${mainNeed} en ce moment ?`);
     }
 
-    if (prompts.length === 0) {
-      const fb = sector || 'un service professionnel';
-      prompts.push(
-        `J'ai besoin d'aide pour ${fb} ${season}, tu connais ?`,
-        `C'est quoi le mieux pour ${fb} en ce moment ?`,
-        `Tu me recommandes quoi pour ${fb} ?`,
-      );
+    // Q3: Alternative simple angle
+    if (sector && sector !== mainNeed) {
+      prompts.push(`J'ai besoin d'aide en ${sector}, tu recommandes quoi ?`);
+    }
+
+    // ── Follow-ups: drip-feed details one by one ──
+    // Each follow-up adds ONE precision, like a real conversation
+    if (area) {
+      followUps.push(`Et ${area}, tu connais des bons ?`);
+    }
+    if (target) {
+      followUps.push(`Je suis ${target}, ça change quelque chose ?`);
+    }
+    // Seasonal follow-up
+    followUps.push(`T'as pas un truc gratuit ${season} ?`);
+    
+    // Product sub-features as individual follow-ups
+    const productParts = products.split(',').map(p => p.trim()).filter(Boolean);
+    if (productParts.length > 1) {
+      for (const part of productParts.slice(1, 3)) {
+        followUps.push(`Et pour ${part}, y'a quoi de bien ?`);
+      }
     }
 
     followUps.push(
-      "Ok et t'aurais pas d'autres idées ?",
-      "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?",
+      "Lequel tu me recommanderais si tu devais en choisir un seul ?",
     );
   }
 
@@ -262,42 +266,43 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       "Which websites or media outlets would you recommend to follow this?",
     );
   } else {
-    if (products) {
-      prompts.push(
-        area
-          ? `I'm looking for ${products} in ${area} ${season}, any recommendations?`
-          : `I need ${products} ${season}, who would you recommend?`
-      );
-      prompts.push(`What's the best option for ${products} right now?`);
-    }
-    if (sector) {
-      prompts.push(`I need help with ${sector} ${season}, do you know any good providers?`);
-      if (target) {
-        prompts.push(`As a ${target}, I need ${sector}, what would you suggest?`);
-      }
-    }
-    if (target && products) {
-      prompts.push(`As a ${target}, I'm comparing ${products} options, what do you think?`);
-    }
-    if (entityType === 'ecommerce' && products) {
-      prompts.push(`I want to buy ${products} ${season}, what are the best sites?`);
-    }
-    if (entityType === 'saas') {
-      const tool = products || sector || 'a tool';
-      prompts.push(`Do you know a good software for ${tool}? I'm comparing solutions.`);
+    const mainNeed = products
+      ? products.split(',')[0].trim()
+      : sector || 'a professional service';
+
+    // Q1: Simple need
+    prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
+
+    // Q2: Simple alternative angle
+    if (entityType === 'ecommerce') {
+      prompts.push(`What's the best site to buy ${mainNeed}?`);
+    } else if (entityType === 'saas') {
+      prompts.push(`Do you know a good software for ${mainNeed}?`);
+    } else {
+      prompts.push(`What's the best option for ${mainNeed} right now?`);
     }
 
-    if (prompts.length === 0) {
-      const fb = sector || 'a professional service';
-      prompts.push(
-        `I need help with ${fb} ${season}, any ideas?`,
-        `What's the best for ${fb} right now?`,
-        `What would you recommend for ${fb}?`,
-      );
+    if (sector && sector !== mainNeed) {
+      prompts.push(`I need help with ${sector}, what would you recommend?`);
+    }
+
+    // Follow-ups: drip-feed one detail at a time
+    if (area) {
+      followUps.push(`What about in ${area}, any good ones?`);
+    }
+    if (target) {
+      followUps.push(`I'm a ${target}, does that change anything?`);
+    }
+    followUps.push(`Is there a free option ${season}?`);
+
+    const productParts = products.split(',').map(p => p.trim()).filter(Boolean);
+    if (productParts.length > 1) {
+      for (const part of productParts.slice(1, 3)) {
+        followUps.push(`And for ${part}, what's good?`);
+      }
     }
 
     followUps.push(
-      "Any other suggestions?",
       "If you had to pick just one, which would you recommend?",
     );
   }
@@ -319,32 +324,41 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
   const area = (ctx.commercial_area || '').trim();
 
   const prompts: string[] = [];
+  const followUps: string[] = [];
 
-  if (products) {
-    prompts.push(
-      area
-        ? `Busco ${products} en ${area} ${season}, ¿conoces buenos proveedores?`
-        : `Necesito ${products} ${season}, ¿a quién me recomiendas?`
-    );
-    prompts.push(`¿Cuál es la mejor opción para ${products} ahora mismo?`);
+  const mainNeed = products
+    ? products.split(',')[0].trim()
+    : sector || 'un servicio profesional';
+
+  prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
+  prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
+
+  if (sector && sector !== mainNeed) {
+    prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
   }
-  if (sector) {
-    prompts.push(`Necesito ayuda con ${sector} ${season}, ¿conoces buenos proveedores?`);
+
+  if (area) {
+    followUps.push(`¿Y en ${area}, conoces buenos?`);
   }
-  if (prompts.length === 0) {
-    const fb = sector || 'un servicio profesional';
-    prompts.push(
-      `Busco un buen proveedor para ${fb} ${season}, ¿alguna recomendación?`,
-      `¿Cuáles son los mejores en ${fb} ahora mismo?`,
-    );
+  if (target) {
+    followUps.push(`Soy ${target}, ¿cambia algo?`);
   }
+  followUps.push(`¿Hay alguna opción gratis ${season}?`);
+
+  const productParts = products.split(',').map(p => p.trim()).filter(Boolean);
+  if (productParts.length > 1) {
+    for (const part of productParts.slice(1, 3)) {
+      followUps.push(`¿Y para ${part}, qué hay de bueno?`);
+    }
+  }
+
+  followUps.push(
+    "Si tuvieras que elegir solo uno, ¿cuál recomendarías?",
+  );
 
   return {
     prompts: [...new Set(prompts)].slice(0, maxPrompts),
-    followUps: [
-      "¿Alguna otra sugerencia?",
-      "Si tuvieras que elegir solo uno, ¿cuál recomendarías?",
-    ],
+    followUps,
   };
 }
 
