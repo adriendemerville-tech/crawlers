@@ -2561,7 +2561,7 @@ Deno.serve(async (req) => {
         console.warn('[audit-strategique-ia] Could not resolve tracked_site for pre-crawl:', e);
       }
 
-      const [metadataResult, rkOverviewResult, preCrawlResult] = await Promise.all([
+      const [metadataResult, rkOverviewResult, preCrawlRes] = await Promise.all([
         safe('metadata', () => extractPageMetadata(url)),
         safe('ranked_keywords', () => {
           // We need location code — default to France
@@ -2573,6 +2573,7 @@ Deno.serve(async (req) => {
         }),
         safe('pre_crawl', () => preCrawlForAudit(getServiceClient(), domainWithoutWww, trackedSiteIdForCrawl, userIdForCrawl)),
       ]);
+      preCrawlResult = preCrawlRes as PreCrawlResult | null;
 
       // Format pre-crawl context for injection into prompt
       const preCrawlContext = preCrawlResult ? formatPreCrawlForPrompt(preCrawlResult as PreCrawlResult) : '';
