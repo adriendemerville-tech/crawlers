@@ -30,6 +30,10 @@ export function IntelligenceHub() {
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Supervisor</span>
           </TabsTrigger>
+          <TabsTrigger value="eeat" className="flex-1 gap-2">
+            <Award className="h-4 w-4" />
+            <span className="hidden sm:inline">E-E-A-T</span>
+          </TabsTrigger>
           <TabsTrigger value="predictions" className="flex-1 gap-2">
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Prédictions</span>
