@@ -118,7 +118,17 @@ function getDepthRingColor(depth: number): string {
 function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
   if (!nodes.length) return null;
 
-  const sorted = [...nodes].sort((a, b) => a.depth - b.depth);
+  // Prioritize actual homepage: page_type 'homepage' first, then root-level URL ("/"), then lowest depth
+  const sorted = [...nodes].sort((a, b) => {
+    const aIsHome = a.page_type === 'homepage' ? 0 : 1;
+    const bIsHome = b.page_type === 'homepage' ? 0 : 1;
+    if (aIsHome !== bIsHome) return aIsHome - bIsHome;
+    // Prefer root URL (domain with just "/" path)
+    const aIsRoot = /^https?:\/\/[^/]+\/?$/.test(a.url) ? 0 : 1;
+    const bIsRoot = /^https?:\/\/[^/]+\/?$/.test(b.url) ? 0 : 1;
+    if (aIsRoot !== bIsRoot) return aIsRoot - bIsRoot;
+    return a.depth - b.depth;
+  });
   const homeNode = sorted[0];
 
   const urlMap = new Map<string, SemanticNode>();
