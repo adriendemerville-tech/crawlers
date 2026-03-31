@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now()
 
+  let _jobId: string | undefined
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
