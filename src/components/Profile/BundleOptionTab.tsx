@@ -87,7 +87,7 @@ function getFeatureColor(feature: string): string {
 }
 
 // ── Catalog view (marketplace) ──────────────────────────────────
-function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void }) {
+function BundleCatalog({ apis, onSubscribe, activeApiIds = [] }: { apis: ApiItem[]; onSubscribe: (ids: string[]) => void; activeApiIds?: string[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [segmentSort, setSegmentSort] = useState<'asc' | 'desc' | null>(null);
   const [featureSort, setFeatureSort] = useState<'asc' | 'desc' | null>(null);
@@ -196,9 +196,11 @@ function BundleCatalog({ apis, onSubscribe }: { apis: ApiItem[]; onSubscribe: (i
             {sortedApis.map(api => (
               <tr
                 key={api.id}
-                className={`border-b border-border/10 transition-colors hover:bg-muted/20 ${
-                  selected.has(api.id) ? 'bg-primary/[0.03]' : ''
-                }`}
+                className={`border-b transition-colors hover:bg-muted/20 ${
+                  activeApiIds.includes(api.id)
+                    ? 'border-l-2 border-l-emerald-500/60 border-b-border/10 bg-emerald-500/[0.03]'
+                    : 'border-b-border/10'
+                } ${selected.has(api.id) ? 'bg-primary/[0.03]' : ''}`}
               >
                 <td className="px-4 py-3 text-sm font-medium">
                   <span className="flex items-center gap-2">
@@ -393,7 +395,7 @@ export function BundleOptionTab() {
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {view === 'catalog' || !hasActiveApis ? (
-          <BundleCatalog apis={apis} onSubscribe={handleSubscribe} />
+          <BundleCatalog apis={apis} onSubscribe={handleSubscribe} activeApiIds={subscription?.selected_apis || []} />
         ) : (
           <div className="space-y-4">
             {(() => {
