@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, ArrowRight, Lightbulb, BrainCircuit, 
-  CheckCircle2, XCircle, Code2, ExternalLink, FileText, ChevronDown, ChevronUp, Image as ImageIcon
+  CheckCircle2, XCircle, Code2, ExternalLink, FileText, ChevronDown, ChevronUp, Image as ImageIcon, MessageCircle
 } from 'lucide-react';
 import { HallucinationDiagnosis, Discrepancy, HallucinationRecommendation, DiscrepancySourcePage } from './HallucinationCorrectionModal';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -218,6 +218,14 @@ function DiscrepancyCard({ disc, index, t, fieldLabel }: {
         <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 mb-2">
           📋 {disc.evidence}
         </p>
+      )}
+
+      {/* User-facing explanation — pedagogical */}
+      {disc.userExplanation && (
+        <div className="flex items-start gap-2 text-xs bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-2">
+          <MessageCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+          <p className="text-foreground/80 leading-relaxed">{disc.userExplanation}</p>
+        </div>
       )}
 
       {/* Source pages + Screenshot expandable */}

@@ -33,13 +33,14 @@ interface Discrepancy {
   explanation: string;
   verdict: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
   evidence?: string;
+  userExplanation?: string;
   sourcePages?: Array<{
     url: string;
     title: string;
-    element: string; // e.g. "title", "h1", "meta_description", "schema_org", "body_content"
-    excerpt: string; // the problematic text excerpt
+    element: string;
+    excerpt: string;
   }>;
-  screenshotUrl?: string; // thumbnail of the page with the issue
+  screenshotUrl?: string;
 }
 
 interface HallucinationRecommendation {
@@ -359,7 +360,12 @@ Pour chaque incohérence, tu dois attribuer un VERDICT parmi :
    Evidence requise : explique la faille de raisonnement.
 
 Tu dois retourner un JSON structuré avec:
-- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, sourcePages: [{url: "URL de la page problématique", title: "titre de la page", element: "title"|"h1"|"meta_description"|"schema_org"|"body_content"|"canonical"|"og_tags", excerpt: "le texte exact qui pose problème"}]}
+- discrepancies: Array de {field, original, corrected, impact: "high"|"medium"|"low", explanation, verdict: "misleading_data"|"absent_data"|"training_bias"|"reasoning_error", evidence: string, userExplanation: string, sourcePages: [{url, title, element, excerpt}]}
+  - userExplanation : un texte PÉDAGOGIQUE destiné à l'utilisateur final (non technique) qui explique en langage simple POURQUOI l'IA s'est trompée. 
+    - Si absent_data : explique que le site ne fournit pas assez d'informations sur ce point, donc l'IA a dû deviner. Propose ce que l'utilisateur peut ajouter concrètement.
+    - Si training_bias : explique que l'IA possède un historique ou des connaissances antérieures sur ce domaine qui contredisent la réalité actuelle du site. Précise que c'est une limitation connue des LLM et que renforcer les signaux du site corrigera ça.
+    - Si misleading_data : explique quel élément du site a induit l'IA en erreur et comment le corriger.
+    - Si reasoning_error : explique la faille de logique de l'IA de façon accessible.
 - confusionSources: Array de strings décrivant les causes de confusion
 - recommendations: Array de {id, category: "metadata"|"content"|"schema"|"authority", priority: "critical"|"important"|"optional", title, description, codeSnippet?}
 - analysisNarrative: Un paragraphe de diagnostic
@@ -684,6 +690,7 @@ Deno.serve(async (req) => {
               ...d,
               verdict: d.verdict || 'absent_data',
               evidence: d.evidence || '',
+              userExplanation: d.userExplanation || generateFallbackUserExplanation(d.verdict || 'absent_data', d.field, lang),
               sourcePages: Array.isArray(d.sourcePages) ? d.sourcePages : [],
             };
             // Add screenshot URL for the first source page if available
@@ -722,6 +729,7 @@ Deno.serve(async (req) => {
               explanation: `L'IA avait détecté "${originalValues[field] || 'aucune valeur'}" mais la réalité est "${correctedValues[field]}".`,
               verdict,
               evidence: verdict === 'absent_data' ? 'Donnée non trouvée dans le crawl' : 'Basé sur analyse du crawl',
+              userExplanation: generateFallbackUserExplanation(verdict, field, lang),
               sourcePages,
             };
             if (sourcePages.length > 0) {
@@ -891,4 +899,40 @@ function findSourcePagesForField(
   }
 
   return results;
+}
+
+function generateFallbackUserExplanation(verdict: string, field: string, lang: string): string {
+  const fieldName = field === 'sector' ? (lang === 'en' ? 'sector' : 'secteur')
+    : field === 'valueProposition' ? (lang === 'en' ? 'value proposition' : 'proposition de valeur')
+    : field === 'targetAudience' ? (lang === 'en' ? 'target audience' : 'audience cible')
+    : field;
+
+  if (lang === 'en') {
+    switch (verdict) {
+      case 'absent_data':
+        return `Your site doesn't provide enough information about its ${fieldName}. Without clear signals, the AI had to guess based on similar sites. Adding this information explicitly (Schema.org, meta tags, dedicated page) will help AI models understand your site correctly.`;
+      case 'training_bias':
+        return `The AI has prior knowledge about your domain that contradicts your current site. This is a known limitation of language models — they rely on historical training data. Strengthening your site's signals (structured data, clear content) will override this bias over time.`;
+      case 'misleading_data':
+        return `An element on your site sent a confusing signal about your ${fieldName}. The AI interpreted it literally. Correcting or clarifying this element will prevent future misunderstandings.`;
+      case 'reasoning_error':
+        return `The AI had the right data but drew a wrong conclusion about your ${fieldName}. This is a reasoning limitation — not a data issue.`;
+      default:
+        return '';
+    }
+  }
+
+  // French (default)
+  switch (verdict) {
+    case 'absent_data':
+      return `Votre site ne fournit pas assez d'informations sur son ${fieldName}. Sans signaux clairs, l'IA a dû deviner en se basant sur des sites similaires. Ajouter cette information explicitement (Schema.org, balises meta, page dédiée) aidera les modèles d'IA à comprendre correctement votre site.`;
+    case 'training_bias':
+      return `L'IA possède un historique ou des connaissances antérieures sur votre domaine qui contredisent la réalité actuelle de votre site. C'est une limitation connue des modèles de langage : ils s'appuient sur leurs données d'entraînement. En renforçant les signaux de votre site (données structurées, contenu clair), ce biais sera corrigé progressivement.`;
+    case 'misleading_data':
+      return `Un élément de votre site a envoyé un signal trompeur concernant votre ${fieldName}. L'IA l'a interprété littéralement. Corriger ou clarifier cet élément évitera les malentendus futurs.`;
+    case 'reasoning_error':
+      return `L'IA disposait des bonnes données mais a tiré une conclusion erronée sur votre ${fieldName}. C'est une limitation de raisonnement, pas un problème de données.`;
+    default:
+      return '';
+  }
 }

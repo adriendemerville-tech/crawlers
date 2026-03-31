@@ -66,6 +66,7 @@ export interface Discrepancy {
   explanation: string;
   verdict?: 'misleading_data' | 'absent_data' | 'training_bias' | 'reasoning_error';
   evidence?: string;
+  userExplanation?: string;
   sourcePages?: DiscrepancySourcePage[];
   screenshotUrl?: string;
 }
