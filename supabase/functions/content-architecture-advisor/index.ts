@@ -1352,7 +1352,7 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
           status: 'failed',
           error_message: error instanceof Error ? error.message : 'Unknown error',
           completed_at: new Date().toISOString(),
-        }).eq('id', jobId)
+        }).eq('id', _jobId)
       } catch (_) { /* ignore */ }
     }
 
