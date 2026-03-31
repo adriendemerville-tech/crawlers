@@ -2530,6 +2530,7 @@ Deno.serve(async (req) => {
       gmbData = cachedContext.gmbData || null;
       facebookPageInfo = cachedContext.facebookPageInfo || { pageUrl: null, pageName: null, found: false };
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
+      preCrawlResult = cachedContext.preCrawlData || null;
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
 
