@@ -135,7 +135,7 @@ async function loadCrawlData(supabase: any, domain: string): Promise<CrawlSnapsh
     if (crawl?.id) {
       const { data: pages } = await supabase
         .from('crawl_pages')
-        .select('url, title, h1, meta_description, word_count, has_schema_org, is_indexable')
+        .select('url, title, h1, meta_description, word_count, has_schema_org, schema_org_types, is_indexable, body_text_truncated, canonical_url, has_og')
         .eq('crawl_id', crawl.id)
         .order('seo_score', { ascending: false })
         .limit(20);
@@ -150,8 +150,11 @@ async function loadCrawlData(supabase: any, domain: string): Promise<CrawlSnapsh
             h1: p.h1 || '',
             metaDescription: p.meta_description || '',
             wordCount: p.word_count || 0,
-            schemaTypes: [],
+            schemaTypes: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
             isIndexable: p.is_indexable !== false,
+            bodyExcerpt: (p.body_text_truncated || '').slice(0, 300),
+            canonicalUrl: p.canonical_url || '',
+            hasOg: p.has_og || false,
           })),
         };
       }
