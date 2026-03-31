@@ -2532,9 +2532,35 @@ Deno.serve(async (req) => {
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
 
-      // ── WAVE 1: Metadata + Ranked Keywords (independent, parallel) ──
-      console.log('📊 WAVE 1: Metadata + Ranked Keywords (parallel)...');
-      const [metadataResult, rkOverviewResult] = await Promise.all([
+      // ── WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (independent, parallel) ──
+      console.log('📊 WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (parallel)...');
+
+      // Resolve tracked_site_id for pre-crawl (GA4 cross-reference)
+      let trackedSiteIdForCrawl: string | null = null;
+      let userIdForCrawl: string | null = null;
+      try {
+        const svcSb = getServiceClient();
+        const authHeader = req.headers.get('Authorization') || '';
+        if (authHeader) {
+          const userSb = getUserClient(authHeader);
+          const { data: { user: authUser } } = await userSb.auth.getUser();
+          if (authUser?.id) {
+            userIdForCrawl = authUser.id;
+            const { data: site } = await svcSb
+              .from('tracked_sites')
+              .select('id')
+              .ilike('domain', `%${domainWithoutWww}%`)
+              .eq('user_id', authUser.id)
+              .limit(1)
+              .maybeSingle();
+            if (site) trackedSiteIdForCrawl = site.id;
+          }
+        }
+      } catch (e) {
+        console.warn('[audit-strategique-ia] Could not resolve tracked_site for pre-crawl:', e);
+      }
+
+      const [metadataResult, rkOverviewResult, preCrawlResult] = await Promise.all([
         safe('metadata', () => extractPageMetadata(url)),
         safe('ranked_keywords', () => {
           // We need location code — default to France
@@ -2544,7 +2570,14 @@ Deno.serve(async (req) => {
           const locInfo = KNOWN_LOCATIONS[locKey] || KNOWN_LOCATIONS['france'];
           return fetchRankedKeywords(domain, locInfo.code, locInfo.lang);
         }),
+        safe('pre_crawl', () => preCrawlForAudit(getServiceClient(), domainWithoutWww, trackedSiteIdForCrawl, userIdForCrawl)),
       ]);
+
+      // Format pre-crawl context for injection into prompt
+      const preCrawlContext = preCrawlResult ? formatPreCrawlForPrompt(preCrawlResult as PreCrawlResult) : '';
+      if (preCrawlContext) {
+        console.log(`🕷️ Pre-crawl context: ${(preCrawlResult as PreCrawlResult).pages.length} pages (${(preCrawlResult as PreCrawlResult).source})`);
+      }
 
       pageContentContext = metadataResult?.context || '';
       brandSignals = metadataResult?.brandSignals || [];
