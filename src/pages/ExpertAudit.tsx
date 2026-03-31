@@ -60,6 +60,7 @@ const metaData = {
 };
 
 const ExpertAudit = () => {
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
   const { language } = useLanguage();
   const meta = metaData[language] || metaData.fr;
   const faqItems = faqSchemaData[language] || faqSchemaData.fr;
