@@ -196,9 +196,11 @@ function BundleCatalog({ apis, onSubscribe, activeApiIds = [] }: { apis: ApiItem
             {sortedApis.map(api => (
               <tr
                 key={api.id}
-                className={`border-b border-border/10 transition-colors hover:bg-muted/20 ${
-                  selected.has(api.id) ? 'bg-primary/[0.03]' : ''
-                }`}
+                className={`border-b transition-colors hover:bg-muted/20 ${
+                  activeApiIds.includes(api.id)
+                    ? 'border-l-2 border-l-emerald-500/60 border-b-border/10 bg-emerald-500/[0.03]'
+                    : 'border-b-border/10'
+                } ${selected.has(api.id) ? 'bg-primary/[0.03]' : ''}`}
               >
                 <td className="px-4 py-3 text-sm font-medium">
                   <span className="flex items-center gap-2">
