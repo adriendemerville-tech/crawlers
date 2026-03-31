@@ -64,6 +64,20 @@ export function FloatingChatBubble() {
     return () => window.removeEventListener('felix-enterprise-contact', handler);
   }, []);
 
+  // Listen for hallucination diagnosis suggestion (2s after modal close)
+  const [showHallucinationBubble, setShowHallucinationBubble] = useState(false);
+  useEffect(() => {
+    const handler = () => {
+      if (isMuted) return;
+      setShowHallucinationBubble(true);
+      playNotificationSound();
+      // Auto-hide after 15s
+      setTimeout(() => setShowHallucinationBubble(false), 15000);
+    };
+    window.addEventListener('felix-hallucination-diagnosis', handler);
+    return () => window.removeEventListener('felix-hallucination-diagnosis', handler);
+  }, [isMuted]);
+
   // Suggest Crawlers quiz to non-logged users on home after 5s
   // Auto-hide the bubble after 10s but keep the notification badge
   const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
