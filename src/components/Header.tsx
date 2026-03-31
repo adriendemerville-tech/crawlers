@@ -98,6 +98,8 @@ const translations = {
     wallet: 'Mi Billetera',
     credits: 'créditos',
     logout: 'Cerrar sesión',
+    myAccount: 'Mi cuenta',
+    help: 'Ayuda',
     login: 'Iniciar sesión',
     signup: 'Registrarse',
     back: 'Volver',
