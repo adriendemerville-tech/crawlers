@@ -900,3 +900,39 @@ function findSourcePagesForField(
 
   return results;
 }
+
+function generateFallbackUserExplanation(verdict: string, field: string, lang: string): string {
+  const fieldName = field === 'sector' ? (lang === 'en' ? 'sector' : 'secteur')
+    : field === 'valueProposition' ? (lang === 'en' ? 'value proposition' : 'proposition de valeur')
+    : field === 'targetAudience' ? (lang === 'en' ? 'target audience' : 'audience cible')
+    : field;
+
+  if (lang === 'en') {
+    switch (verdict) {
+      case 'absent_data':
+        return `Your site doesn't provide enough information about its ${fieldName}. Without clear signals, the AI had to guess based on similar sites. Adding this information explicitly (Schema.org, meta tags, dedicated page) will help AI models understand your site correctly.`;
+      case 'training_bias':
+        return `The AI has prior knowledge about your domain that contradicts your current site. This is a known limitation of language models — they rely on historical training data. Strengthening your site's signals (structured data, clear content) will override this bias over time.`;
+      case 'misleading_data':
+        return `An element on your site sent a confusing signal about your ${fieldName}. The AI interpreted it literally. Correcting or clarifying this element will prevent future misunderstandings.`;
+      case 'reasoning_error':
+        return `The AI had the right data but drew a wrong conclusion about your ${fieldName}. This is a reasoning limitation — not a data issue.`;
+      default:
+        return '';
+    }
+  }
+
+  // French (default)
+  switch (verdict) {
+    case 'absent_data':
+      return `Votre site ne fournit pas assez d'informations sur son ${fieldName}. Sans signaux clairs, l'IA a dû deviner en se basant sur des sites similaires. Ajouter cette information explicitement (Schema.org, balises meta, page dédiée) aidera les modèles d'IA à comprendre correctement votre site.`;
+    case 'training_bias':
+      return `L'IA possède un historique ou des connaissances antérieures sur votre domaine qui contredisent la réalité actuelle de votre site. C'est une limitation connue des modèles de langage : ils s'appuient sur leurs données d'entraînement. En renforçant les signaux de votre site (données structurées, contenu clair), ce biais sera corrigé progressivement.`;
+    case 'misleading_data':
+      return `Un élément de votre site a envoyé un signal trompeur concernant votre ${fieldName}. L'IA l'a interprété littéralement. Corriger ou clarifier cet élément évitera les malentendus futurs.`;
+    case 'reasoning_error':
+      return `L'IA disposait des bonnes données mais a tiré une conclusion erronée sur votre ${fieldName}. C'est une limitation de raisonnement, pas un problème de données.`;
+    default:
+      return '';
+  }
+}
