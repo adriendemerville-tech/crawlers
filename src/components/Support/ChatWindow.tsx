@@ -461,6 +461,90 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
     const messageText = newMessage.trim();
 
+    // Hallucination diagnosis conversational flow intercept
+    if (hallucinationDiagFlow !== 'idle') {
+      const lower = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isNo = /^(non|no|nan|nope|pas besoin|c'est bon|ca va|ça va|ok merci|merci)$/i.test(lower) || lower.startsWith('non');
+      const isYes = /^(oui|yes|ok|d'accord|bien sur|volontiers|go|vas-y|absolument)$/i.test(lower) || lower.startsWith('oui');
+
+      const userMsg: ChatMessage = { role: 'user', content: messageText, timestamp: new Date().toISOString() };
+
+      if (hallucinationDiagFlow === 'asked_details') {
+        if (isNo) {
+          // User doesn't want details → ask about fixing
+          const fixMsg: ChatMessage = {
+            role: 'assistant',
+            content: "D'accord ! 👌\n\n🛠️ **Veux-tu que nous corrigions à la source ce défaut d'information qui prête à confusion pour les IA ?**\n\nJe peux te générer les correctifs (métadonnées, Schema.org, contenu) à implémenter sur ton site pour que les LLMs interprètent correctement tes informations.",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, fixMsg]);
+          setNewMessage('');
+          setHallucinationDiagFlow('asked_fix');
+          return;
+        } else if (isYes) {
+          // User wants more details → send to sav-agent for detailed explanation, then re-ask
+          setMessages(prev => [...prev, userMsg]);
+          setNewMessage('');
+          // Let it fall through to sav-agent, but after response, ask the fix question
+          setSending(true);
+          try {
+            const { data, error } = await supabase.functions.invoke('sav-agent', {
+              body: {
+                messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+                conversation_id: conversationId,
+                user_id: user?.id || null,
+                guest_mode: !user,
+                screen_context: { route: location.pathname },
+                language,
+              },
+            });
+            if (error) throw error;
+            const detailMsg: ChatMessage = {
+              role: 'assistant',
+              content: (data.reply || "Voici les détails du diagnostic.") + "\n\n🛠️ **Veux-tu que nous corrigions à la source ce défaut d'information qui prête à confusion pour les IA ?**",
+              timestamp: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev, detailMsg]);
+            if (data.conversation_id && !conversationId) setConversationId(data.conversation_id);
+          } catch {
+            const fallback: ChatMessage = {
+              role: 'assistant',
+              content: "🛠️ **Veux-tu que nous corrigions à la source ce défaut d'information qui prête à confusion pour les IA ?**",
+              timestamp: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev, fallback]);
+          } finally {
+            setSending(false);
+          }
+          setHallucinationDiagFlow('asked_fix');
+          return;
+        }
+        // If neither yes/no, fall through to normal handling
+        setHallucinationDiagFlow('idle');
+      }
+
+      if (hallucinationDiagFlow === 'asked_fix') {
+        if (isYes) {
+          const goMsg: ChatMessage = {
+            role: 'assistant',
+            content: "🚀 **Parfait !** Je prépare les correctifs.\n\nRendez-vous dans la section **Scripts** de votre Console pour voir les corrections générées (métadonnées, Schema.org, balises OG). Vous pourrez les déployer en un clic via notre SDK ou les copier manuellement.\n\n💡 *Astuce : les corrections de Schema.org et métadonnées sont les plus efficaces pour corriger les hallucinations des LLMs.*",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, goMsg]);
+        } else {
+          const okMsg: ChatMessage = {
+            role: 'assistant',
+            content: "Pas de souci ! 👍 N'hésite pas si tu changes d'avis. Les informations du diagnostic restent disponibles dans ton rapport d'audit.",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, okMsg]);
+        }
+        setNewMessage('');
+        setHallucinationDiagFlow('idle');
+        return;
+      }
+    }
+
     // Bug report: waiting for the actual report message
     if (bugReportMode === 'waiting') {
       await submitBugReport(messageText);
