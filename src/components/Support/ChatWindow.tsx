@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -163,7 +163,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   // idle → asked_details (after diagnosis response, asks "Veux-tu plus de précisions ?")
   // asked_details → asked_fix (if user says no, asks "Veux-tu corriger à la source ?")
   // asked_fix → idle (after user responds)
-  const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix'>('idle');
+  const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix' | 'show_fix_buttons'>('idle');
   const hallucinationDiagTriggered = useRef(false);
 
   // Listen for hallucination diagnosis trigger from FloatingChatBubble
@@ -527,10 +527,13 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         if (isYes) {
           const goMsg: ChatMessage = {
             role: 'assistant',
-            content: "🚀 **Parfait !** Je prépare les correctifs.\n\nRendez-vous dans la section **Scripts** de votre Console pour voir les corrections générées (métadonnées, Schema.org, balises OG). Vous pourrez les déployer en un clic via notre SDK ou les copier manuellement.\n\n💡 *Astuce : les corrections de Schema.org et métadonnées sont les plus efficaces pour corriger les hallucinations des LLMs.*",
+            content: "🚀 **Parfait !** Choisis le mode de correction adapté ci-dessous.\n\n🔘 **Content Architect** — pour corriger le contenu, les titres, H1, meta descriptions\n🔘 **Code Architect** — pour corriger le Schema.org, les balises OG, canonical, données structurées\n\n*Clique sur le bouton correspondant et le diagnostic sera pré-chargé automatiquement.*",
             timestamp: new Date().toISOString(),
           };
           setMessages(prev => [...prev, userMsg, goMsg]);
+          setNewMessage('');
+          setHallucinationDiagFlow('show_fix_buttons');
+          return;
         } else {
           const okMsg: ChatMessage = {
             role: 'assistant',
@@ -1022,6 +1025,37 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                       setMessages(prev => [...prev, confirmMsg]);
                     }}
                   />
+                )}
+
+                {hallucinationDiagFlow === 'show_fix_buttons' && (
+                  <div className="flex justify-start">
+                    <div className="flex flex-col gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('open-hallucination-fix', { detail: { target: 'content' } }));
+                          const msg: ChatMessage = { role: 'assistant', content: "📝 **Content Architect** ouvert avec le diagnostic pré-chargé. Bonne correction !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, msg]);
+                          setHallucinationDiagFlow('idle');
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs font-medium hover:bg-primary/10 transition-colors"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        Ouvrir Content Architect
+                      </button>
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('open-hallucination-fix', { detail: { target: 'code' } }));
+                          const msg: ChatMessage = { role: 'assistant', content: "⚙️ **Code Architect** ouvert avec le diagnostic pré-chargé. Bonne correction !", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, msg]);
+                          setHallucinationDiagFlow('idle');
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-foreground text-xs font-medium hover:bg-primary/10 transition-colors"
+                      >
+                        <Code className="h-3.5 w-3.5 text-primary" />
+                        Ouvrir Code Architect
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 {bugReportMode === 'prompt' && (

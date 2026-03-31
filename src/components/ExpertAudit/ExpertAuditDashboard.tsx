@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
+const CocoonContentArchitectModal = lazy(() => import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal })));
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
 import { ImageQualityCard } from './ImageQualityCard';
@@ -271,8 +272,22 @@ export function ExpertAuditDashboard() {
   const [fromCocoon, setFromCocoon] = useState(false);
   const [cocoonDomain, setCocoonDomain] = useState<string>('');
   const [completedAuditsCount, setCompletedAuditsCount] = useState(0);
+  const [showContentArchitectFromDiag, setShowContentArchitectFromDiag] = useState(false);
 
-  // Fetch completed audits count for current user
+  // Listen for hallucination fix routing from Félix chat
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.target === 'code') {
+        setIsCodeEditorOpen(true);
+      } else if (detail?.target === 'content') {
+        setShowContentArchitectFromDiag(true);
+      }
+    };
+    window.addEventListener('open-hallucination-fix', handler);
+    return () => window.removeEventListener('open-hallucination-fix', handler);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -1611,6 +1626,27 @@ export function ExpertAuditDashboard() {
           console.log('✅ Payment verified, buttons unlocked');
         }}
       />
+
+      {/* Content Architect from hallucination diagnosis */}
+      {showContentArchitectFromDiag && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitectFromDiag}
+            onClose={() => setShowContentArchitectFromDiag(false)}
+            nodes={[]}
+            domain={result?.domain || url}
+            prefillUrl={result?.url || url}
+            draftData={hallucinationDiagnosis ? {
+              hallucinationDiagnosis,
+              prefillPrompt: hallucinationDiagnosis.discrepancies
+                ?.filter((d: any) => ['title', 'h1', 'meta_description', 'body_content'].includes(d.sourcePages?.[0]?.element))
+                .map((d: any) => `Corriger "${d.field}" : "${d.original}" → "${d.corrected}" (${d.explanation})`)
+                .join('\n') || ''
+            } : null}
+            colorTheme="green"
+          />
+        </Suspense>
+      )}
     </div>
     </StrategicErrorBoundary>
   );
