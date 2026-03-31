@@ -264,7 +264,7 @@ GÉNÈRE un JSON:
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
 "lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph","social_proof":{"has_testimonials":true/false,"has_reviews":true/false,"has_portfolio_links":true/false,"details":"1ph"}},
 "red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
 
 RÈGLES:
@@ -305,7 +305,7 @@ GÉNÈRE un JSON:
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
 "lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph","social_proof":{"has_testimonials":true/false,"has_reviews":true/false,"has_portfolio_links":true/false,"details":"1ph"}},
 "red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
 RÈGLES:
@@ -320,7 +320,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
 - lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
 - red_team: 3 failles/objections client sceptique.
 - missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site.
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP.

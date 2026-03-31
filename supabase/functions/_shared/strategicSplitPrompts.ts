@@ -117,7 +117,7 @@ GÉNÈRE un JSON avec UNIQUEMENT ces clés:
 "quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
 "summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
 "lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph","social_proof":{"has_testimonials":true/false,"has_reviews":true/false,"has_portfolio_links":true/false,"details":"1ph"}},
 "red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
 RÈGLES:
@@ -126,7 +126,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots.
 - lexical_footprint: jargonRatio+concreteRatio=100. "jargon" = UNIQUEMENT formules vides/corporate.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
 - red_team: 3 failles/objections client sceptique.
 - JSON pur, sans virgules traînantes`;
 }

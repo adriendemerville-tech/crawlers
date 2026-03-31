@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, GraduationCap, Lightbulb } from 'lucide-react';
+import { Star, GraduationCap, Lightbulb, CheckCircle2, XCircle, Badge } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ExpertiseSentiment } from '@/types/newAuditMetrics';
 
@@ -9,6 +9,7 @@ interface ExpertiseSentimentCardProps {
 
 export function ExpertiseSentimentCard({ data }: ExpertiseSentimentCardProps) {
   const labels = ['', 'Générique / IA', 'Peu incarné', 'Modéré', 'Expérimenté', 'Expert de terrain'];
+  const sp = data.social_proof;
 
   return (
     <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -17,7 +18,10 @@ export function ExpertiseSentimentCard({ data }: ExpertiseSentimentCardProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <GraduationCap className="h-4.5 w-4.5 text-primary" />
           </div>
-          Sentiment d'Expertise (E-E-A-T Tone)
+          <div className="flex flex-col">
+            <span>Sentiment d'Expertise (E-E-A-T Tone)</span>
+            <span className="text-[11px] font-normal text-muted-foreground">(estimation partielle réalisée sur une seule page)</span>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -38,6 +42,31 @@ export function ExpertiseSentimentCard({ data }: ExpertiseSentimentCardProps) {
         <p className="text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3 italic">
           {data.justification}
         </p>
+
+        {/* Social Proof Signals */}
+        {sp && (
+          <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Preuves sociales détectées</p>
+            <div className="space-y-1.5">
+              {[
+                { label: 'Témoignages / études de cas', value: sp.has_testimonials },
+                { label: 'Avis clients', value: sp.has_reviews },
+                { label: 'Liens vers des réalisations concrètes', value: sp.has_portfolio_links },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 text-sm">
+                  {item.value 
+                    ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> 
+                    : <XCircle className="h-4 w-4 text-destructive/60 shrink-0" />
+                  }
+                  <span className={item.value ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+            {sp.details && (
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{sp.details}</p>
+            )}
+          </div>
+        )}
 
         {/* GBP Tip */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/50 border border-accent">
