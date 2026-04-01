@@ -310,7 +310,7 @@ export function FloatingChatBubble() {
       {/* Floating Button — Crawlers robot logo */}
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-5 z-[110] h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
+        className={`fixed bottom-5 z-[110] h-14 w-14 rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
         style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
