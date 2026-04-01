@@ -199,9 +199,27 @@ async function runEeatPipeline(
   console.log(`[check-eeat] 🕷️ Phase 1: Pre-crawl for ${domain}...`);
   if (jobId) await supabase.from('async_jobs').update({ progress: 10 }).eq('id', jobId);
 
-  const preCrawlResult = await preCrawlForAudit(supabase, domain, trackedSiteId);
+  let preCrawlResult = await preCrawlForAudit(supabase, domain, trackedSiteId);
+  
+  // If no pages crawled, try with www. prefix as fallback
+  if (preCrawlResult.pages.length === 0) {
+    console.log(`[check-eeat] ⚠️ 0 pages crawled for ${domain}, retrying with www.${domain}...`);
+    preCrawlResult = await preCrawlForAudit(supabase, `www.${domain}`, trackedSiteId);
+  }
+
   const pagesContext = formatPreCrawlForPrompt(preCrawlResult);
   const pagesCount = preCrawlResult.pages.length;
+
+  // If still 0 pages, return a clear error instead of a misleading 0-score report
+  if (pagesCount === 0) {
+    console.error(`[check-eeat] ❌ No pages could be crawled for ${domain}`);
+    return {
+      success: false,
+      error: `Impossible de crawler le domaine "${domain}". Vérifiez que le domaine est correct et accessible.`,
+      score: 0,
+      crawlInfo: { pagesAnalyzed: 0, source: 'intermediate', crawledAt: new Date().toISOString() },
+    };
+  }
 
   console.log(`[check-eeat] 📄 ${pagesCount} pages crawled (source: ${preCrawlResult.source})`);
   if (jobId) await supabase.from('async_jobs').update({ progress: 30 }).eq('id', jobId);
