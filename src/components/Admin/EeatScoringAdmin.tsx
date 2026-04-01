@@ -247,6 +247,7 @@ export function EeatScoringAdmin() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
+        <TooltipProvider delayDuration={200}>
           {Object.entries(CATEGORY_META).map(([catKey, meta]) => {
             const items = groupedCriteria[catKey] || [];
             const CatIcon = meta.icon;
