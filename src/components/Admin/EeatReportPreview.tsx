@@ -227,6 +227,21 @@ ${Object.entries(SIGNAL_LABELS).map(([key, label]) => {
 <div>${result.trustSignals.map(s => `<span class="tag ok">✓ ${s}</span>`).join('')}</div>
 <h2>Signaux manquants</h2>
 <div>${result.missingSignals.map(s => `<span class="tag miss">✗ ${s}</span>`).join('')}</div>
+${result.backlinkData ? `<h2>🔗 Données Backlinks (réelles)</h2>
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.referringDomains}</div><p style="font-size:.7rem;color:#94a3b8">Domaines référents</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.domainRank}</div><p style="font-size:.7rem;color:#94a3b8">Domain Rank</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.backlinksTotal.toLocaleString()}</div><p style="font-size:.7rem;color:#94a3b8">Backlinks totaux</p></div>
+</div>
+${result.backlinkData.anchorDistribution?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">Top ancres</p>${result.backlinkData.anchorDistribution.slice(0, 5).map(a => `<div style="display:flex;justify-content:space-between;font-size:.75rem;margin:.2rem 0"><span>"${a.anchor}"</span><span style="color:#94a3b8">${a.backlinks} liens</span></div>`).join('')}</div>` : ''}
+<p style="font-size:.6rem;color:#64748b">Source : DataForSEO · Données en temps réel</p>` : ''}
+${result.gbpData ? `<h2>📍 Google Business Profile (réel)</h2>
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+<div class="card" style="text-align:center"><div class="val amber">${result.gbpData.avgRating}★</div><p style="font-size:.7rem;color:#94a3b8">Note moyenne</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.gbpData.totalReviews}</div><p style="font-size:.7rem;color:#94a3b8">Avis Google</p></div>
+<div class="card" style="text-align:center"><div style="font-size:.85rem;font-weight:600">${result.gbpData.category || 'N/A'}</div><p style="font-size:.7rem;color:#94a3b8">Catégorie</p></div>
+</div>
+<p style="font-size:.6rem;color:#64748b">Source : Google Business Profile · Données vérifiées</p>` : ''}
 ${result.issues.length ? `<h2>Problèmes identifiés</h2><ul style="padding-left:1.2rem;color:#fca5a5;font-size:.85rem">${result.issues.map(i => `<li style="margin:.3rem 0">${i}</li>`).join('')}</ul>` : ''}
 <h2>🔬 Méthodologie</h2>
 <div class="card" style="margin-bottom:1rem">
