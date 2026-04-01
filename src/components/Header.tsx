@@ -274,99 +274,82 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* Audit */}
-          {!isAuditExpertPage && (
-            <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-sm">Audit</span>
+          {/* Crawl */}
+          {isAuditExpertPage ? (
+            <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+                <Bug className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Crawl</span>
+              </Button>
+            </a>
+          ) : (
+            <Link to="/app/site-crawl">
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+                <Bug className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Crawl</span>
               </Button>
             </Link>
           )}
 
-          {/* Cocoon — desktop only */}
-          {!isCocoonPage && (
-            isAuditExpertPage ? (
-              <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                  <span className="text-sm font-semibold">Cocoon</span>
-                </Button>
-              </a>
-            ) : (
-              <Link to="/app/cocoon">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                  <span className="text-sm font-semibold">Cocoon</span>
-                </Button>
-              </Link>
-            )
-          )}
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* Crawl */}
-          {!isCrawlPage && (
-            isAuditExpertPage ? (
-              <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
-                  <Bug className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Crawl</span>
-                </Button>
-              </a>
-            ) : (
-              <Link to="/app/site-crawl">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60">
-                  <Bug className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Crawl</span>
-                </Button>
-              </Link>
-            )
-          )}
-
-          {/* Matrice */}
-          {!isMatricePage && (
-            isAuditExpertPage ? (
-              <a href="/matrice" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-                  <Grid3X3 className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Matrice</span>
-                </Button>
-              </a>
-            ) : (
-              <Link to="/matrice">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-                  <Grid3X3 className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Matrice</span>
-                </Button>
-              </Link>
-            )
-          )}
-
-          {/* Content Architect button — admin only, on console page */}
-          {isProfilePage && isAdmin && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowContentArchitect(true)}
-              className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">BETA</span>
-              <PenLine className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Content</span>
+          {/* Audit */}
+          {isAuditExpertPage ? (
+            <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10 border border-[#3b82f6]">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-semibold">Audit</span>
             </Button>
+          ) : (
+            <Link to="/audit-expert">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm font-semibold">Audit</span>
+              </Button>
+            </Link>
           )}
+
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+
+          {/* Cocoon */}
+          {isAuditExpertPage ? (
+            <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+                <span className="text-sm font-semibold">Cocoon</span>
+              </Button>
+            </a>
+          ) : (
+            <Link to="/app/cocoon">
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+                <span className="text-sm font-semibold">Cocoon</span>
+              </Button>
+            </Link>
+          )}
+
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+
+          {/* Content Architect */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowContentArchitect(true)}
+            className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+          >
+            <PenLine className="h-3.5 w-3.5" />
+            <span className="text-sm font-semibold">Content</span>
+          </Button>
 
           {/* Console — for paid users, hidden on console page */}
           {!isProfilePage && (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) && (
             isAuditExpertPage ? (
               <a href="/app/console" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="text-sm">{t.console}</span>
                 </Button>
               </a>
             ) : (
               <Link to="/app/console">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="text-sm">{t.console}</span>
                 </Button>
