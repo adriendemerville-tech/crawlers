@@ -1301,3 +1301,11 @@ function CocoonContent() {
     </>
   );
 }
+
+export default function Cocoon() {
+  return (
+    <DesktopOnlyGate featureName="Cocoon (graphe sémantique)">
+      <CocoonContent />
+    </DesktopOnlyGate>
+  );
+}
