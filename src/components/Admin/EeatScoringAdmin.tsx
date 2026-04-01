@@ -42,6 +42,19 @@ const METHOD_LABELS: Record<string, string> = {
   llm: '🤖 LLM',
 };
 
+const METHOD_TOOLTIPS: Record<string, string> = {
+  telemetry: 'Données mesurées automatiquement par crawl HTML (balises, Schema.org, liens, signaux de fraîcheur). Aucune IA impliquée.',
+  heuristic: 'Score calculé par des règles pondérées à partir de signaux bruts (ex: présence d\'auteur + page à propos = +20 pts).',
+  llm: 'Analyse sémantique par IA (originalité, pertinence, qualité rédactionnelle). Coûte des crédits.',
+};
+
+const CATEGORY_TOOLTIPS: Record<string, string> = {
+  experience: 'Preuves que l\'auteur a vécu ou pratiqué ce dont il parle (témoignages, cas concrets, captures).',
+  expertise: 'Qualifications, profondeur technique et précision du contenu sur le sujet traité.',
+  authoritativeness: 'Reconnaissance externe : backlinks, citations, mentions par des sources faisant autorité.',
+  trustworthiness: 'Signaux de confiance : HTTPS, mentions légales, contact, politique de confidentialité, avis vérifiés.',
+};
+
 export function EeatScoringAdmin() {
   const { toast } = useToast();
   const [criteria, setCriteria] = useState<EeatCriterion[]>([]);
