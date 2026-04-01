@@ -277,6 +277,7 @@ Réponds UNIQUEMENT en JSON valide :
       source: preCrawlResult.source,
       crawledAt: preCrawlResult.crawledAt,
       sitemapUrlsFound: preCrawlResult.totalSitemapUrls,
+      crawledUrls: preCrawlResult.pages.map((p: any) => p.url).filter(Boolean),
     },
   };
 }

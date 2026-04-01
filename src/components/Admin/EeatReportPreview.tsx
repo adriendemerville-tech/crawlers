@@ -33,6 +33,7 @@ interface EeatScanResult {
     source: string;
     crawledAt: string;
     sitemapUrlsFound: number;
+    crawledUrls?: string[];
   } | null;
   scannedAt: string;
 }
