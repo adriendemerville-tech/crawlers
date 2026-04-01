@@ -18,7 +18,7 @@ export function FAQSection() {
             <HelpCircle className="h-4 w-4 text-primary" aria-hidden="true" />
             <span>{t.faq.badge}</span>
           </div>
-          <h2 id="faq-heading" className="text-3xl font-bold text-foreground">
+          <h2 id="faq-heading" className="text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
             {t.faq.title}
           </h2>
         </div>
