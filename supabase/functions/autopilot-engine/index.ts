@@ -754,6 +754,7 @@ Deno.serve(async (req: Request) => {
                   keyword: payload.keyword || payload.target_keyword || 'SEO',
                   page_type: payload.page_type || 'article',
                   tracked_site_id: config.tracked_site_id,
+                  user_id: config.user_id, // ← Pass real user_id for async job creation
                   language_code: payload.language_code || 'fr',
                   location_code: payload.location_code || 2250,
                   async: true, // ← Force async mode
