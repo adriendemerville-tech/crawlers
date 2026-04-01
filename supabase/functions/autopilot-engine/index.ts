@@ -551,7 +551,13 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
+        // ═══ SKIP function execution during prescribe V2 phase ═══
+        // Prescribe V2 produces cms_actions/fixes via LLM tool calls in the orchestrator itself.
+        // These are stored in the payload and will be executed during the 'execute' phase.
+        // Running functions (like content-architecture-advisor) here is redundant and causes errors.
+        const isPrescribeV2 = phase === 'prescribe' && decision.action?.payload?._prescribe_v2 === true;
+        
+        if (!isPrescribeV2 && config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
             try {
               // ── Skip cms-push-code: it's auto-chained after generate-corrective-code ──
@@ -748,6 +754,7 @@ Deno.serve(async (req: Request) => {
                   keyword: payload.keyword || payload.target_keyword || 'SEO',
                   page_type: payload.page_type || 'article',
                   tracked_site_id: config.tracked_site_id,
+                  user_id: config.user_id, // ← Pass real user_id for async job creation
                   language_code: payload.language_code || 'fr',
                   location_code: payload.location_code || 2250,
                   async: true, // ← Force async mode

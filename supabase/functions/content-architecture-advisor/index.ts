@@ -81,7 +81,18 @@ Deno.serve(async (req) => {
 
     let user: { id: string; email?: string } | null = null
     if (isServiceRole) {
-      user = { id: 'service-role', email: 'system@crawlers.fr' }
+      // For service role calls (from autopilot-engine), use user_id from body if provided
+      // This is needed because async_jobs.user_id is uuid NOT NULL
+      const bodyForUserId = await req.clone().json().catch(() => ({}))
+      const serviceUserId = bodyForUserId.user_id || bodyForUserId._service_user_id
+      if (serviceUserId && serviceUserId !== 'service-role') {
+        user = { id: serviceUserId, email: 'system@crawlers.fr' }
+      } else {
+        // Fallback: look up any admin user to use as owner
+        const sb = getServiceClient()
+        const { data: adminProfile } = await sb.from('profiles').select('id').eq('is_admin', true).limit(1).maybeSingle()
+        user = { id: adminProfile?.id || '00000000-0000-0000-0000-000000000000', email: 'system@crawlers.fr' }
+      }
     } else {
       const userClient = getUserClient(authHeader)
       const { data: { user: authUser }, error: userError } = await userClient.auth.getUser()
