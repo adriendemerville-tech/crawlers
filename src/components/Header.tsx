@@ -338,6 +338,19 @@ export function Header() {
             <span className="text-sm font-semibold">Content</span>
           </Button>
 
+          {/* Matrice d'audit - console only */}
+          {location.pathname === '/app/console' && (
+            <>
+              <div className="w-6 shrink-0" />
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span className="text-sm">Matrice</span>
+                </Button>
+              </Link>
+            </>
+          )}
+
           {/* Console — for paid users, hidden on console page */}
           {!isProfilePage && (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) && (
             isAuditExpertPage ? (
