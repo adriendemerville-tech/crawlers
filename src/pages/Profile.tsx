@@ -225,7 +225,7 @@ function ProfileContent() {
                 </TabsTrigger>
                 <TabsTrigger value="drafts" className="flex-1 gap-2">
                   <FileEdit className="h-4 w-4" />
-                  <span className="hidden sm:inline">Brouillons</span>
+                  <span className="hidden sm:inline">Content</span>
                 </TabsTrigger>
                 {isProUser && (
                   <TabsTrigger
