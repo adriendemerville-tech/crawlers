@@ -26,8 +26,8 @@ export function ToolTabs({
   };
 
   return (
-    <nav className="flex flex-col items-center gap-4 px-4 pb-4" aria-label="Outils disponibles">
-        <div className="inline-flex flex-wrap justify-center gap-1 rounded-lg border border-border bg-card p-1">
+    <nav className="flex flex-col items-center gap-3 sm:gap-4 px-3 sm:px-4 pb-4" aria-label="Outils disponibles">
+        <div className="inline-flex flex-wrap justify-center gap-1 rounded-lg border border-border bg-card p-1 max-w-full overflow-x-auto">
         <button
           data-tour="tab-crawlers"
           onClick={() => onTabChange('crawlers')}
