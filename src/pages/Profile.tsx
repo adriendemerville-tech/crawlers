@@ -20,7 +20,7 @@ const MyCrawls = lazy(() => import('@/components/Profile/MyCrawls').then(m => ({
 const GMBDashboard = lazy(() => import('@/components/Profile/GMBDashboard').then(m => ({ default: m.GMBDashboard })));
 const MyReportsTab = lazy(() => import('@/components/Profile/MyReportsTab').then(m => ({ default: m.MyReportsTab })));
 const BundleOptionTab = lazy(() => import('@/components/Profile/BundleOptionTab').then(m => ({ default: m.BundleOptionTab })));
-const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
+const MyContent = lazy(() => import('@/components/Profile/MyContent').then(m => ({ default: m.MyContent })));
 const MarinaConsoleTab = lazy(() => import('@/components/Profile/MarinaConsoleTab').then(m => ({ default: m.MarinaConsoleTab })));
 const SeaSeoBridgeTab = lazy(() => import('@/components/Profile/SeaSeoBridgeTab').then(m => ({ default: m.SeaSeoBridgeTab })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
@@ -225,7 +225,7 @@ function ProfileContent() {
                 </TabsTrigger>
                 <TabsTrigger value="drafts" className="flex-1 gap-2">
                   <FileEdit className="h-4 w-4" />
-                  <span className="hidden sm:inline">Brouillons</span>
+                  <span className="hidden sm:inline">Content</span>
                 </TabsTrigger>
                 {isProUser && (
                   <TabsTrigger
@@ -323,7 +323,7 @@ function ProfileContent() {
                 )}
 
                 <TabsContent value="drafts">
-                  <MyDrafts />
+                  <MyContent />
                 </TabsContent>
 
                 <TabsContent value="marina">
