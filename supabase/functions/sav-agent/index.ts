@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
+import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1127,7 +1128,7 @@ ${screen_context}
       ? `\n\n# LANGUE OBLIGATOIRE\nL'utilisateur a choisi la langue "${clientLanguage === 'es' ? 'español' : 'English'}" dans l'interface. Tu DOIS répondre UNIQUEMENT dans cette langue. Ne réponds JAMAIS en français sauf si l'utilisateur écrit en français.\n`
       : '';
 
-    const fullSystemPrompt = SYSTEM_PROMPT + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
