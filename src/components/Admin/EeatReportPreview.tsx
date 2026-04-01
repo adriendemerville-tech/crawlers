@@ -33,6 +33,7 @@ interface EeatScanResult {
     source: string;
     crawledAt: string;
     sitemapUrlsFound: number;
+    crawledUrls?: string[];
   } | null;
   scannedAt: string;
 }
@@ -92,6 +93,16 @@ ${CATEGORY_META.map(c => {
 <h2>Signaux manquants</h2>
 <div>${result.missingSignals.map(s => `<span class="tag miss">✗ ${s}</span>`).join('')}</div>
 ${result.issues.length ? `<h2>Problèmes identifiés</h2><ul style="padding-left:1.2rem;color:#fca5a5;font-size:.85rem">${result.issues.map(i => `<li style="margin:.3rem 0">${i}</li>`).join('')}</ul>` : ''}
+<h2>🔬 Méthodologie</h2>
+<div class="card" style="margin-bottom:1rem">
+<h3 style="margin-bottom:.5rem">Méthodologie générale E-E-A-T</h3>
+<p style="font-size:.8rem;color:#94a3b8;line-height:1.5">L'audit E-E-A-T évalue un site selon les 4 piliers des Quality Rater Guidelines de Google : Experience (vécu terrain), Expertise (compétence technique), Authoritativeness (reconnaissance externe) et Trustworthiness (signaux de confiance). L'analyse combine une télémétrie automatique (crawl HTML, détection Schema.org, balises, liens) et une analyse sémantique par IA (qualité rédactionnelle, originalité, pertinence).</p>
+</div>
+<div class="card" style="margin-bottom:1rem">
+<h3 style="margin-bottom:.5rem">Méthodologie spécifique</h3>
+<p style="font-size:.8rem;color:#94a3b8;line-height:1.5">${result.crawlInfo ? `<strong>${result.crawlInfo.pagesAnalyzed} pages</strong> analysées (${result.crawlInfo.source === 'cache' ? 'crawl complet récent en cache' : 'crawl intermédiaire dédié'}).${result.crawlInfo.sitemapUrlsFound > 0 ? ` ${result.crawlInfo.sitemapUrlsFound} URLs sitemap détectées.` : ''}${result.crawlInfo.crawledAt ? ` Crawl du ${new Date(result.crawlInfo.crawledAt).toLocaleDateString('fr-FR')}.` : ''}` : 'Analyse mono-page (page d\'accueil uniquement).'}</p>
+${result.crawlInfo?.crawledUrls?.length ? `<div style="margin-top:.5rem"><p style="font-size:.75rem;color:#94a3b8;font-weight:600;margin-bottom:.25rem">Pages crawlées :</p><ul style="padding-left:1.2rem;font-size:.75rem;color:#64748b">${result.crawlInfo.crawledUrls.map(u => `<li style="margin:.2rem 0"><a href="${u}" style="color:#3b82f6;text-decoration:none">${u}</a></li>`).join('')}</ul></div>` : ''}
+</div>
 <h2>Glossaire</h2>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.75rem">
 ${[
@@ -127,21 +138,29 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
   const handleShare = async () => {
     setSharing(true);
     try {
-      const shareId = crypto.randomUUID();
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const filePath = `eeat/${shareId}.html`;
-
-      const { error } = await supabase.storage
-        .from('shared-reports')
-        .upload(filePath, blob, { contentType: 'text/html', upsert: false });
+      const htmlContent = buildReportHTML(result);
+      const { data: responseData, error } = await supabase.functions.invoke('share-actions', {
+        body: {
+          action: 'create',
+          type: 'eeat',
+          url: result.url,
+          data: result,
+          language: 'fr',
+          preRenderedHtml: htmlContent,
+        },
+      });
       if (error) throw error;
 
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from('shared-reports')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 7);
-      if (signedError || !signedData?.signedUrl) throw signedError || new Error('No URL');
+      const shareId = responseData?.shareId;
+      if (!shareId) throw new Error('No share ID returned');
 
-      await navigator.clipboard.writeText(signedData.signedUrl);
+      // Resolve to signed URL
+      const { data: resolveData, error: resolveError } = await supabase.functions.invoke('share-actions', {
+        body: { action: 'resolve', shareId },
+      });
+      if (resolveError || !resolveData?.signedUrl) throw resolveError || new Error('No signed URL');
+
+      await navigator.clipboard.writeText(resolveData.signedUrl);
       setCopied(true);
       toast({ title: 'Lien copié !', description: 'Valide 7 jours.' });
       setTimeout(() => setCopied(false), 3000);
@@ -295,6 +314,50 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             </ul>
           </div>
         )}
+
+        {/* Methodology */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-sm font-semibold text-foreground">🔬 Méthodologie</h3>
+          <div className="rounded-lg border border-border p-4 bg-muted/30 text-sm space-y-3">
+            <div>
+              <p className="font-medium text-foreground mb-1">Méthodologie générale E-E-A-T</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                L'audit E-E-A-T évalue un site selon les 4 piliers des Quality Rater Guidelines de Google : 
+                Experience (vécu terrain), Expertise (compétence technique), Authoritativeness (reconnaissance externe) 
+                et Trustworthiness (signaux de confiance). L'analyse combine une télémétrie automatique (crawl HTML, 
+                détection Schema.org, balises, liens) et une analyse sémantique par IA (qualité rédactionnelle, 
+                originalité, pertinence). Chaque critère est pondéré selon son impact SEO réel.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground mb-1">Méthodologie spécifique de ce rapport</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                {result.crawlInfo ? (
+                  <>
+                    <strong>{result.crawlInfo.pagesAnalyzed} pages</strong> ont été analysées 
+                    ({result.crawlInfo.source === 'cache' ? 'crawl complet récent en cache' : 'crawl intermédiaire dédié'}).
+                    {result.crawlInfo.sitemapUrlsFound > 0 && <> {result.crawlInfo.sitemapUrlsFound} URLs détectées dans le sitemap.</>}
+                    {result.crawlInfo.crawledAt && <> Crawl effectué le {new Date(result.crawlInfo.crawledAt).toLocaleDateString('fr-FR')}.</>}
+                  </>
+                ) : (
+                  <>Analyse mono-page (page d'accueil uniquement).</>
+                )}
+              </p>
+              {result.crawlInfo?.crawledUrls && result.crawlInfo.crawledUrls.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-medium text-foreground text-xs mb-1">Pages crawlées :</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
+                    {result.crawlInfo.crawledUrls.map((u, i) => (
+                      <li key={i} className="truncate">
+                        <a href={u} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{u}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Glossary */}
         <div className="space-y-3 pt-2">
