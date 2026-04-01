@@ -133,30 +133,32 @@ export function EeatScoringAdmin() {
 
         if (pollData.status === 'completed' && pollData.result) {
           const data = pollData.result;
+          if (data?.success === false) {
+            toast({ title: 'Erreur de crawl', description: data.error || 'Impossible de crawler le domaine. Vérifiez l\'URL.', variant: 'destructive' });
+            break;
+          }
           toast({ title: 'Scan E-E-A-T terminé', description: `Score global : ${data?.score ?? '?'}/100 — ${data?.crawlInfo?.pagesAnalyzed || '?'} pages analysées` });
           console.log('[EEAT Scan Result]', data);
-          if (data?.success) {
-            setScanResult({
-              url: scanUrl.trim(),
-              score: data.score,
-              experience: data.experience,
-              expertise: data.expertise,
-              authoritativeness: data.authoritativeness,
-              trustworthiness: data.trustworthiness,
-              signals: data.signals,
-              trustSignals: data.trustSignals || [],
-              missingSignals: data.missingSignals || [],
-              issues: data.issues || [],
-              strengths: data.strengths || [],
-              recommendations: data.recommendations || [],
-              backlinkData: data.backlinkData || null,
-              gbpData: data.gbpData || null,
-              dataSources: data.dataSources || [],
-              crawlInfo: data.crawlInfo || null,
-              scannedAt: new Date().toISOString(),
-            });
-            setActiveTab('report');
-          }
+          setScanResult({
+            url: scanUrl.trim(),
+            score: data.score,
+            experience: data.experience,
+            expertise: data.expertise,
+            authoritativeness: data.authoritativeness,
+            trustworthiness: data.trustworthiness,
+            signals: data.signals,
+            trustSignals: data.trustSignals || [],
+            missingSignals: data.missingSignals || [],
+            issues: data.issues || [],
+            strengths: data.strengths || [],
+            recommendations: data.recommendations || [],
+            backlinkData: data.backlinkData || null,
+            gbpData: data.gbpData || null,
+            dataSources: data.dataSources || [],
+            crawlInfo: data.crawlInfo || null,
+            scannedAt: new Date().toISOString(),
+          });
+          setActiveTab('report');
           break;
         }
 
