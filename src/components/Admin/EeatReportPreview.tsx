@@ -29,6 +29,21 @@ interface EeatScanResult {
   issues: string[];
   strengths?: string[];
   recommendations?: string[];
+  backlinkData?: {
+    referringDomains: number;
+    backlinksTotal: number;
+    domainRank: number;
+    referringIps: number;
+    referringSubnets: number;
+    anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
+  } | null;
+  gbpData?: {
+    avgRating: number;
+    totalReviews: number;
+    category: string;
+    locationName: string;
+  } | null;
+  dataSources?: string[];
   crawlInfo?: {
     pagesAnalyzed: number;
     source: string;
