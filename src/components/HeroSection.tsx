@@ -49,7 +49,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-6">
+    <section className="relative flex min-h-[70vh] sm:min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 sm:px-6">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -57,7 +57,7 @@ function HeroSectionComponent() {
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
         {/* Animated headline */}
-        <h1 className="mb-6 text-2xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center whitespace-nowrap">
+        <h1 className="mb-6 text-xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center sm:whitespace-nowrap">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
@@ -92,7 +92,7 @@ function HeroSectionComponent() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mb-10 text-xl font-medium font-display text-white sm:mb-12 sm:text-3xl leading-relaxed">
+        <h2 className="mb-10 text-base font-medium font-display text-white sm:mb-12 sm:text-3xl leading-relaxed px-2 sm:px-0">
           {language === 'es'
             ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
@@ -114,7 +114,7 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}`);
                 }
               }}
-              className="h-16 rounded-xl pl-5 pr-14 text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-12 sm:h-16 rounded-xl pl-4 pr-12 text-base sm:text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
             <Search className="absolute right-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
@@ -123,7 +123,7 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-16 gap-2 rounded-xl border-amber-400 border-2 px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
+              className="h-12 sm:h-16 gap-2 rounded-xl border-amber-400 border-2 px-6 sm:px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap w-full sm:w-auto"
             >
               <div className="flex flex-col items-start leading-tight">
                 <span className="font-bold text-amber-400 text-lg">
@@ -136,7 +136,7 @@ function HeroSectionComponent() {
         </div>
 
         {/* Audit Expert info */}
-        <p className="mt-10 text-lg font-medium text-muted-foreground text-right w-full" style={{ maxWidth: 'min(90%, 44rem)', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p className="mt-6 sm:mt-10 text-sm sm:text-lg font-medium text-muted-foreground text-center sm:text-right w-full" style={{ maxWidth: 'min(90%, 44rem)', marginLeft: 'auto', marginRight: 'auto' }}>
           {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
       </div>

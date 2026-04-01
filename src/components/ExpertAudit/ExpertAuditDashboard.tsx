@@ -1342,7 +1342,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
 
   return (
     <StrategicErrorBoundary onReset={handleNewAudit}>
-    <div className="container mx-auto px-4 py-10 max-w-5xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10 max-w-5xl">
       {/* Fatal error banner — after 4 consecutive failures */}
       {fatalAuditError && (
         <motion.div
@@ -1414,7 +1414,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           <Sparkles className="h-3 w-3 mr-1.5" />
           {t.badge}
         </Badge>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+        <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
           {t.titleLine1}<br />{t.titleLine2}
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">

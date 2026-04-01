@@ -188,7 +188,7 @@ export function Header() {
   return (
     <>
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-card/80 backdrop-blur-md" role="banner">
-      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
+      <nav className="mx-auto flex h-14 sm:h-20 max-w-6xl items-center justify-between px-3 sm:px-4" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
@@ -272,7 +272,7 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Navigation links - hidden on mobile */}
+        {/* Center: Navigation links - desktop */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {/* Audit */}
           {!isAuditExpertPage && (
@@ -284,7 +284,7 @@ export function Header() {
             </Link>
           )}
 
-          {/* Cocoon */}
+          {/* Cocoon — desktop only */}
           {!isCocoonPage && (
             isAuditExpertPage ? (
               <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
@@ -519,7 +519,29 @@ export function Header() {
         </Suspense>
       )}
     </header>
-    <div className="h-20" aria-hidden="true" />
+    {/* Mobile scrollable navigation — only mobile-friendly features */}
+    <nav className="sm:hidden fixed top-14 left-0 right-0 z-40 border-b border-border bg-card/90 backdrop-blur-md overflow-x-auto" aria-label="Navigation mobile">
+      <div className="flex items-center gap-1 px-3 py-1.5 min-w-max">
+        <Link to="/audit-expert" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isAuditExpertPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+          <Sparkles className="h-3.5 w-3.5" />
+          Audit
+        </Link>
+        <Link to="/app/site-crawl" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isCrawlPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+          <Bug className="h-3.5 w-3.5" />
+          Crawl
+        </Link>
+        <Link to="/app/audit-compare" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${location.pathname === '/app/audit-compare' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+          <Scale className="h-3.5 w-3.5" />
+          Comparé
+        </Link>
+        <Link to="/matrice" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isMatricePage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+          <Grid3X3 className="h-3.5 w-3.5" />
+          Matrice
+        </Link>
+      </div>
+    </nav>
+    <div className="h-14 sm:h-20" aria-hidden="true" />
+    <div className="h-10 sm:hidden" aria-hidden="true" /> {/* Extra spacer for mobile second nav bar */}
     <>
       {isAdmin && showContentArchitect && createPortal(
         <Suspense fallback={null}>

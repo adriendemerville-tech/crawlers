@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
+import { DesktopOnlyGate } from '@/components/DesktopOnlyGate';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -405,8 +406,10 @@ class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError
 
 export default function Profile() {
   return (
-    <ProfileErrorBoundary>
-      <ProfileContent />
-    </ProfileErrorBoundary>
+    <DesktopOnlyGate featureName="La Console">
+      <ProfileErrorBoundary>
+        <ProfileContent />
+      </ProfileErrorBoundary>
+    </DesktopOnlyGate>
   );
 }

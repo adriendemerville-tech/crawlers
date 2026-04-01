@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
@@ -181,7 +182,7 @@ async function findReadySite(sites: any[], userId: string) {
   return null;
 }
 
-export default function Cocoon() {
+function CocoonContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -1298,5 +1299,13 @@ export default function Cocoon() {
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+export default function Cocoon() {
+  return (
+    <DesktopOnlyGate featureName="Cocoon (graphe sémantique)">
+      <CocoonContent />
+    </DesktopOnlyGate>
   );
 }
