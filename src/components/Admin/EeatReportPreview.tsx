@@ -19,10 +19,21 @@ interface EeatScanResult {
     aboutPage: boolean;
     contactInfo: boolean;
     legalNotice: boolean;
+    schemaOrg?: boolean;
+    blogSection?: boolean;
+    testimonials?: boolean;
   };
   trustSignals: string[];
   missingSignals: string[];
   issues: string[];
+  strengths?: string[];
+  recommendations?: string[];
+  crawlInfo?: {
+    pagesAnalyzed: number;
+    source: string;
+    crawledAt: string;
+    sitemapUrlsFound: number;
+  } | null;
   scannedAt: string;
 }
 
