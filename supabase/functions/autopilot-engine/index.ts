@@ -551,7 +551,13 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        if (config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
+        // ═══ SKIP function execution during prescribe phase ═══
+        // Prescribe V2 produces cms_actions/fixes via LLM tool calls — they are stored in the payload
+        // and will be executed during the 'execute' phase. Running functions here would be redundant
+        // (and causes errors with async jobs).
+        const skipExecution = (phase === 'prescribe' || phase === 'audit' || phase === 'diagnose' || phase === 'validate');
+        
+        if (!skipExecution && config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
           for (const funcName of decision.action.functions) {
             try {
               // ── Skip cms-push-code: it's auto-chained after generate-corrective-code ──
