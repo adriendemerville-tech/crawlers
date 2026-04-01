@@ -114,7 +114,7 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}`);
                 }
               }}
-              className="h-16 rounded-xl pl-5 pr-14 text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-12 sm:h-16 rounded-xl pl-4 pr-12 text-base sm:text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
             <Search className="absolute right-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
