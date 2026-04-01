@@ -700,3 +700,90 @@ function aggregateSignals(pages: any[]): AggregatedSignals {
     hasBlogSection, hasTestimonials, isHttps,
   };
 }
+
+// ══════════════════════════════════════════════════════
+// Auto-correct domain: test DNS variants silently
+// ══════════════════════════════════════════════════════
+async function autoCorrectDomain(domain: string): Promise<string> {
+  // Quick check: does the original domain resolve?
+  if (await domainResolves(domain)) return domain;
+
+  console.log(`[check-eeat] 🔍 Domain "${domain}" doesn't resolve, trying variants...`);
+
+  // Generate variants to try
+  const variants = generateDomainVariants(domain);
+
+  for (const variant of variants) {
+    if (variant === domain) continue;
+    if (await domainResolves(variant)) {
+      console.log(`[check-eeat] ✅ Found working variant: ${variant}`);
+      return variant;
+    }
+  }
+
+  // None resolved — return original (will fail gracefully later)
+  return domain;
+}
+
+async function domainResolves(domain: string): Promise<boolean> {
+  try {
+    const resp = await fetch(`https://${domain}/`, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(5000),
+    });
+    return resp.status < 500;
+  } catch {
+    // Also try http
+    try {
+      const resp = await fetch(`http://${domain}/`, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(5000),
+      });
+      return resp.status < 500;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function generateDomainVariants(domain: string): string[] {
+  const variants = new Set<string>();
+  const parts = domain.split('.');
+  if (parts.length < 2) return [domain];
+
+  const name = parts.slice(0, -1).join('.');
+  const tld = parts[parts.length - 1];
+
+  // 1. Remove trailing 's' (iktrackers → iktracker)
+  if (name.endsWith('s')) {
+    variants.add(`${name.slice(0, -1)}.${tld}`);
+  }
+
+  // 2. Add trailing 's'
+  variants.add(`${name}s.${tld}`);
+
+  // 3. TLD swaps (.fr ↔ .com, .net, .org)
+  const tlds = ['fr', 'com', 'net', 'org', 'io'];
+  for (const t of tlds) {
+    if (t !== tld) {
+      variants.add(`${name}.${t}`);
+      // Also without trailing 's'
+      if (name.endsWith('s')) variants.add(`${name.slice(0, -1)}.${t}`);
+    }
+  }
+
+  // 4. Hyphen variants (my-site ↔ mysite)
+  if (name.includes('-')) {
+    variants.add(`${name.replace(/-/g, '')}.${tld}`);
+  } else if (name.length > 6) {
+    // Try adding common split points (not very reliable, so limited)
+  }
+
+  // 5. www. prefix
+  variants.add(`www.${domain}`);
+  if (name.endsWith('s')) variants.add(`www.${name.slice(0, -1)}.${tld}`);
+
+  return [...variants];
+}
