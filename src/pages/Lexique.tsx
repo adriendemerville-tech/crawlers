@@ -131,6 +131,88 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Embedding", definition: "Représentation vectorielle dense d'un texte capturant sa signification sémantique, utilisée pour la recherche et la similarité.", category: "ai" },
     { term: "Vector Database", definition: "Base de données optimisée pour stocker et rechercher des embeddings, utilisée dans les systèmes RAG.", category: "ai" },
     { term: "Perplexity", definition: "Métrique mesurant la qualité d'un modèle de langage. Aussi le nom d'un moteur de recherche IA populaire.", category: "ai" },
+
+    // ══════════════════════════════════════════════════════════════
+    // Crawlers.fr — Fonctionnalités, APIs & Métriques propriétaires
+    // ══════════════════════════════════════════════════════════════
+
+    // Outils & modules Crawlers.fr
+    { term: "Audit Expert", definition: "Audit SEO technique complet de Crawlers.fr analysant 168 critères en 5 minutes : balises, performance, données structurées, crawlabilité, sécurité, E-E-A-T et GEO. Gratuit 1x/jour pour les inscrits.", category: "seo", toolLink: { path: "/audit-expert", label: "Lancer un Audit Expert" } },
+    { term: "Audit Stratégique IA", definition: "Audit avancé combinant crawl technique, analyse sémantique par IA et données de marché pour produire un score IAS et un plan d'action priorisé. Coûte 1 crédit.", category: "seo", toolLink: { path: "/audit-expert", label: "Lancer un audit stratégique" } },
+    { term: "Audit Comparé", definition: "Benchmark concurrentiel comparant un site à 3 concurrents sur les axes SEO, GEO, performance et contenu. Coûte 4 crédits.", category: "seo", toolLink: { path: "/audit-compare", label: "Comparer votre site" } },
+    { term: "Matrice d'Audit", definition: "Moteur d'audit sur-mesure permettant d'importer ses propres critères (CSV, XLSX, DOCX) ou de charger des templates. Double scoring : Score Crawlers (télémétrie) vs Score Parsé (LLM). 11 catégories avec code couleur.", category: "seo", toolLink: { path: "/matrice", label: "Accéder à la matrice" } },
+    { term: "Cocon Sémantique 3D", definition: "Module de visualisation et d'optimisation du maillage interne en graphe 3D (Three.js). Analyse les clusters thématiques, l'autorité des pages, la cannibalisation et les gaps de contenu. Réservé aux abonnés Pro Agency.", category: "seo", toolLink: { path: "/cocoon", label: "Ouvrir le Cocon" } },
+    { term: "Content Architect", definition: "Générateur de contenus optimisés E-E-A-T avec 7 panneaux (Prompt, Structure, Images, Données structurées, Brouillon, Bibliothèque, Options). Produit des brouillons éditables publiables directement vers le CMS.", category: "ai", toolLink: { path: "/architecte-generatif", label: "Créer un contenu" } },
+    { term: "Code Architect", definition: "Générateur de code correctif SEO/GEO : métadonnées, Schema.org JSON-LD, balises Open Graph, données structurées. Injecte le code optimisé directement dans le site via CMS ou widget. Coûte 1 crédit.", category: "technical", toolLink: { path: "/architecte-generatif", label: "Générer du code" } },
+    { term: "Crawl Multi-Pages", definition: "Crawler technique analysant jusqu'à 5000 pages d'un site : statut HTTP, temps de réponse, titres, liens cassés, profondeur, chaînes de redirection. Réservé aux abonnés Pro Agency.", category: "seo", toolLink: { path: "/site-crawl", label: "Lancer un crawl" } },
+    { term: "Site Crawl", definition: "Analyse automatisée de la structure complète d'un site web en parcourant toutes ses pages. Détecte liens cassés, pages orphelines, temps de réponse et architecture de navigation.", category: "seo", toolLink: { path: "/site-crawl", label: "Lancer un crawl" } },
+
+    // Scores & métriques propriétaires
+    { term: "Score IAS", acronym: "Indice d'Alignement Stratégique", definition: "Score propriétaire Crawlers.fr évaluant l'alignement global d'un site sur 23 variables et 4 axes (technique, contenu, autorité, GEO). > 70 = bon, < 40 = correctifs urgents.", category: "seo", toolLink: { path: "/ias", label: "Calculer votre IAS" } },
+    { term: "Score GEO", definition: "Score mesurant la visibilité d'un site dans les réponses des moteurs IA (ChatGPT, Perplexity, Gemini, Claude). Calculé gratuitement sans inscription depuis la page d'accueil.", category: "geo", toolLink: { path: "/?tab=geo", label: "Calculez votre score GEO" } },
+    { term: "Visibilité LLM", definition: "Taux de citation d'un site dans les réponses de 4 LLMs interrogés en parallèle simultané. Mesure la fréquence à laquelle l'IA mentionne votre marque ou contenu.", category: "geo", toolLink: { path: "/?tab=llm", label: "Testez votre visibilité LLM" } },
+    { term: "Part de Voix", definition: "Indicateur composite : 40% LLM + 35% SERP + 25% ETV (Estimated Traffic Value). Mesure la présence globale d'une marque dans l'écosystème de recherche organique et IA.", category: "geo" },
+    { term: "Triangle Prédictif", definition: "Modèle de prédiction du trafic à 90 jours par corrélation croisée GSC/GA4. MAPE < 15%. Visualisé en triangle reliant positions SERP, trafic et conversions.", category: "seo" },
+    { term: "Score Crawlers", definition: "Score de télémétrie calculé par le moteur propriétaire Crawlers.fr via crawl HTML (balises, Schema.org, liens, signaux de fraîcheur). Aucune IA impliquée.", category: "seo" },
+    { term: "Score Parsé", definition: "Score attribué par un LLM (Gemini Flash) lors de l'évaluation sémantique d'un critère d'audit. Complémentaire au Score Crawlers pour une vision hybride.", category: "ai" },
+
+    // Agents & assistants
+    { term: "Félix", definition: "Assistant SAV intelligent de Crawlers.fr. Accompagne les utilisateurs dans la navigation, explique les scores, répond aux questions SEO/GEO et peut prendre la main dans Content Architect.", category: "ai" },
+    { term: "Stratège Cocoon", definition: "Agent IA pilotant le workflow sémantique dans le module Cocon Sémantique. Lance les diagnostics, priorise les tâches et produit des plans stratégiques 360°.", category: "ai" },
+    { term: "Parménion", definition: "Orchestrateur autonome Crawlers.fr enchaînant les phases Audit → Diagnostic → Prescription → Exécution → Validation en boucle continue. Gère les cycles d'optimisation automatisés.", category: "ai" },
+    { term: "TIM", acronym: "Tracked Intelligence Memory", definition: "Agent mémoire de Crawlers.fr qui persiste et restitue le contexte structuré d'un domaine (identité, GSC/GA4, audits) pour garantir la cohérence entre les modules.", category: "ai" },
+
+    // Techniques de scoring & analyse
+    { term: "Télémétrie", definition: "Données mesurées automatiquement par crawl HTML : balises meta, Schema.org, liens internes/externes, signaux de fraîcheur, statuts HTTP. Aucune IA impliquée, mesure objective.", category: "technical" },
+    { term: "Heuristique", definition: "Score calculé par des règles pondérées à partir de signaux bruts détectés par le crawler. Exemple : présence d'auteur + page à propos + mentions légales = score de confiance.", category: "technical" },
+    { term: "Scoring Hybride", definition: "Approche combinant télémétrie brute et analyse sémantique par IA. 11 critères sur 14 sont calculés par crawl, 3 par LLM (originalité, pertinence, qualité rédactionnelle).", category: "ai" },
+    { term: "Empreinte Lexicale", definition: "Distance sémantique relative entre le contenu d'un site et ses cibles (primaire, secondaire, inexploitée). Score d'intentionnalité hybride : 30% CTA + 30% SEO + 20% Ton + 20% Structure.", category: "seo" },
+    { term: "Cannibalisation SEO", definition: "Situation où plusieurs pages d'un même site se disputent le même mot-clé, diluant l'autorité et réduisant les chances de classement. Détection sémantique et structurelle par IA.", category: "seo" },
+    { term: "Page Orpheline", definition: "Page web qui n'est liée par aucune autre page du site. Invisible pour les crawlers, elle perd tout potentiel de référencement et de trafic.", category: "seo" },
+    { term: "Keyword Gap", definition: "Écart entre les mots-clés sur lesquels un site est positionné et ceux couverts par ses concurrents. Révèle des opportunités de contenu manquées.", category: "seo" },
+    { term: "Auto-Maillage IA", definition: "Fonctionnalité du Cocon Sémantique analysant automatiquement le contenu de chaque page pour trouver les meilleurs emplacements d'ancres de liens internes via IA.", category: "ai" },
+
+    // APIs & connecteurs
+    { term: "DataForSEO", definition: "API de données SERP et de mots-clés utilisée pour le positionnement, l'analyse concurrentielle et les volumes de recherche.", category: "technical" },
+    { term: "PageSpeed Insights API", definition: "API Google mesurant les performances d'une page web (Core Web Vitals, scores Lighthouse). Utilisée dans l'Audit Expert.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Mesurer les performances" } },
+    { term: "Google Search Console", acronym: "GSC", definition: "Service Google fournissant des données sur les performances de recherche : impressions, clics, positions moyennes, pages indexées.", category: "seo" },
+    { term: "Google Analytics 4", acronym: "GA4", definition: "Plateforme d'analyse de trafic web de Google basée sur les événements. Fournit les données comportementales des visiteurs.", category: "seo" },
+    { term: "Google My Business", acronym: "GMB", definition: "Plateforme Google pour gérer la présence locale d'un établissement : fiche, avis, posts, horaires, performances locales.", category: "seo" },
+    { term: "Spider.cloud", definition: "Service de crawl web rapide utilisé comme fallback dans la cascade de récupération de pages quand le fetch natif échoue.", category: "technical" },
+    { term: "Firecrawl", definition: "API de crawl et de scraping web utilisée pour l'exploration de pages JavaScript-heavy et la découverte d'URLs via /map.", category: "technical" },
+    { term: "IKtracker", definition: "CMS/plateforme partenaire. L'intégration bidirectionnelle permet la publication de contenu, l'injection de code et la gestion de redirections.", category: "technical" },
+    { term: "WordPress REST API", definition: "Interface de communication avec WordPress permettant la publication de brouillons, l'injection de code et la synchronisation de contenu depuis Crawlers.fr.", category: "technical" },
+
+    // Architecture & processus
+    { term: "Cascade de Crawl", definition: "Algorithme 'smartFetch' utilisant une cascade optimisée (Fetch Natif → Spider.cloud → Firecrawl) avec marge cible de 75% pour maximiser la fiabilité de récupération des pages.", category: "technical" },
+    { term: "Architect Workbench", definition: "Table centralisée recevant les findings de tous les diagnostics (audits, cocoon, crawl). Priorise les tâches par tier, sévérité et ancienneté pour alimenter les plans d'action.", category: "technical" },
+    { term: "Stratégie 360°", definition: "Mode du Stratège Cocoon lançant 4 diagnostics en parallèle (contenu, sémantique, structure, autorité) puis consolidant un plan d'action priorisé avec 3 axes de développement.", category: "seo", toolLink: { path: "/cocoon", label: "Lancer une Stratégie 360°" } },
+    { term: "Autopilote", definition: "Mode d'exécution automatisé de Parménion. Enchaîne les cycles diagnostic → prescription → exécution avec des seuils de risque configurables et un journal de modifications.", category: "ai" },
+    { term: "Plan d'Action", definition: "Liste de tâches priorisées par impact, urgence et faisabilité, générée par l'Audit Stratégique ou la Stratégie 360°. Suivi dans la Console.", category: "seo", toolLink: { path: "/console", label: "Voir mes plans d'action" } },
+
+    // Concepts GEO avancés
+    { term: "AEO", acronym: "Answer Engine Optimization", definition: "Optimisation pour les moteurs de réponse directe (featured snippets, People Also Ask, assistants vocaux). Sous-ensemble de GEO.", category: "geo" },
+    { term: "Direct Answer", definition: "Réponse directe affichée par un moteur de recherche ou un LLM sans que l'utilisateur n'ait besoin de cliquer sur un lien.", category: "geo" },
+    { term: "Citation IA", definition: "Mention d'un site web comme source dans la réponse d'un modèle de langage. Indicateur clé de la visibilité GEO.", category: "geo", toolLink: { path: "/?tab=llm", label: "Vérifiez vos citations IA" } },
+    { term: "PerplexityBot", definition: "Crawler du moteur de recherche IA Perplexity. Collecte des données pour alimenter les réponses avec sources citées.", category: "geo" },
+    { term: "Google-Extended", definition: "User-agent Google permettant de contrôler l'accès de Gemini/Bard au contenu d'un site, indépendamment du crawl Googlebot classique.", category: "geo" },
+
+    // Crédits & abonnements
+    { term: "Crédits Crawlers", definition: "Unité de consommation pour les fonctionnalités avancées (audits stratégiques, génération de code, Content Architect). 25 crédits offerts aux 1000 premiers inscrits.", category: "technical" },
+    { term: "Pro Agency", definition: "Abonnement premium Crawlers.fr (59€/mois) débloquant le Cocon Sémantique 3D, le Crawl Multi-Pages, le tracking SERP, la connexion GMB et 1 collaborateur.", category: "technical" },
+    { term: "Pro Agency+", definition: "Abonnement premium étendu (99€/mois) avec 2 collaborateurs, limites de crawl à 50 pages et accès prioritaire aux nouvelles fonctionnalités.", category: "technical" },
+
+    // Fichiers techniques
+    { term: "llms.txt", definition: "Fichier texte à la racine d'un site listant les pages clés avec descriptions pour les LLMs. Complément du robots.txt pour la visibilité dans les moteurs IA.", category: "geo" },
+    { term: "Données Structurées", definition: "Balisage (JSON-LD, Schema.org) intégré dans le HTML permettant aux moteurs de recherche et aux IA de comprendre le type et le contexte du contenu (Article, FAQ, Product, etc.).", category: "geo", toolLink: { path: "/?tab=geo", label: "Analysez vos données structurées" } },
+    { term: "Noindex", definition: "Directive meta robots indiquant aux moteurs de recherche de ne pas indexer une page. Utilisée pour les pages légales, d'authentification ou de contenu dupliqué.", category: "seo" },
+    { term: "Chaîne de Redirection", definition: "Séquence de redirections en cascade (A→B→C→D). Chaque maillon rallonge le temps de chargement et dilue le jus SEO. À limiter à 1-2 sauts maximum.", category: "technical" },
+    { term: "Content Gap", definition: "Lacune de contenu identifiée par rapport aux concurrents ou aux attentes des utilisateurs. Opportunité de création de nouvelles pages ou d'enrichissement de pages existantes.", category: "seo" },
+    { term: "Maillage Interne", definition: "Ensemble des liens hypertextes reliant les pages d'un même site entre elles. Un maillage optimisé distribue l'autorité, guide le crawl et améliore l'UX.", category: "seo", toolLink: { path: "/cocoon", label: "Optimiser votre maillage" } },
+    { term: "Cluster Thématique", definition: "Groupe de pages traitant d'un même sujet, organisées autour d'une page pilier et reliées par des liens internes. Renforce l'autorité topique.", category: "seo" },
+    { term: "Page Pilier", definition: "Page centrale et exhaustive d'un cluster thématique, couvrant un sujet large et renvoyant vers des pages satellites plus spécifiques.", category: "seo" },
+    { term: "Autorité Topique", definition: "Reconnaissance par les moteurs de recherche qu'un site fait autorité sur un sujet spécifique, grâce à la profondeur et la cohérence de son contenu.", category: "seo" },
+    { term: "Quick Win SEO", definition: "Optimisation SEO à fort impact et faible effort. Typiquement : améliorer un titre, ajouter une meta description ou corriger un lien cassé sur une page à fort trafic.", category: "seo" },
   ],
   en: [
     // SEO Terms
@@ -181,6 +263,35 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "NLP", acronym: "Natural Language Processing", definition: "Automatic processing of natural language enabling machines to understand and generate human text.", category: "ai" },
     { term: "GPT", acronym: "Generative Pre-trained Transformer", definition: "OpenAI's language model architecture, basis of ChatGPT. Generates text autoregressively.", category: "ai" },
     { term: "RAG", acronym: "Retrieval-Augmented Generation", definition: "Technique combining information retrieval and text generation to improve LLM response accuracy.", category: "ai" },
+
+    // Crawlers.fr tools & metrics
+    { term: "Expert Audit", definition: "Crawlers.fr comprehensive SEO audit analyzing 168 criteria in 5 minutes: tags, performance, structured data, crawlability, security, E-E-A-T, and GEO.", category: "seo", toolLink: { path: "/audit-expert", label: "Run an Expert Audit" } },
+    { term: "Strategic AI Audit", definition: "Advanced audit combining technical crawl, AI semantic analysis, and market data to produce an IAS score and prioritized action plan.", category: "seo" },
+    { term: "Comparative Audit", definition: "Competitive benchmark comparing a site against 3 competitors across SEO, GEO, performance, and content axes.", category: "seo", toolLink: { path: "/audit-compare", label: "Compare your site" } },
+    { term: "Audit Matrix", definition: "Custom audit engine allowing import of custom criteria (CSV, XLSX, DOCX). Dual scoring: Crawlers Score (telemetry) vs Parsed Score (LLM).", category: "seo", toolLink: { path: "/matrice", label: "Access the matrix" } },
+    { term: "Semantic Cocoon 3D", definition: "3D graph visualization and optimization module for internal linking (Three.js). Analyzes topic clusters, page authority, cannibalization, and content gaps.", category: "seo", toolLink: { path: "/cocoon", label: "Open the Cocoon" } },
+    { term: "Content Architect", definition: "E-E-A-T-optimized content generator with 7 panels (Prompt, Structure, Images, Structured Data, Draft, Library, Options). Creates publishable drafts.", category: "ai" },
+    { term: "IAS Score", acronym: "Strategic Alignment Index", definition: "Crawlers.fr proprietary score evaluating overall site alignment across 23 variables and 4 axes. > 70 = good, < 40 = urgent fixes needed.", category: "seo" },
+    { term: "GEO Score", definition: "Score measuring a site's visibility in AI engine responses (ChatGPT, Perplexity, Gemini, Claude). Free to calculate without registration.", category: "geo", toolLink: { path: "/?tab=geo", label: "Calculate your GEO Score" } },
+    { term: "LLM Visibility", definition: "Citation rate of a site across 4 LLMs queried simultaneously. Measures how often AI mentions your brand or content.", category: "geo" },
+    { term: "Share of Voice", definition: "Composite indicator: 40% LLM + 35% SERP + 25% ETV. Measures overall brand presence in organic search and AI ecosystem.", category: "geo" },
+    { term: "Predictive Triangle", definition: "90-day traffic prediction model via GSC/GA4 cross-correlation. MAPE < 15%. Connects SERP positions, traffic, and conversions.", category: "seo" },
+    { term: "Félix", definition: "Crawlers.fr intelligent support assistant. Guides users through navigation, explains scores, answers SEO/GEO questions.", category: "ai" },
+    { term: "Cocoon Strategist", definition: "AI agent driving the semantic workflow in the Semantic Cocoon module. Runs diagnostics, prioritizes tasks, and produces 360° strategic plans.", category: "ai" },
+    { term: "Parmenion", definition: "Crawlers.fr autonomous orchestrator chaining Audit → Diagnosis → Prescription → Execution → Validation in continuous loops.", category: "ai" },
+    { term: "Telemetry", definition: "Data automatically measured via HTML crawl: meta tags, Schema.org, internal/external links, freshness signals, HTTP status codes. No AI involved.", category: "technical" },
+    { term: "Heuristic", definition: "Score calculated from weighted rules applied to raw signals detected by the crawler. Objective measurement without AI.", category: "technical" },
+    { term: "Hybrid Scoring", definition: "Approach combining raw telemetry and AI semantic analysis. 11 of 14 criteria are crawl-based, 3 use LLM (originality, relevance, writing quality).", category: "ai" },
+    { term: "Lexical Footprint", definition: "Relative semantic distance between site content and its targets (primary, secondary, untapped). Hybrid intentionality score.", category: "seo" },
+    { term: "SEO Cannibalization", definition: "When multiple pages on the same site compete for the same keyword, diluting authority and reducing ranking chances.", category: "seo" },
+    { term: "Crawl Cascade", definition: "SmartFetch algorithm using an optimized cascade (Native Fetch → Spider.cloud → Firecrawl) with 75% reliability margin.", category: "technical" },
+    { term: "360° Strategy", definition: "Cocoon Strategist mode launching 4 parallel diagnostics (content, semantic, structure, authority) then consolidating a prioritized action plan.", category: "seo" },
+    { term: "Autopilot", definition: "Automated execution mode of Parmenion. Chains diagnosis → prescription → execution cycles with configurable risk thresholds.", category: "ai" },
+    { term: "AEO", acronym: "Answer Engine Optimization", definition: "Optimization for direct answer engines (featured snippets, People Also Ask, voice assistants). Subset of GEO.", category: "geo" },
+    { term: "AI Citation", definition: "Mention of a website as a source in a language model response. Key indicator of GEO visibility.", category: "geo" },
+    { term: "Internal Linking", definition: "All hyperlinks connecting pages within the same site. Optimized linking distributes authority, guides crawl, and improves UX.", category: "seo" },
+    { term: "Topic Cluster", definition: "Group of pages covering the same subject, organized around a pillar page and connected by internal links. Strengthens topical authority.", category: "seo" },
+    { term: "Quick Win SEO", definition: "High-impact, low-effort SEO optimization: improving a title, adding a meta description, or fixing a broken link on a high-traffic page.", category: "seo" },
   ],
   es: [
     // SEO Terms
