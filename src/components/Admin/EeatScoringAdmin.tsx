@@ -255,6 +255,12 @@ export function EeatScoringAdmin() {
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <CatIcon className="h-4 w-4" />
                   {meta.label}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground transition-colors"><HelpCircle className="h-3.5 w-3.5" /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs text-xs">{CATEGORY_TOOLTIPS[catKey]}</TooltipContent>
+                  </Tooltip>
                   <Badge variant="outline" className="text-xs">{items.length}</Badge>
                 </h3>
                 <div className="space-y-1">
