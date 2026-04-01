@@ -323,7 +323,7 @@ function ProfileContent() {
                 )}
 
                 <TabsContent value="drafts">
-                  <MyDrafts />
+                  <MyContent />
                 </TabsContent>
 
                 <TabsContent value="marina">
