@@ -180,6 +180,12 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             {result.score}<span className="text-lg text-muted-foreground">/100</span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">Score global E-E-A-T</p>
+          {result.crawlInfo && (
+            <p className="text-xs text-muted-foreground mt-2">
+              📄 {result.crawlInfo.pagesAnalyzed} pages analysées ({result.crawlInfo.source === 'cache' ? 'crawl récent en cache' : 'crawl intermédiaire'})
+              {result.crawlInfo.sitemapUrlsFound > 0 && ` · ${result.crawlInfo.sitemapUrlsFound} URLs sitemap`}
+            </p>
+          )}
         </div>
 
         {/* Category scores */}
