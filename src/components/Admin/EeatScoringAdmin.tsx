@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2 } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2, FileText } from 'lucide-react';
+import { EeatReportPreview } from './EeatReportPreview';
 
 interface EeatCriterion {
   id: string;
@@ -47,6 +48,8 @@ export function EeatScoringAdmin() {
   const [scanUrl, setScanUrl] = useState('');
   const [scanning, setScanning] = useState(false);
   const [editingCriterion, setEditingCriterion] = useState<EeatCriterion | null>(null);
+  const [scanResult, setScanResult] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('config');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newCriterion, setNewCriterion] = useState({
     criterion_key: '',
@@ -85,6 +88,22 @@ export function EeatScoringAdmin() {
       if (error) throw error;
       toast({ title: 'Scan E-E-A-T terminé', description: `Score global : ${data?.score ?? '?'}/100` });
       console.log('[EEAT Scan Result]', data);
+      if (data?.success) {
+        setScanResult({
+          url: scanUrl.trim(),
+          score: data.score,
+          experience: data.experience,
+          expertise: data.expertise,
+          authoritativeness: data.authoritativeness,
+          trustworthiness: data.trustworthiness,
+          signals: data.signals,
+          trustSignals: data.trustSignals || [],
+          missingSignals: data.missingSignals || [],
+          issues: data.issues || [],
+          scannedAt: new Date().toISOString(),
+        });
+        setActiveTab('report');
+      }
     } catch (e: any) {
       toast({ title: 'Erreur scan', description: e.message, variant: 'destructive' });
     } finally {
@@ -166,7 +185,14 @@ export function EeatScoringAdmin() {
   }, {});
 
   return (
-    <div className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="config" className="gap-2"><Settings2 className="h-4 w-4" /> Configuration</TabsTrigger>
+        <TabsTrigger value="report" className="gap-2" disabled={!scanResult}><FileText className="h-4 w-4" /> Rapport</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="config">
+      <div className="space-y-6">
       {/* Scan Card */}
       <Card>
         <CardHeader>
@@ -335,5 +361,19 @@ export function EeatScoringAdmin() {
         </DialogContent>
       </Dialog>
     </div>
+      </TabsContent>
+
+      <TabsContent value="report">
+        {scanResult ? (
+          <EeatReportPreview result={scanResult} />
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Lancez un scan E-E-A-T pour générer un rapport.
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+    </Tabs>
   );
 }
