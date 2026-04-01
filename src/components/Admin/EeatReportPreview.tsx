@@ -305,6 +305,50 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
           </div>
         )}
 
+        {/* Methodology */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-sm font-semibold text-foreground">🔬 Méthodologie</h3>
+          <div className="rounded-lg border border-border p-4 bg-muted/30 text-sm space-y-3">
+            <div>
+              <p className="font-medium text-foreground mb-1">Méthodologie générale E-E-A-T</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                L'audit E-E-A-T évalue un site selon les 4 piliers des Quality Rater Guidelines de Google : 
+                Experience (vécu terrain), Expertise (compétence technique), Authoritativeness (reconnaissance externe) 
+                et Trustworthiness (signaux de confiance). L'analyse combine une télémétrie automatique (crawl HTML, 
+                détection Schema.org, balises, liens) et une analyse sémantique par IA (qualité rédactionnelle, 
+                originalité, pertinence). Chaque critère est pondéré selon son impact SEO réel.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground mb-1">Méthodologie spécifique de ce rapport</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                {result.crawlInfo ? (
+                  <>
+                    <strong>{result.crawlInfo.pagesAnalyzed} pages</strong> ont été analysées 
+                    ({result.crawlInfo.source === 'cache' ? 'crawl complet récent en cache' : 'crawl intermédiaire dédié'}).
+                    {result.crawlInfo.sitemapUrlsFound > 0 && <> {result.crawlInfo.sitemapUrlsFound} URLs détectées dans le sitemap.</>}
+                    {result.crawlInfo.crawledAt && <> Crawl effectué le {new Date(result.crawlInfo.crawledAt).toLocaleDateString('fr-FR')}.</>}
+                  </>
+                ) : (
+                  <>Analyse mono-page (page d'accueil uniquement).</>
+                )}
+              </p>
+              {result.crawlInfo?.crawledUrls && result.crawlInfo.crawledUrls.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-medium text-foreground text-xs mb-1">Pages crawlées :</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
+                    {result.crawlInfo.crawledUrls.map((u, i) => (
+                      <li key={i} className="truncate">
+                        <a href={u} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{u}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Glossary */}
         <div className="space-y-3 pt-2">
           <h3 className="text-sm font-semibold text-foreground">📖 Glossaire</h3>
