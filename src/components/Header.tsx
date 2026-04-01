@@ -272,7 +272,7 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Navigation links - hidden on mobile */}
+        {/* Center: Navigation links - desktop */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {/* Audit */}
           {!isAuditExpertPage && (
@@ -284,7 +284,7 @@ export function Header() {
             </Link>
           )}
 
-          {/* Cocoon */}
+          {/* Cocoon — desktop only */}
           {!isCocoonPage && (
             isAuditExpertPage ? (
               <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
