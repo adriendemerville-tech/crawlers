@@ -2465,6 +2465,39 @@ export type Database = {
         }
         Relationships: []
       }
+      content_prompt_blocks: {
+        Row: {
+          block_type: string
+          content: string
+          created_at: string
+          id: string
+          name: string
+          score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          block_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          name: string
+          score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          block_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_prompt_presets: {
         Row: {
           created_at: string
