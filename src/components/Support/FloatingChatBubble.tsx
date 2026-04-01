@@ -314,7 +314,7 @@ export function FloatingChatBubble() {
         style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
-        <CrawlersLogo size={44} className="transition-opacity duration-300" />
+        <CrawlersLogo size={56} className="transition-opacity duration-300" />
       </button>
       {/* Notification Badge — outside button to avoid overflow clipping */}
       {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
