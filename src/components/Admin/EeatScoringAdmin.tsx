@@ -271,7 +271,15 @@ export function EeatScoringAdmin() {
                         <div className="font-medium truncate">{c.label}</div>
                         <div className="text-xs text-muted-foreground truncate">{c.description}</div>
                       </div>
-                      <Badge variant="outline" className="text-xs shrink-0">{METHOD_LABELS[c.scoring_method]}</Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs shrink-0">{METHOD_LABELS[c.scoring_method]}</Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors"><HelpCircle className="h-3 w-3" /></button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs text-xs">{METHOD_TOOLTIPS[c.scoring_method]}</TooltipContent>
+                        </Tooltip>
+                      </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">×{c.weight}</span>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCriterion({ ...c })}>
                         <Pencil className="h-3 w-3" />
