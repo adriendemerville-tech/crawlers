@@ -81,6 +81,18 @@ ${CATEGORY_META.map(c => {
 <h2>Signaux manquants</h2>
 <div>${result.missingSignals.map(s => `<span class="tag miss">✗ ${s}</span>`).join('')}</div>
 ${result.issues.length ? `<h2>Problèmes identifiés</h2><ul style="padding-left:1.2rem;color:#fca5a5;font-size:.85rem">${result.issues.map(i => `<li style="margin:.3rem 0">${i}</li>`).join('')}</ul>` : ''}
+<h2>Glossaire</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.75rem">
+${[
+  ['Experience', "Preuves que l'auteur a vécu ou pratiqué le sujet (cas concrets, témoignages)."],
+  ['Expertise', 'Qualifications et profondeur technique du contenu sur le sujet traité.'],
+  ['Authoritativeness', 'Reconnaissance externe : backlinks, citations, mentions par des sources faisant autorité.'],
+  ['Trustworthiness', 'Signaux de confiance : HTTPS, mentions légales, contact, avis vérifiés.'],
+  ['Télémétrie', 'Données mesurées par crawl HTML (balises, Schema.org, liens). Aucune IA.'],
+  ['Heuristique', 'Score calculé par règles pondérées à partir de signaux bruts.'],
+  ['LLM', 'Analyse sémantique par IA (originalité, pertinence, qualité rédactionnelle).'],
+].map(([t, d]) => `<div class="card" style="padding:.75rem"><strong>${t}</strong> — ${d}</div>`).join('')}
+</div>
 <div class="footer">Généré par Crawlers.fr — Audit E-E-A-T</div>
 </div></body></html>`;
 }
