@@ -185,9 +185,14 @@ export function EeatScoringAdmin() {
   }, {});
 
   return (
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="config" className="gap-2"><Settings2 className="h-4 w-4" /> Configuration</TabsTrigger>
+        <TabsTrigger value="report" className="gap-2" disabled={!scanResult}><FileText className="h-4 w-4" /> Rapport</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="config">
     <div className="space-y-6">
-      {/* Scan Card */}
-      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5 text-primary" />
