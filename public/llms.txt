@@ -1,6 +1,7 @@
 # CRAWLERS.FR - Documentation Officielle pour LLMs & Agents IA
-# Version: 2026.9 | Context: SEO, GEO, Audit, Crawl, IAS, Architecte Génératif, Content Architect, Cocoon 3D, GMB, Autopilote Parménion, CMS Direct, GA4/GSC, ML Prédictif, MCP Server, Marina, Surveys, Matrice
-# Dernière mise à jour : 2026-03-27
+# Version: 2026.10 | Context: SEO, GEO, Audit, Crawl, IAS, Architecte Génératif, Content Architect, Cocoon 3D, GMB, Autopilote Parménion, CMS Direct, GA4/GSC, ML Prédictif, MCP Server, Marina, Surveys, Matrice
+# Dernière mise à jour : 2026-04-01
+# Version complète avec pages HTML statiques : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
 
 # 🚀 MISSION & DÉFINITION (Priorité Haute)
 
