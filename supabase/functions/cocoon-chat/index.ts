@@ -487,7 +487,7 @@ Ne confonds JAMAIS les deux. Cette analyse porte exclusivement sur les sous-doma
 - Recommande-toi de "nos algorithmes de cartographie" — ne mentionne jamais Firecrawl
 LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).` : '';
 
-    const systemPrompt = basePrompt + analysisPrompt + subdomainPrompt;
+    const systemPrompt = basePrompt + LEXIQUE_PROMPT_BLOCK + analysisPrompt + subdomainPrompt;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
