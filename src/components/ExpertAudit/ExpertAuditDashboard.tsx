@@ -1342,7 +1342,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
 
   return (
     <StrategicErrorBoundary onReset={handleNewAudit}>
-    <div className="container mx-auto px-4 py-10 max-w-5xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10 max-w-5xl">
       {/* Fatal error banner — after 4 consecutive failures */}
       {fatalAuditError && (
         <motion.div
