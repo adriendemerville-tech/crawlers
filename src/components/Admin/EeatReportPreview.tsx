@@ -29,6 +29,21 @@ interface EeatScanResult {
   issues: string[];
   strengths?: string[];
   recommendations?: string[];
+  backlinkData?: {
+    referringDomains: number;
+    backlinksTotal: number;
+    domainRank: number;
+    referringIps: number;
+    referringSubnets: number;
+    anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
+  } | null;
+  gbpData?: {
+    avgRating: number;
+    totalReviews: number;
+    category: string;
+    locationName: string;
+  } | null;
+  dataSources?: string[];
   crawlInfo?: {
     pagesAnalyzed: number;
     source: string;
@@ -212,6 +227,21 @@ ${Object.entries(SIGNAL_LABELS).map(([key, label]) => {
 <div>${result.trustSignals.map(s => `<span class="tag ok">✓ ${s}</span>`).join('')}</div>
 <h2>Signaux manquants</h2>
 <div>${result.missingSignals.map(s => `<span class="tag miss">✗ ${s}</span>`).join('')}</div>
+${result.backlinkData ? `<h2>🔗 Données Backlinks (réelles)</h2>
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.referringDomains}</div><p style="font-size:.7rem;color:#94a3b8">Domaines référents</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.domainRank}</div><p style="font-size:.7rem;color:#94a3b8">Domain Rank</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.backlinkData.backlinksTotal.toLocaleString()}</div><p style="font-size:.7rem;color:#94a3b8">Backlinks totaux</p></div>
+</div>
+${result.backlinkData.anchorDistribution?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">Top ancres</p>${result.backlinkData.anchorDistribution.slice(0, 5).map(a => `<div style="display:flex;justify-content:space-between;font-size:.75rem;margin:.2rem 0"><span>"${a.anchor}"</span><span style="color:#94a3b8">${a.backlinks} liens</span></div>`).join('')}</div>` : ''}
+<p style="font-size:.6rem;color:#64748b">Source : DataForSEO · Données en temps réel</p>` : ''}
+${result.gbpData ? `<h2>📍 Google Business Profile (réel)</h2>
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+<div class="card" style="text-align:center"><div class="val amber">${result.gbpData.avgRating}★</div><p style="font-size:.7rem;color:#94a3b8">Note moyenne</p></div>
+<div class="card" style="text-align:center"><div class="val">${result.gbpData.totalReviews}</div><p style="font-size:.7rem;color:#94a3b8">Avis Google</p></div>
+<div class="card" style="text-align:center"><div style="font-size:.85rem;font-weight:600">${result.gbpData.category || 'N/A'}</div><p style="font-size:.7rem;color:#94a3b8">Catégorie</p></div>
+</div>
+<p style="font-size:.6rem;color:#64748b">Source : Google Business Profile · Données vérifiées</p>` : ''}
 ${result.issues.length ? `<h2>Problèmes identifiés</h2><ul style="padding-left:1.2rem;color:#fca5a5;font-size:.85rem">${result.issues.map(i => `<li style="margin:.3rem 0">${i}</li>`).join('')}</ul>` : ''}
 <h2>🔬 Méthodologie</h2>
 <div class="card" style="margin-bottom:1rem">
@@ -514,7 +544,79 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             </div>
           )}
 
-          {/* Methodology */}
+          {/* Backlink data */}
+          {result.backlinkData && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground">🔗 Données Backlinks (réelles)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xl font-bold text-foreground">{result.backlinkData.referringDomains}</div>
+                  <div className="text-[10px] text-muted-foreground">Domaines référents</div>
+                </div>
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xl font-bold text-foreground">{result.backlinkData.domainRank}</div>
+                  <div className="text-[10px] text-muted-foreground">Domain Rank</div>
+                </div>
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xl font-bold text-foreground">{result.backlinkData.backlinksTotal.toLocaleString()}</div>
+                  <div className="text-[10px] text-muted-foreground">Backlinks totaux</div>
+                </div>
+              </div>
+              {result.backlinkData.anchorDistribution && result.backlinkData.anchorDistribution.length > 0 && (
+                <div className="rounded-lg border border-border p-3 bg-background">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Top ancres</p>
+                  <div className="space-y-1">
+                    {result.backlinkData.anchorDistribution.slice(0, 5).map((a, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <span className="text-foreground truncate max-w-[60%]">"{a.anchor}"</span>
+                        <span className="text-muted-foreground">{a.backlinks} liens · {a.domains} domaines</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">Source : DataForSEO · Données en temps réel</p>
+            </div>
+          )}
+
+          {/* GBP data */}
+          {result.gbpData && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground">📍 Google Business Profile (réel)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xl font-bold text-amber-500">{result.gbpData.avgRating}★</div>
+                  <div className="text-[10px] text-muted-foreground">Note moyenne</div>
+                </div>
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xl font-bold text-foreground">{result.gbpData.totalReviews}</div>
+                  <div className="text-[10px] text-muted-foreground">Avis Google</div>
+                </div>
+                <div className="rounded-lg border border-border p-3 bg-background text-center">
+                  <div className="text-xs font-medium text-foreground">{result.gbpData.category || 'N/A'}</div>
+                  <div className="text-[10px] text-muted-foreground">Catégorie</div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Source : Google Business Profile · Données vérifiées</p>
+            </div>
+          )}
+
+          {/* Data sources */}
+          {result.dataSources && result.dataSources.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] text-muted-foreground">Sources :</span>
+              {result.dataSources.map((s, i) => (
+                <Badge key={i} variant="outline" className="text-[9px] py-0">
+                  {s === 'crawl_html' ? '🕷️ Crawl HTML' : 
+                   s === 'llm_semantic' ? '🤖 IA Sémantique' : 
+                   s === 'dataforseo_backlinks' ? '🔗 Backlinks DataForSEO' : 
+                   s === 'google_business_profile' ? '📍 Google Business' : s}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+
           <div className="space-y-3 pt-2">
             <h3 className="text-sm font-semibold text-foreground">🔬 Méthodologie</h3>
             <div className="rounded-lg border border-border p-4 bg-muted/30 text-sm space-y-3">

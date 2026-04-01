@@ -149,6 +149,9 @@ export function EeatScoringAdmin() {
               issues: data.issues || [],
               strengths: data.strengths || [],
               recommendations: data.recommendations || [],
+              backlinkData: data.backlinkData || null,
+              gbpData: data.gbpData || null,
+              dataSources: data.dataSources || [],
               crawlInfo: data.crawlInfo || null,
               scannedAt: new Date().toISOString(),
             });
