@@ -215,6 +215,11 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # Documentation LLM pour IA et ChatGPT
 # https://crawlers.fr/llms.txt
+# https://crawlers.fr/llms-full.txt (version complète avec pages pré-rendues)
+
+# Pages HTML statiques pré-rendues (pour bots sans JS)
+# https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
+# https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
 
 # ============================================
 # 🔒 SÉGRÉGATION DES DONNÉES & CONFORMITÉ GOOGLE API
