@@ -192,7 +192,9 @@ export function EeatScoringAdmin() {
       </TabsList>
 
       <TabsContent value="config">
-    <div className="space-y-6">
+      <div className="space-y-6">
+      {/* Scan Card */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5 text-primary" />
