@@ -88,6 +88,22 @@ export function EeatScoringAdmin() {
       if (error) throw error;
       toast({ title: 'Scan E-E-A-T terminé', description: `Score global : ${data?.score ?? '?'}/100` });
       console.log('[EEAT Scan Result]', data);
+      if (data?.success) {
+        setScanResult({
+          url: scanUrl.trim(),
+          score: data.score,
+          experience: data.experience,
+          expertise: data.expertise,
+          authoritativeness: data.authoritativeness,
+          trustworthiness: data.trustworthiness,
+          signals: data.signals,
+          trustSignals: data.trustSignals || [],
+          missingSignals: data.missingSignals || [],
+          issues: data.issues || [],
+          scannedAt: new Date().toISOString(),
+        });
+        setActiveTab('report');
+      }
     } catch (e: any) {
       toast({ title: 'Erreur scan', description: e.message, variant: 'destructive' });
     } finally {
