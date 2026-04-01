@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2, FileText } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2, FileText, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EeatReportPreview } from './EeatReportPreview';
 
 interface EeatCriterion {
