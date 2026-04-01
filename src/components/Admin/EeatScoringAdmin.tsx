@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2, FileText } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Save, Shield, Brain, Eye, Award, RefreshCw, Settings2, FileText, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EeatReportPreview } from './EeatReportPreview';
 
 interface EeatCriterion {
@@ -39,6 +40,19 @@ const METHOD_LABELS: Record<string, string> = {
   telemetry: '📡 Télémétrie',
   heuristic: '🔢 Heuristique',
   llm: '🤖 LLM',
+};
+
+const METHOD_TOOLTIPS: Record<string, string> = {
+  telemetry: 'Données mesurées automatiquement par crawl HTML (balises, Schema.org, liens, signaux de fraîcheur). Aucune IA impliquée.',
+  heuristic: 'Score calculé par des règles pondérées à partir de signaux bruts (ex: présence d\'auteur + page à propos = +20 pts).',
+  llm: 'Analyse sémantique par IA (originalité, pertinence, qualité rédactionnelle). Coûte des crédits.',
+};
+
+const CATEGORY_TOOLTIPS: Record<string, string> = {
+  experience: 'Preuves que l\'auteur a vécu ou pratiqué ce dont il parle (témoignages, cas concrets, captures).',
+  expertise: 'Qualifications, profondeur technique et précision du contenu sur le sujet traité.',
+  authoritativeness: 'Reconnaissance externe : backlinks, citations, mentions par des sources faisant autorité.',
+  trustworthiness: 'Signaux de confiance : HTTPS, mentions légales, contact, politique de confidentialité, avis vérifiés.',
 };
 
 export function EeatScoringAdmin() {
@@ -233,6 +247,7 @@ export function EeatScoringAdmin() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
+        <TooltipProvider delayDuration={200}>
           {Object.entries(CATEGORY_META).map(([catKey, meta]) => {
             const items = groupedCriteria[catKey] || [];
             const CatIcon = meta.icon;
@@ -241,6 +256,12 @@ export function EeatScoringAdmin() {
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <CatIcon className="h-4 w-4" />
                   {meta.label}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground transition-colors"><HelpCircle className="h-3.5 w-3.5" /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs text-xs">{CATEGORY_TOOLTIPS[catKey]}</TooltipContent>
+                  </Tooltip>
                   <Badge variant="outline" className="text-xs">{items.length}</Badge>
                 </h3>
                 <div className="space-y-1">
@@ -251,7 +272,15 @@ export function EeatScoringAdmin() {
                         <div className="font-medium truncate">{c.label}</div>
                         <div className="text-xs text-muted-foreground truncate">{c.description}</div>
                       </div>
-                      <Badge variant="outline" className="text-xs shrink-0">{METHOD_LABELS[c.scoring_method]}</Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs shrink-0">{METHOD_LABELS[c.scoring_method]}</Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors"><HelpCircle className="h-3 w-3" /></button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs text-xs">{METHOD_TOOLTIPS[c.scoring_method]}</TooltipContent>
+                        </Tooltip>
+                      </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">×{c.weight}</span>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCriterion({ ...c })}>
                         <Pencil className="h-3 w-3" />
@@ -265,7 +294,8 @@ export function EeatScoringAdmin() {
                 </div>
               </div>
             );
-          })}
+           })}
+        </TooltipProvider>
         </CardContent>
       </Card>
 

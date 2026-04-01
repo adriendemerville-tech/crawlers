@@ -81,6 +81,18 @@ ${CATEGORY_META.map(c => {
 <h2>Signaux manquants</h2>
 <div>${result.missingSignals.map(s => `<span class="tag miss">✗ ${s}</span>`).join('')}</div>
 ${result.issues.length ? `<h2>Problèmes identifiés</h2><ul style="padding-left:1.2rem;color:#fca5a5;font-size:.85rem">${result.issues.map(i => `<li style="margin:.3rem 0">${i}</li>`).join('')}</ul>` : ''}
+<h2>Glossaire</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.75rem">
+${[
+  ['Experience', "Preuves que l'auteur a vécu ou pratiqué le sujet (cas concrets, témoignages)."],
+  ['Expertise', 'Qualifications et profondeur technique du contenu sur le sujet traité.'],
+  ['Authoritativeness', 'Reconnaissance externe : backlinks, citations, mentions par des sources faisant autorité.'],
+  ['Trustworthiness', 'Signaux de confiance : HTTPS, mentions légales, contact, avis vérifiés.'],
+  ['Télémétrie', 'Données mesurées par crawl HTML (balises, Schema.org, liens). Aucune IA.'],
+  ['Heuristique', 'Score calculé par règles pondérées à partir de signaux bruts.'],
+  ['LLM', 'Analyse sémantique par IA (originalité, pertinence, qualité rédactionnelle).'],
+].map(([t, d]) => `<div class="card" style="padding:.75rem"><strong>${t}</strong> — ${d}</div>`).join('')}
+</div>
 <div class="footer">Généré par Crawlers.fr — Audit E-E-A-T</div>
 </div></body></html>`;
 }
@@ -229,6 +241,27 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             ].map((s, i) => (
               <div key={i} className={`rounded-md border p-2 text-center ${s.ok ? 'border-green-500/30 bg-green-500/5 text-green-500' : 'border-destructive/30 bg-destructive/5 text-destructive'}`}>
                 {s.ok ? '✓' : '✗'} {s.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Glossary */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-sm font-semibold text-foreground">📖 Glossaire</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            {[
+              { term: 'Experience', desc: 'Preuves que l\'auteur a vécu ou pratiqué le sujet (cas concrets, témoignages, captures).' },
+              { term: 'Expertise', desc: 'Qualifications et profondeur technique du contenu sur le sujet traité.' },
+              { term: 'Authoritativeness', desc: 'Reconnaissance externe : backlinks, citations, mentions par des sources faisant autorité.' },
+              { term: 'Trustworthiness', desc: 'Signaux de confiance : HTTPS, mentions légales, contact, politique de confidentialité, avis.' },
+              { term: 'Télémétrie', desc: 'Données mesurées automatiquement par crawl HTML (balises, Schema.org, liens). Aucune IA.' },
+              { term: 'Heuristique', desc: 'Score calculé par règles pondérées à partir de signaux bruts détectés par le crawler.' },
+              { term: 'LLM', desc: 'Analyse sémantique par intelligence artificielle (originalité, pertinence, qualité rédactionnelle).' },
+            ].map((g, i) => (
+              <div key={i} className="rounded-md border border-border p-2.5 bg-muted/30">
+                <span className="font-semibold text-foreground">{g.term}</span>
+                <span className="text-muted-foreground ml-1">— {g.desc}</span>
               </div>
             ))}
           </div>
