@@ -270,9 +270,20 @@ export function EeatScoringAdmin() {
             />
             <Button onClick={handleScan} disabled={scanning || !scanUrl.trim()}>
               {scanning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Scan
+              {scanning ? 'Scan multi-pages…' : 'Scan E-E-A-T'}
             </Button>
           </div>
+          {scanning && scanProgress > 0 && (
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Crawl et analyse en cours…</span>
+                <span>{scanProgress}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${scanProgress}%` }} />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
