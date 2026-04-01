@@ -128,21 +128,29 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
   const handleShare = async () => {
     setSharing(true);
     try {
-      const shareId = crypto.randomUUID();
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const filePath = `eeat/${shareId}.html`;
-
-      const { error } = await supabase.storage
-        .from('shared-reports')
-        .upload(filePath, blob, { contentType: 'text/html', upsert: false });
+      const htmlContent = buildReportHTML(result);
+      const { data: responseData, error } = await supabase.functions.invoke('share-actions', {
+        body: {
+          action: 'create',
+          type: 'eeat',
+          url: result.url,
+          data: result,
+          language: 'fr',
+          preRenderedHtml: htmlContent,
+        },
+      });
       if (error) throw error;
 
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from('shared-reports')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 7);
-      if (signedError || !signedData?.signedUrl) throw signedError || new Error('No URL');
+      const shareId = responseData?.shareId;
+      if (!shareId) throw new Error('No share ID returned');
 
-      await navigator.clipboard.writeText(signedData.signedUrl);
+      // Resolve to signed URL
+      const { data: resolveData, error: resolveError } = await supabase.functions.invoke('share-actions', {
+        body: { action: 'resolve', shareId },
+      });
+      if (resolveError || !resolveData?.signedUrl) throw resolveError || new Error('No signed URL');
+
+      await navigator.clipboard.writeText(resolveData.signedUrl);
       setCopied(true);
       toast({ title: 'Lien copié !', description: 'Valide 7 jours.' });
       setTimeout(() => setCopied(false), 3000);
