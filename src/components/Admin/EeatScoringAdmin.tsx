@@ -92,36 +92,80 @@ export function EeatScoringAdmin() {
 
   useEffect(() => { fetchCriteria(); }, [fetchCriteria]);
 
+  const [scanProgress, setScanProgress] = useState(0);
+
   const handleScan = async () => {
     if (!scanUrl.trim()) return;
     setScanning(true);
+    setScanProgress(0);
+    setScanResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke('check-eeat', {
-        body: { url: scanUrl.trim() },
+      // Launch async scan
+      const { data: jobData, error: jobError } = await supabase.functions.invoke('check-eeat', {
+        body: { url: scanUrl.trim(), async: true },
       });
-      if (error) throw error;
-      toast({ title: 'Scan E-E-A-T terminé', description: `Score global : ${data?.score ?? '?'}/100` });
-      console.log('[EEAT Scan Result]', data);
-      if (data?.success) {
-        setScanResult({
-          url: scanUrl.trim(),
-          score: data.score,
-          experience: data.experience,
-          expertise: data.expertise,
-          authoritativeness: data.authoritativeness,
-          trustworthiness: data.trustworthiness,
-          signals: data.signals,
-          trustSignals: data.trustSignals || [],
-          missingSignals: data.missingSignals || [],
-          issues: data.issues || [],
-          scannedAt: new Date().toISOString(),
+      if (jobError) throw jobError;
+      if (!jobData?.job_id) throw new Error('No job_id returned');
+
+      toast({ title: 'Scan E-E-A-T lancé', description: 'Crawl multi-pages en cours…' });
+
+      // Poll for completion
+      const jobId = jobData.job_id;
+      const maxPolls = 60; // 5 minutes max
+      for (let i = 0; i < maxPolls; i++) {
+        await new Promise(r => setTimeout(r, 5000));
+        
+        const { data: status } = await supabase.functions.invoke('check-eeat', {
+          method: 'GET',
+          body: null,
+          headers: {},
         });
-        setActiveTab('report');
+        
+        // Use query param polling via direct fetch
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const pollResp = await fetch(`${supabaseUrl}/functions/v1/check-eeat?job_id=${jobId}`, {
+          headers: { 'Authorization': `Bearer ${supabaseKey}`, 'apikey': supabaseKey },
+        });
+        const pollData = await pollResp.json();
+        
+        setScanProgress(pollData.progress || 0);
+
+        if (pollData.status === 'completed' && pollData.result) {
+          const data = pollData.result;
+          toast({ title: 'Scan E-E-A-T terminé', description: `Score global : ${data?.score ?? '?'}/100 — ${data?.crawlInfo?.pagesAnalyzed || '?'} pages analysées` });
+          console.log('[EEAT Scan Result]', data);
+          if (data?.success) {
+            setScanResult({
+              url: scanUrl.trim(),
+              score: data.score,
+              experience: data.experience,
+              expertise: data.expertise,
+              authoritativeness: data.authoritativeness,
+              trustworthiness: data.trustworthiness,
+              signals: data.signals,
+              trustSignals: data.trustSignals || [],
+              missingSignals: data.missingSignals || [],
+              issues: data.issues || [],
+              strengths: data.strengths || [],
+              recommendations: data.recommendations || [],
+              crawlInfo: data.crawlInfo || null,
+              scannedAt: new Date().toISOString(),
+            });
+            setActiveTab('report');
+          }
+          break;
+        }
+
+        if (pollData.status === 'failed') {
+          throw new Error(pollData.error || 'Scan failed');
+        }
       }
     } catch (e: any) {
       toast({ title: 'Erreur scan', description: e.message, variant: 'destructive' });
     } finally {
       setScanning(false);
+      setScanProgress(0);
     }
   };
 
