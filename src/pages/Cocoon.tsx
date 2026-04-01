@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
