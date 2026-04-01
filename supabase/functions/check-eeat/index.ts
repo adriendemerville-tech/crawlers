@@ -195,16 +195,23 @@ async function runEeatPipeline(
   jobId: string | null
 ): Promise<any> {
 
+  // ── Phase 0: Auto-correct domain if DNS fails ──
+  const correctedDomain = await autoCorrectDomain(domain);
+  if (correctedDomain !== domain) {
+    console.log(`[check-eeat] 🔧 Domain auto-corrected: ${domain} → ${correctedDomain}`);
+  }
+  const effectiveDomain = correctedDomain;
+
   // ── Phase 1: Pré-crawl multi-pages ──
-  console.log(`[check-eeat] 🕷️ Phase 1: Pre-crawl for ${domain}...`);
+  console.log(`[check-eeat] 🕷️ Phase 1: Pre-crawl for ${effectiveDomain}...`);
   if (jobId) await supabase.from('async_jobs').update({ progress: 10 }).eq('id', jobId);
 
-  let preCrawlResult = await preCrawlForAudit(supabase, domain, trackedSiteId);
+  let preCrawlResult = await preCrawlForAudit(supabase, effectiveDomain, trackedSiteId);
   
   // If no pages crawled, try with www. prefix as fallback
   if (preCrawlResult.pages.length === 0) {
-    console.log(`[check-eeat] ⚠️ 0 pages crawled for ${domain}, retrying with www.${domain}...`);
-    preCrawlResult = await preCrawlForAudit(supabase, `www.${domain}`, trackedSiteId);
+    console.log(`[check-eeat] ⚠️ 0 pages crawled for ${effectiveDomain}, retrying with www.${effectiveDomain}...`);
+    preCrawlResult = await preCrawlForAudit(supabase, `www.${effectiveDomain}`, trackedSiteId);
   }
 
   const pagesContext = formatPreCrawlForPrompt(preCrawlResult);
@@ -212,7 +219,7 @@ async function runEeatPipeline(
 
   // If still 0 pages, return a clear error instead of a misleading 0-score report
   if (pagesCount === 0) {
-    console.error(`[check-eeat] ❌ No pages could be crawled for ${domain}`);
+    console.error(`[check-eeat] ❌ No pages could be crawled for ${effectiveDomain}`);
     return {
       success: false,
       error: `Impossible de crawler le domaine "${domain}". Vérifiez que le domaine est correct et accessible.`,
