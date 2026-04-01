@@ -123,7 +123,7 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-16 gap-2 rounded-xl border-amber-400 border-2 px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap"
+              className="h-12 sm:h-16 gap-2 rounded-xl border-amber-400 border-2 px-6 sm:px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap w-full sm:w-auto"
             >
               <div className="flex flex-col items-start leading-tight">
                 <span className="font-bold text-amber-400 text-lg">
