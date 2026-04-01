@@ -30,10 +30,41 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/observatoire": { title: "Observatoire SEO & GEO — Tendances 2026 | Crawlers.fr", description: "Suivez les tendances SEO et GEO en temps réel : évolution des SERP, adoption IA, métriques sectorielles." },
 };
 
-function generateStaticHTML(route: string, meta: { title: string; description: string }, llmsTxt: string): string {
-  const baseUrl = "https://crawlers.fr";
+const baseUrl = "https://crawlers.fr";
+
+/** Convert basic Markdown to HTML (headings, bold, italic, links, lists, paragraphs) */
+function markdownToHtml(md: string): string {
+  if (!md) return "";
+  let html = md
+    // Headings
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+    // Bold & italic
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    // Unordered lists
+    .replace(/^[*-] (.+)$/gm, "<li>$1</li>");
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
+  // Paragraphs: wrap non-tag lines
+  html = html
+    .split("\n\n")
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      if (/^<[hulo]/.test(trimmed)) return trimmed;
+      return `<p>${trimmed}</p>`;
+    })
+    .join("\n");
+  return html;
+}
+
+function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
   const fullUrl = `${baseUrl}${route}`;
-  
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -54,8 +85,6 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
   <meta name="twitter:description" content="${meta.description}">
   <meta name="twitter:image" content="${baseUrl}/og-image.png">
   <link rel="alternate" hreflang="fr" href="${fullUrl}">
-  <link rel="alternate" hreflang="en" href="${fullUrl}">
-  <link rel="alternate" hreflang="es" href="${fullUrl}">
   <link rel="alternate" hreflang="x-default" href="${fullUrl}">
   <script type="application/ld+json">${JSON.stringify({
     "@context": "https://schema.org",
@@ -63,72 +92,93 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
     "name": meta.title,
     "description": meta.description,
     "url": fullUrl,
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "Crawlers.fr",
-      "url": baseUrl,
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": `${baseUrl}/audit-expert?url={search_term_string}`,
-        "query-input": "required name=search_term_string"
-      }
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Crawlers.fr",
-      "url": baseUrl,
-      "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png` }
-    }
+    "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": baseUrl },
+    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png` } }
   })}</script>
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="${baseUrl}">Crawlers.fr</a>
-      <a href="${baseUrl}/audit-expert">Audit Expert</a>
-      <a href="${baseUrl}/faq">FAQ</a>
-      <a href="${baseUrl}/tarifs">Tarifs</a>
-      <a href="${baseUrl}/pro-agency">Pro Agency</a>
-      <a href="${baseUrl}/blog">Blog</a>
-      <a href="${baseUrl}/lexique">Lexique</a>
-    </nav>
-  </header>
+  <header><nav>
+    <a href="${baseUrl}">Crawlers.fr</a>
+    <a href="${baseUrl}/audit-expert">Audit Expert</a>
+    <a href="${baseUrl}/blog">Blog</a>
+    <a href="${baseUrl}/tarifs">Tarifs</a>
+    <a href="${baseUrl}/lexique">Lexique</a>
+  </nav></header>
   <main>
     <h1>${meta.title}</h1>
     <p>${meta.description}</p>
-    <section>
-      <h2>À propos de Crawlers.fr</h2>
-      <p>Crawlers.fr est la première plateforme française d'audit hybride SEO et GEO. Elle combine diagnostic technique, correction automatique et optimisation pour les moteurs de recherche traditionnels ET les moteurs de réponse IA (ChatGPT, Gemini, Perplexity, Claude).</p>
-    </section>
-    <section>
-      <h2>Fonctionnalités principales</h2>
-      <ul>
-        <li>Audit Expert sur 168 critères SEO et GEO</li>
-        <li>Score GEO — Visibilité dans les moteurs IA</li>
-        <li>Cocoon 3D — Architecture sémantique intelligente</li>
-        <li>Content Architect — Création de contenu IA</li>
-        <li>Matrice d'audit personnalisable</li>
-        <li>Marina API — Rapports en marque blanche</li>
-        <li>Connexion CMS directe (WordPress, Shopify, etc.)</li>
-        <li>Autopilote Parménion — Maintenance prédictive</li>
-      </ul>
-    </section>
-    <section>
-      <h2>Navigation</h2>
-      <ul>
-${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `        <li><a href="${baseUrl}${r}">${m.title}</a></li>`).join('\n')}
-      </ul>
-    </section>
+    <section><h2>Navigation</h2><ul>
+${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `      <li><a href="${baseUrl}${r}">${m.title}</a></li>`).join("\n")}
+    </ul></section>
   </main>
-  <footer>
-    <p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p>
-    <nav>
-      <a href="${baseUrl}/mentions-legales">Mentions légales</a>
-      <a href="${baseUrl}/politique-confidentialite">Politique de confidentialité</a>
-      <a href="${baseUrl}/cgvu">CGVU</a>
+  <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
+</body>
+</html>`;
+}
+
+function generateBlogArticleHTML(article: { slug: string; title: string; excerpt: string; content: string; image_url: string | null; published_at: string }): string {
+  const fullUrl = `${baseUrl}/blog/${article.slug}`;
+  const contentHtml = markdownToHtml(article.content || "");
+  const safeTitle = (article.title || "").replace(/"/g, "&quot;");
+  const safeExcerpt = (article.excerpt || "").replace(/"/g, "&quot;");
+  const imageUrl = article.image_url || `${baseUrl}/og-image.png`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${article.title} | Crawlers.fr</title>
+  <meta name="description" content="${safeExcerpt}">
+  <link rel="canonical" href="${fullUrl}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Crawlers.fr">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:title" content="${safeTitle}">
+  <meta property="og:description" content="${safeExcerpt}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="article:published_time" content="${article.published_at}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${safeTitle}">
+  <meta name="twitter:description" content="${safeExcerpt}">
+  <meta name="twitter:image" content="${imageUrl}">
+  <link rel="alternate" hreflang="fr" href="${fullUrl}">
+  <link rel="alternate" hreflang="x-default" href="${fullUrl}">
+  <script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": article.title,
+    "description": article.excerpt,
+    "url": fullUrl,
+    "image": imageUrl,
+    "datePublished": article.published_at,
+    "author": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl },
+    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png` } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": fullUrl }
+  })}</script>
+</head>
+<body>
+  <header><nav>
+    <a href="${baseUrl}">Crawlers.fr</a>
+    <a href="${baseUrl}/blog">Blog</a>
+    <a href="${baseUrl}/audit-expert">Audit Expert</a>
+    <a href="${baseUrl}/tarifs">Tarifs</a>
+  </nav></header>
+  <main>
+    <article>
+      <h1>${article.title}</h1>
+      <p><em>${safeExcerpt}</em></p>
+      ${article.image_url ? `<img src="${article.image_url}" alt="${safeTitle}" loading="lazy" width="1200" height="630">` : ""}
+      <div class="article-content">
+        ${contentHtml}
+      </div>
+    </article>
+    <nav aria-label="Articles du blog">
+      <a href="${baseUrl}/blog">← Retour au blog</a>
     </nav>
-  </footer>
-  <!-- Full documentation: ${baseUrl}/llms.txt -->
+  </main>
+  <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
 </body>
 </html>`;
 }
@@ -141,27 +191,91 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const route = url.searchParams.get("route") || "/";
-    const format = url.searchParams.get("format") || "html"; // html or json
+    const format = url.searchParams.get("format") || "html";
     const noCache = url.searchParams.get("nocache") === "true";
-
-    // Validate route
-    const meta = PUBLIC_ROUTES[route];
-    if (!meta) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Route not found", 
-          available_routes: Object.keys(PUBLIC_ROUTES) 
-        }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check cache first
+    // ── Blog article route: /blog/<slug> ──
+    const blogMatch = route.match(/^\/blog\/([a-z0-9_-]+)$/);
+    if (blogMatch) {
+      const slug = blogMatch[1];
+
+      // Check cache first
+      if (!noCache) {
+        const { data: cached } = await supabase
+          .from("prerender_cache")
+          .select("html_content, meta_title, meta_description, rendered_at")
+          .eq("route", route)
+          .gt("expires_at", new Date().toISOString())
+          .single();
+
+        if (cached) {
+          if (format === "json") {
+            return new Response(JSON.stringify({ route, title: cached.meta_title, description: cached.meta_description, rendered_at: cached.rendered_at, cached: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          return new Response(cached.html_content, {
+            headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "cache-hit", "X-Rendered-At": cached.rendered_at },
+          });
+        }
+      }
+
+      // Fetch article from DB
+      const { data: article, error } = await supabase
+        .from("blog_articles")
+        .select("slug, title, excerpt, content, image_url, published_at")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .single();
+
+      if (error || !article) {
+        return new Response(JSON.stringify({ error: "Article not found", slug }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const html = generateBlogArticleHTML(article);
+
+      // Cache it (24h)
+      const contentHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))
+        .then((buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join(""));
+
+      await supabase.from("prerender_cache").upsert({
+        route,
+        html_content: html,
+        content_hash: contentHash,
+        meta_title: article.title,
+        meta_description: article.excerpt || "",
+        rendered_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }, { onConflict: "route" });
+
+      if (format === "json") {
+        return new Response(JSON.stringify({ route, title: article.title, description: article.excerpt, rendered_at: new Date().toISOString(), cached: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(html, {
+        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "fresh" },
+      });
+    }
+
+    // ── Static routes ──
+    const meta = PUBLIC_ROUTES[route];
+    if (!meta) {
+      return new Response(
+        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>"] }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check cache
     if (!noCache) {
       const { data: cached } = await supabase
         .from("prerender_cache")
@@ -172,35 +286,20 @@ Deno.serve(async (req) => {
 
       if (cached) {
         if (format === "json") {
-          return new Response(JSON.stringify({
-            route,
-            title: cached.meta_title,
-            description: cached.meta_description,
-            rendered_at: cached.rendered_at,
-            cached: true,
-          }), {
+          return new Response(JSON.stringify({ route, title: cached.meta_title, description: cached.meta_description, rendered_at: cached.rendered_at, cached: true }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
         return new Response(cached.html_content, {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "text/html; charset=utf-8",
-            "X-Prerender": "cache-hit",
-            "X-Rendered-At": cached.rendered_at,
-          },
+          headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "cache-hit", "X-Rendered-At": cached.rendered_at },
         });
       }
     }
 
-    // Generate static HTML
-    const html = generateStaticHTML(route, meta, "");
-    const contentHash = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(html)
-    ).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
+    const html = generateStaticHTML(route, meta);
+    const contentHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))
+      .then((buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join(""));
 
-    // Cache it
     await supabase.from("prerender_cache").upsert({
       route,
       html_content: html,
@@ -212,30 +311,18 @@ Deno.serve(async (req) => {
     }, { onConflict: "route" });
 
     if (format === "json") {
-      return new Response(JSON.stringify({
-        route,
-        title: meta.title,
-        description: meta.description,
-        rendered_at: new Date().toISOString(),
-        cached: false,
-      }), {
+      return new Response(JSON.stringify({ route, title: meta.title, description: meta.description, rendered_at: new Date().toISOString(), cached: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     return new Response(html, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/html; charset=utf-8",
-        "X-Prerender": "fresh",
-        "X-Rendered-At": new Date().toISOString(),
-      },
+      headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "fresh" },
     });
   } catch (error) {
     console.error("render-page error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
