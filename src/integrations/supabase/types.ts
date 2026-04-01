@@ -5723,6 +5723,45 @@ export type Database = {
           },
         ]
       }
+      prerender_cache: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          expires_at: string
+          html_content: string
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          rendered_at: string
+          route: string
+          updated_at: string
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          html_content: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          rendered_at?: string
+          route: string
+          updated_at?: string
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          html_content?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          rendered_at?: string
+          route?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           affiliate_code_used: string | null
