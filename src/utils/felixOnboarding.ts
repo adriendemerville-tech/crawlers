@@ -25,7 +25,7 @@ export function getOnboardingMessages(_persona: string | null): OnboardingMessag
   return [
     {
       role: 'assistant',
-      content: `Bonjour ! 👋`,
+      content: `Salut, moi c'est Félix ! En quoi puis-je t'être utile ? 👋`,
       timestamp: now,
     },
     {
