@@ -993,6 +993,43 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
 ═══ FIN TEMPLATE ═══
 ` : ''}`
 
+    // ── Intelligent model routing based on content complexity ──
+    const complexityScore = (() => {
+      let score = 0;
+      // Length signals
+      if (brief.target_length.ideal > 3000) score += 3;
+      else if (brief.target_length.ideal > 1500) score += 1;
+      // Structure depth
+      if (brief.h2_count.max > 8) score += 2;
+      else if (brief.h2_count.max > 5) score += 1;
+      if (brief.h3_per_h2.max > 3) score += 1;
+      // E-E-A-T & GEO demands
+      if (brief.eeat_signals.length > 3) score += 2;
+      if (brief.citable_passages_count > 5) score += 1;
+      // Rich content features
+      if (brief.include_faq && brief.faq_count > 5) score += 1;
+      if (brief.include_table) score += 1;
+      if (brief.include_key_takeaways) score += 1;
+      // Internal linking complexity
+      if (brief.internal_links.length > 5) score += 1;
+      // Template presence (rich SEO/GEO rules)
+      if (contentTemplate) score += 2;
+      // Strategic objectives
+      if (strategic_objectives && strategic_objectives.length > 2) score += 2;
+      // Cannibalization context
+      if (cannibalization_data && cannibalization_data.length > 0) score += 1;
+      return score;
+    })();
+
+    // Route: ≤4 → flash (simple), 5-8 → flash-preview (standard), ≥9 → pro (complex)
+    const selectedModel = complexityScore >= 9
+      ? 'google/gemini-2.5-pro'
+      : complexityScore >= 5
+        ? 'google/gemini-3-flash-preview'
+        : 'google/gemini-2.5-flash';
+
+    console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${selectedModel} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
+
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -1000,7 +1037,7 @@ ${JSON.stringify(contentTemplate.examples, null, 2)}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: selectedModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
