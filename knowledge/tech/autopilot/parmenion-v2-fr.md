@@ -1,5 +1,5 @@
 # Memory: tech/autopilot/parmenion-v2-fr
-Updated: 2026-03-30
+Updated: 2026-04-01
 
 ## Autopilote Parménion v2 — Architecture complète (Dual-Lane)
 
@@ -18,21 +18,22 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 │
 │  ┌─ MICRO-CYCLE (Parménion)
 │  │
-│  │  1. AUDIT      → audit-expert-seo
+│  │  1. AUDIT      → audit-expert-seo (exécution dans l'engine)
 │  │
-│  │  2. DIAGNOSE   → cocoon-diag-* (content, semantic, structure, authority)
+│  │  2. DIAGNOSE   → cocoon-diag-* (exécution dans l'engine)
 │  │                  + ♻️ recyclage des items workbench consommés >24h
 │  │
-│  │  3. PRESCRIBE  → 2 prompts LLM parallèles :
+│  │  3. PRESCRIBE  → 2 prompts LLM parallèles dans l'orchestrateur :
 │  │                   • Lot TECHNIQUE (lane tech) → emit_code + emit_corrective_data
 │  │                   • Lot CONTENU (lane content) → emit_corrective_content + emit_editorial_content
 │  │                   (max 4 tool calls par prompt)
-│  │                   Budget: techSlots + contentSlots = 8 items max
-│  │                   Si force_content + workbench vide → item synthétique créé automatiquement
+│  │                   ⚠️ PAS d'exécution de fonctions (V2 produit directement le contenu)
+│  │                   Les cms_actions et fixes sont stockés dans le payload
 │  │
-│  │  4. ROUTE      → inline, dispatch automatique par canal
+│  │  4. ROUTE      → inline, dispatch automatique par canal (dans l'engine)
 │  │
 │  │  5. EXECUTE    → iktracker-actions / cms-push-draft / cms-patch-content / generate-corrective-code
+│  │                   Les CMS actions de prescribe V2 sont injectées dans cette phase
 │  │                   Max 10 actions CMS par cycle
 │  │
 │  │  6. VALIDATE   → vérification post-déploiement
@@ -55,6 +56,17 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 | 9 | Gap/Création | Contenu | content |
 | 10 | Expansion | Contenu | content |
 
+### FIX critique v2.2 (2026-04-01)
+
+**Problème racine** : Parménion ne publiait aucun article sur IKtracker malgré 71 cycles.
+- `content-architecture-advisor` échouait avec "Failed to create async job" car `user.id = 'service-role'` n'est pas un UUID valide pour la colonne `async_jobs.user_id`
+- L'engine exécutait les fonctions pendant la phase `prescribe`, alors que Prescribe V2 produit déjà le contenu via tool calls LLM. Résultat : appel redondant à `content-architecture-advisor` → crash → pipeline bloqué.
+
+**Corrections appliquées** :
+1. `autopilot-engine` : la phase `prescribe` avec V2 (`_prescribe_v2: true`) ne déclenche plus d'exécution de fonctions. Les `cms_actions` et `fixes` sont stockés dans le payload et injectés dans la phase `execute`.
+2. `content-architecture-advisor` : les appels service role utilisent maintenant le `user_id` réel depuis le body de la requête, avec fallback sur un admin.
+3. `autopilot-engine` : passe `config.user_id` dans les appels à `content-architecture-advisor`.
+
 ### Gate progressif (v2)
 - Tiers 5-6 : bloqués si score tech < `gate_threshold_low` (défaut: 50)
 - Tiers 7+ : bloqués si score tech < `gate_threshold_high` (défaut: 70)
@@ -73,7 +85,6 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
   - Lane `tech` → exclut seulement les items avec `consumed_by_code = true`
   - Lane `content` → exclut seulement les items avec `consumed_by_content = true`
   - Lane `all` → exclut seulement si `consumed_by_code = true AND consumed_by_content = true`
-- **Avant le fix** : les deux flags étaient combinés en AND, ce qui excluait les items des deux lanes dès qu'un seul flag était true → workbench vide → pas de contenu
 
 ### Recyclage du workbench (FIX v2.1)
 - Après chaque phase `diagnose`, l'engine recycle les items `in_progress` consommés depuis >24h
@@ -85,15 +96,11 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 - L'orchestrateur crée un item synthétique `missing_page` tier 9 avec le premier keyword du site
 - Garantit que prescribeWithDualPrompts est toujours appelé quand du contenu est forcé
 
-### Fallback prescribe (FIX v2.1)
-- L'alternance tech/contenu est désormais systématique (cycles impairs → contenu, pairs → tech)
-- Si force_content → toujours `content-architecture-advisor`
-- Plus de biais systématique vers `generate-corrective-code`
-
 ### Colonnes `autopilot_configs`
 | Colonne | Type | Défaut | Description |
 |---------|------|--------|-------------|
 | `force_content_cycle` | boolean | false | Forcer un cycle contenu (reset auto) |
+| `force_iktracker_article` | boolean | false | Forcer la création d'un article IKtracker |
 | `content_budget_pct` | integer | 30 | % du budget alloué au contenu |
 | `gate_threshold_low` | integer | 50 | Seuil gate pour tiers 5-6 |
 | `gate_threshold_high` | integer | 70 | Seuil gate pour tiers 7+ |
