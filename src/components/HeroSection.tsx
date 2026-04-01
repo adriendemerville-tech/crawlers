@@ -136,7 +136,7 @@ function HeroSectionComponent() {
         </div>
 
         {/* Audit Expert info */}
-        <p className="mt-10 text-lg font-medium text-muted-foreground text-right w-full" style={{ maxWidth: 'min(90%, 44rem)', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p className="mt-6 sm:mt-10 text-sm sm:text-lg font-medium text-muted-foreground text-center sm:text-right w-full" style={{ maxWidth: 'min(90%, 44rem)', marginLeft: 'auto', marginRight: 'auto' }}>
           {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
       </div>
