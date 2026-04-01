@@ -311,7 +311,7 @@ const IdentityFirstSection = memo(() => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-brand-violet-muted/30 via-background to-background">
+    <section className="py-10 md:py-14 bg-gradient-to-b from-brand-violet-muted/30 via-background to-background">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 border border-brand-violet/20 px-4 py-1.5 text-sm font-semibold text-brand-violet mb-5">
