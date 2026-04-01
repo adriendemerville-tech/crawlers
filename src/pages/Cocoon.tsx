@@ -182,7 +182,7 @@ async function findReadySite(sites: any[], userId: string) {
   return null;
 }
 
-export default function Cocoon() {
+function CocoonContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { language } = useLanguage();
