@@ -48,6 +48,8 @@ export function EeatScoringAdmin() {
   const [scanUrl, setScanUrl] = useState('');
   const [scanning, setScanning] = useState(false);
   const [editingCriterion, setEditingCriterion] = useState<EeatCriterion | null>(null);
+  const [scanResult, setScanResult] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('config');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newCriterion, setNewCriterion] = useState({
     criterion_key: '',
