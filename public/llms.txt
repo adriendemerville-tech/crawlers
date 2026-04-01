@@ -306,3 +306,5 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 # Contact : https://crawlers.fr
 # Langues : Français (FR), English (EN), Español (ES)
 # Zones : Europe, Amérique du Nord, Amérique du Sud
+# Version complète (llms-full.txt) : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
+# Pages HTML pré-rendues : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
