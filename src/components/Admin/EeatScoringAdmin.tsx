@@ -294,7 +294,8 @@ export function EeatScoringAdmin() {
                 </div>
               </div>
             );
-          })}
+           })}
+        </TooltipProvider>
         </CardContent>
       </Card>
 
