@@ -19,10 +19,21 @@ interface EeatScanResult {
     aboutPage: boolean;
     contactInfo: boolean;
     legalNotice: boolean;
+    schemaOrg?: boolean;
+    blogSection?: boolean;
+    testimonials?: boolean;
   };
   trustSignals: string[];
   missingSignals: string[];
   issues: string[];
+  strengths?: string[];
+  recommendations?: string[];
+  crawlInfo?: {
+    pagesAnalyzed: number;
+    source: string;
+    crawledAt: string;
+    sitemapUrlsFound: number;
+  } | null;
   scannedAt: string;
 }
 
@@ -169,6 +180,12 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             {result.score}<span className="text-lg text-muted-foreground">/100</span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">Score global E-E-A-T</p>
+          {result.crawlInfo && (
+            <p className="text-xs text-muted-foreground mt-2">
+              📄 {result.crawlInfo.pagesAnalyzed} pages analysées ({result.crawlInfo.source === 'cache' ? 'crawl récent en cache' : 'crawl intermédiaire'})
+              {result.crawlInfo.sitemapUrlsFound > 0 && ` · ${result.crawlInfo.sitemapUrlsFound} URLs sitemap`}
+            </p>
+          )}
         </div>
 
         {/* Category scores */}
@@ -238,6 +255,9 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
               { label: 'Expertise démontrée', ok: result.signals.expertiseDemonstrated },
               { label: 'Contact', ok: result.signals.contactInfo },
               { label: 'Mentions légales', ok: result.signals.legalNotice },
+              { label: 'Schema.org', ok: result.signals.schemaOrg ?? false },
+              { label: 'Blog/Actualités', ok: result.signals.blogSection ?? false },
+              { label: 'Témoignages/Avis', ok: result.signals.testimonials ?? false },
             ].map((s, i) => (
               <div key={i} className={`rounded-md border p-2 text-center ${s.ok ? 'border-green-500/30 bg-green-500/5 text-green-500' : 'border-destructive/30 bg-destructive/5 text-destructive'}`}>
                 {s.ok ? '✓' : '✗'} {s.label}
@@ -245,6 +265,36 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             ))}
           </div>
         </div>
+
+        {/* Strengths */}
+        {result.strengths && result.strengths.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">💪 Points forts</h3>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              {result.strengths.map((s, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Recommendations */}
+        {result.recommendations && result.recommendations.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">📋 Recommandations</h3>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              {result.recommendations.map((r, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">→</span>
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Glossary */}
         <div className="space-y-3 pt-2">
