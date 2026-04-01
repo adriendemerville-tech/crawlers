@@ -359,5 +359,19 @@ export function EeatScoringAdmin() {
         </DialogContent>
       </Dialog>
     </div>
+      </TabsContent>
+
+      <TabsContent value="report">
+        {scanResult ? (
+          <EeatReportPreview result={scanResult} />
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Lancez un scan E-E-A-T pour générer un rapport.
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+    </Tabs>
   );
 }
