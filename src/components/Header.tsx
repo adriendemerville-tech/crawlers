@@ -519,6 +519,7 @@ export function Header() {
         </Suspense>
       )}
     </header>
+    <div className="h-20" aria-hidden="true" />
     <>
       {isAdmin && showContentArchitect && createPortal(
         <Suspense fallback={null}>
