@@ -93,6 +93,7 @@ export function EeatScoringAdmin() {
   useEffect(() => { fetchCriteria(); }, [fetchCriteria]);
 
   const [scanProgress, setScanProgress] = useState(0);
+  const [forceCrawl, setForceCrawl] = useState(false);
 
   const handleScan = async () => {
     if (!scanUrl.trim()) return;
@@ -102,7 +103,7 @@ export function EeatScoringAdmin() {
     try {
       // Launch async scan
       const { data: jobData, error: jobError } = await supabase.functions.invoke('check-eeat', {
-        body: { url: scanUrl.trim(), async: true },
+        body: { url: scanUrl.trim(), async: true, forceCrawl },
       });
       if (jobError) throw jobError;
       if (!jobData?.job_id) throw new Error('No job_id returned');
