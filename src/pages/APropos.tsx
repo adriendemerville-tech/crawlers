@@ -87,7 +87,7 @@ const translations = {
   },
   es: {
     title: 'Acerca de Crawlers.fr — Auditoría SEO & GEO con IA',
-    metaDesc: 'Conozca la historia de Crawlers.fr, plataforma SaaS de auditoría SEO & GEO creada por Mukesh Bagri. Misión, tecnología, valores y visión 2026.',
+    metaDesc: 'Conozca la historia de Crawlers.fr, plataforma SaaS de auditoría SEO & GEO creada por Adrien de Volontat. Misión, tecnología, valores y visión 2026.',
     heading: 'Acerca de Crawlers.fr',
     subtitle: 'La primera herramienta francófona de auditoría SEO, GEO y visibilidad IA — diseñada para profesionales del posicionamiento.',
     missionTitle: 'Nuestra misión',
