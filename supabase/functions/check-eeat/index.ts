@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       try {
         await supabase.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', _job_id);
 
-        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id);
+        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id, !!forceCrawl);
 
         await supabase.from('async_jobs').update({
           status: 'completed',
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceKey}`,
         },
-        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id }),
+        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id, forceCrawl }),
       }).catch(e => console.error('[check-eeat] Self-invoke error:', e));
 
       return new Response(JSON.stringify({
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Synchronous mode (fallback for simple calls) ──
-    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null);
+    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl);
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
@@ -192,7 +192,8 @@ async function runEeatPipeline(
   domain: string,
   targetUrl: string,
   trackedSiteId: string | null,
-  jobId: string | null
+  jobId: string | null,
+  forceCrawl: boolean = false
 ): Promise<any> {
 
   // ── Phase 0: Auto-correct domain if DNS fails ──
