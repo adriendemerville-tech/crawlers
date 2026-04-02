@@ -796,6 +796,42 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
     }
   }
 
+  // Loading state for Pro users
+  if (locationsLoading && !isGated) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Empty state for Pro users with no GBP connection and no locations
+  if (!isGated && orderedLocations.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-8 text-center space-y-4">
+            <Store className="h-12 w-12 mx-auto text-muted-foreground/40" />
+            <div>
+              <h3 className="font-semibold text-lg">
+                {language === 'fr' ? 'Aucun établissement connecté' : 'No location connected'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {language === 'fr' 
+                  ? 'Connectez votre compte Google Business Profile pour gérer vos établissements.'
+                  : 'Connect your Google Business Profile account to manage your locations.'}
+              </p>
+            </div>
+            <Button onClick={handleGbpConnect} disabled={gbpLoading} className="gap-2">
+              {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
+              {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${isGated ? 'relative' : ''}`}>
       {isGated && (
