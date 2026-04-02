@@ -670,9 +670,6 @@ const Index = () => {
           <IdentityFirstSection />
         </Suspense>
 
-        <Suspense fallback={<SectionSkeleton />}>
-          <FeatureShowcase />
-        </Suspense>
 
         {/* Active crawl notification banner */}
         <div className="max-w-3xl mx-auto px-4 mb-4">
