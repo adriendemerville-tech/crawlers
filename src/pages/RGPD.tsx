@@ -158,6 +158,21 @@ const RGPD = () => {
                   </ul>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données CMS', 'CMS Data', 'Datos CMS')}</h3>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    <li>• {t3(language, 'Identifiants de connexion CMS chiffrés (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : clés API ou tokens OAuth', 'Encrypted CMS connection credentials (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): API keys or OAuth tokens', 'Credenciales de conexión CMS cifradas (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): claves API o tokens OAuth')}</li>
+                    <li>• {t3(language, 'Identifiant de site CMS (platform_site_id)', 'CMS site identifier (platform_site_id)', 'Identificador del sitio CMS (platform_site_id)')}</li>
+                    <li>• {t3(language, 'Connexion Google My Business (OAuth, optionnelle)', 'Google My Business connection (OAuth, optional)', 'Conexión Google My Business (OAuth, opcional)')}</li>
+                  </ul>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'équipe agence', 'Agency Team Data', 'Datos del equipo de agencia')}</h3>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    <li>• {t3(language, 'Liste des membres d\'équipe et clients rattachés (nom, email, rôle)', 'Team member and client list (name, email, role)', 'Lista de miembros del equipo y clientes asociados (nombre, email, rol)')}</li>
+                    <li>• {t3(language, 'Invitations envoyées et acceptées', 'Sent and accepted invitations', 'Invitaciones enviadas y aceptadas')}</li>
+                  </ul>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-6">
                   <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données de navigation (anonymes)', 'Navigation Data (anonymous)', 'Datos de navegación (anónimos)')}</h3>
                   <ul className="text-muted-foreground space-y-1 text-sm">
                     <li>• {t3(language, 'Pages visitées, type d\'événement, identifiant de session (analytics internes, sans cookies tiers)', 'Pages visited, event type, session identifier (internal analytics, no third-party cookies)', 'Páginas visitadas, tipo de evento, identificador de sesión (analíticas internas, sin cookies de terceros)')}</li>
