@@ -808,7 +808,7 @@ export default function Aide() {
 
           {/* Footer metadata */}
           <div className="mt-16 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <p>Dernière mise à jour : mars 2026</p>
+            <p>Dernière mise à jour : mars 2026 — Contact : <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
             <a
               href="/crawlers-sav-documentation.md"
               download
