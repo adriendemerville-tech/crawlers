@@ -305,7 +305,28 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
 - URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
+
+═══ RICHESSE SCHEMA.ORG ═══
+- Blocs JSON-LD détectés: ${aggregated.schemaRichness.totalBlocks}
+- Types uniques: ${aggregated.schemaRichness.uniqueTypes.join(', ') || 'aucun'}
+- Utilise @graph: ${aggregated.schemaRichness.hasGraph ? 'Oui' : 'Non'}
+- Champs totaux: ${aggregated.schemaRichness.totalFields}
+- Profondeur max: ${aggregated.schemaRichness.maxDepth}
+- sameAs (liens sociaux/identité): ${aggregated.schemaRichness.hasSameAs ? 'Oui' : 'Non'}
+- Auteur dans JSON-LD: ${aggregated.schemaRichness.hasAuthorInJsonLd ? 'Oui' : 'Non'}
+- Entités détectées:
+  • Organization: ${aggregated.schemaRichness.entities.hasOrganization ? '✓' : '✗'}
+  • LocalBusiness: ${aggregated.schemaRichness.entities.hasLocalBusiness ? '✓' : '✗'}
+  • Person: ${aggregated.schemaRichness.entities.hasPerson ? '✓' : '✗'}
+  • WebSite: ${aggregated.schemaRichness.entities.hasWebSite ? '✓' : '✗'}
+  • Article/BlogPosting: ${aggregated.schemaRichness.entities.hasArticle ? '✓' : '✗'}
+  • FAQPage: ${aggregated.schemaRichness.entities.hasFAQPage ? '✓' : '✗'}
+  • Product: ${aggregated.schemaRichness.entities.hasProduct ? '✓' : '✗'}
+  • BreadcrumbList: ${aggregated.schemaRichness.entities.hasBreadcrumb ? '✓' : '✗'}
+  • Review: ${aggregated.schemaRichness.entities.hasReview ? '✓' : '✗'}
+
 IMPORTANT: Les détections de pages (À propos, Contact, Mentions légales, CGV/CGU, Blog, Témoignages) sont basées sur l'analyse combinée des ${pagesCount} pages crawlées ET des ${preCrawlResult.totalSitemapUrls} URLs du sitemap. Si un signal est marqué "Oui", la page EXISTE — ne le signale PAS comme manquant.
+IMPORTANT: Si des entités Schema.org sont marquées ✓, elles EXISTENT — valorise-les dans le score. Si sameAs ou auteur JSON-LD sont présents, c'est un signal E-E-A-T fort.
 ${backlinkSection}
 ${gbpSection}
 
