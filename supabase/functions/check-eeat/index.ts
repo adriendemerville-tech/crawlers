@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Synchronous mode (fallback for simple calls) ──
-    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl);
+    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl, null);
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
