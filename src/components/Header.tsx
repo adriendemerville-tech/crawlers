@@ -351,23 +351,14 @@ export function Header() {
             </>
           )}
 
-          {/* Console — for paid users, hidden on console page */}
-          {!isProfilePage && (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) && (
-            isAuditExpertPage ? (
-              <a href="/app/console" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="text-sm">{t.console}</span>
-                </Button>
-              </a>
-            ) : (
-              <Link to="/app/console">
-                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="text-sm">{t.console}</span>
-                </Button>
-              </Link>
-            )
+          {/* Console — for paid users, hidden on console page and audit-expert page */}
+          {!isProfilePage && !isAuditExpertPage && (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free'))) && (
+            <Link to="/app/console">
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="text-sm">{t.console}</span>
+              </Button>
+            </Link>
           )}
         </div>
 
