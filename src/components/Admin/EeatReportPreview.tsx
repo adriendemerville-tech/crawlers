@@ -36,6 +36,7 @@ interface EeatScanResult {
     referringIps: number;
     referringSubnets: number;
     anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
+    referringPages?: { sourceUrl: string; targetUrl: string; anchor: string; rank: number; dofollow: boolean; firstSeen: string | null }[];
   } | null;
   gbpData?: {
     avgRating: number;
@@ -242,6 +243,7 @@ ${result.backlinkData ? `<h2>🔗 Données Backlinks (réelles)</h2>
 <div class="card" style="text-align:center"><div class="val">${result.backlinkData.backlinksTotal.toLocaleString()}</div><p style="font-size:.7rem;color:#94a3b8">Backlinks totaux</p></div>
 </div>
 ${result.backlinkData.anchorDistribution?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">Top ancres</p>${result.backlinkData.anchorDistribution.slice(0, 5).map(a => `<div style="display:flex;justify-content:space-between;font-size:.75rem;margin:.2rem 0"><span>"${a.anchor}"</span><span style="color:#94a3b8">${a.backlinks} liens</span></div>`).join('')}</div>` : ''}
+${result.backlinkData.referringPages?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">🔗 Pages référentes (cliquez pour vérifier)</p>${result.backlinkData.referringPages.slice(0, 20).map(bp => `<div style="font-size:.75rem;margin:.4rem 0;padding:.4rem 0;border-bottom:1px solid #2d3348"><a href="${bp.sourceUrl}" target="_blank" style="color:#3b82f6;text-decoration:none;word-break:break-all">${bp.sourceUrl}</a><div style="color:#64748b;font-size:.65rem;margin-top:.2rem">→ ${bp.targetUrl} · Ancre: "${bp.anchor || '(vide)'}" · Rank: ${bp.rank}${bp.dofollow ? ' · dofollow' : ' · nofollow'}</div></div>`).join('')}</div>` : ''}
 <p style="font-size:.6rem;color:#64748b">Source : DataForSEO · Données en temps réel</p>` : ''}
 ${result.gbpData ? `<h2>📍 Google Business Profile (réel)</h2>
 <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
@@ -603,6 +605,29 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
                       <div key={i} className="flex items-center justify-between text-xs">
                         <span className="text-foreground truncate max-w-[60%]">"{a.anchor}"</span>
                         <span className="text-muted-foreground">{a.backlinks} liens · {a.domains} domaines</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.backlinkData.referringPages && result.backlinkData.referringPages.length > 0 && (
+                <div className="rounded-lg border border-border p-3 bg-background">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">🔗 Pages référentes (cliquez pour vérifier le backlink)</p>
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {result.backlinkData.referringPages.map((bp, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs border-b border-border/50 pb-1.5 last:border-0">
+                        <div className="flex-1 min-w-0">
+                          <a href={bp.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block" title={bp.sourceUrl}>
+                            {bp.sourceUrl}
+                          </a>
+                          <div className="flex items-center gap-2 mt-0.5 text-muted-foreground">
+                            <span>→ {bp.targetUrl}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right text-muted-foreground">
+                          <div className="text-[10px]">Ancre: "{bp.anchor || '(vide)'}"</div>
+                          <div className="text-[10px]">Rank: {bp.rank}{bp.dofollow ? ' · dofollow' : ' · nofollow'}</div>
+                        </div>
                       </div>
                     ))}
                   </div>
