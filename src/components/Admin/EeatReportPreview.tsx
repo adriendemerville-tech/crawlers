@@ -371,6 +371,9 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             <Button size="sm" variant="outline" onClick={handleDownloadPDF}>
               <Download className="h-4 w-4 mr-1" /> PDF
             </Button>
+            <Button size="sm" variant="outline" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-1" /> Imprimer
+            </Button>
             <Button size="sm" variant="outline" onClick={handleShare} disabled={sharing}>
               {copied ? <Check className="h-4 w-4 mr-1" /> : <Share2 className="h-4 w-4 mr-1" />}
               {copied ? 'Copié !' : sharing ? 'Partage…' : 'Partager'}
