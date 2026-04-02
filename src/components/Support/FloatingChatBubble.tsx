@@ -92,7 +92,7 @@ export function FloatingChatBubble() {
       sessionStorage.setItem(key, '1');
       setShowGuestQuizSuggestion(true);
       setGuestBubbleVisible(true);
-      playNotificationSound();
+      if (!isSilentPage) playNotificationSound();
       // Auto-hide bubble text after 10s, keep notification dot
       setTimeout(() => setGuestBubbleVisible(false), 10000);
     }, 5000);
