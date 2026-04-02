@@ -350,9 +350,9 @@ export default function GuideAuditSeo() {
 
           {/* ═══ FAQ ═══ */}
           <section className="mb-14">
-            <h2 className="mb-6 text-2xl font-bold text-foreground sm:text-3xl">
+            <p className="mb-6 text-2xl font-bold text-foreground sm:text-3xl">
               FAQ : Vos questions sur l'audit SEO & GEO
-            </h2>
+            </p>
             <Accordion type="single" collapsible className="space-y-3">
               {faqItems.map((item, i) => (
                 <AccordionItem
