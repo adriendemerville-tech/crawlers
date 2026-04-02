@@ -389,7 +389,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '10. Réclamation auprès de la CNIL', '10. Complaint to the CNIL', '10. Reclamación ante la CNIL')}
+                {t3(language, '11. Réclamation auprès de la CNIL', '11. Complaint to the CNIL', '11. Reclamación ante la CNIL')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
