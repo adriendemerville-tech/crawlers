@@ -49,7 +49,7 @@ const translations = {
   },
   en: {
     title: 'About Crawlers.fr — AI-Powered SEO & GEO Audit',
-    metaDesc: 'Learn about Crawlers.fr, the SaaS SEO & GEO audit platform created by Mukesh Bagri. Mission, technology, values and 2026 vision.',
+    metaDesc: 'Learn about Crawlers.fr, the SaaS SEO & GEO audit platform created by Adrien de Volontat. Mission, technology, values and 2026 vision.',
     heading: 'About Crawlers.fr',
     subtitle: 'The first French-language SEO, GEO and AI visibility audit tool — built for search professionals.',
     missionTitle: 'Our Mission',
