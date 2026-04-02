@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceKey}`,
         },
-        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id }),
+        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id, forceCrawl }),
       }).catch(e => console.error('[check-eeat] Self-invoke error:', e));
 
       return new Response(JSON.stringify({
