@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
     });
 
     const data = await resp.json();
+    console.log('[check-backlinks] DataForSEO response status:', data?.status_code, 'tasks:', JSON.stringify(data?.tasks?.[0]?.status_code), 'result count:', data?.tasks?.[0]?.result?.length);
     const result = data?.tasks?.[0]?.result?.[0];
 
     if (!result) {
