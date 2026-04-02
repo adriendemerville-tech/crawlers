@@ -232,7 +232,7 @@ async function runEeatPipeline(
   if (jobId) await supabase.from('async_jobs').update({ progress: 30 }).eq('id', jobId);
 
   // ── Phase 2: Aggregate structural signals ──
-  const aggregated = aggregateSignals(preCrawlResult.pages);
+  const aggregated = aggregateSignals(preCrawlResult.pages, preCrawlResult.sitemapUrls);
 
   if (jobId) await supabase.from('async_jobs').update({ progress: 35 }).eq('id', jobId);
 
