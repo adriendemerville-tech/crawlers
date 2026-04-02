@@ -1458,7 +1458,7 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 | status | string | TOUJOURS "draft" — JAMAIS "published" |
 | author_name | string | Nom de l'auteur affiché (ex: "Équipe IKtracker") |
 | image_url | string | URL de l'image à la une (hero image) |
-| category | string | Catégorie de l'article (ex: "Guides", "Actualités", "Conseils fiscaux") |
+| category | string | Catégorie de l'article (ex: "Actualités", "Conseils fiscaux", "Comparatifs") |
 | tags | string[] | Tags/mots-clés associés |
 | canonical_url | string | URL canonique si republication |
 | schema_org | object | Données structurées JSON-LD (Article, BlogPosting, FAQPage) |

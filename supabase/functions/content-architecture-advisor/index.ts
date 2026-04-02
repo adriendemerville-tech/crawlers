@@ -1002,7 +1002,7 @@ FRAÎCHEUR & DÉNOMINATION:
 
 ⚠️ Le contenu des sections (body_text) DOIT suivre ces règles. Un contenu qui ne respecte pas les règles GEO (passages citables, réponse directe, FAQ) sera considéré comme non conforme.
 ═══ FIN TEMPLATE ═══
-` : ''}
+` : ''}`;
 
     // ── Intelligent model routing based on content complexity ──
     const complexityScore = (() => {
