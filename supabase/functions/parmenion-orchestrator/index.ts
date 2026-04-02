@@ -875,7 +875,8 @@ RÈGLES:
       console.warn('[Parménion] Failed to log generation:', e);
     }
 
-    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Date du jour : ${todayISO}. Utilise TOUJOURS l'année en cours (${new Date().getFullYear()}) dans tes contenus — JAMAIS 2024 ou une autre année passée.
 Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
 ${siteCtx}
