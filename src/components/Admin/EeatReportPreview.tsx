@@ -38,6 +38,11 @@ interface EeatScanResult {
     anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
     referringPages?: { sourceUrl: string; targetUrl: string; anchor: string; rank: number; dofollow: boolean; firstSeen: string | null }[];
   } | null;
+  ga4Referrals?: {
+    referrals: { source: string; sessions: number; users: number }[];
+    totalReferralSessions: number;
+  } | null;
+  ga4Connected?: boolean;
   gbpData?: {
     avgRating: number;
     totalReviews: number;
