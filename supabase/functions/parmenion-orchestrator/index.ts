@@ -762,8 +762,9 @@ async function prescribeWithDualPrompts(context: {
 
   // ── PROMPT TECHNIQUE (tiers 0-3) ──
   if (techItems.length > 0) {
-    const techPrompt = `Tu es un moteur d'exécution SEO technique. Tu reçois des items prioritaires à corriger.
-Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+    const techTodayISO = new Date().toISOString().slice(0, 10);
+    const techPrompt = `Tu es un moteur d'exécution SEO technique. Date du jour : ${techTodayISO}.
+Tu reçois des items prioritaires à corriger. Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
 
 ${siteCtx}
 
