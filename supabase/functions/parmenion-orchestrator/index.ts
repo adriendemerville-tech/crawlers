@@ -762,8 +762,9 @@ async function prescribeWithDualPrompts(context: {
 
   // ── PROMPT TECHNIQUE (tiers 0-3) ──
   if (techItems.length > 0) {
-    const techPrompt = `Tu es un moteur d'exécution SEO technique. Tu reçois des items prioritaires à corriger.
-Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
+    const techTodayISO = new Date().toISOString().slice(0, 10);
+    const techPrompt = `Tu es un moteur d'exécution SEO technique. Date du jour : ${techTodayISO}.
+Tu reçois des items prioritaires à corriger. Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis.
 
 ${siteCtx}
 
@@ -875,7 +876,8 @@ RÈGLES:
       console.warn('[Parménion] Failed to log generation:', e);
     }
 
-    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Tu reçois des items prioritaires.
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Date du jour : ${todayISO}. Utilise TOUJOURS l'année en cours (${new Date().getFullYear()}) dans tes contenus — JAMAIS 2024 ou une autre année passée.
 Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
 
 ${siteCtx}
@@ -897,8 +899,11 @@ ${context.siteInfo?.products_services ? `Ses produits/services : ${context.siteI
 
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
-- emit_editorial_content: pour CRÉER un nouvel article/page (combler un gap)
-${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content avec action "create-post" pour créer UN NOUVEL ARTICLE de blog pertinent pour le secteur du site. Cette directive est prioritaire et NON NÉGOCIABLE — même si aucun gap n'est identifié, produis un article utile pour le référencement du site.\n` : ''}
+- emit_editorial_content: pour CRÉER un nouvel article OU une nouvelle page (combler un gap)
+  - Utilise action "create-post" pour les articles de blog (guides, actualités, conseils)
+  - Utilise action "create-page" pour les pages statiques (landing pages, pages de conversion, FAQ globales)
+  - DIVERSIFIE : ne crée pas uniquement des articles. Si un gap correspond à une page de service/conversion, utilise create-page.
+${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur du site. Privilégie "create-post" pour le blog, mais si le gap identifié correspond à une page de conversion, utilise "create-page". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
 - status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
 - FORMAT OBLIGATOIRE: tout le contenu DOIT être en **Markdown** (pas de HTML). Utilise ## pour H2, ### pour H3, **gras**, *italique*, - pour listes, [ancre](url) pour liens, > pour citations.
@@ -1485,10 +1490,11 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true
+9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO)
 10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
 11. author_name par défaut: "Équipe IKtracker"
 12. ⚠️ FORMAT: N'utilise JAMAIS de balises HTML (<h2>, <p>, <a>, <ul>, etc.). Tout DOIT être en syntaxe Markdown pure.
+13. ⚠️ DATES: Utilise TOUJOURS l'année en cours dans le contenu et les métadonnées. JAMAIS 2024 ou une autre année passée.
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
