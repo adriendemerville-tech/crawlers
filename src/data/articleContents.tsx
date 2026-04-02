@@ -2068,8 +2068,16 @@ Allow: /`}</pre>
         <p>
           La estrategia racional es invertir en lo medible: <strong>el cumplimiento técnico</strong>. <strong>Crawlers.fr</strong> se centra en diagnósticos concretos y verificables: accesibilidad del <code>robots.txt</code>, validación de <code>JSON-LD</code>, arquitectura AI-ready y corrección inmediata.
         </p>
+
+        <h2>La alternativa que ya existe: análisis directo de logs del servidor</h2>
         <p>
-          <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística.
+          Lo que las herramientas de "Share of Voice" no hacen — y servicios como <strong>Crawlers.fr</strong> sí — es <strong>analizar directamente los logs de tu servidor</strong> para observar el comportamiento real de los bots IA. Sin simulación, sin estimaciones: <strong>hechos brutos de tus propios datos</strong>.
+        </p>
+        <p>
+          Cada vez que <strong>GPTBot</strong>, <strong>ClaudeBot</strong>, <strong>PerplexityBot</strong> o <strong>Google-Extended</strong> rastrea tu sitio, deja una huella en los logs. Analizándolos, obtienes respuestas concretas: qué bots pasan, en qué páginas se detienen, con qué frecuencia vuelven, y qué códigos HTTP reciben. <strong>Los logs no mienten</strong>: registran lo que realmente ocurrió.
+        </p>
+        <p>
+          <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística. Invierte en código perfecto y datos reales.
         </p>
 
 
