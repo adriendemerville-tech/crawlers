@@ -307,6 +307,21 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
     setTimeout(() => { w.print(); }, 500);
   };
 
+  const handlePrint = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+  };
+
   const handleShare = async () => {
     setSharing(true);
     try {
