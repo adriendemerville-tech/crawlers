@@ -129,7 +129,7 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
     // Fetch les pages du crawl
     const { data: crawlPages } = await supabase
       .from('crawl_pages')
-      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, is_indexable, body_text_truncated, http_status')
+      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, schema_types, schema_count, schema_depth, schema_field_count, schema_has_graph, has_same_as, has_author_in_json_ld, is_indexable, body_text_truncated, http_status')
       .eq('crawl_id', crawl.id)
       .order('seo_score', { ascending: false })
       .limit(50);
@@ -143,7 +143,13 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
       metaDescription: '',
       wordCount: p.word_count || 0,
       hasSchemaOrg: p.has_schema_org || false,
-      schemaTypes: [],
+      schemaTypes: p.schema_types || [],
+      schemaCount: p.schema_count || 0,
+      schemaDepth: p.schema_depth || 0,
+      schemaFieldCount: p.schema_field_count || 0,
+      schemaHasGraph: p.schema_has_graph || false,
+      hasSameAs: p.has_same_as || false,
+      hasAuthorInJsonLd: p.has_author_in_json_ld || false,
       internalLinksCount: p.internal_links || 0,
       externalLinksCount: p.external_links || 0,
       httpStatus: p.http_status || 200,
@@ -151,12 +157,16 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
       bodyTextTruncated: (p.body_text_truncated || '').slice(0, 500),
     }));
 
+    // Also scan sitemap even from cache for trust page detection
+    const normalizedDomain = domain;
+    const sitemapUrls = await scanSitemap(normalizedDomain);
+
     return {
-      source: 'cache',
+      source: 'cache' as const,
       cacheAge: crawl.created_at,
       pages,
-      sitemapUrls: [],
-      totalSitemapUrls: 0,
+      sitemapUrls,
+      totalSitemapUrls: sitemapUrls.length,
       ga4TopPages: [],
       crawledAt: crawl.created_at,
     };
