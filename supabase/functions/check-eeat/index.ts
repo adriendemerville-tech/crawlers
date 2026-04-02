@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       try {
         await supabase.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', _job_id);
 
-        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id);
+        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id, !!forceCrawl);
 
         await supabase.from('async_jobs').update({
           status: 'completed',
