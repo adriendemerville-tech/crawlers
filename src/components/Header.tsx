@@ -449,7 +449,7 @@ export function Header() {
                         <LayoutDashboard className="h-4 w-4" />
                         {t.console}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=pro-agency')}>
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigateFromMenu('/app/console?tab=settings')}>
                         <User className="h-4 w-4" />
                         {t.myAccount}
                     </DropdownMenuItem>
