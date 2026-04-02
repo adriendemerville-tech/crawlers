@@ -271,23 +271,46 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '6. Durées de conservation', '6. Retention Periods', '6. Plazos de conservación')}
+                {t3(language, '6. Ségrégation des données (Data Firewall)', '6. Data Segregation (Data Firewall)', '6. Segregación de datos (Data Firewall)')}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'Crawlers AI met en place une architecture de « Data Firewall » qui sépare strictement l\'écosystème Google (Search Console, GA4, Google My Business) des LLMs tiers (OpenAI, OpenRouter). Les données brutes provenant des APIs Google restent confinées dans l\'écosystème Google. Seules des métriques agrégées et anonymisées (clics, impressions, positions moyennes) sont transmises aux modèles de langage tiers pour les calculs de prévision. La génération de contenu et l\'assistant Marina privilégient le modèle Gemini Pro pour rester dans l\'écosystème Google.',
+                  'Crawlers AI implements a "Data Firewall" architecture that strictly separates the Google ecosystem (Search Console, GA4, Google My Business) from third-party LLMs (OpenAI, OpenRouter). Raw data from Google APIs remains confined within the Google ecosystem. Only aggregated and anonymized metrics (clicks, impressions, average positions) are transmitted to third-party language models for prediction calculations. Content generation and the Marina assistant favor the Gemini Pro model to remain within the Google ecosystem.',
+                  'Crawlers AI implementa una arquitectura de «Data Firewall» que separa estrictamente el ecosistema Google (Search Console, GA4, Google My Business) de los LLMs de terceros (OpenAI, OpenRouter). Los datos brutos de las APIs de Google permanecen confinados en el ecosistema Google. Solo se transmiten métricas agregadas y anonimizadas (clics, impresiones, posiciones medias) a los modelos de lenguaje de terceros para los cálculos de previsión. La generación de contenido y el asistente Marina privilegian el modelo Gemini Pro para permanecer en el ecosistema Google.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'Cette séparation est attestée publiquement sur la page crawlers.fr/data-flow-diagram.',
+                  'This separation is publicly attested on the page crawlers.fr/data-flow-diagram.',
+                  'Esta separación está atestiguada públicamente en la página crawlers.fr/data-flow-diagram.'
+                )}
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '7. Durées de conservation', '7. Retention Periods', '7. Plazos de conservación')}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6">
                 <ul className="text-muted-foreground space-y-2 text-sm">
                   <li>• <strong className="text-foreground">{t3(language, 'Données de compte :', 'Account data:', 'Datos de cuenta:')}</strong> {t3(language, 'durée de l\'inscription + 3 ans après suppression', 'duration of registration + 3 years after deletion', 'duración del registro + 3 años después de la eliminación')}</li>
-                  <li>• <strong className="text-foreground">{t3(language, 'Rapports et audits :', 'Reports and audits:', 'Informes y auditorías:')}</strong> {t3(language, 'durée de l\'inscription (supprimés avec le compte)', 'duration of registration (deleted with account)', 'duración del registro (eliminados con la cuenta)')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Rapports, audits et graphes sémantiques :', 'Reports, audits and semantic graphs:', 'Informes, auditorías y grafos semánticos:')}</strong> {t3(language, 'durée de l\'inscription (supprimés avec le compte)', 'duration of registration (deleted with account)', 'duración del registro (eliminados con la cuenta)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Données de facturation :', 'Billing data:', 'Datos de facturación:')}</strong> {t3(language, '10 ans (obligation légale)', '10 years (legal obligation)', '10 años (obligación legal)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Cache d\'audit :', 'Audit cache:', 'Caché de auditoría:')}</strong> {t3(language, '24 heures (automatiquement purgé)', '24 hours (automatically purged)', '24 horas (purgado automáticamente)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Analytics de navigation :', 'Navigation analytics:', 'Analíticas de navegación:')}</strong> {t3(language, '13 mois (conformité CNIL)', '13 months (CNIL compliance)', '13 meses (conformidad CNIL)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Données de crawl :', 'Crawl data:', 'Datos de crawl:')}</strong> {t3(language, 'conservées tant que le site est suivi par l\'utilisateur', 'retained as long as the site is tracked by the user', 'conservados mientras el sitio sea rastreado por el usuario')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Conversations LLM depth :', 'LLM depth conversations:', 'Conversaciones LLM depth:')}</strong> {t3(language, 'expiration automatique après 24 heures', 'automatic expiration after 24 hours', 'expiración automática después de 24 horas')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Tokens CMS / OAuth :', 'CMS / OAuth tokens:', 'Tokens CMS / OAuth:')}</strong> {t3(language, 'révocables à tout moment ; supprimés à la déconnexion du CMS', 'revocable at any time; deleted upon CMS disconnection', 'revocables en cualquier momento; eliminados al desconectar el CMS')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</strong> {t3(language, 'conservées tant que le compte propriétaire est actif', 'retained as long as the owner account is active', 'conservados mientras la cuenta propietaria esté activa')}</li>
                 </ul>
               </div>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '7. Sécurité des données', '7. Data Security', '7. Seguridad de los datos')}
+                {t3(language, '8. Sécurité des données', '8. Data Security', '8. Seguridad de los datos')}
               </h2>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>{t3(language, 'Chiffrement en transit (TLS 1.3) et au repos', 'Encryption in transit (TLS 1.3) and at rest', 'Cifrado en tránsito (TLS 1.3) y en reposo')}</li>
@@ -297,6 +320,8 @@ const RGPD = () => {
                 <li>{t3(language, 'Protection SSRF : validation des URLs avec blocage des IPs privées', 'SSRF protection: URL validation with private IP blocking', 'Protección SSRF: validación de URLs con bloqueo de IPs privadas')}</li>
                 <li>{t3(language, 'Clés API gérées via secrets d\'environnement (jamais exposées côté client)', 'API keys managed via environment secrets (never exposed client-side)', 'Claves API gestionadas mediante secretos de entorno (nunca expuestas del lado del cliente)')}</li>
                 <li>{t3(language, 'Injection de code correctif isolée par sandboxing sémantique (isolation DOM)', 'Corrective code injection isolated by semantic sandboxing (DOM isolation)', 'Inyección de código correctivo aislada por sandboxing semántico (aislamiento DOM)')}</li>
+                <li>{t3(language, 'Chiffrement des tokens CMS et OAuth au repos', 'CMS and OAuth token encryption at rest', 'Cifrado de los tokens CMS y OAuth en reposo')}</li>
+                <li>{t3(language, 'Architecture « Data Firewall » : ségrégation des données entre écosystèmes Google et LLMs tiers', '"Data Firewall" architecture: data segregation between Google and third-party LLM ecosystems', 'Arquitectura «Data Firewall»: segregación de datos entre ecosistemas Google y LLMs de terceros')}</li>
               </ul>
             </section>
 
