@@ -208,7 +208,7 @@ export default function APropos() {
           <h2 className="text-2xl font-bold text-foreground">{t.founderTitle}</h2>
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="shrink-0 w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-3xl font-bold text-primary">
-              MB
+              AV
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-foreground">{t.founderName}</h3>
