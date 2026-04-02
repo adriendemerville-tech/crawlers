@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +94,7 @@ export function EeatScoringAdmin() {
   useEffect(() => { fetchCriteria(); }, [fetchCriteria]);
 
   const [scanProgress, setScanProgress] = useState(0);
+  const [forceCrawl, setForceCrawl] = useState(false);
 
   const handleScan = async () => {
     if (!scanUrl.trim()) return;
@@ -102,7 +104,7 @@ export function EeatScoringAdmin() {
     try {
       // Launch async scan
       const { data: jobData, error: jobError } = await supabase.functions.invoke('check-eeat', {
-        body: { url: scanUrl.trim(), async: true },
+        body: { url: scanUrl.trim(), async: true, forceCrawl },
       });
       if (jobError) throw jobError;
       if (!jobData?.job_id) throw new Error('No job_id returned');
@@ -277,6 +279,12 @@ export function EeatScoringAdmin() {
               {scanning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               {scanning ? 'Scan multi-pages…' : 'Scan E-E-A-T'}
             </Button>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Checkbox id="force-crawl" checked={forceCrawl} onCheckedChange={(v) => setForceCrawl(v === true)} />
+            <Label htmlFor="force-crawl" className="text-sm text-muted-foreground cursor-pointer">
+              Forcer le renouvellement du crawl (ignorer le cache récent)
+            </Label>
           </div>
           {scanning && scanProgress > 0 && (
             <div className="mt-3 space-y-1">

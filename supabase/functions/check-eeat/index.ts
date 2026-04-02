@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { url, async: isAsync, _job_id, tracked_site_id } = body;
+    const { url, async: isAsync, _job_id, tracked_site_id, forceCrawl } = body;
 
     if (!url) return new Response(JSON.stringify({ error: 'URL required' }), { status: 400, headers: HEADERS });
 
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       const { data: job, error: jobErr } = await supabase.from('async_jobs').insert({
         function_name: 'check-eeat',
         user_id: userId,
-        input_payload: { url, tracked_site_id },
+        input_payload: { url, tracked_site_id, forceCrawl },
         status: 'pending',
         progress: 0,
       }).select('id').single();
@@ -206,12 +206,12 @@ async function runEeatPipeline(
   console.log(`[check-eeat] 🕷️ Phase 1: Pre-crawl for ${effectiveDomain}...`);
   if (jobId) await supabase.from('async_jobs').update({ progress: 10 }).eq('id', jobId);
 
-  let preCrawlResult = await preCrawlForAudit(supabase, effectiveDomain, trackedSiteId);
+  let preCrawlResult = await preCrawlForAudit(supabase, effectiveDomain, trackedSiteId, null, { skipCache: !!forceCrawl });
   
   // If no pages crawled, try with www. prefix as fallback
   if (preCrawlResult.pages.length === 0) {
     console.log(`[check-eeat] ⚠️ 0 pages crawled for ${effectiveDomain}, retrying with www.${effectiveDomain}...`);
-    preCrawlResult = await preCrawlForAudit(supabase, `www.${effectiveDomain}`, trackedSiteId);
+    preCrawlResult = await preCrawlForAudit(supabase, `www.${effectiveDomain}`, trackedSiteId, null, { skipCache: !!forceCrawl });
   }
 
   const pagesContext = formatPreCrawlForPrompt(preCrawlResult);

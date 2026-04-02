@@ -60,7 +60,8 @@ export async function preCrawlForAudit(
   supabase: any,
   domain: string,
   trackedSiteId?: string | null,
-  userId?: string | null
+  userId?: string | null,
+  options?: { skipCache?: boolean }
 ): Promise<PreCrawlResult> {
   const normalizedDomain = domain
     .replace(/^https?:\/\//, '')
@@ -68,13 +69,17 @@ export async function preCrawlForAudit(
     .replace(/\/.*$/, '')
     .toLowerCase();
 
-  console.log(`[preCrawl] 🔍 Checking cache for ${normalizedDomain}...`);
+  console.log(`[preCrawl] 🔍 Checking cache for ${normalizedDomain}...${options?.skipCache ? ' (FORCE REFRESH)' : ''}`);
 
   // ── 1. Check cache: crawl complet < 7 jours ──
-  const cacheResult = await checkCrawlCache(supabase, normalizedDomain);
-  if (cacheResult) {
-    console.log(`[preCrawl] ✅ Cache hit — ${cacheResult.pages.length} pages from ${cacheResult.cacheAge}`);
-    return cacheResult;
+  if (!options?.skipCache) {
+    const cacheResult = await checkCrawlCache(supabase, normalizedDomain);
+    if (cacheResult) {
+      console.log(`[preCrawl] ✅ Cache hit — ${cacheResult.pages.length} pages from ${cacheResult.cacheAge}`);
+      return cacheResult;
+    }
+  } else {
+    console.log(`[preCrawl] 🔄 Cache skipped — forcing fresh crawl`);
   }
 
   console.log(`[preCrawl] ⚡ No recent cache — starting intermediate crawl...`);
