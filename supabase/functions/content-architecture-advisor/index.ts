@@ -952,6 +952,11 @@ ${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Tot
 - Cible: ${siteIdentity?.targets || 'inconnue'}
 - Taille entreprise: ${siteIdentity?.company_size || 'inconnue'}
 - Entity type: ${siteIdentity?.entity_type || 'inconnu'}
+- Date du jour: ${new Date().toISOString().slice(0, 10)}
+- Fraîcheur éditoriale: si une date, année, millésime, échéance, barème, version ou mise à jour est mentionné(e), il/elle doit être exact(e) et cohérent(e) partout dans la sortie.
+- Cohérence temporelle obligatoire pour: recommended_h1, hn_hierarchy (H2/H3), introduction, sections.body_text, tldr_summary, FAQ, tableaux, résumés, meta_title, meta_description et json_ld_schemas.
+- N'ajoute PAS de date si elle n'apporte rien.
+- N'utilise PAS automatiquement le mot "Guide" dans le H1 ou les sections ; choisis la forme éditoriale la plus juste selon l'intention réelle.
 
 ⚠️ ACTIVATION DES 5 CRITÈRES GEO :
 Active chaque critère selon les signaux disponibles. Voici l'état des signaux :
@@ -989,9 +994,15 @@ ${contentTemplate.tone_guidelines}
 EXEMPLES DE RÉFÉRENCE:
 ${JSON.stringify(contentTemplate.examples, null, 2)}
 
+FRAÎCHEUR & DÉNOMINATION:
+- N'utilise PAS automatiquement "Guide" dans le recommended_h1, les H2/H3, les FAQ, les tableaux, les résumés ou les sections.
+- Choisis l'intitulé éditorial le plus juste selon l'intention: barème, comparatif, procédure, actualité, FAQ, décryptage, mise à jour, analyse, checklist, etc.
+- Si une date est pertinente, elle doit être exacte et cohérente PARTOUT dans la sortie.
+- Si la date n'apporte rien, n'en ajoute pas artificiellement.
+
 ⚠️ Le contenu des sections (body_text) DOIT suivre ces règles. Un contenu qui ne respecte pas les règles GEO (passages citables, réponse directe, FAQ) sera considéré comme non conforme.
 ═══ FIN TEMPLATE ═══
-` : ''}`
+` : ''}`;
 
     // ── Intelligent model routing based on content complexity ──
     const complexityScore = (() => {

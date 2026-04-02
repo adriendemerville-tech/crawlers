@@ -536,6 +536,12 @@ ${template.tone_guidelines}
 
 EXEMPLES DE RÉFÉRENCE:
 ${JSON.stringify(template.examples, null, 2)}
+
+FRAÎCHEUR & DÉNOMINATION:
+- N'utilise PAS automatiquement "Guide" dans le title, le H1, les H2, les H3, le résumé, la FAQ, les tableaux ou le corps du texte.
+- Choisis l'intitulé le plus juste selon l'intention réelle : barème, simulation, comparatif, mode d'emploi, procédure, actualité, checklist, FAQ, décryptage, mise à jour, analyse, etc.
+- Si une date est pertinente, elle doit être exacte et cohérente PARTOUT dans le livrable : title, H1/H2/H3, paragraphes, FAQ, tableaux, résumés, meta_title, meta_description, excerpt et schema_org.
+- Si la date n'apporte rien, n'en ajoute pas artificiellement.
 ═══ FIN TEMPLATE ═══`;
 }
 
@@ -900,7 +906,7 @@ ${context.siteInfo?.products_services ? `Ses produits/services : ${context.siteI
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
 - emit_editorial_content: pour CRÉER un nouvel article OU une nouvelle page (combler un gap)
-  - Utilise action "create-post" pour les articles de blog (guides, actualités, conseils)
+  - Utilise action "create-post" pour les contenus blog éditoriaux (actualités, décryptages, comparatifs, procédures, analyses, FAQ éditoriales)
   - Utilise action "create-page" pour les pages statiques (landing pages, pages de conversion, FAQ globales)
   - DIVERSIFIE : ne crée pas uniquement des articles. Si un gap correspond à une page de service/conversion, utilise create-page.
 ${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur du site. Privilégie "create-post" pour le blog, mais si le gap identifié correspond à une page de conversion, utilise "create-page". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
@@ -1452,7 +1458,7 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 | status | string | TOUJOURS "draft" — JAMAIS "published" |
 | author_name | string | Nom de l'auteur affiché (ex: "Équipe IKtracker") |
 | image_url | string | URL de l'image à la une (hero image) |
-| category | string | Catégorie de l'article (ex: "Guides", "Actualités", "Conseils fiscaux") |
+| category | string | Catégorie de l'article (ex: "Actualités", "Conseils fiscaux", "Comparatifs") |
 | tags | string[] | Tags/mots-clés associés |
 | canonical_url | string | URL canonique si republication |
 | schema_org | object | Données structurées JSON-LD (Article, BlogPosting, FAQPage) |
@@ -1490,11 +1496,12 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO)
+9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO) si une date est mentionnée
 10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
 11. author_name par défaut: "Équipe IKtracker"
 12. ⚠️ FORMAT: N'utilise JAMAIS de balises HTML (<h2>, <p>, <a>, <ul>, etc.). Tout DOIT être en syntaxe Markdown pure.
-13. ⚠️ DATES: Utilise TOUJOURS l'année en cours dans le contenu et les métadonnées. JAMAIS 2024 ou une autre année passée.
+13. ⚠️ DATES: quand une date / année / millésime est pertinente, elle doit être exacte et cohérente partout : title, H1, H2, H3, paragraphes, FAQ, tableaux, résumés, meta_title, meta_description, excerpt et schema_org. N'ajoute PAS de date si elle n'apporte rien.
+14. ⚠️ TITRE / H1: n'utilise PAS automatiquement le mot "Guide". Choisis la forme éditoriale la plus juste selon l'intention réelle : barème, comparatif, procédure, tutoriel, FAQ, actualité, décryptage, mise à jour, analyse, checklist, simulateur, etc.
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
@@ -1505,7 +1512,7 @@ Quand tu crées un article pour combler un gap de contenu:
 - Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus quand c'est pertinent
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
-- Catégories suggérées: "Guides", "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels"
+- Catégories suggérées: "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels", "FAQ", "Décryptages"
 - Tags pertinents: "indemnités kilométriques", "frais réels", "barème IK", "déclaration impôts", "auto-entrepreneur", "trajets professionnels"`;
 }
 
