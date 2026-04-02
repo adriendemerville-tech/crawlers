@@ -134,7 +134,7 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
     // Fetch les pages du crawl
     const { data: crawlPages } = await supabase
       .from('crawl_pages')
-      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, schema_types, schema_count, schema_depth, schema_field_count, schema_has_graph, has_same_as, has_author_in_json_ld, is_indexable, body_text_truncated, http_status')
+      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, schema_org_types, is_indexable, body_text_truncated, http_status')
       .eq('crawl_id', crawl.id)
       .order('seo_score', { ascending: false })
       .limit(50);
@@ -148,13 +148,13 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
       metaDescription: '',
       wordCount: p.word_count || 0,
       hasSchemaOrg: p.has_schema_org || false,
-      schemaTypes: p.schema_types || [],
-      schemaCount: p.schema_count || 0,
-      schemaDepth: p.schema_depth || 0,
-      schemaFieldCount: p.schema_field_count || 0,
-      schemaHasGraph: p.schema_has_graph || false,
-      hasSameAs: p.has_same_as || false,
-      hasAuthorInJsonLd: p.has_author_in_json_ld || false,
+      schemaTypes: p.schema_org_types || [],
+      schemaCount: 0,
+      schemaDepth: 0,
+      schemaFieldCount: 0,
+      schemaHasGraph: false,
+      hasSameAs: false,
+      hasAuthorInJsonLd: false,
       internalLinksCount: p.internal_links || 0,
       externalLinksCount: p.external_links || 0,
       httpStatus: p.http_status || 200,
