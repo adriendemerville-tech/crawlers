@@ -1848,8 +1848,8 @@ Allow: /`}</pre>
             "Aucune 'Search Console' pour les LLMs : OpenAI, Anthropic et Perplexity ne partagent aucune donnée de volume réel.",
             "Les outils comme Meteoria, Qwairy ou GetMint utilisent des simulations synthétiques sans pondération par le volume réel.",
             "Un prompt générique tapé 100 000 fois a le même poids qu'un prompt ultra-niché dans ces outils.",
-            "La seule action vérifiable est la compliance technique : robots.txt, JSON-LD, architecture AI-ready.",
-            "Crawlers.fr ne vend pas de la donnée estimée mais du diagnostic d'accessibilité et de la correction immédiate.",
+            "Des services comme Crawlers.fr analysent directement les logs serveur pour identifier quels bots IA passent réellement et sur quels contenus ils s'arrêtent.",
+            "La seule action vérifiable est la compliance technique + l'analyse de logs réels, pas des estimations de laboratoire.",
           ]}
         />
 
@@ -1905,12 +1905,41 @@ Allow: /`}</pre>
           La différence fondamentale ? <strong>Chaque point diagnostiqué par Crawlers.fr est un fait technique binaire</strong> (votre robots.txt bloque ou ne bloque pas <a href="https://platform.openai.com/docs/gptbot" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GPTBot</a>) — pas une estimation probabiliste basée sur un échantillon arbitraire de prompts.
         </p>
 
-        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion : investissez dans le code, pas dans les hallucinations statistiques</h3>
+        <h3 className="text-xl font-bold mt-10 mb-4">L'alternative qui existe déjà : l'analyse directe des logs serveur</h3>
+        <p>
+          Ce que les outils de "Share of Voice" ne font pas — et que des services comme <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a> font — c'est <strong>analyser directement vos logs serveur</strong> pour observer le comportement réel des bots IA. Pas de simulation, pas d'estimation : des <strong>faits bruts extraits de vos propres données</strong>.
+        </p>
+        <p>
+          Concrètement, chaque fois que <strong>GPTBot</strong>, <strong>ClaudeBot</strong>, <strong>PerplexityBot</strong>, <strong>Google-Extended</strong> ou <strong>Bytespider</strong> crawle votre site, il laisse une trace dans vos logs d'accès. En analysant ces logs, on obtient des réponses à des questions que la "Share of Voice" ne peut même pas poser :
+        </p>
+        <ul>
+          <li><strong>Quels bots IA visitent réellement votre site ?</strong> — Vous découvrirez peut-être que GPTBot passe 3 fois par semaine mais que ClaudeBot ne vient jamais. C'est une donnée actionnable immédiate.</li>
+          <li><strong>Sur quelles pages s'arrêtent-ils ?</strong> — Les crawlers IA ne parcourent pas votre site au hasard. Ils ont des préférences : pages avec du contenu structuré, des FAQ, du JSON-LD riche. L'analyse des logs révèle exactement quelles pages attirent leur attention.</li>
+          <li><strong>Quelle profondeur de crawl ?</strong> — Un bot qui ne visite que votre homepage n'exploite pas votre contenu. Un bot qui descend dans vos pages produit, vos articles de blog, vos FAQ : c'est le signe d'une architecture bien construite.</li>
+          <li><strong>À quelle fréquence reviennent-ils ?</strong> — Un crawl hebdomadaire vs. quotidien vous donne une indication directe de l'intérêt que les LLMs portent à votre contenu frais.</li>
+          <li><strong>Quels codes HTTP reçoivent-ils ?</strong> — Si GPTBot reçoit des 403 ou 503 sur vos pages clés, vous êtes invisible sans le savoir. C'est mesurable, binaire, et corrigeable en quelques minutes.</li>
+        </ul>
+        <p>
+          Cette approche est fondamentalement différente de la simulation synthétique. <strong>Les logs ne mentent pas</strong> : ils enregistrent ce qui s'est réellement passé sur votre serveur. Pas ce qu'un outil imagine qu'il pourrait se passer dans un prompt hypothétique.
+        </p>
+
+        <SgeSummaryBox
+          
+          points={[
+            "L'analyse de logs identifie les vrais bots IA (GPTBot, ClaudeBot, PerplexityBot) qui crawlent votre site",
+            "Elle révèle quelles pages attirent l'attention des LLMs et lesquelles sont ignorées",
+            "Les codes HTTP (200, 403, 503) montrent si votre contenu est réellement accessible aux IA",
+            "La fréquence de crawl indique l'intérêt des LLMs pour votre contenu frais",
+            "Contrairement à la Share of Voice synthétique, les logs sont des données factuelles, pas des estimations",
+          ]}
+        />
+
+        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion : investissez dans le code et les données réelles, pas dans les hallucinations statistiques</h3>
         <p>
           Le marché de la "Share of Voice IA" est séduisant. Il répond à un besoin réel des CMOs et des agences : avoir des chiffres à mettre dans un deck. Mais promettre une mesure précise d'une donnée qui n'existe pas, c'est construire une stratégie sur du sable.
         </p>
         <p>
-          <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est : <strong>"est-ce que ChatGPT peut techniquement accéder à mon contenu, le comprendre et le citer ?"</strong> Et ça, c'est mesurable. Aujourd'hui. Gratuitement. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait.
+          <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est double : <strong>"est-ce que les bots IA accèdent techniquement à mon contenu ?"</strong> (vérifiable par les logs) et <strong>"est-ce que mon contenu est structuré pour être compris et cité ?"</strong> (vérifiable par audit technique). Les deux sont mesurables. Aujourd'hui. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait et des données réelles.
         </p>
 
 
@@ -1925,8 +1954,8 @@ Allow: /`}</pre>
             "No 'Search Console' for LLMs: OpenAI, Anthropic, and Perplexity share zero real volume data.",
             "Tools like Meteoria, Qwairy, or GetMint use synthetic simulations without real volume weighting.",
             "A generic prompt typed 100,000 times weighs the same as an ultra-niche prompt in these tools.",
-            "The only verifiable action is technical compliance: robots.txt, JSON-LD, AI-ready architecture.",
-            "Crawlers.fr doesn't sell estimated data but accessibility diagnostics and immediate fixes.",
+            "Services like Crawlers.fr analyze server logs directly to identify which AI bots actually visit and what content they focus on.",
+            "The only verifiable action is technical compliance + real log analysis, not lab-grade estimates.",
           ]}
         />
 
@@ -1971,12 +2000,30 @@ Allow: /`}</pre>
           The fundamental difference? <strong>Every point diagnosed by Crawlers.fr is a binary technical fact</strong> — not a probabilistic estimate based on an arbitrary prompt sample.
         </p>
 
-        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion: invest in code, not statistical hallucinations</h3>
+        <h3 className="text-xl font-bold mt-10 mb-4">The alternative that already exists: direct server log analysis</h3>
+        <p>
+          What "Share of Voice" tools don't do — and services like <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a> do — is <strong>analyze your server logs directly</strong> to observe real AI bot behavior. No simulation, no estimation: <strong>raw facts from your own data</strong>.
+        </p>
+        <p>
+          Every time <strong>GPTBot</strong>, <strong>ClaudeBot</strong>, <strong>PerplexityBot</strong>, <strong>Google-Extended</strong>, or <strong>Bytespider</strong> crawls your site, it leaves a trace in your access logs. By analyzing these logs, you get answers to questions that "Share of Voice" can't even ask:
+        </p>
+        <ul>
+          <li><strong>Which AI bots actually visit your site?</strong> — You might discover GPTBot comes 3 times a week while ClaudeBot never visits. That's immediately actionable data.</li>
+          <li><strong>Which pages do they focus on?</strong> — AI crawlers don't browse randomly. They prefer pages with structured content, FAQs, rich JSON-LD. Log analysis reveals exactly which pages attract their attention.</li>
+          <li><strong>How deep do they crawl?</strong> — A bot that only visits your homepage isn't exploiting your content. One that digs into product pages, blog posts, and FAQs signals a well-built architecture.</li>
+          <li><strong>How often do they return?</strong> — Weekly vs. daily crawl frequency directly indicates LLM interest in your fresh content.</li>
+          <li><strong>What HTTP codes do they receive?</strong> — If GPTBot gets 403s or 503s on key pages, you're invisible without knowing it. Measurable, binary, fixable in minutes.</li>
+        </ul>
+        <p>
+          This approach is fundamentally different from synthetic simulation. <strong>Logs don't lie</strong>: they record what actually happened on your server — not what a tool imagines might happen with a hypothetical prompt.
+        </p>
+
+        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion: invest in code and real data, not statistical hallucinations</h3>
         <p>
           The "AI Share of Voice" market is seductive. It answers a real CMO need: numbers for a deck. But promising precise measurement of data that doesn't exist is building strategy on sand.
         </p>
         <p>
-          <strong>The real question isn't "how often does ChatGPT cite me."</strong> It's: <strong>"can ChatGPT technically access, understand, and cite my content?"</strong> And that's measurable. Today. For free. On Crawlers.fr.
+          <strong>The real question isn't "how often does ChatGPT cite me."</strong> It's twofold: <strong>"are AI bots technically accessing my content?"</strong> (verifiable via logs) and <strong>"is my content structured to be understood and cited?"</strong> (verifiable via technical audit). Both are measurable. Today. On <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Stop paying for hallucination dashboards. Invest in perfect code and real data.
         </p>
 
 
@@ -1991,8 +2038,8 @@ Allow: /`}</pre>
             "No existe 'Search Console' para los LLMs: OpenAI, Anthropic y Perplexity no comparten datos de volumen reales.",
             "Herramientas como Meteoria, Qwairy o GetMint usan simulaciones sintéticas sin ponderación por volumen real.",
             "Un prompt genérico tecleado 100.000 veces tiene el mismo peso que uno ultra-nicho en estas herramientas.",
-            "La única acción verificable es el cumplimiento técnico: robots.txt, JSON-LD, arquitectura AI-ready.",
-            "Crawlers.fr no vende datos estimados sino diagnóstico de accesibilidad y corrección inmediata.",
+            "Servicios como Crawlers.fr analizan los logs del servidor directamente para identificar qué bots IA pasan realmente y en qué contenidos se detienen.",
+            "La única acción verificable es el cumplimiento técnico + análisis de logs reales, no estimaciones de laboratorio.",
           ]}
         />
 
@@ -2021,8 +2068,16 @@ Allow: /`}</pre>
         <p>
           La estrategia racional es invertir en lo medible: <strong>el cumplimiento técnico</strong>. <strong>Crawlers.fr</strong> se centra en diagnósticos concretos y verificables: accesibilidad del <code>robots.txt</code>, validación de <code>JSON-LD</code>, arquitectura AI-ready y corrección inmediata.
         </p>
+
+        <h2>La alternativa que ya existe: análisis directo de logs del servidor</h2>
         <p>
-          <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística.
+          Lo que las herramientas de "Share of Voice" no hacen — y servicios como <strong>Crawlers.fr</strong> sí — es <strong>analizar directamente los logs de tu servidor</strong> para observar el comportamiento real de los bots IA. Sin simulación, sin estimaciones: <strong>hechos brutos de tus propios datos</strong>.
+        </p>
+        <p>
+          Cada vez que <strong>GPTBot</strong>, <strong>ClaudeBot</strong>, <strong>PerplexityBot</strong> o <strong>Google-Extended</strong> rastrea tu sitio, deja una huella en los logs. Analizándolos, obtienes respuestas concretas: qué bots pasan, en qué páginas se detienen, con qué frecuencia vuelven, y qué códigos HTTP reciben. <strong>Los logs no mienten</strong>: registran lo que realmente ocurrió.
+        </p>
+        <p>
+          <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística. Invierte en código perfecto y datos reales.
         </p>
 
 
