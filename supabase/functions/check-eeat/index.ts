@@ -198,7 +198,8 @@ async function runEeatPipeline(
   targetUrl: string,
   trackedSiteId: string | null,
   jobId: string | null,
-  forceCrawl: boolean = false
+  forceCrawl: boolean = false,
+  userId: string | null = null
 ): Promise<any> {
 
   // ── Phase 0: Auto-correct domain if DNS fails ──
