@@ -446,6 +446,12 @@ Réponds UNIQUEMENT en JSON valide :
       anchorDistribution: backlinkData.anchorDistribution,
       referringPages: backlinkData.referringPages,
     } : null,
+    // GA4 referral data enrichment
+    ga4Referrals: ga4Referrals.available ? {
+      referrals: ga4Referrals.referrals,
+      totalReferralSessions: ga4Referrals.totalReferralSessions,
+    } : null,
+    ga4Connected: ga4Referrals.available,
     // GBP data enrichment
     gbpData: gbpData.available ? {
       avgRating: gbpData.avgRating,
@@ -464,6 +470,7 @@ Réponds UNIQUEMENT en JSON valide :
       'crawl_html',
       'llm_semantic',
       ...(backlinkData.available ? ['dataforseo_backlinks'] : []),
+      ...(ga4Referrals.available ? ['ga4_referrals'] : []),
       ...(gbpData.available ? ['google_business_profile'] : []),
     ],
   };
