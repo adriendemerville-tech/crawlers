@@ -616,6 +616,27 @@ async function refreshGbpToken(supabase: any, conn: any, userId: string): Promis
 // ══════════════════════════════════════════════════════
 // Aggregation des signaux sur N pages
 // ══════════════════════════════════════════════════════
+interface SchemaRichness {
+  totalBlocks: number;
+  uniqueTypes: string[];
+  hasGraph: boolean;
+  totalFields: number;
+  maxDepth: number;
+  hasSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
+  entities: {
+    hasOrganization: boolean;
+    hasLocalBusiness: boolean;
+    hasPerson: boolean;
+    hasWebSite: boolean;
+    hasArticle: boolean;
+    hasFAQPage: boolean;
+    hasProduct: boolean;
+    hasBreadcrumb: boolean;
+    hasReview: boolean;
+  };
+}
+
 interface AggregatedSignals {
   pagesWithAuthor: number;
   pagesWithSchema: number;
@@ -632,15 +653,27 @@ interface AggregatedSignals {
   hasBlogSection: boolean;
   hasTestimonials: boolean;
   isHttps: boolean;
+  schemaRichness: SchemaRichness;
 }
 
 function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedSignals {
+  const schemaRichness: SchemaRichness = {
+    totalBlocks: 0, uniqueTypes: [], hasGraph: false,
+    totalFields: 0, maxDepth: 0, hasSameAs: false, hasAuthorInJsonLd: false,
+    entities: {
+      hasOrganization: false, hasLocalBusiness: false, hasPerson: false,
+      hasWebSite: false, hasArticle: false, hasFAQPage: false,
+      hasProduct: false, hasBreadcrumb: false, hasReview: false,
+    },
+  };
+
   if (!pages.length && !sitemapUrls.length) {
     return {
       pagesWithAuthor: 0, pagesWithSchema: 0, schemaTypes: [], noindexCount: 0,
       totalWords: 0, avgWords: 0, avgInternalLinks: 0, avgExternalLinks: 0,
       hasAboutPage: false, hasContactPage: false, hasLegalPage: false,
       hasTermsPage: false, hasBlogSection: false, hasTestimonials: false, isHttps: true,
+      schemaRichness,
     };
   }
 
@@ -659,7 +692,7 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
   let hasTestimonials = false;
   let isHttps = true;
 
-  // ── 1. Scan crawled pages (content + URL) ──
+  // ── 1. Scan crawled pages (content + URL + schema richness) ──
   for (const page of pages) {
     const urlLower = (page.url || '').toLowerCase();
     const textLower = (page.bodyTextTruncated || '').toLowerCase();
@@ -667,10 +700,30 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
 
     if (page.hasSchemaOrg || (page.schemaTypes && page.schemaTypes.length > 0)) {
       pagesWithSchema++;
-      for (const t of (page.schemaTypes || [])) allSchemaTypes.add(t);
+      for (const t of (page.schemaTypes || [])) {
+        allSchemaTypes.add(t);
+        const tl = t.toLowerCase();
+        if (tl.includes('organization')) schemaRichness.entities.hasOrganization = true;
+        if (tl.includes('localbusiness')) schemaRichness.entities.hasLocalBusiness = true;
+        if (tl.includes('person')) schemaRichness.entities.hasPerson = true;
+        if (tl.includes('website')) schemaRichness.entities.hasWebSite = true;
+        if (tl.includes('article') || tl.includes('blogposting') || tl.includes('newsarticle')) schemaRichness.entities.hasArticle = true;
+        if (tl.includes('faqpage')) schemaRichness.entities.hasFAQPage = true;
+        if (tl.includes('product')) schemaRichness.entities.hasProduct = true;
+        if (tl.includes('breadcrumb')) schemaRichness.entities.hasBreadcrumb = true;
+        if (tl.includes('review')) schemaRichness.entities.hasReview = true;
+      }
     }
 
-    // Author detection: URL pattern, content text, or Schema.org Person type
+    // Aggregate schema richness from crawled page metadata
+    if (page.schemaCount) schemaRichness.totalBlocks += page.schemaCount;
+    if (page.schemaHasGraph) schemaRichness.hasGraph = true;
+    if (page.schemaFieldCount) schemaRichness.totalFields += page.schemaFieldCount;
+    if (page.schemaDepth && page.schemaDepth > schemaRichness.maxDepth) schemaRichness.maxDepth = page.schemaDepth;
+    if (page.hasSameAs) schemaRichness.hasSameAs = true;
+    if (page.hasAuthorInJsonLd) schemaRichness.hasAuthorInJsonLd = true;
+
+    // Author detection
     if (/auteur|author|écrit par|written by|rédigé par/i.test(textLower)) {
       pagesWithAuthor++;
     }
@@ -705,9 +758,11 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     if (/mentions-legales|legal|imprint|impressum/i.test(urlLower)) hasLegalPage = true;
     if (/cgv|cgu|conditions|terms|privacy|confidentialit|rgpd|gdpr/i.test(urlLower)) hasTermsPage = true;
     if (/blog|actualit|news|articles|journal/i.test(urlLower)) hasBlogSection = true;
-    if (/auteur|author/i.test(urlLower)) hasAboutPage = true; // Author page counts as about/identity
+    if (/auteur|author/i.test(urlLower)) hasAboutPage = true;
     if (/temoignage|testimonial|avis|portfolio|references|realisations/i.test(urlLower)) hasTestimonials = true;
   }
+
+  schemaRichness.uniqueTypes = [...allSchemaTypes];
 
   const n = Math.max(pages.length, 1);
   return {
@@ -717,6 +772,7 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     avgExternalLinks: Math.round(totalExternal / n),
     hasAboutPage, hasContactPage, hasLegalPage, hasTermsPage,
     hasBlogSection, hasTestimonials, isHttps,
+    schemaRichness,
   };
 }
 
