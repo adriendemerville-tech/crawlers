@@ -28,6 +28,7 @@ export function FloatingChatBubble() {
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const isSilentPage = location.pathname === '/' || location.pathname.startsWith('/blog');
 
   // Hide Félix on report preview/viewer pages
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
