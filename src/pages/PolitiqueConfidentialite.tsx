@@ -248,7 +248,7 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '9. Vos droits', '9. Your Rights', '9. Sus derechos')}
+                {t3(language, '10. Vos droits', '10. Your Rights', '10. Sus derechos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Conformément au RGPD (Règlement UE 2016/679), vous disposez des droits suivants :', 'In accordance with the GDPR (EU Regulation 2016/679), you have the following rights:', 'De conformidad con el RGPD (Reglamento UE 2016/679), usted dispone de los siguientes derechos:')}
