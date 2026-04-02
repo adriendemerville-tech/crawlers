@@ -489,6 +489,33 @@ async function fetchBacklinkData(domain: string): Promise<any> {
       }));
     } catch { /* non-critical */ }
 
+    // Fetch top referring pages (individual backlink URLs)
+    let referringPages: any[] = [];
+    try {
+      const blResp = await fetch('https://api.dataforseo.com/v3/backlinks/backlinks/live', {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify([{
+          target: domain,
+          limit: 20,
+          order_by: ['rank,desc'],
+          filters: ['dofollow', '=', 'true'],
+        }]),
+      });
+      const blData = await blResp.json();
+      referringPages = (blData?.tasks?.[0]?.result?.[0]?.items || []).map((b: any) => ({
+        sourceUrl: b.url_from || '',
+        targetUrl: b.url_to || '',
+        anchor: b.anchor || '',
+        rank: b.rank || 0,
+        dofollow: b.dofollow ?? true,
+        firstSeen: b.first_seen || null,
+      }));
+      console.log(`[check-eeat] 🔗 Fetched ${referringPages.length} individual backlinks`);
+    } catch (e) {
+      console.warn('[check-eeat] Backlink list fetch error:', e);
+    }
+
     console.log(`[check-eeat] 🔗 Backlinks: ${result.referring_domains || 0} referring domains, rank ${result.rank || 0}`);
 
     return {
@@ -499,6 +526,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
       referringIps: result.referring_ips || 0,
       referringSubnets: result.referring_subnets || 0,
       anchorDistribution,
+      referringPages,
     };
   } catch (e) {
     console.error('[check-eeat] Backlink fetch error:', e);
