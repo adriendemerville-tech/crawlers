@@ -305,7 +305,28 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
 - URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
+
+═══ RICHESSE SCHEMA.ORG ═══
+- Blocs JSON-LD détectés: ${aggregated.schemaRichness.totalBlocks}
+- Types uniques: ${aggregated.schemaRichness.uniqueTypes.join(', ') || 'aucun'}
+- Utilise @graph: ${aggregated.schemaRichness.hasGraph ? 'Oui' : 'Non'}
+- Champs totaux: ${aggregated.schemaRichness.totalFields}
+- Profondeur max: ${aggregated.schemaRichness.maxDepth}
+- sameAs (liens sociaux/identité): ${aggregated.schemaRichness.hasSameAs ? 'Oui' : 'Non'}
+- Auteur dans JSON-LD: ${aggregated.schemaRichness.hasAuthorInJsonLd ? 'Oui' : 'Non'}
+- Entités détectées:
+  • Organization: ${aggregated.schemaRichness.entities.hasOrganization ? '✓' : '✗'}
+  • LocalBusiness: ${aggregated.schemaRichness.entities.hasLocalBusiness ? '✓' : '✗'}
+  • Person: ${aggregated.schemaRichness.entities.hasPerson ? '✓' : '✗'}
+  • WebSite: ${aggregated.schemaRichness.entities.hasWebSite ? '✓' : '✗'}
+  • Article/BlogPosting: ${aggregated.schemaRichness.entities.hasArticle ? '✓' : '✗'}
+  • FAQPage: ${aggregated.schemaRichness.entities.hasFAQPage ? '✓' : '✗'}
+  • Product: ${aggregated.schemaRichness.entities.hasProduct ? '✓' : '✗'}
+  • BreadcrumbList: ${aggregated.schemaRichness.entities.hasBreadcrumb ? '✓' : '✗'}
+  • Review: ${aggregated.schemaRichness.entities.hasReview ? '✓' : '✗'}
+
 IMPORTANT: Les détections de pages (À propos, Contact, Mentions légales, CGV/CGU, Blog, Témoignages) sont basées sur l'analyse combinée des ${pagesCount} pages crawlées ET des ${preCrawlResult.totalSitemapUrls} URLs du sitemap. Si un signal est marqué "Oui", la page EXISTE — ne le signale PAS comme manquant.
+IMPORTANT: Si des entités Schema.org sont marquées ✓, elles EXISTENT — valorise-les dans le score. Si sameAs ou auteur JSON-LD sont présents, c'est un signal E-E-A-T fort.
 ${backlinkSection}
 ${gbpSection}
 
@@ -382,6 +403,7 @@ Réponds UNIQUEMENT en JSON valide :
       contactInfo: aggregated.hasContactPage,
       legalNotice: aggregated.hasLegalPage,
       schemaOrg: aggregated.pagesWithSchema > 0,
+      schemaRichness: aggregated.schemaRichness,
       blogSection: aggregated.hasBlogSection,
       testimonials: aggregated.hasTestimonials,
     },
@@ -616,6 +638,27 @@ async function refreshGbpToken(supabase: any, conn: any, userId: string): Promis
 // ══════════════════════════════════════════════════════
 // Aggregation des signaux sur N pages
 // ══════════════════════════════════════════════════════
+interface SchemaRichness {
+  totalBlocks: number;
+  uniqueTypes: string[];
+  hasGraph: boolean;
+  totalFields: number;
+  maxDepth: number;
+  hasSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
+  entities: {
+    hasOrganization: boolean;
+    hasLocalBusiness: boolean;
+    hasPerson: boolean;
+    hasWebSite: boolean;
+    hasArticle: boolean;
+    hasFAQPage: boolean;
+    hasProduct: boolean;
+    hasBreadcrumb: boolean;
+    hasReview: boolean;
+  };
+}
+
 interface AggregatedSignals {
   pagesWithAuthor: number;
   pagesWithSchema: number;
@@ -632,15 +675,27 @@ interface AggregatedSignals {
   hasBlogSection: boolean;
   hasTestimonials: boolean;
   isHttps: boolean;
+  schemaRichness: SchemaRichness;
 }
 
 function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedSignals {
+  const schemaRichness: SchemaRichness = {
+    totalBlocks: 0, uniqueTypes: [], hasGraph: false,
+    totalFields: 0, maxDepth: 0, hasSameAs: false, hasAuthorInJsonLd: false,
+    entities: {
+      hasOrganization: false, hasLocalBusiness: false, hasPerson: false,
+      hasWebSite: false, hasArticle: false, hasFAQPage: false,
+      hasProduct: false, hasBreadcrumb: false, hasReview: false,
+    },
+  };
+
   if (!pages.length && !sitemapUrls.length) {
     return {
       pagesWithAuthor: 0, pagesWithSchema: 0, schemaTypes: [], noindexCount: 0,
       totalWords: 0, avgWords: 0, avgInternalLinks: 0, avgExternalLinks: 0,
       hasAboutPage: false, hasContactPage: false, hasLegalPage: false,
       hasTermsPage: false, hasBlogSection: false, hasTestimonials: false, isHttps: true,
+      schemaRichness,
     };
   }
 
@@ -659,7 +714,7 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
   let hasTestimonials = false;
   let isHttps = true;
 
-  // ── 1. Scan crawled pages (content + URL) ──
+  // ── 1. Scan crawled pages (content + URL + schema richness) ──
   for (const page of pages) {
     const urlLower = (page.url || '').toLowerCase();
     const textLower = (page.bodyTextTruncated || '').toLowerCase();
@@ -667,10 +722,30 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
 
     if (page.hasSchemaOrg || (page.schemaTypes && page.schemaTypes.length > 0)) {
       pagesWithSchema++;
-      for (const t of (page.schemaTypes || [])) allSchemaTypes.add(t);
+      for (const t of (page.schemaTypes || [])) {
+        allSchemaTypes.add(t);
+        const tl = t.toLowerCase();
+        if (tl.includes('organization')) schemaRichness.entities.hasOrganization = true;
+        if (tl.includes('localbusiness')) schemaRichness.entities.hasLocalBusiness = true;
+        if (tl.includes('person')) schemaRichness.entities.hasPerson = true;
+        if (tl.includes('website')) schemaRichness.entities.hasWebSite = true;
+        if (tl.includes('article') || tl.includes('blogposting') || tl.includes('newsarticle')) schemaRichness.entities.hasArticle = true;
+        if (tl.includes('faqpage')) schemaRichness.entities.hasFAQPage = true;
+        if (tl.includes('product')) schemaRichness.entities.hasProduct = true;
+        if (tl.includes('breadcrumb')) schemaRichness.entities.hasBreadcrumb = true;
+        if (tl.includes('review')) schemaRichness.entities.hasReview = true;
+      }
     }
 
-    // Author detection: URL pattern, content text, or Schema.org Person type
+    // Aggregate schema richness from crawled page metadata
+    if (page.schemaCount) schemaRichness.totalBlocks += page.schemaCount;
+    if (page.schemaHasGraph) schemaRichness.hasGraph = true;
+    if (page.schemaFieldCount) schemaRichness.totalFields += page.schemaFieldCount;
+    if (page.schemaDepth && page.schemaDepth > schemaRichness.maxDepth) schemaRichness.maxDepth = page.schemaDepth;
+    if (page.hasSameAs) schemaRichness.hasSameAs = true;
+    if (page.hasAuthorInJsonLd) schemaRichness.hasAuthorInJsonLd = true;
+
+    // Author detection
     if (/auteur|author|écrit par|written by|rédigé par/i.test(textLower)) {
       pagesWithAuthor++;
     }
@@ -690,6 +765,12 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     if (/cgv|cgu|conditions|terms|privacy|confidentialit/i.test(urlLower)) hasTermsPage = true;
     if (/blog|actualit|news|articles|journal/i.test(urlLower)) hasBlogSection = true;
 
+    // Also detect trust pages from links found in crawled page HTML (footer links)
+    const rawHtml = (page.bodyTextTruncated || '').toLowerCase() + ' ' + textLower;
+    if (/href=["'][^"']*contact/i.test(rawHtml) || /page contact|nous contacter|contactez/i.test(rawHtml)) hasContactPage = true;
+    if (/href=["'][^"']*mentions-legales/i.test(rawHtml) || /mentions légales/i.test(rawHtml)) hasLegalPage = true;
+    if (/href=["'][^"']*(?:cgv|cgu|conditions)/i.test(rawHtml) || /conditions .{0,20}(?:utilisation|vente|générales)/i.test(rawHtml)) hasTermsPage = true;
+
     if (/témoignage|avis client|testimonial|review|réalisation|portfolio|cas client/i.test(textLower + ' ' + titleLower)) {
       hasTestimonials = true;
     }
@@ -705,9 +786,11 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     if (/mentions-legales|legal|imprint|impressum/i.test(urlLower)) hasLegalPage = true;
     if (/cgv|cgu|conditions|terms|privacy|confidentialit|rgpd|gdpr/i.test(urlLower)) hasTermsPage = true;
     if (/blog|actualit|news|articles|journal/i.test(urlLower)) hasBlogSection = true;
-    if (/auteur|author/i.test(urlLower)) hasAboutPage = true; // Author page counts as about/identity
+    if (/auteur|author/i.test(urlLower)) hasAboutPage = true;
     if (/temoignage|testimonial|avis|portfolio|references|realisations/i.test(urlLower)) hasTestimonials = true;
   }
+
+  schemaRichness.uniqueTypes = [...allSchemaTypes];
 
   const n = Math.max(pages.length, 1);
   return {
@@ -717,6 +800,7 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     avgExternalLinks: Math.round(totalExternal / n),
     hasAboutPage, hasContactPage, hasLegalPage, hasTermsPage,
     hasBlogSection, hasTestimonials, isHttps,
+    schemaRichness,
   };
 }
 

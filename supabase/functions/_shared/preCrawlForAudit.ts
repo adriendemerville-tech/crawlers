@@ -23,6 +23,12 @@ export interface PreCrawlPage {
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
+  schemaCount: number;
+  schemaDepth: number;
+  schemaFieldCount: number;
+  schemaHasGraph: boolean;
+  hasSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
   internalLinksCount: number;
   externalLinksCount: number;
   httpStatus: number;
@@ -123,7 +129,7 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
     // Fetch les pages du crawl
     const { data: crawlPages } = await supabase
       .from('crawl_pages')
-      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, is_indexable, body_text_truncated, http_status')
+      .select('url, title, h1, seo_score, word_count, internal_links, external_links, has_schema_org, schema_types, schema_count, schema_depth, schema_field_count, schema_has_graph, has_same_as, has_author_in_json_ld, is_indexable, body_text_truncated, http_status')
       .eq('crawl_id', crawl.id)
       .order('seo_score', { ascending: false })
       .limit(50);
@@ -137,7 +143,13 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
       metaDescription: '',
       wordCount: p.word_count || 0,
       hasSchemaOrg: p.has_schema_org || false,
-      schemaTypes: [],
+      schemaTypes: p.schema_types || [],
+      schemaCount: p.schema_count || 0,
+      schemaDepth: p.schema_depth || 0,
+      schemaFieldCount: p.schema_field_count || 0,
+      schemaHasGraph: p.schema_has_graph || false,
+      hasSameAs: p.has_same_as || false,
+      hasAuthorInJsonLd: p.has_author_in_json_ld || false,
       internalLinksCount: p.internal_links || 0,
       externalLinksCount: p.external_links || 0,
       httpStatus: p.http_status || 200,
@@ -145,12 +157,16 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
       bodyTextTruncated: (p.body_text_truncated || '').slice(0, 500),
     }));
 
+    // Also scan sitemap even from cache for trust page detection
+    const normalizedDomain = domain;
+    const sitemapUrls = await scanSitemap(normalizedDomain);
+
     return {
-      source: 'cache',
+      source: 'cache' as const,
       cacheAge: crawl.created_at,
       pages,
-      sitemapUrls: [],
-      totalSitemapUrls: 0,
+      sitemapUrls,
+      totalSitemapUrls: sitemapUrls.length,
       ga4TopPages: [],
       crawledAt: crawl.created_at,
     };
@@ -302,7 +318,7 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
     });
 
     if (status >= 400 || !html) {
-      return { url, title: '', h1: '', metaDescription: '', wordCount: 0, hasSchemaOrg: false, schemaTypes: [], internalLinksCount: 0, externalLinksCount: 0, httpStatus: status, isIndexable: false, bodyTextTruncated: '' };
+      return { url, title: '', h1: '', metaDescription: '', wordCount: 0, hasSchemaOrg: false, schemaTypes: [], schemaCount: 0, schemaDepth: 0, schemaFieldCount: 0, schemaHasGraph: false, hasSameAs: false, hasAuthorInJsonLd: false, internalLinksCount: 0, externalLinksCount: 0, httpStatus: status, isIndexable: false, bodyTextTruncated: '' };
     }
 
     // Extract metadata
@@ -312,9 +328,46 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       || html.match(/<meta\s+content=["']([^"']{1,500})["']\s+name=["']description/i);
     const noindexMatch = html.match(/<meta\s+[^>]*content=["'][^"']*noindex/i);
 
-    // Schema.org detection
-    const schemaMatches = html.matchAll(/"@type"\s*:\s*"([^"]+)"/gi);
-    const schemaTypes = [...new Set([...schemaMatches].map(m => m[1]))];
+    // Schema.org detection with richness analysis
+    const schemaBlocks = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+    const schemaTypes: string[] = [];
+    let schemaFieldCount = 0;
+    let schemaDepth = 0;
+    let schemaHasGraph = false;
+    let hasSameAs = false;
+    let hasAuthorInJsonLd = false;
+
+    for (const block of schemaBlocks) {
+      try {
+        const jsonContent = block.replace(/<script[^>]*>|<\/script>/gi, '');
+        const parsed = JSON.parse(jsonContent);
+        if (parsed['@graph']) schemaHasGraph = true;
+
+        const processItem = (item: any, depth: number) => {
+          if (depth > schemaDepth) schemaDepth = depth;
+          if (!item || typeof item !== 'object') return;
+          if (Array.isArray(item)) { item.forEach((i: any) => processItem(i, depth)); return; }
+          for (const [k, v] of Object.entries(item)) {
+            schemaFieldCount++;
+            if (k === 'sameAs') hasSameAs = true;
+            if (k === 'author') hasAuthorInJsonLd = true;
+            if (typeof v === 'object' && v !== null) processItem(v, depth + 1);
+          }
+          const t = item['@type'];
+          if (t) {
+            const types = Array.isArray(t) ? t : [t];
+            types.forEach((type: string) => { if (!schemaTypes.includes(type)) schemaTypes.push(type); });
+          }
+        };
+        processItem(parsed, 0);
+      } catch { /* invalid JSON-LD */ }
+    }
+
+    // Fallback: also check @type in raw HTML for simple schema detection
+    if (schemaTypes.length === 0) {
+      const rawTypes = [...html.matchAll(/"@type"\s*:\s*"([^"]+)"/gi)].map(m => m[1]);
+      for (const t of rawTypes) { if (!schemaTypes.includes(t)) schemaTypes.push(t); }
+    }
 
     // Links count
     const domain = new URL(url).hostname;
@@ -347,6 +400,12 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       wordCount: words.length,
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
+      schemaCount: schemaBlocks.length,
+      schemaDepth,
+      schemaFieldCount,
+      schemaHasGraph,
+      hasSameAs,
+      hasAuthorInJsonLd,
       internalLinksCount: internal,
       externalLinksCount: external,
       httpStatus: status,

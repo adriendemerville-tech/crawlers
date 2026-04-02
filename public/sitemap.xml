@@ -700,4 +700,54 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/api-integrations"/>
   </url>
 
+  <!-- ==================== PAGES LÉGALES & CONFIANCE ==================== -->
+
+  <!-- Contact -->
+  <url>
+    <loc>https://crawlers.fr/contact</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Mentions légales -->
+  <url>
+    <loc>https://crawlers.fr/mentions-legales</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- CGVU -->
+  <url>
+    <loc>https://crawlers.fr/cgvu</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Conditions d'utilisation -->
+  <url>
+    <loc>https://crawlers.fr/conditions-utilisation</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Politique de confidentialité -->
+  <url>
+    <loc>https://crawlers.fr/politique-confidentialite</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- RGPD -->
+  <url>
+    <loc>https://crawlers.fr/rgpd</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
 </urlset>
