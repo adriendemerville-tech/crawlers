@@ -28,6 +28,7 @@ export function FloatingChatBubble() {
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const isSilentPage = location.pathname === '/' || location.pathname.startsWith('/blog');
 
   // Hide Félix on report preview/viewer pages
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
@@ -70,7 +71,7 @@ export function FloatingChatBubble() {
     const handler = () => {
       if (isMuted) return;
       setShowHallucinationBubble(true);
-      playNotificationSound();
+      if (!isSilentPage) playNotificationSound();
       // Auto-hide after 15s
       setTimeout(() => setShowHallucinationBubble(false), 15000);
     };
@@ -91,7 +92,7 @@ export function FloatingChatBubble() {
       sessionStorage.setItem(key, '1');
       setShowGuestQuizSuggestion(true);
       setGuestBubbleVisible(true);
-      playNotificationSound();
+      if (!isSilentPage) playNotificationSound();
       // Auto-hide bubble text after 10s, keep notification dot
       setTimeout(() => setGuestBubbleVisible(false), 10000);
     }, 5000);
@@ -116,7 +117,7 @@ export function FloatingChatBubble() {
     const timer = setTimeout(() => {
       setShowOnboardingPulse(true);
       if (!onboardingSoundPlayed.current) {
-        playNotificationSound();
+        if (!isSilentPage) playNotificationSound();
         onboardingSoundPlayed.current = true;
       }
     }, 2500);
