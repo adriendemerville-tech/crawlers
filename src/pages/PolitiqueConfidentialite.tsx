@@ -195,12 +195,34 @@ const PolitiqueConfidentialite = () => {
                 <li><strong>{t3(language, 'Rapports et graphes sémantiques :', 'Reports and semantic graphs:', 'Informes y grafos semánticos:')}</strong> {t3(language, 'conservés tant que le compte est actif', 'retained as long as the account is active', 'conservados mientras la cuenta esté activa')}</li>
                 <li><strong>{t3(language, 'Données analytiques :', 'Analytical data:', 'Datos analíticos:')}</strong> {t3(language, 'anonymisées et conservées maximum 13 mois (recommandation CNIL)', 'anonymized and retained maximum 13 months (CNIL recommendation)', 'anonimizados y conservados un máximo de 13 meses (recomendación CNIL)')}</li>
                 <li><strong>{t3(language, 'Conversations LLM depth :', 'LLM depth conversations:', 'Conversaciones LLM depth:')}</strong> {t3(language, 'expiration automatique après 24 heures', 'automatic expiration after 24 hours', 'expiración automática después de 24 horas')}</li>
+                <li><strong>{t3(language, 'Tokens CMS / OAuth :', 'CMS / OAuth tokens:', 'Tokens CMS / OAuth:')}</strong> {t3(language, 'révocables à tout moment par l\'utilisateur ; supprimés à la déconnexion du CMS', 'revocable at any time by the user; deleted upon CMS disconnection', 'revocables en cualquier momento por el usuario; eliminados al desconectar el CMS')}</li>
+                <li><strong>{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</strong> {t3(language, 'conservées tant que le compte propriétaire est actif', 'retained as long as the owner account is active', 'conservados mientras la cuenta propietaria esté activa')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '7. Partage des données', '7. Data Sharing', '7. Compartición de datos')}
+                {t3(language, '7. Ségrégation des données (Data Firewall)', '7. Data Segregation (Data Firewall)', '7. Segregación de datos (Data Firewall)')}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'Crawlers AI met en place une architecture de « Data Firewall » qui sépare strictement l\'écosystème Google (Search Console, GA4, Google My Business) des LLMs tiers (OpenAI, OpenRouter). Les données brutes provenant des APIs Google restent confinées dans l\'écosystème Google. Seules des métriques agrégées et anonymisées (clics, impressions, positions moyennes) sont transmises aux modèles de langage tiers pour les calculs de prévision. La génération de contenu et l\'assistant Marina privilégient le modèle Gemini Pro pour rester dans l\'écosystème Google.',
+                  'Crawlers AI implements a "Data Firewall" architecture that strictly separates the Google ecosystem (Search Console, GA4, Google My Business) from third-party LLMs (OpenAI, OpenRouter). Raw data from Google APIs remains confined within the Google ecosystem. Only aggregated and anonymized metrics (clicks, impressions, average positions) are transmitted to third-party language models for prediction calculations. Content generation and the Marina assistant favor the Gemini Pro model to remain within the Google ecosystem.',
+                  'Crawlers AI implementa una arquitectura de «Data Firewall» que separa estrictamente el ecosistema Google (Search Console, GA4, Google My Business) de los LLMs de terceros (OpenAI, OpenRouter). Los datos brutos de las APIs de Google permanecen confinados en el ecosistema Google. Solo se transmiten métricas agregadas y anonimizadas (clics, impresiones, posiciones medias) a los modelos de lenguaje de terceros para los cálculos de previsión. La generación de contenido y el asistente Marina privilegian el modelo Gemini Pro para permanecer en el ecosistema Google.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'Cette séparation est attestée publiquement sur la page crawlers.fr/data-flow-diagram.',
+                  'This separation is publicly attested on the page crawlers.fr/data-flow-diagram.',
+                  'Esta separación está atestiguada públicamente en la página crawlers.fr/data-flow-diagram.'
+                )}
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '8. Partage des données', '8. Data Sharing', '8. Compartición de datos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -213,13 +235,13 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '8. Sécurité', '8. Security', '8. Seguridad')}
+                {t3(language, '9. Sécurité', '9. Security', '9. Seguridad')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, Row-Level Security (RLS) sur toutes les tables de données, verrous SQL anti-tamper sur les champs sensibles (crédits, plan, abonnement), sandboxing sémantique des scripts injectés. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1.',
-                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, Row-Level Security (RLS) on all data tables, SQL anti-tamper locks on sensitive fields (credits, plan, subscription), semantic sandboxing of injected scripts. Payments are secured by Stripe, PCI-DSS Level 1 certified.',
-                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, Row-Level Security (RLS) en todas las tablas de datos, bloqueos SQL anti-manipulación en campos sensibles (créditos, plan, suscripción), sandboxing semántico de los scripts inyectados. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1.'
+                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, Row-Level Security (RLS) sur toutes les tables de données, verrous SQL anti-tamper sur les champs sensibles (crédits, plan, abonnement), sandboxing sémantique des scripts injectés, chiffrement des tokens CMS et OAuth au repos. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1. L\'architecture Data Firewall garantit la ségrégation des données entre les écosystèmes.',
+                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, Row-Level Security (RLS) on all data tables, SQL anti-tamper locks on sensitive fields (credits, plan, subscription), semantic sandboxing of injected scripts, encryption of CMS and OAuth tokens at rest. Payments are secured by Stripe, PCI-DSS Level 1 certified. The Data Firewall architecture ensures data segregation between ecosystems.',
+                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, Row-Level Security (RLS) en todas las tablas de datos, bloqueos SQL anti-manipulación en campos sensibles (créditos, plan, suscripción), sandboxing semántico de los scripts inyectados, cifrado de los tokens CMS y OAuth en reposo. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1. La arquitectura Data Firewall garantiza la segregación de datos entre ecosistemas.'
                 )}
               </p>
             </section>
