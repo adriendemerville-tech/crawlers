@@ -1848,8 +1848,8 @@ Allow: /`}</pre>
             "Aucune 'Search Console' pour les LLMs : OpenAI, Anthropic et Perplexity ne partagent aucune donnée de volume réel.",
             "Les outils comme Meteoria, Qwairy ou GetMint utilisent des simulations synthétiques sans pondération par le volume réel.",
             "Un prompt générique tapé 100 000 fois a le même poids qu'un prompt ultra-niché dans ces outils.",
-            "La seule action vérifiable est la compliance technique : robots.txt, JSON-LD, architecture AI-ready.",
-            "Crawlers.fr ne vend pas de la donnée estimée mais du diagnostic d'accessibilité et de la correction immédiate.",
+            "Des services comme Crawlers.fr analysent directement les logs serveur pour identifier quels bots IA passent réellement et sur quels contenus ils s'arrêtent.",
+            "La seule action vérifiable est la compliance technique + l'analyse de logs réels, pas des estimations de laboratoire.",
           ]}
         />
 
