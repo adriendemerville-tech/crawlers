@@ -1496,11 +1496,12 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO)
+9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO) si une date est mentionnée
 10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
 11. author_name par défaut: "Équipe IKtracker"
 12. ⚠️ FORMAT: N'utilise JAMAIS de balises HTML (<h2>, <p>, <a>, <ul>, etc.). Tout DOIT être en syntaxe Markdown pure.
-13. ⚠️ DATES: Utilise TOUJOURS l'année en cours dans le contenu et les métadonnées. JAMAIS 2024 ou une autre année passée.
+13. ⚠️ DATES: quand une date / année / millésime est pertinente, elle doit être exacte et cohérente partout : title, H1, H2, H3, paragraphes, FAQ, tableaux, résumés, meta_title, meta_description, excerpt et schema_org. N'ajoute PAS de date si elle n'apporte rien.
+14. ⚠️ TITRE / H1: n'utilise PAS automatiquement le mot "Guide". Choisis la forme éditoriale la plus juste selon l'intention réelle : barème, comparatif, procédure, tutoriel, FAQ, actualité, décryptage, mise à jour, analyse, checklist, simulateur, etc.
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
@@ -1511,7 +1512,7 @@ Quand tu crées un article pour combler un gap de contenu:
 - Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus quand c'est pertinent
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
-- Catégories suggérées: "Guides", "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels"
+- Catégories suggérées: "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels", "FAQ", "Décryptages"
 - Tags pertinents: "indemnités kilométriques", "frais réels", "barème IK", "déclaration impôts", "auto-entrepreneur", "trajets professionnels"`;
 }
 
