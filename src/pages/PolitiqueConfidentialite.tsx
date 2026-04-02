@@ -42,9 +42,9 @@ const PolitiqueConfidentialite = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers AI s\'engage à protéger la vie privée des utilisateurs de son site. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement.',
-                'Crawlers AI is committed to protecting the privacy of its website users. This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions.',
-                'Crawlers AI se compromete a proteger la privacidad de los usuarios de su sitio. Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago.'
+                'Crawlers AI (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à protéger la vie privée des utilisateurs de son site. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement et des connexions CMS.',
+                'Crawlers AI (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to protecting the privacy of its website users. This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions and CMS connections.',
+                'Crawlers AI (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a proteger la privacidad de los usuarios de su sitio. Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago y las conexiones CMS.'
               )}
             </p>
 
@@ -58,26 +58,36 @@ const PolitiqueConfidentialite = () => {
               
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données d\'utilisation :', 'Usage data:', 'Datos de uso:')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-                <li>{t3(language, 'URLs analysées via nos outils (audits, crawls, analyses concurrentielles)', 'URLs analyzed via our tools (audits, crawls, competitive analysis)', 'URLs analizadas a través de nuestras herramientas (auditorías, crawls, análisis competitivo)')}</li>
+                <li>{t3(language, 'URLs analysées via nos outils (audits SEO/GEO, crawls multi-pages, analyses concurrentielles, matrice d\'audit)', 'URLs analyzed via our tools (SEO/GEO audits, multi-page crawls, competitive analysis, audit matrix)', 'URLs analizadas a través de nuestras herramientas (auditorías SEO/GEO, crawls multi-páginas, análisis competitivo, matriz de auditoría)')}</li>
                 <li>{t3(language, 'Données de navigation anonymisées (pages visitées, durée de visite)', 'Anonymized browsing data (pages visited, visit duration)', 'Datos de navegación anonimizados (páginas visitadas, duración de la visita)')}</li>
                 <li>{t3(language, 'Préférences linguistiques', 'Language preferences', 'Preferencias lingüísticas')}</li>
-                <li>{t3(language, 'Rapports, codes correctifs et graphes sémantiques (Cocoon) générés', 'Generated reports, corrective codes and semantic graphs (Cocoon)', 'Informes, códigos correctivos y grafos semánticos (Cocoon) generados')}</li>
+                <li>{t3(language, 'Rapports, codes correctifs, graphes sémantiques (Cocoon) et plans d\'action générés', 'Generated reports, corrective codes, semantic graphs (Cocoon) and action plans', 'Informes, códigos correctivos, grafos semánticos (Cocoon) y planes de acción generados')}</li>
                 <li>{t3(language, 'Données de télémétrie du widget/GTM (ping de statut, sans données personnelles des visiteurs)', 'Widget/GTM telemetry data (status ping, no visitor personal data)', 'Datos de telemetría del widget/GTM (ping de estado, sin datos personales de visitantes)')}</li>
+                <li>{t3(language, 'Prédictions de trafic et scores d\'impact calculés par machine learning (métriques agrégées et anonymisées)', 'Traffic predictions and impact scores calculated by machine learning (aggregated and anonymized metrics)', 'Predicciones de tráfico y puntuaciones de impacto calculadas por machine learning (métricas agregadas y anonimizadas)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de compte (si inscription) :', 'Account data (if registered):', 'Datos de cuenta (si está registrado):')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>{t3(language, 'Prénom et nom', 'First and last name', 'Nombre y apellido')}</li>
                 <li>{t3(language, 'Adresse email', 'Email address', 'Dirección de correo electrónico')}</li>
-                <li>{t3(language, 'Historique des achats de crédits', 'Credit purchase history', 'Historial de compras de créditos')}</li>
+                <li>{t3(language, 'Type de persona (indépendant, agence, e-commerce, etc.)', 'Persona type (freelancer, agency, e-commerce, etc.)', 'Tipo de persona (independiente, agencia, e-commerce, etc.)')}</li>
+                <li>{t3(language, 'Historique des achats de crédits et abonnements (Pro Agency, Pro Agency+)', 'Credit purchases and subscription history (Pro Agency, Pro Agency+)', 'Historial de compras de créditos y suscripciones (Pro Agency, Pro Agency+)')}</li>
                 <li>{t3(language, 'Solde de crédits', 'Credit balance', 'Saldo de créditos')}</li>
-                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés)', 'Google Search Console / GA4 access tokens (encrypted)', 'Tokens de acceso Google Search Console / GA4 (cifrados)')}</li>
+                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés, stockés côté serveur)', 'Google Search Console / GA4 access tokens (encrypted, stored server-side)', 'Tokens de acceso Google Search Console / GA4 (cifrados, almacenados del lado del servidor)')}</li>
+                <li>{t3(language, 'Identifiants CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : clés API ou tokens OAuth chiffrés', 'CMS credentials (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): encrypted API keys or OAuth tokens', 'Credenciales CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): claves API o tokens OAuth cifrados')}</li>
+                <li>{t3(language, 'Connexion Google My Business (OAuth, optionnelle)', 'Google My Business connection (OAuth, optional)', 'Conexión Google My Business (OAuth, opcional)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de paiement :', 'Payment data:', 'Datos de pago:')}</h3>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
+                <li>{t3(language, 'Les paiements sont traités exclusivement par Stripe Payments Europe Ltd. (Dublin, Irlande). Nous ne stockons jamais vos données bancaires.', 'Payments are processed exclusively by Stripe Payments Europe Ltd. (Dublin, Ireland). We never store your banking data.', 'Los pagos son procesados exclusivamente por Stripe Payments Europe Ltd. (Dublín, Irlanda). Nunca almacenamos sus datos bancarios.')}</li>
+                <li>{t3(language, 'Seules les informations de transaction (montant, date, identifiant Stripe, type d\'achat) sont conservées.', 'Only transaction information (amount, date, Stripe identifier, purchase type) is retained.', 'Solo se conserva la información de la transacción (monto, fecha, identificador Stripe, tipo de compra).')}</li>
+              </ul>
+
+              <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{t3(language, 'Les paiements sont traités par Stripe. Nous ne stockons pas vos données bancaires.', 'Payments are processed by Stripe. We do not store your banking data.', 'Los pagos son procesados por Stripe. No almacenamos sus datos bancarios.')}</li>
-                <li>{t3(language, 'Seules les informations de transaction (montant, date, identifiant Stripe) sont conservées.', 'Only transaction information (amount, date, Stripe identifier) is retained.', 'Solo se conserva la información de la transacción (monto, fecha, identificador Stripe).')}</li>
+                <li>{t3(language, 'Liste des membres d\'équipe et clients rattachés (nom, email, rôle)', 'Team member and client list (name, email, role)', 'Lista de miembros del equipo y clientes asociados (nombre, email, rol)')}</li>
+                <li>{t3(language, 'Invitations envoyées et acceptées', 'Sent and accepted invitations', 'Invitaciones enviadas y aceptadas')}</li>
               </ul>
             </section>
 
@@ -89,7 +99,7 @@ const PolitiqueConfidentialite = () => {
                 <li><strong>{t3(language, 'Exécution du contrat :', 'Performance of contract:', 'Ejecución del contrato:')}</strong> {t3(language, 'gestion du compte, fourniture des services d\'audit, traitement des paiements', 'account management, provision of audit services, payment processing', 'gestión de la cuenta, prestación de servicios de auditoría, procesamiento de pagos')}</li>
                 <li><strong>{t3(language, 'Intérêt légitime :', 'Legitimate interest:', 'Interés legítimo:')}</strong> {t3(language, 'amélioration du service, statistiques anonymisées, sécurité de la plateforme', 'service improvement, anonymized statistics, platform security', 'mejora del servicio, estadísticas anonimizadas, seguridad de la plataforma')}</li>
                 <li><strong>{t3(language, 'Obligation légale :', 'Legal obligation:', 'Obligación legal:')}</strong> {t3(language, 'conservation des données de facturation (10 ans)', 'retention of billing data (10 years)', 'conservación de los datos de facturación (10 años)')}</li>
-                <li><strong>{t3(language, 'Consentement :', 'Consent:', 'Consentimiento:')}</strong> {t3(language, 'connexion Google Search Console / GA4 (OAuth), injection de code via widget', 'Google Search Console / GA4 connection (OAuth), code injection via widget', 'conexión Google Search Console / GA4 (OAuth), inyección de código via widget')}</li>
+                <li><strong>{t3(language, 'Consentement :', 'Consent:', 'Consentimiento:')}</strong> {t3(language, 'connexion Google Search Console / GA4 / Google My Business (OAuth), connexion CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), injection de code via widget', 'Google Search Console / GA4 / Google My Business connection (OAuth), CMS connection (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), code injection via widget', 'conexión Google Search Console / GA4 / Google My Business (OAuth), conexión CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo), inyección de código via widget')}</li>
               </ul>
             </section>
 
@@ -101,11 +111,13 @@ const PolitiqueConfidentialite = () => {
                 {t3(language, 'Vos données sont utilisées pour :', 'Your data is used to:', 'Sus datos se utilizan para:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{t3(language, 'Fournir les résultats d\'analyse demandés', 'Provide requested analysis results', 'Proporcionar los resultados de análisis solicitados')}</li>
-                <li>{t3(language, 'Gérer votre compte et vos crédits', 'Manage your account and credits', 'Gestionar su cuenta y sus créditos')}</li>
-                <li>{t3(language, 'Traiter les transactions de paiement', 'Process payment transactions', 'Procesar las transacciones de pago')}</li>
+                <li>{t3(language, 'Fournir les résultats d\'analyse demandés (audits SEO/GEO, crawls, graphes Cocoon, prédictions de trafic)', 'Provide requested analysis results (SEO/GEO audits, crawls, Cocoon graphs, traffic predictions)', 'Proporcionar los resultados de análisis solicitados (auditorías SEO/GEO, crawls, grafos Cocoon, predicciones de tráfico)')}</li>
+                <li>{t3(language, 'Gérer votre compte, vos crédits et vos abonnements', 'Manage your account, credits and subscriptions', 'Gestionar su cuenta, sus créditos y sus suscripciones')}</li>
+                <li>{t3(language, 'Traiter les transactions de paiement (crédits, abonnements Pro Agency / Pro Agency+)', 'Process payment transactions (credits, Pro Agency / Pro Agency+ subscriptions)', 'Procesar las transacciones de pago (créditos, suscripciones Pro Agency / Pro Agency+)')}</li>
+                <li>{t3(language, 'Déployer des correctifs SEO sur vos CMS connectés (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'Deploy SEO fixes on your connected CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'Desplegar correcciones SEO en sus CMS conectados (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)')}</li>
+                <li>{t3(language, 'Piloter le suivi automatisé de vos sites (Autopilot, alertes d\'anomalies, maintenance prédictive)', 'Run automated monitoring of your sites (Autopilot, anomaly alerts, predictive maintenance)', 'Gestionar el seguimiento automatizado de sus sitios (Autopilot, alertas de anomalías, mantenimiento predictivo)')}</li>
                 <li>{t3(language, 'Améliorer nos services et l\'expérience utilisateur', 'Improve our services and user experience', 'Mejorar nuestros servicios y la experiencia del usuario')}</li>
-                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat, alertes de suivi)', 'Send transactional notifications (purchase confirmations, tracking alerts)', 'Enviar notificaciones transaccionales (confirmaciones de compra, alertas de seguimiento)')}</li>
+                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat, alertes de suivi, rapports programmés)', 'Send transactional notifications (purchase confirmations, tracking alerts, scheduled reports)', 'Enviar notificaciones transaccionales (confirmaciones de compra, alertas de seguimiento, informes programados)')}</li>
                 <li>{t3(language, 'Générer des statistiques d\'utilisation anonymisées', 'Generate anonymized usage statistics', 'Generar estadísticas de uso anonimizadas')}</li>
               </ul>
             </section>
@@ -137,12 +149,16 @@ const PolitiqueConfidentialite = () => {
                   <p className="text-sm text-muted-foreground">{t3(language, 'Hébergement de l\'application web.', 'Web application hosting.', 'Alojamiento de la aplicación web.')}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">OpenAI / OpenRouter</p>
-                  <p className="text-sm text-muted-foreground">{t3(language, 'Génération de recommandations IA. Données transmises : contenu HTML public analysé (aucune donnée personnelle). Aucun entraînement sur les données.', 'AI recommendation generation. Data transmitted: analyzed public HTML content (no personal data). No training on data.', 'Generación de recomendaciones IA. Datos transmitidos: contenido HTML público analizado (sin datos personales). Sin entrenamiento con los datos.')}</p>
+                  <p className="font-medium text-foreground">Google LLC (Gemini Pro / AI)</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Génération de contenu IA et recommandations (modèle Gemini Pro privilégié pour rester dans l\'écosystème Google). Données transmises : contenu HTML public analysé, métriques agrégées anonymisées. Aucune donnée personnelle transmise. Aucun entraînement sur les données.', 'AI content generation and recommendations (Gemini Pro model preferred to stay within the Google ecosystem). Data transmitted: analyzed public HTML content, anonymized aggregated metrics. No personal data transmitted. No training on data.', 'Generación de contenido IA y recomendaciones (modelo Gemini Pro privilegiado para permanecer en el ecosistema Google). Datos transmitidos: contenido HTML público analizado, métricas agregadas anonimizadas. Sin datos personales transmitidos. Sin entrenamiento con los datos.')}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Google LLC</p>
-                  <p className="text-sm text-muted-foreground">{t3(language, 'APIs PageSpeed Insights, Search Console et Analytics (GA4). Connexion OAuth optionnelle initiée par l\'utilisateur.', 'PageSpeed Insights, Search Console and Analytics (GA4) APIs. Optional OAuth connection initiated by the user.', 'APIs PageSpeed Insights, Search Console y Analytics (GA4). Conexión OAuth opcional iniciada por el usuario.')}</p>
+                  <p className="font-medium text-foreground">OpenAI / OpenRouter</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Modèles de langage pour les calculs de prévision de trafic et recommandations avancées. Données transmises : métriques agrégées et anonymisées (clics, impressions, positions) — jamais de données personnelles ni de données brutes Google. Un « Data Firewall » sépare l\'écosystème Google des LLMs tiers. Aucun entraînement sur les données.', 'Language models for traffic prediction calculations and advanced recommendations. Data transmitted: aggregated and anonymized metrics (clicks, impressions, positions) — never personal data or raw Google data. A "Data Firewall" separates the Google ecosystem from third-party LLMs. No training on data.', 'Modelos de lenguaje para cálculos de previsión de tráfico y recomendaciones avanzadas. Datos transmitidos: métricas agregadas y anonimizadas (clics, impresiones, posiciones) — nunca datos personales ni datos brutos de Google. Un «Data Firewall» separa el ecosistema Google de los LLMs de terceros. Sin entrenamiento con los datos.')}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Google LLC (APIs)</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'APIs PageSpeed Insights, Search Console, Analytics (GA4) et Google My Business. Connexion OAuth optionnelle initiée par l\'utilisateur. Les données brutes restent confinées dans l\'écosystème Google.', 'PageSpeed Insights, Search Console, Analytics (GA4) and Google My Business APIs. Optional OAuth connection initiated by the user. Raw data remains confined within the Google ecosystem.', 'APIs PageSpeed Insights, Search Console, Analytics (GA4) y Google My Business. Conexión OAuth opcional iniciada por el usuario. Los datos brutos permanecen confinados en el ecosistema Google.')}</p>
                 </div>
                 <div>
                   <p className="font-medium text-foreground">DataForSEO</p>
@@ -179,12 +195,34 @@ const PolitiqueConfidentialite = () => {
                 <li><strong>{t3(language, 'Rapports et graphes sémantiques :', 'Reports and semantic graphs:', 'Informes y grafos semánticos:')}</strong> {t3(language, 'conservés tant que le compte est actif', 'retained as long as the account is active', 'conservados mientras la cuenta esté activa')}</li>
                 <li><strong>{t3(language, 'Données analytiques :', 'Analytical data:', 'Datos analíticos:')}</strong> {t3(language, 'anonymisées et conservées maximum 13 mois (recommandation CNIL)', 'anonymized and retained maximum 13 months (CNIL recommendation)', 'anonimizados y conservados un máximo de 13 meses (recomendación CNIL)')}</li>
                 <li><strong>{t3(language, 'Conversations LLM depth :', 'LLM depth conversations:', 'Conversaciones LLM depth:')}</strong> {t3(language, 'expiration automatique après 24 heures', 'automatic expiration after 24 hours', 'expiración automática después de 24 horas')}</li>
+                <li><strong>{t3(language, 'Tokens CMS / OAuth :', 'CMS / OAuth tokens:', 'Tokens CMS / OAuth:')}</strong> {t3(language, 'révocables à tout moment par l\'utilisateur ; supprimés à la déconnexion du CMS', 'revocable at any time by the user; deleted upon CMS disconnection', 'revocables en cualquier momento por el usuario; eliminados al desconectar el CMS')}</li>
+                <li><strong>{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</strong> {t3(language, 'conservées tant que le compte propriétaire est actif', 'retained as long as the owner account is active', 'conservados mientras la cuenta propietaria esté activa')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '7. Partage des données', '7. Data Sharing', '7. Compartición de datos')}
+                {t3(language, '7. Ségrégation des données (Data Firewall)', '7. Data Segregation (Data Firewall)', '7. Segregación de datos (Data Firewall)')}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'Crawlers AI met en place une architecture de « Data Firewall » qui sépare strictement l\'écosystème Google (Search Console, GA4, Google My Business) des LLMs tiers (OpenAI, OpenRouter). Les données brutes provenant des APIs Google restent confinées dans l\'écosystème Google. Seules des métriques agrégées et anonymisées (clics, impressions, positions moyennes) sont transmises aux modèles de langage tiers pour les calculs de prévision. La génération de contenu et l\'assistant Marina privilégient le modèle Gemini Pro pour rester dans l\'écosystème Google.',
+                  'Crawlers AI implements a "Data Firewall" architecture that strictly separates the Google ecosystem (Search Console, GA4, Google My Business) from third-party LLMs (OpenAI, OpenRouter). Raw data from Google APIs remains confined within the Google ecosystem. Only aggregated and anonymized metrics (clicks, impressions, average positions) are transmitted to third-party language models for prediction calculations. Content generation and the Marina assistant favor the Gemini Pro model to remain within the Google ecosystem.',
+                  'Crawlers AI implementa una arquitectura de «Data Firewall» que separa estrictamente el ecosistema Google (Search Console, GA4, Google My Business) de los LLMs de terceros (OpenAI, OpenRouter). Los datos brutos de las APIs de Google permanecen confinados en el ecosistema Google. Solo se transmiten métricas agregadas y anonimizadas (clics, impresiones, posiciones medias) a los modelos de lenguaje de terceros para los cálculos de previsión. La generación de contenido y el asistente Marina privilegian el modelo Gemini Pro para permanecer en el ecosistema Google.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'Cette séparation est attestée publiquement sur la page crawlers.fr/data-flow-diagram.',
+                  'This separation is publicly attested on the page crawlers.fr/data-flow-diagram.',
+                  'Esta separación está atestiguada públicamente en la página crawlers.fr/data-flow-diagram.'
+                )}
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '8. Partage des données', '8. Data Sharing', '8. Compartición de datos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -197,20 +235,20 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '8. Sécurité', '8. Security', '8. Seguridad')}
+                {t3(language, '9. Sécurité', '9. Security', '9. Seguridad')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, Row-Level Security (RLS) sur toutes les tables de données, verrous SQL anti-tamper sur les champs sensibles (crédits, plan, abonnement), sandboxing sémantique des scripts injectés. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1.',
-                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, Row-Level Security (RLS) on all data tables, SQL anti-tamper locks on sensitive fields (credits, plan, subscription), semantic sandboxing of injected scripts. Payments are secured by Stripe, PCI-DSS Level 1 certified.',
-                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, Row-Level Security (RLS) en todas las tablas de datos, bloqueos SQL anti-manipulación en campos sensibles (créditos, plan, suscripción), sandboxing semántico de los scripts inyectados. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1.'
+                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, Row-Level Security (RLS) sur toutes les tables de données, verrous SQL anti-tamper sur les champs sensibles (crédits, plan, abonnement), sandboxing sémantique des scripts injectés, chiffrement des tokens CMS et OAuth au repos. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1. L\'architecture Data Firewall garantit la ségrégation des données entre les écosystèmes.',
+                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, Row-Level Security (RLS) on all data tables, SQL anti-tamper locks on sensitive fields (credits, plan, subscription), semantic sandboxing of injected scripts, encryption of CMS and OAuth tokens at rest. Payments are secured by Stripe, PCI-DSS Level 1 certified. The Data Firewall architecture ensures data segregation between ecosystems.',
+                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, Row-Level Security (RLS) en todas las tablas de datos, bloqueos SQL anti-manipulación en campos sensibles (créditos, plan, suscripción), sandboxing semántico de los scripts inyectados, cifrado de los tokens CMS y OAuth en reposo. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1. La arquitectura Data Firewall garantiza la segregación de datos entre ecosistemas.'
                 )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '9. Vos droits', '9. Your Rights', '9. Sus derechos')}
+                {t3(language, '10. Vos droits', '10. Your Rights', '10. Sus derechos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Conformément au RGPD (Règlement UE 2016/679), vous disposez des droits suivants :', 'In accordance with the GDPR (EU Regulation 2016/679), you have the following rights:', 'De conformidad con el RGPD (Reglamento UE 2016/679), usted dispone de los siguientes derechos:')}
@@ -236,7 +274,7 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '10. Contact & Responsable du traitement', '10. Contact & Data Controller', '10. Contacto & Responsable del tratamiento')}
+                {t3(language, '11. Contact & Responsable du traitement', '11. Contact & Data Controller', '11. Contacto & Responsable del tratamiento')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -261,7 +299,7 @@ const PolitiqueConfidentialite = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 2 avril 2026', 'Last updated: April 2, 2026', 'Última actualización: 2 de abril de 2026')}
             </p>
           </article>
         </div>
