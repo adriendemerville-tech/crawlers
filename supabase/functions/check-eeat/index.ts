@@ -765,6 +765,12 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     if (/cgv|cgu|conditions|terms|privacy|confidentialit/i.test(urlLower)) hasTermsPage = true;
     if (/blog|actualit|news|articles|journal/i.test(urlLower)) hasBlogSection = true;
 
+    // Also detect trust pages from links found in crawled page HTML (footer links)
+    const rawHtml = (page.bodyTextTruncated || '').toLowerCase() + ' ' + textLower;
+    if (/href=["'][^"']*contact/i.test(rawHtml) || /page contact|nous contacter|contactez/i.test(rawHtml)) hasContactPage = true;
+    if (/href=["'][^"']*mentions-legales/i.test(rawHtml) || /mentions légales/i.test(rawHtml)) hasLegalPage = true;
+    if (/href=["'][^"']*(?:cgv|cgu|conditions)/i.test(rawHtml) || /conditions .{0,20}(?:utilisation|vente|générales)/i.test(rawHtml)) hasTermsPage = true;
+
     if (/témoignage|avis client|testimonial|review|réalisation|portfolio|cas client/i.test(textLower + ' ' + titleLower)) {
       hasTestimonials = true;
     }
