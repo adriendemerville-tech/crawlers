@@ -1490,10 +1490,11 @@ Quand tu crées un article pour combler un gap de contenu:
 6. Le slug doit être court, en kebab-case, sans accents
 7. Longueur cible: 800-1500 mots minimum
 8. TOUJOURS remplir: title, slug, content, excerpt, meta_description, status, author_name, category
-9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true
+9. ⚠️ INDEXABILITÉ : dans le schema_org, ajoute "isAccessibleForFree": true et "datePublished" avec la date du jour (format ISO)
 10. Si pertinent, ajouter: meta_title (si différent du title), tags, schema_org (BlogPosting)
 11. author_name par défaut: "Équipe IKtracker"
 12. ⚠️ FORMAT: N'utilise JAMAIS de balises HTML (<h2>, <p>, <a>, <ul>, etc.). Tout DOIT être en syntaxe Markdown pure.
+13. ⚠️ DATES: Utilise TOUJOURS l'année en cours dans le contenu et les métadonnées. JAMAIS 2024 ou une autre année passée.
 
 ## RÈGLES SPÉCIFIQUES IKTRACKER
 - Le contenu DOIT être pertinent pour l'activité du site. Consulte l'UNIVERS MOTS-CLÉS et l'IDENTITÉ DU SITE fournis dans le contexte.
