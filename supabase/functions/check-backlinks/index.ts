@@ -24,18 +24,20 @@ Deno.serve(async (req) => {
     const auth = btoa(`${login}:${password}`);
 
     // ── Call DataForSEO Backlinks Summary ──
+    console.log('[check-backlinks] Calling DataForSEO for domain:', domain);
     const resp = await fetch('https://api.dataforseo.com/v3/backlinks/summary/live', {
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify([{ target: domain, internal_list_limit: 0, backlinks_filters: ['dofollow', '=', 'true'] }]),
     });
 
+    console.log('[check-backlinks] DataForSEO HTTP status:', resp.status);
     const data = await resp.json();
-    console.log('[check-backlinks] DataForSEO response status:', data?.status_code, 'tasks:', JSON.stringify(data?.tasks?.[0]?.status_code), 'result count:', data?.tasks?.[0]?.result?.length);
+    console.log('[check-backlinks] DataForSEO response:', JSON.stringify(data).slice(0, 500));
     const result = data?.tasks?.[0]?.result?.[0];
 
     if (!result) {
-      return new Response(JSON.stringify({ success: true, score: 0, error: 'No backlink data found', domain }), { headers: HEADERS });
+      return new Response(JSON.stringify({ success: true, score: 0, error: 'No backlink data found', domain, debug_status: data?.status_code, debug_task_status: data?.tasks?.[0]?.status_code }), { headers: HEADERS });
     }
 
     const referringDomains = result.referring_domains || 0;
