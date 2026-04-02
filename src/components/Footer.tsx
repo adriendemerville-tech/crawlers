@@ -167,17 +167,17 @@ function FooterComponent() {
     <>
       {allArticles.length > 0 && (
         <section className="border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-7xl px-4 py-8">
+          <div className="mx-auto max-w-7xl px-4 py-5">
             <button
               onClick={() => setResourcesOpen(!resourcesOpen)}
-              className="flex items-center gap-2 mb-4 w-full text-left group"
+              className="flex items-center justify-center gap-2 mb-3 w-full group"
             >
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Blog', 'Blog', 'Blog')}
               </h3>
               {!isPublicPage && (
-                <ChevronUp className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ml-auto ${resourcesOpen ? '' : 'rotate-180'}`} />
+                <ChevronUp className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${resourcesOpen ? '' : 'rotate-180'}`} />
               )}
             </button>
             {resourcesOpen && (
