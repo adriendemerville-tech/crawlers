@@ -38,6 +38,11 @@ interface EeatScanResult {
     anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
     referringPages?: { sourceUrl: string; targetUrl: string; anchor: string; rank: number; dofollow: boolean; firstSeen: string | null }[];
   } | null;
+  ga4Referrals?: {
+    referrals: { source: string; sessions: number; users: number }[];
+    totalReferralSessions: number;
+  } | null;
+  ga4Connected?: boolean;
   gbpData?: {
     avgRating: number;
     totalReviews: number;
@@ -245,6 +250,10 @@ ${result.backlinkData ? `<h2>🔗 Données Backlinks (réelles)</h2>
 ${result.backlinkData.anchorDistribution?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">Top ancres</p>${result.backlinkData.anchorDistribution.slice(0, 5).map(a => `<div style="display:flex;justify-content:space-between;font-size:.75rem;margin:.2rem 0"><span>"${a.anchor}"</span><span style="color:#94a3b8">${a.backlinks} liens</span></div>`).join('')}</div>` : ''}
 ${result.backlinkData.referringPages?.length ? `<div class="card" style="margin:.5rem 0"><p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem">🔗 Pages référentes (cliquez pour vérifier)</p>${result.backlinkData.referringPages.slice(0, 20).map(bp => `<div style="font-size:.75rem;margin:.4rem 0;padding:.4rem 0;border-bottom:1px solid #2d3348"><a href="${bp.sourceUrl}" target="_blank" style="color:#3b82f6;text-decoration:none;word-break:break-all">${bp.sourceUrl}</a><div style="color:#64748b;font-size:.65rem;margin-top:.2rem">→ ${bp.targetUrl} · Ancre: "${bp.anchor || '(vide)'}" · Rank: ${bp.rank}${bp.dofollow ? ' · dofollow' : ' · nofollow'}</div></div>`).join('')}</div>` : ''}
 <p style="font-size:.6rem;color:#64748b">Source : DataForSEO · Données en temps réel</p>` : ''}
+${result.ga4Referrals ? `<h2>📊 Backlinks vivants (GA4 Referrals)</h2>
+<p style="font-size:.8rem;color:#94a3b8;margin-bottom:.5rem">Domaines qui envoient du trafic réel (90 derniers jours) — ${result.ga4Referrals.totalReferralSessions} sessions referral au total</p>
+<div class="card" style="margin:.5rem 0">${result.ga4Referrals.referrals.slice(0, 15).map(r => `<div style="display:flex;justify-content:space-between;font-size:.75rem;margin:.3rem 0;padding:.3rem 0;border-bottom:1px solid #2d3348"><span style="color:#e2e8f0">${r.source}</span><span style="color:#94a3b8">${r.sessions} sessions · ${r.users} users</span></div>`).join('')}</div>
+<p style="font-size:.6rem;color:#64748b">Source : Google Analytics 4 · Données vérifiées</p>` : `${!result.backlinkData ? '<div class="card" style="padding:.8rem;border-left:3px solid #f59e0b;margin:.5rem 0"><p style="font-size:.8rem;color:#fbbf24">⚠️ Sans connexion de la GA4, la remontée des backlinks est partielle. Les backlinks vivants (ceux qui génèrent du trafic réel) ne sont pas détectés.</p></div>' : ''}`}
 ${result.gbpData ? `<h2>📍 Google Business Profile (réel)</h2>
 <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
 <div class="card" style="text-align:center"><div class="val amber">${result.gbpData.avgRating}★</div><p style="font-size:.7rem;color:#94a3b8">Note moyenne</p></div>
@@ -634,6 +643,33 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground">Source : DataForSEO · Données en temps réel</p>
+            </div>
+          )}
+
+          {/* GA4 Referrals */}
+          {result.ga4Referrals ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                📊 Backlinks vivants (GA4 Referrals)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Domaines qui envoient du trafic réel (90 derniers jours) — {result.ga4Referrals.totalReferralSessions} sessions referral
+              </p>
+              <div className="rounded-lg border border-border p-3 bg-background">
+                <div className="space-y-1">
+                  {result.ga4Referrals.referrals.slice(0, 15).map((r: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-xs border-b border-border/50 pb-1 last:border-0">
+                      <span className="text-foreground">{r.source}</span>
+                      <span className="text-muted-foreground">{r.sessions} sessions · {r.users} users</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Source : Google Analytics 4 · Données vérifiées</p>
+            </div>
+          ) : !result.ga4Connected && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="text-xs text-amber-400">⚠️ Sans connexion de la GA4, la remontée des backlinks est partielle. Les backlinks vivants (ceux qui génèrent du trafic réel) ne sont pas détectés.</p>
             </div>
           )}
 

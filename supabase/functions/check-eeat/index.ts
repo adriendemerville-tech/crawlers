@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { url, async: isAsync, _job_id, tracked_site_id, forceCrawl } = body;
+    const { url, async: isAsync, _job_id, tracked_site_id, forceCrawl, _user_id } = body;
 
     if (!url) return new Response(JSON.stringify({ error: 'URL required' }), { status: 400, headers: HEADERS });
 
@@ -55,7 +56,11 @@ Deno.serve(async (req) => {
       try {
         await supabase.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', _job_id);
 
-        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id, !!forceCrawl);
+        // Resolve userId from the job record for GA4 access
+        const { data: jobRecord } = await supabase.from('async_jobs').select('user_id').eq('id', _job_id).maybeSingle();
+        const workerUserId = _user_id || jobRecord?.user_id || null;
+
+        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, jobId, !!forceCrawl, workerUserId);
 
         await supabase.from('async_jobs').update({
           status: 'completed',
@@ -122,7 +127,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceKey}`,
         },
-        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id, forceCrawl }),
+        body: JSON.stringify({ url, _job_id: job.id, tracked_site_id, forceCrawl, _user_id: userId }),
       }).catch(e => console.error('[check-eeat] Self-invoke error:', e));
 
       return new Response(JSON.stringify({
@@ -132,7 +137,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Synchronous mode (fallback for simple calls) ──
-    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl);
+    const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl, null);
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
@@ -193,7 +198,8 @@ async function runEeatPipeline(
   targetUrl: string,
   trackedSiteId: string | null,
   jobId: string | null,
-  forceCrawl: boolean = false
+  forceCrawl: boolean = false,
+  userId: string | null = null
 ): Promise<any> {
 
   // ── Phase 0: Auto-correct domain if DNS fails ──
@@ -242,6 +248,10 @@ async function runEeatPipeline(
   const backlinkData = await fetchBacklinkData(domain);
   if (jobId) await supabase.from('async_jobs').update({ progress: 45 }).eq('id', jobId);
 
+  // ── Phase 2.55: Fetch GA4 referrals (live backlinks) if GA4 connected ──
+  console.log(`[check-eeat] 📊 Phase 2.55: Fetching GA4 referrals...`);
+  const ga4Referrals = await fetchGA4Referrals(supabase, domain, trackedSiteId, userId);
+
   // ── Phase 2.6: Fetch GBP data if connected ──
   console.log(`[check-eeat] 📍 Phase 2.6: Checking GBP connection...`);
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
@@ -255,6 +265,15 @@ async function runEeatPipeline(
   }
 
   // Build enriched prompt sections
+  const ga4ReferralSection = ga4Referrals.available ? `
+═══ BACKLINKS VIVANTS (GA4 Referrals — trafic réel) ═══
+${ga4Referrals.referrals.map((r: any) => `- ${r.source}: ${r.sessions} sessions, ${r.users} utilisateurs`).join('\n')}
+Total: ${ga4Referrals.totalReferralSessions} sessions referral, ${ga4Referrals.referrals.length} domaines référents actifs.
+IMPORTANT: Ces domaines envoient du trafic RÉEL au site. C'est un signal fort d'Authoritativeness.` : '';
+
+  const ga4Warning = !ga4Referrals.available ? `
+⚠️ Sans connexion de la GA4, la remontée des backlinks est partielle. Seules les données DataForSEO (crawl externe) sont disponibles. Les backlinks vivants (ceux qui génèrent du trafic réel) ne sont pas détectés.` : '';
+
   const backlinkSection = backlinkData.available ? `
 ═══ DONNÉES BACKLINKS RÉELLES (DataForSEO) ═══
 - Domaines référents: ${backlinkData.referringDomains}
@@ -263,9 +282,13 @@ async function runEeatPipeline(
 - IPs référentes: ${backlinkData.referringIps}
 - Sous-réseaux référents: ${backlinkData.referringSubnets}
 - Top ancres: ${backlinkData.anchorDistribution?.map((a: any) => `"${a.anchor}" (${a.backlinks} liens)`).join(', ') || 'N/A'}
+${ga4ReferralSection}
+${ga4Warning}
 IMPORTANT: Utilise ces données RÉELLES pour scorer l'Authoritativeness. Ne devine pas, base-toi sur ces chiffres.` : `
 ═══ BACKLINKS ═══
-Données backlinks non disponibles. Score l'Authoritativeness uniquement sur les signaux structurels du crawl.`;
+Données backlinks non disponibles. Score l'Authoritativeness uniquement sur les signaux structurels du crawl.
+${ga4ReferralSection}
+${ga4Warning}`;
 
   const gbpSection = gbpData.available ? `
 ═══ DONNÉES GOOGLE BUSINESS PROFILE (réelles) ═══
@@ -423,6 +446,12 @@ Réponds UNIQUEMENT en JSON valide :
       anchorDistribution: backlinkData.anchorDistribution,
       referringPages: backlinkData.referringPages,
     } : null,
+    // GA4 referral data enrichment
+    ga4Referrals: ga4Referrals.available ? {
+      referrals: ga4Referrals.referrals,
+      totalReferralSessions: ga4Referrals.totalReferralSessions,
+    } : null,
+    ga4Connected: ga4Referrals.available,
     // GBP data enrichment
     gbpData: gbpData.available ? {
       avgRating: gbpData.avgRating,
@@ -441,6 +470,7 @@ Réponds UNIQUEMENT en JSON valide :
       'crawl_html',
       'llm_semantic',
       ...(backlinkData.available ? ['dataforseo_backlinks'] : []),
+      ...(ga4Referrals.available ? ['ga4_referrals'] : []),
       ...(gbpData.available ? ['google_business_profile'] : []),
     ],
   };
@@ -919,4 +949,96 @@ function generateDomainVariants(domain: string): string[] {
   if (name.endsWith('s')) variants.add(`www.${name.slice(0, -1)}.${tld}`);
 
   return [...variants];
+}
+
+// ══════════════════════════════════════════════════════
+// Fetch GA4 referral traffic (live backlinks)
+// ══════════════════════════════════════════════════════
+const GA4_API = 'https://analyticsdata.googleapis.com/v1beta';
+
+async function fetchGA4Referrals(
+  supabase: any,
+  domain: string,
+  trackedSiteId: string | null,
+  userId: string | null
+): Promise<any> {
+  if (!userId || !trackedSiteId) {
+    console.log('[check-eeat] ⚠️ No userId or trackedSiteId — skipping GA4 referrals');
+    return { available: false, reason: 'no_user_or_site' };
+  }
+
+  try {
+    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+    if (!clientId || !clientSecret) {
+      console.log('[check-eeat] ⚠️ Google OAuth credentials not configured — skipping GA4 referrals');
+      return { available: false, reason: 'credentials_missing' };
+    }
+
+    const resolved = await resolveGoogleToken(supabase, userId, domain, clientId, clientSecret);
+    if (!resolved?.ga4_property_id) {
+      console.log('[check-eeat] ⚠️ No GA4 property linked — skipping referrals');
+      return { available: false, reason: 'no_ga4_property' };
+    }
+
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
+    const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resolved.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'sessionSource' }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+        ],
+        dimensionFilter: {
+          filter: {
+            fieldName: 'sessionMedium',
+            stringFilter: { value: 'referral', matchType: 'EXACT' },
+          },
+        },
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 20,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!resp.ok) {
+      console.warn(`[check-eeat] GA4 referrals API error: ${resp.status}`);
+      return { available: false, reason: 'api_error' };
+    }
+
+    const data = await resp.json();
+    const rows = data.rows || [];
+
+    const referrals = rows.map((row: any) => ({
+      source: row.dimensionValues?.[0]?.value || 'unknown',
+      sessions: parseInt(row.metricValues?.[0]?.value || '0'),
+      users: parseInt(row.metricValues?.[1]?.value || '0'),
+    })).filter((r: any) => r.sessions > 0);
+
+    const totalReferralSessions = referrals.reduce((sum: number, r: any) => sum + r.sessions, 0);
+
+    console.log(`[check-eeat] ✅ GA4 referrals: ${referrals.length} sources, ${totalReferralSessions} total sessions`);
+
+    return {
+      available: true,
+      referrals,
+      totalReferralSessions,
+    };
+  } catch (e) {
+    console.warn('[check-eeat] GA4 referrals error:', e instanceof Error ? e.message : e);
+    return { available: false, reason: 'error' };
+  }
 }
