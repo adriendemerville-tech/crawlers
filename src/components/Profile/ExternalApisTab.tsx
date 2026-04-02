@@ -535,10 +535,10 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                     <Loader2 className="w-3 h-3 animate-spin" />
                     {t.connecting}
                   </>
-                ) : isGbpActive ? (
+                ) : isActive ? (
                   <>
-                    <MapPin className="w-3 h-3" />
-                    {language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect'}
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    {isGbpActive ? (language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect') : t.configure}
                   </>
                 ) : (
                   <>
