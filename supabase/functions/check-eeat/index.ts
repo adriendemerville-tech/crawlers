@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       const { data: job, error: jobErr } = await supabase.from('async_jobs').insert({
         function_name: 'check-eeat',
         user_id: userId,
-        input_payload: { url, tracked_site_id },
+        input_payload: { url, tracked_site_id, forceCrawl },
         status: 'pending',
         progress: 0,
       }).select('id').single();
