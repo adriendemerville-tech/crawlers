@@ -62,7 +62,7 @@ function generateLlmsFullTxt(): string {
 - Langue principale : Français
 - Langues supportées : Français, Anglais, Espagnol
 - URL : ${baseUrl}
-- Fondateur : Mukesh Bagri
+- Fondateur : Adrien de Volontat
 - Lancement : Mars 2026
 - Marché : France, Europe francophone
 
