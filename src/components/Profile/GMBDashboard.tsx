@@ -764,6 +764,10 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
       if (error) throw error;
       setGbpConnected(false);
       setGbpEmail(null);
+      if (!isGated) {
+        setOrderedLocations([]);
+        setSelectedLocationId(null);
+      }
       toast.success(language === 'fr' ? 'Google Business Profile déconnecté' : 'GBP disconnected');
     } catch (err) {
       console.error('[GMBDashboard] GBP disconnect error:', err);
