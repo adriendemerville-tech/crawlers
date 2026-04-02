@@ -45,9 +45,9 @@ const RGPD = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales et de l\'injection de code correctif sur vos sites.',
-                'Crawlers is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions and corrective code injection on your sites.',
-                'Crawlers se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales y la inyección de código correctivo en sus sitios.'
+                'Crawlers (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales, de l\'injection de code correctif sur vos sites et des connexions CMS directes.',
+                'Crawlers (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions, corrective code injection on your sites and direct CMS connections.',
+                'Crawlers (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales, la inyección de código correctivo en sus sitios y las conexiones CMS directas.'
               )}
             </p>
 
