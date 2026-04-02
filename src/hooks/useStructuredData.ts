@@ -84,11 +84,11 @@ export function useStructuredData() {
           "foundingDate": "2026",
           "founder": {
             "@type": "Person",
-            "name": "Mukesh Bagri",
+            "name": "Adrien de Volontat",
             "jobTitle": "Fondateur & CTO",
             "url": "https://crawlers.fr/a-propos",
             "sameAs": [
-              "https://www.linkedin.com/in/mukesh-bagri/"
+              "https://www.linkedin.com/in/adrien-de-volontat/"
             ]
           },
           "description": "Éditeur de la plateforme d'audit SEO, GEO et visibilité IA Crawlers.fr. Premier outil francophone couvrant simultanément SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables.",

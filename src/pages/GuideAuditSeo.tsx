@@ -71,7 +71,7 @@ const articleSchema = {
   "@type": "Article",
   "headline": "Guide Ultime de l'Audit SEO & GEO en 2026 : Approche Identity-First",
   "description": "Guide complet pour réaliser un audit SEO/GEO en 2026. Méthodologie Identity-First, 168 critères, Score GEO, visibilité LLM et plan d'action priorisé.",
-  "author": { "@type": "Person", "name": "Mukesh Bagri", "url": "https://crawlers.fr/a-propos", "jobTitle": "Fondateur de Crawlers.fr" },
+  "author": { "@type": "Person", "name": "Adrien de Volontat", "url": "https://crawlers.fr/a-propos", "jobTitle": "Fondateur de Crawlers.fr" },
   "publisher": { "@type": "Organization", "name": "Crawlers.fr", "logo": { "@type": "ImageObject", "url": "https://crawlers.fr/favicon.svg", "width": 512, "height": 512 } },
   "datePublished": "2026-01-15",
   "dateModified": "2026-04-02",
