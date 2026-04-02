@@ -184,13 +184,13 @@ async function checkCrawlCache(supabase: any, domain: string): Promise<PreCrawlR
 // ── Sitemap scanner ──
 async function scanSitemap(domain: string): Promise<string[]> {
   const urls: string[] = [];
-  const sitemapUrls = [
+  const sitemapEntryPoints = [
     `https://${domain}/sitemap.xml`,
     `https://${domain}/sitemap_index.xml`,
     `https://www.${domain}/sitemap.xml`,
   ];
 
-  for (const sitemapUrl of sitemapUrls) {
+  for (const sitemapUrl of sitemapEntryPoints) {
     try {
       const { text, status } = await stealthFetchText(sitemapUrl, {
         timeout: 8000,
@@ -199,13 +199,47 @@ async function scanSitemap(domain: string): Promise<string[]> {
 
       if (status !== 200 || !text) continue;
 
-      // Parse sitemap XML — extract <loc> tags
+      // Collect sub-sitemaps and page URLs separately
+      const subSitemaps: string[] = [];
       const locMatches = text.matchAll(/<loc>\s*(https?:\/\/[^<\s]+)\s*<\/loc>/gi);
       for (const match of locMatches) {
         const loc = match[1].trim();
-        // Si c'est un sitemap index, on ne descend pas (trop lent)
-        if (loc.endsWith('.xml') || loc.endsWith('.xml.gz')) continue;
-        urls.push(loc);
+        if (loc.endsWith('.xml') || loc.endsWith('.xml.gz')) {
+          subSitemaps.push(loc);
+        } else {
+          urls.push(loc);
+        }
+      }
+
+      // If this was a sitemap index (only sub-sitemaps, no page URLs), descend one level
+      if (urls.length === 0 && subSitemaps.length > 0) {
+        console.log(`[preCrawl] 📂 Sitemap index at ${sitemapUrl}: ${subSitemaps.length} sub-sitemaps, descending...`);
+        // Fetch up to 5 sub-sitemaps in parallel to stay fast
+        const subResults = await Promise.allSettled(
+          subSitemaps.slice(0, 5).map(async (subUrl) => {
+            try {
+              const { text: subText, status: subStatus } = await stealthFetchText(subUrl, {
+                timeout: 8000,
+                maxRetries: 1,
+              });
+              if (subStatus !== 200 || !subText) return [];
+              const subLocs = subText.matchAll(/<loc>\s*(https?:\/\/[^<\s]+)\s*<\/loc>/gi);
+              const subUrls: string[] = [];
+              for (const m of subLocs) {
+                const l = m[1].trim();
+                if (!l.endsWith('.xml') && !l.endsWith('.xml.gz')) {
+                  subUrls.push(l);
+                }
+              }
+              return subUrls;
+            } catch {
+              return [];
+            }
+          })
+        );
+        for (const r of subResults) {
+          if (r.status === 'fulfilled') urls.push(...r.value);
+        }
       }
 
       if (urls.length > 0) {
