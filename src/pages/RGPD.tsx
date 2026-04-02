@@ -45,9 +45,9 @@ const RGPD = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales et de l\'injection de code correctif sur vos sites.',
-                'Crawlers is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions and corrective code injection on your sites.',
-                'Crawlers se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales y la inyección de código correctivo en sus sitios.'
+                'Crawlers (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales, de l\'injection de code correctif sur vos sites et des connexions CMS directes.',
+                'Crawlers (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions, corrective code injection on your sites and direct CMS connections.',
+                'Crawlers (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales, la inyección de código correctivo en sus sitios y las conexiones CMS directas.'
               )}
             </p>
 
@@ -86,6 +86,14 @@ const RGPD = () => {
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
                   <span>{t3(language, 'Injection de code correctif encapsulée (sandboxing sémantique), révocable à tout instant', 'Corrective code injection sandboxed (semantic isolation), revocable at any time', 'Inyección de código correctivo encapsulada (sandboxing semántico), revocable en cualquier momento')}</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                  <span>{t3(language, 'Architecture « Data Firewall » : ségrégation stricte entre l\'écosystème Google et les LLMs tiers', '"Data Firewall" architecture: strict segregation between the Google ecosystem and third-party LLMs', 'Arquitectura «Data Firewall»: segregación estricta entre el ecosistema Google y los LLMs de terceros')}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                  <span>{t3(language, 'Connexions CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : tokens chiffrés, révocables à tout moment', 'CMS connections (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): encrypted tokens, revocable at any time', 'Conexiones CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): tokens cifrados, revocables en cualquier momento')}</span>
+                </li>
               </ul>
             </div>
 
@@ -109,8 +117,8 @@ const RGPD = () => {
                 {t3(language, 'Le traitement de vos données repose sur :', 'The processing of your data is based on:', 'El tratamiento de sus datos se basa en:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li><strong>{t3(language, 'Exécution du contrat :', 'Contract execution:', 'Ejecución del contrato:')}</strong> {t3(language, 'pour fournir les services gratuits et payants (audits SEO/GEO, codes correctifs, crawl multi-pages, audit comparé, suivi de visibilité IA)', 'to provide free and paid services (SEO/GEO audits, corrective codes, multi-page crawl, comparative audit, AI visibility tracking)', 'para proporcionar los servicios gratuitos y de pago (auditorías SEO/GEO, códigos correctivos, crawl multi-páginas, auditoría comparativa, seguimiento de visibilidad IA)')}</li>
-                <li><strong>{t3(language, 'Consentement explicite :', 'Explicit consent:', 'Consentimiento explícito:')}</strong> {t3(language, 'pour l\'injection de code correctif sur vos sites via widget ou Google Tag Manager (action volontaire déclenchée par l\'utilisateur)', 'for corrective code injection on your sites via widget or Google Tag Manager (voluntary action triggered by the user)', 'para la inyección de código correctivo en sus sitios a través de widget o Google Tag Manager (acción voluntaria iniciada por el usuario)')}</li>
+                <li><strong>{t3(language, 'Exécution du contrat :', 'Contract execution:', 'Ejecución del contrato:')}</strong> {t3(language, 'pour fournir les services gratuits et payants (audits SEO/GEO, codes correctifs, crawl multi-pages, audit comparé, suivi de visibilité IA, matrice d\'audit, graphes Cocoon, maintenance prédictive)', 'to provide free and paid services (SEO/GEO audits, corrective codes, multi-page crawl, comparative audit, AI visibility tracking, audit matrix, Cocoon graphs, predictive maintenance)', 'para proporcionar los servicios gratuitos y de pago (auditorías SEO/GEO, códigos correctivos, crawl multi-páginas, auditoría comparativa, seguimiento de visibilidad IA, matriz de auditoría, grafos Cocoon, mantenimiento predictivo)')}</li>
+                <li><strong>{t3(language, 'Consentement explicite :', 'Explicit consent:', 'Consentimiento explícito:')}</strong> {t3(language, 'pour l\'injection de code correctif via widget ou GTM, la connexion OAuth Google (Search Console, GA4, Google My Business) et la connexion CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'for corrective code injection via widget or GTM, Google OAuth connection (Search Console, GA4, Google My Business) and CMS connection (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'para la inyección de código correctivo vía widget o GTM, la conexión OAuth Google (Search Console, GA4, Google My Business) y la conexión CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)')}</li>
                 <li><strong>{t3(language, 'Obligation légale :', 'Legal obligation:', 'Obligación legal:')}</strong> {t3(language, 'pour la conservation des données de facturation (10 ans)', 'for retention of billing data (10 years)', 'para la conservación de los datos de facturación (10 años)')}</li>
                 <li><strong>{t3(language, 'Intérêt légitime :', 'Legitimate interest:', 'Interés legítimo:')}</strong> {t3(language, 'pour l\'amélioration de nos services et l\'analyse statistique anonymisée', 'for improving our services and anonymized statistical analysis', 'para la mejora de nuestros servicios y el análisis estadístico anonimizado')}</li>
               </ul>
@@ -125,6 +133,7 @@ const RGPD = () => {
                   <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'identification', 'Identification Data', 'Datos de identificación')}</h3>
                   <ul className="text-muted-foreground space-y-1 text-sm">
                     <li>• {t3(language, 'Nom, prénom, adresse email (inscription)', 'Name, first name, email address (registration)', 'Nombre, apellido, dirección de correo electrónico (registro)')}</li>
+                    <li>• {t3(language, 'Type de persona (indépendant, agence, e-commerce, etc.)', 'Persona type (freelancer, agency, e-commerce, etc.)', 'Tipo de persona (independiente, agencia, e-commerce, etc.)')}</li>
                     <li>• {t3(language, 'Clé API unique par site suivi (UUID auto-générée)', 'Unique API key per tracked site (auto-generated UUID)', 'Clave API única por sitio rastreado (UUID autogenerada)')}</li>
                     <li>• {t3(language, 'Code de parrainage (optionnel)', 'Referral code (optional)', 'Código de referido (opcional)')}</li>
                   </ul>
@@ -132,10 +141,11 @@ const RGPD = () => {
                 <div className="bg-muted/50 rounded-lg p-6">
                   <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'audit et d\'analyse', 'Audit and Analysis Data', 'Datos de auditoría y análisis')}</h3>
                   <ul className="text-muted-foreground space-y-1 text-sm">
-                    <li>• {t3(language, 'URLs analysées et résultats d\'audit (scores SEO/GEO, métriques PageSpeed, analyse crawlers)', 'Analyzed URLs and audit results (SEO/GEO scores, PageSpeed metrics, crawler analysis)', 'URLs analizadas y resultados de auditoría (puntuaciones SEO/GEO, métricas PageSpeed, análisis de crawlers)')}</li>
-                    <li>• {t3(language, 'Rapports sauvegardés et plans d\'action', 'Saved reports and action plans', 'Informes guardados y planes de acción')}</li>
+                    <li>• {t3(language, 'URLs analysées et résultats d\'audit (scores SEO/GEO, métriques PageSpeed, analyse crawlers, matrice d\'audit)', 'Analyzed URLs and audit results (SEO/GEO scores, PageSpeed metrics, crawler analysis, audit matrix)', 'URLs analizadas y resultados de auditoría (puntuaciones SEO/GEO, métricas PageSpeed, análisis de crawlers, matriz de auditoría)')}</li>
+                    <li>• {t3(language, 'Rapports sauvegardés, plans d\'action et graphes sémantiques (Cocoon)', 'Saved reports, action plans and semantic graphs (Cocoon)', 'Informes guardados, planes de acción y grafos semánticos (Cocoon)')}</li>
                     <li>• {t3(language, 'Codes correctifs générés et configurations associées', 'Generated corrective codes and associated configurations', 'Códigos correctivos generados y configuraciones asociadas')}</li>
                     <li>• {t3(language, 'Données de crawl multi-pages (contenu HTML, structure, liens)', 'Multi-page crawl data (HTML content, structure, links)', 'Datos de crawl multi-páginas (contenido HTML, estructura, enlaces)')}</li>
+                    <li>• {t3(language, 'Prédictions de trafic et scores d\'impact calculés par machine learning (métriques agrégées et anonymisées)', 'Traffic predictions and impact scores calculated by machine learning (aggregated and anonymized metrics)', 'Predicciones de tráfico y puntuaciones de impacto calculadas por machine learning (métricas agregadas y anonimizadas)')}</li>
                     <li>• {t3(language, 'Données d\'engagement GA4 agrégées (sessions, taux d\'engagement, taux de rebond, durée de session) — collectées via OAuth avec votre consentement explicite, conservées 13 mois', 'Aggregated GA4 engagement data (sessions, engagement rate, bounce rate, session duration) — collected via OAuth with your explicit consent, retained for 13 months', 'Datos de engagement GA4 agregados (sesiones, tasa de engagement, tasa de rebote, duración de sesión) — recopilados vía OAuth con su consentimiento explícito, conservados 13 meses')}</li>
                   </ul>
                 </div>
@@ -145,6 +155,21 @@ const RGPD = () => {
                     <li>• {t3(language, 'Domaine du site connecté (vérifié contre la clé API)', 'Connected site domain (verified against API key)', 'Dominio del sitio conectado (verificado contra la clave API)')}</li>
                     <li>• {t3(language, 'Horodatage du dernier ping widget (last_widget_ping)', 'Last widget ping timestamp (last_widget_ping)', 'Marca de tiempo del último ping del widget (last_widget_ping)')}</li>
                     <li>• {t3(language, 'Configuration courante du code injecté', 'Current configuration of injected code', 'Configuración actual del código inyectado')}</li>
+                  </ul>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données CMS', 'CMS Data', 'Datos CMS')}</h3>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    <li>• {t3(language, 'Identifiants de connexion CMS chiffrés (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : clés API ou tokens OAuth', 'Encrypted CMS connection credentials (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): API keys or OAuth tokens', 'Credenciales de conexión CMS cifradas (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): claves API o tokens OAuth')}</li>
+                    <li>• {t3(language, 'Identifiant de site CMS (platform_site_id)', 'CMS site identifier (platform_site_id)', 'Identificador del sitio CMS (platform_site_id)')}</li>
+                    <li>• {t3(language, 'Connexion Google My Business (OAuth, optionnelle)', 'Google My Business connection (OAuth, optional)', 'Conexión Google My Business (OAuth, opcional)')}</li>
+                  </ul>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-6">
+                  <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'équipe agence', 'Agency Team Data', 'Datos del equipo de agencia')}</h3>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    <li>• {t3(language, 'Liste des membres d\'équipe et clients rattachés (nom, email, rôle)', 'Team member and client list (name, email, role)', 'Lista de miembros del equipo y clientes asociados (nombre, email, rol)')}</li>
+                    <li>• {t3(language, 'Invitations envoyées et acceptées', 'Sent and accepted invitations', 'Invitaciones enviadas y aceptadas')}</li>
                   </ul>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-6">
@@ -200,7 +225,7 @@ const RGPD = () => {
                     <tbody>
                       <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Stripe</td>
-                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés', 'Secure payments', 'Pagos seguros')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés (PCI-DSS niveau 1)', 'Secure payments (PCI-DSS Level 1)', 'Pagos seguros (PCI-DSS nivel 1)')}</td>
                         <td className="py-2">{t3(language, 'UE (Dublin)', 'EU (Dublin)', 'UE (Dublín)')}</td>
                       </tr>
                       <tr className="border-b border-border/50">
@@ -210,13 +235,33 @@ const RGPD = () => {
                       </tr>
                       <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Supabase Inc.</td>
-                        <td className="py-2 pr-4">{t3(language, 'Infrastructure backend et base de données', 'Backend infrastructure and database', 'Infraestructura backend y base de datos')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Infrastructure backend, BDD, auth, stockage (AWS eu-west-1)', 'Backend infrastructure, DB, auth, storage (AWS eu-west-1)', 'Infraestructura backend, BDD, auth, almacenamiento (AWS eu-west-1)')}</td>
+                        <td className="py-2">{t3(language, 'UE (Irlande)', 'EU (Ireland)', 'UE (Irlanda)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Google LLC (Gemini Pro)</td>
+                        <td className="py-2 pr-4">{t3(language, 'Génération de contenu IA, assistant Marina (écosystème Google)', 'AI content generation, Marina assistant (Google ecosystem)', 'Generación de contenido IA, asistente Marina (ecosistema Google)')}</td>
+                        <td className="py-2">{t3(language, 'UE / États-Unis (clauses contractuelles types)', 'EU / United States (standard contractual clauses)', 'UE / Estados Unidos (cláusulas contractuales tipo)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">OpenAI / OpenRouter</td>
+                        <td className="py-2 pr-4">{t3(language, 'Prédictions de trafic, recommandations avancées (métriques agrégées anonymisées uniquement)', 'Traffic predictions, advanced recommendations (aggregated anonymized metrics only)', 'Predicciones de tráfico, recomendaciones avanzadas (métricas agregadas anonimizadas únicamente)')}</td>
+                        <td className="py-2">{t3(language, 'États-Unis (clauses contractuelles types)', 'United States (standard contractual clauses)', 'Estados Unidos (cláusulas contractuales tipo)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Google LLC (APIs)</td>
+                        <td className="py-2 pr-4">{t3(language, 'PageSpeed, Search Console, GA4, Google My Business (données brutes confinées)', 'PageSpeed, Search Console, GA4, Google My Business (raw data confined)', 'PageSpeed, Search Console, GA4, Google My Business (datos brutos confinados)')}</td>
+                        <td className="py-2">{t3(language, 'UE / États-Unis', 'EU / United States', 'UE / Estados Unidos')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">DataForSEO</td>
+                        <td className="py-2 pr-4">{t3(language, 'Données SERP et backlinks (domaines/URLs publics)', 'SERP and backlink data (public domains/URLs)', 'Datos SERP y backlinks (dominios/URLs públicos)')}</td>
                         <td className="py-2">{t3(language, 'UE', 'EU', 'UE')}</td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4">Google / OpenAI</td>
-                        <td className="py-2 pr-4">{t3(language, 'Génération de recommandations IA (données anonymisées)', 'AI recommendation generation (anonymized data)', 'Generación de recomendaciones IA (datos anonimizados)')}</td>
-                        <td className="py-2">{t3(language, 'UE / États-Unis (clauses contractuelles types)', 'EU / United States (standard contractual clauses)', 'UE / Estados Unidos (cláusulas contractuales tipo)')}</td>
+                        <td className="py-2 pr-4">Firecrawl / Fly.io</td>
+                        <td className="py-2 pr-4">{t3(language, 'Crawl et rendu de pages (URLs publiques)', 'Crawl and page rendering (public URLs)', 'Crawl y renderizado de páginas (URLs públicas)')}</td>
+                        <td className="py-2">{t3(language, 'UE (Frankfurt)', 'EU (Frankfurt)', 'UE (Frankfurt)')}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -226,23 +271,46 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '6. Durées de conservation', '6. Retention Periods', '6. Plazos de conservación')}
+                {t3(language, '6. Ségrégation des données (Data Firewall)', '6. Data Segregation (Data Firewall)', '6. Segregación de datos (Data Firewall)')}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'Crawlers AI met en place une architecture de « Data Firewall » qui sépare strictement l\'écosystème Google (Search Console, GA4, Google My Business) des LLMs tiers (OpenAI, OpenRouter). Les données brutes provenant des APIs Google restent confinées dans l\'écosystème Google. Seules des métriques agrégées et anonymisées (clics, impressions, positions moyennes) sont transmises aux modèles de langage tiers pour les calculs de prévision. La génération de contenu et l\'assistant Marina privilégient le modèle Gemini Pro pour rester dans l\'écosystème Google.',
+                  'Crawlers AI implements a "Data Firewall" architecture that strictly separates the Google ecosystem (Search Console, GA4, Google My Business) from third-party LLMs (OpenAI, OpenRouter). Raw data from Google APIs remains confined within the Google ecosystem. Only aggregated and anonymized metrics (clicks, impressions, average positions) are transmitted to third-party language models for prediction calculations. Content generation and the Marina assistant favor the Gemini Pro model to remain within the Google ecosystem.',
+                  'Crawlers AI implementa una arquitectura de «Data Firewall» que separa estrictamente el ecosistema Google (Search Console, GA4, Google My Business) de los LLMs de terceros (OpenAI, OpenRouter). Los datos brutos de las APIs de Google permanecen confinados en el ecosistema Google. Solo se transmiten métricas agregadas y anonimizadas (clics, impresiones, posiciones medias) a los modelos de lenguaje de terceros para los cálculos de previsión. La generación de contenido y el asistente Marina privilegian el modelo Gemini Pro para permanecer en el ecosistema Google.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'Cette séparation est attestée publiquement sur la page crawlers.fr/data-flow-diagram.',
+                  'This separation is publicly attested on the page crawlers.fr/data-flow-diagram.',
+                  'Esta separación está atestiguada públicamente en la página crawlers.fr/data-flow-diagram.'
+                )}
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '7. Durées de conservation', '7. Retention Periods', '7. Plazos de conservación')}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6">
                 <ul className="text-muted-foreground space-y-2 text-sm">
                   <li>• <strong className="text-foreground">{t3(language, 'Données de compte :', 'Account data:', 'Datos de cuenta:')}</strong> {t3(language, 'durée de l\'inscription + 3 ans après suppression', 'duration of registration + 3 years after deletion', 'duración del registro + 3 años después de la eliminación')}</li>
-                  <li>• <strong className="text-foreground">{t3(language, 'Rapports et audits :', 'Reports and audits:', 'Informes y auditorías:')}</strong> {t3(language, 'durée de l\'inscription (supprimés avec le compte)', 'duration of registration (deleted with account)', 'duración del registro (eliminados con la cuenta)')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Rapports, audits et graphes sémantiques :', 'Reports, audits and semantic graphs:', 'Informes, auditorías y grafos semánticos:')}</strong> {t3(language, 'durée de l\'inscription (supprimés avec le compte)', 'duration of registration (deleted with account)', 'duración del registro (eliminados con la cuenta)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Données de facturation :', 'Billing data:', 'Datos de facturación:')}</strong> {t3(language, '10 ans (obligation légale)', '10 years (legal obligation)', '10 años (obligación legal)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Cache d\'audit :', 'Audit cache:', 'Caché de auditoría:')}</strong> {t3(language, '24 heures (automatiquement purgé)', '24 hours (automatically purged)', '24 horas (purgado automáticamente)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Analytics de navigation :', 'Navigation analytics:', 'Analíticas de navegación:')}</strong> {t3(language, '13 mois (conformité CNIL)', '13 months (CNIL compliance)', '13 meses (conformidad CNIL)')}</li>
                   <li>• <strong className="text-foreground">{t3(language, 'Données de crawl :', 'Crawl data:', 'Datos de crawl:')}</strong> {t3(language, 'conservées tant que le site est suivi par l\'utilisateur', 'retained as long as the site is tracked by the user', 'conservados mientras el sitio sea rastreado por el usuario')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Conversations LLM depth :', 'LLM depth conversations:', 'Conversaciones LLM depth:')}</strong> {t3(language, 'expiration automatique après 24 heures', 'automatic expiration after 24 hours', 'expiración automática después de 24 horas')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Tokens CMS / OAuth :', 'CMS / OAuth tokens:', 'Tokens CMS / OAuth:')}</strong> {t3(language, 'révocables à tout moment ; supprimés à la déconnexion du CMS', 'revocable at any time; deleted upon CMS disconnection', 'revocables en cualquier momento; eliminados al desconectar el CMS')}</li>
+                  <li>• <strong className="text-foreground">{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</strong> {t3(language, 'conservées tant que le compte propriétaire est actif', 'retained as long as the owner account is active', 'conservados mientras la cuenta propietaria esté activa')}</li>
                 </ul>
               </div>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '7. Sécurité des données', '7. Data Security', '7. Seguridad de los datos')}
+                {t3(language, '8. Sécurité des données', '8. Data Security', '8. Seguridad de los datos')}
               </h2>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>{t3(language, 'Chiffrement en transit (TLS 1.3) et au repos', 'Encryption in transit (TLS 1.3) and at rest', 'Cifrado en tránsito (TLS 1.3) y en reposo')}</li>
@@ -252,12 +320,14 @@ const RGPD = () => {
                 <li>{t3(language, 'Protection SSRF : validation des URLs avec blocage des IPs privées', 'SSRF protection: URL validation with private IP blocking', 'Protección SSRF: validación de URLs con bloqueo de IPs privadas')}</li>
                 <li>{t3(language, 'Clés API gérées via secrets d\'environnement (jamais exposées côté client)', 'API keys managed via environment secrets (never exposed client-side)', 'Claves API gestionadas mediante secretos de entorno (nunca expuestas del lado del cliente)')}</li>
                 <li>{t3(language, 'Injection de code correctif isolée par sandboxing sémantique (isolation DOM)', 'Corrective code injection isolated by semantic sandboxing (DOM isolation)', 'Inyección de código correctivo aislada por sandboxing semántico (aislamiento DOM)')}</li>
+                <li>{t3(language, 'Chiffrement des tokens CMS et OAuth au repos', 'CMS and OAuth token encryption at rest', 'Cifrado de los tokens CMS y OAuth en reposo')}</li>
+                <li>{t3(language, 'Architecture « Data Firewall » : ségrégation des données entre écosystèmes Google et LLMs tiers', '"Data Firewall" architecture: data segregation between Google and third-party LLM ecosystems', 'Arquitectura «Data Firewall»: segregación de datos entre ecosistemas Google y LLMs de terceros')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '8. Vos droits RGPD', '8. Your GDPR Rights', '8. Sus derechos RGPD')}
+                {t3(language, '9. Vos droits RGPD', '9. Your GDPR Rights', '9. Sus derechos RGPD')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Conformément au RGPD, vous disposez des droits suivants :', 'In accordance with the GDPR, you have the following rights:', 'De conformidad con el RGPD, usted dispone de los siguientes derechos:')}
@@ -293,7 +363,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '9. Exercer vos droits', '9. Exercise Your Rights', '9. Ejercer sus derechos')}
+                {t3(language, '10. Exercer vos droits', '10. Exercise Your Rights', '10. Ejercer sus derechos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
@@ -319,7 +389,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '10. Réclamation auprès de la CNIL', '10. Complaint to the CNIL', '10. Reclamación ante la CNIL')}
+                {t3(language, '11. Réclamation auprès de la CNIL', '11. Complaint to the CNIL', '11. Reclamación ante la CNIL')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -332,7 +402,7 @@ const RGPD = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 2 avril 2026', 'Last updated: April 2, 2026', 'Última actualización: 2 de abril de 2026')}
             </p>
           </article>
         </div>
