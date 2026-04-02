@@ -206,12 +206,12 @@ async function runEeatPipeline(
   console.log(`[check-eeat] 🕷️ Phase 1: Pre-crawl for ${effectiveDomain}...`);
   if (jobId) await supabase.from('async_jobs').update({ progress: 10 }).eq('id', jobId);
 
-  let preCrawlResult = await preCrawlForAudit(supabase, effectiveDomain, trackedSiteId);
+  let preCrawlResult = await preCrawlForAudit(supabase, effectiveDomain, trackedSiteId, null, { skipCache: !!forceCrawl });
   
   // If no pages crawled, try with www. prefix as fallback
   if (preCrawlResult.pages.length === 0) {
     console.log(`[check-eeat] ⚠️ 0 pages crawled for ${effectiveDomain}, retrying with www.${effectiveDomain}...`);
-    preCrawlResult = await preCrawlForAudit(supabase, `www.${effectiveDomain}`, trackedSiteId);
+    preCrawlResult = await preCrawlForAudit(supabase, `www.${effectiveDomain}`, trackedSiteId, null, { skipCache: !!forceCrawl });
   }
 
   const pagesContext = formatPreCrawlForPrompt(preCrawlResult);
