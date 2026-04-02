@@ -1349,6 +1349,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 ### Protocole d'escalade
 
 - 3 itérations max → rappel téléphonique (06/07)
+- Email de contact : contact@crawlers.fr
 - Purge auto 48h via \\\`cleanup_expired_phone_callbacks()\\\`
 
 ### Sécurité
