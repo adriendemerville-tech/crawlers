@@ -114,7 +114,7 @@ Crawlers.fr est la première plateforme française combinant :
 
 Crawlers.fr implémente les schémas JSON-LD suivants :
 - Organization (Crawlers.fr)
-- Person (Mukesh Bagri, fondateur)
+- Person (Adrien de Volontat, fondateur)
 - SoftwareApplication (Crawlers.fr)
 - FAQPage (pages FAQ)
 - WebSite avec SearchAction
