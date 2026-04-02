@@ -318,7 +318,7 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
     });
 
     if (status >= 400 || !html) {
-      return { url, title: '', h1: '', metaDescription: '', wordCount: 0, hasSchemaOrg: false, schemaTypes: [], internalLinksCount: 0, externalLinksCount: 0, httpStatus: status, isIndexable: false, bodyTextTruncated: '' };
+      return { url, title: '', h1: '', metaDescription: '', wordCount: 0, hasSchemaOrg: false, schemaTypes: [], schemaCount: 0, schemaDepth: 0, schemaFieldCount: 0, schemaHasGraph: false, hasSameAs: false, hasAuthorInJsonLd: false, internalLinksCount: 0, externalLinksCount: 0, httpStatus: status, isIndexable: false, bodyTextTruncated: '' };
     }
 
     // Extract metadata
@@ -328,9 +328,46 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       || html.match(/<meta\s+content=["']([^"']{1,500})["']\s+name=["']description/i);
     const noindexMatch = html.match(/<meta\s+[^>]*content=["'][^"']*noindex/i);
 
-    // Schema.org detection
-    const schemaMatches = html.matchAll(/"@type"\s*:\s*"([^"]+)"/gi);
-    const schemaTypes = [...new Set([...schemaMatches].map(m => m[1]))];
+    // Schema.org detection with richness analysis
+    const schemaBlocks = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+    const schemaTypes: string[] = [];
+    let schemaFieldCount = 0;
+    let schemaDepth = 0;
+    let schemaHasGraph = false;
+    let hasSameAs = false;
+    let hasAuthorInJsonLd = false;
+
+    for (const block of schemaBlocks) {
+      try {
+        const jsonContent = block.replace(/<script[^>]*>|<\/script>/gi, '');
+        const parsed = JSON.parse(jsonContent);
+        if (parsed['@graph']) schemaHasGraph = true;
+
+        const processItem = (item: any, depth: number) => {
+          if (depth > schemaDepth) schemaDepth = depth;
+          if (!item || typeof item !== 'object') return;
+          if (Array.isArray(item)) { item.forEach((i: any) => processItem(i, depth)); return; }
+          for (const [k, v] of Object.entries(item)) {
+            schemaFieldCount++;
+            if (k === 'sameAs') hasSameAs = true;
+            if (k === 'author') hasAuthorInJsonLd = true;
+            if (typeof v === 'object' && v !== null) processItem(v, depth + 1);
+          }
+          const t = item['@type'];
+          if (t) {
+            const types = Array.isArray(t) ? t : [t];
+            types.forEach((type: string) => { if (!schemaTypes.includes(type)) schemaTypes.push(type); });
+          }
+        };
+        processItem(parsed, 0);
+      } catch { /* invalid JSON-LD */ }
+    }
+
+    // Fallback: also check @type in raw HTML for simple schema detection
+    if (schemaTypes.length === 0) {
+      const rawTypes = [...html.matchAll(/"@type"\s*:\s*"([^"]+)"/gi)].map(m => m[1]);
+      for (const t of rawTypes) { if (!schemaTypes.includes(t)) schemaTypes.push(t); }
+    }
 
     // Links count
     const domain = new URL(url).hostname;
@@ -363,6 +400,12 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       wordCount: words.length,
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
+      schemaCount: schemaBlocks.length,
+      schemaDepth,
+      schemaFieldCount,
+      schemaHasGraph,
+      hasSameAs,
+      hasAuthorInJsonLd,
       internalLinksCount: internal,
       externalLinksCount: external,
       httpStatus: status,
