@@ -248,6 +248,10 @@ async function runEeatPipeline(
   const backlinkData = await fetchBacklinkData(domain);
   if (jobId) await supabase.from('async_jobs').update({ progress: 45 }).eq('id', jobId);
 
+  // ── Phase 2.55: Fetch GA4 referrals (live backlinks) if GA4 connected ──
+  console.log(`[check-eeat] 📊 Phase 2.55: Fetching GA4 referrals...`);
+  const ga4Referrals = await fetchGA4Referrals(supabase, domain, trackedSiteId, userId);
+
   // ── Phase 2.6: Fetch GBP data if connected ──
   console.log(`[check-eeat] 📍 Phase 2.6: Checking GBP connection...`);
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
@@ -261,6 +265,15 @@ async function runEeatPipeline(
   }
 
   // Build enriched prompt sections
+  const ga4ReferralSection = ga4Referrals.available ? `
+═══ BACKLINKS VIVANTS (GA4 Referrals — trafic réel) ═══
+${ga4Referrals.referrals.map((r: any) => `- ${r.source}: ${r.sessions} sessions, ${r.users} utilisateurs`).join('\n')}
+Total: ${ga4Referrals.totalReferralSessions} sessions referral, ${ga4Referrals.referrals.length} domaines référents actifs.
+IMPORTANT: Ces domaines envoient du trafic RÉEL au site. C'est un signal fort d'Authoritativeness.` : '';
+
+  const ga4Warning = !ga4Referrals.available ? `
+⚠️ Sans connexion de la GA4, la remontée des backlinks est partielle. Seules les données DataForSEO (crawl externe) sont disponibles. Les backlinks vivants (ceux qui génèrent du trafic réel) ne sont pas détectés.` : '';
+
   const backlinkSection = backlinkData.available ? `
 ═══ DONNÉES BACKLINKS RÉELLES (DataForSEO) ═══
 - Domaines référents: ${backlinkData.referringDomains}
@@ -269,9 +282,13 @@ async function runEeatPipeline(
 - IPs référentes: ${backlinkData.referringIps}
 - Sous-réseaux référents: ${backlinkData.referringSubnets}
 - Top ancres: ${backlinkData.anchorDistribution?.map((a: any) => `"${a.anchor}" (${a.backlinks} liens)`).join(', ') || 'N/A'}
+${ga4ReferralSection}
+${ga4Warning}
 IMPORTANT: Utilise ces données RÉELLES pour scorer l'Authoritativeness. Ne devine pas, base-toi sur ces chiffres.` : `
 ═══ BACKLINKS ═══
-Données backlinks non disponibles. Score l'Authoritativeness uniquement sur les signaux structurels du crawl.`;
+Données backlinks non disponibles. Score l'Authoritativeness uniquement sur les signaux structurels du crawl.
+${ga4ReferralSection}
+${ga4Warning}`;
 
   const gbpSection = gbpData.available ? `
 ═══ DONNÉES GOOGLE BUSINESS PROFILE (réelles) ═══
