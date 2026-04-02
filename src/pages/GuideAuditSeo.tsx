@@ -361,7 +361,7 @@ export default function GuideAuditSeo() {
                   className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80"
                 >
                   <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
-                    <h3 className="text-base font-medium">{item.q}</h3>
+                    <span className="text-base font-medium">{item.q}</span>
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
                     {item.a}
