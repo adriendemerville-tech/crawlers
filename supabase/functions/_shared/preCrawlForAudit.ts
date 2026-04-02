@@ -223,6 +223,9 @@ async function fetchGA4TopPages(supabase: any, trackedSiteId: string): Promise<s
 }
 
 // ── Page selection logic ──
+// Patterns E-E-A-T de pages de confiance à prioriser dans le crawl
+const TRUST_PAGE_PATTERNS = /\/(about|a-propos|qui-sommes|equipe|team|notre-histoire|contact|contactez|mentions-legales|legal|imprint|impressum|cgv|cgu|conditions|terms|privacy|confidentialit|politique|rgpd|gdpr|temoignages|avis|testimonials|references|realisations|portfolio|auteur|author)/i;
+
 function selectTopPages(domain: string, sitemapUrls: string[], ga4TopPages: string[]): string[] {
   const selected = new Set<string>();
   const baseUrl = `https://${domain}`;
@@ -230,6 +233,13 @@ function selectTopPages(domain: string, sitemapUrls: string[], ga4TopPages: stri
   // Toujours inclure la homepage
   selected.add(baseUrl);
   selected.add(`${baseUrl}/`);
+
+  // ── Prioriser les pages E-E-A-T (confiance, expertise, auteur) ──
+  const trustPages = sitemapUrls.filter(u => TRUST_PAGE_PATTERNS.test(new URL(u).pathname));
+  for (const url of trustPages) {
+    if (selected.size >= MAX_PAGES_TO_CRAWL) break;
+    selected.add(url);
+  }
 
   // Prioriser les pages GA4 (trafic réel = importance réelle)
   for (const page of ga4TopPages) {
@@ -242,7 +252,6 @@ function selectTopPages(domain: string, sitemapUrls: string[], ga4TopPages: stri
   const sortedSitemap = [...sitemapUrls]
     .filter(u => !u.match(/\.(jpg|png|gif|pdf|css|js|svg|webp)/i))
     .sort((a, b) => {
-      // URL courte = plus importante (homepage > category > article)
       const depthA = (new URL(a).pathname.match(/\//g) || []).length;
       const depthB = (new URL(b).pathname.match(/\//g) || []).length;
       return depthA - depthB;

@@ -232,7 +232,7 @@ async function runEeatPipeline(
   if (jobId) await supabase.from('async_jobs').update({ progress: 30 }).eq('id', jobId);
 
   // ── Phase 2: Aggregate structural signals ──
-  const aggregated = aggregateSignals(preCrawlResult.pages);
+  const aggregated = aggregateSignals(preCrawlResult.pages, preCrawlResult.sitemapUrls);
 
   if (jobId) await supabase.from('async_jobs').update({ progress: 35 }).eq('id', jobId);
 
@@ -304,6 +304,8 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Blog/actualités détecté: ${aggregated.hasBlogSection ? 'Oui' : 'Non'}
 - Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
+- URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
+IMPORTANT: Les détections de pages (À propos, Contact, Mentions légales, CGV/CGU, Blog, Témoignages) sont basées sur l'analyse combinée des ${pagesCount} pages crawlées ET des ${preCrawlResult.totalSitemapUrls} URLs du sitemap. Si un signal est marqué "Oui", la page EXISTE — ne le signale PAS comme manquant.
 ${backlinkSection}
 ${gbpSection}
 
@@ -632,8 +634,8 @@ interface AggregatedSignals {
   isHttps: boolean;
 }
 
-function aggregateSignals(pages: any[]): AggregatedSignals {
-  if (!pages.length) {
+function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedSignals {
+  if (!pages.length && !sitemapUrls.length) {
     return {
       pagesWithAuthor: 0, pagesWithSchema: 0, schemaTypes: [], noindexCount: 0,
       totalWords: 0, avgWords: 0, avgInternalLinks: 0, avgExternalLinks: 0,
@@ -657,6 +659,7 @@ function aggregateSignals(pages: any[]): AggregatedSignals {
   let hasTestimonials = false;
   let isHttps = true;
 
+  // ── 1. Scan crawled pages (content + URL) ──
   for (const page of pages) {
     const urlLower = (page.url || '').toLowerCase();
     const textLower = (page.bodyTextTruncated || '').toLowerCase();
@@ -667,7 +670,11 @@ function aggregateSignals(pages: any[]): AggregatedSignals {
       for (const t of (page.schemaTypes || [])) allSchemaTypes.add(t);
     }
 
+    // Author detection: URL pattern, content text, or Schema.org Person type
     if (/auteur|author|écrit par|written by|rédigé par/i.test(textLower)) {
+      pagesWithAuthor++;
+    }
+    if ((page.schemaTypes || []).some((t: string) => /person/i.test(t))) {
       pagesWithAuthor++;
     }
 
@@ -690,7 +697,19 @@ function aggregateSignals(pages: any[]): AggregatedSignals {
     if (page.url && page.url.startsWith('http://')) isHttps = false;
   }
 
-  const n = pages.length;
+  // ── 2. Scan ALL sitemap URLs for trust page patterns (even non-crawled) ──
+  for (const sitemapUrl of sitemapUrls) {
+    const urlLower = sitemapUrl.toLowerCase();
+    if (/about|a-propos|qui-sommes|equipe|team|notre-histoire/i.test(urlLower)) hasAboutPage = true;
+    if (/contact/i.test(urlLower)) hasContactPage = true;
+    if (/mentions-legales|legal|imprint|impressum/i.test(urlLower)) hasLegalPage = true;
+    if (/cgv|cgu|conditions|terms|privacy|confidentialit|rgpd|gdpr/i.test(urlLower)) hasTermsPage = true;
+    if (/blog|actualit|news|articles|journal/i.test(urlLower)) hasBlogSection = true;
+    if (/auteur|author/i.test(urlLower)) hasAboutPage = true; // Author page counts as about/identity
+    if (/temoignage|testimonial|avis|portfolio|references|realisations/i.test(urlLower)) hasTestimonials = true;
+  }
+
+  const n = Math.max(pages.length, 1);
   return {
     pagesWithAuthor, pagesWithSchema, schemaTypes: [...allSchemaTypes], noindexCount,
     totalWords, avgWords: Math.round(totalWords / n),
