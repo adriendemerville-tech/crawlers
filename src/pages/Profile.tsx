@@ -296,11 +296,9 @@ function ProfileContent() {
                   <MyTracking />
                 </TabsContent>
 
-                {!isProUser && (
-                  <TabsContent value="settings">
-                    <ProfileSettings />
-                  </TabsContent>
-                )}
+                <TabsContent value="settings">
+                  <ProfileSettings />
+                </TabsContent>
 
                 <TabsContent value="reports">
                   <MyReports />
