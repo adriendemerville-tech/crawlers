@@ -304,6 +304,8 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Blog/actualités détecté: ${aggregated.hasBlogSection ? 'Oui' : 'Non'}
 - Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
+- URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
+IMPORTANT: Les détections de pages (À propos, Contact, Mentions légales, CGV/CGU, Blog, Témoignages) sont basées sur l'analyse combinée des ${pagesCount} pages crawlées ET des ${preCrawlResult.totalSitemapUrls} URLs du sitemap. Si un signal est marqué "Oui", la page EXISTE — ne le signale PAS comme manquant.
 ${backlinkSection}
 ${gbpSection}
 
