@@ -403,6 +403,7 @@ Réponds UNIQUEMENT en JSON valide :
       contactInfo: aggregated.hasContactPage,
       legalNotice: aggregated.hasLegalPage,
       schemaOrg: aggregated.pagesWithSchema > 0,
+      schemaRichness: aggregated.schemaRichness,
       blogSection: aggregated.hasBlogSection,
       testimonials: aggregated.hasTestimonials,
     },
