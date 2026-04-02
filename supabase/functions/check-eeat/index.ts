@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
