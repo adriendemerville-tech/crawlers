@@ -477,10 +477,21 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
     }
   };
 
+  const getServiceConnected = (id: string): boolean => {
+    if (id === 'gsc') return gscConnected;
+    if (id === 'ga4') return ga4Connected;
+    if (id === 'google-ads') return adsConnected;
+    if (id === 'gmb') return gbpConnected;
+    if (id === 'matomo') return matomoConnected;
+    if (cmsConnectedIds.has(id)) return true;
+    return false;
+  };
+
   const renderServiceCard = (service: ServiceButton) => {
     const isConnecting = connectingId === service.id;
     const isGbp = service.id === 'gmb';
     const isGbpActive = isGbp && gbpConnected;
+    const isActive = getServiceConnected(service.id);
 
     return (
       <div key={service.id} className="relative">
@@ -488,7 +499,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           disabled={!service.available || isConnecting}
           onClick={() => handleServiceClick(service)}
           className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
-            isGbpActive
+            isActive
               ? 'border-emerald-500/40 bg-emerald-500/5'
               : service.available
                 ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
