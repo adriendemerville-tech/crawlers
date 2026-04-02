@@ -354,6 +354,9 @@ export function MyTracking() {
                       >
                         <Cable className="h-3.5 w-3.5" />
                         <span>API</span>
+                        {hasAnyApiConnected && (
+                          <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -362,7 +365,7 @@ export function MyTracking() {
 
               {/* Main content */}
               <div className="flex-1 min-w-0">
-                {h.showApiPanel && <ExternalApisTab />}
+                {h.showApiPanel && <ExternalApisTab onConnectionChange={setHasAnyApiConnected} />}
 
                 {h.currentSite && !h.showApiPanel && (
                   <div className="space-y-6">
