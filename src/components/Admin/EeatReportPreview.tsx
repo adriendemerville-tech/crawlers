@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Share2, Check, ExternalLink, Eye, Brain, Award, Shield, Info } from 'lucide-react';
+import { Download, Share2, Check, ExternalLink, Eye, Brain, Award, Shield, Info, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -182,6 +182,14 @@ h1{font-size:1.5rem;margin-bottom:.5rem}h2{font-size:1.1rem;margin:1.5rem 0 .75r
 .signal-green{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);color:#22c55e}
 .signal-amber{border-color:rgba(234,179,8,.3);background:rgba(234,179,8,.05);color:#eab308}
 .signal-red{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05);color:#ef4444}
+@media print {
+  body{padding:1rem}
+  .card,.grid,.signal-grid,.contrib-bar,.signal-item{page-break-inside:avoid;break-inside:avoid}
+  h2{page-break-after:avoid;break-after:avoid}
+  .footer{page-break-before:avoid}
+  .container>*{page-break-inside:avoid;break-inside:avoid}
+}
+@page{margin:15mm 10mm}
 </style></head><body><div class="container">
 <h1>Rapport E-E-A-T</h1>
 <p style="color:#94a3b8;font-size:.85rem">${domain} · ${new Date(result.scannedAt).toLocaleDateString('fr-FR')}</p>
@@ -299,6 +307,21 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
     setTimeout(() => { w.print(); }, 500);
   };
 
+  const handlePrint = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+  };
+
   const handleShare = async () => {
     setSharing(true);
     try {
@@ -347,6 +370,9 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
           <div className="flex items-center gap-2 shrink-0">
             <Button size="sm" variant="outline" onClick={handleDownloadPDF}>
               <Download className="h-4 w-4 mr-1" /> PDF
+            </Button>
+            <Button size="sm" variant="outline" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-1" /> Imprimer
             </Button>
             <Button size="sm" variant="outline" onClick={handleShare} disabled={sharing}>
               {copied ? <Check className="h-4 w-4 mr-1" /> : <Share2 className="h-4 w-4 mr-1" />}
