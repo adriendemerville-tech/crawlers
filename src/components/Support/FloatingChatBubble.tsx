@@ -71,7 +71,7 @@ export function FloatingChatBubble() {
     const handler = () => {
       if (isMuted) return;
       setShowHallucinationBubble(true);
-      playNotificationSound();
+      if (!isSilentPage) playNotificationSound();
       // Auto-hide after 15s
       setTimeout(() => setShowHallucinationBubble(false), 15000);
     };
