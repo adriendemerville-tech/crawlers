@@ -111,11 +111,13 @@ const PolitiqueConfidentialite = () => {
                 {t3(language, 'Vos données sont utilisées pour :', 'Your data is used to:', 'Sus datos se utilizan para:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{t3(language, 'Fournir les résultats d\'analyse demandés', 'Provide requested analysis results', 'Proporcionar los resultados de análisis solicitados')}</li>
-                <li>{t3(language, 'Gérer votre compte et vos crédits', 'Manage your account and credits', 'Gestionar su cuenta y sus créditos')}</li>
-                <li>{t3(language, 'Traiter les transactions de paiement', 'Process payment transactions', 'Procesar las transacciones de pago')}</li>
+                <li>{t3(language, 'Fournir les résultats d\'analyse demandés (audits SEO/GEO, crawls, graphes Cocoon, prédictions de trafic)', 'Provide requested analysis results (SEO/GEO audits, crawls, Cocoon graphs, traffic predictions)', 'Proporcionar los resultados de análisis solicitados (auditorías SEO/GEO, crawls, grafos Cocoon, predicciones de tráfico)')}</li>
+                <li>{t3(language, 'Gérer votre compte, vos crédits et vos abonnements', 'Manage your account, credits and subscriptions', 'Gestionar su cuenta, sus créditos y sus suscripciones')}</li>
+                <li>{t3(language, 'Traiter les transactions de paiement (crédits, abonnements Pro Agency / Pro Agency+)', 'Process payment transactions (credits, Pro Agency / Pro Agency+ subscriptions)', 'Procesar las transacciones de pago (créditos, suscripciones Pro Agency / Pro Agency+)')}</li>
+                <li>{t3(language, 'Déployer des correctifs SEO sur vos CMS connectés (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'Deploy SEO fixes on your connected CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)', 'Desplegar correcciones SEO en sus CMS conectados (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)')}</li>
+                <li>{t3(language, 'Piloter le suivi automatisé de vos sites (Autopilot, alertes d\'anomalies, maintenance prédictive)', 'Run automated monitoring of your sites (Autopilot, anomaly alerts, predictive maintenance)', 'Gestionar el seguimiento automatizado de sus sitios (Autopilot, alertas de anomalías, mantenimiento predictivo)')}</li>
                 <li>{t3(language, 'Améliorer nos services et l\'expérience utilisateur', 'Improve our services and user experience', 'Mejorar nuestros servicios y la experiencia del usuario')}</li>
-                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat, alertes de suivi)', 'Send transactional notifications (purchase confirmations, tracking alerts)', 'Enviar notificaciones transaccionales (confirmaciones de compra, alertas de seguimiento)')}</li>
+                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat, alertes de suivi, rapports programmés)', 'Send transactional notifications (purchase confirmations, tracking alerts, scheduled reports)', 'Enviar notificaciones transaccionales (confirmaciones de compra, alertas de seguimiento, informes programados)')}</li>
                 <li>{t3(language, 'Générer des statistiques d\'utilisation anonymisées', 'Generate anonymized usage statistics', 'Generar estadísticas de uso anonimizadas')}</li>
               </ul>
             </section>
