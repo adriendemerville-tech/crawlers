@@ -701,29 +701,39 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [activeTab, setActiveTab] = useState('stats');
-  const [orderedLocations, setOrderedLocations] = useState(SIMULATED_LOCATIONS);
-  const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
+  // Gated users always see simulated data; Pro users start empty until GBP check
+  const [orderedLocations, setOrderedLocations] = useState(isGated ? SIMULATED_LOCATIONS : []);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(isGated ? (SIMULATED_LOCATIONS[0]?.id || null) : null);
   const [gbpConnected, setGbpConnected] = useState(false);
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
   const [gbpLoading, setGbpLoading] = useState(false);
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(!isGated);
 
-  // Check GBP connection status
+  // Check GBP connection status & fetch real locations for Pro users
   useEffect(() => {
+    if (isGated) return; // gated users keep simulated data
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) { setLocationsLoading(false); return; }
         const { data } = await supabase.functions.invoke('gbp-auth', {
           body: { action: 'status', user_id: user.id },
         });
         if (data?.connected) {
           setGbpConnected(true);
           setGbpEmail(data.email || null);
+          // Try to fetch real locations
+          if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
+            setOrderedLocations(data.locations);
+            setSelectedLocationId(data.locations[0]?.id || null);
+          }
+          // If no locations returned, keep empty state (no simulated data)
         }
       } catch (_) { /* ignore */ }
+      setLocationsLoading(false);
     })();
-  }, []);
+  }, [isGated]);
 
   const handleGbpConnect = async () => {
     setGbpLoading(true);
