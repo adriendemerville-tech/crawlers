@@ -328,6 +328,8 @@ function selectTopPages(domain: string, sitemapUrls: string[], ga4TopPages: stri
 }
 
 // ── Crawl individual pages ──
+const SPA_WORD_THRESHOLD = 100; // Below this, trigger headless fallback
+
 async function crawlPages(urls: string[]): Promise<PreCrawlPage[]> {
   // Crawl par batch de 3 pour limiter la pression
   const results: PreCrawlPage[] = [];
@@ -360,6 +362,77 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       return { url, title: '', h1: '', metaDescription: '', wordCount: 0, hasSchemaOrg: false, schemaTypes: [], schemaCount: 0, schemaDepth: 0, schemaFieldCount: 0, schemaHasGraph: false, hasSameAs: false, hasAuthorInJsonLd: false, internalLinksCount: 0, externalLinksCount: 0, httpStatus: status, isIndexable: false, bodyTextTruncated: '' };
     }
 
+    // Parse the HTML
+    let result = parseHtmlToPreCrawlPage(url, html, status);
+
+    // ── SPA fallback: if content is too thin, try Firecrawl for JS-rendered HTML ──
+    if (result.wordCount < SPA_WORD_THRESHOLD) {
+      console.log(`[preCrawl] ⚠️ SPA detected for ${url} (${result.wordCount} words < ${SPA_WORD_THRESHOLD}). Trying Firecrawl headless fallback...`);
+      const firecrawlResult = await firecrawlFallback(url);
+      if (firecrawlResult && firecrawlResult.wordCount > result.wordCount) {
+        console.log(`[preCrawl] ✅ Firecrawl fallback success for ${url}: ${firecrawlResult.wordCount} words (was ${result.wordCount})`);
+        return firecrawlResult;
+      } else {
+        console.log(`[preCrawl] ℹ️ Firecrawl fallback did not improve content for ${url}, keeping native result`);
+      }
+    }
+
+    return result;
+  } catch (e) {
+    console.warn(`[preCrawl] ❌ Failed to crawl ${url}:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/**
+ * Firecrawl headless fallback — renders JS and returns full HTML.
+ */
+async function firecrawlFallback(url: string): Promise<PreCrawlPage | null> {
+  try {
+    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!apiKey) {
+      console.log(`[preCrawl] ℹ️ FIRECRAWL_API_KEY not set, skipping headless fallback`);
+      return null;
+    }
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html', 'markdown'],
+        waitFor: 3000, // Wait for JS to render
+        onlyMainContent: false, // We need full page for schema detection
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`[preCrawl] Firecrawl returned ${response.status} for ${url}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const html = data?.data?.html || data?.html;
+    if (!html) {
+      console.warn(`[preCrawl] Firecrawl returned no HTML for ${url}`);
+      return null;
+    }
+
+    console.log(`[preCrawl] 🔥 Firecrawl rendered HTML for ${url} (${html.length} chars)`);
+    return parseHtmlToPreCrawlPage(url, html, 200);
+  } catch (e) {
+    console.warn(`[preCrawl] Firecrawl fallback error for ${url}:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/**
+ * Parse raw HTML into a PreCrawlPage structure.
+ */
+function parseHtmlToPreCrawlPage(url: string, html: string, status: number): PreCrawlPage {
     // Extract metadata
     const titleMatch = html.match(/<title[^>]*>([^<]{1,300})<\/title>/i);
     const h1Match = html.match(/<h1[^>]*>([^<]{1,300})<\/h1>/i);
@@ -409,13 +482,13 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
     }
 
     // Links count
-    const domain = new URL(url).hostname;
+    const pageDomain = new URL(url).hostname;
     const linkMatches = [...html.matchAll(/href=["'](https?:\/\/[^"'#\s]+)/gi)];
     let internal = 0, external = 0;
     for (const m of linkMatches) {
       try {
         const linkHost = new URL(m[1]).hostname;
-        if (linkHost.includes(domain) || domain.includes(linkHost)) internal++;
+        if (linkHost.includes(pageDomain) || pageDomain.includes(linkHost)) internal++;
         else external++;
       } catch { external++; }
     }
@@ -451,10 +524,6 @@ async function crawlSinglePage(url: string): Promise<PreCrawlPage | null> {
       isIndexable: !noindexMatch,
       bodyTextTruncated: bodyText.slice(0, 500),
     };
-  } catch (e) {
-    console.warn(`[preCrawl] ❌ Failed to crawl ${url}:`, e instanceof Error ? e.message : e);
-    return null;
-  }
 }
 
 /**
