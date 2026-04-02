@@ -183,6 +183,9 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
 </html>`;
 }
 
+// Bot user-agent detection regex — covers major search engines, social crawlers & AI bots
+const BOT_UA_RE = /googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|applebot-extended|gptbot|oai-searchbot|chatgpt-user|google-extended|perplexitybot|claudebot|claude-user|claude-searchbot|claude-web|anthropic-ai|ccbot|bytespider|amazonbot|meta-externalagent|cohere-ai|ahrefsbot|semrushbot|mj12bot|dotbot|rogerbot|screaming frog/i;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -193,6 +196,12 @@ Deno.serve(async (req) => {
     const route = url.searchParams.get("route") || "/";
     const format = url.searchParams.get("format") || "html";
     const noCache = url.searchParams.get("nocache") === "true";
+    const userAgent = req.headers.get("user-agent") || "";
+    const isBot = BOT_UA_RE.test(userAgent);
+
+    if (isBot) {
+      console.log(`[render-page] 🤖 Bot detected: ${userAgent.slice(0, 120)} — route: ${route}`);
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
