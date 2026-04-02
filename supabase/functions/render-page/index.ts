@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Routes publiques indexables (pas les routes /app/*, /auth, /signup, etc.)
+// Routes publiques indexables
 const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/": { title: "Crawlers.fr — Audit SEO & GEO Expert | Visibilité IA", description: "Première plateforme française d'audit hybride SEO et GEO. Analysez, corrigez et optimisez votre site pour Google et les moteurs IA." },
   "/faq": { title: "FAQ Crawlers.fr — Questions fréquentes SEO & GEO", description: "Toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency." },
@@ -32,24 +32,39 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
 
 const baseUrl = "https://crawlers.fr";
 
+const PUBLISHER_ORG = {
+  "@type": "Organization",
+  "name": "Crawlers.fr",
+  "url": baseUrl,
+  "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png`, "width": 512, "height": 512 },
+  "sameAs": ["https://www.linkedin.com/company/crawlers-fr"]
+};
+
+const AUTHOR_PERSON = {
+  "@type": "Person",
+  "name": "Équipe Crawlers.fr",
+  "url": `${baseUrl}/a-propos`,
+  "worksFor": { "@type": "Organization", "name": "Crawlers.fr" }
+};
+
+// ── Helpers ──
+
+function escapeHtml(str: string): string {
+  return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 /** Convert basic Markdown to HTML (headings, bold, italic, links, lists, paragraphs) */
 function markdownToHtml(md: string): string {
   if (!md) return "";
   let html = md
-    // Headings
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    // Bold & italic
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    // Unordered lists
     .replace(/^[*-] (.+)$/gm, "<li>$1</li>");
-  // Wrap consecutive <li> in <ul>
   html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
-  // Paragraphs: wrap non-tag lines
   html = html
     .split("\n\n")
     .map((block) => {
@@ -62,39 +77,142 @@ function markdownToHtml(md: string): string {
   return html;
 }
 
+/** Count words in text (strip markdown/html) */
+function countWords(text: string): number {
+  if (!text) return 0;
+  const plain = text.replace(/<[^>]+>/g, "").replace(/[#*_\[\]()]/g, "").trim();
+  return plain.split(/\s+/).filter(Boolean).length;
+}
+
+/** Extract FAQ pairs from markdown content (## or ### starting with question words) */
+function extractFaqFromContent(content: string): Array<{ question: string; answer: string }> {
+  if (!content) return [];
+  const faqs: Array<{ question: string; answer: string }> = [];
+  const lines = content.split("\n");
+  const questionRe = /^#{2,3}\s+(.+\?)\s*$/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(questionRe);
+    if (match) {
+      const question = match[1].trim();
+      // Collect answer lines until next heading or end
+      const answerLines: string[] = [];
+      for (let j = i + 1; j < lines.length; j++) {
+        if (/^#{1,3}\s/.test(lines[j])) break;
+        const line = lines[j].trim();
+        if (line) answerLines.push(line);
+      }
+      if (answerLines.length > 0) {
+        const answer = answerLines
+          .join(" ")
+          .replace(/\*\*(.+?)\*\*/g, "$1")
+          .replace(/\*(.+?)\*/g, "$1")
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+          .slice(0, 500);
+        faqs.push({ question, answer });
+      }
+    }
+  }
+  return faqs.slice(0, 10); // Max 10 FAQ items
+}
+
+/** Generate BreadcrumbList JSON-LD */
+function breadcrumbJsonLd(crumbs: Array<{ name: string; url: string }>): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": crumbs.map((c, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": c.name,
+      "item": c.url,
+    })),
+  };
+}
+
+/** Generate FAQPage JSON-LD */
+function faqJsonLd(faqs: Array<{ question: string; answer: string }>): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((f) => ({
+      "@type": "Question",
+      "name": f.question,
+      "acceptedAnswer": { "@type": "Answer", "text": f.answer },
+    })),
+  };
+}
+
+// ── Route-specific breadcrumb labels ──
+const ROUTE_LABELS: Record<string, string> = {
+  "/": "Accueil",
+  "/faq": "FAQ",
+  "/tarifs": "Tarifs",
+  "/pro-agency": "Pro Agency",
+  "/audit-expert": "Audit Expert",
+  "/audit-seo-gratuit": "Audit SEO Gratuit",
+  "/analyse-site-web-gratuit": "Analyse de site web",
+  "/generative-engine-optimization": "GEO",
+  "/guide-audit-seo": "Guide Audit SEO",
+  "/methodologie": "Méthodologie",
+  "/blog": "Blog",
+  "/lexique": "Lexique",
+  "/marina": "Marina API",
+  "/matrice": "Matrice d'audit",
+  "/content-architect": "Content Architect",
+  "/features/cocoon": "Cocoon 3D",
+  "/comparatif-crawlers-semrush": "Crawlers vs Semrush",
+  "/a-propos": "À propos",
+  "/sea-seo-bridge": "SEA → SEO Bridge",
+  "/data-flow-diagram": "Architecture données",
+  "/observatoire": "Observatoire",
+};
+
+// ── HTML generators ──
+
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
   const fullUrl = `${baseUrl}${route}`;
+  const label = ROUTE_LABELS[route] || meta.title;
+
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Accueil", url: baseUrl },
+    ...(route !== "/" ? [{ name: label, url: fullUrl }] : []),
+  ]);
+
+  const webPage = {
+    "@context": "https://schema.org",
+    "@type": route === "/" ? "WebSite" : "WebPage",
+    "name": meta.title,
+    "description": meta.description,
+    "url": fullUrl,
+    ...(route === "/" ? { "potentialAction": { "@type": "SearchAction", "target": `${baseUrl}/audit-expert?url={search_term_string}`, "query-input": "required name=search_term_string" } } : {}),
+    "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": baseUrl },
+    "publisher": PUBLISHER_ORG,
+  };
 
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${meta.title}</title>
-  <meta name="description" content="${meta.description}">
+  <title>${escapeHtml(meta.title)}</title>
+  <meta name="description" content="${escapeHtml(meta.description)}">
   <link rel="canonical" href="${fullUrl}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Crawlers.fr">
   <meta property="og:url" content="${fullUrl}">
-  <meta property="og:title" content="${meta.title}">
-  <meta property="og:description" content="${meta.description}">
+  <meta property="og:title" content="${escapeHtml(meta.title)}">
+  <meta property="og:description" content="${escapeHtml(meta.description)}">
   <meta property="og:image" content="${baseUrl}/og-image.png">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${meta.title}">
-  <meta name="twitter:description" content="${meta.description}">
+  <meta name="twitter:title" content="${escapeHtml(meta.title)}">
+  <meta name="twitter:description" content="${escapeHtml(meta.description)}">
   <meta name="twitter:image" content="${baseUrl}/og-image.png">
   <link rel="alternate" hreflang="fr" href="${fullUrl}">
   <link rel="alternate" hreflang="x-default" href="${fullUrl}">
-  <script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": meta.title,
-    "description": meta.description,
-    "url": fullUrl,
-    "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": baseUrl },
-    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png` } }
-  })}</script>
+  <script type="application/ld+json">${JSON.stringify(webPage)}</script>
+  <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
 </head>
 <body>
   <header><nav>
@@ -105,10 +223,10 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
     <a href="${baseUrl}/lexique">Lexique</a>
   </nav></header>
   <main>
-    <h1>${meta.title}</h1>
-    <p>${meta.description}</p>
+    <h1>${escapeHtml(meta.title)}</h1>
+    <p>${escapeHtml(meta.description)}</p>
     <section><h2>Navigation</h2><ul>
-${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `      <li><a href="${baseUrl}${r}">${m.title}</a></li>`).join("\n")}
+${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `      <li><a href="${baseUrl}${r}">${escapeHtml(m.title)}</a></li>`).join("\n")}
     </ul></section>
   </main>
   <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
@@ -116,19 +234,58 @@ ${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `      <li><a href="${baseUrl}${
 </html>`;
 }
 
-function generateBlogArticleHTML(article: { slug: string; title: string; excerpt: string; content: string; image_url: string | null; published_at: string }): string {
+function generateBlogArticleHTML(article: { slug: string; title: string; excerpt: string; content: string; image_url: string | null; published_at: string; updated_at?: string }): string {
   const fullUrl = `${baseUrl}/blog/${article.slug}`;
   const contentHtml = markdownToHtml(article.content || "");
-  const safeTitle = (article.title || "").replace(/"/g, "&quot;");
-  const safeExcerpt = (article.excerpt || "").replace(/"/g, "&quot;");
+  const safeTitle = escapeHtml(article.title);
+  const safeExcerpt = escapeHtml(article.excerpt);
   const imageUrl = article.image_url || `${baseUrl}/og-image.png`;
+  const wordCount = countWords(article.content || "");
+  const dateModified = article.updated_at || article.published_at;
+
+  // Breadcrumb: Accueil > Blog > Article
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Accueil", url: baseUrl },
+    { name: "Blog", url: `${baseUrl}/blog` },
+    { name: article.title, url: fullUrl },
+  ]);
+
+  // BlogPosting enriched
+  const blogPosting: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": article.title,
+    "description": article.excerpt,
+    "url": fullUrl,
+    "image": imageUrl,
+    "datePublished": article.published_at,
+    "dateModified": dateModified,
+    "wordCount": wordCount,
+    "inLanguage": "fr",
+    "author": AUTHOR_PERSON,
+    "publisher": PUBLISHER_ORG,
+    "mainEntityOfPage": { "@type": "WebPage", "@id": fullUrl },
+    "isPartOf": { "@type": "Blog", "name": "Blog Crawlers.fr", "url": `${baseUrl}/blog` },
+  };
+
+  // Auto-detect FAQ from content
+  const faqs = extractFaqFromContent(article.content || "");
+
+  // Build JSON-LD scripts
+  let jsonLdScripts = `
+  <script type="application/ld+json">${JSON.stringify(blogPosting)}</script>
+  <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>`;
+
+  if (faqs.length >= 2) {
+    jsonLdScripts += `\n  <script type="application/ld+json">${JSON.stringify(faqJsonLd(faqs))}</script>`;
+  }
 
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${article.title} | Crawlers.fr</title>
+  <title>${safeTitle} | Crawlers.fr</title>
   <meta name="description" content="${safeExcerpt}">
   <link rel="canonical" href="${fullUrl}">
   <meta property="og:type" content="article">
@@ -139,24 +296,15 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
   <meta property="og:image" content="${imageUrl}">
   <meta property="og:locale" content="fr_FR">
   <meta property="article:published_time" content="${article.published_at}">
+  <meta property="article:modified_time" content="${dateModified}">
+  <meta property="article:author" content="${baseUrl}/a-propos">
+  <meta property="article:section" content="SEO & GEO">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeExcerpt}">
   <meta name="twitter:image" content="${imageUrl}">
   <link rel="alternate" hreflang="fr" href="${fullUrl}">
-  <link rel="alternate" hreflang="x-default" href="${fullUrl}">
-  <script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": article.title,
-    "description": article.excerpt,
-    "url": fullUrl,
-    "image": imageUrl,
-    "datePublished": article.published_at,
-    "author": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl },
-    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl, "logo": { "@type": "ImageObject", "url": `${baseUrl}/crawlers-logo-violet.png` } },
-    "mainEntityOfPage": { "@type": "WebPage", "@id": fullUrl }
-  })}</script>
+  <link rel="alternate" hreflang="x-default" href="${fullUrl}">${jsonLdScripts}
 </head>
 <body>
   <header><nav>
@@ -166,9 +314,17 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
     <a href="${baseUrl}/tarifs">Tarifs</a>
   </nav></header>
   <main>
+    <nav aria-label="Fil d'Ariane">
+      <ol>
+        <li><a href="${baseUrl}">Accueil</a></li>
+        <li><a href="${baseUrl}/blog">Blog</a></li>
+        <li>${safeTitle}</li>
+      </ol>
+    </nav>
     <article>
-      <h1>${article.title}</h1>
+      <h1>${safeTitle}</h1>
       <p><em>${safeExcerpt}</em></p>
+      <p><time datetime="${article.published_at}">Publié le ${new Date(article.published_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}</time>${dateModified !== article.published_at ? ` · <time datetime="${dateModified}">Mis à jour le ${new Date(dateModified).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}</time>` : ""}</p>
       ${article.image_url ? `<img src="${article.image_url}" alt="${safeTitle}" loading="lazy" width="1200" height="630">` : ""}
       <div class="article-content">
         ${contentHtml}
@@ -183,7 +339,7 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
 </html>`;
 }
 
-// Bot user-agent detection regex — covers major search engines, social crawlers & AI bots
+// Bot user-agent detection regex
 const BOT_UA_RE = /googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|applebot-extended|gptbot|oai-searchbot|chatgpt-user|google-extended|perplexitybot|claudebot|claude-user|claude-searchbot|claude-web|anthropic-ai|ccbot|bytespider|amazonbot|meta-externalagent|cohere-ai|ahrefsbot|semrushbot|mj12bot|dotbot|rogerbot|screaming frog/i;
 
 Deno.serve(async (req) => {
@@ -234,10 +390,10 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fetch article from DB
+      // Fetch article from DB (include updated_at)
       const { data: article, error } = await supabase
         .from("blog_articles")
-        .select("slug, title, excerpt, content, image_url, published_at")
+        .select("slug, title, excerpt, content, image_url, published_at, updated_at")
         .eq("slug", slug)
         .eq("status", "published")
         .single();
