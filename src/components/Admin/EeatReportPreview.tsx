@@ -609,6 +609,29 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
                   </div>
                 </div>
               )}
+              {result.backlinkData.referringPages && result.backlinkData.referringPages.length > 0 && (
+                <div className="rounded-lg border border-border p-3 bg-background">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">🔗 Pages référentes (cliquez pour vérifier le backlink)</p>
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {result.backlinkData.referringPages.map((bp, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs border-b border-border/50 pb-1.5 last:border-0">
+                        <div className="flex-1 min-w-0">
+                          <a href={bp.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block" title={bp.sourceUrl}>
+                            {bp.sourceUrl}
+                          </a>
+                          <div className="flex items-center gap-2 mt-0.5 text-muted-foreground">
+                            <span>→ {bp.targetUrl}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right text-muted-foreground">
+                          <div className="text-[10px]">Ancre: "{bp.anchor || '(vide)'}"</div>
+                          <div className="text-[10px]">Rank: {bp.rank}{bp.dofollow ? ' · dofollow' : ' · nofollow'}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p className="text-[10px] text-muted-foreground">Source : DataForSEO · Données en temps réel</p>
             </div>
           )}
