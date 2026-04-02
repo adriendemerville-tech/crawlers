@@ -143,7 +143,7 @@ const services: ServiceButton[] = [
 
 const RANK_MATH_LOGO = `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#E44B36" d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.18L18.82 7.5 12 10.82 5.18 7.5 12 4.18zM5 8.82l6 3.33v7.03l-6-3.33V8.82zm8 10.36v-7.03l6-3.33v7.03l-6 3.33z"/></svg>`;
 
-export function ExternalApisTab() {
+export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (hasAny: boolean) => void } = {}) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -154,6 +154,12 @@ export function ExternalApisTab() {
   const [wpConnection, setWpConnection] = useState<{ id: string; site_url: string } | null>(null);
   const [rankMathConnected, setRankMathConnected] = useState(false);
   const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
+
+  // Google API connection states
+  const [gscConnected, setGscConnected] = useState(false);
+  const [ga4Connected, setGa4Connected] = useState(false);
+  const [adsConnected, setAdsConnected] = useState(false);
+  const [cmsConnectedIds, setCmsConnectedIds] = useState<Set<string>>(new Set());
 
   // GBP state
   const [gbpConnected, setGbpConnected] = useState(false);
@@ -166,6 +172,52 @@ export function ExternalApisTab() {
   const [matomoConnected, setMatomoConnected] = useState(false);
   const [matomoForm, setMatomoForm] = useState({ matomo_url: '', token_auth: '', site_id: '', tracked_site_id: '' });
   const [trackedSites, setTrackedSites] = useState<{ id: string; domain: string }[]>([]);
+
+  // Check GSC/GA4/Ads/CMS connection status
+  useEffect(() => {
+    const checkApiConnections = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check GSC & GA4 from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('gsc_refresh_token, ga4_property_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile) {
+        setGscConnected(!!profile.gsc_refresh_token);
+        setGa4Connected(!!profile.ga4_property_id);
+      }
+
+      // Check Google Ads
+      const { data: adsData } = await (supabase as any)
+        .from('google_ads_connections')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      setAdsConnected(!!adsData);
+
+      // Check CMS connections
+      const { data: cmsData } = await supabase
+        .from('cms_connections')
+        .select('platform')
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+      if (cmsData && cmsData.length > 0) {
+        setCmsConnectedIds(new Set(cmsData.map(c => c.platform)));
+      }
+    };
+    checkApiConnections();
+  }, [cmsDialogOpen]);
+
+  // Notify parent of connection changes
+  useEffect(() => {
+    const hasAny = gscConnected || ga4Connected || adsConnected || gbpConnected || matomoConnected || rankMathConnected || cmsConnectedIds.size > 0;
+    onConnectionChange?.(hasAny);
+  }, [gscConnected, ga4Connected, adsConnected, gbpConnected, matomoConnected, rankMathConnected, cmsConnectedIds, onConnectionChange]);
 
   useEffect(() => {
     const checkWpConnection = async () => {
@@ -425,10 +477,21 @@ export function ExternalApisTab() {
     }
   };
 
+  const getServiceConnected = (id: string): boolean => {
+    if (id === 'gsc') return gscConnected;
+    if (id === 'ga4') return ga4Connected;
+    if (id === 'google-ads') return adsConnected;
+    if (id === 'gmb') return gbpConnected;
+    if (id === 'matomo') return matomoConnected;
+    if (cmsConnectedIds.has(id)) return true;
+    return false;
+  };
+
   const renderServiceCard = (service: ServiceButton) => {
     const isConnecting = connectingId === service.id;
     const isGbp = service.id === 'gmb';
     const isGbpActive = isGbp && gbpConnected;
+    const isActive = getServiceConnected(service.id);
 
     return (
       <div key={service.id} className="relative">
@@ -436,7 +499,7 @@ export function ExternalApisTab() {
           disabled={!service.available || isConnecting}
           onClick={() => handleServiceClick(service)}
           className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
-            isGbpActive
+            isActive
               ? 'border-emerald-500/40 bg-emerald-500/5'
               : service.available
                 ? 'border-border hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer'
@@ -450,7 +513,7 @@ export function ExternalApisTab() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">{service.name}</span>
-              {isGbpActive && (
+              {isActive && (
                 <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   {t.connected}
@@ -472,10 +535,10 @@ export function ExternalApisTab() {
                     <Loader2 className="w-3 h-3 animate-spin" />
                     {t.connecting}
                   </>
-                ) : isGbpActive ? (
+                ) : isActive ? (
                   <>
-                    <MapPin className="w-3 h-3" />
-                    {language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect'}
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    {isGbpActive ? (language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect') : t.configure}
                   </>
                 ) : (
                   <>
