@@ -225,7 +225,7 @@ const RGPD = () => {
                     <tbody>
                       <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Stripe</td>
-                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés', 'Secure payments', 'Pagos seguros')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés (PCI-DSS niveau 1)', 'Secure payments (PCI-DSS Level 1)', 'Pagos seguros (PCI-DSS nivel 1)')}</td>
                         <td className="py-2">{t3(language, 'UE (Dublin)', 'EU (Dublin)', 'UE (Dublín)')}</td>
                       </tr>
                       <tr className="border-b border-border/50">
@@ -235,13 +235,33 @@ const RGPD = () => {
                       </tr>
                       <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Supabase Inc.</td>
-                        <td className="py-2 pr-4">{t3(language, 'Infrastructure backend et base de données', 'Backend infrastructure and database', 'Infraestructura backend y base de datos')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Infrastructure backend, BDD, auth, stockage (AWS eu-west-1)', 'Backend infrastructure, DB, auth, storage (AWS eu-west-1)', 'Infraestructura backend, BDD, auth, almacenamiento (AWS eu-west-1)')}</td>
+                        <td className="py-2">{t3(language, 'UE (Irlande)', 'EU (Ireland)', 'UE (Irlanda)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Google LLC (Gemini Pro)</td>
+                        <td className="py-2 pr-4">{t3(language, 'Génération de contenu IA, assistant Marina (écosystème Google)', 'AI content generation, Marina assistant (Google ecosystem)', 'Generación de contenido IA, asistente Marina (ecosistema Google)')}</td>
+                        <td className="py-2">{t3(language, 'UE / États-Unis (clauses contractuelles types)', 'EU / United States (standard contractual clauses)', 'UE / Estados Unidos (cláusulas contractuales tipo)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">OpenAI / OpenRouter</td>
+                        <td className="py-2 pr-4">{t3(language, 'Prédictions de trafic, recommandations avancées (métriques agrégées anonymisées uniquement)', 'Traffic predictions, advanced recommendations (aggregated anonymized metrics only)', 'Predicciones de tráfico, recomendaciones avanzadas (métricas agregadas anonimizadas únicamente)')}</td>
+                        <td className="py-2">{t3(language, 'États-Unis (clauses contractuelles types)', 'United States (standard contractual clauses)', 'Estados Unidos (cláusulas contractuales tipo)')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Google LLC (APIs)</td>
+                        <td className="py-2 pr-4">{t3(language, 'PageSpeed, Search Console, GA4, Google My Business (données brutes confinées)', 'PageSpeed, Search Console, GA4, Google My Business (raw data confined)', 'PageSpeed, Search Console, GA4, Google My Business (datos brutos confinados)')}</td>
+                        <td className="py-2">{t3(language, 'UE / États-Unis', 'EU / United States', 'UE / Estados Unidos')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">DataForSEO</td>
+                        <td className="py-2 pr-4">{t3(language, 'Données SERP et backlinks (domaines/URLs publics)', 'SERP and backlink data (public domains/URLs)', 'Datos SERP y backlinks (dominios/URLs públicos)')}</td>
                         <td className="py-2">{t3(language, 'UE', 'EU', 'UE')}</td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4">Google / OpenAI</td>
-                        <td className="py-2 pr-4">{t3(language, 'Génération de recommandations IA (données anonymisées)', 'AI recommendation generation (anonymized data)', 'Generación de recomendaciones IA (datos anonimizados)')}</td>
-                        <td className="py-2">{t3(language, 'UE / États-Unis (clauses contractuelles types)', 'EU / United States (standard contractual clauses)', 'UE / Estados Unidos (cláusulas contractuales tipo)')}</td>
+                        <td className="py-2 pr-4">Firecrawl / Fly.io</td>
+                        <td className="py-2 pr-4">{t3(language, 'Crawl et rendu de pages (URLs publiques)', 'Crawl and page rendering (public URLs)', 'Crawl y renderizado de páginas (URLs públicas)')}</td>
+                        <td className="py-2">{t3(language, 'UE (Frankfurt)', 'EU (Frankfurt)', 'UE (Frankfurt)')}</td>
                       </tr>
                     </tbody>
                   </table>
