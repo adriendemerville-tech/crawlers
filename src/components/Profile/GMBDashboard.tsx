@@ -701,29 +701,39 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [activeTab, setActiveTab] = useState('stats');
-  const [orderedLocations, setOrderedLocations] = useState(SIMULATED_LOCATIONS);
-  const [selectedLocationId, setSelectedLocationId] = useState(SIMULATED_LOCATIONS[0]?.id || null);
+  // Gated users always see simulated data; Pro users start empty until GBP check
+  const [orderedLocations, setOrderedLocations] = useState(isGated ? SIMULATED_LOCATIONS : []);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(isGated ? (SIMULATED_LOCATIONS[0]?.id || null) : null);
   const [gbpConnected, setGbpConnected] = useState(false);
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
   const [gbpLoading, setGbpLoading] = useState(false);
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(!isGated);
 
-  // Check GBP connection status
+  // Check GBP connection status & fetch real locations for Pro users
   useEffect(() => {
+    if (isGated) return; // gated users keep simulated data
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) { setLocationsLoading(false); return; }
         const { data } = await supabase.functions.invoke('gbp-auth', {
           body: { action: 'status', user_id: user.id },
         });
         if (data?.connected) {
           setGbpConnected(true);
           setGbpEmail(data.email || null);
+          // Try to fetch real locations
+          if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
+            setOrderedLocations(data.locations);
+            setSelectedLocationId(data.locations[0]?.id || null);
+          }
+          // If no locations returned, keep empty state (no simulated data)
         }
       } catch (_) { /* ignore */ }
+      setLocationsLoading(false);
     })();
-  }, []);
+  }, [isGated]);
 
   const handleGbpConnect = async () => {
     setGbpLoading(true);
@@ -754,6 +764,10 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
       if (error) throw error;
       setGbpConnected(false);
       setGbpEmail(null);
+      if (!isGated) {
+        setOrderedLocations([]);
+        setSelectedLocationId(null);
+      }
       toast.success(language === 'fr' ? 'Google Business Profile déconnecté' : 'GBP disconnected');
     } catch (err) {
       console.error('[GMBDashboard] GBP disconnect error:', err);
@@ -780,6 +794,42 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
         return arrayMove(prev, oldIndex, newIndex);
       });
     }
+  }
+
+  // Loading state for Pro users
+  if (locationsLoading && !isGated) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Empty state for Pro users with no GBP connection and no locations
+  if (!isGated && orderedLocations.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-8 text-center space-y-4">
+            <Store className="h-12 w-12 mx-auto text-muted-foreground/40" />
+            <div>
+              <h3 className="font-semibold text-lg">
+                {language === 'fr' ? 'Aucun établissement connecté' : 'No location connected'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {language === 'fr' 
+                  ? 'Connectez votre compte Google Business Profile pour gérer vos établissements.'
+                  : 'Connect your Google Business Profile account to manage your locations.'}
+              </p>
+            </div>
+            <Button onClick={handleGbpConnect} disabled={gbpLoading} className="gap-2">
+              {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
+              {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -818,15 +868,10 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
                 variant="ghost"
                 size="sm"
                 className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
-                disabled={isGated}
-                onClick={() => {
-                  const msg = (language === 'fr')
-                    ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
-                    : 'Connect your Google Business Profile account to add a location.';
-                  toast.info(msg);
-                }}
+                disabled={isGated || gbpLoading}
+                onClick={handleGbpConnect}
               >
-                <Plus className="h-3.5 w-3.5" />
+                {gbpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                 {t.add}
               </Button>
             </>
