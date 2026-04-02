@@ -152,7 +152,7 @@ export default function APropos() {
       },
       "knowsAbout": ["SEO", "GEO", "Generative Engine Optimization", "Architecture serverless", "Intelligence artificielle"],
       "sameAs": [
-        "https://www.linkedin.com/in/mukesh-bagri/"
+        "https://www.linkedin.com/in/adrien-de-volontat/"
       ]
     };
     const script = document.createElement('script');
