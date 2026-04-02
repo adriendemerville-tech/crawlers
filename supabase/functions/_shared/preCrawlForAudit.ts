@@ -23,6 +23,12 @@ export interface PreCrawlPage {
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
+  schemaCount: number;
+  schemaDepth: number;
+  schemaFieldCount: number;
+  schemaHasGraph: boolean;
+  hasSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
   internalLinksCount: number;
   externalLinksCount: number;
   httpStatus: number;
