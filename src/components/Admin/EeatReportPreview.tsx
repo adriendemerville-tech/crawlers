@@ -641,6 +641,33 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
             </div>
           )}
 
+          {/* GA4 Referrals */}
+          {result.ga4Referrals ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                📊 Backlinks vivants (GA4 Referrals)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Domaines qui envoient du trafic réel (90 derniers jours) — {result.ga4Referrals.totalReferralSessions} sessions referral
+              </p>
+              <div className="rounded-lg border border-border p-3 bg-background">
+                <div className="space-y-1">
+                  {result.ga4Referrals.referrals.slice(0, 15).map((r: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-xs border-b border-border/50 pb-1 last:border-0">
+                      <span className="text-foreground">{r.source}</span>
+                      <span className="text-muted-foreground">{r.sessions} sessions · {r.users} users</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Source : Google Analytics 4 · Données vérifiées</p>
+            </div>
+          ) : !result.ga4Connected && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <p className="text-xs text-amber-400">⚠️ Sans connexion de la GA4, la remontée des backlinks est partielle. Les backlinks vivants (ceux qui génèrent du trafic réel) ne sont pas détectés.</p>
+            </div>
+          )}
+
           {/* GBP data */}
           {result.gbpData && (
             <div className="space-y-2">
