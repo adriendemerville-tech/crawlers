@@ -142,7 +142,7 @@ export default function APropos() {
     const personSchema = {
       "@context": "https://schema.org",
       "@type": "Person",
-      "name": "Mukesh Bagri",
+      "name": "Adrien de Volontat",
       "jobTitle": "Fondateur & CTO de Crawlers.fr",
       "url": "https://crawlers.fr/a-propos",
       "worksFor": {
