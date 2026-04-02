@@ -276,11 +276,9 @@ function ProfileContent() {
                   </TabsTrigger>
                 )}
                 <div className="ml-auto" />
-                {!isProUser && (
-                  <TabsTrigger value="settings" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                  </TabsTrigger>
-                )}
+                <TabsTrigger value="settings" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                </TabsTrigger>
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
@@ -298,11 +296,9 @@ function ProfileContent() {
                   <MyTracking />
                 </TabsContent>
 
-                {!isProUser && (
-                  <TabsContent value="settings">
-                    <ProfileSettings />
-                  </TabsContent>
-                )}
+                <TabsContent value="settings">
+                  <ProfileSettings />
+                </TabsContent>
 
                 <TabsContent value="reports">
                   <MyReports />
