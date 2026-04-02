@@ -373,9 +373,9 @@ export default function GuideAuditSeo() {
 
           {/* ═══ Conclusion + CTA ═══ */}
           <section className="mb-8 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-foreground">
+            <p className="mb-4 text-2xl font-bold text-foreground">
               Passez à l'action : auditez votre site avec l'approche Identity-First
-            </h2>
+            </p>
             <p className="mx-auto mb-6 max-w-2xl leading-relaxed text-muted-foreground">
               Chaque jour sans diagnostic, c'est du trafic qualifié — organique et IA — qui vous échappe. Crawlers.fr analyse 168 critères techniques, sémantiques et GEO, construit votre carte d'identité numérique et vous livre un plan d'action avec le code correctif pour chaque problème. Commencez gratuitement, mesurez l'impact à 30, 60 et 90 jours.
             </p>
