@@ -133,6 +133,7 @@ const RGPD = () => {
                   <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'identification', 'Identification Data', 'Datos de identificación')}</h3>
                   <ul className="text-muted-foreground space-y-1 text-sm">
                     <li>• {t3(language, 'Nom, prénom, adresse email (inscription)', 'Name, first name, email address (registration)', 'Nombre, apellido, dirección de correo electrónico (registro)')}</li>
+                    <li>• {t3(language, 'Type de persona (indépendant, agence, e-commerce, etc.)', 'Persona type (freelancer, agency, e-commerce, etc.)', 'Tipo de persona (independiente, agencia, e-commerce, etc.)')}</li>
                     <li>• {t3(language, 'Clé API unique par site suivi (UUID auto-générée)', 'Unique API key per tracked site (auto-generated UUID)', 'Clave API única por sitio rastreado (UUID autogenerada)')}</li>
                     <li>• {t3(language, 'Code de parrainage (optionnel)', 'Referral code (optional)', 'Código de referido (opcional)')}</li>
                   </ul>
@@ -140,10 +141,11 @@ const RGPD = () => {
                 <div className="bg-muted/50 rounded-lg p-6">
                   <h3 className="font-semibold text-foreground mb-2">{t3(language, 'Données d\'audit et d\'analyse', 'Audit and Analysis Data', 'Datos de auditoría y análisis')}</h3>
                   <ul className="text-muted-foreground space-y-1 text-sm">
-                    <li>• {t3(language, 'URLs analysées et résultats d\'audit (scores SEO/GEO, métriques PageSpeed, analyse crawlers)', 'Analyzed URLs and audit results (SEO/GEO scores, PageSpeed metrics, crawler analysis)', 'URLs analizadas y resultados de auditoría (puntuaciones SEO/GEO, métricas PageSpeed, análisis de crawlers)')}</li>
-                    <li>• {t3(language, 'Rapports sauvegardés et plans d\'action', 'Saved reports and action plans', 'Informes guardados y planes de acción')}</li>
+                    <li>• {t3(language, 'URLs analysées et résultats d\'audit (scores SEO/GEO, métriques PageSpeed, analyse crawlers, matrice d\'audit)', 'Analyzed URLs and audit results (SEO/GEO scores, PageSpeed metrics, crawler analysis, audit matrix)', 'URLs analizadas y resultados de auditoría (puntuaciones SEO/GEO, métricas PageSpeed, análisis de crawlers, matriz de auditoría)')}</li>
+                    <li>• {t3(language, 'Rapports sauvegardés, plans d\'action et graphes sémantiques (Cocoon)', 'Saved reports, action plans and semantic graphs (Cocoon)', 'Informes guardados, planes de acción y grafos semánticos (Cocoon)')}</li>
                     <li>• {t3(language, 'Codes correctifs générés et configurations associées', 'Generated corrective codes and associated configurations', 'Códigos correctivos generados y configuraciones asociadas')}</li>
                     <li>• {t3(language, 'Données de crawl multi-pages (contenu HTML, structure, liens)', 'Multi-page crawl data (HTML content, structure, links)', 'Datos de crawl multi-páginas (contenido HTML, estructura, enlaces)')}</li>
+                    <li>• {t3(language, 'Prédictions de trafic et scores d\'impact calculés par machine learning (métriques agrégées et anonymisées)', 'Traffic predictions and impact scores calculated by machine learning (aggregated and anonymized metrics)', 'Predicciones de tráfico y puntuaciones de impacto calculadas por machine learning (métricas agregadas y anonimizadas)')}</li>
                     <li>• {t3(language, 'Données d\'engagement GA4 agrégées (sessions, taux d\'engagement, taux de rebond, durée de session) — collectées via OAuth avec votre consentement explicite, conservées 13 mois', 'Aggregated GA4 engagement data (sessions, engagement rate, bounce rate, session duration) — collected via OAuth with your explicit consent, retained for 13 months', 'Datos de engagement GA4 agregados (sesiones, tasa de engagement, tasa de rebote, duración de sesión) — recopilados vía OAuth con su consentimiento explícito, conservados 13 meses')}</li>
                   </ul>
                 </div>
