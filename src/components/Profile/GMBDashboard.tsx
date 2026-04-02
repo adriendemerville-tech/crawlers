@@ -832,15 +832,10 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
                 variant="ghost"
                 size="sm"
                 className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
-                disabled={isGated}
-                onClick={() => {
-                  const msg = (language === 'fr')
-                    ? 'Connectez votre compte Google Business Profile pour ajouter un établissement.'
-                    : 'Connect your Google Business Profile account to add a location.';
-                  toast.info(msg);
-                }}
+                disabled={isGated || gbpLoading}
+                onClick={handleGbpConnect}
               >
-                <Plus className="h-3.5 w-3.5" />
+                {gbpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                 {t.add}
               </Button>
             </>
