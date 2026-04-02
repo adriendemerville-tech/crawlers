@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { url, async: isAsync, _job_id, tracked_site_id } = body;
+    const { url, async: isAsync, _job_id, tracked_site_id, forceCrawl } = body;
 
     if (!url) return new Response(JSON.stringify({ error: 'URL required' }), { status: 400, headers: HEADERS });
 
