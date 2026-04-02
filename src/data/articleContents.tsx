@@ -1905,12 +1905,41 @@ Allow: /`}</pre>
           La différence fondamentale ? <strong>Chaque point diagnostiqué par Crawlers.fr est un fait technique binaire</strong> (votre robots.txt bloque ou ne bloque pas <a href="https://platform.openai.com/docs/gptbot" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GPTBot</a>) — pas une estimation probabiliste basée sur un échantillon arbitraire de prompts.
         </p>
 
-        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion : investissez dans le code, pas dans les hallucinations statistiques</h3>
+        <h3 className="text-xl font-bold mt-10 mb-4">L'alternative qui existe déjà : l'analyse directe des logs serveur</h3>
+        <p>
+          Ce que les outils de "Share of Voice" ne font pas — et que des services comme <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a> font — c'est <strong>analyser directement vos logs serveur</strong> pour observer le comportement réel des bots IA. Pas de simulation, pas d'estimation : des <strong>faits bruts extraits de vos propres données</strong>.
+        </p>
+        <p>
+          Concrètement, chaque fois que <strong>GPTBot</strong>, <strong>ClaudeBot</strong>, <strong>PerplexityBot</strong>, <strong>Google-Extended</strong> ou <strong>Bytespider</strong> crawle votre site, il laisse une trace dans vos logs d'accès. En analysant ces logs, on obtient des réponses à des questions que la "Share of Voice" ne peut même pas poser :
+        </p>
+        <ul>
+          <li><strong>Quels bots IA visitent réellement votre site ?</strong> — Vous découvrirez peut-être que GPTBot passe 3 fois par semaine mais que ClaudeBot ne vient jamais. C'est une donnée actionnable immédiate.</li>
+          <li><strong>Sur quelles pages s'arrêtent-ils ?</strong> — Les crawlers IA ne parcourent pas votre site au hasard. Ils ont des préférences : pages avec du contenu structuré, des FAQ, du JSON-LD riche. L'analyse des logs révèle exactement quelles pages attirent leur attention.</li>
+          <li><strong>Quelle profondeur de crawl ?</strong> — Un bot qui ne visite que votre homepage n'exploite pas votre contenu. Un bot qui descend dans vos pages produit, vos articles de blog, vos FAQ : c'est le signe d'une architecture bien construite.</li>
+          <li><strong>À quelle fréquence reviennent-ils ?</strong> — Un crawl hebdomadaire vs. quotidien vous donne une indication directe de l'intérêt que les LLMs portent à votre contenu frais.</li>
+          <li><strong>Quels codes HTTP reçoivent-ils ?</strong> — Si GPTBot reçoit des 403 ou 503 sur vos pages clés, vous êtes invisible sans le savoir. C'est mesurable, binaire, et corrigeable en quelques minutes.</li>
+        </ul>
+        <p>
+          Cette approche est fondamentalement différente de la simulation synthétique. <strong>Les logs ne mentent pas</strong> : ils enregistrent ce qui s'est réellement passé sur votre serveur. Pas ce qu'un outil imagine qu'il pourrait se passer dans un prompt hypothétique.
+        </p>
+
+        <SgeSummaryBox
+          
+          points={[
+            "L'analyse de logs identifie les vrais bots IA (GPTBot, ClaudeBot, PerplexityBot) qui crawlent votre site",
+            "Elle révèle quelles pages attirent l'attention des LLMs et lesquelles sont ignorées",
+            "Les codes HTTP (200, 403, 503) montrent si votre contenu est réellement accessible aux IA",
+            "La fréquence de crawl indique l'intérêt des LLMs pour votre contenu frais",
+            "Contrairement à la Share of Voice synthétique, les logs sont des données factuelles, pas des estimations",
+          ]}
+        />
+
+        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion : investissez dans le code et les données réelles, pas dans les hallucinations statistiques</h3>
         <p>
           Le marché de la "Share of Voice IA" est séduisant. Il répond à un besoin réel des CMOs et des agences : avoir des chiffres à mettre dans un deck. Mais promettre une mesure précise d'une donnée qui n'existe pas, c'est construire une stratégie sur du sable.
         </p>
         <p>
-          <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est : <strong>"est-ce que ChatGPT peut techniquement accéder à mon contenu, le comprendre et le citer ?"</strong> Et ça, c'est mesurable. Aujourd'hui. Gratuitement. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait.
+          <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est double : <strong>"est-ce que les bots IA accèdent techniquement à mon contenu ?"</strong> (vérifiable par les logs) et <strong>"est-ce que mon contenu est structuré pour être compris et cité ?"</strong> (vérifiable par audit technique). Les deux sont mesurables. Aujourd'hui. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait et des données réelles.
         </p>
 
 
