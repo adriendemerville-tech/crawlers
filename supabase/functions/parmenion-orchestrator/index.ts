@@ -536,6 +536,12 @@ ${template.tone_guidelines}
 
 EXEMPLES DE RÉFÉRENCE:
 ${JSON.stringify(template.examples, null, 2)}
+
+FRAÎCHEUR & DÉNOMINATION:
+- N'utilise PAS automatiquement "Guide" dans le title, le H1, les H2, les H3, le résumé, la FAQ, les tableaux ou le corps du texte.
+- Choisis l'intitulé le plus juste selon l'intention réelle : barème, simulation, comparatif, mode d'emploi, procédure, actualité, checklist, FAQ, décryptage, mise à jour, analyse, etc.
+- Si une date est pertinente, elle doit être exacte et cohérente PARTOUT dans le livrable : title, H1/H2/H3, paragraphes, FAQ, tableaux, résumés, meta_title, meta_description, excerpt et schema_org.
+- Si la date n'apporte rien, n'en ajoute pas artificiellement.
 ═══ FIN TEMPLATE ═══`;
 }
 
