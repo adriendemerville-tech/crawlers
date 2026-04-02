@@ -11,7 +11,7 @@ import { ArrowRight, Target, Brain, Shield, Zap, Code2, BarChart3, Globe } from 
 const translations = {
   fr: {
     title: 'À propos de Crawlers.fr — Audit SEO & GEO par IA',
-    metaDesc: 'Découvrez l\'histoire de Crawlers.fr, plateforme SaaS d\'audit SEO & GEO créée par Mukesh Bagri. Mission, technologie, valeurs et vision 2026.',
+    metaDesc: 'Découvrez l\'histoire de Crawlers.fr, plateforme SaaS d\'audit SEO & GEO créée par Adrien de Volontat. Mission, technologie, valeurs et vision 2026.',
     heading: 'À propos de Crawlers.fr',
     subtitle: 'Premier outil francophone d\'audit SEO, GEO et visibilité IA — conçu pour les professionnels du référencement.',
     missionTitle: 'Notre mission',
