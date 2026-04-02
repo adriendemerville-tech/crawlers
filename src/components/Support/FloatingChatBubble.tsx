@@ -117,7 +117,7 @@ export function FloatingChatBubble() {
     const timer = setTimeout(() => {
       setShowOnboardingPulse(true);
       if (!onboardingSoundPlayed.current) {
-        playNotificationSound();
+        if (!isSilentPage) playNotificationSound();
         onboardingSoundPlayed.current = true;
       }
     }, 2500);
