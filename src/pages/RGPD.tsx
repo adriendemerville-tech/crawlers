@@ -86,6 +86,14 @@ const RGPD = () => {
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
                   <span>{t3(language, 'Injection de code correctif encapsulée (sandboxing sémantique), révocable à tout instant', 'Corrective code injection sandboxed (semantic isolation), revocable at any time', 'Inyección de código correctivo encapsulada (sandboxing semántico), revocable en cualquier momento')}</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                  <span>{t3(language, 'Architecture « Data Firewall » : ségrégation stricte entre l\'écosystème Google et les LLMs tiers', '"Data Firewall" architecture: strict segregation between the Google ecosystem and third-party LLMs', 'Arquitectura «Data Firewall»: segregación estricta entre el ecosistema Google y los LLMs de terceros')}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                  <span>{t3(language, 'Connexions CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : tokens chiffrés, révocables à tout moment', 'CMS connections (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): encrypted tokens, revocable at any time', 'Conexiones CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): tokens cifrados, revocables en cualquier momento')}</span>
+                </li>
               </ul>
             </div>
 
