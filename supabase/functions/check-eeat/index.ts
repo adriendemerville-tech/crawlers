@@ -56,7 +56,11 @@ Deno.serve(async (req) => {
       try {
         await supabase.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', _job_id);
 
-        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id, !!forceCrawl);
+        // Resolve userId from the job record for GA4 access
+        const { data: jobRecord } = await supabase.from('async_jobs').select('user_id').eq('id', _job_id).maybeSingle();
+        const workerUserId = _user_id || jobRecord?.user_id || null;
+
+        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, jobId, !!forceCrawl, workerUserId);
 
         await supabase.from('async_jobs').update({
           status: 'completed',
