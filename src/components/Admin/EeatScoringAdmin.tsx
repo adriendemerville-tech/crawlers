@@ -280,6 +280,12 @@ export function EeatScoringAdmin() {
               {scanning ? 'Scan multi-pages…' : 'Scan E-E-A-T'}
             </Button>
           </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Checkbox id="force-crawl" checked={forceCrawl} onCheckedChange={(v) => setForceCrawl(v === true)} />
+            <Label htmlFor="force-crawl" className="text-sm text-muted-foreground cursor-pointer">
+              Forcer le renouvellement du crawl (ignorer le cache récent)
+            </Label>
+          </div>
           {scanning && scanProgress > 0 && (
             <div className="mt-3 space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
