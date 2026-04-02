@@ -42,9 +42,9 @@ const PolitiqueConfidentialite = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers AI s\'engage à protéger la vie privée des utilisateurs de son site. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement.',
-                'Crawlers AI is committed to protecting the privacy of its website users. This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions.',
-                'Crawlers AI se compromete a proteger la privacidad de los usuarios de su sitio. Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago.'
+                'Crawlers AI (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à protéger la vie privée des utilisateurs de son site. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement et des connexions CMS.',
+                'Crawlers AI (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to protecting the privacy of its website users. This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions and CMS connections.',
+                'Crawlers AI (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a proteger la privacidad de los usuarios de su sitio. Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago y las conexiones CMS.'
               )}
             </p>
 
@@ -58,26 +58,36 @@ const PolitiqueConfidentialite = () => {
               
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données d\'utilisation :', 'Usage data:', 'Datos de uso:')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-                <li>{t3(language, 'URLs analysées via nos outils (audits, crawls, analyses concurrentielles)', 'URLs analyzed via our tools (audits, crawls, competitive analysis)', 'URLs analizadas a través de nuestras herramientas (auditorías, crawls, análisis competitivo)')}</li>
+                <li>{t3(language, 'URLs analysées via nos outils (audits SEO/GEO, crawls multi-pages, analyses concurrentielles, matrice d\'audit)', 'URLs analyzed via our tools (SEO/GEO audits, multi-page crawls, competitive analysis, audit matrix)', 'URLs analizadas a través de nuestras herramientas (auditorías SEO/GEO, crawls multi-páginas, análisis competitivo, matriz de auditoría)')}</li>
                 <li>{t3(language, 'Données de navigation anonymisées (pages visitées, durée de visite)', 'Anonymized browsing data (pages visited, visit duration)', 'Datos de navegación anonimizados (páginas visitadas, duración de la visita)')}</li>
                 <li>{t3(language, 'Préférences linguistiques', 'Language preferences', 'Preferencias lingüísticas')}</li>
-                <li>{t3(language, 'Rapports, codes correctifs et graphes sémantiques (Cocoon) générés', 'Generated reports, corrective codes and semantic graphs (Cocoon)', 'Informes, códigos correctivos y grafos semánticos (Cocoon) generados')}</li>
+                <li>{t3(language, 'Rapports, codes correctifs, graphes sémantiques (Cocoon) et plans d\'action générés', 'Generated reports, corrective codes, semantic graphs (Cocoon) and action plans', 'Informes, códigos correctivos, grafos semánticos (Cocoon) y planes de acción generados')}</li>
                 <li>{t3(language, 'Données de télémétrie du widget/GTM (ping de statut, sans données personnelles des visiteurs)', 'Widget/GTM telemetry data (status ping, no visitor personal data)', 'Datos de telemetría del widget/GTM (ping de estado, sin datos personales de visitantes)')}</li>
+                <li>{t3(language, 'Prédictions de trafic et scores d\'impact calculés par machine learning (métriques agrégées et anonymisées)', 'Traffic predictions and impact scores calculated by machine learning (aggregated and anonymized metrics)', 'Predicciones de tráfico y puntuaciones de impacto calculadas por machine learning (métricas agregadas y anonimizadas)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de compte (si inscription) :', 'Account data (if registered):', 'Datos de cuenta (si está registrado):')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>{t3(language, 'Prénom et nom', 'First and last name', 'Nombre y apellido')}</li>
                 <li>{t3(language, 'Adresse email', 'Email address', 'Dirección de correo electrónico')}</li>
-                <li>{t3(language, 'Historique des achats de crédits', 'Credit purchase history', 'Historial de compras de créditos')}</li>
+                <li>{t3(language, 'Type de persona (indépendant, agence, e-commerce, etc.)', 'Persona type (freelancer, agency, e-commerce, etc.)', 'Tipo de persona (independiente, agencia, e-commerce, etc.)')}</li>
+                <li>{t3(language, 'Historique des achats de crédits et abonnements (Pro Agency, Pro Agency+)', 'Credit purchases and subscription history (Pro Agency, Pro Agency+)', 'Historial de compras de créditos y suscripciones (Pro Agency, Pro Agency+)')}</li>
                 <li>{t3(language, 'Solde de crédits', 'Credit balance', 'Saldo de créditos')}</li>
-                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés)', 'Google Search Console / GA4 access tokens (encrypted)', 'Tokens de acceso Google Search Console / GA4 (cifrados)')}</li>
+                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés, stockés côté serveur)', 'Google Search Console / GA4 access tokens (encrypted, stored server-side)', 'Tokens de acceso Google Search Console / GA4 (cifrados, almacenados del lado del servidor)')}</li>
+                <li>{t3(language, 'Identifiants CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : clés API ou tokens OAuth chiffrés', 'CMS credentials (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): encrypted API keys or OAuth tokens', 'Credenciales CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): claves API o tokens OAuth cifrados')}</li>
+                <li>{t3(language, 'Connexion Google My Business (OAuth, optionnelle)', 'Google My Business connection (OAuth, optional)', 'Conexión Google My Business (OAuth, opcional)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de paiement :', 'Payment data:', 'Datos de pago:')}</h3>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
+                <li>{t3(language, 'Les paiements sont traités exclusivement par Stripe Payments Europe Ltd. (Dublin, Irlande). Nous ne stockons jamais vos données bancaires.', 'Payments are processed exclusively by Stripe Payments Europe Ltd. (Dublin, Ireland). We never store your banking data.', 'Los pagos son procesados exclusivamente por Stripe Payments Europe Ltd. (Dublín, Irlanda). Nunca almacenamos sus datos bancarios.')}</li>
+                <li>{t3(language, 'Seules les informations de transaction (montant, date, identifiant Stripe, type d\'achat) sont conservées.', 'Only transaction information (amount, date, Stripe identifier, purchase type) is retained.', 'Solo se conserva la información de la transacción (monto, fecha, identificador Stripe, tipo de compra).')}</li>
+              </ul>
+
+              <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données d\'équipe agence :', 'Agency team data:', 'Datos del equipo de agencia:')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{t3(language, 'Les paiements sont traités par Stripe. Nous ne stockons pas vos données bancaires.', 'Payments are processed by Stripe. We do not store your banking data.', 'Los pagos son procesados por Stripe. No almacenamos sus datos bancarios.')}</li>
-                <li>{t3(language, 'Seules les informations de transaction (montant, date, identifiant Stripe) sont conservées.', 'Only transaction information (amount, date, Stripe identifier) is retained.', 'Solo se conserva la información de la transacción (monto, fecha, identificador Stripe).')}</li>
+                <li>{t3(language, 'Liste des membres d\'équipe et clients rattachés (nom, email, rôle)', 'Team member and client list (name, email, role)', 'Lista de miembros del equipo y clientes asociados (nombre, email, rol)')}</li>
+                <li>{t3(language, 'Invitations envoyées et acceptées', 'Sent and accepted invitations', 'Invitaciones enviadas y aceptadas')}</li>
               </ul>
             </section>
 
