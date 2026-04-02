@@ -421,6 +421,7 @@ Réponds UNIQUEMENT en JSON valide :
       referringIps: backlinkData.referringIps,
       referringSubnets: backlinkData.referringSubnets,
       anchorDistribution: backlinkData.anchorDistribution,
+      referringPages: backlinkData.referringPages,
     } : null,
     // GBP data enrichment
     gbpData: gbpData.available ? {

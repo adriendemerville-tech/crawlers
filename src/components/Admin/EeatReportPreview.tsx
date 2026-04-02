@@ -36,6 +36,7 @@ interface EeatScanResult {
     referringIps: number;
     referringSubnets: number;
     anchorDistribution?: { anchor: string; backlinks: number; domains: number }[];
+    referringPages?: { sourceUrl: string; targetUrl: string; anchor: string; rank: number; dofollow: boolean; firstSeen: string | null }[];
   } | null;
   gbpData?: {
     avgRating: number;
