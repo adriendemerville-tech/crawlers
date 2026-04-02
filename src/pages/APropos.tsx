@@ -19,9 +19,9 @@ const translations = {
     storyTitle: 'L\'histoire',
     storyText: 'Crawlers.fr est né d\'un constat simple : en 2026, les outils SEO existants ignorent encore largement les moteurs de réponse IA. Les agences et freelances SEO doivent jongler entre 5 à 8 outils différents pour couvrir le SEO technique, le GEO, le maillage interne et la génération de contenu. Crawlers.fr réunit tout dans une seule plateforme, avec une approche "audit-first" qui produit des résultats actionnables immédiatement.',
     founderTitle: 'Le fondateur',
-    founderName: 'Mukesh Bagri',
+    founderName: 'Adrien de Volontat',
     founderRole: 'Fondateur & CTO',
-    founderBio: 'Ingénieur logiciel spécialisé en architectures serverless et intelligence artificielle appliquée au SEO. Mukesh a conçu l\'intégralité de la stack technique de Crawlers.fr : 7 algorithmes propriétaires, plus de 180 fonctions edge en production, et une architecture multi-fallback qui garantit la fiabilité de chaque audit. Son objectif : transformer l\'audit SEO d\'une prestation artisanale en un diagnostic automatisé, reproductible et mesurable.',
+    founderBio: 'Ingénieur logiciel français spécialisé en architectures serverless et intelligence artificielle appliquée au SEO. Adrien a conçu l\'intégralité de la stack technique de Crawlers.fr : 7 algorithmes propriétaires, plus de 180 fonctions edge en production, et une architecture multi-fallback qui garantit la fiabilité de chaque audit. Son objectif : transformer l\'audit SEO d\'une prestation artisanale en un diagnostic automatisé, reproductible et mesurable.',
     techTitle: 'Technologie',
     techItems: [
       { icon: 'code', label: '221 000+ lignes de code', desc: 'Architecture serverless, 183+ edge functions en production' },
