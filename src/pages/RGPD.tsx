@@ -327,7 +327,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '8. Vos droits RGPD', '8. Your GDPR Rights', '8. Sus derechos RGPD')}
+                {t3(language, '9. Vos droits RGPD', '9. Your GDPR Rights', '9. Sus derechos RGPD')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Conformément au RGPD, vous disposez des droits suivants :', 'In accordance with the GDPR, you have the following rights:', 'De conformidad con el RGPD, usted dispone de los siguientes derechos:')}
