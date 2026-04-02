@@ -274,7 +274,7 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '10. Contact & Responsable du traitement', '10. Contact & Data Controller', '10. Contacto & Responsable del tratamiento')}
+                {t3(language, '11. Contact & Responsable du traitement', '11. Contact & Data Controller', '11. Contacto & Responsable del tratamiento')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
