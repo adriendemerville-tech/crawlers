@@ -950,3 +950,95 @@ function generateDomainVariants(domain: string): string[] {
 
   return [...variants];
 }
+
+// ══════════════════════════════════════════════════════
+// Fetch GA4 referral traffic (live backlinks)
+// ══════════════════════════════════════════════════════
+const GA4_API = 'https://analyticsdata.googleapis.com/v1beta';
+
+async function fetchGA4Referrals(
+  supabase: any,
+  domain: string,
+  trackedSiteId: string | null,
+  userId: string | null
+): Promise<any> {
+  if (!userId || !trackedSiteId) {
+    console.log('[check-eeat] ⚠️ No userId or trackedSiteId — skipping GA4 referrals');
+    return { available: false, reason: 'no_user_or_site' };
+  }
+
+  try {
+    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+    if (!clientId || !clientSecret) {
+      console.log('[check-eeat] ⚠️ Google OAuth credentials not configured — skipping GA4 referrals');
+      return { available: false, reason: 'credentials_missing' };
+    }
+
+    const resolved = await resolveGoogleToken(supabase, userId, domain, clientId, clientSecret);
+    if (!resolved?.ga4_property_id) {
+      console.log('[check-eeat] ⚠️ No GA4 property linked — skipping referrals');
+      return { available: false, reason: 'no_ga4_property' };
+    }
+
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
+    const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resolved.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'sessionSource' }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+        ],
+        dimensionFilter: {
+          filter: {
+            fieldName: 'sessionMedium',
+            stringFilter: { value: 'referral', matchType: 'EXACT' },
+          },
+        },
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 20,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!resp.ok) {
+      console.warn(`[check-eeat] GA4 referrals API error: ${resp.status}`);
+      return { available: false, reason: 'api_error' };
+    }
+
+    const data = await resp.json();
+    const rows = data.rows || [];
+
+    const referrals = rows.map((row: any) => ({
+      source: row.dimensionValues?.[0]?.value || 'unknown',
+      sessions: parseInt(row.metricValues?.[0]?.value || '0'),
+      users: parseInt(row.metricValues?.[1]?.value || '0'),
+    })).filter((r: any) => r.sessions > 0);
+
+    const totalReferralSessions = referrals.reduce((sum: number, r: any) => sum + r.sessions, 0);
+
+    console.log(`[check-eeat] ✅ GA4 referrals: ${referrals.length} sources, ${totalReferralSessions} total sessions`);
+
+    return {
+      available: true,
+      referrals,
+      totalReferralSessions,
+    };
+  } catch (e) {
+    console.warn('[check-eeat] GA4 referrals error:', e instanceof Error ? e.message : e);
+    return { available: false, reason: 'error' };
+  }
+}
