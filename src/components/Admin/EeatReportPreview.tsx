@@ -182,6 +182,14 @@ h1{font-size:1.5rem;margin-bottom:.5rem}h2{font-size:1.1rem;margin:1.5rem 0 .75r
 .signal-green{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);color:#22c55e}
 .signal-amber{border-color:rgba(234,179,8,.3);background:rgba(234,179,8,.05);color:#eab308}
 .signal-red{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05);color:#ef4444}
+@media print {
+  body{padding:1rem}
+  .card,.grid,.signal-grid,.contrib-bar,.signal-item{page-break-inside:avoid;break-inside:avoid}
+  h2{page-break-after:avoid;break-after:avoid}
+  .footer{page-break-before:avoid}
+  .container>*{page-break-inside:avoid;break-inside:avoid}
+}
+@page{margin:15mm 10mm}
 </style></head><body><div class="container">
 <h1>Rapport E-E-A-T</h1>
 <p style="color:#94a3b8;font-size:.85rem">${domain} · ${new Date(result.scannedAt).toLocaleDateString('fr-FR')}</p>
