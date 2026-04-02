@@ -31,7 +31,15 @@ Deno.serve(async (req) => {
     });
 
     const data = await resp.json();
+    const taskStatus = data?.tasks?.[0]?.status_code;
+    const taskMessage = data?.tasks?.[0]?.status_message || '';
     const result = data?.tasks?.[0]?.result?.[0];
+
+    // Check for subscription/access issues
+    if (taskStatus === 40204 && taskMessage.includes('Access denied')) {
+      console.warn('[check-backlinks] DataForSEO Backlinks API subscription not active');
+      return new Response(JSON.stringify({ success: false, score: 0, error: 'DataForSEO Backlinks subscription not active', domain }), { headers: HEADERS });
+    }
 
     if (!result) {
       return new Response(JSON.stringify({ success: true, score: 0, error: 'No backlink data found', domain }), { headers: HEADERS });
