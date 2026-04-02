@@ -191,7 +191,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       }
 
       // Check Google Ads
-      const { data: adsData } = await supabase
+      const { data: adsData } = await (supabase as any)
         .from('google_ads_connections')
         .select('id')
         .eq('user_id', user.id)
