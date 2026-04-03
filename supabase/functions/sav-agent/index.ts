@@ -856,7 +856,7 @@ ${alertBlock}\n`;
             .from("audit_recommendations_registry")
             .select("title, is_resolved, category")
             .eq("domain", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .limit(5);
 
           if (scripts?.length) {
