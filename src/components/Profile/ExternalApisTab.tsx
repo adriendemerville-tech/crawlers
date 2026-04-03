@@ -793,12 +793,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{service.name}</span>
-                      {isActive && (
-                        <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                          {t.connected}
-                        </Badge>
-                      )}
                     </div>
                     <span className="text-xs text-muted-foreground mt-0.5 block">
                       {service.description[language] || service.description.fr}
