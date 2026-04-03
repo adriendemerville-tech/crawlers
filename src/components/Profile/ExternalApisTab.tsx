@@ -1149,12 +1149,25 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   <li>{language === 'fr' ? 'Accéder à vos informations de facturation' : language === 'es' ? 'Acceder a su información de facturación' : 'Access your billing information'}</li>
                 </ul>
               </div>
+              <div className="rounded-md border border-border bg-muted/20 p-2.5 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">
+                  {language === 'fr' ? '⏱ Conservation des données :' : language === 'es' ? '⏱ Retención de datos:' : '⏱ Data retention:'}
+                </p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>{language === 'fr' ? 'Tokens OAuth : supprimés dès la déconnexion' : language === 'es' ? 'Tokens OAuth: eliminados al desconectar' : 'OAuth tokens: deleted on disconnect'}</li>
+                  <li>{language === 'fr' ? 'Données mots-clés : 90 jours puis suppression auto' : language === 'es' ? 'Datos palabras clave: 90 días, luego eliminación auto' : 'Keyword data: 90 days then auto-deleted'}</li>
+                </ul>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {language === 'fr'
                   ? "Vous pouvez révoquer cet accès à tout moment depuis cette page ou depuis votre compte Google."
                   : language === 'es'
                   ? "Puede revocar este acceso en cualquier momento desde esta página o desde su cuenta de Google."
                   : "You can revoke this access at any time from this page or your Google account."}
+                {' '}
+                <a href="/privacy-google-ads" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
+                  {language === 'fr' ? 'Politique de confidentialité complète' : language === 'es' ? 'Política de privacidad completa' : 'Full privacy policy'}
+                </a>
               </p>
             </DialogDescription>
           </DialogHeader>
