@@ -22,6 +22,7 @@ import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
+import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 
