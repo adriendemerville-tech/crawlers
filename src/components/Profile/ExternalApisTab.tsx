@@ -665,12 +665,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">{service.name}</span>
-              {isActive && (
-                <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  {t.connected}
-                </Badge>
-              )}
               {!service.available && (
                 <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-muted-foreground/30">
                   {t.comingSoon}
@@ -799,12 +793,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{service.name}</span>
-                      {isActive && (
-                        <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                          {t.connected}
-                        </Badge>
-                      )}
                     </div>
                     <span className="text-xs text-muted-foreground mt-0.5 block">
                       {service.description[language] || service.description.fr}
@@ -840,12 +828,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm">Rank Math SEO</span>
-                  {rankMathConnected && (
-                    <Badge className="text-[10px] py-0 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      {t.connected}
-                    </Badge>
-                  )}
                 </div>
                 <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                   <ExternalLink className="w-3 h-3" />
@@ -894,12 +876,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{s.name}</span>
-                        {isMatomoConnected && (
-                          <Badge className="text-[10px] py-0 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {t.connected}
-                          </Badge>
-                        )}
                       </div>
                       <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <ExternalLink className="w-3 h-3" />
