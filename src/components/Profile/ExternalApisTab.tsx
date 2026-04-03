@@ -1165,7 +1165,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   ? "Puede revocar este acceso en cualquier momento desde esta página o desde su cuenta de Google."
                   : "You can revoke this access at any time from this page or your Google account."}
                 {' '}
-                <a href="/privacy-google-ads" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
+                <a href="/api-integrations#google-ads" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
                   {language === 'fr' ? 'Politique de confidentialité complète' : language === 'es' ? 'Política de privacidad completa' : 'Full privacy policy'}
                 </a>
               </p>

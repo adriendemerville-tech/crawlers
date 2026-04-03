@@ -80,11 +80,15 @@ const apis: ApiCard[] = [
     id: 'google-ads',
     name: 'Google Ads',
     icon: <TrendingUp className="w-6 h-6" />,
-    purpose: 'Import des campagnes publicitaires et mots-clés payants pour alimenter le bridge SEA↔SEO.',
+    purpose: 'Import des campagnes publicitaires et mots-clés payants pour alimenter le bridge SEA↔SEO. Accès strictement en lecture seule.',
     dataUsage: [
       'Mots-clés SEA à fort ROI identifiés pour une stratégie SEO organique',
       'Budget publicitaire corrélé au trafic organique potentiel',
       'Métriques de coût par clic pour estimer l\'économie SEO',
+      'Scope OAuth : adwords (imposé par Google — pas d\'alternative read-only)',
+      'Restriction logicielle : seule la méthode searchStream (lecture) est appelée',
+      'Rétention : mots-clés conservés 90 jours max, tokens supprimés à la déconnexion',
+      'Révocation : déconnexion en 1 clic depuis Console → SEA→SEO ou API Externes',
     ],
     interactsWith: ['SEA→SEO Bridge', 'Audit Stratégique IA', 'Quick Wins'],
     disconnectable: true,
@@ -263,6 +267,7 @@ export default function ApiIntegrations() {
               {apis.map((api, i) => (
                 <motion.div
                   key={api.id}
+                  id={api.id}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: '-50px' }}
