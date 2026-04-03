@@ -184,7 +184,15 @@ export function BotLogChartCard({ domain }: BotLogChartCardProps) {
   ];
 
   return (
-    <Card>
+    <Card className={cn("relative", !hasAccess && "opacity-60 grayscale pointer-events-none select-none")}>
+      {!hasAccess && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/40">
+          <Badge className="bg-transparent border-2 border-yellow-500 text-yellow-600 text-xs font-bold px-3 py-1 gap-1.5 shadow-sm">
+            <Lock className="h-3 w-3" />
+            Pro Agency +
+          </Badge>
+        </div>
+      )}
       <CardHeader className="pb-2">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
