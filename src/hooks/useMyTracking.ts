@@ -171,7 +171,7 @@ export function useMyTracking() {
       data.forEach((entry: Record<string, unknown>) => {
         const siteId = entry.tracked_site_id as string;
         if (!map[siteId]) map[siteId] = [];
-        map[siteId].push(entry);
+        map[siteId].push(entry as unknown as StatsEntry);
       });
       setStatsMap(map);
     }
