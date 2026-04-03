@@ -372,13 +372,13 @@ export function ProfileSettings() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant={language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('fr')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'fr' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇫🇷</span> {t.french}
             </Button>
-            <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => setLanguage('en')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('en')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'en' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇬🇧</span> {t.english}
             </Button>
-            <Button variant={language === 'es' ? 'default' : 'outline'} onClick={() => setLanguage('es')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('es')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'es' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇪🇸</span> {t.spanish}
             </Button>
           </div>
