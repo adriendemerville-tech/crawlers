@@ -79,6 +79,7 @@ const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
+const PrivacyGoogleAds = lazy(() => import("./pages/PrivacyGoogleAds"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {

@@ -1169,7 +1169,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   {language === 'fr' ? 'Politique de confidentialité complète' : language === 'es' ? 'Política de privacidad completa' : 'Full privacy policy'}
                 </a>
               </p>
-              </p>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
