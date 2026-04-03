@@ -92,7 +92,7 @@ export function useMyTracking() {
   // ─── Architect modal ───
   const [architectSiteId, setArchitectSiteId] = useState<string | null>(null);
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
-  const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
+  const [architectAuditResult, setArchitectAuditResult] = useState<Record<string, unknown> | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
 
   // ─── WordPress connection ───
