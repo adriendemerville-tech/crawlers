@@ -346,6 +346,30 @@ export async function getDomainContext(
     }
   }
 
+  // ── Bot Log Analysis (from log_entries) ──
+  const botLogData = botLogRes?.data;
+  if (botLogData && typeof botLogData === 'object' && !Array.isArray(botLogData) && (botLogData as any).total_entries > 0) {
+    const bl = botLogData as any;
+    const logLines: string[] = [];
+    logLines.push(`Entrées analysées: ${bl.total_entries} (derniers 7 jours)`);
+    logLines.push(`Bots détectés: ${bl.total_bot_hits} hits (${bl.unique_bots} bots uniques)`);
+    if (bl.top_bots?.length) {
+      logLines.push(`Top bots: ${bl.top_bots.map((b: any) => `${b.bot_name} (${b.hits} hits)`).join(', ')}`);
+    }
+    if (bl.ai_bots?.length) {
+      logLines.push(`🤖 Bots IA détectés: ${bl.ai_bots.map((b: any) => `${b.bot_name} (${b.hits} hits)`).join(', ')}`);
+    } else {
+      logLines.push(`⚠ Aucun bot IA détecté dans les logs (GPTBot, ClaudeBot, PerplexityBot absents)`);
+    }
+    if (bl.error_rate) {
+      logLines.push(`Taux d'erreurs bots: ${bl.error_rate}% (4xx/5xx)`);
+    }
+    if (bl.top_paths?.length) {
+      logLines.push(`Pages les plus crawlées: ${bl.top_paths.map((p: any) => `${p.path} (${p.hits})`).join(', ')}`);
+    }
+    blocks.push(`ANALYSE DES LOGS SERVEUR:\n${logLines.join('\n')}`);
+  }
+
   return {
     blocks,
     raw: {
@@ -363,6 +387,7 @@ export async function getDomainContext(
       anomalyAlerts: anomalyRes?.data || [],
       auditTechnique: auditTechData,
       auditStrategique: auditStratData,
+      botLogs: botLogData || null,
     },
   };
 }
