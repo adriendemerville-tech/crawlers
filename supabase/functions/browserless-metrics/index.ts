@@ -3,12 +3,9 @@ import { BROWSERLESS_BASE_URL, getBrowserlessKey } from '../_shared/browserlessC
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-const token = getBrowserlessKey();
+  const token = getBrowserlessKey();
   if (!token) {
-    return new Response(JSON.stringify({ error: 'RENDERING_API_KEY not configured' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('RENDERING_API_KEY not configured', 500);
   }
 
   try {
@@ -54,20 +51,15 @@ const token = getBrowserlessKey();
       }
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       ...totals,
       planUnitsPerMonth: 1000,
       unitsRemaining: Math.max(0, 1000 - totals.units),
       concurrencyLimit: 10,
       entriesCount: Array.isArray(metrics) ? metrics.length : 0,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(msg, 500);
   }
 }));

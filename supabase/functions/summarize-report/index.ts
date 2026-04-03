@@ -1,17 +1,13 @@
 import { trackTokenUsage } from "../_shared/tokenTracker.ts";
-import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const { texts, language } = await req.json();
 
     // texts is a Record<string, string> of key -> long text
     if (!texts || typeof texts !== "object" || Object.keys(texts).length === 0) {
-      return new Response(JSON.stringify({ error: "No texts provided" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("No texts provided", 400);
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -24,9 +20,7 @@ try {
     
     if (entries.length === 0) {
       // Nothing to summarize
-      return new Response(JSON.stringify({ summaries: texts }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonOk({ summaries: texts });
     }
 
     const textsBlock = entries
@@ -65,23 +59,15 @@ Règles :
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError("Rate limit exceeded", 429);
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError("Payment required", 402);
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
       // Fallback: return original texts
-      return new Response(JSON.stringify({ summaries: texts }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonOk({ summaries: texts });
     }
 
     const data = await response.json();
@@ -99,9 +85,7 @@ Règles :
     } catch {
       console.error("Failed to parse AI summary response:", content);
       // Fallback: return original texts
-      return new Response(JSON.stringify({ summaries: texts }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonOk({ summaries: texts });
     }
 
     // Merge: keep original for keys not returned by AI
@@ -112,14 +96,9 @@ Règles :
       }
     }
 
-    return new Response(JSON.stringify({ summaries: merged }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ summaries: merged });
   } catch (e) {
     console.error("summarize-report error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(e instanceof Error ? e.message : "Unknown error", 500);
   }
 }));

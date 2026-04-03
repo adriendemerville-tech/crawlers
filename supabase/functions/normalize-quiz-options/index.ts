@@ -4,7 +4,7 @@ import { callLovableAIText } from '../_shared/lovableAI.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-const supabase = getServiceClient();
+  const supabase = getServiceClient();
   if (!Deno.env.get('LOVABLE_API_KEY')) throw new Error('LOVABLE_API_KEY not configured');
 
   try {
@@ -21,9 +21,7 @@ const supabase = getServiceClient();
 
     if (error) throw error;
     if (!questions || questions.length === 0) {
-      return new Response(JSON.stringify({ done: true, processed: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ done: true, processed: 0 });
     }
 
     // Filter questions where answer lengths differ significantly
@@ -35,9 +33,7 @@ const supabase = getServiceClient();
     });
 
     if (needsFix.length === 0) {
-      return new Response(JSON.stringify({ done: false, processed: 0, skipped: questions.length, next_offset: offset + batchSize }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ done: false, processed: 0, skipped: questions.length, next_offset: offset + batchSize });
     }
 
     const questionsBlock = needsFix.map((q, i) => 
@@ -84,19 +80,15 @@ Réponds UNIQUEMENT en JSON :
       if (!updateErr) updated++;
     }
 
-    return new Response(JSON.stringify({ 
+    return jsonOk({ 
       done: false, 
       processed: updated, 
       candidates: needsFix.length,
       next_offset: offset + batchSize 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[normalize-quiz-options]', error);
-    return new Response(JSON.stringify({ error: String(error) }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(String(error), 500);
   }
 }));

@@ -1,15 +1,11 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No auth" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("No auth", 401);
     }
 
     const supabase = getUserClient(authHeader);
@@ -18,10 +14,7 @@ try {
     // Verify caller is admin
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Unauthorized", 401);
     }
 
     const { data: adminRole } = await adminClient
@@ -32,18 +25,12 @@ try {
       .maybeSingle();
 
     if (!adminRole) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Admin only", 403);
     }
 
     const { target_user_id } = await req.json();
     if (!target_user_id) {
-      return new Response(JSON.stringify({ error: "target_user_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("target_user_id required", 400);
     }
 
     // Strip Pro Agency: reset plan to free, clear subscription fields
@@ -59,14 +46,9 @@ try {
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ success: true });
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(String(err), 500);
   }
 }));

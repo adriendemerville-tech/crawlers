@@ -14,7 +14,7 @@ function escapeXml(str: string): string {
 }
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const supabase = getServiceClient();
 
     // Fetch published blog articles

@@ -12,7 +12,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  */
 
 Deno.serve(handleRequest(async (req) => {
-// Always respond 200 quickly — Shopify retries on non-2xx
+  // Always respond 200 quickly — Shopify retries on non-2xx
   try {
     const supabase = getServiceClient()
 
@@ -25,10 +25,7 @@ Deno.serve(handleRequest(async (req) => {
     const createdAt = payload.created_at || new Date().toISOString()
 
     if (!orderId || totalPrice <= 0) {
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_amount' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_amount' })
     }
 
     // Resolve tracked_site from Shopify shop domain
@@ -38,10 +35,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!shopDomain) {
       console.error('[webhook-shopify] No shop domain found')
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_shop_domain' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_shop_domain' })
     }
 
     // Find the CMS connection for this Shopify store
@@ -65,10 +59,7 @@ Deno.serve(handleRequest(async (req) => {
 
       if (!site) {
         console.warn(`[webhook-shopify] No site found for domain: ${bareDomain}`)
-        return new Response(JSON.stringify({ ok: true, skipped: 'no_site_match' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ ok: true, skipped: 'no_site_match' })
       }
 
       await insertRevenueEvent(supabase, {
@@ -94,17 +85,11 @@ Deno.serve(handleRequest(async (req) => {
       })
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true })
   } catch (err) {
     console.error('[webhook-shopify] Error:', err)
     // Still return 200 to prevent Shopify retries
-    return new Response(JSON.stringify({ ok: true, error: 'internal' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true, error: 'internal' })
   }
 })
 

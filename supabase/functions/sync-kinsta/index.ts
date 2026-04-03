@@ -1,4 +1,3 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseCombinedLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
@@ -8,15 +7,13 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  * sync-kinsta — Pulls access logs from Kinsta API (cron: hourly at :05).
  */
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get('Authorization') || '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const token = authHeader.replace('Bearer ', '');
     if (!token || (token !== serviceKey && token !== anonKey)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     const supabase = getServiceClient();
@@ -27,9 +24,7 @@ try {
       .eq('status', 'active');
 
     if (!connectors?.length) {
-      return new Response(JSON.stringify({ ok: true, message: 'No active Kinsta connectors', synced: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ ok: true, message: 'No active Kinsta connectors', synced: 0 });
     }
 
     const results: Array<{ connector_id: string; inserted: number; error?: string }> = [];
@@ -95,13 +90,9 @@ try {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, synced: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, synced: results.length, results });
   } catch (error) {
     console.error('[sync-kinsta] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
 }));

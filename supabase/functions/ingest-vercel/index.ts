@@ -1,4 +1,3 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseJSONLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
@@ -9,12 +8,10 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  * Validates x-vercel-signature (HMAC-SHA1), filters edge/lambda logs.
  */
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const signature = req.headers.get('x-vercel-signature');
     if (!signature) {
-      return new Response(JSON.stringify({ error: 'Missing x-vercel-signature', code: 'MISSING_SIGNATURE' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing x-vercel-signature', code: 'MISSING_SIGNATURE', 401);
     }
 
     const bodyText = await req.text();
@@ -51,9 +48,7 @@ try {
     }
 
     if (!matchedConnector) {
-      return new Response(JSON.stringify({ error: 'Invalid signature', code: 'INVALID_SIGNATURE' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid signature', code: 'INVALID_SIGNATURE', 401);
     }
 
     // Parse body (array of log entries or NDJSON)
@@ -93,13 +88,9 @@ try {
       .update({ last_sync_at: new Date().toISOString(), error_count: 0 } as any)
       .eq('id', matchedConnector.id);
 
-    return new Response(JSON.stringify({ ok: true, processed: result.inserted }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, processed: result.inserted });
   } catch (error) {
     console.error('[ingest-vercel] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
 }));

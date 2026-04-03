@@ -16,7 +16,7 @@ const DELAY_BETWEEN_SITES_MS = 2000
 const MAX_RUNTIME_MS = 240_000 // 240s safety margin
 
 Deno.serve(handleRequest(async (req) => {
-const supabase = getServiceClient()
+  const supabase = getServiceClient()
 
   try {
     const body = await req.json().catch(() => ({}))
@@ -36,9 +36,7 @@ const supabase = getServiceClient()
 
     if (error || !sites?.length) {
       console.log('[refresh-llm-visibility-all] No (more) sites or error:', error)
-      return new Response(JSON.stringify({ refreshed: 0, next_cursor: null }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ refreshed: 0, next_cursor: null })
     }
 
     let refreshed = 0
@@ -104,15 +102,10 @@ const supabase = getServiceClient()
       }).catch(err => console.error('[refresh-llm-visibility-all] Self-invoke failed:', err))
     }
 
-    return new Response(JSON.stringify({ refreshed, errors, total: sites.length, next_cursor: nextCursor }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ refreshed, errors, total: sites.length, next_cursor: nextCursor })
   } catch (error) {
     console.error('[refresh-llm-visibility-all] Fatal:', error)
     await trackEdgeFunctionError('refresh-llm-visibility-all', error instanceof Error ? error.message : 'Fatal').catch(() => {})
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown', 500)
   }
 })

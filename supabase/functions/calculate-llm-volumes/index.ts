@@ -1,4 +1,3 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getUserClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const INFORMATIONAL_KEYWORDS = ['comment', 'pourquoi', 'idées', 'quel', 'quelle', 'différence', 'how', 'why', 'what', 'which', 'ideas'];
@@ -14,7 +13,7 @@ function detectIntent(keyword: string): string {
 }
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const { keyword, global_volume, keywords } = await req.json();
 
     // Support both single keyword and batch mode

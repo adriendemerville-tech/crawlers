@@ -13,7 +13,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  */
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const supabase = getServiceClient()
 
     const payload = await req.json()
@@ -25,10 +25,7 @@ try {
     const dateCreated = payload.date_created || new Date().toISOString()
 
     if (!orderId || total <= 0) {
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_amount' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_amount' })
     }
 
     // Resolve source domain from WooCommerce webhook header
@@ -41,10 +38,7 @@ try {
 
     if (!bareDomain) {
       console.error('[webhook-woo] No source domain found')
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_source' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_source' })
     }
 
     // Find CMS connection for this WooCommerce store
@@ -73,10 +67,7 @@ try {
 
       if (!site) {
         console.warn(`[webhook-woo] No site found for domain: ${bareDomain}`)
-        return new Response(JSON.stringify({ ok: true, skipped: 'no_site_match' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ ok: true, skipped: 'no_site_match' })
       }
       trackedSiteId = site.id
       userId = site.user_id
@@ -97,15 +88,9 @@ try {
 
     if (error) console.error('[webhook-woo] Insert error:', error.message)
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true })
   } catch (err) {
     console.error('[webhook-woo] Error:', err)
-    return new Response(JSON.stringify({ ok: true, error: 'internal' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true, error: 'internal' })
   }
 })

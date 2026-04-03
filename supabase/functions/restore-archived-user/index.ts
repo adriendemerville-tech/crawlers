@@ -1,7 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No auth");
 
@@ -70,13 +70,8 @@ try {
     // Delete archive entry after successful restore
     await supabase.from("archived_users").delete().eq("id", archive_id);
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ success: true });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(e.message, 400);
   }
 }));

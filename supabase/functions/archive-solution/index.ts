@@ -16,7 +16,7 @@ interface ArchiveRequest {
 }
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const { code, fixes, siteName, siteUrl, technologyContext = '' }: ArchiveRequest = await req.json();
 
     // Seuil minimum : 3 fixes activés pour archiver

@@ -1,5 +1,4 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -18,7 +17,7 @@ const GHOST_THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 hours
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 Deno.serve(handleRequest(async (req) => {
-const supabase = getServiceClient();
+  const supabase = getServiceClient();
 
   const report = {
     rule1_deactivated: 0,
@@ -100,16 +99,11 @@ const supabase = getServiceClient();
 
     console.log(`[watchdog] Complete — deactivated: ${report.rule1_deactivated}, warnings: ${report.rule2_warnings}, cache cleaned: ${report.rule3_cleaned}`);
 
-    return new Response(JSON.stringify({ success: true, report }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, report });
 
   } catch (error) {
     console.error('[watchdog] Fatal error:', error);
     await trackEdgeFunctionError('watchdog-scripts', String(error)).catch(() => {});
-    return new Response(JSON.stringify({ success: false, error: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
 }));

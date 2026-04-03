@@ -1,9 +1,8 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonError('Unauthorized', 401);
@@ -40,9 +39,7 @@ try {
 
     if (existingProfile) {
       console.log('Profile already exists');
-      return new Response(JSON.stringify({ success: true, exists: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, exists: true });
     }
 
     // Create profile
@@ -80,24 +77,17 @@ try {
     if (insertError) {
       console.error('Error creating profile:', insertError);
       if (insertError.code === '23505') {
-        return new Response(JSON.stringify({ success: true, exists: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonOk({ success: true, exists: true });
       }
       return jsonError('Error creating profile', 500);
     }
 
     console.log('Profile created successfully');
-    return new Response(JSON.stringify({ success: true, created: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, created: true });
 
   } catch (error: unknown) {
     console.error('Error in ensure-profile function:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(message, 500);
   }
 }));

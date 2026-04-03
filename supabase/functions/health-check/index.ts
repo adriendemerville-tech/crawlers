@@ -2,7 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-const start = Date.now();
+  const start = Date.now();
   const checks: Record<string, { ok: boolean; ms: number; error?: string }> = {};
 
   // 1. Database connectivity

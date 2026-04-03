@@ -2,7 +2,7 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return jsonError('Unauthorized', 401);
@@ -72,10 +72,7 @@ try {
       }
     }
 
-    return new Response(JSON.stringify({ function_name, code }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ function_name, code });
   } catch (err) {
     return jsonError(String(err), 500);
   }

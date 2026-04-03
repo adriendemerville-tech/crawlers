@@ -1,9 +1,8 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-const supabase = getServiceClient();
+  const supabase = getServiceClient();
 
   // Fetch all tracked sites that have an api_key (i.e. widget was configured)
   const { data: sites, error } = await supabase
@@ -13,10 +12,7 @@ const supabase = getServiceClient();
 
   if (error) {
     console.error('Failed to fetch tracked sites:', error.message);
-    return new Response(JSON.stringify({ error: 'DB error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('DB error', 500);
   }
 
   const now = Date.now();
@@ -39,13 +35,10 @@ const supabase = getServiceClient();
 
   console.log(`[check-widget-health] Checked ${checked} sites: ${alive} alive, ${stale} stale`);
 
-  return new Response(JSON.stringify({
+  return jsonOk({
     checked,
     alive,
     stale,
     timestamp: new Date().toISOString(),
-  }), {
-    status: 200,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }));

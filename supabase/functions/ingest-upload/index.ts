@@ -1,4 +1,3 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { autoDetectAndParse } from '../_shared/parsers.ts';
@@ -12,28 +11,22 @@ const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50 MB
  * Requires authentication. Reserved for Pro Agency+ users.
  */
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     // Auth check
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     // Plan check: Pro Agency+ only
     if (auth.planType !== 'agency_premium' && !auth.isAdmin) {
-      return new Response(JSON.stringify({ error: 'Pro Agency+ required', code: 'PLAN_REQUIRED' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Pro Agency+ required', code: 'PLAN_REQUIRED', 403);
     }
 
     // Check content length
     const contentLength = parseInt(req.headers.get('Content-Length') || '0', 10);
     if (contentLength > MAX_BODY_SIZE) {
-      return new Response(JSON.stringify({ error: 'File too large (max 50 MB)', code: 'FILE_TOO_LARGE' }), {
-        status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('File too large (max 50 MB)', code: 'FILE_TOO_LARGE', 413);
     }
 
     let logContent = '';
@@ -49,9 +42,7 @@ try {
       connectorId = (formData.get('connector_id') as string) || '';
 
       if (!logFile) {
-        return new Response(JSON.stringify({ error: 'Missing logfile field', code: 'MISSING_FILE' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('Missing logfile field', code: 'MISSING_FILE', 400);
       }
 
       logContent = await logFile.text();
@@ -64,9 +55,7 @@ try {
     }
 
     if (!siteId) {
-      return new Response(JSON.stringify({ error: 'site_id required', code: 'MISSING_SITE' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('site_id required', code: 'MISSING_SITE', 400);
     }
 
     // If no connector_id, create an upload connector
@@ -84,9 +73,7 @@ try {
         .single();
 
       if (connErr || !newConn) {
-        return new Response(JSON.stringify({ error: 'Failed to create connector', code: 'CONNECTOR_ERROR' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('Failed to create connector', code: 'CONNECTOR_ERROR', 500);
       }
       connectorId = newConn.id;
     }
@@ -121,19 +108,15 @@ try {
       .eq('connector_id', connectorId)
       .eq('is_bot', true);
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       ok: true,
       lines_processed: totalInserted,
       bots_detected: botsCount || 0,
       format_detected: detectedFormat,
       errors: allErrors,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('[ingest-upload] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
 }));

@@ -2,23 +2,17 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const supabase = getUserClient(authHeader);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     // Only admin (creator) can execute this
@@ -30,10 +24,7 @@ try {
 
     const userRoles = (roles || []).map((r: any) => r.role);
     if (!userRoles.includes('admin')) {
-      return new Response(JSON.stringify({ error: 'Forbidden: admin only' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Forbidden: admin only', 403);
     }
 
     // Delete all viewer, viewer_level2, and auditor roles
@@ -44,10 +35,7 @@ try {
       .select('user_id, role');
 
     if (deleteError) {
-      return new Response(JSON.stringify({ error: deleteError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError(deleteError.message, 500);
     }
 
     // Also revoke all approved function access requests
@@ -58,18 +46,12 @@ try {
 
     const removedCount = deletedViewers?.length || 0;
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       removed_count: removedCount,
       removed: deletedViewers || [],
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(String(err), 500);
   }
 }));

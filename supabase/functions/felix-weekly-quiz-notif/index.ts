@@ -11,7 +11,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  */
 
 Deno.serve(handleRequest(async (req) => {
-const supabase = getServiceClient();
+  const supabase = getServiceClient();
 
   try {
     // Find users who logged in within last 14 days but haven't done a quiz in 7+ days
@@ -26,9 +26,7 @@ const supabase = getServiceClient();
       .limit(500);
 
     if (!activeUsers || activeUsers.length === 0) {
-      return new Response(JSON.stringify({ success: true, notified: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, notified: 0 });
     }
 
     const userIds = activeUsers.map(u => u.user_id);
@@ -59,9 +57,7 @@ const supabase = getServiceClient();
     );
 
     if (eligibleUsers.length === 0) {
-      return new Response(JSON.stringify({ success: true, notified: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, notified: 0 });
     }
 
     // Insert quiz invite events
@@ -79,15 +75,10 @@ const supabase = getServiceClient();
 
     console.log(`[felix-weekly-quiz-notif] Notified ${eligibleUsers.length} users`);
 
-    return new Response(JSON.stringify({ success: true, notified: eligibleUsers.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, notified: eligibleUsers.length });
 
   } catch (error) {
     console.error('[felix-weekly-quiz-notif] Error:', error);
-    return new Response(JSON.stringify({ success: false, error: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
 }));

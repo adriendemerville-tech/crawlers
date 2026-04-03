@@ -45,7 +45,7 @@ interface IntersectionResult {
 }
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const { action, tracked_site_id, competitor_domains } = await req.json()
 
     const authHeader = req.headers.get('Authorization')

@@ -1,9 +1,8 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const { report_id, referrer_id, visitor_ip } = await req.json();
 
     if (!report_id || !referrer_id || !visitor_ip) {

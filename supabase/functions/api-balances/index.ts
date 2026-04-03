@@ -8,28 +8,22 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  */
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const supabase = getServiceClient();
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid token', 401);
     }
 
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Admin only' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Admin only', 403);
     }
 
     // Fetch all balances in parallel
@@ -51,9 +45,7 @@ try {
     });
   } catch (e) {
     console.error('[api-balances] error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
 });
 
