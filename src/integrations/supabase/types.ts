@@ -8796,6 +8796,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_bot_log_summary: {
+        Args: { p_tracked_site_id: string }
+        Returns: Json
+      }
       get_database_size: { Args: never; Returns: Json }
       get_max_sessions: { Args: { p_user_id: string }; Returns: number }
       get_site_revenue: {
