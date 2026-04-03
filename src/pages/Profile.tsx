@@ -342,7 +342,7 @@ function ProfileContent() {
                 )}
 
                 <TabsContent value="gmb">
-                  <GMBDashboard isGated={!isProUser} />
+                  <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />
                 </TabsContent>
 
                 {isProUser && (
