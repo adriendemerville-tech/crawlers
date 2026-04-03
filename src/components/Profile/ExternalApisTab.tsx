@@ -876,12 +876,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{s.name}</span>
-                        {isMatomoConnected && (
-                          <Badge className="text-[10px] py-0 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {t.connected}
-                          </Badge>
-                        )}
                       </div>
                       <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <ExternalLink className="w-3 h-3" />
