@@ -177,7 +177,7 @@ const App = () => (
                           <Route path="/audit-semantique" element={<AuditSemantique />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
-                          <Route path="/privacy-google-ads" element={<PrivacyGoogleAds />} />
+                          <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
                           <Route path="/profil" element={<Navigate to="/app/profil" replace />} />
