@@ -378,10 +378,39 @@ Deno.serve(async (req: Request) => {
           let executionSuccess = true;
           const executionResults: any[] = [];
 
-        // ═══ POST-DIAGNOSE: Recycle stale consumed workbench items ═══
-        // After diagnose completes, reset items consumed >24h ago so prescribe has fresh items
+        // ═══ POST-AUDIT: Auto-inject audit findings into architect_workbench ═══
+        if (phase === 'audit' && executionSuccess) {
+          try {
+            console.log(`[AutopilotEngine] 🔄 Auto-populating workbench from audit results for ${site.domain}`);
+            const { data: populateResult, error: populateErr } = await supabase.rpc('populate_architect_workbench', {
+              p_domain: site.domain,
+              p_user_id: config.user_id,
+              p_tracked_site_id: config.tracked_site_id,
+            });
+            if (populateErr) {
+              console.warn('[AutopilotEngine] Workbench populate error:', populateErr.message);
+            } else {
+              console.log(`[AutopilotEngine] ✅ Workbench populated: ${JSON.stringify(populateResult)}`);
+            }
+          } catch (popE) {
+            console.warn('[AutopilotEngine] Workbench populate exception:', popE);
+          }
+        }
+
+        // ═══ POST-DIAGNOSE: Re-populate workbench + recycle stale items + proactive opportunity scan ═══
         if (phase === 'diagnose' && executionSuccess) {
           try {
+            // 1. Re-populate workbench with latest diagnostic findings
+            console.log(`[AutopilotEngine] 🔄 Re-populating workbench after diagnose for ${site.domain}`);
+            const { data: populateResult2, error: populateErr2 } = await supabase.rpc('populate_architect_workbench', {
+              p_domain: site.domain,
+              p_user_id: config.user_id,
+              p_tracked_site_id: config.tracked_site_id,
+            });
+            if (populateErr2) console.warn('[AutopilotEngine] Post-diagnose populate error:', populateErr2.message);
+            else console.log(`[AutopilotEngine] ✅ Post-diagnose workbench: ${JSON.stringify(populateResult2)}`);
+
+            // 2. Recycle stale consumed workbench items (>24h)
             const { data: recycled, error: recycleErr } = await supabase
               .from('architect_workbench')
               .update({ 
@@ -400,8 +429,89 @@ Deno.serve(async (req: Request) => {
               console.log(`[AutopilotEngine] ♻️ Recycled ${recycled.length} stale workbench items for ${site.domain}`);
             }
             if (recycleErr) console.warn('[AutopilotEngine] Workbench recycle error:', recycleErr.message);
+
+            // 3. PROACTIVE: Check content freshness — inject "stale content" items for pages not updated in 90+ days
+            try {
+              const { data: stalePages } = await supabase
+                .from('url_registry')
+                .select('url, title, last_crawled_at')
+                .eq('domain', site.domain)
+                .lt('last_crawled_at', new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString())
+                .not('url', 'ilike', '%/wp-admin%')
+                .not('url', 'ilike', '%/feed%')
+                .order('last_crawled_at', { ascending: true })
+                .limit(5);
+
+              if (stalePages && stalePages.length > 0) {
+                const staleItems = stalePages.map(p => ({
+                  domain: site.domain,
+                  tracked_site_id: config.tracked_site_id,
+                  user_id: config.user_id,
+                  source_type: 'proactive_scan' as const,
+                  source_function: 'autopilot-engine',
+                  source_record_id: `freshness_${site.domain}_${p.url}`,
+                  finding_category: 'content_freshness',
+                  severity: 'medium',
+                  title: `Contenu obsolète: ${p.title || p.url}`,
+                  description: `Cette page n'a pas été mise à jour depuis plus de 90 jours. Une actualisation améliorerait le signal de fraîcheur pour Google et les moteurs IA.`,
+                  target_url: p.url,
+                  target_operation: 'replace',
+                  action_type: 'content' as const,
+                  status: 'pending' as const,
+                }));
+
+                for (const item of staleItems) {
+                  await supabase.from('architect_workbench').upsert(item, { 
+                    onConflict: 'source_type,source_record_id',
+                    ignoreDuplicates: true,
+                  });
+                }
+                console.log(`[AutopilotEngine] 🔍 Proactive: injected ${staleItems.length} stale content items for ${site.domain}`);
+              }
+            } catch (freshErr) {
+              console.warn('[AutopilotEngine] Freshness scan error:', freshErr);
+            }
+
+            // 4. PROACTIVE: Check if EEAT audit is stale (>14 days) → inject EEAT gap items
+            try {
+              const { data: lastEeat } = await supabase
+                .from('audit_raw_data')
+                .select('created_at')
+                .eq('domain', site.domain)
+                .eq('audit_type', 'eeat')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              const eeatAge = lastEeat?.created_at 
+                ? Date.now() - new Date(lastEeat.created_at).getTime()
+                : Infinity;
+
+              if (eeatAge > 14 * 24 * 3600 * 1000) {
+                await supabase.from('architect_workbench').upsert({
+                  domain: site.domain,
+                  tracked_site_id: config.tracked_site_id,
+                  user_id: config.user_id,
+                  source_type: 'proactive_scan' as const,
+                  source_function: 'autopilot-engine',
+                  source_record_id: `eeat_refresh_${site.domain}`,
+                  finding_category: 'eeat',
+                  severity: 'medium',
+                  title: `Rafraîchir l'audit E-E-A-T (${lastEeat ? `dernier: ${new Date(lastEeat.created_at).toLocaleDateString('fr')}` : 'jamais fait'})`,
+                  description: `L'audit E-E-A-T date de plus de 14 jours. Un nouvel audit permettrait d'identifier les signaux de confiance à renforcer.`,
+                  target_url: `https://${site.domain}`,
+                  target_operation: 'replace',
+                  action_type: 'content' as const,
+                  status: 'pending' as const,
+                }, { onConflict: 'source_type,source_record_id', ignoreDuplicates: true });
+                console.log(`[AutopilotEngine] 🔍 Proactive: EEAT refresh needed for ${site.domain}`);
+              }
+            } catch (eeatErr) {
+              console.warn('[AutopilotEngine] EEAT check error:', eeatErr);
+            }
+
           } catch (recycleE) {
-            console.warn('[AutopilotEngine] Workbench recycle exception:', recycleE);
+            console.warn('[AutopilotEngine] Post-diagnose processing exception:', recycleE);
           }
         }
 
@@ -1190,8 +1300,9 @@ Deno.serve(async (req: Request) => {
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            // Reset force_content_cycle after use (one-shot toggle - Option D)
-            force_content_cycle: false,
+            // force_content_cycle stays true by default (proactive mode)
+            // Only reset force_iktracker_article which is a one-shot toggle
+            force_iktracker_article: false,
           })
           .eq('id', config.id);
 
