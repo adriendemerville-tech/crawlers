@@ -169,7 +169,7 @@ export function useMyTracking() {
     if (data) {
       const map: Record<string, StatsEntry[]> = {};
       data.forEach((entry: Record<string, unknown>) => {
-        const siteId = entry.tracked_site_id;
+        const siteId = entry.tracked_site_id as string;
         if (!map[siteId]) map[siteId] = [];
         map[siteId].push(entry);
       });
