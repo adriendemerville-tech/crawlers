@@ -748,17 +748,40 @@ ${alertBlock}\n`;
         }
       }
 
-      // Fetch tracked sites with detailed scores
-      const { data: sites } = await sb
-        .from("tracked_sites")
-        .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at")
-        .eq("user_id", user_id)
-        .limit(10);
+      // Fetch tracked sites — include team-shared sites if applicable
+      const { data: accessibleSiteIds } = await sb.rpc('get_team_accessible_sites', { p_user_id: user_id });
+      const siteIds: string[] = Array.isArray(accessibleSiteIds) ? accessibleSiteIds : [];
+
+      let sites: any[] = [];
+      if (siteIds.length > 0) {
+        const { data: sitesData } = await sb
+          .from("tracked_sites")
+          .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at, user_id, shared_with_team")
+          .in("id", siteIds)
+          .limit(10);
+        sites = sitesData || [];
+      } else {
+        // Fallback: own sites only
+        const { data: sitesData } = await sb
+          .from("tracked_sites")
+          .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at, user_id, shared_with_team")
+          .eq("user_id", user_id)
+          .limit(10);
+        sites = sitesData || [];
+      }
 
       if (sites && sites.length > 0) {
         contextSnippet += "\n# SITES TRACKÉS DE L'UTILISATEUR\n";
-        for (const s of sites) {
+        const ownSites = sites.filter((s: any) => s.user_id === user_id);
+        const sharedSites = sites.filter((s: any) => s.user_id !== user_id);
+        for (const s of ownSites) {
           contextSnippet += `- ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}% (ajouté le ${s.created_at?.slice(0, 10)})\n`;
+        }
+        if (sharedSites.length > 0) {
+          contextSnippet += "\n# SITES PARTAGÉS PAR LE PROPRIÉTAIRE DU COMPTE\n";
+          for (const s of sharedSites) {
+            contextSnippet += `- [partagé] ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}%\n`;
+          }
         }
 
         // Read persistent memory for each site
@@ -781,14 +804,15 @@ ${alertBlock}\n`;
           }
         }
 
-        // For each site, fetch latest audit & crawl info
+        // For each site, fetch latest audit & crawl info (use s.user_id for proper data isolation)
         for (const s of sites.slice(0, 5)) {
+          const siteOwnerId = s.user_id || user_id;
           // Latest audit
           const { data: audits } = await sb
             .from("audit_raw_data")
             .select("audit_type, created_at")
             .eq("domain", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .order("created_at", { ascending: false })
             .limit(3);
 
@@ -803,7 +827,7 @@ ${alertBlock}\n`;
             .from("site_crawls")
             .select("status, total_pages, crawled_pages, avg_score, created_at")
             .eq("domain", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .order("created_at", { ascending: false })
             .limit(1);
 
@@ -819,7 +843,7 @@ ${alertBlock}\n`;
             .from("action_plans")
             .select("title, audit_type, is_archived, created_at")
             .eq("url", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .eq("is_archived", false)
             .limit(3);
 
@@ -832,7 +856,7 @@ ${alertBlock}\n`;
             .from("audit_recommendations_registry")
             .select("title, is_resolved, category")
             .eq("domain", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .limit(5);
 
           if (scripts?.length) {

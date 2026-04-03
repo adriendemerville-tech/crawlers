@@ -89,7 +89,17 @@ serve(async (req) => {
           .toLowerCase();
 
         if (normalizedDomain && trackedSiteId) {
-          const ctx = await getDomainContext(supabase, normalizedDomain, trackedSiteId, { userId: userCtx?.userId });
+          // Resolve the site owner for proper data isolation (team sharing)
+          let dataUserId = userCtx?.userId;
+          const { data: siteOwner } = await supabase
+            .from('tracked_sites')
+            .select('user_id, shared_with_team')
+            .eq('id', trackedSiteId)
+            .single();
+          if (siteOwner) {
+            dataUserId = siteOwner.user_id;
+          }
+          const ctx = await getDomainContext(supabase, normalizedDomain, trackedSiteId, { userId: dataUserId });
           if (ctx.blocks.length > 0) {
             domainDataBlock = `\n\nDONNÉES COMPLÈTES DU DOMAINE "${normalizedDomain}" :\n${ctx.blocks.join('\n\n')}`;
             console.log(`[cocoon-chat] Domain data loaded via shared helper: ${ctx.blocks.length} blocks`);

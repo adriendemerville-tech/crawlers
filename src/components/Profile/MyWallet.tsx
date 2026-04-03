@@ -22,6 +22,7 @@ import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
+import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 
@@ -450,6 +451,9 @@ export function MyWallet() {
               {/* Accounts Tab */}
               <TabsContent value="profile" className="mt-0">
                 <AccountManager />
+                <div className="mt-6">
+                  <TeamSharingSettings />
+                </div>
                 <div className="mt-6">
                   <ProfileSettings />
                 </div>
