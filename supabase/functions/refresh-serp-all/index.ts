@@ -4,6 +4,7 @@ import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracke
 import { withCircuitBreaker } from '../_shared/circuitBreaker.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement } from '../_shared/fetchGA4.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * refresh-serp-all  v2
@@ -205,11 +206,8 @@ function currentWeekStart(): string {
   return monday.toISOString().split('T')[0]
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  const supabase = getServiceClient()
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient()
 
   const dfLogin = Deno.env.get('DATAFORSEO_LOGIN')
   const dfPassword = Deno.env.get('DATAFORSEO_PASSWORD')
@@ -237,9 +235,7 @@ Deno.serve(async (req) => {
 
     if (sitesError || !sites?.length) {
       console.log('[refresh-serp-all] No (more) tracked sites or error:', sitesError)
-      return new Response(JSON.stringify({ refreshed: 0, next_cursor: null }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ refreshed: 0, next_cursor: null })
     }
 
     let refreshed = 0
@@ -512,15 +508,10 @@ Deno.serve(async (req) => {
       }).catch(err => console.error('[refresh-serp-all] Self-invoke failed:', err))
     }
 
-    return new Response(JSON.stringify({ refreshed, errors, total: sites.length, stats, next_cursor: nextCursor }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ refreshed, errors, total: sites.length, stats, next_cursor: nextCursor })
   } catch (error) {
     console.error('[refresh-serp-all] Fatal error:', error)
     await trackEdgeFunctionError('refresh-serp-all', error instanceof Error ? error.message : 'Fatal error').catch(() => {})
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

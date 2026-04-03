@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * calculate-llm-visibility v3
@@ -338,17 +339,11 @@ function getWeekStart(): string {
 // MAIN HANDLER — Parallelized across LLMs
 // ═══════════════════════════════════════════════
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
+Deno.serve(handleRequest(async (req) => {
+const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
   if (!openrouterKey) {
-    return new Response(JSON.stringify({ error: 'OPENROUTER_API_KEY not set' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError('OPENROUTER_API_KEY not set', 500)
   }
 
   const supabase = getServiceClient()
@@ -357,10 +352,7 @@ Deno.serve(async (req) => {
     const { tracked_site_id, user_id, siteContext: externalContext } = await req.json()
 
     if (!tracked_site_id || !user_id) {
-      return new Response(JSON.stringify({ error: 'Missing tracked_site_id or user_id' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Missing tracked_site_id or user_id', 400)
     }
 
     const { data: site, error: siteErr } = await supabase
@@ -370,10 +362,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (siteErr || !site) {
-      return new Response(JSON.stringify({ error: 'Site not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Site not found', 404)
     }
 
     // ── Auto-enrich site identity card if context fields are empty ──
@@ -422,9 +411,7 @@ Deno.serve(async (req) => {
         }, { onConflict: 'tracked_site_id,llm_name,week_start_date' })
       }
 
-      return new Response(JSON.stringify({ data: cached }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ data: cached })
     }
 
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
@@ -533,14 +520,9 @@ Deno.serve(async (req) => {
       expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     }, { onConflict: 'domain,data_type,week_start_date' })
 
-    return new Response(JSON.stringify({ data: cachePayload }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ data: cachePayload })
   } catch (error) {
     console.error('[llm-vis] Error:', error)
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

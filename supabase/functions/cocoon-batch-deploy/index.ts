@@ -2,6 +2,7 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cocoon-batch-deploy
@@ -34,12 +35,8 @@ interface PageBackup {
   platform: string
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  const ip = getClientIp(req)
+Deno.serve(handleRequest(async (req) => {
+const ip = getClientIp(req)
   const rateCheck = checkIpRate(ip, 'cocoon-batch-deploy', 5, 60_000)
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs)
 

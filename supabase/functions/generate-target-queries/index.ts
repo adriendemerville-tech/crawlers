@@ -2,6 +2,7 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 interface StrategicContext {
   coreBusiness?: string;
   marketLeader?: string;
@@ -67,7 +68,6 @@ function buildStrategicContext(strategicAnalysis: any): StrategicContext {
 
   return ctx;
 }
-
 
 /**
  * Humanise un slug de domaine en nom d'entreprise lisible.
@@ -248,12 +248,8 @@ Réponds au format JSON exact suivant :
 }`;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { domain, coreValueSummary, citations, lang = 'fr', strategicAnalysis } = await req.json();
 
     if (!domain) {
@@ -501,10 +497,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
 
     console.log(`Generated ${parsed.queries?.length || 0} target queries for ${domain}. Core: ${parsed.coreBusiness}`);
 
-    return new Response(
-      JSON.stringify({ success: true, data: parsed }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true, data: parsed });
   } catch (error) {
     console.error('Error generating target queries:', error);
     return new Response(
@@ -562,7 +555,7 @@ function detectObviousInconsistencies(generated: any, ctx: StrategicContext, bra
     const themeMatches = themes.filter(t => {
       const words = t.split(/\s+/).filter((w: string) => w.length > 3);
       return words.some(w => queriesText.includes(w));
-    });
+    }));
     if (themeMatches.length === 0 && themes.length >= 3) {
       console.log(`[CoherenceCheck] No keyword theme match found in queries`);
       return true;

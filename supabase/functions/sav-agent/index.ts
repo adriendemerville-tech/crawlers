@@ -3,12 +3,7 @@ import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FRONTEND_TAXONOMY = `
 # TAXONOMIE FRONTEND CRAWLERS.FR (Navigation exacte — positions visuelles)
@@ -317,11 +312,7 @@ Ne mentionne JAMAIS : Supabase, Edge Function, Deno, PostgreSQL, Lovable, cocoon
 Ne dis JAMAIS : "on pourrait envisager de", "il serait peut-être pertinent de".`;
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -355,17 +346,12 @@ serve(async (req) => {
           }).eq("id", score.id);
         }
       }
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonOk({ ok: true });
     }
 
     const { messages, conversation_id, user_id, guest_mode, screen_context, language: clientLanguage } = body;
     if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "Invalid request" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Invalid request", 400);
     }
 
     const isGuest = guest_mode === true || !user_id;
@@ -530,9 +516,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
               console.error("Save parmenion conv error:", e);
             }
 
-            return new Response(JSON.stringify({ reply, conversation_id: savedConvId || conversation_id }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonOk({ reply, conversation_id: savedConvId || conversation_id });
           }
         } catch (e) {
           console.error("Parmenion context fetch error:", e);
@@ -649,9 +633,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
                 console.error("Save admin conv error:", e);
               }
 
-              return new Response(JSON.stringify({ reply: adminReply, conversation_id: savedConvId || conversation_id }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
+              return jsonOk({ reply: adminReply, conversation_id: savedConvId || conversation_id });
             }
           }
         } catch (e) {
@@ -1225,14 +1207,10 @@ ${screen_context}
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Service temporairement surchargé, réessayez dans quelques instants." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError("Service temporairement surchargé, réessayez dans quelques instants.", 429);
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Service IA temporairement indisponible." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError("Service IA temporairement indisponible.", 402);
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
@@ -1393,23 +1371,16 @@ ${screen_context}
       }
 
       if (!conversation_id && savedConvId) {
-        return new Response(JSON.stringify({ reply, conversation_id: savedConvId }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ reply, conversation_id: savedConvId });
       }
     } catch (e) {
       console.error("Save conversation error:", e);
     }
     } // end if (!isGuest)
 
-    return new Response(JSON.stringify({ reply, conversation_id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ reply, conversation_id });
   } catch (e) {
     console.error("sav-agent error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur interne" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(e instanceof Error ? e.message : "Erreur interne", 500);
   }
-});
+}));

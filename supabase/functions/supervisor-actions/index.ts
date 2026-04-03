@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
@@ -244,27 +245,18 @@ Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // Check kill switch
     const enabled = await isSupervisorEnabled()
     if (!enabled) {
-      return new Response(JSON.stringify({ success: false, reason: 'Supervisor désactivé' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: false, reason: 'Supervisor désactivé' })
     }
 
     // Auth check - admin only
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     const supabase = getServiceClient()
@@ -273,10 +265,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     const { data: userData, error: authError } = await supabase.auth.getUser(token)
     if (authError || !userData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
     
     const { data: roleData } = await supabase
@@ -287,10 +276,7 @@ Deno.serve(async (req) => {
       .single()
     
     if (!roleData) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Admin access required', 403)
     }
 
     const body = await req.json()
@@ -299,9 +285,7 @@ Deno.serve(async (req) => {
     // ─── Action: List CTO corrections ────────────────────────────
     if (action === 'list_corrections') {
       const corrections = await collectCtoCorrections(supabase)
-      return new Response(JSON.stringify({ success: true, corrections, count: corrections.length }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, corrections, count: corrections.length })
     }
 
     // ─── Action: Audit CTO corrections ───────────────────────────
@@ -355,14 +339,12 @@ Deno.serve(async (req) => {
         },
       })
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         analysis,
         correction_count: corrections.length,
         functions_audited: functionNames,
         post_deploy_errors: postErrors.length,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -384,9 +366,7 @@ Deno.serve(async (req) => {
         metadata: { type: 'assistant_audit', ...assistantReport },
       })
 
-      return new Response(JSON.stringify({ success: true, assistant_report: assistantReport }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, assistant_report: assistantReport })
     }
 
     // ─── Action: Audit Parménion (Autopilot) errors ──────────────
@@ -523,10 +503,7 @@ Réponds en JSON :
     if (action === 'toggle_killswitch') {
       const { target, enabled: newState } = body
       if (!['supervisor_enabled', 'cto_agent_enabled'].includes(target)) {
-        return new Response(JSON.stringify({ error: 'Invalid target' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Invalid target', 400)
       }
 
       await supabase
@@ -537,15 +514,10 @@ Réponds en JSON :
           updated_at: new Date().toISOString(),
         }, { onConflict: 'key' })
 
-      return new Response(JSON.stringify({ success: true, target, enabled: newState }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, target, enabled: newState })
     }
 
-    return new Response(JSON.stringify({ error: 'Unknown action' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError('Unknown action', 400)
 
   } catch (error) {
     console.error('[SUPERVISOR] Error:', error)

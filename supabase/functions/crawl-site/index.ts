@@ -4,6 +4,7 @@ import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracke
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
@@ -12,12 +13,8 @@ const SPIDER_API = 'https://api.spider.cloud';
  * crawl-site v3 — Lightweight launcher with advanced options
  * Supports: maxDepth, urlFilter (regex), customSelectors (CSS extraction)
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // ── IP Rate Limit (anti-bot) ──
+Deno.serve(handleRequest(async (req) => {
+// ── IP Rate Limit (anti-bot) ──
   const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'crawl-site', 5, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
@@ -603,4 +600,4 @@ Deno.serve(async (req) => {
       error: error instanceof Error ? error.message : 'Erreur interne',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+}));

@@ -4,6 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { callOpenRouter } from '../_shared/openRouterAI.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -333,17 +334,11 @@ async function checkCacheHealth(supabase: any): Promise<CacheHealthReport> {
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const enabled = await isAgentEnabled()
     if (!enabled) {
-      return new Response(JSON.stringify({ success: false, reason: 'Agent CTO désactivé' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: false, reason: 'Agent CTO désactivé' })
     }
 
     const body = await req.json()
@@ -371,9 +366,7 @@ Deno.serve(async (req) => {
         },
       })
 
-      return new Response(JSON.stringify({ success: true, report }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, report })
     }
 
     // ─── Mode: Manual re-analyze (admin "Mettre à jour" button) ───
@@ -388,11 +381,9 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (rawError || !latestRaw) {
-        return new Response(JSON.stringify({
+        return jsonOk({
           success: false,
           analysis_summary: 'Aucune donnée d\'audit récente à analyser — lancez un audit depuis la console.',
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
@@ -446,9 +437,7 @@ Deno.serve(async (req) => {
       })
 
       if ((!failedJobs || failedJobs.length === 0) && marinaErrors.length === 0) {
-        return new Response(JSON.stringify({ success: true, message: 'Aucune erreur Marina à diagnostiquer.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ success: true, message: 'Aucune erreur Marina à diagnostiquer.' })
       }
 
       // Summarize for LLM
@@ -511,13 +500,11 @@ Réponds en JSON :
         metadata: { diagnosis, failed_jobs_count: (failedJobs || []).length, silent_errors_count: marinaErrors.length, tokens },
       })
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         failed_jobs: (failedJobs || []).length,
         silent_errors: marinaErrors.length,
         diagnosis,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -537,9 +524,7 @@ Réponds en JSON :
         .limit(20)
 
       if (!crashes || crashes.length === 0) {
-        return new Response(JSON.stringify({ success: true, message: 'Aucun crash frontend à diagnostiquer.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ success: true, message: 'Aucun crash frontend à diagnostiquer.' })
       }
 
       // Deduplicate by error_message to avoid analyzing the same crash multiple times
@@ -720,12 +705,10 @@ Réponds UNIQUEMENT en JSON :
 
       console.log(`[AGENT-CTO] 🏥 Frontend crash diagnosis: ${results.length} crashes analyzed`)
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         crashes_analyzed: results.length,
         results,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -801,7 +784,7 @@ Réponds UNIQUEMENT en JSON :
         reason: `CTO supervision disabled for ${functionName}`,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      }));
     }
 
     // ─── Phase 1: Gather real evidence ──────────────────────────────

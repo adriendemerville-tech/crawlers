@@ -4,6 +4,7 @@ import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLi
 import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { checkFairUse } from "../_shared/fairUse.ts";
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: calculate-cocoon-logic
@@ -260,12 +261,8 @@ function normalizeAbsoluteUrl(value: string | null | undefined, base?: string): 
 
 // ─── Main Handler ───
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const ip = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const ip = getClientIp(req);
   const rateCheck = checkIpRate(ip, "calculate-cocoon-logic", 5, 60_000);
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
 
@@ -273,10 +270,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { tracked_site_id } = body;
     if (!tracked_site_id) {
-      return new Response(JSON.stringify({ error: "tracked_site_id requis" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("tracked_site_id requis", 400);
     }
     const supabase = getServiceClient();
 
@@ -302,9 +296,7 @@ Deno.serve(async (req) => {
       userId = user?.id || null;
     }
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Non autorisé" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Non autorisé", 401);
     }
 
     // ─── Plan check (skip for service role calls) ───
@@ -317,18 +309,14 @@ Deno.serve(async (req) => {
       isAdmin = !!isAdminUser;
 
       if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
-        return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError("Accès réservé Pro Agency", 403);
       }
 
       // ── Fair use check ──
       const planType = ["agency_pro", "agency_premium"].includes(profile?.plan_type || "") ? 'agency_pro' : 'free';
       const fairUse = await checkFairUse(userId, 'cocoon_logic', planType);
       if (!fairUse.allowed) {
-        return new Response(JSON.stringify({ error: fairUse.reason }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonError(fairUse.reason, 429);
       }
     }
 
@@ -338,9 +326,7 @@ Deno.serve(async (req) => {
       .eq("id", tracked_site_id).maybeSingle();
 
     if (!site || (site.user_id !== userId && !isAdmin)) {
-      return new Response(JSON.stringify({ error: "Site non trouvé" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Site non trouvé", 404);
     }
 
     // ─── 1. Check prerequisites: crawl + strategic audit ───
@@ -730,9 +716,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("[Cocoon] Error:", error);
     await trackEdgeFunctionError("calculate-cocoon-logic", error instanceof Error ? error.message : String(error)).catch((e) => logSilentError("calculate-cocoon-logic", "track-error", e, { severity: "medium", impact: "tracking_miss" }));
-    return new Response(JSON.stringify({ error: "Erreur interne du module Cocoon" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError("Erreur interne du module Cocoon", 500);
   }
-});
+}));

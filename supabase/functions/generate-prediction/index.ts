@@ -1,8 +1,8 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
-import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -671,12 +671,8 @@ function pct(final: number, baseline: number): number {
 
 // ─── SERVE ──────────────────────────────────────────────────────────────────
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     /**
      * Accepted input params:
      * - audit_id: string (optional — PDF audit source)
@@ -689,15 +685,11 @@ Deno.serve(async (req) => {
     const { audit_id, crawl_id, client_id, gsc_data, sector } = body;
 
     if (!client_id) {
-      return new Response(JSON.stringify({ error: 'client_id is required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('client_id is required', 400);
     }
 
     if (!audit_id && !crawl_id) {
-      return new Response(JSON.stringify({ error: 'audit_id or crawl_id is required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('audit_id or crawl_id is required', 400);
     }
 
     const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -969,7 +961,7 @@ Deno.serve(async (req) => {
 
     await supabase.rpc('recalculate_reliability');
 
-    return new Response(JSON.stringify({ 
+    return jsonOk({ 
       success: true, 
       prediction: saved,
       // Also return in predict-from-crawl compatible format for frontend
@@ -978,14 +970,10 @@ Deno.serve(async (req) => {
       ai_risk_score: prediction.ai_risk_score,
       business_impact: prediction.business_impact,
       reasoning: prediction.reasoning,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('generate-prediction error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message, 500);
   }
-});
+}));

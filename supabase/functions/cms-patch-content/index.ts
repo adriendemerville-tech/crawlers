@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cms-patch-content
@@ -1090,28 +1091,24 @@ async function patchContent(conn: CmsConnection, input: PatchInput): Promise<Pat
 
 // ── Main Handler ──
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Unauthorized', 401);
     }
 
     const userClient = getUserClient(authHeader);
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Invalid token', 401);
     }
 
     const body: PatchInput = await req.json();
     const { tracked_site_id, target_url, patches } = body;
 
     if (!tracked_site_id || !target_url || !patches?.length) {
-      return new Response(JSON.stringify({ error: 'Missing tracked_site_id, target_url, or patches[]' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Missing tracked_site_id, target_url, or patches[]', 400);
     }
 
     // Get CMS connection
@@ -1156,8 +1153,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('[cms-patch-content] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
-});
+}));

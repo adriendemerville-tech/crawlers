@@ -1,6 +1,6 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Autopilot Engine — Moteur d'exécution autonome des cycles
@@ -243,10 +243,8 @@ function routeCmsActions(actions: Array<Record<string, unknown>>, domain: string
   return { content, code, all };
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient();
     let targetSiteId: string | null = null;
 
@@ -261,7 +259,7 @@ Deno.serve(async (req: Request) => {
       if (!auth) {
         // Allow anon key calls (from cron via pg_net)
       } else if (!auth.isAdmin) {
-        return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonError('Admin only', 403);
       }
     }
 
@@ -278,7 +276,7 @@ Deno.serve(async (req: Request) => {
     const { data: configs, error: configError } = await query;
     if (configError) throw configError;
     if (!configs || configs.length === 0) {
-      return new Response(JSON.stringify({ message: 'No active autopilot configs', processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonOk({ message: 'No active autopilot configs', processed: 0 });
     }
 
     const results: Array<{ site_id: string; domain: string; status: string; decision_id?: string; pipeline_phase?: string; error?: string }> = [];
@@ -1338,15 +1336,10 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    return new Response(JSON.stringify({ processed: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ processed: results.length, results });
 
   } catch (e) {
     console.error('[AutopilotEngine] Fatal error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));

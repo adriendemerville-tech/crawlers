@@ -1,8 +1,8 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -64,23 +64,21 @@ function getNextPhase(lastPhase: PipelinePhase | undefined): PipelinePhase {
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+try {
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
     
     let authUserId: string | null = null;
     if (!isServiceRole) {
       const auth = await getAuthenticatedUser(req);
-      if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (!auth) return jsonError('Unauthorized', 401);
+      if (!auth.isAdmin) return jsonError('Admin only', 403);
       authUserId = auth.userId;
     }
 
     const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article } = await req.json();
     if (!tracked_site_id || !domain) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('tracked_site_id and domain required', 400);
     }
 
     const supabase = getServiceClient();
@@ -309,7 +307,7 @@ serve(async (req: Request) => {
     }
 
     if (!decision) {
-      return new Response(JSON.stringify({ error: 'Parménion could not produce a decision' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Parménion could not produce a decision', 500);
     }
 
     // ═══ PHASE 4: Validate functions against phase ═══
@@ -369,20 +367,20 @@ serve(async (req: Request) => {
 
     if (logError) {
       console.error('[Parménion] Failed to persist decision:', logError);
-      return new Response(JSON.stringify({ error: 'Failed to persist decision' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Failed to persist decision', 500);
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       decision_id: logData.id,
       decision,
       pipeline_phase: currentPhase,
       conservative_mode: conservativeMode,
       error_rate: errorRateData,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
 
   } catch (e) {
     console.error('[Parménion] Error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
 });
 
@@ -1257,7 +1255,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
         }],
         tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
       }),
-    });
+    }));
 
     if (!response.ok) {
       const errText = await response.text();

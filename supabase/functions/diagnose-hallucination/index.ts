@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -565,12 +566,8 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
 
 // ═══ Main handler ═══
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const body: DiagnoseRequest = await req.json();
     const { domain, coreValueSummary, action, originalValues, correctedValues, lang = 'fr' } = body;
 
@@ -633,10 +630,7 @@ Deno.serve(async (req) => {
         };
       }
 
-      return new Response(
-        JSON.stringify({ success: true, extractedValues }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonOk({ success: true, extractedValues });
     }
 
     // === ACTION: COMPARE (enriched with factual data) ===
@@ -759,10 +753,7 @@ Deno.serve(async (req) => {
 
       console.log(`[diagnose] Complete — ${diagnosis.discrepancies.length} discrepancies, verdicts: ${JSON.stringify(diagnosis.verdictSummary)}`);
 
-      return new Response(
-        JSON.stringify({ success: true, diagnosis }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonOk({ success: true, diagnosis });
     }
 
     // Legacy action
@@ -784,10 +775,7 @@ Deno.serve(async (req) => {
       };
     }
 
-    return new Response(
-      JSON.stringify({ success: true, data: result }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true, data: result });
 
   } catch (error: unknown) {
     const err = error as Error;
@@ -890,7 +878,7 @@ function findSourcePagesForField(
           title: page.title,
           element: el.name,
           excerpt: el.text.slice(0, 200),
-        });
+        }));
         break; // One match per page is enough
       }
     }

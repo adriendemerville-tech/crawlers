@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -495,11 +496,8 @@ const ALL_TESTS = [
   { id: 'cors',            name: 'Headers CORS',                 pillar: 'Tracking',     fn: testCorsHeaders },
 ]
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  // Sécurité : admin only (vérifié via service role ou auth header)
+Deno.serve(handleRequest(async (req) => {
+// Sécurité : admin only (vérifié via service role ou auth header)
   const authHeader = req.headers.get('Authorization') || ''
   const isServiceRole = authHeader.includes(serviceKey)
 
@@ -516,22 +514,13 @@ Deno.serve(async (req) => {
           _role: 'admin',
         })
         if (!isAdmin) {
-          return new Response(JSON.stringify({ error: 'Admin only' }), {
-            status: 403,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('Admin only', 403)
         }
       } else {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Unauthorized', 401)
       }
     } else {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
   }
 
