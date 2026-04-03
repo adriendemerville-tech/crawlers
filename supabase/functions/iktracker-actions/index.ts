@@ -343,11 +343,15 @@ Deno.serve(async (req) => {
         })
     }
 
-    // Log action for traceability
+    // Log action for traceability — detect upsert (create that became update)
     try {
       const supabase = getServiceClient()
+      const wasUpserted = result && typeof result === 'object' && (result as any)._upserted === true
+      const effectiveAction = wasUpserted ? 'update-post' : action
       const logData: Record<string, unknown> = {
-        action,
+        action: effectiveAction,
+        original_action: wasUpserted ? 'create-post' : action,
+        was_upserted: wasUpserted,
         params_keys: Object.keys(params),
       }
       // Capture identifiers for history display
