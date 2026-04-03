@@ -29,7 +29,7 @@ export async function getDomainContext(
   supabase: any,
   domain: string,
   trackedSiteId: string,
-  options?: { includeDiagnostics?: boolean; includeRecos?: boolean; maxPages?: number }
+  options?: { includeDiagnostics?: boolean; includeRecos?: boolean; maxPages?: number; userId?: string }
 ): Promise<DomainContextResult> {
   const normalizedDomain = domain
     .replace(/^https?:\/\//, '')
@@ -38,21 +38,29 @@ export async function getDomainContext(
     .toLowerCase();
 
   const maxPages = options?.maxPages || 50;
+  const userId = options?.userId;
+
+  // Helper to conditionally add user_id filter on domain-scoped queries
+  const withUser = (query: any) => userId ? query.eq('user_id', userId) : query;
 
   const promises: Promise<any>[] = [
-    // 0: crawl
-    supabase
-      .from('site_crawls')
-      .select('id, domain, status, total_pages, crawled_pages, avg_score, ai_summary, created_at, completed_at')
-      .eq('domain', normalizedDomain)
+    // 0: crawl (user-scoped)
+    withUser(
+      supabase
+        .from('site_crawls')
+        .select('id, domain, status, total_pages, crawled_pages, avg_score, ai_summary, created_at, completed_at')
+        .eq('domain', normalizedDomain)
+    )
       .order('created_at', { ascending: false })
       .limit(3),
-    // 1: crawl pages (via latest crawl)
-    supabase
-      .from('site_crawls')
-      .select('id')
-      .eq('domain', normalizedDomain)
-      .eq('status', 'completed')
+    // 1: crawl pages (via latest crawl, user-scoped)
+    withUser(
+      supabase
+        .from('site_crawls')
+        .select('id')
+        .eq('domain', normalizedDomain)
+        .eq('status', 'completed')
+    )
       .order('created_at', { ascending: false })
       .limit(1)
       .then(async ({ data }: any) => {
@@ -65,14 +73,16 @@ export async function getDomainContext(
           .limit(maxPages);
         return { data: pages };
       }),
-    // 2: audits
-    supabase
-      .from('audit_raw_data')
-      .select('audit_type, created_at')
-      .eq('domain', normalizedDomain)
+    // 2: audits (user-scoped)
+    withUser(
+      supabase
+        .from('audit_raw_data')
+        .select('audit_type, created_at')
+        .eq('domain', normalizedDomain)
+    )
       .order('created_at', { ascending: false })
       .limit(5),
-    // 3: serp
+    // 3: serp (shared cache — no user_id, public SERP data)
     supabase
       .from('domain_data_cache')
       .select('data_type, result_data, created_at')
@@ -80,7 +90,7 @@ export async function getDomainContext(
       .in('data_type', ['serp_kpis', 'keyword_rankings'])
       .order('created_at', { ascending: false })
       .limit(2),
-    // 4: backlinks
+    // 4: backlinks (tracked_site_id scoped)
     supabase
       .from('backlink_snapshots')
       .select('referring_domains, backlinks_total, domain_rank, referring_domains_new, referring_domains_lost, measured_at')
@@ -123,23 +133,27 @@ export async function getDomainContext(
       .eq('is_dismissed', false)
       .order('detected_at', { ascending: false })
       .limit(10),
-    // 10: audit technique raw data (latest)
-    supabase
-      .from('audit_raw_data')
-      .select('raw_payload, audit_type, created_at')
-      .eq('domain', normalizedDomain)
-      .in('audit_type', ['expert', 'technical'])
+    // 10: audit technique raw data (user-scoped)
+    withUser(
+      supabase
+        .from('audit_raw_data')
+        .select('raw_payload, audit_type, created_at')
+        .eq('domain', normalizedDomain)
+        .in('audit_type', ['expert', 'technical'])
+    )
       .order('created_at', { ascending: false })
       .limit(1),
-    // 11: audit stratégique raw data (latest)
-    supabase
-      .from('audit_raw_data')
-      .select('raw_payload, audit_type, created_at')
-      .eq('domain', normalizedDomain)
-      .in('audit_type', ['strategic', 'strategique'])
+    // 11: audit stratégique raw data (user-scoped)
+    withUser(
+      supabase
+        .from('audit_raw_data')
+        .select('raw_payload, audit_type, created_at')
+        .eq('domain', normalizedDomain)
+        .in('audit_type', ['strategic', 'strategique'])
+    )
       .order('created_at', { ascending: false })
       .limit(1),
-    // 12: bot log analysis (last 7 days aggregated)
+    // 12: bot log analysis (last 7 days aggregated, tracked_site scoped)
     supabase
       .rpc('get_bot_log_summary', { p_tracked_site_id: trackedSiteId })
       .then((res: any) => res)

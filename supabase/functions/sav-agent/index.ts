@@ -803,6 +803,7 @@ ${alertBlock}\n`;
             .from("site_crawls")
             .select("status, total_pages, crawled_pages, avg_score, created_at")
             .eq("domain", s.domain)
+            .eq("user_id", user_id)
             .order("created_at", { ascending: false })
             .limit(1);
 

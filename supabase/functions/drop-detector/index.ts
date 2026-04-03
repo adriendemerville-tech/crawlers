@@ -161,6 +161,7 @@ async function analyzeSite(
   const ctx = await getDomainContext(supabase, site.domain, site.id, {
     includeDiagnostics: true,
     includeRecos: true,
+    userId: site.user_id,
   });
 
   // Cross-analyze to determine verdict
