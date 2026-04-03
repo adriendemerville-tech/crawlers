@@ -487,21 +487,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
     }
 
     if (service.id === 'google-ads') {
-      setConnectingId(service.id);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data, error } = await supabase.functions.invoke('google-ads-connector', {
-          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
-        });
-        if (error) throw error;
-        if (data?.auth_url) window.location.href = data.auth_url;
-        else throw new Error('No auth URL returned');
-      } catch (err) {
-        console.error('[ExternalApis] Google Ads auth error:', err);
-        toast.error(language === 'fr' ? 'Erreur de connexion Google Ads' : language === 'es' ? 'Error de conexión Google Ads' : 'Google Ads connection error');
-      } finally {
-        setConnectingId(null);
-      }
+      setGadsConsentOpen(true);
       return;
     }
 
