@@ -796,10 +796,10 @@ export function useMyTracking() {
   };
 
   // ─── Helpers for stats extraction ───
-  const getPerformanceScore = (entry: StatsEntry) => (entry as any)?.raw_data?.performanceScore ?? null;
-  const getPerformanceDesktop = (entry: StatsEntry) => (entry as any)?.raw_data?.performanceDesktop ?? null;
-  const getAiVisibility = (entry: StatsEntry): number | null => (entry as any)?.raw_data?.llmOverallScore ?? null;
-  const getSerpData = (entry: StatsEntry) => (entry as any)?.raw_data?.serpData ?? null;
+  const getPerformanceScore = (entry: StatsEntry) => entry.raw_data?.performanceScore as number | null ?? null;
+  const getPerformanceDesktop = (entry: StatsEntry) => entry.raw_data?.performanceDesktop as number | null ?? null;
+  const getAiVisibility = (entry: StatsEntry): number | null => entry.raw_data?.llmOverallScore as number | null ?? null;
+  const getSerpData = (entry: StatsEntry) => entry.raw_data?.serpData as Record<string, unknown> | null ?? null;
 
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
   const latestPerformanceDesktop = latestStats ? getPerformanceDesktop(latestStats) : null;
