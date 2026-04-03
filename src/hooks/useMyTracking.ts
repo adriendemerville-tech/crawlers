@@ -339,7 +339,7 @@ export function useMyTracking() {
         throw new Error(data.error);
       }
       setGscData(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('GSC fetch error:', err);
     } finally {
       setGscLoading(false);
