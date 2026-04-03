@@ -108,7 +108,7 @@ const ConditionsUtilisation = () => {
                 <h3 className="font-semibold text-foreground mb-3">{t3(language, 'Abonnement Pro Agency+ :', 'Pro Agency+ Subscription:', 'Suscripción Pro Agency+:')}</h3>
                 <ul className="text-muted-foreground space-y-1">
                   <li>• {t3(language, '99€ TTC / mois, sans engagement, résiliable à tout moment', '€99 incl. VAT / month, no commitment, cancellable at any time', '99€ IVA incl. / mes, sin compromiso, cancelable en cualquier momento')}</li>
-                  <li>• {t3(language, 'Tout Pro Agency + 100 000 pages crawl/mois, 5 comptes, Content Architect (200/mois), API Marina en marque blanche complète, support prioritaire renforcé', 'Everything in Pro Agency + 100,000 crawl pages/month, 5 accounts, Content Architect (200/month), Marina API with full white label, enhanced priority support', 'Todo Pro Agency + 100.000 páginas crawl/mes, 5 cuentas, Content Architect (200/mes), API Marina con marca blanca completa, soporte prioritario reforzado')}</li>
+                  <li>• {t3(language, 'Tout Pro Agency + 100 000 pages crawl/mois, 5 comptes, Content Architect (200/mois), API Marina en marque blanche complète, analyse des logs, support prioritaire renforcé', 'Everything in Pro Agency + 100,000 crawl pages/month, 5 accounts, Content Architect (200/month), Marina API with full white label, log analysis, enhanced priority support', 'Todo Pro Agency + 100.000 páginas crawl/mes, 5 cuentas, Content Architect (200/mes), API Marina con marca blanca completa, análisis de logs, soporte prioritario reforzado')}</li>
                 </ul>
               </div>
               <div className="bg-muted/50 rounded-lg p-6 mb-4">
