@@ -843,7 +843,7 @@ ${alertBlock}\n`;
             .from("action_plans")
             .select("title, audit_type, is_archived, created_at")
             .eq("url", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .eq("is_archived", false)
             .limit(3);
 
