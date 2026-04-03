@@ -167,6 +167,40 @@ Deno.serve(async (req) => {
 
     // ── Synchronous mode (fallback for simple calls) ──
     const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, null, !!forceCrawl, null);
+
+    // Persist in audit_raw_data for agent access (sync mode)
+    try {
+      const authHeader = req.headers.get('authorization') || '';
+      const token = authHeader.replace('Bearer ', '');
+      let syncUserId: string | null = null;
+      if (token) {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) syncUserId = user.id;
+      }
+      await supabase.from('audit_raw_data').insert({
+        url: targetUrl,
+        domain,
+        audit_type: 'eeat',
+        user_id: syncUserId,
+        source_functions: ['check-eeat'],
+        raw_payload: {
+          score: result.score,
+          experience: result.experience,
+          expertise: result.expertise,
+          authoritativeness: result.authoritativeness,
+          trustworthiness: result.trustworthiness,
+          signals: result.signals,
+          issues: result.issues,
+          strengths: result.strengths,
+          recommendations: result.recommendations,
+          backlinkData: result.backlinkData,
+          gbpData: result.gbpData,
+          crawlInfo: result.crawlInfo,
+          dataSources: result.dataSources,
+        },
+      });
+    } catch (_) { /* best effort */ }
+
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
