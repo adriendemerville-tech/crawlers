@@ -748,12 +748,27 @@ ${alertBlock}\n`;
         }
       }
 
-      // Fetch tracked sites with detailed scores
-      const { data: sites } = await sb
-        .from("tracked_sites")
-        .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at")
-        .eq("user_id", user_id)
-        .limit(10);
+      // Fetch tracked sites — include team-shared sites if applicable
+      const { data: accessibleSiteIds } = await sb.rpc('get_team_accessible_sites', { p_user_id: user_id });
+      const siteIds: string[] = Array.isArray(accessibleSiteIds) ? accessibleSiteIds : [];
+
+      let sites: any[] = [];
+      if (siteIds.length > 0) {
+        const { data: sitesData } = await sb
+          .from("tracked_sites")
+          .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at, user_id, shared_with_team")
+          .in("id", siteIds)
+          .limit(10);
+        sites = sitesData || [];
+      } else {
+        // Fallback: own sites only
+        const { data: sitesData } = await sb
+          .from("tracked_sites")
+          .select("id, domain, display_name, geo_score, seo_score, llm_visibility_score, created_at, user_id, shared_with_team")
+          .eq("user_id", user_id)
+          .limit(10);
+        sites = sitesData || [];
+      }
 
       if (sites && sites.length > 0) {
         contextSnippet += "\n# SITES TRACKÉS DE L'UTILISATEUR\n";
