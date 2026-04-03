@@ -1,15 +1,22 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
+import { getAuthenticatedUserId } from '../_shared/auth.ts'
 
 /**
  * Edge Function: sea-seo-bridge
+ * 
+ * SECURITY NOTES:
+ * - READ-ONLY: Only uses Google Ads searchStream (SELECT queries). 
+ *   No campaign create/update/delete operations exist in this function.
+ * - JWT-authenticated: user_id derived from auth token, never from client body.
+ * - Site ownership verified via owns_tracked_site() before workbench injection.
  * 
  * Cross-references Google Ads keywords, GA4 conversions and Cocoon gaps
  * to identify untapped SEO opportunities from paid search data.
  * 
  * Actions:
- * - analyze: Full SEA→SEO bridge analysis
+ * - analyze: Full SEA→SEO bridge analysis (READ-ONLY on Google Ads API)
  * - inject_workbench: Push selected opportunities to architect_workbench
  */
 
@@ -48,10 +55,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { action, user_id, domain, tracked_site_id, opportunity_ids } = await req.json()
+    // ── JWT Authentication ──
+    const authenticatedUserId = await getAuthenticatedUserId(req)
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
-    if (!user_id || !domain) {
-      return new Response(JSON.stringify({ error: 'user_id and domain required' }), {
+    const { action, domain, tracked_site_id, opportunity_ids } = await req.json()
+    const user_id = authenticatedUserId // Use authenticated identity
+
+    if (!domain) {
+      return new Response(JSON.stringify({ error: 'domain required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
