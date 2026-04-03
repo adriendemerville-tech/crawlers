@@ -607,7 +607,7 @@ export function useMyTracking() {
 
     await Promise.allSettled(calls);
 
-    const computedSemanticAuth = rawAccumulator.serpData?.semantic_authority ?? null;
+    const computedSemanticAuth = (rawAccumulator.serpData as Record<string, unknown>)?.semantic_authority ?? null;
 
     await supabase.from('user_stats_history').insert({
       user_id: user.id,
