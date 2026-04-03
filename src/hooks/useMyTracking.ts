@@ -688,7 +688,7 @@ export function useMyTracking() {
   };
 
   // ─── Add site ───
-  const handleAddSite = async (t: any) => {
+  const handleAddSite = async (t: Record<string, string>) => {
     if (!user) return;
     if (!validationResult.checked) {
       await handleValidateUrl();
