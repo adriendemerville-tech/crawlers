@@ -4882,6 +4882,166 @@ export type Database = {
           },
         ]
       }
+      log_connector_errors: {
+        Row: {
+          connector_id: string
+          created_at: string
+          error: string
+          id: string
+          raw_payload: Json | null
+        }
+        Insert: {
+          connector_id: string
+          created_at?: string
+          error: string
+          id?: string
+          raw_payload?: Json | null
+        }
+        Update: {
+          connector_id?: string
+          created_at?: string
+          error?: string
+          id?: string
+          raw_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_connector_errors_connector_id_fkey"
+            columns: ["connector_id"]
+            isOneToOne: false
+            referencedRelation: "log_connectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      log_connectors: {
+        Row: {
+          api_key_hash: string | null
+          config: Json | null
+          created_at: string
+          error_count: number
+          id: string
+          last_sync_at: string | null
+          status: string
+          tracked_site_id: string
+          type: Database["public"]["Enums"]["log_connector_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key_hash?: string | null
+          config?: Json | null
+          created_at?: string
+          error_count?: number
+          id?: string
+          last_sync_at?: string | null
+          status?: string
+          tracked_site_id: string
+          type: Database["public"]["Enums"]["log_connector_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key_hash?: string | null
+          config?: Json | null
+          created_at?: string
+          error_count?: number
+          id?: string
+          last_sync_at?: string | null
+          status?: string
+          tracked_site_id?: string
+          type?: Database["public"]["Enums"]["log_connector_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_connectors_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      log_entries: {
+        Row: {
+          bot_category: Database["public"]["Enums"]["bot_category"] | null
+          bot_name: string | null
+          bytes_sent: number | null
+          connector_id: string
+          country_code: string | null
+          created_at: string
+          id: string
+          ip: unknown
+          is_bot: boolean
+          method: string | null
+          path: string | null
+          raw: Json | null
+          referer: string | null
+          source: string
+          status_code: number | null
+          tracked_site_id: string
+          ts: string
+          user_agent: string | null
+        }
+        Insert: {
+          bot_category?: Database["public"]["Enums"]["bot_category"] | null
+          bot_name?: string | null
+          bytes_sent?: number | null
+          connector_id: string
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          ip?: unknown
+          is_bot?: boolean
+          method?: string | null
+          path?: string | null
+          raw?: Json | null
+          referer?: string | null
+          source: string
+          status_code?: number | null
+          tracked_site_id: string
+          ts: string
+          user_agent?: string | null
+        }
+        Update: {
+          bot_category?: Database["public"]["Enums"]["bot_category"] | null
+          bot_name?: string | null
+          bytes_sent?: number | null
+          connector_id?: string
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          ip?: unknown
+          is_bot?: boolean
+          method?: string | null
+          path?: string | null
+          raw?: Json | null
+          referer?: string | null
+          source?: string
+          status_code?: number | null
+          tracked_site_id?: string
+          ts?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_entries_connector_id_fkey"
+            columns: ["connector_id"]
+            isOneToOne: false
+            referencedRelation: "log_connectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_entries_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       magic_links: {
         Row: {
           created_at: string
@@ -8658,6 +8818,7 @@ export type Database = {
         }
         Returns: number
       }
+      owns_tracked_site: { Args: { p_site_id: string }; Returns: boolean }
       parmenion_error_rate: {
         Args: { p_domain: string; p_last_n?: number }
         Returns: Json
@@ -8786,6 +8947,12 @@ export type Database = {
         | "unpublished"
         | "archived"
         | "deleted"
+      bot_category:
+        | "search_engine"
+        | "ai_crawler"
+        | "seo_tool"
+        | "social"
+        | "unknown"
       cms_platform:
         | "wordpress"
         | "shopify"
@@ -8800,6 +8967,16 @@ export type Database = {
         | "audit_tech"
         | "audit_strategic"
         | "cocoon"
+      log_connector_type:
+        | "cloudflare"
+        | "agent"
+        | "upload"
+        | "wpengine"
+        | "kinsta"
+        | "sftp"
+        | "aws"
+        | "vercel"
+        | "wordpress_plugin"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -8964,6 +9141,13 @@ export const Constants = {
         "archived",
         "deleted",
       ],
+      bot_category: [
+        "search_engine",
+        "ai_crawler",
+        "seo_tool",
+        "social",
+        "unknown",
+      ],
       cms_platform: [
         "wordpress",
         "shopify",
@@ -8979,6 +9163,17 @@ export const Constants = {
         "audit_tech",
         "audit_strategic",
         "cocoon",
+      ],
+      log_connector_type: [
+        "cloudflare",
+        "agent",
+        "upload",
+        "wpengine",
+        "kinsta",
+        "sftp",
+        "aws",
+        "vercel",
+        "wordpress_plugin",
       ],
       report_type: [
         "seo_technical",
