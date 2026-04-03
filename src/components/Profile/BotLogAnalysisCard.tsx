@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface BotLogAnalysisCardProps {
   trackedSiteId: string;
   domain: string;
+  simulatedDataEnabled?: boolean;
 }
 
 const translations = {
