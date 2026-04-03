@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, Unplug, MapPin } from 'lucide-react';
+import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, Unplug, MapPin, Server, Upload, Terminal, Globe, Cloud, HardDrive, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const translations = {
   fr: {
