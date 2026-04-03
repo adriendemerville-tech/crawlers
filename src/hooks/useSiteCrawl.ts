@@ -477,7 +477,7 @@ export function useSiteCrawl(language: string, translations: Record<string, stri
           anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
           custom_extraction: (p.custom_extraction && typeof p.custom_extraction === 'object' && !Array.isArray(p.custom_extraction)) ? p.custom_extraction : {},
         }));
-        setPages(sanitized as CrawlPage[]);
+        setPages(sanitized as unknown as CrawlPage[]);
       }
       setCrawlBacklinks((blData || []) as Record<string, unknown>[]);
     } catch {
