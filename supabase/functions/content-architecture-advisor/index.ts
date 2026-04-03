@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify(syncBody),
       }).catch(err => console.error('[content-advisor] Async self-invoke failed:', err))
 
-      console.log(`[content-advisor] Async job created: ${job.id} for ${keyword}@${domain}`)
+      console.log(`[content-advisor] Async job created: ${job.id} for ${keyword}@${extractDomain(url)}`)
       return new Response(JSON.stringify({ job_id: job.id, status: 'pending' }), {
         status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
