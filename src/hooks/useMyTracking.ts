@@ -562,7 +562,7 @@ export function useMyTracking() {
     }
     setRefreshingSites(prev => new Set(prev).add(site.id));
     const url = `https://${site.domain}`;
-    const rawAccumulator: Record<string, any> = {};
+    const rawAccumulator: Record<string, unknown> = {};
     let currentSeoScore: number | null = null;
     let currentGeoScore = 0;
     let currentCitationRate = 0;
