@@ -750,7 +750,7 @@ export function useMyTracking() {
     try {
       await supabase
         .from('tracked_sites')
-        .update({ current_config: site.previous_config, previous_config: {} } as any)
+        .update({ current_config: site.previous_config, previous_config: {} } as Record<string, unknown>)
         .eq('id', site.id)
         .eq('user_id', user.id);
       setSites(prev => prev.map(s =>
