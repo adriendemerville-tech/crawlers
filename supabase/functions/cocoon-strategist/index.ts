@@ -395,8 +395,8 @@ Deno.serve(async (req) => {
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics + strategic audit data + keyword cloud in parallel
-    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult] = await Promise.all([
+    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data in parallel
+    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -423,6 +423,16 @@ Deno.serve(async (req) => {
         .select('sample_keywords')
         .eq('tracked_site_id', tracked_site_id)
         .order('measured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Load latest EEAT audit data
+      supabase
+        .from('audit_raw_data')
+        .select('raw_payload, created_at')
+        .eq('domain', domain)
+        .eq('audit_type', 'eeat')
+        .eq('user_id', auth.userId)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
     ]);
