@@ -1052,6 +1052,75 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Log Connector Dialog */}
+      <Dialog open={logConnectorDialogOpen} onOpenChange={setLogConnectorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Server className="w-5 h-5" />
+              {selectedLogService?.name || 'Log Connector'}
+            </DialogTitle>
+            <DialogDescription className="text-sm pt-2">
+              {language === 'fr'
+                ? 'Sélectionnez le site à connecter pour l\'analyse des logs serveur.'
+                : language === 'es'
+                  ? 'Seleccione el sitio a conectar para el análisis de logs del servidor.'
+                  : 'Select the site to connect for server log analysis.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+              </label>
+              <select
+                value={logTrackedSiteId}
+                onChange={e => setLogTrackedSiteId(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">{language === 'fr' ? 'Sélectionner un site…' : 'Select a site…'}</option>
+                {trackedSites.map(s => (
+                  <option key={s.id} value={s.id}>{s.domain}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedLogService && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">
+                  {selectedLogService.description[language] || selectedLogService.description.fr}
+                </p>
+                {['agent', 'upload', 'wordpress_plugin'].includes(selectedLogService.type) && (
+                  <p>{language === 'fr' ? 'Une clé API sera générée et copiée automatiquement.' : 'An API key will be generated and copied automatically.'}</p>
+                )}
+                {['cloudflare', 'vercel'].includes(selectedLogService.type) && (
+                  <p>{language === 'fr' ? 'Configurez le webhook dans votre dashboard externe.' : 'Configure the webhook in your external dashboard.'}</p>
+                )}
+                {['wpengine', 'kinsta', 'sftp', 'aws'].includes(selectedLogService.type) && (
+                  <p>{language === 'fr' ? 'La synchronisation se fera automatiquement toutes les heures.' : 'Sync will happen automatically every hour.'}</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={handleLogConnectorCreate}
+              disabled={logConnectorLoading || !logTrackedSiteId}
+              className="w-full"
+            >
+              {logConnectorLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+              )}
+              {language === 'fr' ? 'Créer le connecteur' : language === 'es' ? 'Crear conector' : 'Create connector'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
