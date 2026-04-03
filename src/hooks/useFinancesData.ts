@@ -296,7 +296,12 @@ export function useFinancesData() {
 
       try {
         const [sizeRes, balanceRes, apiBalancesRes, browserlessRes] = await Promise.all([
-          supabase.rpc('get_database_size' as never),
+          supabase.rpc('get_database_size' as string),
+          supabase.functions.invoke('dataforseo-balance'),
+          supabase.functions.invoke('api-balances'),
+          supabase.functions.invoke('browserless-metrics'),
+        ]);
+        if ((sizeRes as { data?: unknown }).data) setDbSize((sizeRes as { data: { total_mb: number; total_gb: number } }).data);
           supabase.functions.invoke('dataforseo-balance'),
           supabase.functions.invoke('api-balances'),
           supabase.functions.invoke('browserless-metrics'),
