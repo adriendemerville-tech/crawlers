@@ -335,6 +335,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Network className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Cocon & Stratège ∞' : language === 'es' ? 'Cocon & Estratega ∞' : 'Cocoon & Strategist ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Content Architect : 150 pages créés inclus' : language === 'es' ? 'Content Architect: 150 páginas creadas incluidas' : 'Content Architect: 150 pages created included'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Crown className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'API Marina marque blanche complète' : language === 'es' ? 'API Marina marca blanca completa' : 'Marina API full white label'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? 'Analyse des logs' : language === 'es' ? 'Análisis de logs' : 'Log analysis'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
