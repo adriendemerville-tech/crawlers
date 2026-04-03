@@ -887,6 +887,7 @@ export function MyTracking() {
                       <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
                     )}
                   </div>
+                )}
               </div>
             </div>
           )}
