@@ -557,9 +557,19 @@ export function ParmenionDashboard() {
               </CardTitle>
               <CardDescription>Actions CMS effectuées sur iktracker.fr</CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchIkHistory}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+                const last24h = ikHistory.filter(ev => new Date(ev.created_at) >= new Date(Date.now() - 24 * 60 * 60 * 1000));
+                generateParmenionReport(last24h as any, autopilotConfig?.domain || 'iktracker.fr');
+                toast({ title: '📄 Rapport PDF téléchargé', description: `${last24h.length} action(s) sur les dernières 24h` });
+              }}>
+                <Download className="h-3.5 w-3.5" />
+                Rapport 24h
+              </Button>
+              <Button variant="ghost" size="icon" onClick={fetchIkHistory}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
