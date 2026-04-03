@@ -618,9 +618,9 @@ export function useMyTracking() {
       geo_score: Math.round(currentGeoScore),
       llm_citation_rate: currentCitationRate,
       ai_sentiment: currentSentiment,
-      semantic_authority: computedSemanticAuth,
+      semantic_authority: computedSemanticAuth as number | null,
       voice_share: currentCitationRate || null,
-      raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
+      raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore } as unknown as import('@/integrations/supabase/types').Json,
     });
     await fetchStats();
 
