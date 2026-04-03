@@ -303,7 +303,7 @@ export function useSiteCrawl(language: string, translations: Record<string, stri
               const crawlTasks = sanitizedResult.ai_recommendations.map((rec, i) => ({
                 id: `crawl_${sanitizedResult.id}_${i}`,
                 title: typeof rec === 'string' ? rec : ((rec as Record<string, string>)?.title || (rec as Record<string, string>)?.recommendation || (rec as Record<string, string>)?.text || `Recommandation ${i + 1}`),
-                priority: (typeof rec === 'object' && (rec as Record<string, string>)?.priority) || 'important' as const,
+                priority: ((typeof rec === 'object' && (rec as Record<string, string>)?.priority) || 'important') as 'critical' | 'important' | 'optional',
                 category: (typeof rec === 'object' && (rec as Record<string, string>)?.category) || 'crawl',
                 isCompleted: false,
               }));
