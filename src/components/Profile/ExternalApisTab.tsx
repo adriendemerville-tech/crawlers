@@ -360,6 +360,22 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
     checkGbpStatus();
   }, []);
 
+  // Check log connectors status
+  useEffect(() => {
+    const checkLogConnectors = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await (supabase as any)
+        .from('log_connectors')
+        .select('type')
+        .eq('user_id', user.id);
+      if (data && data.length > 0) {
+        setLogConnectedTypes(new Set(data.map((c: any) => c.type)));
+      }
+    };
+    checkLogConnectors();
+  }, [logConnectorDialogOpen]);
+
 
   const analyticsServices = services.filter(s => {
     if (s.category !== 'analytics') return false;
