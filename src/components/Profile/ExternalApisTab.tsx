@@ -824,7 +824,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           <CardDescription className="text-xs">{t.seoToolsDesc}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
               onClick={() => setRankMathDialogOpen(true)}
               className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
