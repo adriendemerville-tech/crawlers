@@ -1,0 +1,120 @@
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+interface IkAction {
+  id: string;
+  created_at: string;
+  event_data: Record<string, unknown>;
+}
+
+function extractActionDetails(ev: IkAction): { url: string; action: string; description: string; date: string; time: string } {
+  const ed = ev.event_data || {};
+  const pageKey = (ed.page_key as string) || '';
+  const action = (ed.action as string) || (ed.event_type as string) || 'action';
+  const domain = (ed.domain as string) || 'iktracker.fr';
+  const response = ed.response as Record<string, unknown> | undefined;
+  const message = (response?.result as any)?.data?.data?.message || (ed.message as string) || '';
+  const phase = (ed.pipeline_phase as string) || (ed.phase as string) || '';
+  const status = (ed.final_status as string) || (ed.downstream_status as string) || '';
+
+  // Build URL
+  const url = pageKey ? `https://${domain}/blog/${pageKey}` : `https://${domain}`;
+
+  // Build description
+  let desc = '';
+  if (typeof message === 'string' && message.length > 10) {
+    // Clean the message: take first sentence or first 120 chars
+    const cleaned = message.replace(/\[Cycle #\d+[^\]]*\]\s*/, '').replace(/\d+ phases — /, '');
+    desc = cleaned.length > 150 ? cleaned.slice(0, 147) + '…' : cleaned;
+  } else {
+    const parts: string[] = [];
+    if (action) parts.push(action);
+    if (phase) parts.push(`phase: ${phase}`);
+    if (status) parts.push(`statut: ${status}`);
+    if (pageKey) parts.push(`page: ${pageKey}`);
+    desc = parts.join(' · ');
+  }
+
+  // Parse date
+  const d = new Date(ev.created_at);
+  const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  // Determine action type label
+  let actionLabel = 'Modification';
+  const lowerAction = action.toLowerCase();
+  if (lowerAction.includes('create') || lowerAction.includes('push') || lowerAction.includes('post')) {
+    actionLabel = 'Ajout de page';
+  } else if (lowerAction.includes('delete') || lowerAction.includes('remove')) {
+    actionLabel = 'Suppression';
+  } else if (lowerAction.includes('update') || lowerAction.includes('patch')) {
+    actionLabel = 'Modification';
+  } else if (lowerAction.includes('push-event')) {
+    actionLabel = 'Événement CMS';
+  }
+
+  return { url, action: actionLabel, description: desc, date, time };
+}
+
+export function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  const now = new Date();
+  const reportDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const reportTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  // Header
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Rapport Parménion — Actions 24h', 14, 18);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Domaine : ${domain}  ·  Généré le ${reportDate} à ${reportTime}  ·  ${events.length} action(s)`, 14, 26);
+
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, 29, 283, 29);
+
+  if (events.length === 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Aucune action enregistrée sur les dernières 24 heures.', 14, 42);
+  } else {
+    const rows = events.map(ev => {
+      const { date, time, action, url, description } = extractActionDetails(ev);
+      return [date, time, action, url, description];
+    });
+
+    autoTable(doc, {
+      startY: 34,
+      head: [['Date', 'Heure', 'Action', 'URL', 'Description']],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+      headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 70, textColor: [30, 100, 180] },
+        4: { cellWidth: 'auto' },
+      },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      margin: { left: 14, right: 14 },
+      didDrawPage: (data) => {
+        // Footer on each page
+        const pageCount = doc.getNumberOfPages();
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+          `Parménion · Crawlers.fr — Page ${data.pageNumber} / ${pageCount}`,
+          14, doc.internal.pageSize.height - 8
+        );
+      },
+    });
+  }
+
+  // Save
+  const filename = `Parmenion_Rapport_24h_${domain}_${now.toISOString().slice(0, 10)}.pdf`;
+  doc.save(filename);
+}
