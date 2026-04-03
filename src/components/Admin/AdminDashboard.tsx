@@ -106,7 +106,7 @@ const adminTranslations = {
     users: 'Usuarios',
     blog: 'Blog',
     support: 'Soporte',
-    affiliates: 'Afiliación',
+    affiliates: 'Perks',
     technical: 'Técnico',
     crawls: 'Crawls',
     scripts: 'Scripts',
