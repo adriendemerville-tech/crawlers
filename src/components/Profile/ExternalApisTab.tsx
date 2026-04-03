@@ -213,6 +213,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [wpConnection, setWpConnection] = useState<{ id: string; site_url: string } | null>(null);
   const [rankMathConnected, setRankMathConnected] = useState(false);
   const [fullGoogleAccess, setFullGoogleAccess] = useState(false);
+  const [gadsConsentOpen, setGadsConsentOpen] = useState(false);
 
   // Google API connection states
   const [gscConnected, setGscConnected] = useState(false);
