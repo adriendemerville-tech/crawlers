@@ -140,7 +140,11 @@ function generateSimulatedData(startDate: Date, endDate: Date, interval: Interva
 
 export function BotLogChartCard({ domain }: BotLogChartCardProps) {
   const { language } = useLanguage();
+  const { isAgencyPremium } = useCredits();
+  const { isAdmin } = useAdmin();
   const t = translations[language as keyof typeof translations] || translations.fr;
+
+  const hasAccess = isAgencyPremium || isAdmin;
 
   const defaultEnd = new Date();
   const defaultStart = new Date();
