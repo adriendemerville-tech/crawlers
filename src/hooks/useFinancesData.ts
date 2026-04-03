@@ -301,7 +301,7 @@ export function useFinancesData() {
           supabase.functions.invoke('browserless-metrics'),
         ]);
         try {
-          const sizeRes = await supabase.rpc('get_database_size' as string);
+          const sizeRes = await (supabase.rpc as Function)('get_database_size');
           if (sizeRes.data) setDbSize(sizeRes.data as unknown as { total_mb: number; total_gb: number });
         } catch { /* ignore */ }
         if (balanceRes.data && !balanceRes.error) setDataforseoBalance(balanceRes.data as DataforseoBalance);
