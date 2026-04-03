@@ -241,8 +241,9 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [logConnectorLoading, setLogConnectorLoading] = useState(false);
   const [logTrackedSiteId, setLogTrackedSiteId] = useState('');
 
-  // Check if user has Pro Agency+ plan
-  const isPremium = profile?.plan_type === 'agency_premium' || profile?.plan_type === 'agency_pro';
+  const { isAdmin } = useAdmin();
+  // Check if user has Pro Agency+ plan (admin = premium)
+  const isPremium = isAdmin || profile?.plan_type === 'agency_premium' || profile?.plan_type === 'agency_pro';
 
   // Check GSC/GA4/Ads/CMS connection status
   useEffect(() => {
