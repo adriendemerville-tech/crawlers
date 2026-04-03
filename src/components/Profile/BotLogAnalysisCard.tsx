@@ -91,12 +91,30 @@ function generateSimulatedData(days: number) {
   return data;
 }
 
-export function BotLogAnalysisCard({ trackedSiteId, domain }: BotLogAnalysisCardProps) {
+export function BotLogAnalysisCard({ trackedSiteId, domain, simulatedDataEnabled = true }: BotLogAnalysisCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [period, setPeriod] = useState('28');
 
-  const chartData = useMemo(() => generateSimulatedData(parseInt(period)), [period]);
+  const chartData = useMemo(() => simulatedDataEnabled ? generateSimulatedData(parseInt(period)) : [], [period, simulatedDataEnabled]);
+
+  if (!simulatedDataEnabled) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold text-muted-foreground">{t.title}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">
+            {language === 'fr' ? 'Connectez vos logs serveur pour visualiser l\'activité des bots.' : 'Connect your server logs to visualize bot activity.'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const totals = useMemo(() => {
     const sums = chartData.reduce(

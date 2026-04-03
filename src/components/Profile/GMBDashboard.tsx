@@ -697,13 +697,14 @@ function SortableLocationItem({ loc, isSelected, onSelect }: {
 
 // ─── Main Component ────────────────────────────────────────────
 
-export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
+export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: { isGated?: boolean; simulatedDataEnabled?: boolean }) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [activeTab, setActiveTab] = useState('stats');
-  // Gated users always see simulated data; Pro users start empty until GBP check
-  const [orderedLocations, setOrderedLocations] = useState(isGated ? SIMULATED_LOCATIONS : []);
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(isGated ? (SIMULATED_LOCATIONS[0]?.id || null) : null);
+  // Show simulated data when: gated users always, OR simulatedDataEnabled is on and not connected
+  const showSimulated = isGated || simulatedDataEnabled;
+  const [orderedLocations, setOrderedLocations] = useState(showSimulated ? SIMULATED_LOCATIONS : []);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(showSimulated ? (SIMULATED_LOCATIONS[0]?.id || null) : null);
   const [gbpConnected, setGbpConnected] = useState(false);
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
   const [gbpLoading, setGbpLoading] = useState(false);
