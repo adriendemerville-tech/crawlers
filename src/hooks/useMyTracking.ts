@@ -774,7 +774,7 @@ export function useMyTracking() {
       const newDisabled = isOn;
       const config = (currentSite.current_config as Record<string, unknown>) || {};
       const updated = { ...config, iktracker_disabled: newDisabled };
-      if (!newDisabled) delete (updated as any).iktracker_disabled;
+      if (!newDisabled) delete (updated as Record<string, unknown>).iktracker_disabled;
       await supabase
         .from('tracked_sites')
         .update({ current_config: updated })
