@@ -905,6 +905,9 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         </Card>
       )}
 
+
+
+
       {/* CMS Connection Dialog */}
       <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} cmsType={cmsDialogType} />
 
