@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface BotLogAnalysisCardProps {
   trackedSiteId: string;
   domain: string;
+  simulatedDataEnabled?: boolean;
 }
 
 const translations = {
@@ -90,12 +91,12 @@ function generateSimulatedData(days: number) {
   return data;
 }
 
-export function BotLogAnalysisCard({ trackedSiteId, domain }: BotLogAnalysisCardProps) {
+export function BotLogAnalysisCard({ trackedSiteId, domain, simulatedDataEnabled = true }: BotLogAnalysisCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [period, setPeriod] = useState('28');
 
-  const chartData = useMemo(() => generateSimulatedData(parseInt(period)), [period]);
+  const chartData = useMemo(() => simulatedDataEnabled ? generateSimulatedData(parseInt(period)) : [], [period, simulatedDataEnabled]);
 
   const totals = useMemo(() => {
     const sums = chartData.reduce(
@@ -109,8 +110,6 @@ export function BotLogAnalysisCard({ trackedSiteId, domain }: BotLogAnalysisCard
     );
     const total = sums.searchEngines + sums.aiBots + sums.seoTools + sums.socialBots;
     const aiPct = total > 0 ? Math.round((sums.aiBots / total) * 100) : 0;
-
-    // Find top bot
     const bots = [
       { name: 'Googlebot', count: Math.round(sums.searchEngines * 0.65) },
       { name: 'Bytespider', count: Math.round(sums.aiBots * 0.55) },
@@ -119,14 +118,26 @@ export function BotLogAnalysisCard({ trackedSiteId, domain }: BotLogAnalysisCard
       { name: 'Bingbot', count: Math.round(sums.searchEngines * 0.2) },
     ];
     const topBot = bots.sort((a, b) => b.count - a.count)[0];
-
-    return {
-      total,
-      activeBots: 26,
-      topBot,
-      aiPct,
-    };
+    return { total, activeBots: 26, topBot, aiPct };
   }, [chartData]);
+
+  if (!simulatedDataEnabled) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold text-muted-foreground">{t.title}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">
+            {language === 'fr' ? 'Connectez vos logs serveur pour visualiser l\'activité des bots.' : 'Connect your server logs to visualize bot activity.'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const kpis = [
     { label: t.totalRequests, value: totals.total.toLocaleString(), icon: Activity },
