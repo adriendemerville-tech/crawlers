@@ -144,8 +144,66 @@ const services: ServiceButton[] = [
 
 const RANK_MATH_LOGO = `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#E44B36" d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.18L18.82 7.5 12 10.82 5.18 7.5 12 4.18zM5 8.82l6 3.33v7.03l-6-3.33V8.82zm8 10.36v-7.03l6-3.33v7.03l-6 3.33z"/></svg>`;
 
+// Log connector services
+interface LogServiceButton {
+  id: string;
+  type: 'cloudflare' | 'agent' | 'upload' | 'wpengine' | 'kinsta' | 'sftp' | 'aws' | 'vercel' | 'wordpress_plugin';
+  name: string;
+  logoSvg: string;
+  description: { fr: string; en: string; es: string };
+}
+
+const logServices: LogServiceButton[] = [
+  {
+    id: 'log-cloudflare', type: 'cloudflare', name: 'Cloudflare',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#F6821F" d="M16.51 15.86l.62-2.14c.12-.42.07-.81-.15-1.1-.2-.26-.52-.42-.88-.44l-8.73-.12c-.07 0-.12-.03-.15-.08-.03-.05-.03-.11 0-.16.04-.08.11-.14.2-.15l8.82-.12c.87-.04 1.8-.75 2.12-1.64l.41-1.13c.03-.07.03-.15.01-.22A5.5 5.5 0 0013.5 5 5.49 5.49 0 008.24 8.5a3.42 3.42 0 00-5.37 3.35A4.24 4.24 0 004.25 20h12a2.13 2.13 0 002.09-1.73l.23-.8c.07-.24.05-.46-.06-.61z"/><path fill="#FBAD41" d="M18.61 11.27c-.05 0-.1 0-.16.01l-.11-.38c-.12-.42-.5-.72-.94-.74l-1.18-.02c-.07 0-.12-.03-.15-.08-.03-.05-.03-.11 0-.16.04-.08.11-.14.2-.15l1.24-.02c.41-.02.85-.35 1-.76l.18-.5c.01-.04.02-.08.01-.12A3.3 3.3 0 0015.5 7a3.3 3.3 0 00-3.06 2.07h.01c.3.28.52.63.64 1.03l.49 1.7c.07.24.05.46-.06.61-.1.15-.27.24-.46.25l-8.74.12c-.01 0-.03 0-.04.01A4.24 4.24 0 004.25 20H18.6a2.4 2.4 0 100-4.8 2.4 2.4 0 000-3.93z"/></svg>`,
+    description: { fr: 'Webhook Logpush', en: 'Logpush Webhook', es: 'Webhook Logpush' },
+  },
+  {
+    id: 'log-wpengine', type: 'wpengine', name: 'WP Engine',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#0ECAD4" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-11l4 3-4 3V9z"/></svg>`,
+    description: { fr: 'Sync API horaire', en: 'Hourly API sync', es: 'Sync API por hora' },
+  },
+  {
+    id: 'log-kinsta', type: 'kinsta', name: 'Kinsta',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#5333ED" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15a5 5 0 110-10 5 5 0 010 10z"/></svg>`,
+    description: { fr: 'Sync API horaire', en: 'Hourly API sync', es: 'Sync API por hora' },
+  },
+  {
+    id: 'log-sftp', type: 'sftp', name: 'SFTP / SSH',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#607D8B" d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/><path fill="#607D8B" d="M7 8l2.5 2L7 12v-1.5L8.5 10 7 9.5V8zm5 4h4v1h-4v-1z"/></svg>`,
+    description: { fr: 'OVH, o2switch, Infomaniak…', en: 'OVH, o2switch, Infomaniak…', es: 'OVH, o2switch, Infomaniak…' },
+  },
+  {
+    id: 'log-aws', type: 'aws', name: 'AWS CloudFront',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#FF9900" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path fill="#FF9900" d="M8 11h8v2H8z"/><path fill="#232F3E" d="M12 7l-4 4h3v4h2v-4h3l-4-4z"/></svg>`,
+    description: { fr: 'Logs S3 CloudFront', en: 'CloudFront S3 Logs', es: 'Logs S3 CloudFront' },
+  },
+  {
+    id: 'log-vercel', type: 'vercel', name: 'Vercel',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M12 2L2 19.5h20L12 2z"/></svg>`,
+    description: { fr: 'Webhook Log Drain', en: 'Log Drain Webhook', es: 'Webhook Log Drain' },
+  },
+  {
+    id: 'log-wordpress', type: 'wordpress_plugin', name: 'Plugin WordPress',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#21759B" d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1.246 15.172L6.25 7.588A8.033 8.033 0 0112 4.028c1.676 0 3.234.514 4.524 1.392l-.532.472A7.963 7.963 0 0012 4.028c-1.907 0-3.657.67-5.032 1.784l4.77 13.846L12 19.44l-.754.268-.492-.536z"/></svg>`,
+    description: { fr: 'Capture bots PHP', en: 'PHP Bot Capture', es: 'Captura bots PHP' },
+  },
+  {
+    id: 'log-agent', type: 'agent', name: 'Agent Bash',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4CAF50" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM7 15l-2-2 2-2 1.41 1.41L7.83 13l.58.59L7 15zm4.59 1L10 16l4-8 1.59 0-4 8zM17 15l-1.41-1.41.58-.59-.58-.59L17 11l2 2-2 2z"/></svg>`,
+    description: { fr: 'Script tail -F', en: 'tail -F script', es: 'Script tail -F' },
+  },
+  {
+    id: 'log-upload', type: 'upload', name: 'Upload fichier',
+    logoSvg: `<svg viewBox="0 0 24 24" width="28" height="28"><path fill="#2196F3" d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15.01l1.41 1.41L11 14.84V19h2v-4.16l1.59 1.59L16 15.01 12.01 11 8 15.01z"/></svg>`,
+    description: { fr: 'access.log manuel', en: 'Manual access.log', es: 'access.log manual' },
+  },
+];
+
 export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (hasAny: boolean) => void } = {}) {
   const { language } = useLanguage();
+  const { profile } = useAuth();
   const t = translations[language] || translations.fr;
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
@@ -173,6 +231,16 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [matomoConnected, setMatomoConnected] = useState(false);
   const [matomoForm, setMatomoForm] = useState({ matomo_url: '', token_auth: '', site_id: '', tracked_site_id: '' });
   const [trackedSites, setTrackedSites] = useState<{ id: string; domain: string }[]>([]);
+
+  // Log connectors state
+  const [logConnectedTypes, setLogConnectedTypes] = useState<Set<string>>(new Set());
+  const [logConnectorDialogOpen, setLogConnectorDialogOpen] = useState(false);
+  const [selectedLogService, setSelectedLogService] = useState<LogServiceButton | null>(null);
+  const [logConnectorLoading, setLogConnectorLoading] = useState(false);
+  const [logTrackedSiteId, setLogTrackedSiteId] = useState('');
+
+  // Check if user has Pro Agency+ plan
+  const isPremium = profile?.plan_type === 'agency_premium' || profile?.plan_type === 'agency_pro';
 
   // Check GSC/GA4/Ads/CMS connection status
   useEffect(() => {
