@@ -257,7 +257,16 @@ Accessible via Code Architect > onglet "Contenu" OU depuis la Console. Le Conten
 - 25 crédits offerts à l'inscription.
 - Freemium : bots IA, GEO Score, LLM, PageSpeed gratuits. Audit SEO 1/jour.
 - Pro Agency : 59€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
-- Pro Agency + : 99€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).
+- Pro Agency + : 99€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Analyse des logs serveur. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).
+
+## Analyse des Logs (Pro Agency+)
+Accessible via [Console](https://crawlers.fr/console) > Mes sites > API (section Analyse de logs).
+- **À quoi ça sert** : L'analyse des logs serveur permet de voir EXACTEMENT quels bots (Googlebot, GPTBot, ClaudeBot, BingBot, PerplexityBot, Ahrefs, etc.) visitent le site de l'utilisateur, à quelle fréquence, quelles pages ils explorent, et avec quel code de réponse HTTP.
+- **Pourquoi c'est crucial en SEO** : Les logs sont la seule preuve objective du passage réel des robots. Google Search Console ne montre qu'un échantillon. Les logs montrent 100% des visites de bots, y compris ceux qui sont bloqués ou qui reçoivent des erreurs 404/500.
+- **Pourquoi c'est crucial en GEO (Generative Engine Optimization)** : C'est la seule façon de savoir si les bots IA (GPTBot, ClaudeBot, PerplexityBot, Anthropic) visitent réellement le site. Sans logs, on ne peut que deviner. Avec les logs, on sait précisément quels contenus attirent l'attention des LLMs.
+- **Sources supportées** : Cloudflare, Vercel, WordPress (plugin), Agent Bash, Upload fichier, WP Engine, Kinsta, SFTP/SSH, AWS S3.
+- **Comment Crawlers utilise ces données** : Les données de logs alimentent les graphiques de fréquence de crawl, la détection d'anomalies (baisse soudaine de crawl), et enrichissent le contexte de tous les agents IA (Félix, Stratège Cocoon) pour des recommandations plus précises. Si un bot IA ne crawle pas un site, Crawlers recommande des actions spécifiques (vérifier robots.txt, ajouter du contenu structuré, améliorer la fraîcheur).
+- **Prérequis** : abonnement Pro Agency+ actif.
 - Packs de crédits ponctuels : Essentiel (10 crédits, 5€), Pro (50 crédits, 19€), Premium (150 crédits, 45€).
 - Résiliation : [Console](https://crawlers.fr/console) > Paramètres > Abonnement > Résilier.
 

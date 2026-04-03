@@ -139,6 +139,11 @@ export async function getDomainContext(
       .in('audit_type', ['strategic', 'strategique'])
       .order('created_at', { ascending: false })
       .limit(1),
+    // 12: bot log analysis (last 7 days aggregated)
+    supabase
+      .rpc('get_bot_log_summary', { p_tracked_site_id: trackedSiteId })
+      .then((res: any) => res)
+      .catch(() => ({ data: null })),
   ];
 
   // Optional: diagnostics
