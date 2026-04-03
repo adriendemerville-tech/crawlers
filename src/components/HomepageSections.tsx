@@ -375,8 +375,8 @@ const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'BotRank', 'Mete
 const HybridSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
-  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7];
-  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false];
+  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7, t.row8];
+  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false, false];
   const lang = language as 'fr' | 'en' | 'es';
 
   return (
