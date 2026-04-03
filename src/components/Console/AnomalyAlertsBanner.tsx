@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AnomalyAlert {
@@ -16,16 +16,10 @@ interface AnomalyAlert {
   affected_pages: number;
 }
 
-interface GscNewsItem {
-  id: string;
-  type: 'gsc';
-  title: string;
-  description: string;
-  severity: string;
-}
-
 interface AnomalyAlertsBannerProps {
   trackedSiteId: string | null;
+  domain?: string;
+  simulatedDataEnabled?: boolean;
 }
 
 const severityConfig: Record<string, { bg: string; border: string; icon: any; text: string }> = {
@@ -34,20 +28,54 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
   danger: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
   info: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: TrendingUp, text: 'text-blue-400' },
   gsc: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', icon: Search, text: 'text-indigo-400' },
+  ga4_up: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: TrendingUp, text: 'text-emerald-400' },
+  ga4_down: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
 };
 
-function buildGscNews(trackedSiteId: string): GscNewsItem[] {
-  // Simulated GSC news — will be replaced by real GSC data
+const GA4_SIMULATED = [
+  { page: '/guide-seo-2025', delta: +34, metric: 'sessions' },
+  { page: '/audit-technique', delta: +18, metric: 'users' },
+  { page: '/blog/core-web-vitals', delta: -12, metric: 'sessions' },
+  { page: '/tarifs', delta: +52, metric: 'conversions' },
+  { page: '/contact', delta: -8, metric: 'bounce_rate' },
+  { page: '/blog/netlinking-guide', delta: +27, metric: 'sessions' },
+  { page: '/outil-crawl', delta: +41, metric: 'users' },
+  { page: '/faq', delta: -5, metric: 'sessions' },
+];
+
+const METRIC_LABELS: Record<string, string> = {
+  sessions: 'sessions',
+  users: 'utilisateurs',
+  conversions: 'conversions',
+  bounce_rate: 'taux de rebond',
+};
+
+function buildGscNews(): { id: string; title: string; desc: string; severity: string }[] {
   return [
-    { id: 'gsc-1', type: 'gsc', title: 'GSC · Couverture', description: 'Nouvelles pages indexées détectées cette semaine', severity: 'gsc' },
-    { id: 'gsc-2', type: 'gsc', title: 'GSC · Performance', description: 'CTR moyen en hausse de 0.3% sur 7 jours', severity: 'gsc' },
-    { id: 'gsc-3', type: 'gsc', title: 'GSC · Erreurs', description: '2 nouvelles erreurs 404 détectées par Googlebot', severity: 'warning' },
+    { id: 'gsc-1', title: 'GSC · Couverture', desc: 'Nouvelles pages indexées détectées cette semaine', severity: 'gsc' },
+    { id: 'gsc-2', title: 'GSC · Performance', desc: 'CTR moyen en hausse de 0.3% sur 7 jours', severity: 'gsc' },
+    { id: 'gsc-3', title: 'GSC · Erreurs', desc: '2 nouvelles erreurs 404 détectées par Googlebot', severity: 'warning' },
   ];
 }
 
-export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps) {
+function buildGa4Items(): { id: string; title: string; desc: string; severity: string }[] {
+  return GA4_SIMULATED.map((a, i) => {
+    const isUp = a.delta > 0;
+    const sign = isUp ? '+' : '';
+    const label = METRIC_LABELS[a.metric] || a.metric;
+    return {
+      id: `ga4-${i}`,
+      title: `GA4 · ${a.page}`,
+      desc: `${sign}${a.delta}% ${label}`,
+      severity: isUp ? 'ga4_up' : 'ga4_down',
+    };
+  });
+}
+
+type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
+
+export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnabled }: AnomalyAlertsBannerProps) {
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
-  const [gscNews] = useState<GscNewsItem[]>(trackedSiteId ? buildGscNews(trackedSiteId) : []);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [hidden, setHidden] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -69,20 +97,18 @@ export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps)
     fetchAlerts();
   }, [trackedSiteId]);
 
-  // Auto-scroll animation — slower speed
+  // Auto-scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || paused || hidden) {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       return;
     }
-    const speed = 0.25; // slower
+    const speed = 0.25;
     const step = () => {
       if (!el) return;
       el.scrollLeft += speed;
-      if (el.scrollLeft >= el.scrollWidth / 2) {
-        el.scrollLeft = 0;
-      }
+      if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft = 0;
       animRef.current = requestAnimationFrame(step);
     };
     animRef.current = requestAnimationFrame(step);
@@ -91,18 +117,31 @@ export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps)
 
   const handleDismiss = async (id: string) => {
     setDismissed(prev => new Set([...prev, id]));
-    if (!id.startsWith('gsc-')) {
-      await supabase
-        .from('anomaly_alerts')
-        .update({ is_dismissed: true } as any)
-        .eq('id', id);
+    if (!id.startsWith('gsc-') && !id.startsWith('ga4-')) {
+      await supabase.from('anomaly_alerts').update({ is_dismissed: true } as any).eq('id', id);
     }
   };
 
-  const visibleAlerts = alerts.filter(a => !dismissed.has(a.id));
-  const visibleGsc = gscNews.filter(g => !dismissed.has(g.id));
+  // Build unified ticker items
+  const gscItems = trackedSiteId ? buildGscNews() : [];
+  const ga4Items = simulatedDataEnabled ? buildGa4Items() : [];
 
-  if (visibleAlerts.length === 0 && visibleGsc.length === 0) return null;
+  const tickerItems: TickerItem[] = [
+    ...alerts.filter(a => !dismissed.has(a.id)).map(a => {
+      const c = severityConfig[a.severity] || severityConfig.info;
+      return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
+    }),
+    ...gscItems.filter(g => !dismissed.has(g.id)).map(g => {
+      const c = severityConfig[g.severity] || severityConfig.gsc;
+      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
+    }),
+    ...ga4Items.filter(g => !dismissed.has(g.id)).map(g => {
+      const c = severityConfig[g.severity] || severityConfig.ga4_up;
+      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
+    }),
+  ];
+
+  if (tickerItems.length === 0) return null;
 
   if (hidden) {
     return (
@@ -112,30 +151,16 @@ export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps)
           className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md border border-border/50 bg-muted/30"
         >
           <ChevronDown className="w-3 h-3" />
-          {visibleAlerts.length + visibleGsc.length} alerte{(visibleAlerts.length + visibleGsc.length) > 1 ? 's' : ''}
+          {tickerItems.length} alerte{tickerItems.length > 1 ? 's' : ''}
         </button>
       </div>
     );
   }
 
-  // Build unified items for the ticker
-  type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
-  const tickerItems: TickerItem[] = [
-    ...visibleAlerts.map(a => {
-      const c = severityConfig[a.severity] || severityConfig.info;
-      return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
-    }),
-    ...visibleGsc.map(g => {
-      const c = severityConfig[g.severity] || severityConfig.gsc;
-      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.description };
-    }),
-  ];
-
   const loopItems = [...tickerItems, ...tickerItems];
 
   return (
     <div className="w-full mb-4 space-y-1">
-      {/* Controls */}
       <div className="flex items-center justify-end gap-1">
         <button
           onClick={() => setHidden(true)}
@@ -146,16 +171,12 @@ export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps)
         </button>
       </div>
 
-      {/* Scrolling ticker — click to pause/play */}
       <div
         className="w-full overflow-hidden cursor-pointer"
         onClick={() => setPaused(p => !p)}
         title={paused ? 'Cliquer pour reprendre' : 'Cliquer pour mettre en pause'}
       >
-        <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-x-hidden pb-1"
-        >
+        <div ref={scrollRef} className="flex gap-3 overflow-x-hidden pb-1">
           {loopItems.map((item, idx) => {
             const Icon = item.icon;
             return (
@@ -184,7 +205,6 @@ export function AnomalyAlertsBanner({ trackedSiteId }: AnomalyAlertsBannerProps)
         </div>
       </div>
 
-      {/* Pause indicator */}
       {paused && (
         <p className="text-[10px] text-muted-foreground text-center animate-pulse">⏸ En pause — cliquer pour reprendre</p>
       )}
