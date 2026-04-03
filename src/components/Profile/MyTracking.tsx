@@ -884,7 +884,7 @@ export function MyTracking() {
 
                     {/* Bot Log Analysis (Pro Agency+) */}
                     {h.isAgencyPro && (
-                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} simulatedDataEnabled={h.simulatedDataEnabled} />
                     )}
                   </div>
                 )}
