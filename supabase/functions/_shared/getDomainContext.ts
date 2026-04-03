@@ -29,7 +29,7 @@ export async function getDomainContext(
   supabase: any,
   domain: string,
   trackedSiteId: string,
-  options?: { includeDiagnostics?: boolean; includeRecos?: boolean; maxPages?: number }
+  options?: { includeDiagnostics?: boolean; includeRecos?: boolean; maxPages?: number; userId?: string }
 ): Promise<DomainContextResult> {
   const normalizedDomain = domain
     .replace(/^https?:\/\//, '')
