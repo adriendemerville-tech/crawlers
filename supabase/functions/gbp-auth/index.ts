@@ -239,11 +239,13 @@ Deno.serve(async (req) => {
       }
 
       // Log event
-      await supabase.from('analytics_events').insert({
-        user_id,
-        event_type: 'gbp:disconnect',
-        event_data: { deleted_count: gbpConns?.length || 0 },
-      }).catch(() => {})
+      try {
+        await supabase.from('analytics_events').insert({
+          user_id,
+          event_type: 'gbp:disconnect',
+          event_data: { deleted_count: gbpConns?.length || 0 },
+        })
+      } catch (_) { /* best effort */ }
 
       return new Response(JSON.stringify({ success: true, deleted: gbpConns?.length || 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
