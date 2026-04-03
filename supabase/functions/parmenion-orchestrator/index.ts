@@ -27,11 +27,11 @@ const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'
 type PipelinePhase = typeof PIPELINE_PHASES[number];
 
 const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
-  audit: ['audit-expert-seo'],
+  audit: ['audit-expert-seo', 'check-eeat', 'audit-strategique-ia', 'multi-page-crawl'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
   execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'cms-push-code', 'cms-patch-content', 'cms-push-redirect', 'generate-corrective-code'],
-  validate: ['audit-expert-seo', 'cocoon-diag-content'],
+  validate: ['audit-expert-seo', 'cocoon-diag-content', 'check-eeat'],
 };
 
 function isIktrackerDomain(domain: string): boolean {

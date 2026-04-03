@@ -864,6 +864,28 @@ ${alertBlock}\n`;
             contextSnippet += `  Scripts ${s.domain}: ${applied}/${scripts.length} recommandations appliquées\n`;
           }
 
+          // EEAT audit data
+          const { data: eeatAudit } = await sb
+            .from("audit_raw_data")
+            .select("raw_payload, created_at")
+            .eq("domain", s.domain)
+            .eq("audit_type", "eeat")
+            .eq("user_id", siteOwnerId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (eeatAudit?.raw_payload) {
+            const ep = eeatAudit.raw_payload as any;
+            contextSnippet += `  E-E-A-T ${s.domain} (${eeatAudit.created_at?.slice(0, 10)}): score ${ep.score}/100 — Exp: ${ep.experience}, Expert: ${ep.expertise}, Auth: ${ep.authoritativeness}, Trust: ${ep.trustworthiness}\n`;
+            if (ep.issues?.length) {
+              contextSnippet += `    Problèmes E-E-A-T: ${ep.issues.slice(0, 3).join('; ')}\n`;
+            }
+            if (ep.strengths?.length) {
+              contextSnippet += `    Forces E-E-A-T: ${ep.strengths.slice(0, 3).join('; ')}\n`;
+            }
+          }
+
           // GSC connection check
           const { data: gsc } = await sb
             .from("gsc_history_log")

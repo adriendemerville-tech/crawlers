@@ -60,7 +60,36 @@ Deno.serve(async (req) => {
         const { data: jobRecord } = await supabase.from('async_jobs').select('user_id').eq('id', _job_id).maybeSingle();
         const workerUserId = _user_id || jobRecord?.user_id || null;
 
-        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, jobId, !!forceCrawl, workerUserId);
+        const result = await runEeatPipeline(supabase, domain, targetUrl, tracked_site_id, _job_id, !!forceCrawl, workerUserId);
+
+        // ── Persist EEAT results in audit_raw_data for agent access (Félix, Stratège, Cocoon) ──
+        try {
+          await supabase.from('audit_raw_data').insert({
+            url: targetUrl,
+            domain: domain,
+            audit_type: 'eeat',
+            user_id: workerUserId || null,
+            source_functions: ['check-eeat'],
+            raw_payload: {
+              score: result.score,
+              experience: result.experience,
+              expertise: result.expertise,
+              authoritativeness: result.authoritativeness,
+              trustworthiness: result.trustworthiness,
+              signals: result.signals,
+              issues: result.issues,
+              strengths: result.strengths,
+              recommendations: result.recommendations,
+              backlinkData: result.backlinkData,
+              gbpData: result.gbpData,
+              crawlInfo: result.crawlInfo,
+              dataSources: result.dataSources,
+            },
+          });
+          console.log(`[check-eeat] 📦 EEAT data persisted in audit_raw_data for ${domain}`);
+        } catch (persistErr) {
+          console.warn(`[check-eeat] ⚠️ Failed to persist EEAT in audit_raw_data:`, persistErr);
+        }
 
         await supabase.from('async_jobs').update({
           status: 'completed',
