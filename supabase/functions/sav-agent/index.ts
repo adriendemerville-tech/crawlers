@@ -804,14 +804,15 @@ ${alertBlock}\n`;
           }
         }
 
-        // For each site, fetch latest audit & crawl info
+        // For each site, fetch latest audit & crawl info (use s.user_id for proper data isolation)
         for (const s of sites.slice(0, 5)) {
+          const siteOwnerId = s.user_id || user_id;
           // Latest audit
           const { data: audits } = await sb
             .from("audit_raw_data")
             .select("audit_type, created_at")
             .eq("domain", s.domain)
-            .eq("user_id", user_id)
+            .eq("user_id", siteOwnerId)
             .order("created_at", { ascending: false })
             .limit(3);
 
