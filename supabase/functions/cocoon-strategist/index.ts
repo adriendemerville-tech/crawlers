@@ -659,6 +659,43 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 2c-bis: Inject EEAT audit data into findings
+    // ═══════════════════════════════════════════════════════════
+    const eeatPayload = (eeatAuditResult as any)?.data?.raw_payload;
+    if (eeatPayload) {
+      console.log(`[strategist] 🏅 EEAT data loaded: score ${eeatPayload.score}/100`);
+      if (eeatPayload.score < 60) {
+        allFindings.push({
+          category: 'eeat_signals',
+          severity: eeatPayload.score < 30 ? 'critical' : 'warning',
+          description: `Score E-E-A-T: ${eeatPayload.score}/100. Experience: ${eeatPayload.experience}, Expertise: ${eeatPayload.expertise}, Authoritativeness: ${eeatPayload.authoritativeness}, Trustworthiness: ${eeatPayload.trustworthiness}. Problèmes: ${(eeatPayload.issues || []).slice(0, 5).join('; ')}`,
+          affected_urls: [],
+          source_type: 'eeat_audit',
+          data: {
+            score: eeatPayload.score,
+            experience: eeatPayload.experience,
+            expertise: eeatPayload.expertise,
+            authoritativeness: eeatPayload.authoritativeness,
+            trustworthiness: eeatPayload.trustworthiness,
+            issues: eeatPayload.issues,
+            strengths: eeatPayload.strengths,
+            recommendations: eeatPayload.recommendations,
+            signals: eeatPayload.signals,
+          },
+        });
+      }
+      for (const f of allFindings) {
+        if (f.data) {
+          f.data.eeat_context = {
+            score: eeatPayload.score,
+            weakest_pillar: ['experience', 'expertise', 'authoritativeness', 'trustworthiness']
+              .reduce((min, p) => (eeatPayload[p] < eeatPayload[min] ? p : min), 'experience'),
+          };
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 2c: Inject keyword cloud as reference universe
     // ═══════════════════════════════════════════════════════════
     if (keywordCloud.length > 0) {
