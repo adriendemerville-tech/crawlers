@@ -253,7 +253,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       const { data: profile } = await supabase
         .from('profiles')
         .select('gsc_refresh_token, ga4_property_id')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
       if (profile) {
         setGscConnected(!!profile.gsc_refresh_token);
