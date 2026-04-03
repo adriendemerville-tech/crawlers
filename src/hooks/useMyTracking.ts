@@ -732,7 +732,7 @@ export function useMyTracking() {
   };
 
   // ─── Remove site ───
-  const handleRemoveSite = async (siteId: string, t: any) => {
+  const handleRemoveSite = async (siteId: string, t: Record<string, string>) => {
     await supabase.from('tracked_sites').delete().eq('id', siteId);
     setSites(prev => prev.filter(s => s.id !== siteId));
     if (selectedSite === siteId) {
