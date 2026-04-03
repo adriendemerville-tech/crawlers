@@ -31,6 +31,7 @@ import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
 import { AutopilotModal } from '@/components/Profile/AutopilotModal';
 import { AutopilotModificationRegistry } from '@/components/Profile/AutopilotModificationRegistry';
+import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -880,6 +881,11 @@ export function MyTracking() {
                       }}
                       isRefreshing={h.refreshingSerp}
                     />
+
+                    {/* Bot Log Analysis (Pro Agency+) */}
+                    {h.isAgencyPro && (
+                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                    )}
                   </div>
                 )}
               </div>
