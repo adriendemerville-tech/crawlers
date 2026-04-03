@@ -849,6 +849,62 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         </Card>
       )}
 
+      {/* Log Analysis — Pro Agency+ */}
+      {isPremium && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Server className="w-4 h-4" />
+              {language === 'fr' ? 'Analyse des logs' : language === 'es' ? 'Análisis de logs' : 'Log Analysis'}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {language === 'fr'
+                ? 'Connectez vos sources de logs serveur pour analyser l\'activité des bots et le budget de crawl.'
+                : language === 'es'
+                  ? 'Conecte sus fuentes de logs del servidor para analizar la actividad de bots y el presupuesto de crawl.'
+                  : 'Connect your server log sources to analyze bot activity and crawl budget.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {logServices.map(service => {
+                const isActive = logConnectedTypes.has(service.type);
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => handleLogServiceClick(service)}
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                      isActive
+                        ? 'border-emerald-500/40 bg-emerald-500/5'
+                        : 'border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                      dangerouslySetInnerHTML={{ __html: service.logoSvg }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{service.name}</span>
+                        {isActive && (
+                          <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            {t.connected}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground mt-0.5 block">
+                        {service.description[language] || service.description.fr}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
 
 
