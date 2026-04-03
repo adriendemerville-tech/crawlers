@@ -120,6 +120,10 @@ export default {
           "0%, 100%": { boxShadow: "0 0 8px 2px rgba(16,185,129,0.2)" },
           "50%": { boxShadow: "0 0 18px 5px rgba(16,185,129,0.35), 0 0 36px 8px rgba(16,185,129,0.15)" },
         },
+        "marquee": {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -130,6 +134,7 @@ export default {
         "shake": "shake 0.4s ease-in-out",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "autopilot-glow": "autopilot-glow 4s ease-in-out infinite",
+        "marquee": "marquee 30s linear infinite",
       },
     },
   },
