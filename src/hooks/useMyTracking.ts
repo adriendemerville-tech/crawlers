@@ -272,7 +272,7 @@ export function useMyTracking() {
         .select('value')
         .eq('key', 'ga4_oauth_enabled')
         .maybeSingle();
-      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+      if (data?.value && typeof data.value === 'object' && (data.value as Record<string, unknown>).active === true) {
         setGa4EnabledLocal(true);
       }
     })();
