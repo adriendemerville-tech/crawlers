@@ -275,9 +275,9 @@ export function ProfileSettings() {
               </div>
             </div>
             <Button
-              variant={gscConnected ? 'outline' : 'default'}
+              variant="outline"
               size="sm"
-              className="gap-2 shrink-0"
+              className="gap-2 shrink-0 bg-transparent border-border rounded-sm"
               disabled={gscConnecting}
               onClick={handleUpdateGscConnection}
             >
