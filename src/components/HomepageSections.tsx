@@ -93,6 +93,7 @@ const i18n = {
     row5: 'Code correctif dynamique',
     row6: 'Création de contenu assistée',
     row7: 'Maintenance SEO & GEO automatisée',
+    row8: 'Analyse des logs',
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La première plateforme française SEO + GEO full-stack',
