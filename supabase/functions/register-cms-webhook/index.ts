@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: register-cms-webhook
@@ -14,20 +15,14 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
 
     const { action, connection_id, user_id } = await req.json()
 
     if (!connection_id || !user_id) {
-      return new Response(JSON.stringify({ error: 'connection_id and user_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('connection_id and user_id required', 400)
     }
 
     // Fetch CMS connection details
@@ -39,9 +34,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (connErr || !conn) {
-      return new Response(JSON.stringify({ error: 'Connection not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Connection not found', 404)
     }
 
     const siteUrl = conn.site_url.replace(/\/$/, '')
@@ -54,9 +47,7 @@ Deno.serve(async (req) => {
       return await registerShopifyWebhook(siteUrl, conn)
     }
 
-    return new Response(JSON.stringify({ error: 'Unknown action' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError('Unknown action', 400)
   } catch (err: any) {
     console.error('[register-cms-webhook] Error:', err)
     return new Response(JSON.stringify({ success: false, error: err.message }), {
@@ -85,11 +76,11 @@ async function registerWooWebhook(siteUrl: string, conn: any): Promise<Response>
       w.delivery_url === webhookUrl && w.topic === 'order.created'
     )
     if (already) {
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         already_registered: true,
         webhook_id: already.id,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      })
     }
   }
 
@@ -123,10 +114,10 @@ async function registerWooWebhook(siteUrl: string, conn: any): Promise<Response>
   }
 
   const created = await createResp.json()
-  return new Response(JSON.stringify({
+  return jsonOk({
     success: true,
     webhook_id: created.id,
-  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  })
 }
 
 /**
@@ -139,13 +130,10 @@ async function registerShopifyWebhook(siteUrl: string, conn: any): Promise<Respo
   // Shopify Admin API uses the API key as access token
   const accessToken = conn.api_key || conn.oauth_access_token
   if (!accessToken) {
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: false,
       error: 'no_shopify_token',
       fallback_url: webhookUrl,
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
@@ -166,11 +154,11 @@ async function registerShopifyWebhook(siteUrl: string, conn: any): Promise<Respo
     const { webhooks = [] } = await listResp.json()
     const already = webhooks.find((w: any) => w.address === webhookUrl)
     if (already) {
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         already_registered: true,
         webhook_id: already.id,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      })
     }
   }
 
@@ -193,20 +181,17 @@ async function registerShopifyWebhook(siteUrl: string, conn: any): Promise<Respo
   if (!createResp.ok) {
     const err = await createResp.text()
     console.error('[register-cms-webhook] Shopify error:', err)
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: false,
       error: 'shopify_api_failed',
       details: err,
       fallback_url: webhookUrl,
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
   const { webhook } = await createResp.json()
-  return new Response(JSON.stringify({
+  return jsonOk({
     success: true,
     webhook_id: webhook?.id,
-  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  })
 }

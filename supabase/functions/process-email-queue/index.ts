@@ -1,5 +1,6 @@
 import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -25,7 +26,7 @@ function getRetryAfterSeconds(error: unknown): number {
   return 60
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
   if (!apiKey) {

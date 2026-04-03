@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cms-push-redirect
@@ -370,24 +371,22 @@ async function handleRedirect(conn: CmsConnection, input: RedirectInput): Promis
 
 // ── Main ──
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!authHeader) return jsonError('Unauthorized', 401);
 
     const userClient = getUserClient(authHeader);
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (userError || !user) return jsonError('Invalid token', 401);
 
     const body: RedirectInput = await req.json();
     if (!body.tracked_site_id || !body.action) {
-      return new Response(JSON.stringify({ error: 'Missing tracked_site_id or action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Missing tracked_site_id or action', 400);
     }
 
     if (body.action === 'create' && (!body.from || !body.to)) {
-      return new Response(JSON.stringify({ error: 'Missing from or to for create action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Missing from or to for create action', 400);
     }
 
     const serviceClient = getServiceClient();
@@ -422,8 +421,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('[cms-push-redirect] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
-});
+}));

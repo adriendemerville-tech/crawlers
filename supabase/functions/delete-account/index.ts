@@ -11,6 +11,7 @@
  */
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -376,10 +377,8 @@ async function verify(supabase: any, userId: string, email: string) {
 
 // ─── Main handler ───────────────────────────────────────────────────────────
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { user_id, reason } = await req.json();
     if (!user_id) return json({ error: 'user_id required' }, 400);
 
@@ -427,4 +426,4 @@ Deno.serve(async (req) => {
     console.error('[delete-account] Fatal error:', err);
     return json({ error: err.message || 'Internal error' }, 500);
   }
-});
+}));

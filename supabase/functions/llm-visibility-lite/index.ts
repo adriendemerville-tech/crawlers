@@ -3,6 +3,7 @@ import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import {
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   generateNaturalPrompts,
   buildBrandPatterns,
   detectCitationInText,
@@ -33,25 +34,15 @@ function extractBrandFromDomain(domain: string): string {
     .join(' ')
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { url, siteContext: externalContext } = await req.json()
     if (!url) {
-      return new Response(JSON.stringify({ error: 'URL required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('URL required', 400)
     }
 
     if (!Deno.env.get('OPENROUTER_API_KEY')) {
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('API key not configured', 500)
     }
 
     let domain: string
@@ -84,7 +75,7 @@ Deno.serve(async (req) => {
                 maxTokens: 500,
                 signal: AbortSignal.timeout(15000),
                 title: 'Crawlers.fr - LLM Visibility Lite',
-              });
+              }));
 
               const content = resp.content;
               trackTokenUsage('llm-visibility-lite', llm.model, resp.usage, domain)
@@ -144,9 +135,6 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('[llm-lite] Error:', error)
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

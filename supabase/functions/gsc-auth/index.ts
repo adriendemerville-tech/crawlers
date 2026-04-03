@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: gsc-auth
@@ -10,11 +11,8 @@ import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
  * - GET  (from Google) → Server-side callback: exchanges code, stores tokens, redirects to frontend
  * - POST action=fetch  → Uses stored tokens to fetch GSC data (30 days)
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+Deno.serve(handleRequest(async (req) => {
+const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 
@@ -22,9 +20,7 @@ Deno.serve(async (req) => {
   const REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
 
   if (!clientId || !clientSecret) {
-    return new Response(JSON.stringify({ error: 'Google GSC credentials not configured' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Google GSC credentials not configured', 500);
   }
 
   const supabase = getServiceClient();
@@ -224,9 +220,7 @@ Deno.serve(async (req) => {
     // === STATUS: Check connection status for a user ===
     if (action === 'status') {
       if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('user_id required', 400);
       }
 
       // Get all google_connections for this user
@@ -269,9 +263,7 @@ Deno.serve(async (req) => {
     // === DISCONNECT: Revoke Google token and remove connection ===
     if (action === 'disconnect') {
       if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('user_id required', 400);
       }
 
       const targetConnectionId = connection_id;
@@ -355,21 +347,17 @@ Deno.serve(async (req) => {
         gsc_token_expiry: null,
       }).eq('user_id', user_id);
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         revoked_tokens: revokedCount,
         deleted_connections: deletedCount,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     // === FETCH: Get GSC data for last 30 days ===
     if (action === 'fetch') {
       if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('user_id required', 400);
       }
 
       // Resolve the correct Google token for this domain (multi-account aware)
@@ -381,17 +369,13 @@ Deno.serve(async (req) => {
         .toLowerCase();
 
       if (!bareDomain) {
-        return new Response(JSON.stringify({ error: 'No site URL configured' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('No site URL configured', 400);
       }
 
       const resolved = await resolveGoogleToken(supabase, user_id, bareDomain, clientId, clientSecret);
 
       if (!resolved) {
-        return new Response(JSON.stringify({ error: 'GSC not connected' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('GSC not connected', 401);
       }
 
       const accessToken = resolved.access_token;
@@ -419,12 +403,8 @@ Deno.serve(async (req) => {
           console.log(`[gsc-auth] Resolved "${requestedSite}" → "${resolvedSiteUrl}"`);
         } else {
           console.log(`[gsc-auth] No matching property found for "${bareDomain}". Available: ${allSites.map(s => s.siteUrl).join(', ')}`);
-          return new Response(JSON.stringify({ 
-            error: 'Site not found in Search Console',
-            available_sites: allSites.map(s => s.siteUrl),
-          }), {
-            status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return jsonError('Site not found in Search Console',
+            available_sites: allSites.map(s => s.siteUrl), 404);
         }
       } else {
         await sitesResp.text();
@@ -483,14 +463,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Invalid action', 400);
 
   } catch (error) {
     console.error('gsc-auth error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message, 500);
   }
-});
+}));

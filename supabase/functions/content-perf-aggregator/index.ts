@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * content-perf-aggregator — Weekly cron function
@@ -11,10 +11,8 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
  * Triggered weekly by pg_cron. No user auth required (service key).
  */
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient();
 
     // ═══ PHASE 1: MEASURE — Fill performance deltas on mature logs ═══
@@ -228,18 +226,13 @@ Deno.serve(async (req: Request) => {
 
     console.log(`[aggregator] Done:`, result);
 
-    return new Response(JSON.stringify({ success: true, ...result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, ...result });
 
   } catch (error) {
     console.error('[aggregator] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500);
   }
-});
+}));
 
 function extractGeoScore(scores: any): number | null {
   if (!scores) return null;

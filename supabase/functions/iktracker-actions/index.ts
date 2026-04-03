@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * iktracker-actions
@@ -189,20 +190,13 @@ async function getAutopilotSummary(apiKey: string) {
 
 // ── Main handler ──
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const apiKey = await getApiKey()
     const { action, ...params } = await req.json()
 
     if (!action) {
-      return new Response(JSON.stringify({ error: 'action required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('action required', 400)
     }
 
     let result: unknown
@@ -377,14 +371,9 @@ Deno.serve(async (req) => {
       console.warn('[iktracker-actions] Analytics log failed:', e)
     }
 
-    return new Response(JSON.stringify({ success: true, action, result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ success: true, action, result })
   } catch (error) {
     console.error('[iktracker-actions] Error:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

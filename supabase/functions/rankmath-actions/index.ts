@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: rankmath-actions
@@ -49,27 +50,17 @@ async function wpFetch(conn: WPConnection, path: string, options: RequestInit = 
   return data;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, connection_id, ...params } = await req.json();
     const supabase = getUserClient(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Non authentifié' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non authentifié', 401);
     }
 
     if (!connection_id) {
-      return new Response(JSON.stringify({ error: 'connection_id requis' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('connection_id requis', 400);
     }
 
     // Récupérer la connexion CMS WordPress
@@ -84,10 +75,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!conn) {
-      return new Response(JSON.stringify({ error: 'Connexion WordPress introuvable ou inactive' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Connexion WordPress introuvable ou inactive', 404);
     }
 
     const wpConn: WPConnection = {
@@ -188,15 +176,10 @@ Deno.serve(async (req) => {
         });
     }
 
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, data: result });
 
   } catch (error) {
     console.error('rankmath-actions error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message, 500);
   }
-});
+}));

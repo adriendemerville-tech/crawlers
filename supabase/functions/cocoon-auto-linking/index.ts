@@ -1,6 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface AutoLinkRequest {
   tracked_site_id: string;
@@ -20,28 +21,20 @@ interface LinkSuggestion {
   pre_scan_match: boolean;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization') || '';
     const userClient = getUserClient(authHeader);
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
     if (authErr || !user) {
-      return new Response(JSON.stringify({ error: 'Non authentifié' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non authentifié', 401);
     }
 
     const body: AutoLinkRequest = await req.json();
     const { tracked_site_id, source_url, max_links = 3, dry_run = false } = body;
 
     if (!tracked_site_id || !source_url) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id and source_url required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('tracked_site_id and source_url required', 400);
     }
 
     const supabase = getServiceClient();
@@ -55,11 +48,9 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (sourceExclusion?.exclude_all || sourceExclusion?.exclude_as_source) {
-      return new Response(JSON.stringify({ 
+      return jsonOk({ 
         suggestions: [], 
         message: 'Cette page est exclue du maillage sortant' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -71,9 +62,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!site) {
-      return new Response(JSON.stringify({ error: 'Site non trouvé' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Site non trouvé', 404);
     }
 
     // 3. Get source page content from latest crawl
@@ -87,9 +76,7 @@ Deno.serve(async (req) => {
 
     const crawlId = crawls?.[0]?.id;
     if (!crawlId) {
-      return new Response(JSON.stringify({ error: 'Aucun crawl disponible. Lancez un crawl d\'abord.' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Aucun crawl disponible. Lancez un crawl d\'abord.', 400);
     }
 
     // Get source page
@@ -101,9 +88,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!sourcePage?.body_text_truncated) {
-      return new Response(JSON.stringify({ error: 'Contenu de la page source non disponible' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Contenu de la page source non disponible', 400);
     }
 
     // 4. Get candidate target pages (semantically related, exclude self)
@@ -140,9 +125,7 @@ Deno.serve(async (req) => {
       .in('url', targetUrls.slice(0, 15));
 
     if (!targetPages || targetPages.length === 0) {
-      return new Response(JSON.stringify({ suggestions: [], message: 'Aucune page cible disponible' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ suggestions: [], message: 'Aucune page cible disponible' });
     }
 
     // 7. Pre-scan: check which target titles already appear in source text
@@ -296,8 +279,6 @@ Réponds UNIQUEMENT avec un JSON array:
 
   } catch (error) {
     console.error('[cocoon-auto-linking] Error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Erreur serveur' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message || 'Erreur serveur', 500);
   }
-});
+}));

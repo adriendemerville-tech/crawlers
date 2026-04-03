@@ -8,6 +8,7 @@
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -195,10 +196,8 @@ function analyzeRobotsTxt(content: string): any {
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, tracked_site_id, config, robots_content } = await req.json()
 
     const authHeader = req.headers.get('Authorization')

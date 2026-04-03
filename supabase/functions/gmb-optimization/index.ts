@@ -10,6 +10,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { computeGmbPowerScore, getWeekStart, type GmbPowerInput } from '../_shared/gmbPowerScore.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -127,10 +128,8 @@ function suggestPosts(locationData: any): any[] {
   return posts.map((p, i) => ({ ...p, id: `suggestion-${i + 1}` }))
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, tracked_site_id, ...params } = await req.json()
 
     const authHeader = req.headers.get('Authorization')

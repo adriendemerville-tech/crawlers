@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { applyIdentityUpdates } from '../_shared/siteMemory.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * seasonality-detector — Detects market seasonality via DataForSEO Google Trends
@@ -214,17 +215,13 @@ export function getSeasonalityFactor(profile: SeasonalityProfile, month?: number
   return Math.max(0.85, Math.min(1.15, 100 / monthIndex));
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient();
     const { tracked_site_id, user_id, keywords } = await req.json();
 
     if (!tracked_site_id || !user_id) {
-      return new Response(JSON.stringify({ error: 'Missing tracked_site_id or user_id' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing tracked_site_id or user_id', 400);
     }
 
     // 1. Get site info
@@ -235,9 +232,7 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (!site) {
-      return new Response(JSON.stringify({ error: 'Site not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Site not found', 404);
     }
 
     // 2. Build keyword list for trends analysis
@@ -334,18 +329,14 @@ Deno.serve(async (req: Request) => {
       console.log(`[SeasonalityDetector] Identity card enriched for ${site.domain}`);
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       profile,
       seasonality_factor: getSeasonalityFactor(profile),
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (e) {
     console.error('[SeasonalityDetector] Error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));

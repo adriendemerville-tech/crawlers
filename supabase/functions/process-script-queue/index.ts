@@ -1,6 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * process-script-queue — Sequential worker for AI-generated multi-page script payloads
@@ -14,11 +15,8 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 const BATCH_SIZE = 5;
 const WATCHDOG_MS = 240_000; // 4 minutes safety margin
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+Deno.serve(handleRequest(async (req) => {
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const supabase = getServiceClient();
   const startTime = Date.now();
 
@@ -49,9 +47,7 @@ Deno.serve(async (req) => {
     }
 
     if (!pendingRules || pendingRules.length === 0) {
-      return new Response(JSON.stringify({ success: true, processed: 0, message: 'Queue empty' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, processed: 0, message: 'Queue empty' });
     }
 
     console.log(`[process-script-queue] Processing ${pendingRules.length} pending rules`);
@@ -131,13 +127,11 @@ Deno.serve(async (req) => {
       }).catch(() => {});
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       processed,
       errors,
       remaining: remaining || 0,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -421,7 +415,7 @@ async function generateHTMLPayload(
         ],
         temperature: 0.6,
       }),
-    });
+    }));
 
     if (!response.ok) throw new Error(`AI API error: ${response.status}`);
     const data = await response.json();

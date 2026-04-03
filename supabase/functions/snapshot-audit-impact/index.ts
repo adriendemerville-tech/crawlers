@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * snapshot-audit-impact
@@ -257,18 +258,12 @@ async function fetchGA4Baseline(accessToken: string, propertyId: string): Promis
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { user_id, domain, url, audit_type, audit_scores, recommendations_count, recommendations_data, audit_report_id } = await req.json()
 
     if (!user_id || !domain || !audit_type) {
-      return new Response(JSON.stringify({ error: 'Missing user_id, domain, or audit_type' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Missing user_id, domain, or audit_type', 400)
     }
 
     const supabase = getServiceClient()
@@ -387,15 +382,13 @@ Deno.serve(async (req) => {
 
     console.log(`[snapshot] ✅ Snapshot ${snapshot.id} created for ${domain} (${audit_type}) — sources: ${sourcesCollected.join(', ') || 'none'}`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       snapshot_id: snapshot.id,
       sources_collected: sourcesCollected,
       next_measurement: nextMeasurement.toISOString(),
       has_gsc: !!gscBaseline,
       has_ga4: !!ga4Baseline,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {

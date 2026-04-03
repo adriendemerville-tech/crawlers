@@ -9,6 +9,7 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -29,9 +30,8 @@ function formatToolsDataToMarkdown(toolsData: any): string {
 }
 
 // ── MAIN HANDLER ──
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-  const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+Deno.serve(handleRequest(async (req) => {
+const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
     const body = await req.json();
@@ -403,4 +403,4 @@ Deno.serve(async (req) => {
     await trackEdgeFunctionError('strategic-synthesis', error instanceof Error ? error.message : 'Fatal').catch(() => { });
     return json({ success: true, data: { url: '', domain: '', scannedAt: new Date().toISOString(), overallScore: 0, introduction: { presentation: 'Analyse interrompue.', strengths: '', improvement: '', competitors: [] }, executive_roadmap: [], executive_summary: 'Analyse interrompue.', _error: error instanceof Error ? error.message : 'Unknown' } });
   }
-});
+}));

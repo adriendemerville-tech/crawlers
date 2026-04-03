@@ -7,6 +7,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -218,9 +219,8 @@ function sortByStrategicRelevance(keywords: any[], seeds: string[], ctx: string)
 }
 
 // ── MAIN HANDLER ──
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-  const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+Deno.serve(handleRequest(async (req) => {
+const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
     const { url, domain, businessContext, pageContentContext } = await req.json();
@@ -270,4 +270,4 @@ Deno.serve(async (req) => {
     console.error('❌ [strategic-market] Fatal:', error);
     return json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
-});
+}));

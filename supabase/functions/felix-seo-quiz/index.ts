@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * felix-seo-quiz — Quiz SEO/GEO/LLM + Quiz Crawlers
@@ -126,12 +127,8 @@ async function getLastUserScore(userId: string): Promise<number | null> {
   return null;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const body = await req.json();
     const { action, user_id, language } = body;
     const lang = ['fr', 'en', 'es'].includes(language) ? language : 'fr';
@@ -143,9 +140,7 @@ Deno.serve(async (req) => {
       const questions = await pickQuestionsFromDB('seo_geo_llm', weights, 10, lang);
 
       if (questions.length === 0) {
-        return new Response(JSON.stringify({ error: 'No questions available' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('No questions available', 500);
       }
 
       const clientQuestions = questions.map(q => ({
@@ -161,9 +156,7 @@ Deno.serve(async (req) => {
         answerKey[q.id] = { correct: q.correct_index, explanation: q.explanation, feature_link: q.feature_link };
       }
 
-      return new Response(JSON.stringify({ questions: clientQuestions, answerKey, lastScore }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ questions: clientQuestions, answerKey, lastScore });
     }
 
     if (action === 'get_crawlers_quiz') {
@@ -183,21 +176,15 @@ Deno.serve(async (req) => {
         answerKey[q.id] = { correct: q.correct_index, explanation: q.explanation, feature_link: q.feature_link };
       }
 
-      return new Response(JSON.stringify({ questions: clientQuestions, answerKey }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ questions: clientQuestions, answerKey });
     }
 
     if (action === 'get_last_score') {
       if (!user_id) {
-        return new Response(JSON.stringify({ score: null }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonOk({ score: null });
       }
       const score = await getLastUserScore(user_id);
-      return new Response(JSON.stringify({ score }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ score });
     }
 
     if (action === 'get_stratege_cocoon_quiz') {
@@ -217,19 +204,13 @@ Deno.serve(async (req) => {
         answerKey[q.id] = { correct: q.correct_index, explanation: q.explanation, feature_link: q.feature_link };
       }
 
-      return new Response(JSON.stringify({ questions: clientQuestions, answerKey }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ questions: clientQuestions, answerKey });
     }
 
-    return new Response(JSON.stringify({ error: 'Unknown action' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Unknown action', 400);
 
   } catch (error) {
     console.error('[felix-seo-quiz] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500);
   }
-});
+}));

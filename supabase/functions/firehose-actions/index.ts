@@ -12,6 +12,7 @@
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FIREHOSE_BASE = 'https://api.firehose.com';
 
@@ -349,12 +350,8 @@ async function pollStream(userId: string, localTapId: string, params: { since?: 
 
 // ── Router ───────────────────────────────────────────────
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { userId } = await requireAuth(req);
 
     // Only admin or agency_pro can use Firehose
@@ -397,4 +394,4 @@ Deno.serve(async (req) => {
     console.error('[firehose-actions] Error:', msg);
     return err(msg, 500);
   }
-});
+}));

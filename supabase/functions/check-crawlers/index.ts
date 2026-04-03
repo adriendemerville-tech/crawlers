@@ -5,6 +5,7 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const AI_BOTS = [
   { name: 'GPTBot', userAgent: 'GPTBot', company: 'OpenAI' },
@@ -126,12 +127,8 @@ function checkMetaRobots(html: string, botUserAgent: string): { allowed: boolean
   return { allowed: true };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { url } = await req.json();
     
     if (!url) {
@@ -289,4 +286,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}));

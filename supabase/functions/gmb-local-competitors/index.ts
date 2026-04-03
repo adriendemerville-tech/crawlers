@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gmb-local-competitors — Scan & track local competitors on Google Maps
@@ -128,31 +129,21 @@ async function scanViaSerpAPI(query: string, location: string): Promise<Competit
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
     const { action, ...params } = await req.json()
 
     // Auth check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
     if (authErr || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Invalid token', 401)
     }
 
     // Pro Agency check
@@ -164,10 +155,7 @@ Deno.serve(async (req) => {
 
     const isAdmin = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })
     if (profile?.plan_type !== 'agency_pro' && !isAdmin?.data) {
-      return new Response(JSON.stringify({ error: 'Pro Agency required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Pro Agency required', 403)
     }
 
     switch (action) {
@@ -175,10 +163,7 @@ Deno.serve(async (req) => {
         const { gmb_location_id, tracked_site_id } = params
 
         if (!gmb_location_id || !tracked_site_id) {
-          return new Response(JSON.stringify({ error: 'gmb_location_id and tracked_site_id required' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('gmb_location_id and tracked_site_id required', 400)
         }
 
         // Fetch GMB location data
@@ -190,10 +175,7 @@ Deno.serve(async (req) => {
           .single()
 
         if (!gmbLoc) {
-          return new Response(JSON.stringify({ error: 'GMB location not found' }), {
-            status: 404,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('GMB location not found', 404)
         }
 
         // Build search query from category + city
@@ -216,9 +198,7 @@ Deno.serve(async (req) => {
         }
 
         if (!competitors || competitors.length === 0) {
-          return new Response(JSON.stringify({ error: 'No competitors found', competitors: [] }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonOk({ error: 'No competitors found', competitors: [] })
         }
 
         // Filter out own business
@@ -278,14 +258,12 @@ Deno.serve(async (req) => {
           event_data: { action: 'scan', source, query: searchQuery, results_count: filtered.length },
         })
 
-        return new Response(JSON.stringify({
+        return jsonOk({
           competitors: filtered,
           search_query: searchQuery,
           location: locationText,
           source,
           radius_km: estimateRadiusKm(category, city),
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
@@ -293,10 +271,7 @@ Deno.serve(async (req) => {
         const { gmb_location_id } = params
 
         if (!gmb_location_id) {
-          return new Response(JSON.stringify({ error: 'gmb_location_id required' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('gmb_location_id required', 400)
         }
 
         // Get latest week's competitors
@@ -310,15 +285,10 @@ Deno.serve(async (req) => {
           .limit(10)
 
         if (error) {
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError(error.message, 500)
         }
 
-        return new Response(JSON.stringify({ competitors: data || [] }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ competitors: data || [] })
       }
 
       default:
@@ -330,9 +300,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[gmb-local-competitors] error:', msg)
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(msg, 500)
   }
 })

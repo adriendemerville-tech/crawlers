@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * auto-measure-predictions (CRON — weekly)
@@ -135,12 +136,8 @@ function computeCompositeAccuracy(
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  const supabase = getServiceClient()
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient()
 
   try {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
@@ -154,9 +151,7 @@ Deno.serve(async (req) => {
 
     if (predErr) throw new Error(`Failed to fetch predictions: ${predErr.message}`)
     if (!predictions || predictions.length === 0) {
-      return new Response(JSON.stringify({ message: 'No predictions due for measurement', processed: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ message: 'No predictions due for measurement', processed: 0 })
     }
 
     // Filter out already measured
@@ -170,9 +165,7 @@ Deno.serve(async (req) => {
     const toMeasure = predictions.filter(p => !alreadyMeasured.has(p.id))
 
     if (toMeasure.length === 0) {
-      return new Response(JSON.stringify({ message: 'All due predictions already measured', processed: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ message: 'All due predictions already measured', processed: 0 })
     }
 
     // Group by domain
@@ -315,22 +308,17 @@ Deno.serve(async (req) => {
 
     console.log(`[auto-measure-predictions] processed=${processed} skipped=${skipped} errors=${errors.length}`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       processed,
       skipped,
       errors: errors.slice(0, 5),
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[auto-measure-predictions] error:', msg)
     await trackEdgeFunctionError('auto-measure-predictions', msg).catch(() => {})
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(msg, 500)
   }
 })

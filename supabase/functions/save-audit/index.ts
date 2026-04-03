@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // 💰 CONFIGURATION DU PRICING (Source of Truth)
 // Identique à la logique frontend dans SmartConfigurator/index.tsx
@@ -49,13 +50,8 @@ function calculateDynamicPrice(fixesMetadata: FixMetadata[], totalAdvancedFixes:
   return price;
 }
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { 
       url, 
       domain, 
@@ -70,10 +66,7 @@ Deno.serve(async (req) => {
 
     // Validation
     if (!url || !domain) {
-      return new Response(
-        JSON.stringify({ error: "url and domain are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("url and domain are required", 400);
     }
 
     console.log(`📝 Saving audit for: ${url}`);
@@ -175,9 +168,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ save-audit error:", errorMessage);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonError(errorMessage, 500);
   }
-});
+}));

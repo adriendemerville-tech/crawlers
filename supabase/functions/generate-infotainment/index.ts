@@ -1,12 +1,9 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = getServiceClient();
 
@@ -188,15 +185,12 @@ Retourne UNIQUEMENT un JSON array (pas de markdown) :
       console.error("[infotainment] Blog generation failed (non-blocking):", blogErr);
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonOk({
         success: true,
         generated: cards.length,
         news: cards.filter((c) => c.card_type === "news").length,
         hacks: cards.filter((c) => c.card_type === "tip").length,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      });
   } catch (err) {
     console.error("[infotainment] Error:", err);
     return new Response(
@@ -204,4 +198,4 @@ Retourne UNIQUEMENT un JSON array (pas de markdown) :
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}));

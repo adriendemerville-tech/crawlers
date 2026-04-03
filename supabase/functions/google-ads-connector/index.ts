@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUserId } from '../_shared/auth.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: google-ads-connector
@@ -18,20 +19,15 @@ import { getAuthenticatedUserId } from '../_shared/auth.ts';
  * - POST action=status → Returns connection status for the user
  * - POST action=disconnect → Revokes token at Google + removes the connection
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+Deno.serve(handleRequest(async (req) => {
+const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
 
   const REDIRECT_URI = `${supabaseUrl}/functions/v1/google-ads-connector`;
 
   if (!clientId || !clientSecret) {
-    return new Response(JSON.stringify({ error: 'Google OAuth credentials not configured' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Google OAuth credentials not configured', 500);
   }
 
   const supabase = getServiceClient();
@@ -172,9 +168,7 @@ Deno.serve(async (req) => {
     // ── JWT Authentication ──
     const authenticatedUserId = await getAuthenticatedUserId(req);
     if (!authenticatedUserId) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Authentication required', 401);
     }
 
     const { action, frontend_origin } = await req.json();
@@ -191,9 +185,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const fullGoogleAccess = accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true;
       if (!fullGoogleAccess) {
-        return new Response(JSON.stringify({ error: 'Google Ads access requires full Google API access to be enabled by admin', code: 'FULL_ACCESS_DISABLED' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('Google Ads access requires full Google API access to be enabled by admin', code: 'FULL_ACCESS_DISABLED', 403);
       }
 
       const stateValue = `${user_id}|${frontend_origin || ''}`;
@@ -227,11 +219,9 @@ Deno.serve(async (req) => {
         .eq('user_id', user_id)
         .maybeSingle();
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         connected: !!conn,
         connection: conn || null,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -263,9 +253,7 @@ Deno.serve(async (req) => {
         .delete()
         .eq('user_id', user_id);
 
-      return new Response(JSON.stringify({ success: true, token_revoked: !!conn?.access_token }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, token_revoked: !!conn?.access_token });
     }
 
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
@@ -274,8 +262,6 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error('Google Ads connector error:', e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e.message, 500);
   }
-});
+}));

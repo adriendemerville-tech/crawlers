@@ -1,10 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /** ─── Helpers ────────────────────────────────────────────── */
 
@@ -272,12 +267,8 @@ const ACTIONS: Record<string, (conn: DrupalConnection, params: any) => Promise<a
   "discover-node-types": discoverNodeTypes,
 };
 
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const user = await getUserFromRequest(req);
     const { action, tracked_site_id, ...params } = await req.json();
 
@@ -299,9 +290,7 @@ Deno.serve(async (req: Request) => {
         api_key: params.api_key,
       };
       const result = await ACTIONS[action](tempConn, params);
-      return new Response(JSON.stringify({ data: result }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonOk({ data: result });
     }
 
     // Fetch connection from DB
@@ -337,9 +326,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const result = await ACTIONS[action](conn as DrupalConnection, params);
-    return new Response(JSON.stringify({ data: result }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ data: result });
   } catch (err: any) {
     console.error("[drupal-actions]", err);
     return new Response(
@@ -347,4 +334,4 @@ Deno.serve(async (req: Request) => {
       { status: err.message?.includes("Unauthorized") ? 401 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-});
+}));

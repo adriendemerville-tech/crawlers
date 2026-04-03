@@ -1,6 +1,6 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Parménion Feedback Loop
@@ -46,13 +46,11 @@ function classifyErrorCategory(predicted: string, actual: string, riskPredicted:
   return 'general_miscalibration';
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
-    if (!auth) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    if (!auth.isAdmin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!auth) return jsonError('Unauthorized', 401);
+    if (!auth.isAdmin) return jsonError('Admin only', 403);
 
     const { domain, decision_id } = await req.json();
     const supabase = getServiceClient();
@@ -73,7 +71,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: decisions, error: decError } = await query.limit(20);
     if (decError || !decisions?.length) {
-      return new Response(JSON.stringify({ message: 'No decisions ready for feedback', count: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonOk({ message: 'No decisions ready for feedback', count: 0 });
     }
 
     const results: any[] = [];
@@ -175,16 +173,16 @@ Deno.serve(async (req: Request) => {
     // Check if conservative mode should trigger
     const { data: errorRate } = await supabase.rpc('parmenion_error_rate', { p_domain: domain || decisions[0]?.domain });
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       processed: results.length,
       errors_found: results.filter(r => r.is_error).length,
       results,
       error_rate: errorRate,
       conservative_mode: errorRate?.conservative_mode,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
 
   } catch (e) {
     console.error('[Parménion Feedback] Error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));

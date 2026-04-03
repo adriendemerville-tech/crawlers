@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * serpapi-actions — Router for SerpAPI operations
@@ -29,39 +30,26 @@ interface SearchParams {
   tbm?: string           // nws (news), isch (images), lcl (local)
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
     const { action, ...params } = await req.json()
 
     // Auth check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
     if (authErr || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Invalid token', 401)
     }
 
     const SERPAPI_KEY = Deno.env.get('SERPAPI_KEY')
     if (!SERPAPI_KEY) {
-      return new Response(JSON.stringify({ error: 'SERPAPI_KEY not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('SERPAPI_KEY not configured', 500)
     }
 
     switch (action) {
@@ -82,10 +70,7 @@ Deno.serve(async (req) => {
         } = params as SearchParams
 
         if (!query) {
-          return new Response(JSON.stringify({ error: 'query required' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('query required', 400)
         }
 
         // Determine tbm param based on action
@@ -107,15 +92,13 @@ Deno.serve(async (req) => {
           .maybeSingle()
 
         if (cached) {
-          return new Response(JSON.stringify({
+          return jsonOk({
             ...cached.result_data,
             organic_results: cached.organic_results,
             ads_results: cached.ads_results,
             knowledge_graph: cached.knowledge_graph,
             related_searches: cached.related_searches,
             from_cache: true,
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         }
 
@@ -186,7 +169,7 @@ Deno.serve(async (req) => {
           },
         })
 
-        return new Response(JSON.stringify({
+        return jsonOk({
           organic_results: organic,
           ads_results: ads,
           knowledge_graph: kg,
@@ -194,8 +177,6 @@ Deno.serve(async (req) => {
           search_information: data.search_information,
           search_metadata: searchMeta,
           from_cache: false,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
@@ -217,15 +198,10 @@ Deno.serve(async (req) => {
         const { data, error } = await q
 
         if (error) {
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError(error.message, 500)
         }
 
-        return new Response(JSON.stringify({ data }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ data })
       }
 
       default:
@@ -237,9 +213,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[serpapi-actions] error:', msg)
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(msg, 500)
   }
 })

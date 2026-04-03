@@ -1,26 +1,20 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseW3CLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * sync-aws — Pulls CloudFront/ALB access logs from S3 (cron: hourly at :15).
  * Uses AWS SDK v3 via npm: specifier.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization') || '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const token = authHeader.replace('Bearer ', '');
     if (!token || (token !== serviceKey && token !== anonKey)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     // Dynamic import of AWS SDK
@@ -31,9 +25,7 @@ Deno.serve(async (req) => {
       ListObjectsV2Command = s3Module.ListObjectsV2Command;
       GetObjectCommand = s3Module.GetObjectCommand;
     } catch {
-      return new Response(JSON.stringify({ error: 'AWS SDK unavailable', code: 'MODULE_ERROR' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('AWS SDK unavailable', code: 'MODULE_ERROR', 500);
     }
 
     const supabase = getServiceClient();
@@ -44,9 +36,7 @@ Deno.serve(async (req) => {
       .eq('status', 'active');
 
     if (!connectors?.length) {
-      return new Response(JSON.stringify({ ok: true, message: 'No active AWS connectors', synced: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ ok: true, message: 'No active AWS connectors', synced: 0 });
     }
 
     const results: Array<{ connector_id: string; inserted: number; objects_processed: number; error?: string }> = [];
@@ -144,13 +134,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, synced: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, synced: results.length, results });
   } catch (error) {
     console.error('[sync-aws] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

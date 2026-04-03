@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ──────────────────────────────────────────────────────────────
 // CORS — Cross-Origin Resource Sharing
@@ -9,13 +10,6 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 // domaine différent. La sécurité repose sur la clé API, pas
 // sur l'origine.
 // ──────────────────────────────────────────────────────────────
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400', // Cache preflight 24h
-};
-
 // Helper pour les réponses JSON avec CORS
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -24,17 +18,12 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   // ──────────────────────────────────────────────────────────
   // Preflight CORS — le navigateur envoie une requête OPTIONS
   // avant chaque POST cross-origin. On y répond avec les
   // headers CORS pour que le navigateur autorise la requête.
-  // ──────────────────────────────────────────────────────────
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
-  // Seule la méthode POST est acceptée
+// Seule la méthode POST est acceptée
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
@@ -151,4 +140,4 @@ Deno.serve(async (req) => {
       brandName: profile?.agency_brand_name || null,
     },
   });
-});
+}));

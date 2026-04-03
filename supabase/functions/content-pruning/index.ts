@@ -11,6 +11,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -120,10 +121,8 @@ function levenshteinSimilarity(a: string, b: string): number {
   return 1 - matrix[a.length][b.length] / maxLen
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, tracked_site_id } = await req.json()
 
     const authHeader = req.headers.get('Authorization')

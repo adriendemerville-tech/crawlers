@@ -1,6 +1,6 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * matomo-connector: Fetch analytics data from Matomo Reporting API
@@ -69,17 +69,11 @@ async function callMatomoApi(params: MatomoRequestParams): Promise<any> {
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const body = await req.json();
@@ -90,9 +84,7 @@ Deno.serve(async (req) => {
     if (action === 'test_connection') {
       const { matomo_url, token_auth, site_id } = body;
       if (!matomo_url || !token_auth || !site_id) {
-        return new Response(JSON.stringify({ error: 'Missing matomo_url, token_auth, or site_id' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('Missing matomo_url, token_auth, or site_id', 400);
       }
 
       const data = await callMatomoApi({
@@ -104,9 +96,7 @@ Deno.serve(async (req) => {
         date: 'today',
       });
 
-      return new Response(JSON.stringify({ success: true, site_name: data?.[0]?.name || data?.name || 'OK' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, site_name: data?.[0]?.name || data?.name || 'OK' });
     }
 
     // ── FETCH METRICS (ad-hoc) ──
@@ -122,9 +112,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!conn) {
-        return new Response(JSON.stringify({ error: 'No active Matomo connection for this site' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('No active Matomo connection for this site', 404);
       }
 
       const [visitData, actionData] = await Promise.all([
@@ -159,9 +147,7 @@ Deno.serve(async (req) => {
         .update({ last_sync_at: new Date().toISOString(), sync_error: null })
         .eq('id', conn.id);
 
-      return new Response(JSON.stringify({ success: true, metrics }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, metrics });
     }
 
     // ── SYNC WEEKLY (for history log) ──
@@ -176,9 +162,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!conn) {
-        return new Response(JSON.stringify({ error: 'No active Matomo connection' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError('No active Matomo connection', 404);
       }
 
       // Fetch last 9 weeks for anomaly detection compatibility
@@ -242,19 +226,13 @@ Deno.serve(async (req) => {
         .update({ last_sync_at: new Date().toISOString(), sync_error: null })
         .eq('id', conn.id);
 
-      return new Response(JSON.stringify({ success: true, weeks_synced: synced }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, weeks_synced: synced });
     }
 
-    return new Response(JSON.stringify({ error: 'Unknown action' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Unknown action', 400);
 
   } catch (error) {
     console.error('[matomo-connector] Error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message || 'Internal error', 500);
   }
-});
+}));
