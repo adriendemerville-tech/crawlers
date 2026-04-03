@@ -412,10 +412,10 @@ function ThemeSettingsCard() {
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">
-          <Button variant={theme !== 'dark' ? 'default' : 'outline'} onClick={() => setTheme('light')} className="gap-2">
+          <Button variant="outline" onClick={() => setTheme('light')} className={`gap-2 rounded-sm bg-transparent border-border ${theme !== 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Sun className="h-4 w-4" /> {l.light}
           </Button>
-          <Button variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')} className="gap-2">
+          <Button variant="outline" onClick={() => setTheme('dark')} className={`gap-2 rounded-sm bg-transparent border-border ${theme === 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Moon className="h-4 w-4" /> {l.dark}
           </Button>
         </div>
