@@ -125,6 +125,7 @@ const translations = {
       '100 URL suivis inclus',
       'Priorité file de crawl',
       'API Marina en marque blanche complète',
+      'Analyse des logs',
       '3 comptes inclus (2 collaborateurs)',
     ],
     agencyPremiumCta: "S'abonner · 99€/mois",
