@@ -819,6 +819,52 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
 
   // Empty state for Pro users with no GBP connection and no locations
   if (!isGated && orderedLocations.length === 0) {
+    // Connected but no locations found
+    if (gbpConnected) {
+      return (
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="p-8 text-center space-y-4">
+              <CheckCircle2 className="h-12 w-12 mx-auto text-emerald-500" />
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {language === 'fr' ? 'Compte Google connecté' : 'Google account connected'}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {gbpEmail && <span className="font-medium">{gbpEmail}</span>}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {language === 'fr' 
+                    ? 'Aucun établissement Google Business Profile n\'a été trouvé sur ce compte. Vérifiez que vous avez bien un profil d\'établissement actif sur Google Business.'
+                    : 'No Google Business Profile location was found on this account. Make sure you have an active business profile on Google Business.'}
+                </p>
+              </div>
+              <div className="flex gap-2 justify-center">
+                <Button 
+                  onClick={handleGbpDisconnect} 
+                  disabled={gbpDisconnecting} 
+                  variant="outline" 
+                  className="gap-2 rounded-sm text-destructive border-destructive/40 hover:bg-destructive/5"
+                >
+                  {gbpDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
+                  {language === 'fr' ? 'Déconnecter' : 'Disconnect'}
+                </Button>
+                <Button 
+                  onClick={handleGbpConnect} 
+                  disabled={gbpLoading} 
+                  variant="outline" 
+                  className="gap-2 rounded-sm border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5"
+                >
+                  {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
+                  {language === 'fr' ? 'Reconnecter avec un autre compte' : 'Reconnect with another account'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+    // Not connected at all
     return (
       <div className="space-y-4">
         <Card>
