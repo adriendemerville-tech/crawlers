@@ -61,6 +61,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 │  - CMS bridges (WordPress, Drupal, Shopify, Wix, Odoo)   │
 │  - Google integrations (Ads, GSC, GA4, GTM, GMB)         │
 │  - Anomaly detection + Drop Detector + notification      │
+│  - Server log analysis (Matomo, GoAccess, Plausible)      │
 │  - Quiz SEO Félix (hebdo, notifications, sync)           │
 │  - Stripe billing, Auth, Analytics                       │
 └────────────────────────┬────────────────────────────────┘

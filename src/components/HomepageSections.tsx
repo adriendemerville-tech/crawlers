@@ -93,6 +93,7 @@ const i18n = {
     row5: 'Code correctif dynamique',
     row6: 'Création de contenu assistée',
     row7: 'Maintenance SEO & GEO automatisée',
+    row8: 'Analyse des logs',
     hybridCta: 'Essayer gratuitement',
     // Trust
     trustTitle: 'La première plateforme française SEO + GEO full-stack',
@@ -137,6 +138,7 @@ const i18n = {
     colSeo: 'Classic SEO', colCrawlers: 'Crawlers.fr',
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'AI-assisted content creation', row7: 'Automated SEO & GEO maintenance',
+    row8: 'Log analysis',
     hybridCta: 'Try for free',
     trustTitle: 'The first French full-stack SEO + GEO platform',
     trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business (GBP/GMB) management is natively integrated.',
@@ -180,6 +182,7 @@ const i18n = {
     colSeo: 'SEO clásico', colCrawlers: 'Crawlers.fr',
     row1: 'Auditoría técnica completa', row2: 'Puntuación de visibilidad IA', row3: 'Tarjeta de identidad semántica',
     row4: 'Cocón semántico IA', row5: 'Código correctivo dinámico', row6: 'Creación de contenido asistida', row7: 'Mantenimiento SEO & GEO automatizado',
+    row8: 'Análisis de logs',
     hybridCta: 'Probar gratis',
     trustTitle: 'La primera plataforma francesa full-stack SEO + GEO',
     trustText: 'Crawlers.fr es la primera plataforma francesa en cubrir todo el ciclo SEO y GEO: auditoría técnica, corrección generada automáticamente, despliegue en 30 segundos y medición de impacto real a T+30, T+60 y T+90 días.\n\nDos asistentes IA especializados te acompañan en cada etapa: el Estratega Cocoon para el análisis de tu grafo semántico 3D, y el Asistente Crawlers para aprovechar toda la profundidad de tus datos SEO y GEO. La gestión de Google Business (GBP/GMB) está integrada nativamente.',
@@ -372,8 +375,8 @@ const competitors = ['Screaming Frog', 'Surfer SEO', 'Semrush', 'BotRank', 'Mete
 const HybridSection = memo(() => {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
-  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7];
-  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false];
+  const rows = [t.row1, t.row2, t.row3, t.row4, t.row5, t.row6, t.row7, t.row8];
+  const seoHas: (boolean | 'partial')[] = [true, false, false, false, false, false, false, false];
   const lang = language as 'fr' | 'en' | 'es';
 
   return (
