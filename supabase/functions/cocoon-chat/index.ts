@@ -89,7 +89,7 @@ serve(async (req) => {
           .toLowerCase();
 
         if (normalizedDomain && trackedSiteId) {
-          const ctx = await getDomainContext(supabase, normalizedDomain, trackedSiteId);
+          const ctx = await getDomainContext(supabase, normalizedDomain, trackedSiteId, { userId: userCtx?.userId });
           if (ctx.blocks.length > 0) {
             domainDataBlock = `\n\nDONNÉES COMPLÈTES DU DOMAINE "${normalizedDomain}" :\n${ctx.blocks.join('\n\n')}`;
             console.log(`[cocoon-chat] Domain data loaded via shared helper: ${ctx.blocks.length} blocks`);
