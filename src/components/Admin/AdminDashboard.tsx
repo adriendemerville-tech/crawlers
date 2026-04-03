@@ -54,7 +54,7 @@ const adminTranslations = {
     users: 'Utilisateurs',
     blog: 'Blog',
     support: 'SAV',
-    affiliates: 'Affiliation',
+    affiliates: 'Perks',
     technical: 'Technique',
     crawls: 'Crawls',
     scripts: 'Scripts',
