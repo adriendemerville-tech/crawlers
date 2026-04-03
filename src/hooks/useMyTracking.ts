@@ -36,6 +36,7 @@ export interface StatsEntry {
   ai_sentiment: string | null;
   semantic_authority: number | null;
   voice_share: number | null;
+  raw_data?: Record<string, unknown> | null;
 }
 
 export interface GscDataRow {
@@ -92,6 +93,7 @@ export function useMyTracking() {
   // ─── Architect modal ───
   const [architectSiteId, setArchitectSiteId] = useState<string | null>(null);
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
 
@@ -168,10 +170,10 @@ export function useMyTracking() {
       .order('recorded_at', { ascending: true });
     if (data) {
       const map: Record<string, StatsEntry[]> = {};
-      data.forEach((entry: any) => {
-        const siteId = entry.tracked_site_id;
+      data.forEach((entry: Record<string, unknown>) => {
+        const siteId = entry.tracked_site_id as string;
         if (!map[siteId]) map[siteId] = [];
-        map[siteId].push(entry);
+        map[siteId].push(entry as unknown as StatsEntry);
       });
       setStatsMap(map);
     }
@@ -272,7 +274,7 @@ export function useMyTracking() {
         .select('value')
         .eq('key', 'ga4_oauth_enabled')
         .maybeSingle();
-      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+      if (data?.value && typeof data.value === 'object' && (data.value as Record<string, unknown>).active === true) {
         setGa4EnabledLocal(true);
       }
     })();
@@ -339,7 +341,7 @@ export function useMyTracking() {
         throw new Error(data.error);
       }
       setGscData(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('GSC fetch error:', err);
     } finally {
       setGscLoading(false);
@@ -405,7 +407,7 @@ export function useMyTracking() {
       if (data?.auth_url) {
         window.location.href = data.auth_url;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('GSC login error:', err);
       toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : language === 'es' ? 'Error de conexión Search Console' : 'Search Console connection error');
     } finally {
@@ -562,7 +564,7 @@ export function useMyTracking() {
     }
     setRefreshingSites(prev => new Set(prev).add(site.id));
     const url = `https://${site.domain}`;
-    const rawAccumulator: Record<string, any> = {};
+    const rawAccumulator: Record<string, unknown> = {};
     let currentSeoScore: number | null = null;
     let currentGeoScore = 0;
     let currentCitationRate = 0;
@@ -607,7 +609,7 @@ export function useMyTracking() {
 
     await Promise.allSettled(calls);
 
-    const computedSemanticAuth = rawAccumulator.serpData?.semantic_authority ?? null;
+    const computedSemanticAuth = (rawAccumulator.serpData as Record<string, unknown>)?.semantic_authority ?? null;
 
     await supabase.from('user_stats_history').insert({
       user_id: user.id,
@@ -617,9 +619,9 @@ export function useMyTracking() {
       geo_score: Math.round(currentGeoScore),
       llm_citation_rate: currentCitationRate,
       ai_sentiment: currentSentiment,
-      semantic_authority: computedSemanticAuth,
+      semantic_authority: computedSemanticAuth as number | null,
       voice_share: currentCitationRate || null,
-      raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
+      raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore } as unknown as import('@/integrations/supabase/types').Json,
     });
     await fetchStats();
 
@@ -688,7 +690,7 @@ export function useMyTracking() {
   };
 
   // ─── Add site ───
-  const handleAddSite = async (t: any) => {
+  const handleAddSite = async (t: Record<string, string>) => {
     if (!user) return;
     if (!validationResult.checked) {
       await handleValidateUrl();
@@ -732,7 +734,7 @@ export function useMyTracking() {
   };
 
   // ─── Remove site ───
-  const handleRemoveSite = async (siteId: string, t: any) => {
+  const handleRemoveSite = async (siteId: string, t: Record<string, string>) => {
     await supabase.from('tracked_sites').delete().eq('id', siteId);
     setSites(prev => prev.filter(s => s.id !== siteId));
     if (selectedSite === siteId) {
@@ -750,7 +752,7 @@ export function useMyTracking() {
     try {
       await supabase
         .from('tracked_sites')
-        .update({ current_config: site.previous_config, previous_config: {} } as any)
+        .update({ current_config: site.previous_config, previous_config: {} } as Record<string, unknown>)
         .eq('id', site.id)
         .eq('user_id', user.id);
       setSites(prev => prev.map(s =>
@@ -774,7 +776,7 @@ export function useMyTracking() {
       const newDisabled = isOn;
       const config = (currentSite.current_config as Record<string, unknown>) || {};
       const updated = { ...config, iktracker_disabled: newDisabled };
-      if (!newDisabled) delete (updated as any).iktracker_disabled;
+      if (!newDisabled) delete (updated as Record<string, unknown>).iktracker_disabled;
       await supabase
         .from('tracked_sites')
         .update({ current_config: updated })
@@ -794,10 +796,11 @@ export function useMyTracking() {
   };
 
   // ─── Helpers for stats extraction ───
-  const getPerformanceScore = (entry: StatsEntry) => (entry as any)?.raw_data?.performanceScore ?? null;
-  const getPerformanceDesktop = (entry: StatsEntry) => (entry as any)?.raw_data?.performanceDesktop ?? null;
-  const getAiVisibility = (entry: StatsEntry): number | null => (entry as any)?.raw_data?.llmOverallScore ?? null;
-  const getSerpData = (entry: StatsEntry) => (entry as any)?.raw_data?.serpData ?? null;
+  const getPerformanceScore = (entry: StatsEntry) => entry.raw_data?.performanceScore as number | null ?? null;
+  const getPerformanceDesktop = (entry: StatsEntry) => entry.raw_data?.performanceDesktop as number | null ?? null;
+  const getAiVisibility = (entry: StatsEntry): number | null => entry.raw_data?.llmOverallScore as number | null ?? null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getSerpData = (entry: StatsEntry) => entry.raw_data?.serpData as any ?? null;
 
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
   const latestPerformanceDesktop = latestStats ? getPerformanceDesktop(latestStats) : null;
