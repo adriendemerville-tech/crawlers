@@ -1,14 +1,22 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
+import { getAuthenticatedUserId } from '../_shared/auth.ts';
 
 /**
  * Edge Function: google-ads-connector
+ * 
+ * SECURITY NOTES:
+ * - Scope used: adwords.readonly (read-only, no campaign mutations possible)
+ * - The Google Ads API scope 'adwords' grants full access; we intentionally request
+ *   'adwords.readonly' which restricts the token to GET/report operations only.
+ * - On disconnect, we revoke the token at Google before deleting from DB.
+ * - POST actions (login/status/disconnect) require JWT authentication.
  * 
  * Handles Google Ads OAuth2 flow:
  * - POST action=login  → Returns OAuth2 authorization URL
  * - GET  (from Google) → Callback: exchanges code, stores tokens, redirects to frontend
  * - POST action=status → Returns connection status for the user
- * - POST action=disconnect → Removes the connection
+ * - POST action=disconnect → Revokes token at Google + removes the connection
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -161,7 +169,17 @@ Deno.serve(async (req) => {
   // POST: API calls (login, status, disconnect)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, user_id, frontend_origin } = await req.json();
+    // ── JWT Authentication ──
+    const authenticatedUserId = await getAuthenticatedUserId(req);
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { action, frontend_origin } = await req.json();
+    // Use authenticated user ID instead of trusting client-provided user_id
+    const user_id = authenticatedUserId;
 
     // === LOGIN: Generate OAuth URL ===
     if (action === 'login') {
@@ -178,7 +196,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
+      const stateValue = `${user_id}|${frontend_origin || ''}`;
       const scopes = [
         'https://www.googleapis.com/auth/adwords.readonly',
         'https://www.googleapis.com/auth/userinfo.email',
@@ -203,12 +221,6 @@ Deno.serve(async (req) => {
 
     // === STATUS: Check connection ===
     if (action === 'status') {
-      if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
       const { data: conn } = await supabase
         .from('google_ads_connections')
         .select('id, customer_id, account_name, status, updated_at')
@@ -223,20 +235,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // === DISCONNECT: Remove connection ===
+    // === DISCONNECT: Revoke token at Google + remove connection ===
     if (action === 'disconnect') {
-      if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      // 1. Fetch current token before deletion
+      const { data: conn } = await supabase
+        .from('google_ads_connections')
+        .select('access_token, refresh_token')
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      // 2. Revoke token at Google (best effort — don't block on failure)
+      if (conn?.access_token) {
+        try {
+          await fetch(`https://oauth2.googleapis.com/revoke?token=${conn.access_token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          });
+          console.log(`[google-ads-connector] Token revoked for user ${user_id}`);
+        } catch (revokeErr) {
+          console.warn(`[google-ads-connector] Token revocation failed (non-blocking):`, revokeErr);
+        }
       }
 
+      // 3. Delete from database
       await supabase
         .from('google_ads_connections')
         .delete()
         .eq('user_id', user_id);
 
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, token_revoked: !!conn?.access_token }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
