@@ -360,6 +360,11 @@ Deno.serve(async (req) => {
       if (params.updates) logData.updates_keys = Object.keys(params.updates)
       if (params.body?.title) logData.title = params.body.title
       if (params.body?.slug) logData.slug = params.body.slug
+      // Capture push-event context for accurate report labeling
+      if (params.event_type) logData.event_type = params.event_type
+      if (params.details?.phase) logData.pipeline_phase = params.details.phase
+      if (params.details?.status) logData.final_status = params.details.status
+      if (params.message) logData.message = params.message
       // Capture result status
       if (result && typeof result === 'object' && 'status' in (result as any)) {
         logData.response_status = (result as any).status

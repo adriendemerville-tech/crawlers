@@ -46,17 +46,31 @@ function extractActionDetails(ev: IkAction): { url: string; action: string; desc
   const originalAction = ((ed.original_action as string) || '').toLowerCase();
   const wasUpserted = ed.was_upserted === true;
   const lowerAction = action.toLowerCase();
+  const pipelinePhase = ((ed.pipeline_phase as string) || (ed.phase as string) || '').toLowerCase();
+  const eventType = ((ed.event_type as string) || '').toLowerCase();
 
-  if (wasUpserted) {
+  // 1. push-event from autopilot = tracking event, NOT a page creation
+  if (lowerAction === 'push-event' || effectiveAction === 'push-event') {
+    // Determine label from pipeline phase or event_type
+    if (pipelinePhase.includes('content') || eventType.includes('content')) {
+      actionLabel = wasUpserted ? 'Mise à jour contenu' : 'Publication contenu';
+    } else if (pipelinePhase.includes('code') || eventType.includes('code')) {
+      actionLabel = 'Injection code';
+    } else if (pipelinePhase.includes('diagnostic') || eventType.includes('diagnostic')) {
+      actionLabel = 'Diagnostic';
+    } else {
+      actionLabel = 'Événement Autopilot';
+    }
+  } else if (wasUpserted) {
     actionLabel = 'Mise à jour (upsert)';
   } else if (effectiveAction.includes('update') || lowerAction.includes('update') || lowerAction.includes('patch')) {
     actionLabel = 'Modification';
-  } else if (lowerAction.includes('create') || lowerAction.includes('push') || lowerAction.includes('post')) {
+  } else if (lowerAction.includes('create') || lowerAction.includes('post')) {
     actionLabel = 'Ajout de page';
+  } else if (lowerAction === 'cms-push-draft' || lowerAction === 'cms-patch-content') {
+    actionLabel = wasUpserted ? 'Mise à jour contenu' : 'Publication contenu';
   } else if (lowerAction.includes('delete') || lowerAction.includes('remove')) {
     actionLabel = 'Suppression';
-  } else if (lowerAction.includes('push-event')) {
-    actionLabel = 'Événement CMS';
   }
 
   return { url, action: actionLabel, description: desc, date, time };
