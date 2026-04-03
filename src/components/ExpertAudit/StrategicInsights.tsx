@@ -288,7 +288,11 @@ export function StrategicInsights({
             <SimulatedLLMDepthCard analysis={analysis} domain={domain} />
           </RevealWrapper>
 
-          {/* 10. Matrice de Risque Zéro-Clic */}
+          {/* 9c. Bot Log Chart — GPT & Gemini */}
+          <RevealWrapper delay={7500} isDataCard enabled={progressiveReveal}>
+            <BotLogChartCard domain={domain} />
+          </RevealWrapper>
+
           <RevealWrapper delay={8000} isDataCard enabled={progressiveReveal}>
             <ZeroClickRiskCard analysis={analysis} domain={domain} />
           </RevealWrapper>
