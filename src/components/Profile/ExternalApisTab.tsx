@@ -384,6 +384,84 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const cmsServices = services.filter(s => s.category === 'cms');
   const selfHostedServices = services.filter(s => s.category === 'self_hosted');
 
+  const handleLogServiceClick = (service: LogServiceButton) => {
+    setSelectedLogService(service);
+    setLogTrackedSiteId('');
+    setLogConnectorDialogOpen(true);
+  };
+
+  const handleLogConnectorCreate = async () => {
+    if (!selectedLogService || !logTrackedSiteId) {
+      toast.error(language === 'fr' ? 'Sélectionnez un site' : 'Select a site');
+      return;
+    }
+    setLogConnectorLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const needsApiKey = ['agent', 'upload', 'wordpress_plugin'].includes(selectedLogService.type);
+      let apiKeyHash: string | null = null;
+      let plainApiKey: string | null = null;
+
+      if (needsApiKey) {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        plainApiKey = Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(plainApiKey));
+        apiKeyHash = Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      const { data: existing } = await (supabase as any)
+        .from('log_connectors')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('tracked_site_id', logTrackedSiteId)
+        .eq('type', selectedLogService.type)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info(language === 'fr' ? 'Ce connecteur existe déjà pour ce site' : 'This connector already exists for this site');
+        setLogConnectorDialogOpen(false);
+        setLogConnectorLoading(false);
+        return;
+      }
+
+      const { error } = await (supabase as any)
+        .from('log_connectors')
+        .insert({
+          user_id: user.id,
+          tracked_site_id: logTrackedSiteId,
+          type: selectedLogService.type,
+          status: 'pending',
+          api_key_hash: apiKeyHash,
+        });
+
+      if (error) throw error;
+
+      setLogConnectedTypes(prev => new Set([...prev, selectedLogService.type]));
+      setLogConnectorDialogOpen(false);
+
+      if (plainApiKey) {
+        toast.success(
+          language === 'fr'
+            ? `Connecteur créé ! Clé API copiée dans le presse-papier.`
+            : `Connector created! API Key copied to clipboard.`,
+          { duration: 10000 }
+        );
+        navigator.clipboard.writeText(plainApiKey).catch(() => {});
+      } else {
+        toast.success(language === 'fr' ? 'Connecteur créé !' : 'Connector created!');
+      }
+    } catch (err: any) {
+      console.error('[ExternalApis] Log connector error:', err);
+      toast.error(err.message || 'Error creating connector');
+    } finally {
+      setLogConnectorLoading(false);
+    }
+  };
+
 
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
