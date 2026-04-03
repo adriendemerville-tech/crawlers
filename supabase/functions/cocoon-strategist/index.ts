@@ -395,8 +395,8 @@ Deno.serve(async (req) => {
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics + strategic audit data + keyword cloud in parallel
-    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult] = await Promise.all([
+    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data in parallel
+    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -423,6 +423,16 @@ Deno.serve(async (req) => {
         .select('sample_keywords')
         .eq('tracked_site_id', tracked_site_id)
         .order('measured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Load latest EEAT audit data
+      supabase
+        .from('audit_raw_data')
+        .select('raw_payload, created_at')
+        .eq('domain', domain)
+        .eq('audit_type', 'eeat')
+        .eq('user_id', auth.userId)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
     ]);
@@ -645,6 +655,43 @@ Deno.serve(async (req) => {
           },
         });
         console.log(`[strategist] Added ${strategicSerpData.content_gaps.length} content gaps from strategic audit`);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 2c-bis: Inject EEAT audit data into findings
+    // ═══════════════════════════════════════════════════════════
+    const eeatPayload = (eeatAuditResult as any)?.data?.raw_payload;
+    if (eeatPayload) {
+      console.log(`[strategist] 🏅 EEAT data loaded: score ${eeatPayload.score}/100`);
+      if (eeatPayload.score < 60) {
+        allFindings.push({
+          category: 'eeat_signals',
+          severity: eeatPayload.score < 30 ? 'critical' : 'warning',
+          description: `Score E-E-A-T: ${eeatPayload.score}/100. Experience: ${eeatPayload.experience}, Expertise: ${eeatPayload.expertise}, Authoritativeness: ${eeatPayload.authoritativeness}, Trustworthiness: ${eeatPayload.trustworthiness}. Problèmes: ${(eeatPayload.issues || []).slice(0, 5).join('; ')}`,
+          affected_urls: [],
+          source_type: 'eeat_audit',
+          data: {
+            score: eeatPayload.score,
+            experience: eeatPayload.experience,
+            expertise: eeatPayload.expertise,
+            authoritativeness: eeatPayload.authoritativeness,
+            trustworthiness: eeatPayload.trustworthiness,
+            issues: eeatPayload.issues,
+            strengths: eeatPayload.strengths,
+            recommendations: eeatPayload.recommendations,
+            signals: eeatPayload.signals,
+          },
+        });
+      }
+      for (const f of allFindings) {
+        if (f.data) {
+          f.data.eeat_context = {
+            score: eeatPayload.score,
+            weakest_pillar: ['experience', 'expertise', 'authoritativeness', 'trustworthiness']
+              .reduce((min, p) => (eeatPayload[p] < eeatPayload[min] ? p : min), 'experience'),
+          };
+        }
       }
     }
 
