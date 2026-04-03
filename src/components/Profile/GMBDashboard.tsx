@@ -742,11 +742,15 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
             setOrderedLocations(data.locations);
             setSelectedLocationId(data.locations[0]?.id || null);
           }
+        } else if (simulatedDataEnabled) {
+          // Not connected but simulated data enabled — show demo locations
+          setOrderedLocations(SIMULATED_LOCATIONS);
+          setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
         }
       } catch (_) { /* ignore */ }
       setLocationsLoading(false);
     })();
-  }, [isGated]);
+  }, [isGated, simulatedDataEnabled]);
 
   const handleGbpConnect = async () => {
     setGbpLoading(true);
