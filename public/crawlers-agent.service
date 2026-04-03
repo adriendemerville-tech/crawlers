@@ -1,0 +1,27 @@
+[Unit]
+Description=crawlers.fr - Log Agent (streame les access logs vers le dashboard)
+Documentation=https://crawlers.fr/docs/agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# ═══ CONFIGUREZ CES VALEURS ═══
+ExecStart=/usr/local/bin/crawlers-agent.sh --key=VOTRE_CLE_API --log=/var/log/nginx/access.log
+# ═══════════════════════════════
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=crawlers-agent
+
+# Sécurité
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/var/log
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
