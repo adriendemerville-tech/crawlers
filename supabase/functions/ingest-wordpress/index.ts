@@ -1,18 +1,15 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * ingest-wordpress — Webhook receiver for the crawlers.fr WordPress plugin.
  * Auth: X-Crawlers-Key header, matched against hashed API key in connectors.
  * Receives pre-parsed entries from PHP plugin (limited — misses cached requests).
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const apiKey = req.headers.get('X-Crawlers-Key') || req.headers.get('x-crawlers-key');
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'Missing X-Crawlers-Key header', code: 'MISSING_KEY' }), {
@@ -74,4 +71,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

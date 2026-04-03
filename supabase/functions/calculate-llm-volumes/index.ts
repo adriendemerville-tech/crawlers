@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getUserClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const INFORMATIONAL_KEYWORDS = ['comment', 'pourquoi', 'idées', 'quel', 'quelle', 'différence', 'how', 'why', 'what', 'which', 'ideas'];
 const COMMERCIAL_KEYWORDS = ['prix', 'coût', 'devis', 'tarif', 'combien', 'price', 'cost', 'quote', 'pricing'];
 const LOCAL_KEYWORDS = ['près de', 'autour de', 'entreprise', 'spécialiste', 'artisan', 'ville', 'near', 'around', 'local', 'nearby'];
@@ -12,22 +13,15 @@ function detectIntent(keyword: string): string {
   return 'default';
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { keyword, global_volume, keywords } = await req.json();
 
     // Support both single keyword and batch mode
     const isBatch = Array.isArray(keywords) && keywords.length > 0;
 
     if (!isBatch && (!keyword || global_volume == null)) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'keyword and global_volume are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonOk({ success: false, error: 'keyword and global_volume are required' }, 400);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -71,22 +65,13 @@ Deno.serve(async (req) => {
       const results = keywords.map((item: { keyword: string; global_volume: number }) =>
         computeVolumes(item.keyword, item.global_volume)
       );
-      return new Response(
-        JSON.stringify({ success: true, results }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonOk({ success: true, results });
     }
 
     const result = computeVolumes(keyword, global_volume);
-    return new Response(
-      JSON.stringify({ success: true, ...result }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true, ...result });
   } catch (error) {
     console.error('calculate-llm-volumes error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
-});
+}));

@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { autoDetectAndParse } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -10,12 +11,8 @@ const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50 MB
  * ingest-upload — Accepts log file uploads via multipart/form-data.
  * Requires authentication. Reserved for Pro Agency+ users.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // Auth check
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
@@ -139,4 +136,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

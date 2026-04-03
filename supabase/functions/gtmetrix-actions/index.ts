@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: gtmetrix-actions
@@ -30,12 +31,8 @@ async function gtmetrixFetch(path: string, apiKey: string, options: RequestInit 
   return data;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, ...params } = await req.json();
     const supabase = getUserClient(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -144,4 +141,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

@@ -1,17 +1,14 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * api-balances — Fetches real-time balance/usage for SerpAPI, OpenRouter, Firecrawl
  * Admin-only endpoint returning all API balances in one call
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient();
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -120,7 +117,7 @@ async function fetchFirecrawlBalance() {
 
   const resp = await fetch('https://api.firecrawl.dev/v1/team/credits', {
     headers: { 'Authorization': `Bearer ${apiKey}` },
-  });
+  }));
   if (!resp.ok) {
     const text = await resp.text();
     console.error('[api-balances] Firecrawl error:', resp.status, text);

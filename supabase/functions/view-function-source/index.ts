@@ -1,26 +1,18 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Unauthorized', 401);
     }
 
     const supabase = getUserClient(authHeader);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Unauthorized', 401);
     }
 
     const serviceClient = getServiceClient();
@@ -34,12 +26,12 @@ Deno.serve(async (req) => {
     const isViewer = userRoles.includes('viewer');
 
     if (!isAdmin && !isViewer) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Forbidden', 403);
     }
 
     const { function_name } = await req.json();
     if (!function_name || typeof function_name !== 'string' || /[^a-z0-9\-]/.test(function_name)) {
-      return new Response(JSON.stringify({ error: 'Invalid function name' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonError('Invalid function name', 400);
     }
 
     // For viewers, check approved access
@@ -53,7 +45,7 @@ Deno.serve(async (req) => {
         .limit(1);
 
       if (!accessData || accessData.length === 0) {
-        return new Response(JSON.stringify({ error: 'Access not approved' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonError('Access not approved', 403);
       }
     }
 
@@ -85,6 +77,6 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonError(String(err), 500);
   }
-});
+}));

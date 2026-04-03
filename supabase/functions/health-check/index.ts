@@ -1,14 +1,8 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  const start = Date.now();
+Deno.serve(handleRequest(async (req) => {
+const start = Date.now();
   const checks: Record<string, { ok: boolean; ms: number; error?: string }> = {};
 
   // 1. Database connectivity
@@ -47,4 +41,4 @@ Deno.serve(async (req) => {
     status: allOk ? 200 : 503,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
-});
+}));

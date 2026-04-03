@@ -2,17 +2,14 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseJSONLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * ingest-cloudflare — Webhook receiver for Cloudflare Logpush.
  * Validates CF-Logpush-Secret, parses NDJSON body, normalizes and stores.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const cfSecret = req.headers.get('CF-Logpush-Secret') || req.headers.get('cf-logpush-secret');
     if (!cfSecret) {
       return new Response(JSON.stringify({ error: 'Missing CF-Logpush-Secret header', code: 'MISSING_SECRET' }), {
@@ -90,4 +87,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

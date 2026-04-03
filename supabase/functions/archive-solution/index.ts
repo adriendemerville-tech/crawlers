@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface ArchiveRequest {
   code: string;
@@ -14,20 +15,13 @@ interface ArchiveRequest {
   technologyContext?: string;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { code, fixes, siteName, siteUrl, technologyContext = '' }: ArchiveRequest = await req.json();
 
     // Seuil minimum : 3 fixes activés pour archiver
     if (!code || !fixes || fixes.length < 3) {
-      return new Response(
-        JSON.stringify({ success: false, skipped: true, error: 'Minimum 3 fixes required for archiving' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonOk({ success: false, skipped: true, error: 'Minimum 3 fixes required for archiving' });
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -137,9 +131,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error archiving solution:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: false, error: errorMessage }, 500);
   }
-});
+}));

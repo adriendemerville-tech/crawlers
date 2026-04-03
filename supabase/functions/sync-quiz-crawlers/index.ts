@@ -1,13 +1,10 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { callLovableAIText } from '../_shared/lovableAI.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabase = getServiceClient();
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient();
 
   try {
     // 1. Get current active Crawlers questions for dedup context
@@ -128,4 +125,4 @@ Réponds UNIQUEMENT en JSON valide, format :
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

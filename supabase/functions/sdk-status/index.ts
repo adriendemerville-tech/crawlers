@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: sdk-status (Kill Switch)
@@ -10,12 +11,8 @@ import { corsHeaders } from '../_shared/cors.ts';
  * - If the domain is blocked or SDK is globally disabled → isEnabled: false
  * - Must respond in <200ms (ultra-lightweight)
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     let domain = '';
     let event = '';
     let fixesCount = 0;
@@ -82,4 +79,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
     });
   }
-});
+}));

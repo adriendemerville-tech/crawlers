@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gmb-places-autocomplete — Google Places Autocomplete proxy
@@ -8,12 +9,8 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY')
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     if (!GOOGLE_PLACES_API_KEY) {
       return new Response(JSON.stringify({ error: 'GOOGLE_PLACES_API_KEY not configured' }), {
         status: 500,

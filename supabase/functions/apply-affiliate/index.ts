@@ -1,16 +1,13 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * apply-affiliate — Validates and applies an affiliate code during signup.
  * Grants Pro Agency for the configured duration and tracks activation.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { code, user_id } = await req.json();
 
     if (!code || typeof code !== 'string' || code.length < 3 || code.length > 30) {
@@ -120,4 +117,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

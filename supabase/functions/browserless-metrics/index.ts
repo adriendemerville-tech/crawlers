@@ -1,12 +1,9 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { BROWSERLESS_BASE_URL, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const token = getBrowserlessKey();
+Deno.serve(handleRequest(async (req) => {
+const token = getBrowserlessKey();
   if (!token) {
     return new Response(JSON.stringify({ error: 'RENDERING_API_KEY not configured' }), {
       status: 500,
@@ -73,4 +70,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

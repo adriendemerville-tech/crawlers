@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * felix-weekly-quiz-notif — Weekly cron that creates a quiz invitation
@@ -9,12 +10,8 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
  * can show a notification bubble in Félix.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabase = getServiceClient();
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient();
 
   try {
     // Find users who logged in within last 14 days but haven't done a quiz in 7+ days
@@ -93,4 +90,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

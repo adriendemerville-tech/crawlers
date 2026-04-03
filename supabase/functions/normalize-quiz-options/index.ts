@@ -1,13 +1,10 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { callLovableAIText } from '../_shared/lovableAI.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabase = getServiceClient();
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient();
   if (!Deno.env.get('LOVABLE_API_KEY')) throw new Error('LOVABLE_API_KEY not configured');
 
   try {
@@ -102,4 +99,4 @@ Réponds UNIQUEMENT en JSON :
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

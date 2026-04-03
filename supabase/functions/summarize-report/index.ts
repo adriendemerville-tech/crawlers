@@ -1,10 +1,9 @@
 import { trackTokenUsage } from "../_shared/tokenTracker.ts";
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { texts, language } = await req.json();
 
     // texts is a Record<string, string> of key -> long text
@@ -123,4 +122,4 @@ Règles :
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));

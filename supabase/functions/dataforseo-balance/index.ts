@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * dataforseo-balance — Fetches real-time DataForSEO account balance
@@ -7,12 +8,8 @@ import { corsHeaders } from '../_shared/cors.ts';
  * Returns: balance, total deposited, and spending by endpoint
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // Verify admin
     const supabase = getServiceClient();
     const authHeader = req.headers.get('Authorization');
@@ -91,4 +88,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

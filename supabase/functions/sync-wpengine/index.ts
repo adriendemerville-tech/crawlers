@@ -2,17 +2,14 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseCombinedLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * sync-wpengine — Pulls access logs from WP Engine API (cron: hourly).
  * Iterates all active 'wpengine' connectors.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // Auth: accept service role key or anon key (for pg_cron internal calls)
     const authHeader = req.headers.get('Authorization') || '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -124,4 +121,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

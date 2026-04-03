@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: watchdog-scripts
@@ -16,12 +17,8 @@ const MAX_PAYLOAD_SIZE_BYTES = 50 * 1024; // 50 KB
 const GHOST_THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 hours
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabase = getServiceClient();
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient();
 
   const report = {
     rule1_deactivated: 0,
@@ -115,4 +112,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

@@ -1,11 +1,8 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const flyUrl = Deno.env.get('FLY_RENDERER_URL');
+Deno.serve(handleRequest(async (req) => {
+const flyUrl = Deno.env.get('FLY_RENDERER_URL');
   if (!flyUrl) {
     return new Response(JSON.stringify({ ok: false, error: 'FLY_RENDERER_URL not set' }), {
       status: 500,
@@ -35,4 +32,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

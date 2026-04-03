@@ -1,33 +1,24 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getUserClient, getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
     const supabase = getUserClient(authHeader);
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
     const user = userData.user;
@@ -42,10 +33,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!profile?.stripe_subscription_id) {
-      return new Response(
-        JSON.stringify({ error: "No active subscription found" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("No active subscription found", 400);
     }
 
     // Check if a retention coupon already exists, or create one
@@ -69,10 +57,7 @@ Deno.serve(async (req) => {
     const subscription = await stripe.subscriptions.retrieve(profile.stripe_subscription_id);
     
     if (subscription.discount?.coupon?.id === couponCode) {
-      return new Response(
-        JSON.stringify({ error: "Retention offer already applied" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Retention offer already applied", 400);
     }
 
     // Apply coupon to the subscription
@@ -82,16 +67,10 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Retention coupon applied for user ${user.id} on subscription ${profile.stripe_subscription_id}`);
 
-    return new Response(
-      JSON.stringify({ success: true, discount: 30, duration_months: 3 }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonOk({ success: true, discount: 30, duration_months: 3 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Error applying retention offer:", errorMessage);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonError(errorMessage, 500);
   }
-});
+}));

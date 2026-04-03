@@ -1,13 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  try {
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No auth");
 
@@ -85,4 +79,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));

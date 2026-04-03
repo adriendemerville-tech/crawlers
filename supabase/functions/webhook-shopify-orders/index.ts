@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: webhook-shopify-orders
@@ -10,12 +11,8 @@ import { corsHeaders } from '../_shared/cors.ts'
  * Authentication: maps the shop domain to a tracked_site via cms_connections.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  // Always respond 200 quickly — Shopify retries on non-2xx
+Deno.serve(handleRequest(async (req) => {
+// Always respond 200 quickly — Shopify retries on non-2xx
   try {
     const supabase = getServiceClient()
 

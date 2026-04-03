@@ -12,16 +12,13 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { submitSitemapToGSC } from '../_shared/submitSitemapToGSC.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const DEFAULT_DOMAIN = 'crawlers.fr';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const body = await req.json();
     const { user_id, domain, sitemap_url } = body;
 
@@ -96,4 +93,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

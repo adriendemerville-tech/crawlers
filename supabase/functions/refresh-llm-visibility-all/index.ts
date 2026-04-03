@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * refresh-llm-visibility-all  v2
@@ -14,11 +15,8 @@ const BATCH_SIZE = 15
 const DELAY_BETWEEN_SITES_MS = 2000
 const MAX_RUNTIME_MS = 240_000 // 240s safety margin
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  const supabase = getServiceClient()
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient()
 
   try {
     const body = await req.json().catch(() => ({}))
