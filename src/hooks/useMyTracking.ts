@@ -36,6 +36,7 @@ export interface StatsEntry {
   ai_sentiment: string | null;
   semantic_authority: number | null;
   voice_share: number | null;
+  raw_data?: Record<string, unknown> | null;
 }
 
 export interface GscDataRow {
