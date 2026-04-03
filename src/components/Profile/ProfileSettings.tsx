@@ -191,7 +191,7 @@ export function ProfileSettings() {
             <Label htmlFor="email">{t.email}</Label>
             <Input id="email" value={user.email || ''} disabled className="bg-muted" />
           </div>
-          <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSaveProfile} disabled={isSaving} variant="outline" className="gap-2 bg-transparent border-border rounded-sm">
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? t.saving : t.saveChanges}
           </Button>
@@ -275,9 +275,9 @@ export function ProfileSettings() {
               </div>
             </div>
             <Button
-              variant={gscConnected ? 'outline' : 'default'}
+              variant="outline"
               size="sm"
-              className="gap-2 shrink-0"
+              className="gap-2 shrink-0 bg-transparent border-border rounded-sm"
               disabled={gscConnecting}
               onClick={handleUpdateGscConnection}
             >
@@ -372,13 +372,13 @@ export function ProfileSettings() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant={language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('fr')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'fr' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇫🇷</span> {t.french}
             </Button>
-            <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => setLanguage('en')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('en')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'en' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇬🇧</span> {t.english}
             </Button>
-            <Button variant={language === 'es' ? 'default' : 'outline'} onClick={() => setLanguage('es')} className="gap-2">
+            <Button variant="outline" onClick={() => setLanguage('es')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'es' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇪🇸</span> {t.spanish}
             </Button>
           </div>
@@ -412,10 +412,10 @@ function ThemeSettingsCard() {
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">
-          <Button variant={theme !== 'dark' ? 'default' : 'outline'} onClick={() => setTheme('light')} className="gap-2">
+          <Button variant="outline" onClick={() => setTheme('light')} className={`gap-2 rounded-sm bg-transparent border-border ${theme !== 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Sun className="h-4 w-4" /> {l.light}
           </Button>
-          <Button variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')} className="gap-2">
+          <Button variant="outline" onClick={() => setTheme('dark')} className={`gap-2 rounded-sm bg-transparent border-border ${theme === 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Moon className="h-4 w-4" /> {l.dark}
           </Button>
         </div>
