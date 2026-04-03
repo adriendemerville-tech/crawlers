@@ -452,6 +452,9 @@ export function MyWallet() {
               <TabsContent value="profile" className="mt-0">
                 <AccountManager />
                 <div className="mt-6">
+                  <TeamSharingSettings />
+                </div>
+                <div className="mt-6">
                   <ProfileSettings />
                 </div>
               </TabsContent>
