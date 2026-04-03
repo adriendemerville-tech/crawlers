@@ -8,8 +8,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, Bot, Globe, TrendingUp, CalendarIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Lock } from 'lucide-react';
 
 interface BotLogChartCardProps {
   domain?: string;
