@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
   // POST: API calls (login, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id, frontend_origin, start_date, end_date } = await req.json();
+    const { action, site_url, user_id, frontend_origin, start_date, end_date, connection_id, google_email } = await req.json();
 
     // Check if full Google access is enabled via system_config
     const supabase = getServiceClient();
@@ -216,6 +216,149 @@ Deno.serve(async (req) => {
 
       return new Response(JSON.stringify({
         auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === STATUS: Check connection status for a user ===
+    if (action === 'status') {
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: 'user_id required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Get all google_connections for this user
+      const { data: connections } = await supabase
+        .from('google_connections')
+        .select('id, google_email, gsc_site_urls, ga4_property_id, token_expiry, updated_at')
+        .eq('user_id', user_id);
+
+      // Also check legacy profile tokens
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('gsc_access_token, gsc_token_expiry, ga4_property_id')
+        .eq('user_id', user_id)
+        .single();
+
+      const hasLegacy = !!profile?.gsc_access_token;
+      const legacyExpired = hasLegacy && profile.gsc_token_expiry
+        ? new Date(profile.gsc_token_expiry) < new Date()
+        : false;
+
+      return new Response(JSON.stringify({
+        connected: (connections && connections.length > 0) || hasLegacy,
+        connections: (connections || []).map(c => ({
+          id: c.id,
+          google_email: c.google_email,
+          gsc_site_urls: c.gsc_site_urls,
+          ga4_property_id: c.ga4_property_id,
+          token_expired: c.token_expiry ? new Date(c.token_expiry) < new Date() : false,
+          updated_at: c.updated_at,
+        })),
+        legacy: hasLegacy ? {
+          expired: legacyExpired,
+          ga4_property_id: profile.ga4_property_id,
+        } : null,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === DISCONNECT: Revoke Google token and remove connection ===
+    if (action === 'disconnect') {
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: 'user_id required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const targetConnectionId = connection_id;
+      const targetEmail = google_email;
+
+      let revokedCount = 0;
+      let deletedCount = 0;
+
+      // If a specific connection_id is provided, disconnect only that one
+      if (targetConnectionId) {
+        const { data: conn } = await supabase
+          .from('google_connections')
+          .select('access_token, refresh_token')
+          .eq('id', targetConnectionId)
+          .eq('user_id', user_id)
+          .single();
+
+        if (conn) {
+          // Revoke token at Google
+          const tokenToRevoke = conn.access_token || conn.refresh_token;
+          if (tokenToRevoke) {
+            const revokeResp = await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(tokenToRevoke)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            if (revokeResp.ok) revokedCount++;
+            else console.warn(`[gsc-auth] Token revocation returned ${revokeResp.status}`);
+          }
+
+          // Unlink tracked_sites referencing this connection
+          await supabase
+            .from('tracked_sites')
+            .update({ google_connection_id: null })
+            .eq('google_connection_id', targetConnectionId);
+
+          // Delete the connection row
+          await supabase
+            .from('google_connections')
+            .delete()
+            .eq('id', targetConnectionId)
+            .eq('user_id', user_id);
+          deletedCount++;
+        }
+      } else {
+        // Disconnect ALL connections for this user (or filter by email)
+        let query = supabase
+          .from('google_connections')
+          .select('id, access_token, refresh_token')
+          .eq('user_id', user_id);
+        if (targetEmail) query = query.eq('google_email', targetEmail);
+
+        const { data: allConns } = await query;
+
+        for (const conn of (allConns || [])) {
+          const tokenToRevoke = conn.access_token || conn.refresh_token;
+          if (tokenToRevoke) {
+            const revokeResp = await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(tokenToRevoke)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            if (revokeResp.ok) revokedCount++;
+          }
+
+          await supabase
+            .from('tracked_sites')
+            .update({ google_connection_id: null })
+            .eq('google_connection_id', conn.id);
+
+          await supabase
+            .from('google_connections')
+            .delete()
+            .eq('id', conn.id);
+          deletedCount++;
+        }
+      }
+
+      // Also clear legacy profile tokens
+      await supabase.from('profiles').update({
+        gsc_access_token: null,
+        gsc_refresh_token: null,
+        gsc_token_expiry: null,
+      }).eq('user_id', user_id);
+
+      return new Response(JSON.stringify({
+        success: true,
+        revoked_tokens: revokedCount,
+        deleted_connections: deletedCount,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
