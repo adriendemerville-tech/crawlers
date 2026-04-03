@@ -138,7 +138,15 @@ function ProfileContent() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
-  
+  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
+
+  useEffect(() => {
+    supabase.from('admin_dashboard_config').select('card_order').limit(1).maybeSingle().then(({ data }) => {
+      if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
+        setSimulatedDataEnabled(!!(data.card_order as Record<string, unknown>).simulated_data_enabled);
+      }
+    });
+  }, []);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
