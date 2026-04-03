@@ -822,7 +822,7 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
                   : 'Connect your Google Business Profile account to manage your locations.'}
               </p>
             </div>
-            <Button onClick={handleGbpConnect} disabled={gbpLoading} className="gap-2">
+            <Button onClick={handleGbpConnect} disabled={gbpLoading} variant="outline" className="gap-2 rounded-sm border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5">
               {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
               {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
             </Button>
