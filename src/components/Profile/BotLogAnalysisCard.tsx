@@ -98,6 +98,29 @@ export function BotLogAnalysisCard({ trackedSiteId, domain, simulatedDataEnabled
 
   const chartData = useMemo(() => simulatedDataEnabled ? generateSimulatedData(parseInt(period)) : [], [period, simulatedDataEnabled]);
 
+  const totals = useMemo(() => {
+    const sums = chartData.reduce(
+      (acc, d) => ({
+        searchEngines: acc.searchEngines + d.searchEngines,
+        aiBots: acc.aiBots + d.aiBots,
+        seoTools: acc.seoTools + d.seoTools,
+        socialBots: acc.socialBots + d.socialBots,
+      }),
+      { searchEngines: 0, aiBots: 0, seoTools: 0, socialBots: 0 }
+    );
+    const total = sums.searchEngines + sums.aiBots + sums.seoTools + sums.socialBots;
+    const aiPct = total > 0 ? Math.round((sums.aiBots / total) * 100) : 0;
+    const bots = [
+      { name: 'Googlebot', count: Math.round(sums.searchEngines * 0.65) },
+      { name: 'Bytespider', count: Math.round(sums.aiBots * 0.55) },
+      { name: 'GPTBot', count: Math.round(sums.aiBots * 0.25) },
+      { name: 'AhrefsBot', count: Math.round(sums.seoTools * 0.4) },
+      { name: 'Bingbot', count: Math.round(sums.searchEngines * 0.2) },
+    ];
+    const topBot = bots.sort((a, b) => b.count - a.count)[0];
+    return { total, activeBots: 26, topBot, aiPct };
+  }, [chartData]);
+
   if (!simulatedDataEnabled) {
     return (
       <Card>
@@ -115,37 +138,6 @@ export function BotLogAnalysisCard({ trackedSiteId, domain, simulatedDataEnabled
       </Card>
     );
   }
-
-  const totals = useMemo(() => {
-    const sums = chartData.reduce(
-      (acc, d) => ({
-        searchEngines: acc.searchEngines + d.searchEngines,
-        aiBots: acc.aiBots + d.aiBots,
-        seoTools: acc.seoTools + d.seoTools,
-        socialBots: acc.socialBots + d.socialBots,
-      }),
-      { searchEngines: 0, aiBots: 0, seoTools: 0, socialBots: 0 }
-    );
-    const total = sums.searchEngines + sums.aiBots + sums.seoTools + sums.socialBots;
-    const aiPct = total > 0 ? Math.round((sums.aiBots / total) * 100) : 0;
-
-    // Find top bot
-    const bots = [
-      { name: 'Googlebot', count: Math.round(sums.searchEngines * 0.65) },
-      { name: 'Bytespider', count: Math.round(sums.aiBots * 0.55) },
-      { name: 'GPTBot', count: Math.round(sums.aiBots * 0.25) },
-      { name: 'AhrefsBot', count: Math.round(sums.seoTools * 0.4) },
-      { name: 'Bingbot', count: Math.round(sums.searchEngines * 0.2) },
-    ];
-    const topBot = bots.sort((a, b) => b.count - a.count)[0];
-
-    return {
-      total,
-      activeBots: 26,
-      topBot,
-      aiPct,
-    };
-  }, [chartData]);
 
   const kpis = [
     { label: t.totalRequests, value: totals.total.toLocaleString(), icon: Activity },
