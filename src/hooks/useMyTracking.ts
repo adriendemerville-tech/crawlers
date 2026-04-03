@@ -799,7 +799,8 @@ export function useMyTracking() {
   const getPerformanceScore = (entry: StatsEntry) => entry.raw_data?.performanceScore as number | null ?? null;
   const getPerformanceDesktop = (entry: StatsEntry) => entry.raw_data?.performanceDesktop as number | null ?? null;
   const getAiVisibility = (entry: StatsEntry): number | null => entry.raw_data?.llmOverallScore as number | null ?? null;
-  const getSerpData = (entry: StatsEntry) => entry.raw_data?.serpData as Record<string, unknown> | null ?? null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getSerpData = (entry: StatsEntry) => entry.raw_data?.serpData as any ?? null;
 
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
   const latestPerformanceDesktop = latestStats ? getPerformanceDesktop(latestStats) : null;
