@@ -341,6 +341,20 @@ Deno.serve(async (req) => {
         })
       }
 
+      // ── Verify site ownership ──
+      const { data: siteOwned } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('id', tracked_site_id)
+        .eq('user_id', user_id)
+        .maybeSingle()
+
+      if (!siteOwned) {
+        return new Response(JSON.stringify({ error: 'Site not found or not owned by user' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
       const { data: opportunities } = await req.json().catch(() => ({ data: null }))
       
       // Re-run analysis to get fresh data
