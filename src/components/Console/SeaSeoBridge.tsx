@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, TrendingDown, ArrowRight, Zap, AlertTriangle, Search, DollarSign, Target, Send } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, ArrowRight, Zap, AlertTriangle, Search, DollarSign, Target, Send, Unplug, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { SIMULATED_OPPORTUNITIES, SIMULATED_SUMMARY } from '@/data/seaSeoSimulatedData';
 
 interface Opportunity {
   keyword: string;
@@ -54,10 +56,49 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [injecting, setInjecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [adsConnected, setAdsConnected] = useState<boolean | null>(null);
+  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
+
+  // Check Google Ads connection status & simulated data flag
+  useEffect(() => {
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check ads connection
+      const { data: ads } = await (supabase as any)
+        .from('google_ads_connections')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setAdsConnected(!!ads);
+
+      // Check simulated data flag from admin config
+      const { data: config } = await supabase
+        .from('admin_dashboard_config')
+        .select('card_order')
+        .limit(1)
+        .maybeSingle();
+      if (config?.card_order) {
+        const co = config.card_order as Record<string, unknown>;
+        setSimulatedDataEnabled(co.simulated_data_enabled !== false);
+      }
+    };
+    check();
+  }, []);
+
+  // Auto-load simulated data when enabled and no live data
+  useEffect(() => {
+    if (simulatedDataEnabled && !adsConnected && !summary) {
+      setSummary(SIMULATED_SUMMARY);
+      setOpportunities(SIMULATED_OPPORTUNITIES);
+    }
+  }, [simulatedDataEnabled, adsConnected, summary]);
 
   const analyze = async () => {
     setLoading(true);
@@ -88,6 +129,10 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       toast.warning('Sélectionnez au moins une opportunité');
       return;
     }
+    if (summary?.data_source === 'simulated') {
+      toast.info('Les données simulées ne peuvent pas être injectées dans le workbench.');
+      return;
+    }
     setInjecting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -110,6 +155,24 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       toast.error(err.message || 'Erreur d\'injection');
     } finally {
       setInjecting(false);
+    }
+  };
+
+  const disconnectAds = async () => {
+    setDisconnecting(true);
+    try {
+      const { error } = await supabase.functions.invoke('google-ads-connector', {
+        body: { action: 'disconnect' },
+      });
+      if (error) throw error;
+      setAdsConnected(false);
+      setSummary(null);
+      setOpportunities([]);
+      toast.success(t3(language, 'Google Ads déconnecté', 'Google Ads disconnected', 'Google Ads desconectado'));
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de déconnexion');
+    } finally {
+      setDisconnecting(false);
     }
   };
 
@@ -152,10 +215,18 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
             )}
           </p>
         </div>
-        <Button onClick={analyze} disabled={loading} size="sm">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-          {loading ? 'Analyse…' : 'Analyser'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {adsConnected && (
+            <Button variant="outline" size="sm" onClick={disconnectAds} disabled={disconnecting} className="text-destructive border-destructive/30 hover:bg-destructive/10">
+              {disconnecting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Unplug className="h-4 w-4 mr-1" />}
+              {t3(language, 'Déconnecter Google Ads', 'Disconnect Google Ads', 'Desconectar Google Ads')}
+            </Button>
+          )}
+          <Button onClick={analyze} disabled={loading || (!adsConnected && !simulatedDataEnabled)} size="sm">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+            {loading ? 'Analyse…' : 'Analyser'}
+          </Button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -188,7 +259,11 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
           {summary.data_source === 'simulated' && (
             <div className="col-span-full">
               <Badge variant="outline" className="border-orange-500/40 text-orange-500 text-xs">
-                ⚠️ Données simulées — Connectez Google Ads pour des données réelles
+                ⚠️ {t3(language,
+                  'Données simulées — Connectez Google Ads pour des données réelles',
+                  'Simulated data — Connect Google Ads for real data',
+                  'Datos simulados — Conecte Google Ads para datos reales'
+                )}
               </Badge>
             </div>
           )}
@@ -230,7 +305,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
           </Button>
           <Button
             size="sm"
-            disabled={selectedIds.size === 0 || injecting}
+            disabled={selectedIds.size === 0 || injecting || summary?.data_source === 'simulated'}
             onClick={injectSelected}
             className="gap-2"
           >
@@ -318,21 +393,72 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
         </div>
       )}
 
-      {/* Empty state */}
-      {!loading && opportunities.length === 0 && !summary && (
+      {/* Empty state — Google Ads NOT connected */}
+      {!loading && opportunities.length === 0 && !summary && adsConnected === false && !simulatedDataEnabled && (
+        <Card className="border-dashed border-2 border-primary/20">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <LinkIcon className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">
+                {t3(language, 'Connectez Google Ads', 'Connect Google Ads', 'Conecte Google Ads')}
+              </h3>
+              <p className="text-muted-foreground text-sm mt-1 max-w-md mx-auto">
+                {t3(language,
+                  'Le SEA → SEO Bridge nécessite une connexion à votre compte Google Ads pour croiser vos données de campagnes payantes avec vos positions organiques.',
+                  'The SEA → SEO Bridge requires a connection to your Google Ads account to cross-reference your paid campaign data with organic positions.',
+                  'El SEA → SEO Bridge requiere una conexión a su cuenta de Google Ads para cruzar sus datos de campañas pagadas con posiciones orgánicas.'
+                )}
+              </p>
+            </div>
+            <Link to="/console" className="inline-block">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Target className="h-4 w-4" />
+                {t3(language, 'Aller dans API → Google Ads', 'Go to API → Google Ads', 'Ir a API → Google Ads')}
+              </Button>
+            </Link>
+            <p className="text-[11px] text-muted-foreground/50">
+              {t3(language,
+                'Accès en lecture seule uniquement.',
+                'Read-only access only.',
+                'Acceso de solo lectura.'
+              )}
+              {' '}
+              <Link to="/privacy-google-ads" className="underline hover:text-muted-foreground">
+                {t3(language, 'Politique de confidentialité', 'Privacy policy', 'Política de privacidad')}
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state — Google Ads connected but no analysis yet */}
+      {!loading && opportunities.length === 0 && !summary && adsConnected === true && (
         <Card className="border-dashed">
           <CardContent className="p-8 text-center">
             <Target className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-muted-foreground text-sm">
               {t3(language,
-                'Lancez l\'analyse pour croiser vos données SEA avec vos positions organiques et les gaps Cocoon.',
-                'Run the analysis to cross-reference your SEA data with organic positions and Cocoon gaps.',
-                'Ejecute el análisis para cruzar sus datos SEA con posiciones orgánicas y gaps Cocoon.'
+                'Google Ads connecté ✓ — Lancez l\'analyse pour croiser vos données SEA avec vos positions organiques et les gaps Cocoon.',
+                'Google Ads connected ✓ — Run the analysis to cross-reference your SEA data with organic positions and Cocoon gaps.',
+                'Google Ads conectado ✓ — Ejecute el análisis para cruzar sus datos SEA con posiciones orgánicas y gaps Cocoon.'
               )}
             </p>
           </CardContent>
         </Card>
       )}
+
+      {/* Privacy link footer */}
+      <div className="text-center pt-2">
+        <Link to="/privacy-google-ads" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors underline">
+          {t3(language,
+            'Politique de confidentialité Google Ads',
+            'Google Ads Privacy Policy',
+            'Política de privacidad Google Ads'
+          )}
+        </Link>
+      </div>
     </div>
   );
 }
