@@ -267,6 +267,7 @@ export default function ApiIntegrations() {
               {apis.map((api, i) => (
                 <motion.div
                   key={api.id}
+                  id={api.id}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: '-50px' }}
