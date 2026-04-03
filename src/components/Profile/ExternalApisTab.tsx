@@ -881,14 +881,14 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   <button
                     key={s.id}
                     onClick={() => handleServiceClick(s)}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
                       isMatomoConnected
                         ? 'border-green-500/40 bg-green-500/5'
                         : 'border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
                     }`}
                   >
                     <div
-                      className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                      className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                       dangerouslySetInnerHTML={{ __html: s.logoSvg }}
                     />
                     <div className="flex-1 min-w-0">
