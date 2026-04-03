@@ -191,7 +191,7 @@ export function ProfileSettings() {
             <Label htmlFor="email">{t.email}</Label>
             <Input id="email" value={user.email || ''} disabled className="bg-muted" />
           </div>
-          <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSaveProfile} disabled={isSaving} variant="outline" className="gap-2 bg-transparent border-border rounded-sm">
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? t.saving : t.saveChanges}
           </Button>
