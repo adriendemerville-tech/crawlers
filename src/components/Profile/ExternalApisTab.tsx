@@ -650,7 +650,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         <button
           disabled={!service.available || isConnecting}
           onClick={() => handleServiceClick(service)}
-          className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
             isActive
               ? 'border-emerald-500/40 bg-emerald-500/5'
               : service.available
@@ -659,7 +659,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           }`}
         >
           <div
-            className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+            className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
             dangerouslySetInnerHTML={{ __html: service.logoSvg }}
           />
           <div className="flex-1 min-w-0">
@@ -729,7 +729,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           <CardTitle className="text-base">{t.analyticsTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {analyticsServices.map(renderServiceCard)}
           </div>
         </CardContent>
@@ -748,7 +748,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {cmsServices.map(renderServiceCard)}
           </div>
         </CardContent>
@@ -776,7 +776,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {logServices.map(service => {
               const isActive = logConnectedTypes.has(service.type);
               return (
@@ -784,7 +784,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   key={service.id}
                   onClick={() => isPremium && handleLogServiceClick(service)}
                   disabled={!isPremium}
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
                     !isPremium
                       ? 'border-border opacity-50 cursor-not-allowed grayscale'
                       : isActive
@@ -793,7 +793,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   }`}
                 >
                   <div
-                    className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                    className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                     dangerouslySetInnerHTML={{ __html: service.logoSvg }}
                   />
                   <div className="flex-1 min-w-0">
@@ -824,17 +824,17 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           <CardDescription className="text-xs">{t.seoToolsDesc}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
               onClick={() => setRankMathDialogOpen(true)}
-              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+              className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
                 rankMathConnected
                   ? 'border-green-500/40 bg-green-500/5'
                   : 'border-border hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer'
               }`}
             >
               <div
-                className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                 dangerouslySetInnerHTML={{ __html: RANK_MATH_LOGO }}
               />
               <div className="flex-1 min-w-0">
@@ -874,21 +874,21 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {selfHostedServices.map(s => {
                 const isMatomoConnected = s.id === 'matomo' && matomoConnected;
                 return (
                   <button
                     key={s.id}
                     onClick={() => handleServiceClick(s)}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
                       isMatomoConnected
                         ? 'border-green-500/40 bg-green-500/5'
                         : 'border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
                     }`}
                   >
                     <div
-                      className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                      className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                       dangerouslySetInnerHTML={{ __html: s.logoSvg }}
                     />
                     <div className="flex-1 min-w-0">
