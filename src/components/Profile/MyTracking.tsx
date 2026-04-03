@@ -881,8 +881,12 @@ export function MyTracking() {
                       }}
                       isRefreshing={h.refreshingSerp}
                     />
+
+                    {/* Bot Log Analysis (Pro Agency+) */}
+                    {h.isAgencyPro && (
+                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+                    )}
                   </div>
-                )}
               </div>
             </div>
           )}
