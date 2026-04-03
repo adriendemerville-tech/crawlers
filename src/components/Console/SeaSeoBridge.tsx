@@ -425,7 +425,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
                 'Acceso de solo lectura.'
               )}
               {' '}
-              <Link to="/privacy-google-ads" className="underline hover:text-muted-foreground">
+              <Link to="/api-integrations#google-ads" className="underline hover:text-muted-foreground">
                 {t3(language, 'Politique de confidentialité', 'Privacy policy', 'Política de privacidad')}
               </Link>
             </p>
