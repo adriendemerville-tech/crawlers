@@ -40,15 +40,21 @@ function extractActionDetails(ev: IkAction): { url: string; action: string; desc
   const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  // Determine action type label
+  // Determine action type label — use logged effective action if available
   let actionLabel = 'Modification';
+  const effectiveAction = ((ed.action as string) || '').toLowerCase();
+  const originalAction = ((ed.original_action as string) || '').toLowerCase();
+  const wasUpserted = ed.was_upserted === true;
   const lowerAction = action.toLowerCase();
-  if (lowerAction.includes('create') || lowerAction.includes('push') || lowerAction.includes('post')) {
+
+  if (wasUpserted) {
+    actionLabel = 'Mise à jour (upsert)';
+  } else if (effectiveAction.includes('update') || lowerAction.includes('update') || lowerAction.includes('patch')) {
+    actionLabel = 'Modification';
+  } else if (lowerAction.includes('create') || lowerAction.includes('push') || lowerAction.includes('post')) {
     actionLabel = 'Ajout de page';
   } else if (lowerAction.includes('delete') || lowerAction.includes('remove')) {
     actionLabel = 'Suppression';
-  } else if (lowerAction.includes('update') || lowerAction.includes('patch')) {
-    actionLabel = 'Modification';
   } else if (lowerAction.includes('push-event')) {
     actionLabel = 'Événement CMS';
   }
