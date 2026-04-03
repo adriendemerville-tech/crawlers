@@ -1,14 +1,22 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
+import { getAuthenticatedUserId } from '../_shared/auth.ts';
 
 /**
  * Edge Function: google-ads-connector
+ * 
+ * SECURITY NOTES:
+ * - Scope used: adwords.readonly (read-only, no campaign mutations possible)
+ * - The Google Ads API scope 'adwords' grants full access; we intentionally request
+ *   'adwords.readonly' which restricts the token to GET/report operations only.
+ * - On disconnect, we revoke the token at Google before deleting from DB.
+ * - POST actions (login/status/disconnect) require JWT authentication.
  * 
  * Handles Google Ads OAuth2 flow:
  * - POST action=login  → Returns OAuth2 authorization URL
  * - GET  (from Google) → Callback: exchanges code, stores tokens, redirects to frontend
  * - POST action=status → Returns connection status for the user
- * - POST action=disconnect → Removes the connection
+ * - POST action=disconnect → Revokes token at Google + removes the connection
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
