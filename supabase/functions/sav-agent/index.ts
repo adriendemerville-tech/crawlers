@@ -772,8 +772,16 @@ ${alertBlock}\n`;
 
       if (sites && sites.length > 0) {
         contextSnippet += "\n# SITES TRACKÉS DE L'UTILISATEUR\n";
-        for (const s of sites) {
+        const ownSites = sites.filter((s: any) => s.user_id === user_id);
+        const sharedSites = sites.filter((s: any) => s.user_id !== user_id);
+        for (const s of ownSites) {
           contextSnippet += `- ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}% (ajouté le ${s.created_at?.slice(0, 10)})\n`;
+        }
+        if (sharedSites.length > 0) {
+          contextSnippet += "\n# SITES PARTAGÉS PAR LE PROPRIÉTAIRE DU COMPTE\n";
+          for (const s of sharedSites) {
+            contextSnippet += `- [partagé] ${s.display_name || s.domain}: GEO ${s.geo_score ?? "N/A"}, SEO ${s.seo_score ?? "N/A"}%, LLM ${s.llm_visibility_score ?? "N/A"}%\n`;
+          }
         }
 
         // Read persistent memory for each site
