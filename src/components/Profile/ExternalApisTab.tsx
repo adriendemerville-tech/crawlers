@@ -1108,6 +1108,86 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Google Ads Scope Consent Dialog ── */}
+      <Dialog open={gadsConsentOpen} onOpenChange={setGadsConsentOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              {language === 'fr' ? 'Connexion Google Ads — Accès en lecture seule' :
+               language === 'es' ? 'Conexión Google Ads — Acceso de solo lectura' :
+               'Google Ads Connection — Read-Only Access'}
+            </DialogTitle>
+            <DialogDescription className="text-left space-y-3 pt-2">
+              <p>
+                {language === 'fr'
+                  ? "Google affichera un avertissement de sécurité car le scope technique requis (adwords) est global. C'est normal et attendu."
+                  : language === 'es'
+                  ? "Google mostrará una advertencia de seguridad porque el scope técnico requerido (adwords) es global. Es normal y esperado."
+                  : "Google will show a security warning because the required technical scope (adwords) is global. This is normal and expected."}
+              </p>
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-sm">
+                <p className="font-medium text-foreground">
+                  {language === 'fr' ? '🔒 Ce que nous faisons réellement :' :
+                   language === 'es' ? '🔒 Lo que realmente hacemos:' :
+                   '🔒 What we actually do:'}
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>{language === 'fr' ? 'Lecture des mots-clés et volumes de recherche' : language === 'es' ? 'Lectura de palabras clave y volúmenes de búsqueda' : 'Read keywords and search volumes'}</li>
+                  <li>{language === 'fr' ? 'Lecture des CPC et dépenses par campagne' : language === 'es' ? 'Lectura de CPC y gastos por campaña' : 'Read CPC and campaign spend'}</li>
+                  <li>{language === 'fr' ? 'Lecture des impressions, clics et conversions' : language === 'es' ? 'Lectura de impresiones, clics y conversiones' : 'Read impressions, clicks and conversions'}</li>
+                </ul>
+                <p className="font-medium text-foreground pt-1">
+                  {language === 'fr' ? '🚫 Ce que nous ne faisons JAMAIS :' :
+                   language === 'es' ? '🚫 Lo que NUNCA hacemos:' :
+                   '🚫 What we NEVER do:'}
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>{language === 'fr' ? 'Modifier ou supprimer vos campagnes' : language === 'es' ? 'Modificar o eliminar campañas' : 'Modify or delete your campaigns'}</li>
+                  <li>{language === 'fr' ? 'Créer des annonces ou ajuster des enchères' : language === 'es' ? 'Crear anuncios o ajustar pujas' : 'Create ads or adjust bids'}</li>
+                  <li>{language === 'fr' ? 'Accéder à vos informations de facturation' : language === 'es' ? 'Acceder a su información de facturación' : 'Access your billing information'}</li>
+                </ul>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {language === 'fr'
+                  ? "Vous pouvez révoquer cet accès à tout moment depuis cette page ou depuis votre compte Google."
+                  : language === 'es'
+                  ? "Puede revocar este acceso en cualquier momento desde esta página o desde su cuenta de Google."
+                  : "You can revoke this access at any time from this page or your Google account."}
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setGadsConsentOpen(false)}>
+              {language === 'fr' ? 'Annuler' : language === 'es' ? 'Cancelar' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={async () => {
+                setGadsConsentOpen(false);
+                setConnectingId('google-ads');
+                try {
+                  const { data, error } = await supabase.functions.invoke('google-ads-connector', {
+                    body: { action: 'login', frontend_origin: window.location.origin },
+                  });
+                  if (error) throw error;
+                  if (data?.auth_url) window.location.href = data.auth_url;
+                  else throw new Error('No auth URL returned');
+                } catch (err) {
+                  console.error('[ExternalApis] Google Ads auth error:', err);
+                  toast.error(language === 'fr' ? 'Erreur de connexion Google Ads' : language === 'es' ? 'Error de conexión Google Ads' : 'Google Ads connection error');
+                } finally {
+                  setConnectingId(null);
+                }
+              }}
+              className="gap-2"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {language === 'fr' ? 'J\'ai compris, continuer' : language === 'es' ? 'Entendido, continuar' : 'I understand, continue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
