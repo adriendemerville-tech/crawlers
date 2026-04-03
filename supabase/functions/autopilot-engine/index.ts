@@ -1300,8 +1300,9 @@ Deno.serve(async (req: Request) => {
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            // Reset force_content_cycle after use (one-shot toggle - Option D)
-            force_content_cycle: false,
+            // force_content_cycle stays true by default (proactive mode)
+            // Only reset force_iktracker_article which is a one-shot toggle
+            force_iktracker_article: false,
           })
           .eq('id', config.id);
 
