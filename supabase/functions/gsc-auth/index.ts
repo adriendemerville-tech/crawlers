@@ -274,8 +274,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { connection_id, google_email } = { connection_id: undefined, google_email: undefined, ...(await req.json().catch(() => ({}))) } as any;
-      // Re-parse is not needed since we already parsed above; use variables from outer scope
       const targetConnectionId = connection_id;
       const targetEmail = google_email;
 
