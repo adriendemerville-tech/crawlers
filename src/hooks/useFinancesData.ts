@@ -295,18 +295,15 @@ export function useFinancesData() {
       }
 
       try {
-        const [sizeRes, balanceRes, apiBalancesRes, browserlessRes] = await Promise.all([
-          supabase.rpc('get_database_size' as string),
+        const [balanceRes, apiBalancesRes, browserlessRes] = await Promise.all([
           supabase.functions.invoke('dataforseo-balance'),
           supabase.functions.invoke('api-balances'),
           supabase.functions.invoke('browserless-metrics'),
         ]);
-        if ((sizeRes as { data?: unknown }).data) setDbSize((sizeRes as { data: { total_mb: number; total_gb: number } }).data);
-          supabase.functions.invoke('dataforseo-balance'),
-          supabase.functions.invoke('api-balances'),
-          supabase.functions.invoke('browserless-metrics'),
-        ]);
-        if (sizeRes.data) setDbSize(sizeRes.data as { total_mb: number; total_gb: number });
+        try {
+          const sizeRes = await supabase.rpc('get_database_size' as string);
+          if (sizeRes.data) setDbSize(sizeRes.data as unknown as { total_mb: number; total_gb: number });
+        } catch { /* ignore */ }
         if (balanceRes.data && !balanceRes.error) setDataforseoBalance(balanceRes.data as DataforseoBalance);
         if (apiBalancesRes.data && !apiBalancesRes.error) setApiBalances(apiBalancesRes.data as ApiBalances);
         if (browserlessRes.data && !browserlessRes.error) setBrowserlessMetrics(browserlessRes.data as BrowserlessMetrics);
