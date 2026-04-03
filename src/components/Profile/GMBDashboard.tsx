@@ -710,9 +710,23 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
   const [locationsLoading, setLocationsLoading] = useState(!isGated);
 
+  // Handle GBP OAuth callback URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gbpError = params.get('gbp_error');
+    const gbpOk = params.get('gbp_connected');
+    if (gbpError) {
+      toast.error(language === 'fr' ? `Erreur Google Business : ${gbpError}` : `GBP error: ${gbpError}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (gbpOk) {
+      toast.success(language === 'fr' ? 'Google Business connecté avec succès !' : 'Google Business connected!');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [language]);
+
   // Check GBP connection status & fetch real locations for Pro users
   useEffect(() => {
-    if (isGated) return; // gated users keep simulated data
+    if (isGated) return;
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -723,12 +737,10 @@ export function GMBDashboard({ isGated = false }: { isGated?: boolean }) {
         if (data?.connected) {
           setGbpConnected(true);
           setGbpEmail(data.email || null);
-          // Try to fetch real locations
           if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
             setOrderedLocations(data.locations);
             setSelectedLocationId(data.locations[0]?.id || null);
           }
-          // If no locations returned, keep empty state (no simulated data)
         }
       } catch (_) { /* ignore */ }
       setLocationsLoading(false);

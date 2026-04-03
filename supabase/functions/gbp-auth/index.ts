@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // === STATUS: Check if user has GBP connection ===
+    // === STATUS: Check if user has GBP connection & fetch locations ===
     if (action === 'status') {
       if (!user_id) {
         return new Response(JSON.stringify({ error: 'user_id required' }), {
@@ -260,17 +260,84 @@ Deno.serve(async (req) => {
 
       const { data: gbpConn } = await supabase
         .from('google_connections')
-        .select('id, google_email, gmb_account_id, gmb_location_id, token_expiry')
+        .select('id, google_email, gmb_account_id, gmb_location_id, access_token, refresh_token, token_expiry')
         .eq('user_id', user_id)
         .like('google_email', 'gbp:%')
         .limit(1)
         .maybeSingle()
 
+      if (!gbpConn) {
+        return new Response(JSON.stringify({ connected: false, email: null, locations: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Refresh token if expired
+      let accessToken = gbpConn.access_token
+      if (gbpConn.token_expiry && new Date(gbpConn.token_expiry) <= new Date() && gbpConn.refresh_token) {
+        try {
+          const refreshResp = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: clientId,
+              client_secret: clientSecret,
+              refresh_token: gbpConn.refresh_token,
+              grant_type: 'refresh_token',
+            }),
+          })
+          if (refreshResp.ok) {
+            const newTokens = await refreshResp.json()
+            accessToken = newTokens.access_token
+            const newExpiry = new Date(Date.now() + (newTokens.expires_in || 3600) * 1000).toISOString()
+            await supabase.from('google_connections').update({
+              access_token: accessToken,
+              token_expiry: newExpiry,
+              updated_at: new Date().toISOString(),
+            }).eq('id', gbpConn.id)
+          }
+        } catch (e) {
+          console.warn('[gbp-auth] Token refresh failed:', e)
+        }
+      }
+
+      // Fetch real locations from GBP API
+      const locations: Array<{id: string; location_name: string; address: string; phone: string; website: string; category: string}> = []
+      try {
+        const accountId = gbpConn.gmb_account_id
+        if (accountId && accessToken) {
+          const locResp = await fetch(
+            `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?readMask=name,title,storefrontAddress,phoneNumbers,websiteUri,categories`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          )
+          if (locResp.ok) {
+            const { locations: apiLocs = [] } = await locResp.json()
+            for (const loc of apiLocs) {
+              const locId = loc.name?.split('/').pop() || ''
+              const addr = loc.storefrontAddress
+              const addressStr = addr ? [addr.addressLines?.[0], addr.locality, addr.postalCode, addr.regionCode].filter(Boolean).join(', ') : ''
+              locations.push({
+                id: locId,
+                location_name: loc.title || 'Sans nom',
+                address: addressStr,
+                phone: loc.phoneNumbers?.primaryPhone || '',
+                website: loc.websiteUri || '',
+                category: loc.categories?.primaryCategory?.displayName || '',
+              })
+            }
+          } else {
+            console.warn('[gbp-auth] Locations fetch failed:', await locResp.text())
+          }
+        }
+      } catch (e) {
+        console.warn('[gbp-auth] Locations fetch error:', e)
+      }
+
       return new Response(JSON.stringify({
-        connected: !!gbpConn,
-        email: gbpConn?.google_email?.replace('gbp:', '') || null,
-        has_location: !!gbpConn?.gmb_location_id,
-        token_valid: gbpConn?.token_expiry ? new Date(gbpConn.token_expiry) > new Date() : false,
+        connected: true,
+        email: gbpConn.google_email?.replace('gbp:', '') || null,
+        has_location: locations.length > 0,
+        locations,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })

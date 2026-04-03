@@ -4254,10 +4254,13 @@ export type Database = {
           access_token: string
           created_at: string | null
           ga4_property_id: string | null
+          gmb_account_id: string | null
+          gmb_location_id: string | null
           google_email: string
           gsc_site_urls: Json | null
           id: string
           refresh_token: string | null
+          scopes: string[] | null
           token_expiry: string | null
           updated_at: string | null
           user_id: string
@@ -4266,10 +4269,13 @@ export type Database = {
           access_token: string
           created_at?: string | null
           ga4_property_id?: string | null
+          gmb_account_id?: string | null
+          gmb_location_id?: string | null
           google_email: string
           gsc_site_urls?: Json | null
           id?: string
           refresh_token?: string | null
+          scopes?: string[] | null
           token_expiry?: string | null
           updated_at?: string | null
           user_id: string
@@ -4278,10 +4284,13 @@ export type Database = {
           access_token?: string
           created_at?: string | null
           ga4_property_id?: string | null
+          gmb_account_id?: string | null
+          gmb_location_id?: string | null
           google_email?: string
           gsc_site_urls?: Json | null
           id?: string
           refresh_token?: string | null
+          scopes?: string[] | null
           token_expiry?: string | null
           updated_at?: string | null
           user_id?: string
