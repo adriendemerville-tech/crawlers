@@ -139,6 +139,11 @@ export async function getDomainContext(
       .in('audit_type', ['strategic', 'strategique'])
       .order('created_at', { ascending: false })
       .limit(1),
+    // 12: bot log analysis (last 7 days aggregated)
+    supabase
+      .rpc('get_bot_log_summary', { p_tracked_site_id: trackedSiteId })
+      .then((res: any) => res)
+      .catch(() => ({ data: null })),
   ];
 
   // Optional: diagnostics
@@ -167,8 +172,8 @@ export async function getDomainContext(
   }
 
   const results = await Promise.all(promises);
-  const [crawlRes, crawlPagesRes, auditRes, serpRes, backlinkRes, gscRes, ga4Res, indexHistoryRes, adsRes, anomalyRes, auditTechRes, auditStratRes] = results;
-  const baseIdx = 12; // first optional index
+  const [crawlRes, crawlPagesRes, auditRes, serpRes, backlinkRes, gscRes, ga4Res, indexHistoryRes, adsRes, anomalyRes, auditTechRes, auditStratRes, botLogRes] = results;
+  const baseIdx = 13; // first optional index (was 12, now 13 with botLogRes)
   const diagRes = options?.includeDiagnostics ? results[baseIdx] : { data: null };
   const recoRes = options?.includeRecos ? results[baseIdx + (options?.includeDiagnostics ? 1 : 0)] : { data: null };
 
@@ -341,6 +346,30 @@ export async function getDomainContext(
     }
   }
 
+  // ── Bot Log Analysis (from log_entries) ──
+  const botLogData = botLogRes?.data;
+  if (botLogData && typeof botLogData === 'object' && !Array.isArray(botLogData) && (botLogData as any).total_entries > 0) {
+    const bl = botLogData as any;
+    const logLines: string[] = [];
+    logLines.push(`Entrées analysées: ${bl.total_entries} (derniers 7 jours)`);
+    logLines.push(`Bots détectés: ${bl.total_bot_hits} hits (${bl.unique_bots} bots uniques)`);
+    if (bl.top_bots?.length) {
+      logLines.push(`Top bots: ${bl.top_bots.map((b: any) => `${b.bot_name} (${b.hits} hits)`).join(', ')}`);
+    }
+    if (bl.ai_bots?.length) {
+      logLines.push(`🤖 Bots IA détectés: ${bl.ai_bots.map((b: any) => `${b.bot_name} (${b.hits} hits)`).join(', ')}`);
+    } else {
+      logLines.push(`⚠ Aucun bot IA détecté dans les logs (GPTBot, ClaudeBot, PerplexityBot absents)`);
+    }
+    if (bl.error_rate) {
+      logLines.push(`Taux d'erreurs bots: ${bl.error_rate}% (4xx/5xx)`);
+    }
+    if (bl.top_paths?.length) {
+      logLines.push(`Pages les plus crawlées: ${bl.top_paths.map((p: any) => `${p.path} (${p.hits})`).join(', ')}`);
+    }
+    blocks.push(`ANALYSE DES LOGS SERVEUR:\n${logLines.join('\n')}`);
+  }
+
   return {
     blocks,
     raw: {
@@ -358,6 +387,7 @@ export async function getDomainContext(
       anomalyAlerts: anomalyRes?.data || [],
       auditTechnique: auditTechData,
       auditStrategique: auditStratData,
+      botLogs: botLogData || null,
     },
   };
 }
