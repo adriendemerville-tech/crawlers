@@ -451,7 +451,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
 
       {/* Privacy link footer */}
       <div className="text-center pt-2">
-        <Link to="/privacy-google-ads" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors underline">
+        <Link to="/api-integrations#google-ads" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors underline">
           {t3(language,
             'Politique de confidentialité Google Ads',
             'Google Ads Privacy Policy',
