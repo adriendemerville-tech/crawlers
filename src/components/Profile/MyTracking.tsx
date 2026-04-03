@@ -304,6 +304,7 @@ export function MyTracking() {
 
   return (
     <div className="space-y-6">
+      <GA4TrafficBanner domain={h.currentSite?.domain || ''} simulatedDataEnabled={h.simulatedDataEnabled} />
       <AnomalyAlertsBanner trackedSiteId={h.selectedSite} />
       <ActiveCrawlBanner />
       <Card>
