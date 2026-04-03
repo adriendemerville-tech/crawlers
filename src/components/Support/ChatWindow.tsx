@@ -855,7 +855,6 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2">
-          <CrawlersLogo size={16} />
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-medium text-foreground/80">Félix</span>
           {isAdmin && (
