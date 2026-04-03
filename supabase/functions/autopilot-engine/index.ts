@@ -578,7 +578,7 @@ Deno.serve(async (req: Request) => {
                 for (const cmsAction of decision.action.payload.cms_actions) {
                   try {
                     // Infer action from available fields if LLM omitted it
-                    const inferredAction = cmsAction.action
+                    let inferredAction = cmsAction.action
                       || (cmsAction.body ? 'create-post' : null)
                       || (cmsAction.updates && cmsAction.slug ? 'update-post' : null)
                       || (cmsAction.updates && cmsAction.page_key ? 'update-page' : null)
@@ -586,6 +586,12 @@ Deno.serve(async (req: Request) => {
 
                     if (!cmsAction.action) {
                       console.warn(`[AutopilotEngine] CMS action missing 'action' field, inferred: ${inferredAction}`);
+                    }
+
+                    // ── Smart upsert: if create-post with a slug, check if it already exists ──
+                    // iktracker-actions handles this server-side too, but we log the correct action here
+                    if (inferredAction === 'create-post' && cmsAction.body?.slug) {
+                      console.log(`[AutopilotEngine] create-post for slug "${cmsAction.body.slug}" — iktracker will auto-upsert if exists`);
                     }
 
                     // ── Auto-generate image for new articles ──
