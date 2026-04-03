@@ -90,17 +90,19 @@ async function getPost(apiKey: string, slug: string) {
 }
 
 async function createPost(apiKey: string, body: Record<string, unknown>) {
-  // Anti-duplicate: if slug provided, check if post already exists
+  // Anti-duplicate: if slug provided, check if post already exists → convert to update
   const slug = (body.slug as string) || ''
   if (slug) {
     try {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
-      if (existing && typeof existing === 'object' && (existing as any).slug) {
-        console.log(`[iktracker-actions] Post with slug "${slug}" already exists, returning existing`)
-        return { ...(existing as object), _deduplicated: true }
+      // callIktracker returns {status, data} — check status 200 and data exists
+      if (existing && existing.status === 200 && existing.data) {
+        console.log(`[iktracker-actions] Post with slug "${slug}" already exists, converting to UPDATE`)
+        const updateResult = await callIktracker('PUT', `/posts/${slug}`, apiKey, body)
+        return { ...updateResult, _upserted: true, _original_action: 'create-post' }
       }
     } catch (_) {
-      // 404 = doesn't exist, proceed with creation
+      // 404 or error = doesn't exist, proceed with creation
     }
   }
   return callIktracker('POST', '/posts', apiKey, body)
