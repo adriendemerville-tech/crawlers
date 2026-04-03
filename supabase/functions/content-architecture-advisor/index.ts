@@ -766,6 +766,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
       supabase: serviceClient,
     })
     const briefBlock = briefToPromptBlock(contentBrief)
+    const brief = contentBrief // alias used downstream
     console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}`)
 
     // ── Parse client_targets for audience context ──
