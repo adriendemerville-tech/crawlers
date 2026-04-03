@@ -784,7 +784,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   key={service.id}
                   onClick={() => isPremium && handleLogServiceClick(service)}
                   disabled={!isPremium}
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full ${
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left w-full ${
                     !isPremium
                       ? 'border-border opacity-50 cursor-not-allowed grayscale'
                       : isActive
@@ -793,7 +793,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   }`}
                 >
                   <div
-                    className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0"
+                    className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                     dangerouslySetInnerHTML={{ __html: service.logoSvg }}
                   />
                   <div className="flex-1 min-w-0">
