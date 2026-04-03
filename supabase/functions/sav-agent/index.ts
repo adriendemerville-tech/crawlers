@@ -850,6 +850,24 @@ ${alertBlock}\n`;
           if (!gsc?.length) {
             contextSnippet += `  ⚠ ${s.domain}: pas de données GSC connectées\n`;
           }
+
+          // Bot log analysis
+          try {
+            const { data: botLog } = await sb.rpc('get_bot_log_summary', { p_tracked_site_id: s.id });
+            if (botLog && typeof botLog === 'object' && (botLog as any).total_entries > 0) {
+              const bl = botLog as any;
+              contextSnippet += `  Logs bots ${s.domain}: ${bl.total_bot_hits} hits bots (${bl.unique_bots} uniques) sur 7j`;
+              if (bl.ai_bots?.length) {
+                contextSnippet += ` | Bots IA: ${bl.ai_bots.map((b: any) => `${b.bot_name}(${b.hits})`).join(', ')}`;
+              } else {
+                contextSnippet += ` | ⚠ Aucun bot IA détecté`;
+              }
+              if (bl.error_rate > 10) {
+                contextSnippet += ` | ⚠ ${bl.error_rate}% erreurs bots`;
+              }
+              contextSnippet += '\n';
+            }
+          } catch (_) { /* best effort */ }
         }
       }
     } catch (e) {
