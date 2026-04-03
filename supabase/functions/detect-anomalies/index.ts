@@ -1,7 +1,7 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * detect-anomalies: Z-score anomaly detection across all data sources
@@ -41,17 +41,11 @@ function classifyAnomaly(z: number): { severity: string; direction: string } | n
   return null; // No anomaly
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const body = await req.json();
@@ -92,19 +86,15 @@ Deno.serve(async (req) => {
       totalAlerts += alerts;
     }
 
-    return new Response(JSON.stringify({ 
+    return jsonOk({ 
       success: true, 
       sites_analyzed: siteIds.length, 
       alerts_created: totalAlerts 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[detect-anomalies] Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', 500);
   }
 });
 
@@ -264,7 +254,7 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       change_pct: Math.round(changePct * 100) / 100,
       affected_pages: s.affected_pages || 0,
       description,
-    });
+    }));
   }
 
   if (newAlerts.length > 0) {

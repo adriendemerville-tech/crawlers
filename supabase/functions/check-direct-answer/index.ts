@@ -1,10 +1,9 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { url } = await req.json();
     if (!url) return new Response(JSON.stringify({ error: 'URL required' }), { status: 400, headers: HEADERS });
@@ -126,4 +125,4 @@ Deno.serve(async (req) => {
       score: 0,
     }), { status: 500, headers: HEADERS });
   }
-});
+}));

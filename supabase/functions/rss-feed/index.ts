@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SITE_URL = "https://crawlers.fr";
 
@@ -12,11 +13,7 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const supabase = getServiceClient();
 
@@ -117,4 +114,4 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/rss+xml; charset=utf-8" } }
     );
   }
-});
+}));

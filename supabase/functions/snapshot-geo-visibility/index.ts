@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * snapshot-geo-visibility
@@ -123,12 +124,8 @@ async function queryLlmVisibility(
   return { providers: results, prompts: naturalPrompts }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
     const body = await req.json()
     const { domain, tracked_site_id, user_id, measurement_phase, audit_impact_snapshot_id } = body
@@ -229,7 +226,7 @@ Deno.serve(async (req) => {
 
     console.log(`[snapshot-geo] ✅ ${domain} ${phase}: score=${overallScore}, cited=${citedCount}/${totalModels}`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       phase,
       overall_score: overallScore,
@@ -237,8 +234,6 @@ Deno.serve(async (req) => {
       cited_count: citedCount,
       total_models: totalModels,
       delta_overall_score: deltaOverall,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {

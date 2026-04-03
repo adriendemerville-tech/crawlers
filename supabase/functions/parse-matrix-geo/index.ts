@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /* ================================================================== */
 /*  GEO Matrice Audit — evaluates GEO/AI-Ready criteria               */
@@ -101,10 +102,8 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
 
 /* ── Main handler ─────────────────────────────────────────────────── */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  const clientIp = getClientIp(req)
+Deno.serve(handleRequest(async (req) => {
+const clientIp = getClientIp(req)
   const ipCheck = checkIpRate(clientIp, 'parse-matrix-geo', 15, 60_000)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
   if (!acquireConcurrency('parse-matrix-geo', 50)) return concurrencyResponse(corsHeaders)
@@ -158,10 +157,10 @@ Deno.serve(async (req) => {
 
     console.log(`[parse-matrix-geo] Complete. Global GEO score: ${globalScore}/100`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true, url: normalizedUrl, global_score: globalScore,
       total_items: orderedResults.length, audit_type: 'geo', results: orderedResults,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    })
 
   } catch (e) {
     console.error('[parse-matrix-geo] Error:', e)

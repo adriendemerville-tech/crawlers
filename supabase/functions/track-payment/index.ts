@@ -1,5 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * track-payment — receives payment events from widget.js, GTM tag, or WP plugin.
@@ -16,16 +16,9 @@ import { corsHeaders } from '../_shared/cors.ts';
  *   metadata      — optional JSON
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'POST only' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('POST only', 405);
   }
   const supabase = getServiceClient();
 
@@ -43,10 +36,7 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!api_key || !order_id || amount == null) {
-      return new Response(JSON.stringify({ error: 'api_key, order_id, and amount are required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('api_key, order_id, and amount are required', 400);
     }
 
     // Resolve tracked site from api_key
@@ -57,10 +47,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!site) {
-      return new Response(JSON.stringify({ error: 'Invalid API key' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid API key', 401);
     }
 
     // Upsert into revenue_events
@@ -83,20 +70,12 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error('[track-payment] Insert error:', error.message);
-      return new Response(JSON.stringify({ error: 'Failed to record payment' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Failed to record payment', 500);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true });
   } catch (e) {
     console.error('[track-payment] Error:', e);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', 500);
   }
-});
+}));

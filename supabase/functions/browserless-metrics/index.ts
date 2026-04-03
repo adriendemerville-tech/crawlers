@@ -1,17 +1,11 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { BROWSERLESS_BASE_URL, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   const token = getBrowserlessKey();
   if (!token) {
-    return new Response(JSON.stringify({ error: 'RENDERING_API_KEY not configured' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('RENDERING_API_KEY not configured', 500);
   }
 
   try {
@@ -57,20 +51,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       ...totals,
       planUnitsPerMonth: 1000,
       unitsRemaining: Math.max(0, 1000 - totals.units),
       concurrencyLimit: 10,
       entriesCount: Array.isArray(metrics) ? metrics.length : 0,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(msg, 500);
   }
-});
+}));

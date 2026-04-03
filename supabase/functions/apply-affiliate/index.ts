@@ -1,28 +1,20 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * apply-affiliate — Validates and applies an affiliate code during signup.
  * Grants Pro Agency for the configured duration and tracks activation.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { code, user_id } = await req.json();
 
     if (!code || typeof code !== 'string' || code.length < 3 || code.length > 30) {
-      return new Response(JSON.stringify({ success: false, error: 'Code invalide' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 400);
     }
 
     if (!user_id) {
-      return new Response(JSON.stringify({ success: false, error: 'user_id requis' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 400);
     }
 
     const supabase = getServiceClient();
@@ -37,16 +29,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (fetchError || !affiliate) {
-      return new Response(JSON.stringify({ success: false, error: 'Code d\'affiliation introuvable ou expiré' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 404);
     }
 
     // Check max activations
     if (affiliate.current_activations >= affiliate.max_activations) {
-      return new Response(JSON.stringify({ success: false, error: 'Ce code a atteint sa limite d\'activations' }), {
-        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 409);
     }
 
     // Check user hasn't already used an affiliate code
@@ -57,9 +45,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (profile?.affiliate_code_used) {
-      return new Response(JSON.stringify({ success: false, error: 'Vous avez déjà utilisé un code d\'affiliation' }), {
-        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 409);
     }
 
     // Apply the benefit: Pro Agency for duration_months
@@ -78,9 +64,7 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       console.error('[apply-affiliate] Profile update error:', updateError);
-      return new Response(JSON.stringify({ success: false, error: 'Erreur lors de l\'application du code' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 500);
     }
 
     // Increment activation counter
@@ -102,22 +86,15 @@ Deno.serve(async (req) => {
 
     console.log(`[apply-affiliate] ✅ Code ${normalizedCode} applied for user ${user_id} — Pro Agency until ${expiresAt.toISOString()}`);
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       plan_type: 'agency_pro',
       expires_at: expiresAt.toISOString(),
       duration_months: affiliate.duration_months,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[apply-affiliate] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erreur interne',
-    }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
-});
+}));

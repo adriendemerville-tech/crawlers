@@ -7,6 +7,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import {
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   generateNaturalPrompts,
   buildBrandPatterns,
   detectCitationInText,
@@ -173,12 +174,8 @@ async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: s
 // Main handler
 // ═══════════════════════════════════════════════
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const clientIp = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'check-llm', 10, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
@@ -363,10 +360,7 @@ Deno.serve(async (req) => {
     console.log(`[check-llm] ✅ ${domain}: ${overallScore}/100, cited ${citedCount}/${totalModels}`);
     trackAnalyzedUrl(`https://${domain}`).catch(() => {});
 
-    return new Response(
-      JSON.stringify({ success: true, data: result }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true, data: result });
   } catch (error) {
     console.error('[check-llm] Error:', error);
     await trackEdgeFunctionError('check-llm', error instanceof Error ? error.message : 'Analysis failed').catch(() => {});
@@ -377,4 +371,4 @@ Deno.serve(async (req) => {
   } finally {
     releaseConcurrency('check-llm');
   }
-});
+}));

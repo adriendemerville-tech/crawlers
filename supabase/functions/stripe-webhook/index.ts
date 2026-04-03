@@ -1,5 +1,6 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -8,25 +9,12 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 // Stripe webhook needs stripe-signature in addition to standard CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const signature = req.headers.get("stripe-signature");
     if (!signature) {
       console.error("❌ No Stripe signature found");
-      return new Response(
-        JSON.stringify({ error: "No signature" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("No signature", 400);
     }
 
     const body = await req.text();
@@ -37,10 +25,7 @@ Deno.serve(async (req) => {
       event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
     } catch (err) {
       console.error("❌ Webhook signature verification failed:", err);
-      return new Response(
-        JSON.stringify({ error: "Signature verification failed" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Signature verification failed", 400);
     }
 
     console.log(`📥 Received Stripe event: ${event.type}`);
@@ -68,10 +53,7 @@ Deno.serve(async (req) => {
 
         if (!userId || creditsAmount <= 0) {
           console.error("❌ Invalid credit purchase metadata:", session.metadata);
-          return new Response(
-            JSON.stringify({ error: "Invalid credit purchase metadata" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+          return jsonError("Invalid credit purchase metadata", 400);
         }
 
         console.log(`🪙 Processing credit purchase: ${creditsAmount} credits for user ${userId}`);
@@ -116,10 +98,7 @@ Deno.serve(async (req) => {
 
           if (fallbackError) {
             console.error("❌ Error updating credits balance:", fallbackError);
-            return new Response(
-              JSON.stringify({ error: "Failed to update credits" }),
-              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+            return jsonError("Failed to update credits", 500);
           }
         } else {
           newBalance = (rpcResult as any)?.new_balance ?? 0;
@@ -211,16 +190,13 @@ Deno.serve(async (req) => {
           console.error("⚠️ Referral reward error (non-blocking):", refErr);
         }
 
-        return new Response(
-          JSON.stringify({ 
+        return jsonOk({ 
             received: true, 
             type: "credit_purchase",
             user_id: userId,
             credits_added: creditsAmount,
             new_balance: newBalance,
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+          });
       }
 
       // 🛒 SCRIPT PURCHASE FLOW (existing logic)
@@ -272,15 +248,12 @@ Deno.serve(async (req) => {
         console.warn("⚠️ No audit_id found in session metadata");
       }
 
-      return new Response(
-        JSON.stringify({ 
+      return jsonOk({ 
           received: true, 
           session_id: session.id,
           audit_id: auditId,
           status: "completed" 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        });
     }
 
     // Handle payment_intent.succeeded for additional confirmation
@@ -381,17 +354,11 @@ Deno.serve(async (req) => {
     }
 
     // Return 200 for all other events
-    return new Response(
-      JSON.stringify({ received: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonOk({ received: true });
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Webhook handler error:", errorMessage);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonError(errorMessage, 500);
   }
-});
+}));

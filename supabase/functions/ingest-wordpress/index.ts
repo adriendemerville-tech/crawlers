@@ -1,23 +1,17 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * ingest-wordpress — Webhook receiver for the crawlers.fr WordPress plugin.
  * Auth: X-Crawlers-Key header, matched against hashed API key in connectors.
  * Receives pre-parsed entries from PHP plugin (limited — misses cached requests).
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const apiKey = req.headers.get('X-Crawlers-Key') || req.headers.get('x-crawlers-key');
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Missing X-Crawlers-Key header', code: 'MISSING_KEY' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing X-Crawlers-Key header', code: 'MISSING_KEY', 401);
     }
 
     // Hash the key
@@ -34,18 +28,14 @@ Deno.serve(async (req) => {
       .single();
 
     if (connError || !connector) {
-      return new Response(JSON.stringify({ error: 'Invalid API key', code: 'INVALID_KEY' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid API key', code: 'INVALID_KEY', 401);
     }
 
     const body = await req.json();
     const rawEntries = body.entries;
 
     if (!Array.isArray(rawEntries) || rawEntries.length === 0) {
-      return new Response(JSON.stringify({ error: 'entries array required', code: 'INVALID_BODY' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('entries array required', code: 'INVALID_BODY', 400);
     }
 
     const entries = rawEntries.map((e: any) => ({
@@ -65,13 +55,9 @@ Deno.serve(async (req) => {
       .update({ last_sync_at: new Date().toISOString(), error_count: 0 } as any)
       .eq('id', connector.id);
 
-    return new Response(JSON.stringify({ ok: true, processed: result.inserted, errors: result.errors }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, processed: result.inserted, errors: result.errors });
   } catch (error) {
     console.error('[ingest-wordpress] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

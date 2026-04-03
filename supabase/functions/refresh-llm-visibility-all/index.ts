@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * refresh-llm-visibility-all  v2
@@ -14,10 +15,7 @@ const BATCH_SIZE = 15
 const DELAY_BETWEEN_SITES_MS = 2000
 const MAX_RUNTIME_MS = 240_000 // 240s safety margin
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient()
 
   try {
@@ -38,9 +36,7 @@ Deno.serve(async (req) => {
 
     if (error || !sites?.length) {
       console.log('[refresh-llm-visibility-all] No (more) sites or error:', error)
-      return new Response(JSON.stringify({ refreshed: 0, next_cursor: null }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ refreshed: 0, next_cursor: null })
     }
 
     let refreshed = 0
@@ -106,15 +102,10 @@ Deno.serve(async (req) => {
       }).catch(err => console.error('[refresh-llm-visibility-all] Self-invoke failed:', err))
     }
 
-    return new Response(JSON.stringify({ refreshed, errors, total: sites.length, next_cursor: nextCursor }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ refreshed, errors, total: sites.length, next_cursor: nextCursor })
   } catch (error) {
     console.error('[refresh-llm-visibility-all] Fatal:', error)
     await trackEdgeFunctionError('refresh-llm-visibility-all', error instanceof Error ? error.message : 'Fatal').catch(() => {})
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown', 500)
   }
 })

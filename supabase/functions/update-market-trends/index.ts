@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 /**
  * Fetches monthly market data.
  * TODO: Replace with real API calls (SimilarWeb, StatCounter, etc.)
@@ -39,11 +39,7 @@ async function fetchMonthlyMarketData(): Promise<{
   return { intent_rates, llm_shares };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -64,15 +60,9 @@ Deno.serve(async (req) => {
 
     console.log('✅ Market trends FR updated:', JSON.stringify(newData));
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Tendances FR mises à jour.', data: newData }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    );
+    return jsonOk({ success: true, message: 'Tendances FR mises à jour.', data: newData });
   } catch (error) {
     console.error('update-market-trends error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    );
+    return jsonOk({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 400);
   }
-});
+}));

@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: session-heartbeat
@@ -15,12 +16,8 @@ import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLi
  * Returns { active: true/false, kicked: boolean }
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const ip = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const ip = getClientIp(req);
   const rateCheck = checkIpRate(ip, 'session-heartbeat', 20, 60_000);
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
 
@@ -30,15 +27,11 @@ Deno.serve(async (req) => {
     // Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Non autorisé' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non autorisé', 401);
     }
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Non autorisé' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non autorisé', 401);
     }
 
     const body = await req.json().catch(() => ({}));
@@ -46,9 +39,7 @@ Deno.serve(async (req) => {
     const userAgent = req.headers.get('user-agent') || '';
 
     if (!sessionToken) {
-      return new Response(JSON.stringify({ error: 'session_token requis' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('session_token requis', 400);
     }
 
     // Auto-save workspace state if provided (before potential kick)
@@ -92,12 +83,12 @@ Deno.serve(async (req) => {
         .update({ last_heartbeat_at: new Date().toISOString(), ip_address: ip })
         .eq('id', existingSession.id);
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         active: true,
         kicked: false,
         active_sessions: sessions.length,
         max_sessions: maxIps,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      });
     }
 
     // New session — count distinct active IPs
@@ -145,19 +136,16 @@ Deno.serve(async (req) => {
         kicked_reason: null,
       }, { onConflict: 'user_id,session_token' });
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       active: true,
       kicked: false,
       active_sessions: Math.min(sessions.length + 1, maxIps),
       max_sessions: maxIps,
       new_session: true,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
 
   } catch (error) {
     console.error('[session-heartbeat] Error:', error);
-    return new Response(JSON.stringify({ error: 'Erreur interne' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Erreur interne', 500);
   }
-});
+}));

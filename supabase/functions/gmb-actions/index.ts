@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gmb-actions — Router for Google Business Profile operations
@@ -342,35 +343,25 @@ function getLocationInfoSimulated() {
 
 // ─── Main Router ────────────────────────────────────────────
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { action, tracked_site_id, ...params } = await req.json()
 
     // Auth check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     // Get user
     const userClient = getUserClient(authHeader)
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     if (!tracked_site_id) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('tracked_site_id required', 400)
     }
 
     // Resolve GBP token — fallback to simulated if unavailable
@@ -429,8 +420,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[gmb-actions] error:', msg)
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return jsonError(msg, 500)
   }
 })

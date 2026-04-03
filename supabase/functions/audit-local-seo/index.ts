@@ -4,6 +4,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface KeywordData {
   keyword: string;
@@ -555,13 +556,8 @@ async function executerAuditLocal(
   return result;
 }
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  // ── IP rate limit ──
+Deno.serve(handleRequest(async (req) => {
+// ── IP rate limit ──
   const ip = getClientIp(req);
   const ipCheck = checkIpRate(ip, "audit-local-seo", 5, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
@@ -572,9 +568,7 @@ Deno.serve(async (req) => {
     if (userCtx) {
       const fairUse = await checkFairUse(userCtx.userId, 'local_seo_audit', userCtx.planType);
       if (!fairUse.allowed) {
-        return new Response(JSON.stringify({ error: fairUse.reason }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonError(fairUse.reason, 429);
       }
     }
 
@@ -607,15 +601,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('❌ Erreur audit SEO local:', error);
     
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue',
-        details: error instanceof Error ? error.stack : undefined,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    return jsonError(error instanceof Error ? error.message : 'Erreur inconnue',
+        details: error instanceof Error ? error.stack : undefined, 500);
   }
-});
+}));

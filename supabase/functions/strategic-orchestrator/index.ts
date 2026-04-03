@@ -11,6 +11,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const GLOBAL_DEADLINE = 500_000; // 8m20s
 
@@ -45,10 +46,8 @@ async function invokeFallback(req: Request, body: any): Promise<Response> {
   return new Response(JSON.stringify(data), { status: resp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+Deno.serve(handleRequest(async (req) => {
+const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   const startTime = Date.now();
   let jobId: string | null = null;
   let jobSb: any = null;
@@ -283,4 +282,4 @@ Deno.serve(async (req) => {
   } finally {
     releaseConcurrency('strategic-orchestrator');
   }
-});
+}));

@@ -4,6 +4,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Blog Article Generator v2
@@ -206,12 +207,8 @@ async function getTrendingKeywords(supabase: any): Promise<string[]> {
   return [];
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const openRouterKey = Deno.env.get("OPENROUTER_API_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = getServiceClient();
@@ -253,10 +250,7 @@ Deno.serve(async (req) => {
 
     if (newsErr || !newsCards || newsCards.length === 0) {
       console.log("[blog-gen v2] No fresh news cards (< 30 days) found, skipping");
-      return new Response(
-        JSON.stringify({ success: true, generated: 0, reason: "no_fresh_news" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonOk({ success: true, generated: 0, reason: "no_fresh_news" });
     }
 
     const newsContext = newsCards
@@ -600,4 +594,4 @@ Content: ${article.content}`;
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}));

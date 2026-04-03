@@ -1,6 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cocoon-deploy-links
@@ -23,28 +24,20 @@ interface LinkRecommendation {
   action: 'add_link' | 'update_anchor' | 'remove_link'
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // Auth
     const authHeader = req.headers.get('Authorization') || ''
     const userClient = getUserClient(authHeader)
     const { data: { user }, error: authError } = await userClient.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     const { tracked_site_id, recommendations, mode = 'deploy' } = await req.json()
 
     if (!tracked_site_id || !Array.isArray(recommendations) || recommendations.length === 0) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id and recommendations[] required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('tracked_site_id and recommendations[] required', 400)
     }
 
     const supabase = getServiceClient()
@@ -57,9 +50,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (siteError || !site) {
-      return new Response(JSON.stringify({ error: 'Site not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Site not found', 404)
     }
 
     // Security: verify ownership (cross-reference user vs site owner)
@@ -67,12 +58,10 @@ Deno.serve(async (req) => {
       scriptType: 'cocoon_links',
       payloadPreview: JSON.stringify(recommendations.slice(0, 3)),
       ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
-    });
+    }));
 
     if (!ownershipCheck.allowed) {
-      return new Response(JSON.stringify({ error: ownershipCheck.reason || 'Forbidden' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError(ownershipCheck.reason || 'Forbidden', 403)
     }
 
     const domain = site.domain?.replace(/^www\./, '') || ''
@@ -102,15 +91,10 @@ Deno.serve(async (req) => {
       },
     })
 
-    return new Response(JSON.stringify({ success: true, path: isIktracker ? 'iktracker' : 'site_rules', mode, result: deployResult }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ success: true, path: isIktracker ? 'iktracker' : 'site_rules', mode, result: deployResult })
   } catch (error) {
     console.error('[cocoon-deploy-links] Error:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })
 

@@ -1,12 +1,9 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { callLovableAIText } from '../_shared/lovableAI.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
 
   try {
@@ -113,19 +110,14 @@ Réponds UNIQUEMENT en JSON valide, format :
 
     console.log(`[sync-quiz-crawlers] Generated ${inserted?.length || 0} new questions (pending validation)`);
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       generated: inserted?.length || 0,
       message: 'Questions created as inactive — pending admin validation in Félix',
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[sync-quiz-crawlers] Error:', error);
-    return new Response(JSON.stringify({ success: false, error: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
-});
+}));

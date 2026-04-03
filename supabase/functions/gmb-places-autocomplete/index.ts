@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gmb-places-autocomplete — Google Places Autocomplete proxy
@@ -8,25 +9,16 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY')
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return new Response(JSON.stringify({ error: 'GOOGLE_PLACES_API_KEY not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('GOOGLE_PLACES_API_KEY not configured', 500)
     }
 
     const { query, location_bias } = await req.json()
 
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
-      return new Response(JSON.stringify({ predictions: [] }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ predictions: [] })
     }
 
     // Use Places API (New) Autocomplete
@@ -45,20 +37,14 @@ Deno.serve(async (req) => {
     const response = await fetch(url.toString())
     if (!response.ok) {
       console.error('[gmb-places-autocomplete] Google API error:', response.status)
-      return new Response(JSON.stringify({ error: 'Google API error', predictions: [] }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Google API error', predictions: [], 502)
     }
 
     const data = await response.json()
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.error('[gmb-places-autocomplete] API status:', data.status, data.error_message)
-      return new Response(JSON.stringify({ error: data.error_message || data.status, predictions: [] }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError(data.error_message || data.status, predictions: [], 502)
     }
 
     // Fetch details for each place to get rating, reviews, etc.
@@ -101,15 +87,10 @@ Deno.serve(async (req) => {
       })
     )
 
-    return new Response(JSON.stringify({ predictions: enriched }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ predictions: enriched })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[gmb-places-autocomplete] error:', msg)
-    return new Response(JSON.stringify({ error: msg, predictions: [] }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(msg, predictions: [], 500)
   }
 })

@@ -6,6 +6,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { detectItemType, type ItemType } from '../_shared/matriceTypeDetector.ts'
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts'
 import {
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   type RobotsData, type SitemapData, type PsiData,
   checkRobots, checkSitemap, checkLlmsTxt, fetchPsi,
   computeBaliseScore, computeStructuredDataScore, computePerformanceScore,
@@ -122,10 +123,8 @@ Score de 0 à 100 pour ce critère:`
 /*  Main handler                                                       */
 /* ================================================================== */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  const clientIp = getClientIp(req)
+Deno.serve(handleRequest(async (req) => {
+const clientIp = getClientIp(req)
   const ipCheck = checkIpRate(clientIp, 'audit-matrice', 20, 60_000)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
 
@@ -300,14 +299,12 @@ Deno.serve(async (req) => {
 
     console.log(`[audit-matrice] Complete. Global score: ${globalScore}/100 (${orderedResults.length} items)`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       url: normalizedUrl,
       global_score: globalScore,
       total_items: orderedResults.length,
       results: orderedResults,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (e) {

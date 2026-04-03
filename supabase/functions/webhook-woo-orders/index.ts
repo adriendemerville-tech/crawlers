@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: webhook-woo-orders
@@ -11,11 +12,7 @@ import { corsHeaders } from '../_shared/cors.ts'
  * or the `x-wc-webhook-source` header.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const supabase = getServiceClient()
 
@@ -28,10 +25,7 @@ Deno.serve(async (req) => {
     const dateCreated = payload.date_created || new Date().toISOString()
 
     if (!orderId || total <= 0) {
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_amount' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_amount' })
     }
 
     // Resolve source domain from WooCommerce webhook header
@@ -44,10 +38,7 @@ Deno.serve(async (req) => {
 
     if (!bareDomain) {
       console.error('[webhook-woo] No source domain found')
-      return new Response(JSON.stringify({ ok: true, skipped: 'no_source' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ ok: true, skipped: 'no_source' })
     }
 
     // Find CMS connection for this WooCommerce store
@@ -76,10 +67,7 @@ Deno.serve(async (req) => {
 
       if (!site) {
         console.warn(`[webhook-woo] No site found for domain: ${bareDomain}`)
-        return new Response(JSON.stringify({ ok: true, skipped: 'no_site_match' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ ok: true, skipped: 'no_site_match' })
       }
       trackedSiteId = site.id
       userId = site.user_id
@@ -100,15 +88,9 @@ Deno.serve(async (req) => {
 
     if (error) console.error('[webhook-woo] Insert error:', error.message)
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true })
   } catch (err) {
     console.error('[webhook-woo] Error:', err)
-    return new Response(JSON.stringify({ ok: true, error: 'internal' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ ok: true, error: 'internal' })
   }
 })

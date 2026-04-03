@@ -1,33 +1,22 @@
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { token } = await req.json();
 
     if (!token) {
-      return new Response(JSON.stringify({ success: false, error: 'Missing token' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 400);
     }
 
     // Fail open if Turnstile was unavailable client-side
     if (token === 'TURNSTILE_UNAVAILABLE') {
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true });
     }
 
     const secretKey = Deno.env.get('TURNSTILE_SECRET_KEY');
     if (!secretKey) {
       // If secret not configured, fail open
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true });
     }
 
     const formData = new URLSearchParams();
@@ -42,13 +31,9 @@ Deno.serve(async (req) => {
 
     const outcome = await result.json();
 
-    return new Response(JSON.stringify({ success: outcome.success }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: outcome.success });
   } catch (_error) {
     // Fail open on unexpected errors
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true });
   }
-});
+}));

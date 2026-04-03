@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: fetch-ga4-data
@@ -17,11 +18,8 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
 const GA4_ADMIN_API = 'https://analyticsadmin.googleapis.com/v1beta'
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
+Deno.serve(handleRequest(async (req) => {
+const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
   const supabase = getServiceClient()
 
@@ -29,41 +27,31 @@ Deno.serve(async (req) => {
     const { action, user_id, property_id, start_date, end_date, domain } = await req.json()
 
     if (!user_id) {
-      return new Response(JSON.stringify({ error: 'user_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('user_id required', 400)
     }
 
     // ─── Get & refresh access token ──────────────────────────────
     const accessToken = await getAccessToken(supabase, user_id, clientId, clientSecret)
     if (!accessToken) {
-      return new Response(JSON.stringify({ error: 'GA4 not connected. User must reconnect GSC with analytics scope.' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('GA4 not connected. User must reconnect GSC with analytics scope.', 401)
     }
 
     // ─── Action: list_properties ─────────────────────────────────
     if (action === 'list_properties') {
       const properties = await listGA4Properties(accessToken)
-      return new Response(JSON.stringify({ success: true, properties }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, properties })
     }
 
     // ─── Action: save_property ───────────────────────────────────
     if (action === 'save_property') {
       if (!property_id) {
-        return new Response(JSON.stringify({ error: 'property_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('property_id required', 400)
       }
       await supabase.from('profiles').update({
         ga4_property_id: property_id,
       }).eq('user_id', user_id)
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true })
     }
 
     // ─── Action: fetch_metrics ───────────────────────────────────
@@ -90,12 +78,8 @@ Deno.serve(async (req) => {
       }
 
       if (!resolvedPropertyId) {
-        return new Response(JSON.stringify({ 
-          error: 'No GA4 property found. Use list_properties to find and save one.',
-          needs_property_selection: true,
-        }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('No GA4 property found. Use list_properties to find and save one.',
+          needs_property_selection: true, 404)
       }
 
       const endD = end_date || new Date().toISOString().split('T')[0]
@@ -122,19 +106,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, property_id: resolvedPropertyId, ...metrics }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, property_id: resolvedPropertyId, ...metrics })
     }
 
-    return new Response(JSON.stringify({ error: 'Unknown action. Use: list_properties, save_property, fetch_metrics' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError('Unknown action. Use: list_properties, save_property, fetch_metrics', 400)
   } catch (err) {
     console.error('[fetch-ga4-data] Error:', err)
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(err.message, 500)
   }
 })
 

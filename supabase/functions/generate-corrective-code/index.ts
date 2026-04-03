@@ -4,6 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ══════════════════════════════════════════════════════════════
 // INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
@@ -2803,12 +2804,8 @@ async function computeVersionDiff(
 // HANDLER PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  const clientIp = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'generate-corrective-code', 10, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
@@ -2864,16 +2861,13 @@ Deno.serve(async (req) => {
     const enabledFixes = fixes.filter(f => f.enabled);
     
     if (enabledFixes.length === 0) {
-      return new Response(
-        JSON.stringify({ 
+      return jsonOk({ 
           success: true, 
           code: '', 
           fixesApplied: 0,
           message: 'No fixes enabled',
           source: 'none'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        });
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -3123,4 +3117,4 @@ Deno.serve(async (req) => {
   } finally {
     releaseConcurrency('generate-corrective-code');
   }
-});
+}));

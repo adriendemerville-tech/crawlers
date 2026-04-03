@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gbp-auth — Separate Google Business Profile OAuth2 flow
@@ -11,20 +12,14 @@ import { corsHeaders } from '../_shared/cors.ts'
  *   POST action=status      → Returns GBP connection status
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
+Deno.serve(handleRequest(async (req) => {
+const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const REDIRECT_URI = `${supabaseUrl}/functions/v1/gbp-auth`
 
   if (!clientId || !clientSecret) {
-    return new Response(JSON.stringify({ error: 'Google credentials not configured' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError('Google credentials not configured', 500)
   }
 
   const supabase = getServiceClient()
@@ -210,9 +205,7 @@ Deno.serve(async (req) => {
     // === DISCONNECT: Remove GBP connection ===
     if (action === 'disconnect') {
       if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('user_id required', 400)
       }
 
       // Find and delete GBP-specific connections (prefixed with gbp:)
@@ -247,17 +240,13 @@ Deno.serve(async (req) => {
         })
       } catch (_) { /* best effort */ }
 
-      return new Response(JSON.stringify({ success: true, deleted: gbpConns?.length || 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, deleted: gbpConns?.length || 0 })
     }
 
     // === STATUS: Check if user has GBP connection & fetch locations ===
     if (action === 'status') {
       if (!user_id) {
-        return new Response(JSON.stringify({ error: 'user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('user_id required', 400)
       }
 
       const { data: gbpConn } = await supabase
@@ -269,9 +258,7 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!gbpConn) {
-        return new Response(JSON.stringify({ connected: false, email: null, locations: [] }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonOk({ connected: false, email: null, locations: [] })
       }
 
       // Refresh token if expired
@@ -335,13 +322,11 @@ Deno.serve(async (req) => {
         console.warn('[gbp-auth] Locations fetch error:', e)
       }
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         connected: true,
         email: gbpConn.google_email?.replace('gbp:', '') || null,
         has_location: locations.length > 0,
         locations,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -352,8 +337,6 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[gbp-auth] error:', msg)
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(msg, 500)
   }
 })

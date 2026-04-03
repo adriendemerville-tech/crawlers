@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * gtm-actions — Google Tag Manager API integration
@@ -13,27 +14,20 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const TAG_NAME = 'Crawlers.AI SEO/GEO Optimizer';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  const supabase = getServiceClient();
+Deno.serve(handleRequest(async (req) => {
+const supabase = getServiceClient();
 
   try {
     const { action, user_id, site_id, container_path, account_path } = await req.json();
 
     if (!action || !user_id) {
-      return new Response(JSON.stringify({ error: 'action and user_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('action and user_id required', 400);
     }
 
     // Resolve Google token for user
     const accessToken = await resolveGoogleToken(supabase, user_id);
     if (!accessToken) {
-      return new Response(JSON.stringify({ error: 'Google not connected or token expired', code: 'NO_GOOGLE_TOKEN' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Google not connected or token expired', code: 'NO_GOOGLE_TOKEN', 401);
     }
 
     switch (action) {
@@ -52,9 +46,7 @@ Deno.serve(async (req) => {
     }
   } catch (error) {
     console.error('[gtm-actions] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
 });
 
@@ -124,12 +116,8 @@ async function handleListContainers(accessToken: string) {
   if (!accountsResp.ok) {
     const errBody = await accountsResp.text();
     if (accountsResp.status === 403) {
-      return new Response(JSON.stringify({ 
-        error: 'GTM access denied. Please reconnect Google with GTM permissions.',
-        code: 'GTM_SCOPE_MISSING',
-      }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('GTM access denied. Please reconnect Google with GTM permissions.',
+        code: 'GTM_SCOPE_MISSING', 403);
     }
     throw new Error(`GTM API accounts error ${accountsResp.status}: ${errBody}`);
   }
@@ -165,9 +153,7 @@ async function handleListContainers(accessToken: string) {
     });
   }
 
-  return new Response(JSON.stringify({ success: true, accounts: results }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  return jsonOk({ success: true, accounts: results });
 }
 
 // ═══════════════════════════════════════════════
@@ -199,13 +185,11 @@ async function handleDeployTag(
   // Check if tag already exists
   const existing = await findCrawlersTag(accessToken, containerPath);
   if (existing) {
-    return new Response(JSON.stringify({ 
+    return jsonOk({ 
       success: true, 
       already_exists: true, 
       tag_id: existing.tagId,
       message: 'Crawlers tag already deployed in this container',
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -313,14 +297,12 @@ async function handleDeployTag(
     } as any)
     .eq('id', siteId);
 
-  return new Response(JSON.stringify({
+  return jsonOk({
     success: true,
     tag_id: tag.tagId,
     tag_name: tag.name,
     version: containerVersion?.containerVersionId,
     message: 'Crawlers tag deployed and published successfully',
-  }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
 
@@ -359,13 +341,11 @@ async function handleCheckTag(accessToken: string, containerPath: string) {
 
   const tag = await findCrawlersTag(accessToken, containerPath);
   
-  return new Response(JSON.stringify({
+  return jsonOk({
     success: true,
     exists: !!tag,
     tag_id: tag?.tagId || null,
     tag_name: tag?.name || null,
-  }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
 
@@ -378,9 +358,7 @@ async function handleRemoveTag(accessToken: string, containerPath: string) {
 
   const tag = await findCrawlersTag(accessToken, containerPath);
   if (!tag) {
-    return new Response(JSON.stringify({ success: true, message: 'No Crawlers tag found' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, message: 'No Crawlers tag found' });
   }
 
   // Delete the tag
@@ -394,7 +372,5 @@ async function handleRemoveTag(accessToken: string, containerPath: string) {
     throw new Error(`Failed to delete tag: ${deleteResp.status} ${err}`);
   }
 
-  return new Response(JSON.stringify({ success: true, message: 'Crawlers tag removed' }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  return jsonOk({ success: true, message: 'Crawlers tag removed' }));
 }

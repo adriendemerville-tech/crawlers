@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cocoon-diag-subdomains: Analyse cross-subdomain
@@ -13,22 +14,16 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
  * Output: { subdomains, analysis, recommendations }
  */
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const { tracked_site_id, domain } = await req.json();
     if (!domain) {
-      return new Response(JSON.stringify({ error: 'domain required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('domain required', 400);
     }
 
     const supabase = getServiceClient();
@@ -36,14 +31,10 @@ Deno.serve(async (req: Request) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!FIRECRAWL_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Firecrawl not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Firecrawl not configured', 500);
     }
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('AI not configured', 500);
     }
 
     // ═══ Step 1: Discover subdomains via Firecrawl Map ═══
@@ -66,9 +57,7 @@ Deno.serve(async (req: Request) => {
     if (!mapResponse.ok) {
       const err = await mapResponse.text();
       console.error('[cocoon-diag-subdomains] Firecrawl map failed:', err);
-      return new Response(JSON.stringify({ error: 'Map failed', details: err }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Map failed', details: err, 502);
     }
 
     const mapData = await mapResponse.json();
@@ -189,22 +178,18 @@ Réponds UNIQUEMENT avec le JSON, sans commentaire.`;
 
     console.log(`[cocoon-diag-subdomains] Complete: ${nonRootSubdomains.length} subdomains, score: ${analysis?.architecture_score}`);
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       subdomains,
       analysis,
       total_urls: allUrls.length,
       subdomain_count: nonRootSubdomains.length,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (e) {
     console.error('[cocoon-diag-subdomains] Error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));
 
 /** Extract common path patterns from a list of paths */
 function extractPathPatterns(paths: string[]): string[] {

@@ -9,6 +9,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { writeIdentity } from '../_shared/identityGateway.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
@@ -2262,12 +2263,8 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
   return recommendations;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // ── IP Rate Limit (burst protection) ──
+Deno.serve(handleRequest(async (req) => {
+// ── IP Rate Limit (burst protection) ──
   const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'expert-audit', 15, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
@@ -2622,4 +2619,4 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
   } finally {
     releaseConcurrency('expert-audit');
   }
-});
+}));

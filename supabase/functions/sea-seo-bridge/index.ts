@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { getAuthenticatedUserId } from '../_shared/auth.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: sea-seo-bridge
@@ -49,27 +50,19 @@ interface BridgeOpportunity {
   monthly_savings_potential: number
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // ── JWT Authentication ──
     const authenticatedUserId = await getAuthenticatedUserId(req)
     if (!authenticatedUserId) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Authentication required', 401)
     }
 
     const { action, domain, tracked_site_id, opportunity_ids } = await req.json()
     const user_id = authenticatedUserId // Use authenticated identity
 
     if (!domain) {
-      return new Response(JSON.stringify({ error: 'domain required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('domain required', 400)
     }
 
     const supabase = getServiceClient()
@@ -88,12 +81,8 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!adsConn || !adsConn.access_token) {
-        return new Response(JSON.stringify({ 
-          error: 'Google Ads not connected',
-          code: 'ADS_NOT_CONNECTED' 
-        }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Google Ads not connected',
+          code: 'ADS_NOT_CONNECTED', 400)
       }
 
       // 2. Resolve Google token for GSC/GA4
@@ -336,9 +325,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════════════
     if (action === 'inject_workbench') {
       if (!tracked_site_id) {
-        return new Response(JSON.stringify({ error: 'tracked_site_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('tracked_site_id required', 400)
       }
 
       // ── Verify site ownership ──
@@ -350,9 +337,7 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!siteOwned) {
-        return new Response(JSON.stringify({ error: 'Site not found or not owned by user' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Site not found or not owned by user', 403)
       }
 
       const { data: opportunities } = await req.json().catch(() => ({ data: null }))
@@ -402,17 +387,13 @@ Deno.serve(async (req) => {
 
         if (error) {
           console.error('Workbench injection error:', error)
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError(error.message, 500)
         }
       }
 
-      return new Response(JSON.stringify({
+      return jsonOk({
         success: true,
         injected_count: items.length,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -422,9 +403,7 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error('sea-seo-bridge error:', e)
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(e.message, 500)
   }
 })
 

@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: aggregate-observatory
@@ -13,12 +14,8 @@ import { corsHeaders } from '../_shared/cors.ts'
  * All data is anonymized — no URLs or domains stored, only aggregated metrics.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
 
     const now = new Date()
@@ -221,9 +218,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Observatory aggregation error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return jsonError(error.message, 500)
   }
 })

@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * dataforseo-balance — Fetches real-time DataForSEO account balance
@@ -7,42 +8,30 @@ import { corsHeaders } from '../_shared/cors.ts';
  * Returns: balance, total deposited, and spending by endpoint
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     // Verify admin
     const supabase = getServiceClient();
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid token', 401);
     }
 
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Admin only' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Admin only', 403);
     }
 
     const login = Deno.env.get('DATAFORSEO_LOGIN');
     const password = Deno.env.get('DATAFORSEO_PASSWORD');
     if (!login || !password) {
-      return new Response(JSON.stringify({ error: 'DataForSEO credentials not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('DataForSEO credentials not configured', 500);
     }
 
     const resp = await fetch('https://api.dataforseo.com/v3/appendix/user_data', {
@@ -65,9 +54,7 @@ Deno.serve(async (req) => {
     const userData = data?.tasks?.[0]?.result?.[0];
 
     if (!userData) {
-      return new Response(JSON.stringify({ error: 'No user data returned' }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('No user data returned', 502);
     }
 
     const result = {
@@ -87,8 +74,6 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error('[dataforseo-balance] error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));

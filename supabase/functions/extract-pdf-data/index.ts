@@ -1,7 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
-import { corsHeaders } from '../_shared/cors.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: extract-pdf-data
@@ -16,17 +16,11 @@ import { callOpenRouter } from '../_shared/openRouterAI.ts';
  * 4. Produces calibration signals to refine prediction algorithm
  * 5. Stores calibration data in pdf_audits.extracted_data
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { audit_id } = await req.json();
     if (!audit_id) {
-      return new Response(JSON.stringify({ error: 'audit_id is required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('audit_id is required', 400);
     }
 
     const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -247,12 +241,10 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     // 10. Update system metrics
     await supabase.rpc('recalculate_reliability');
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       calibration_signals: extractedData.calibration_signals,
       data_quality: extractedData.data_quality,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
@@ -267,8 +259,6 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
       }
     } catch {}
 
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message, 500);
   }
-});
+}));

@@ -1,12 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const supabase = getServiceClient();
 
@@ -21,10 +16,7 @@ Deno.serve(async (req) => {
     const { event_type, session_id, url, user_id, event_data, target_url } = body;
 
     if (!event_type) {
-      return new Response(
-        JSON.stringify({ error: 'event_type is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('event_type is required', 400);
     }
 
     // Merge IP into event_data
@@ -47,22 +39,13 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error('[track-analytics] Insert error:', error);
-      return new Response(
-        JSON.stringify({ error: 'Failed to track event' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Failed to track event', 500);
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ success: true });
 
   } catch (error) {
     console.error('[track-analytics] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('Internal server error', 500);
   }
-});
+}));

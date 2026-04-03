@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: persist-cocoon-session
@@ -13,12 +14,8 @@ import { logSilentError } from "../_shared/silentErrorLogger.ts";
  * No frontend wiring — will be integrated later.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const ip = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const ip = getClientIp(req);
   const rateCheck = checkIpRate(ip, "persist-cocoon-session", 10, 60_000);
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
 
@@ -27,10 +24,7 @@ Deno.serve(async (req) => {
     const { tracked_site_id, session_id } = body;
 
     if (!tracked_site_id) {
-      return new Response(JSON.stringify({ error: "tracked_site_id requis" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("tracked_site_id requis", 400);
     }
 
     const supabase = getServiceClient();
@@ -43,9 +37,7 @@ Deno.serve(async (req) => {
       userId = user?.id || null;
     }
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Non autorisé" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Non autorisé", 401);
     }
 
     // ─── Verify site ownership ───
@@ -54,9 +46,7 @@ Deno.serve(async (req) => {
       .eq("id", tracked_site_id).maybeSingle();
 
     if (!site || site.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Site non trouvé" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Site non trouvé", 404);
     }
 
     // ─── Fetch current semantic_nodes for this site ───
@@ -68,9 +58,7 @@ Deno.serve(async (req) => {
       .limit(200);
 
     if (!nodes?.length) {
-      return new Response(JSON.stringify({ error: "Aucun nœud sémantique trouvé. Lancez d'abord le Cocoon." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Aucun nœud sémantique trouvé. Lancez d'abord le Cocoon.", 400);
     }
 
     // ─── Compute aggregated features ───
@@ -218,9 +206,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("[PersistCocoonSession] Error:", error);
     await logSilentError("persist-cocoon-session", "persist-session", error, { severity: "high", impact: "data_loss" });
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erreur interne" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(error instanceof Error ? error.message : "Erreur interne", 500);
   }
-});
+}));

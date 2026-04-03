@@ -1,8 +1,8 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
@@ -350,26 +350,16 @@ function label(key: string, lang: string): string {
   return LABELS[lang]?.[key] || LABELS['fr'][key] || key;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget } = await req.json();
     if (!tracked_site_id || !domain) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id and domain required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('tracked_site_id and domain required', 400);
     }
 
     const budget = Math.min(task_budget || DEFAULT_TASK_BUDGET, 12);
@@ -1031,7 +1021,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════════
     // RESPONSE
     // ═══════════════════════════════════════════════════════════
-    return new Response(JSON.stringify({
+    return jsonOk({
       plan_id: plan?.id || null,
       strategy: strategyPayload,
       diagnostics_summary: diagnosticsSummary,
@@ -1040,16 +1030,11 @@ Deno.serve(async (req) => {
       development_axes: matchingAxes,
       site_memory_context: siteMemoryContext ? true : false,
       lang,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (err) {
     console.error('Strategist error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(err.message, 500);
   }
 });
 
@@ -1406,7 +1391,7 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
           is_destructive: false,
           depends_on: [],
           estimated_impact: impact,
-        });
+        }));
       }
       break;
   }

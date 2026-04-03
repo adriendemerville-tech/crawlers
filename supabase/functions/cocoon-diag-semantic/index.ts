@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cocoon-diag-semantic: Diagnostic Sémantique
@@ -133,24 +134,16 @@ function getParentPath(path: string): string | null {
   return clean.substring(0, idx + 1);
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const { tracked_site_id, domain, lang = 'fr' } = await req.json();
     if (!tracked_site_id || !domain) {
-      return new Response(JSON.stringify({ error: 'Missing params' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing params', 400);
     }
 
     const supabase = getServiceClient();
@@ -577,14 +570,10 @@ Deno.serve(async (req) => {
       metadata,
     });
 
-    return new Response(JSON.stringify({ findings, scores, metadata }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ findings, scores, metadata });
 
   } catch (error) {
     console.error('[cocoon-diag-semantic] Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', 500);
   }
-});
+}));

@@ -1,18 +1,11 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { email, code } = await req.json();
     if (!email || !code) {
-      return new Response(JSON.stringify({ error: 'Email and code required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Email and code required', 400);
     }
 
     const supabase = getServiceClient();
@@ -27,10 +20,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError || !codeRecord) {
-      return new Response(JSON.stringify({ success: false, error: 'invalid_code' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Error', 400);
     }
 
     // Delete the used code
@@ -42,14 +32,9 @@ Deno.serve(async (req) => {
       .delete()
       .eq('email', email);
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true });
   } catch (err) {
     console.error('Error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', 500);
   }
-});
+}));

@@ -1,6 +1,7 @@
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -22,29 +23,19 @@ interface KeywordItem {
   };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { domain, existingKeywords, brandName, locationCode, siteContext, mode } = await req.json();
 
     if (!domain) {
-      return new Response(
-        JSON.stringify({ error: 'Domain is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Domain is required', 400);
     }
 
     const effectiveMode = mode || 'initial';
     console.log(`📊 Generating keywords for ${domain} (mode: ${effectiveMode})`);
 
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-      return new Response(
-        JSON.stringify({ error: 'DataForSEO not configured', keywords: [] }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('DataForSEO not configured', keywords: [], 200);
     }
 
     const extractedBrand = brandName || extractBrandFromDomain(domain);
@@ -88,23 +79,17 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Generated ${enrichedKeywords.length} keywords (mode: ${effectiveMode})`);
 
-    return new Response(
-      JSON.stringify({ 
+    return jsonOk({ 
         success: true, 
         keywords: enrichedKeywords,
         count: enrichedKeywords.length,
         mode: effectiveMode,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      });
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error:', error);
-    return new Response(
-      JSON.stringify({ error: errorMessage, keywords: [] }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError(errorMessage, keywords: [], 500);
   }
 });
 
@@ -391,7 +376,7 @@ async function checkNewRankings(
         method: 'POST',
         headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(tasks),
-      });
+      }));
 
       if (response.ok) {
         const data = await response.json();

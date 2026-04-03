@@ -5,6 +5,7 @@ import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { checkFairUse, checkMonthlyFairUse } from '../_shared/fairUse.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType } from '../_shared/contentBrief.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * content-architecture-advisor
@@ -46,21 +47,17 @@ interface AdvisorInput {
   target_audience_segment?: 'primary' | 'secondary' | 'untapped' | 'all'
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
+Deno.serve(handleRequest(async (req) => {
+// ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
   const reqUrl = new URL(req.url)
   const pollJobId = reqUrl.searchParams.get('job_id')
   if (pollJobId && req.method === 'GET') {
     const sb = getServiceClient()
     const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single()
-    if (!job) return new Response(JSON.stringify({ error: 'Job not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    if (job.status === 'completed') return new Response(JSON.stringify({ success: true, data: job.result_data, status: 'completed' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    if (job.status === 'failed') return new Response(JSON.stringify({ error: job.error_message || 'Job failed', status: 'failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    return new Response(JSON.stringify({ status: job.status, progress: job.progress || 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (!job) return jsonError('Job not found', 404)
+    if (job.status === 'completed') return jsonOk({ success: true, data: job.result_data, status: 'completed' })
+    if (job.status === 'failed') return jsonError(job.error_message || 'Job failed', status: 'failed', 500)
+    return jsonOk({ status: job.status, progress: job.progress || 0 })
   }
 
   const startTime = Date.now()
@@ -69,9 +66,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     // Service role bypass for internal calls (autopilot-engine, etc.)
@@ -97,9 +92,7 @@ Deno.serve(async (req) => {
       const userClient = getUserClient(authHeader)
       const { data: { user: authUser }, error: userError } = await userClient.auth.getUser()
       if (userError || !authUser) {
-        return new Response(JSON.stringify({ error: 'Invalid token' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Invalid token', 401)
       }
       user = authUser
     }
@@ -108,9 +101,7 @@ Deno.serve(async (req) => {
     const { url, keyword, page_type, tracked_site_id, language_code = 'fr', location_code = 2250, strategic_objectives, target_internal_links, cannibalization_data, silo_context, target_audience_segment = 'primary' } = body
 
     if (!url || !keyword || !page_type) {
-      return new Response(JSON.stringify({ error: 'Missing url, keyword, or page_type' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Missing url, keyword, or page_type', 400)
     }
 
     if (!PAGE_TYPES.includes(page_type)) {
@@ -141,9 +132,7 @@ Deno.serve(async (req) => {
         .single()
 
       if (jobError || !job) {
-        return new Response(JSON.stringify({ error: 'Failed to create async job' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Failed to create async job', 500)
       }
 
       // Fire-and-forget: self-invoke with _job_id
@@ -172,9 +161,7 @@ Deno.serve(async (req) => {
     if (!isServiceRole) {
       const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
       if (!fairUse.allowed) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded', details: fairUse }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('Rate limit exceeded', details: fairUse, 429)
       }
     }
 
@@ -227,36 +214,24 @@ Deno.serve(async (req) => {
 
       if (!monthlyFairUse.allowed) {
         if (isActiveSubscriber) {
-          return new Response(JSON.stringify({
-            error: 'Monthly content creation limit reached',
-            details: monthlyFairUse,
-          }), {
-            status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return jsonError('Monthly content creation limit reached',
+            details: monthlyFairUse, 429)
         }
         const result = await deductCredits()
         if (!result.success) {
-          return new Response(JSON.stringify({
-            error: 'Crédits insuffisants',
+          return jsonError('Crédits insuffisants',
             credits_required: CONTENT_CREDIT_COST,
             credits_balance: userProfile?.credits_balance ?? 0,
-            details: monthlyFairUse,
-          }), {
-            status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+            details: monthlyFairUse, 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
       } else if (!isActiveSubscriber) {
         const result = await deductCredits()
         if (!result.success) {
-          return new Response(JSON.stringify({
-            error: 'Crédits insuffisants',
+          return jsonError('Crédits insuffisants',
             credits_required: CONTENT_CREDIT_COST,
-            credits_balance: userProfile?.credits_balance ?? 0,
-          }), {
-            status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+            credits_balance: userProfile?.credits_balance ?? 0, 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
@@ -273,9 +248,7 @@ Deno.serve(async (req) => {
     const cached = await getCached(ck)
     if (cached) {
       console.log(`[content-advisor] Cache hit for ${domain}/${keyword}`)
-      return new Response(JSON.stringify({ data: cached, cached: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ data: cached, cached: true })
     }
 
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
@@ -592,14 +565,11 @@ RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout con
       }
     }
 
-
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 65 }).eq('id', jobId)
     console.log(`[content-advisor] Step 5: LLM synthesis`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI service not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('AI service not configured', 500)
     }
 
     const siteIdentity = siteContext ? {
@@ -1152,19 +1122,13 @@ FRAÎCHEUR & DÉNOMINATION:
       console.error('[content-advisor] AI error:', aiResponse.status, errText)
 
       if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: 'AI rate limited, please try again later' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('AI rate limited, please try again later', 429)
       }
       if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'AI credits exhausted' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return jsonError('AI credits exhausted', 402)
       }
 
-      return new Response(JSON.stringify({ error: 'AI synthesis failed' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('AI synthesis failed', 500)
     }
 
     const aiJson = await aiResponse.json()
@@ -1192,9 +1156,7 @@ FRAÎCHEUR & DÉNOMINATION:
     }
 
     if (!recommendation) {
-      return new Response(JSON.stringify({ error: 'Failed to generate recommendation' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Failed to generate recommendation', 500)
     }
 
     trackTokenUsage('content-architecture-advisor', aiJson?.usage?.total_tokens || 0, user.id)
@@ -1371,7 +1333,7 @@ FRAÎCHEUR & DÉNOMINATION:
         brief_eeat_signals: contentBrief.eeat_signals,
         brief_geo_passages: contentBrief.geo_citable_passages,
         source: 'content_architect',
-      });
+      }));
       console.log(`[content-advisor] Generation logged for correlation training`);
     } catch (e) {
       console.warn('[content-advisor] Failed to log generation:', e);
@@ -1397,9 +1359,7 @@ FRAÎCHEUR & DÉNOMINATION:
       console.log(`[content-advisor] Async job ${jobId} completed`)
     }
 
-    return new Response(JSON.stringify({ data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ data: result })
 
   } catch (error) {
     console.error('[content-advisor] Error:', error)
@@ -1416,8 +1376,6 @@ FRAÎCHEUR & DÉNOMINATION:
       } catch (_) { /* ignore */ }
     }
 
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

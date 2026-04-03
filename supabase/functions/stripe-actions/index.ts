@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -249,10 +250,8 @@ async function handleRetention(req: Request) {
 
 // ─── Router ───
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const body = await req.json();
     const action = body.action as string;
 
@@ -271,4 +270,4 @@ Deno.serve(async (req) => {
     console.error("❌ stripe-actions error:", msg);
     return json({ error: msg }, 500);
   }
-});
+}));

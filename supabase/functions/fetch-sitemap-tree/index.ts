@@ -1,5 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: fetch-sitemap-tree
@@ -288,18 +288,11 @@ async function persistTaxonomy(
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { domain } = await req.json();
     if (!domain || typeof domain !== 'string') {
-      return new Response(JSON.stringify({ error: 'Missing domain' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing domain', 400);
     }
 
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
@@ -318,11 +311,9 @@ Deno.serve(async (req) => {
 
     if (cached?.result_data) {
       console.log(`[fetch-sitemap-tree] Cache hit for ${cleanDomain}`);
-      return new Response(JSON.stringify({
+      return jsonOk({
         ...cached.result_data as Record<string, unknown>,
         cached: true,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -401,15 +392,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ...result, cached: false }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ...result, cached: false });
 
   } catch (error) {
     console.error('[fetch-sitemap-tree] Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal error', tree: [], totalUrls: 0 }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', tree: [], totalUrls: 0, 500);
   }
-});
+}));

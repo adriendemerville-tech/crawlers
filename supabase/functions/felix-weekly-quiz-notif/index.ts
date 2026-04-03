@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * felix-weekly-quiz-notif — Weekly cron that creates a quiz invitation
@@ -9,11 +10,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
  * can show a notification bubble in Félix.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
 
   try {
@@ -29,9 +26,7 @@ Deno.serve(async (req) => {
       .limit(500);
 
     if (!activeUsers || activeUsers.length === 0) {
-      return new Response(JSON.stringify({ success: true, notified: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, notified: 0 });
     }
 
     const userIds = activeUsers.map(u => u.user_id);
@@ -62,9 +57,7 @@ Deno.serve(async (req) => {
     );
 
     if (eligibleUsers.length === 0) {
-      return new Response(JSON.stringify({ success: true, notified: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, notified: 0 });
     }
 
     // Insert quiz invite events
@@ -82,15 +75,10 @@ Deno.serve(async (req) => {
 
     console.log(`[felix-weekly-quiz-notif] Notified ${eligibleUsers.length} users`);
 
-    return new Response(JSON.stringify({ success: true, notified: eligibleUsers.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, notified: eligibleUsers.length });
 
   } catch (error) {
     console.error('[felix-weekly-quiz-notif] Error:', error);
-    return new Response(JSON.stringify({ success: false, error: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
-});
+}));

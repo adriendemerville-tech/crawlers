@@ -1,5 +1,5 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 async function checkUrl(url: string): Promise<{ ok: boolean; status: number; finalUrl: string; contentLength: number }> {
   try {
@@ -116,19 +116,12 @@ async function searchBrandDomain(query: string): Promise<string | null> {
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { urls, searchBrand } = await req.json();
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'urls array is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('urls array is required', 400);
     }
 
     const toCheck = urls.slice(0, 10) as string[];
@@ -171,15 +164,9 @@ Deno.serve(async (req) => {
     console.log(`[validate-url] Results:`, results.map(r => `${r.url}: ${r.valid}`).join(', '));
     if (brandResult) console.log(`[validate-url] Brand fallback: ${brandResult}`);
 
-    return new Response(
-      JSON.stringify({ results, brandResult }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonOk({ results, brandResult });
   } catch (err: any) {
     console.error('[validate-url] Error:', err);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError(err.message, 500);
   }
-});
+}));

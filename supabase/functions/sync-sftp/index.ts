@@ -1,7 +1,7 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseCombinedLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * sync-sftp — Pulls access logs via SFTP from generic hosting providers
@@ -11,20 +11,14 @@ import { normalize } from '../_shared/normalizer.ts';
  * Uses ssh2 via npm: specifier for SFTP connections.
  * Reads only new bytes since last sync using byte offset tracking.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization') || '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const token = authHeader.replace('Bearer ', '');
     if (!token || (token !== serviceKey && token !== anonKey)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     const supabase = getServiceClient();
@@ -35,9 +29,7 @@ Deno.serve(async (req) => {
       .eq('status', 'active');
 
     if (!connectors?.length) {
-      return new Response(JSON.stringify({ ok: true, message: 'No active SFTP connectors', synced: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ ok: true, message: 'No active SFTP connectors', synced: 0 });
     }
 
     // Dynamic import of ssh2 (npm specifier)
@@ -46,9 +38,7 @@ Deno.serve(async (req) => {
       const ssh2 = await import('npm:ssh2@1.16.0');
       Client = ssh2.Client;
     } catch {
-      return new Response(JSON.stringify({ error: 'ssh2 module unavailable', code: 'MODULE_ERROR' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('ssh2 module unavailable', code: 'MODULE_ERROR', 500);
     }
 
     const results: Array<{ connector_id: string; inserted: number; error?: string }> = [];
@@ -119,14 +109,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, synced: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, synced: results.length, results });
   } catch (error) {
     console.error('[sync-sftp] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
 });
 
@@ -200,5 +186,5 @@ function readSFTPFile(Client: any, config: SFTPConfig): Promise<{ data: string; 
     if (config.password) connectConfig.password = config.password;
 
     conn.connect(connectConfig);
-  });
+  }));
 }

@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -461,12 +462,8 @@ async function publishViaConnector(connectorName: string, req: Request, tracked_
 
 // ── Main handler ──
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const user = await getUserFromRequest(req);
     const body = await req.json();
     const { tracked_site_id, result_data, original_result_data, url, keyword, content_type, images } = body;
@@ -475,9 +472,7 @@ Deno.serve(async (req) => {
     const resolvedContentType = content_type === 'page' ? 'page' : 'post';
 
     if (!tracked_site_id || !result_data) {
-      return new Response(JSON.stringify({ error: "tracked_site_id and result_data required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("tracked_site_id and result_data required", 400);
     }
 
     const service = getServiceClient();
@@ -492,9 +487,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (connErr || !conn) {
-      return new Response(JSON.stringify({ error: "No active CMS connection found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("No active CMS connection found", 404);
     }
 
     const htmlContent = buildHtml(result_data, images, keyword);
@@ -554,14 +547,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, platform: conn.platform, content_type: resolvedContentType, data: publishResult }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonOk({ success: true, platform: conn.platform, content_type: resolvedContentType, data: publishResult });
 
   } catch (err: any) {
     console.error("[cms-publish-draft]", err);
-    return new Response(JSON.stringify({ error: err.message || "Internal error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError(err.message || "Internal error", 500);
   }
-});
+}));

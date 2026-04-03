@@ -1,31 +1,16 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+Deno.serve(handleRequest(async (req) => {
+if (req.method !== 'POST') {
+    return jsonError('Method not allowed', 405);
   }
 
   try {
     // Authenticate user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Unauthorized', 401);
     }
 
     const anonClient = getUserClient(authHeader);
@@ -33,10 +18,7 @@ Deno.serve(async (req) => {
       authHeader.replace('Bearer ', '')
     );
     if (claimsError || !claimsData?.claims?.sub) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Invalid token', 401);
     }
 
     const userId = claimsData.claims.sub;
@@ -46,10 +28,7 @@ Deno.serve(async (req) => {
     const { domain, json_ld, meta_tags, robots_rules, corrective_script } = body;
 
     if (!domain || typeof domain !== 'string' || domain.length < 3) {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid domain' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Missing or invalid domain', 400);
     }
 
     const cleanDomain = domain.replace(/[^a-zA-Z0-9.\-]/g, '').toLowerCase();
@@ -63,10 +42,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ error: 'Profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Profile not found', 404);
     }
 
     // Update the latest audit with the new config data
@@ -80,10 +56,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (auditFetchError) {
-      return new Response(
-        JSON.stringify({ error: 'Error fetching audit' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Error fetching audit', 500);
     }
 
     // Build updated audit_data
@@ -107,10 +80,7 @@ Deno.serve(async (req) => {
         .eq('id', latestAudit.id);
 
       if (updateError) {
-        return new Response(
-          JSON.stringify({ error: 'Error updating audit' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Error updating audit', 500);
       }
     } else {
       const { error: insertError } = await supabase
@@ -124,10 +94,7 @@ Deno.serve(async (req) => {
         });
 
       if (insertError) {
-        return new Response(
-          JSON.stringify({ error: 'Error creating audit record' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Error creating audit record', 500);
       }
     }
 
@@ -146,21 +113,15 @@ Deno.serve(async (req) => {
       .eq('user_id', userId)
       .eq('domain', cleanDomain);
 
-    return new Response(
-      JSON.stringify({
+    return jsonOk({
         success: true,
         domain: cleanDomain,
         message: 'Configuration updated. WordPress plugin will sync automatically.',
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      });
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ update-config error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('Internal server error', details: errorMessage, 500);
   }
-});
+}));

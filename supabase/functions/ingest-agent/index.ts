@@ -1,25 +1,19 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { autoDetectAndParse } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * ingest-agent — Receives log data from the crawlers.fr bash agent.
  * Auth: Bearer <api_key> → looks up connector by hashed key.
  * Accepts { lines: string[] } (raw) or { entries: object[] } (pre-parsed).
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     // Auth via Bearer token
     const authHeader = req.headers.get('Authorization') || '';
     if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header', code: 'MISSING_AUTH' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing Authorization header', code: 'MISSING_AUTH', 401);
     }
 
     const apiKey = authHeader.replace('Bearer ', '');
@@ -36,9 +30,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (connError || !connector) {
-      return new Response(JSON.stringify({ error: 'Invalid API key', code: 'INVALID_KEY' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid API key', code: 'INVALID_KEY', 401);
     }
 
     const body = await req.json();
@@ -63,9 +55,7 @@ Deno.serve(async (req) => {
         raw: e,
       }));
     } else {
-      return new Response(JSON.stringify({ error: 'Body must contain "lines" or "entries" array', code: 'INVALID_BODY' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Body must contain "lines" or "entries" array', code: 'INVALID_BODY', 400);
     }
 
     const result = await normalize(entries, connector.tracked_site_id, connector.id, 'agent');
@@ -76,13 +66,9 @@ Deno.serve(async (req) => {
       .update({ last_sync_at: new Date().toISOString(), status: 'active', error_count: 0 })
       .eq('id', connector.id);
 
-    return new Response(JSON.stringify({ ok: true, processed: result.inserted, errors: result.errors }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, processed: result.inserted, errors: result.errors });
   } catch (error) {
     console.error('[ingest-agent] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

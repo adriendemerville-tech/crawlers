@@ -1,10 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function getSupabase() {
   try {
@@ -14,47 +9,31 @@ function getSupabase() {
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const url = new URL(req.url);
 
     // ─── POST: Generate magic link (called from SaaS frontend) ───
     if (req.method === 'POST') {
       const origin = req.headers.get('origin') || '';
       if (!origin.includes('crawlers.fr') && !origin.includes('crawlers.lovable.app')) {
-        return new Response(
-          JSON.stringify({ error: 'Forbidden origin' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Forbidden origin', 403);
       }
 
       const authHeader = req.headers.get('Authorization');
       if (!authHeader?.startsWith('Bearer ')) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Unauthorized', 401);
       }
 
       const supabase = getSupabase();
       if (!supabase) {
-        return new Response(
-          JSON.stringify({ error: 'Server configuration error' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Server configuration error', 500);
       }
 
       const anonClient = getUserClient(authHeader);
       const { data: userData, error: userError } = await anonClient.auth.getUser();
       if (userError || !userData?.user?.id) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid token' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Invalid token', 401);
       }
 
       const userId = userData.user.id;
@@ -74,10 +53,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (mlError || !magicLink) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to generate magic link' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Failed to generate magic link', 500);
       }
 
       // If site_id provided, return the site api_key too
@@ -106,18 +82,12 @@ Deno.serve(async (req) => {
 
     // ─── GET: Standard config retrieval OR magic link redemption ───
     if (req.method !== 'GET') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Method not allowed', 405);
     }
 
     const supabase = getSupabase();
     if (!supabase) {
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Server configuration error', 500);
     }
 
     const tempToken = url.searchParams.get('temp_token');
@@ -125,10 +95,7 @@ Deno.serve(async (req) => {
     // ─── Magic link redemption flow ───
     if (tempToken) {
       if (typeof tempToken !== 'string' || tempToken.length < 10) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid temp_token' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Invalid temp_token', 400);
       }
 
       const { data: link, error: linkError } = await supabase
@@ -138,25 +105,16 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (linkError || !link) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid or expired token', type: 'auth' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Invalid or expired token', type: 'auth', 401);
       }
 
       if (new Date(link.expires_at) < new Date()) {
         await supabase.from('magic_links').delete().eq('id', link.id);
-        return new Response(
-          JSON.stringify({ error: 'Token expired', type: 'auth' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Token expired', type: 'auth', 401);
       }
 
       if (link.used) {
-        return new Response(
-          JSON.stringify({ error: 'Token already used', type: 'auth' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Token already used', type: 'auth', 401);
       }
 
       await supabase
@@ -201,10 +159,7 @@ Deno.serve(async (req) => {
     const domain = url.searchParams.get('domain');
 
     if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 10) {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid api_key parameter' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonError('Missing or invalid api_key parameter', 401);
     }
 
     // Try site-level api_key first (new model)
@@ -232,18 +187,12 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (profileError || !profile) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid API key', authenticated: false }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Invalid API key', authenticated: false, 401);
       }
       userId = profile.user_id;
       
       if (!domain || typeof domain !== 'string' || domain.length < 3) {
-        return new Response(
-          JSON.stringify({ error: 'Missing or invalid domain parameter' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonError('Missing or invalid domain parameter', 400);
       }
       cleanDomain = domain.replace(/[^a-zA-Z0-9.\-]/g, '').toLowerCase();
     }
@@ -256,36 +205,21 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!profile || profile.credits_balance <= 0) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Insufficient credits. Please recharge your account.',
+      return jsonError('Insufficient credits. Please recharge your account.',
           authenticated: true,
-          credits: 0 
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+          credits: 0, 403);
     }
 
     // If site has current_config, return it directly (new model)
     if (currentConfig && Object.keys(currentConfig).length > 0) {
-      return new Response(
-        JSON.stringify({
+      return jsonOk({
           success: true,
           type: 'config',
           domain: cleanDomain!,
           credits_remaining: profile.credits_balance,
           ...currentConfig,
           generated_at: new Date().toISOString(),
-        }),
-        { 
-          status: 200, 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=300',
-          } 
-        }
-      );
+        });
     }
 
     // Fallback: build config from audits + saved_corrective_codes (legacy)
@@ -339,8 +273,7 @@ Deno.serve(async (req) => {
       if (auditData.meta_tags) metaTags = auditData.meta_tags as Record<string, string>;
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonOk({
         success: true,
         type: 'config',
         domain: cleanDomain!,
@@ -352,23 +285,11 @@ Deno.serve(async (req) => {
         corrective_script: latestCode?.code || null,
         fixes_applied: latestCode?.fixes_applied || [],
         generated_at: new Date().toISOString(),
-      }),
-      { 
-        status: 200, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=300',
-        } 
-      }
-    );
+      });
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ wp-sync error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonError('Internal server error', details: errorMessage, 500);
   }
-});
+}));

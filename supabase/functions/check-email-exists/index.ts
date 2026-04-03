@@ -1,18 +1,12 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { email } = await req.json();
 
     if (!email || typeof email !== 'string') {
-      return new Response(JSON.stringify({ exists: false }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ exists: false });
     }
 
     const supabase = getServiceClient();
@@ -22,12 +16,8 @@ Deno.serve(async (req) => {
       .select('id', { count: 'exact', head: true })
       .eq('email', email.toLowerCase().trim());
 
-    return new Response(JSON.stringify({ exists: (count ?? 0) > 0 }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ exists: (count ?? 0) > 0 });
   } catch (_error) {
-    return new Response(JSON.stringify({ exists: false }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ exists: false });
   }
-});
+}));

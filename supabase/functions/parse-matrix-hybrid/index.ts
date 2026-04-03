@@ -6,6 +6,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { detectItemType, type ItemType } from '../_shared/matriceTypeDetector.ts'
 import { analyzeHtmlFull } from '../_shared/matriceHtmlAnalysis.ts'
 import {
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   type RobotsData, type SitemapData, type PsiData,
   checkRobots, checkSitemap, checkLlmsTxt, fetchPsi,
   computeBaliseScore, computeStructuredDataScore, computePerformanceScore,
@@ -128,10 +129,8 @@ function buildHtmlSummary(rawHtml: string): string {
 
 /* ── Main handler ─────────────────────────────────────────────────── */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
-
-  const clientIp = getClientIp(req)
+Deno.serve(handleRequest(async (req) => {
+const clientIp = getClientIp(req)
   const ipCheck = checkIpRate(clientIp, 'parse-matrix-hybrid', 15, 60_000)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
   if (!acquireConcurrency('parse-matrix-hybrid', 50)) return concurrencyResponse(corsHeaders)
@@ -217,11 +216,11 @@ Deno.serve(async (req) => {
 
     console.log(`[parse-matrix-hybrid] Complete. SEO: ${globalScore}/100, GEO: ${globalGeoScore}/100`)
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true, url: normalizedUrl,
       global_score: globalScore, global_geo_score: globalGeoScore,
       total_items: orderedResults.length, audit_type: 'hybrid', results: orderedResults,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    })
 
   } catch (e) {
     console.error('[parse-matrix-hybrid] Error:', e)

@@ -1,18 +1,12 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No auth" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("No auth", 401);
     }
 
     const supabase = getUserClient(authHeader);
@@ -22,10 +16,7 @@ Deno.serve(async (req) => {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Unauthorized", 401);
     }
 
     const { action, ...params } = await req.json();
@@ -49,26 +40,14 @@ Deno.serve(async (req) => {
     const isAgencyPremium = isAdmin || profile?.plan_type === "agency_premium";
 
     if (!isAdmin && !isAgencyPro) {
-      return new Response(
-        JSON.stringify({ error: "Pro Agency subscription required" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return jsonError("Pro Agency subscription required", 403);
     }
 
     switch (action) {
       case "create_invitation": {
         const { role, email } = params;
         if (!role || !["owner", "collaborator"].includes(role)) {
-          return new Response(
-            JSON.stringify({ error: "Invalid role" }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return jsonError("Invalid role", 400);
         }
 
         // Check current team size (max 3 total including owner)
@@ -114,21 +93,13 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
-        return new Response(JSON.stringify({ invitation }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ invitation });
       }
 
       case "accept_invitation": {
         const { token } = params;
         if (!token) {
-          return new Response(
-            JSON.stringify({ error: "Token required" }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return jsonError("Token required", 400);
         }
 
         const { data: invitation } = await adminClient
@@ -139,13 +110,7 @@ Deno.serve(async (req) => {
           .single();
 
         if (!invitation) {
-          return new Response(
-            JSON.stringify({ error: "Invalid or expired invitation" }),
-            {
-              status: 404,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return jsonError("Invalid or expired invitation", 404);
         }
 
         // Check not expired
@@ -154,24 +119,12 @@ Deno.serve(async (req) => {
             .from("agency_invitations")
             .update({ status: "expired" })
             .eq("id", invitation.id);
-          return new Response(
-            JSON.stringify({ error: "Invitation expired" }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return jsonError("Invitation expired", 400);
         }
 
         // Can't join your own team
         if (invitation.owner_user_id === user.id) {
-          return new Response(
-            JSON.stringify({ error: "Cannot accept your own invitation" }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return jsonError("Cannot accept your own invitation", 400);
         }
 
         // Add as team member
@@ -185,16 +138,7 @@ Deno.serve(async (req) => {
 
         if (memberError) {
           if (memberError.code === "23505") {
-            return new Response(
-              JSON.stringify({ error: "Already a team member" }),
-              {
-                status: 400,
-                headers: {
-                  ...corsHeaders,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
+            return jsonError("Already a team member", 400);
           }
           throw memberError;
         }
@@ -205,9 +149,7 @@ Deno.serve(async (req) => {
           .update({ status: "accepted", accepted_by: user.id })
           .eq("id", invitation.id);
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ success: true });
       }
 
       case "remove_member": {
@@ -220,9 +162,7 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ success: true });
       }
 
       case "revoke_invitation": {
@@ -235,9 +175,7 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ success: true });
       }
 
       case "list_team": {
@@ -280,22 +218,10 @@ Deno.serve(async (req) => {
       }
 
       default:
-        return new Response(
-          JSON.stringify({ error: "Unknown action" }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+        return jsonError("Unknown action", 400);
     }
   } catch (err) {
     console.error(err);
-    return new Response(
-      JSON.stringify({ error: String(err) }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return jsonError(String(err), 500);
   }
-});
+}));

@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * haloscan-connector: Interface with HaloScan SEO API
@@ -220,18 +221,11 @@ async function handleDomainsExpired(apiKey: string, params: any) {
 
 // ── Main handler ──
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const { action, ...params } = await req.json();
@@ -239,10 +233,7 @@ Deno.serve(async (req) => {
     // API key: global secret or per-user (future: haloscan_connections table)
     const apiKey = Deno.env.get('HALOSCAN_API_KEY');
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'HaloScan API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('HaloScan API key not configured', 500);
     }
 
     let result: any;
@@ -301,17 +292,10 @@ Deno.serve(async (req) => {
 
     console.log(`[haloscan-connector] ✅ ${action} completed for user ${auth.id}`);
 
-    return new Response(JSON.stringify({ data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ data: result });
 
   } catch (error) {
     console.error('[haloscan-connector] Error:', error);
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500);
   }
-});
+}));

@@ -7,46 +7,29 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const COOLDOWN_DAYS = 7;
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     // ── Auth ──
     const ctx = await getUserContext(req);
     if (!ctx) {
-      return new Response(JSON.stringify({ error: 'Non authentifié' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non authentifié', 401);
     }
 
     // ── Fair Use ──
     const fairUse = await checkFairUse(ctx.userId, 'expert_audit', ctx.planType);
     if (!fairUse.allowed) {
-      return new Response(JSON.stringify({ error: fairUse.reason }), {
-        status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError(fairUse.reason, 429);
     }
 
     // ── Parse body ──
     const body = await req.json();
     const trackedSiteId = body.tracked_site_id;
     if (!trackedSiteId) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id requis' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('tracked_site_id requis', 400);
     }
 
     const adminClient = getServiceClient();
@@ -59,18 +42,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (siteErr || !site) {
-      return new Response(JSON.stringify({ error: 'Site introuvable' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Site introuvable', 404);
     }
 
     // Verify ownership
     if (site.user_id !== ctx.userId) {
-      return new Response(JSON.stringify({ error: 'Accès non autorisé' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Accès non autorisé', 403);
     }
 
     // Strict 7-day cooldown
@@ -180,9 +157,6 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('[SoV] Error:', err);
-    return new Response(JSON.stringify({ error: 'Erreur interne' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Erreur interne', 500);
   }
-});
+}));

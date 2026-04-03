@@ -1,18 +1,11 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { email } = await req.json();
     if (!email) {
-      return new Response(JSON.stringify({ error: 'Email required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Email required', 400);
     }
 
     const supabase = getServiceClient();
@@ -42,10 +35,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error('Insert error:', insertError);
-      return new Response(JSON.stringify({ error: 'Failed to store code' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Failed to store code', 500);
     }
 
     const confirmLink = `https://crawlers.fr/signup?verified=true`;
@@ -95,14 +85,9 @@ Deno.serve(async (req) => {
       console.error('Queue error:', queueError);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true });
   } catch (err) {
     console.error('Error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Internal error', 500);
   }
-});
+}));

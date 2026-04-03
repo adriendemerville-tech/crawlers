@@ -1,12 +1,10 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
 import { getDomainContext } from '../_shared/getDomainContext.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  const startTime = Date.now();
+Deno.serve(handleRequest(async (req) => {
+const startTime = Date.now();
   const supabase = getServiceClient();
 
   try {
@@ -18,9 +16,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!config?.is_enabled) {
-      return new Response(JSON.stringify({ skipped: true, reason: 'disabled' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ skipped: true, reason: 'disabled' });
     }
 
     const minWeeks = config.min_data_weeks || 4;
@@ -35,9 +31,7 @@ Deno.serve(async (req) => {
 
     if (!sites?.length) {
       await logRun(supabase, 'scheduled', 0, 0, 0, null, Date.now() - startTime);
-      return new Response(JSON.stringify({ sites: 0, alerts: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ sites: 0, alerts: 0 });
     }
 
     let alertsGenerated = 0;
@@ -74,22 +68,17 @@ Deno.serve(async (req) => {
 
     await logRun(supabase, 'scheduled', sites.length, alertsGenerated, diagnosticsCreated, errors.length > 0 ? errors : null, Date.now() - startTime);
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       sites: sites.length,
       alerts: alertsGenerated,
       diagnostics: diagnosticsCreated,
       errors: errors.length,
       duration_ms: Date.now() - startTime,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
     console.error('drop-detector fatal error:', e);
     await logRun(supabase, 'scheduled', 0, 0, 0, [{ error: String(e) }], Date.now() - startTime);
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(String(e), 500);
   }
 });
 
@@ -222,7 +211,7 @@ async function analyzeSite(
     change_pct: trends.clicksChange4w,
     description: alertDescription,
     affected_pages: ctx.raw.crawlPages?.filter((p: any) => (p.seo_score || 0) < 80).length || null,
-  });
+  }));
 
   return { alert: true, diagnostic: true };
 }

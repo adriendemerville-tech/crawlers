@@ -3,6 +3,7 @@ import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface PageSpeedResult {
   performance: number;
@@ -154,12 +155,8 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
   return { scores: finalResult, dataSource };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // ── IP Rate Limit ──
+Deno.serve(handleRequest(async (req) => {
+// ── IP Rate Limit ──
   const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'check-pagespeed', 15, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
@@ -291,4 +288,4 @@ Deno.serve(async (req) => {
   } finally {
     releaseConcurrency('check-pagespeed');
   }
-});
+}));

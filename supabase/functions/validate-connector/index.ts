@@ -1,38 +1,28 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { autoDetectAndParse } from '../_shared/parsers.ts';
 import { detectBot } from '../_shared/bot-detection.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * validate-connector — Dry-run validation used during connector onboarding.
  * Tests connectivity and returns a preview of parsed entries (no DB writes).
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const auth = await getAuthenticatedUser(req);
     if (!auth) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     if (auth.planType !== 'agency_premium' && !auth.isAdmin) {
-      return new Response(JSON.stringify({ error: 'Pro Agency+ required', code: 'PLAN_REQUIRED' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Pro Agency+ required', code: 'PLAN_REQUIRED', 403);
     }
 
     const { type, config, sample } = await req.json();
 
     if (!type) {
-      return new Response(JSON.stringify({ error: 'type required', code: 'MISSING_TYPE' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('type required', code: 'MISSING_TYPE', 400);
     }
 
     let preview: any[] = [];
@@ -247,19 +237,15 @@ Deno.serve(async (req) => {
 
     const botsFound = [...new Set(preview.filter((e: any) => e.is_bot).map((e: any) => e.bot_name).filter(Boolean))];
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       ok: !error,
       format_detected: formatDetected || undefined,
       preview: preview.slice(0, 10),
       bots_found: botsFound,
       error: error || undefined,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('[validate-connector] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

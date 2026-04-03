@@ -1,34 +1,24 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getUserClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     // Validate auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
     const supabase = getUserClient(authHeader);
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
     const user = userData.user;
@@ -44,10 +34,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (profile?.subscription_status === "active" && profile?.plan_type === "agency_pro") {
-      return new Response(
-        JSON.stringify({ error: "Vous avez déjà un abonnement Pro Agency actif." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Vous avez déjà un abonnement Pro Agency actif.", 400);
     }
 
     // Create or retrieve Stripe customer
@@ -73,10 +60,7 @@ Deno.serve(async (req) => {
     });
 
     if (prices.data.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Aucun prix récurrent trouvé pour ce produit." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonError("Aucun prix récurrent trouvé pour ce produit.", 500);
     }
 
     const priceId = prices.data[0].id;
@@ -105,16 +89,10 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Subscription session created: ${session.id}`);
 
-    return new Response(
-      JSON.stringify({ url: session.url, session_id: session.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonOk({ url: session.url, session_id: session.id });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Error creating subscription session:", errorMessage);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonError(errorMessage, 500);
   }
-});
+}));

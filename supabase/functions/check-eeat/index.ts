@@ -2,13 +2,12 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
-  // ── Polling mode ──
+Deno.serve(handleRequest(async (req) => {
+// ── Polling mode ──
   if (req.method === 'GET') {
     const url = new URL(req.url);
     const jobId = url.searchParams.get('job_id');
@@ -1073,7 +1072,7 @@ async function fetchGA4Referrals(
         limit: 20,
       }),
       signal: controller.signal,
-    });
+    }));
 
     clearTimeout(timeout);
 

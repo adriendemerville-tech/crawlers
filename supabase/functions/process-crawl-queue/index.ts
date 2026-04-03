@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
@@ -747,12 +748,8 @@ function computeDepth(pageUrl: string, baseUrl: string): number {
 /**
  * process-crawl-queue — Async worker (Screaming Frog-level analysis)
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+Deno.serve(handleRequest(async (req) => {
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
   const renderingKey = Deno.env.get('RENDERING_API_KEY') || null;
@@ -773,9 +770,7 @@ Deno.serve(async (req) => {
       .limit(10);
 
     if (fetchError || !jobs || jobs.length === 0) {
-      return new Response(JSON.stringify({ success: true, message: 'No jobs to process' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ success: true, message: 'No jobs to process' });
     }
 
     console.log(`[Worker] Found ${jobs.length} active jobs`);
@@ -949,12 +944,12 @@ Deno.serve(async (req) => {
     }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       processed: globalPagesProcessed,
       jobs: jobs.length,
       elapsed_seconds: elapsed,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    });
 
   } catch (error) {
     console.error('[Worker] Error:', error);
@@ -1126,7 +1121,7 @@ Donne 5-8 recommandations max, classées par impact.`;
           temperature: 0.3,
         }),
         signal: aiController.signal,
-      });
+      }));
       clearTimeout(aiTimeout);
 
       const aiData = await aiRes.json();

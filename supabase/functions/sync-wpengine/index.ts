@@ -1,17 +1,13 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseCombinedLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * sync-wpengine — Pulls access logs from WP Engine API (cron: hourly).
  * Iterates all active 'wpengine' connectors.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     // Auth: accept service role key or anon key (for pg_cron internal calls)
     const authHeader = req.headers.get('Authorization') || '';
@@ -19,9 +15,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const token = authHeader.replace('Bearer ', '');
     if (!token || (token !== serviceKey && token !== anonKey)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHORIZED' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Unauthorized', code: 'UNAUTHORIZED', 401);
     }
 
     const supabase = getServiceClient();
@@ -32,9 +26,7 @@ Deno.serve(async (req) => {
       .eq('status', 'active');
 
     if (!connectors?.length) {
-      return new Response(JSON.stringify({ ok: true, message: 'No active WP Engine connectors', synced: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonOk({ ok: true, message: 'No active WP Engine connectors', synced: 0 });
     }
 
     const results: Array<{ connector_id: string; inserted: number; error?: string }> = [];
@@ -115,13 +107,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, synced: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, synced: results.length, results });
   } catch (error) {
     console.error('[sync-wpengine] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

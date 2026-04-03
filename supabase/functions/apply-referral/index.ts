@@ -1,34 +1,24 @@
 import { getUserClient, getServiceClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const authClient = getUserClient(authHeader);
     const { data: userData, error: userError } = await authClient.auth.getUser();
     if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Unauthorized', 401);
     }
 
     const userId = userData.user.id;
     const { referral_code } = await req.json();
 
     if (!referral_code || typeof referral_code !== 'string' || referral_code.trim().length < 4) {
-      return new Response(JSON.stringify({ error: 'Code invalide' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Code invalide', 400);
     }
 
     const code = referral_code.trim().toUpperCase();
@@ -44,23 +34,17 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileErr || !myProfile) {
-      return new Response(JSON.stringify({ error: 'Profil introuvable' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Profil introuvable', 404);
     }
 
     // Already referred
     if (myProfile.referred_by) {
-      return new Response(JSON.stringify({ error: 'Vous avez déjà utilisé un code de parrainage' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Vous avez déjà utilisé un code de parrainage', 400);
     }
 
     // Self-referral check
     if (myProfile.referral_code === code) {
-      return new Response(JSON.stringify({ error: 'Vous ne pouvez pas utiliser votre propre code' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Vous ne pouvez pas utiliser votre propre code', 400);
     }
 
     // 2. Find referrer
@@ -71,9 +55,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (refErr || !referrer) {
-      return new Response(JSON.stringify({ error: 'Code de parrainage inconnu' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Code de parrainage inconnu', 404);
     }
 
     // 3. Link referee to referrer
@@ -84,9 +66,7 @@ Deno.serve(async (req) => {
 
     if (updateErr) {
       console.error('Update error:', updateErr);
-      return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonError('Erreur lors de la mise à jour', 500);
     }
 
     // 4. Welcome bonus: +10 credits to referee — atomic via RPC, fallback to SELECT+UPDATE
@@ -128,19 +108,15 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Referral applied: ${userId} referred by ${referrer.user_id}, +${REFERRAL_BONUS} credits`);
 
-    return new Response(JSON.stringify({ 
+    return jsonOk({ 
       success: true, 
       credits_added: REFERRAL_BONUS, 
       new_balance: newBalance 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error: unknown) {
     console.error('Error in apply-referral:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return jsonError(message, 500);
   }
-});
+}));

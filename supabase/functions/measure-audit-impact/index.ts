@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * measure-audit-impact (CRON — weekly)
@@ -226,12 +227,8 @@ function computeCorrelation(input: CorrelationInputV2): { impact_score: number; 
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
 
     // Find snapshots due for measurement
@@ -245,9 +242,7 @@ Deno.serve(async (req) => {
 
     if (fetchErr) throw fetchErr
     if (!pendingSnapshots?.length) {
-      return new Response(JSON.stringify({ success: true, processed: 0, message: 'No pending measurements' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ success: true, processed: 0, message: 'No pending measurements' })
     }
 
     console.log(`[measure] Processing ${pendingSnapshots.length} pending snapshots...`)
@@ -397,13 +392,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({
+    return jsonOk({
       success: true,
       processed,
       errors,
       total_pending: pendingSnapshots.length,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {

@@ -1,23 +1,17 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { parseJSONLogFormat } from '../_shared/parsers.ts';
 import { normalize } from '../_shared/normalizer.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * ingest-cloudflare — Webhook receiver for Cloudflare Logpush.
  * Validates CF-Logpush-Secret, parses NDJSON body, normalizes and stores.
  */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const cfSecret = req.headers.get('CF-Logpush-Secret') || req.headers.get('cf-logpush-secret');
     if (!cfSecret) {
-      return new Response(JSON.stringify({ error: 'Missing CF-Logpush-Secret header', code: 'MISSING_SECRET' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Missing CF-Logpush-Secret header', code: 'MISSING_SECRET', 401);
     }
 
     // Hash the incoming secret to match against stored hash
@@ -36,9 +30,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (connError || !connector) {
-      return new Response(JSON.stringify({ error: 'Invalid secret', code: 'INVALID_SECRET' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid secret', code: 'INVALID_SECRET', 401);
     }
 
     // Parse NDJSON body
@@ -81,13 +73,9 @@ Deno.serve(async (req) => {
       .update({ last_sync_at: new Date().toISOString(), status: 'active', error_count: 0 })
       .eq('id', connector.id);
 
-    return new Response(JSON.stringify({ ok: true, processed: result.inserted, errors: result.errors }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ ok: true, processed: result.inserted, errors: result.errors });
   } catch (error) {
     console.error('[ingest-cloudflare] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
   }
-});
+}));

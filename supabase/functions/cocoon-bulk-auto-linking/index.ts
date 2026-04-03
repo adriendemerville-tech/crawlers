@@ -1,6 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: cocoon-bulk-auto-linking
@@ -31,19 +32,13 @@ interface LinkSuggestion {
   pre_scan_match: boolean;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const authHeader = req.headers.get('Authorization') || '';
     const userClient = getUserClient(authHeader);
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
     if (authErr || !user) {
-      return new Response(JSON.stringify({ error: 'Non authentifié' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non authentifié', 401);
     }
 
     const body: BulkAutoLinkRequest = await req.json();
@@ -56,9 +51,7 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!tracked_site_id) {
-      return new Response(JSON.stringify({ error: 'tracked_site_id requis' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('tracked_site_id requis', 400);
     }
 
     const supabase = getServiceClient();
@@ -70,9 +63,7 @@ Deno.serve(async (req) => {
     ]);
 
     if (!isAdmin && !['agency_pro', 'agency_premium'].includes(profile?.plan_type || '')) {
-      return new Response(JSON.stringify({ error: 'Accès réservé Pro Agency' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Accès réservé Pro Agency', 403);
     }
 
     // ─── Get site & verify ownership ───
@@ -83,9 +74,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!site || (site.user_id !== user.id && !isAdmin)) {
-      return new Response(JSON.stringify({ error: 'Site non trouvé' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Site non trouvé', 404);
     }
 
     // ─── Get latest completed crawl ───
@@ -99,9 +88,7 @@ Deno.serve(async (req) => {
 
     const crawlId = crawls?.[0]?.id;
     if (!crawlId) {
-      return new Response(JSON.stringify({ error: 'Aucun crawl disponible. Lancez un crawl d\'abord.' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Aucun crawl disponible. Lancez un crawl d\'abord.', 400);
     }
 
     // ─── Get all indexable pages with content ───
@@ -114,9 +101,7 @@ Deno.serve(async (req) => {
       .limit(200);
 
     if (!allPages || allPages.length < 3) {
-      return new Response(JSON.stringify({ error: 'Pas assez de pages crawlées (minimum 3).' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Pas assez de pages crawlées (minimum 3).', 400);
     }
 
     // ─── Get existing auto-links to avoid duplicates ───
@@ -359,8 +344,6 @@ RÈGLES:
 
   } catch (error) {
     console.error('[cocoon-bulk-auto-linking] Error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Erreur serveur' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message || 'Erreur serveur', 500);
   }
-});
+}));

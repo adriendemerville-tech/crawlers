@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: calculate-internal-pagerank
@@ -98,22 +99,15 @@ function computePageRank(
   return result;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const ip = getClientIp(req);
+Deno.serve(handleRequest(async (req) => {
+const ip = getClientIp(req);
   const rateCheck = checkIpRate(ip, "calculate-internal-pagerank", 5, 60_000);
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
 
   try {
     const { tracked_site_id } = await req.json();
     if (!tracked_site_id) {
-      return new Response(JSON.stringify({ error: "tracked_site_id requis" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("tracked_site_id requis", 400);
     }
     const supabase = getServiceClient();
 
@@ -125,9 +119,7 @@ Deno.serve(async (req) => {
       userId = user?.id || null;
     }
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Non autorisé" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Non autorisé", 401);
     }
 
     // ─── Plan check ───
@@ -137,9 +129,7 @@ Deno.serve(async (req) => {
     ]);
 
     if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
-      return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Accès réservé Pro Agency", 403);
     }
 
     // ─── Verify site ownership ───
@@ -148,9 +138,7 @@ Deno.serve(async (req) => {
       .eq("id", tracked_site_id).maybeSingle();
 
     if (!site || (site.user_id !== userId && !isAdmin)) {
-      return new Response(JSON.stringify({ error: "Site non trouvé" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError("Site non trouvé", 404);
     }
 
     // ─── Get latest crawl ───
@@ -274,9 +262,6 @@ Deno.serve(async (req) => {
       "calculate-internal-pagerank",
       error instanceof Error ? error.message : String(error),
     ).catch(() => {});
-    return new Response(JSON.stringify({ error: "Erreur interne du calcul PageRank" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonError("Erreur interne du calcul PageRank", 500);
   }
-});
+}));

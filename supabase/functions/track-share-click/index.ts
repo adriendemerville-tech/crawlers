@@ -1,19 +1,12 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { report_id, referrer_id, visitor_ip } = await req.json();
 
     if (!report_id || !referrer_id || !visitor_ip) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing parameters" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonOk({ success: false, error: "Missing parameters" }, 400);
     }
 
     const supabase = getServiceClient();
@@ -26,10 +19,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!referrerProfile) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Referrer not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonOk({ success: false, error: "Referrer not found" }, 404);
     }
 
     // 2. Self-click check: get visitor from auth header if available
@@ -38,10 +28,7 @@ Deno.serve(async (req) => {
       const anonClient = getUserClient(authHeader);
       const { data: { user } } = await anonClient.auth.getUser();
       if (user && user.id === referrer_id) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Self-click not rewarded" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonOk({ success: false, error: "Self-click not rewarded" });
       }
     }
 
@@ -57,10 +44,7 @@ Deno.serve(async (req) => {
       .or(`report_id.eq.${report_id},created_at.gte.${todayStart.toISOString()}`);
 
     if (existingClicks && existingClicks.length > 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Already tracked" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonOk({ success: false, error: "Already tracked" });
     }
 
     // 4. Cap: max 200 credits from social shares
@@ -76,10 +60,7 @@ Deno.serve(async (req) => {
     );
 
     if (totalEarned >= 200) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Share reward cap reached (200 credits)" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonOk({ success: false, error: "Share reward cap reached (200 credits)" });
     }
 
     // 5. Record click
@@ -108,15 +89,9 @@ Deno.serve(async (req) => {
       description: `Partage LinkedIn — rapport ${report_id} consulté par un visiteur unique`,
     });
 
-    return new Response(
-      JSON.stringify({ success: true, credits_awarded: rewardAmount }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonOk({ success: true, credits_awarded: rewardAmount });
   } catch (e) {
     console.error("track-share-click error:", e);
-    return new Response(
-      JSON.stringify({ success: false, error: e.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonOk({ success: false, error: e.message }, 500);
   }
-});
+}));

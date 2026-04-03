@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: backlink-scanner
@@ -13,12 +14,8 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
  * Returns: { scanned: number, results: [...] }
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const supabase = getServiceClient()
     const { crawl_id, tracked_site_id: providedSiteId, top_n = 10 } = await req.json()
 
@@ -26,9 +23,7 @@ Deno.serve(async (req) => {
     let siteContext: any = null
 
     if (!crawl_id) {
-      return new Response(JSON.stringify({ error: 'crawl_id required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('crawl_id required', 400)
     }
 
     // Look up tracked_site_id from crawl if not provided
@@ -52,17 +47,13 @@ Deno.serve(async (req) => {
     // Auth check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('Unauthorized', 401)
     }
 
     const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN')
     const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD')
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-      return new Response(JSON.stringify({ error: 'DataForSEO credentials not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonError('DataForSEO credentials not configured', 500)
     }
 
     const dfAuth = 'Basic ' + btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`)
@@ -86,16 +77,12 @@ Deno.serve(async (req) => {
         .limit(top_n)
 
       if (!crawlPages?.length) {
-        return new Response(JSON.stringify({ scanned: 0, results: [], message: 'No pages found' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return jsonOk({ scanned: 0, results: [], message: 'No pages found' })
       }
 
       // Use crawl_pages as fallback
       const results = await scanBacklinks(crawlPages.map(p => ({ url: p.url, path: p.path || '/' })), crawl_id, tracked_site_id, dfAuth, supabase)
-      return new Response(JSON.stringify({ scanned: results.length, results }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return jsonOk({ scanned: results.length, results })
     }
 
     // Extract paths from URLs
@@ -110,15 +97,11 @@ Deno.serve(async (req) => {
 
     const results = await scanBacklinks(pagesWithPaths, crawl_id, tracked_site_id, dfAuth, supabase)
 
-    return new Response(JSON.stringify({ scanned: results.length, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return jsonOk({ scanned: results.length, results })
   } catch (err) {
     console.error('[backlink-scanner] Error:', err)
     await trackEdgeFunctionError('backlink-scanner', err instanceof Error ? err.message : String(err))
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Internal error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return jsonError(err instanceof Error ? err.message : 'Internal error', 500)
   }
 })
 

@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: gtmetrix-actions
@@ -30,20 +31,13 @@ async function gtmetrixFetch(path: string, apiKey: string, options: RequestInit 
   return data;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const { action, ...params } = await req.json();
     const supabase = getUserClient(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Non authentifié' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Non authentifié', 401);
     }
 
     // Récupérer la clé API GTmetrix depuis le profil ou les connexions
@@ -57,10 +51,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!conn?.api_key) {
-      return new Response(JSON.stringify({ error: 'Clé API GTmetrix non configurée' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Clé API GTmetrix non configurée', 400);
     }
 
     let result;
@@ -133,15 +124,10 @@ Deno.serve(async (req) => {
         });
     }
 
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonOk({ success: true, data: result });
 
   } catch (error) {
     console.error('gtmetrix-actions error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError(error.message, 500);
   }
-});
+}));

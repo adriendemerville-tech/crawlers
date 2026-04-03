@@ -4,6 +4,7 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { logApiBillingAlert } from '../_shared/apiBillingAlert.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * fetch-serp-kpis
@@ -12,21 +13,14 @@ import { logApiBillingAlert } from '../_shared/apiBillingAlert.ts'
  * Returns: avg position, homepage position, total keywords, top 3/10/50 distribution.
  */
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
+Deno.serve(handleRequest(async (req) => {
+try {
     const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code, site_context } = await req.json()
     const effectiveLocationCode = location_code || 2250
     const effectiveLanguageCode = language_code || 'fr'
 
     if (!domain) {
-      return new Response(JSON.stringify({ error: 'Missing domain' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('Missing domain', 400)
     }
 
     // #1: Check audit_cache first (24h TTL for SERP data)
@@ -34,19 +28,14 @@ Deno.serve(async (req) => {
     const cached = await getCached(ck)
     if (cached) {
       console.log(`[fetch-serp-kpis] Cache hit for ${domain}`)
-      return new Response(JSON.stringify({ data: cached }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonOk({ data: cached })
     }
 
     const login = Deno.env.get('DATAFORSEO_LOGIN')
     const password = Deno.env.get('DATAFORSEO_PASSWORD')
 
     if (!login || !password) {
-      return new Response(JSON.stringify({ error: 'DataForSEO credentials not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('DataForSEO credentials not configured', 500)
     }
 
     const authHeader = 'Basic ' + btoa(`${login}:${password}`)
@@ -132,9 +121,7 @@ Deno.serve(async (req) => {
 
               trackPaidApiCall('fetch-serp-kpis', 'serpapi', 'google_search (fallback)');
               
-              return new Response(JSON.stringify({ data: fallbackData }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              });
+              return jsonOk({ data: fallbackData }));
             }
           } catch (serpErr) {
             console.error('[fetch-serp-kpis] SerpAPI fallback error:', serpErr);
@@ -152,10 +139,7 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      return new Response(JSON.stringify({ error: 'DataForSEO API error', status: resp.status }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonError('DataForSEO API error', status: resp.status, 502)
     }
 
     const data = await resp.json()
@@ -422,17 +406,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ data: serpData }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonOk({ data: serpData })
 
   } catch (error) {
     console.error('[fetch-serp-kpis] Error:', error)
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })

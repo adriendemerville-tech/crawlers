@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ─── CRC-32 ───
 function crc32(data: Uint8Array): number {
@@ -555,12 +556,8 @@ Tracking des paiements :
 `;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  if (req.method !== 'GET') {
+Deno.serve(handleRequest(async (req) => {
+if (req.method !== 'GET') {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
@@ -597,4 +594,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
-});
+}));

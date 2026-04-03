@@ -12,24 +12,18 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { submitSitemapToGSC } from '../_shared/submitSitemapToGSC.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const DEFAULT_DOMAIN = 'crawlers.fr';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(handleRequest(async (req) => {
   try {
     const body = await req.json();
     const { user_id, domain, sitemap_url } = body;
 
     if (!user_id) {
-      return new Response(JSON.stringify({ error: 'user_id requis' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('user_id requis', 400);
     }
 
     const targetDomain = domain || DEFAULT_DOMAIN;
@@ -43,23 +37,15 @@ Deno.serve(async (req) => {
     const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET') || '';
 
     if (!clientId || !clientSecret) {
-      return new Response(JSON.stringify({ error: 'Configuration Google OAuth manquante (client ID/secret)' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Configuration Google OAuth manquante (client ID/secret)', 500);
     }
 
     const supabase = getServiceClient();
     const resolved = await resolveGoogleToken(supabase, user_id, targetDomain, clientId, clientSecret);
 
     if (!resolved) {
-      return new Response(JSON.stringify({ 
-        error: 'Impossible de résoudre le token Google. Vérifiez la connexion GSC.',
-        code: 'NO_GOOGLE_TOKEN',
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonError('Impossible de résoudre le token Google. Vérifiez la connexion GSC.',
+        code: 'NO_GOOGLE_TOKEN', 401);
     }
 
     // Soumission du sitemap
@@ -91,9 +77,6 @@ Deno.serve(async (req) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[submit-sitemap] Erreur:', message);
-    return new Response(JSON.stringify({ success: false, error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonError('Error', 500);
   }
-});
+}));
