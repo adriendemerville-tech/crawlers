@@ -8202,6 +8202,7 @@ export type Database = {
           products_services: string | null
           seasonality_detected_at: string | null
           seasonality_profile: Json | null
+          shared_with_team: boolean
           short_term_goal: string | null
           siren_siret: string | null
           site_name: string
@@ -8249,6 +8250,7 @@ export type Database = {
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
+          shared_with_team?: boolean
           short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string
@@ -8296,6 +8298,7 @@ export type Database = {
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
+          shared_with_team?: boolean
           short_term_goal?: string | null
           siren_siret?: string | null
           site_name?: string
@@ -8814,6 +8817,10 @@ export type Database = {
           total_revenue: number
           transaction_count: number
         }[]
+      }
+      get_team_accessible_sites: {
+        Args: { p_user_id: string }
+        Returns: string[]
       }
       has_role: {
         Args: {
