@@ -80,7 +80,7 @@ const adminTranslations = {
     users: 'Users',
     blog: 'Blog',
     support: 'Support',
-    affiliates: 'Affiliates',
+    affiliates: 'Perks',
     technical: 'Technical',
     crawls: 'Crawls',
     scripts: 'Scripts',
