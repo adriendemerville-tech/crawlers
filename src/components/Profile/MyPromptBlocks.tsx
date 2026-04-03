@@ -156,10 +156,13 @@ export function MyPromptBlocks() {
     <div className="flex gap-4 min-h-[350px]">
       {/* Left: list */}
       <div className="w-64 shrink-0 border-r pr-3 space-y-1 max-h-[70vh] overflow-y-auto">
-        <Button size="sm" className="w-full justify-start gap-2 mb-3" onClick={createBlock}>
-          <Plus className="h-3.5 w-3.5" />
+        <button
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border rounded bg-transparent hover:text-foreground hover:border-foreground/40 transition-colors mb-3"
+          onClick={createBlock}
+        >
+          <Plus className="h-3 w-3" />
           {t.add}
-        </Button>
+        </button>
 
         {blocks.length === 0 && (
           <div className="text-center py-8">
