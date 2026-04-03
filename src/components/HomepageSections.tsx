@@ -138,6 +138,7 @@ const i18n = {
     colSeo: 'Classic SEO', colCrawlers: 'Crawlers.fr',
     row1: 'Complete technical audit', row2: 'AI visibility score', row3: 'Semantic identity card',
     row4: 'AI semantic cocoon', row5: 'Dynamic corrective code', row6: 'AI-assisted content creation', row7: 'Automated SEO & GEO maintenance',
+    row8: 'Log analysis',
     hybridCta: 'Try for free',
     trustTitle: 'The first French full-stack SEO + GEO platform',
     trustText: 'Crawlers.fr is the first French platform to cover the entire SEO and GEO loop: technical audit, automatically generated fix, deployment in 30 seconds, and real impact measurement at T+30, T+60 and T+90 days.\n\nTwo specialized AI assistants accompany you at every step: the Cocoon Strategist for your 3D semantic graph analysis, and the Crawlers Assistant to leverage the full depth of your SEO and GEO data. Google Business (GBP/GMB) management is natively integrated.',
