@@ -858,6 +858,98 @@ Deno.serve(async (req) => {
       isSPAWithLimitedContent = true;
     }
 
+// ============================================================================
+// ANALYSE DE LISIBILITÉ (Flesch-Kincaid adapté FR, Coleman-Liau, ARI)
+// ============================================================================
+
+function countSyllablesFr(word: string): number {
+  // French syllable estimation: count vowel groups, adjust for silent 'e'
+  const w = word.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/g, '');
+  if (w.length <= 2) return 1;
+  
+  let count = 0;
+  const vowels = /[aeiouyàâäéèêëïîôùûüÿœæ]/i;
+  let prevVowel = false;
+  
+  for (let i = 0; i < w.length; i++) {
+    const isVowel = vowels.test(w[i]);
+    if (isVowel && !prevVowel) count++;
+    prevVowel = isVowel;
+  }
+  
+  // Silent trailing 'e' in French (unless it's the only vowel)
+  if (w.endsWith('e') && count > 1 && !w.endsWith('ée') && !w.endsWith('ie') && !w.endsWith('ue')) {
+    count--;
+  }
+  // Common French endings that don't add syllables
+  if (w.endsWith('es') && count > 1) count--;
+  if (w.endsWith('ent') && count > 1 && w.length > 4) count--;
+  
+  return Math.max(1, count);
+}
+
+function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
+  fleschScore: number;       // 0-100 (higher = easier)
+  colemanLiauGrade: number;  // US grade level
+  ariScore: number;          // Automated Readability Index
+  avgWordsPerSentence: number;
+  avgSyllablesPerWord: number;
+  sentenceCount: number;
+  wordCount: number;
+} {
+  const defaultResult = { fleschScore: 50, colemanLiauGrade: 12, ariScore: 12, avgWordsPerSentence: 0, avgSyllablesPerWord: 0, sentenceCount: 0, wordCount: 0 };
+  if (!doc) return defaultResult;
+  
+  const body = doc.querySelector('body');
+  if (!body) return defaultResult;
+  
+  const clone = body.cloneNode(true) as Element;
+  clone.querySelectorAll('script, style, noscript, nav, header, footer, [role="navigation"]').forEach((el: Element) => el.remove());
+  const rawText = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  
+  if (rawText.length < 100) return defaultResult;
+  
+  // Split sentences (French punctuation)
+  const sentences = rawText.split(/[.!?…]+/).filter(s => s.trim().split(/\s+/).length >= 3);
+  const sentenceCount = Math.max(1, sentences.length);
+  
+  const words = rawText.split(/\s+/).filter(w => w.replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/gi, '').length >= 2);
+  const wordCount = words.length;
+  if (wordCount < 30) return defaultResult;
+  
+  const totalSyllables = words.reduce((sum, w) => sum + countSyllablesFr(w), 0);
+  const totalChars = words.reduce((sum, w) => sum + w.replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/gi, '').length, 0);
+  
+  const avgWordsPerSentence = wordCount / sentenceCount;
+  const avgSyllablesPerWord = totalSyllables / wordCount;
+  const avgCharsPerWord = totalChars / wordCount;
+  
+  // Flesch-Kincaid adapted for French (Kandel & Moles, 1958)
+  // Score: 207 - 1.015 * ASL - 73.6 * ASW
+  const fleschScore = Math.round(Math.min(100, Math.max(0, 
+    207 - 1.015 * avgWordsPerSentence - 73.6 * avgSyllablesPerWord
+  )));
+  
+  // Coleman-Liau Index: 0.0588 * L - 0.296 * S - 15.8
+  // L = avg letters per 100 words, S = avg sentences per 100 words
+  const L = (avgCharsPerWord * 100);
+  const S = (sentenceCount / wordCount) * 100;
+  const colemanLiauGrade = Math.round(Math.max(0, 0.0588 * L - 0.296 * S - 15.8) * 10) / 10;
+  
+  // ARI: 4.71 * (chars/words) + 0.5 * (words/sentences) - 21.43
+  const ariScore = Math.round((4.71 * avgCharsPerWord + 0.5 * avgWordsPerSentence - 21.43) * 10) / 10;
+  
+  return {
+    fleschScore,
+    colemanLiauGrade,
+    ariScore,
+    avgWordsPerSentence: Math.round(avgWordsPerSentence * 10) / 10,
+    avgSyllablesPerWord: Math.round(avgSyllablesPerWord * 100) / 100,
+    sentenceCount,
+    wordCount,
+  };
+}
+
 
     const factors: GeoFactor[] = [];
 
