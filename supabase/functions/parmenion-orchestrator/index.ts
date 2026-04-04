@@ -882,8 +882,11 @@ RÈGLES:
     }
 
     const todayISO = new Date().toISOString().slice(0, 10);
-    const contentPrompt = `Tu es un moteur de production de contenu SEO/GEO. Date du jour : ${todayISO}. Utilise TOUJOURS l'année en cours (${new Date().getFullYear()}) dans tes contenus — JAMAIS 2024 ou une autre année passée.
-Génère les tool calls correspondants. Max 4 appels. Ne diagnostique pas, produis du contenu optimisé.
+    const sectorName = context.siteInfo?.market_sector || 'inconnu';
+    const siteName = context.siteInfo?.site_name || context.domain;
+    const productsServices = context.siteInfo?.products_services || '';
+    const contentPrompt = `Tu es un rédacteur expert du secteur "${sectorName}". Date du jour : ${todayISO}. Utilise TOUJOURS l'année en cours (${new Date().getFullYear()}) dans tes contenus — JAMAIS 2024 ou une autre année passée.
+Génère les tool calls correspondants. Max 4 appels.
 
 ${siteCtx}
 ${kwCtx}
@@ -892,15 +895,29 @@ ${briefBlock}
 
 ${keywordEnrichment.promptBlock}
 
-ITEMS À TRAITER (par ordre de priorité):
+⚠️⚠️⚠️ RÈGLE CRITIQUE — SÉPARATION DIAGNOSTIC / CONTENU ⚠️⚠️⚠️
+Les "ITEMS À TRAITER" ci-dessous sont des DIAGNOSTICS SEO internes. Ils décrivent des PROBLÈMES techniques à résoudre (gaps sémantiques, cannibalisation, citabilité, etc.).
+Ces termes SEO NE DOIVENT JAMAIS apparaître dans le titre, le slug ou le corps des articles que tu produis.
+Tu dois TRADUIRE chaque diagnostic en un SUJET MÉTIER concret pour le secteur "${sectorName}".
+
+EXEMPLE DE TRANSFORMATION CORRECTE :
+- Diagnostic : "Gap de citabilité sur les frais professionnels" → Article : "Comment déduire ses frais professionnels en ${new Date().getFullYear()}"
+- Diagnostic : "Cannibalisation sur barème kilométrique" → Article : "Barème kilométrique ${new Date().getFullYear()} : le guide complet"
+- Diagnostic : "Gap sémantique cluster indemnités" → Article : "Indemnités kilométriques : calcul, barème et déclaration"
+
+INTERDIT ABSOLU : les mots "gap de citabilité", "gap sémantique", "cannibalisation", "maillage interne", "E-E-A-T", "cocon sémantique", "campagne de partenariats SEO", "stratégie SEO", "backlinks" ou tout jargon SEO dans le contenu destiné aux lecteurs du site.
+Le lecteur final est un UTILISATEUR du site (${parsedTargetsPrimary || 'grand public'}), PAS un expert SEO.
+
+ITEMS À TRAITER (diagnostics internes — à transformer en sujets métier) :
 ${buildItemsList(contentItems)}
 
-CONTEXTE SECTORIEL OBLIGATOIRE:
-Le site traite de : ${context.siteInfo?.market_sector || 'inconnu'}.
-${parsedTargetsPrimary ? `Sa cible prioritaire est : ${parsedTargetsPrimary}.` : ''}
-${parsedTargetsSecondary ? `Sa cible secondaire est : ${parsedTargetsSecondary}.` : ''}
-${context.siteInfo?.products_services ? `Ses produits/services : ${context.siteInfo.products_services}.` : ''}
-⛔ Ne JAMAIS produire de contenu hors-sujet. Chaque article DOIT traiter du secteur ci-dessus. INTERDIT de créer du contenu générique sur le SEO, le marketing digital ou tout autre sujet non lié au métier du site.
+IDENTITÉ DU SITE (OBLIGATOIRE — guide le sujet de chaque article) :
+- Nom : ${siteName}
+- Secteur : ${sectorName}
+${parsedTargetsPrimary ? `- Cible prioritaire : ${parsedTargetsPrimary}` : ''}
+${parsedTargetsSecondary ? `- Cible secondaire : ${parsedTargetsSecondary}` : ''}
+${productsServices ? `- Produits/services : ${productsServices}` : ''}
+Chaque contenu produit DOIT être un article/page que les clients de ${siteName} trouveraient utile et pertinent.
 
 RÈGLES:
 - emit_corrective_content: pour MODIFIER du contenu existant (H1, H2, paragraphes, enrichissement)
@@ -908,8 +925,8 @@ RÈGLES:
   - Utilise action "create-post" pour les contenus blog éditoriaux (actualités, décryptages, comparatifs, procédures, analyses, FAQ éditoriales)
   - Utilise action "create-page" pour les pages statiques (landing pages, pages de conversion, FAQ globales)
   - DIVERSIFIE : ne crée pas uniquement des articles. Si un gap correspond à une page de service/conversion, utilise create-page.
-${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur du site. Privilégie "create-post" pour le blog, mais si le gap identifié correspond à une page de conversion, utilise "create-page". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
-- status TOUJOURS "draft". author_name: "Équipe ${context.siteInfo?.site_name || context.domain}"
+${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur "${sectorName}". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
+- status TOUJOURS "draft". author_name: "Équipe ${siteName}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
 - FORMAT OBLIGATOIRE: tout le contenu DOIT être en **Markdown** (pas de HTML). Utilise ## pour H2, ### pour H3, **gras**, *italique*, - pour listes, [ancre](url) pour liens, > pour citations.
 - RESPECTE les contraintes du CONTENT BRIEF ci-dessus (longueur, H2, ton, CTA, liens internes)
