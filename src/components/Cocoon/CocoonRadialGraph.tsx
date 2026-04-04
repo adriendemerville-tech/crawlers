@@ -546,7 +546,7 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
-    // Draw & advance particles
+    // Draw & advance particles — color by direction
     const nodeById = new Map(allRadialNodes.map(n => [n.id, n]));
     for (const p of particlesRef.current) {
       p.t += p.speed;
@@ -559,7 +559,19 @@ export function CocoonRadialGraph({
       const px = from.x + (to.x - from.x) * p.t;
       const py = from.y + (to.y - from.y) * p.t;
 
-      const [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+      // Direction-based coloring: descending (outward) = gold, ascending (inward) = blue
+      let cr: number, cg: number, cb: number;
+      if (from.depth < to.depth) {
+        // Descending: golden
+        cr = 251; cg = 191; cb = 36;
+      } else if (from.depth > to.depth) {
+        // Ascending: blue
+        cr = 96; cg = 165; cb = 250;
+      } else {
+        // Lateral: use node color
+        [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+      }
+
       ctx.beginPath();
       ctx.arc(px, py, 1.8, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`;
