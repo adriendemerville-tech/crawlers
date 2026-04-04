@@ -99,8 +99,8 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 ### Colonnes `autopilot_configs`
 | Colonne | Type | Défaut | Description |
 |---------|------|--------|-------------|
-| `force_content_cycle` | boolean | false | Forcer un cycle contenu (reset auto) |
-| `force_iktracker_article` | boolean | false | Forcer la création d'un article IKtracker |
+| `force_content_cycle` | boolean | **true** (v3) | Mode proactif contenu (actif par défaut) |
+| `force_iktracker_article` | boolean | false | Forcer la création d'un article IKtracker (one-shot, pas reset si cycle échoue) |
 | `content_budget_pct` | integer | 30 | % du budget alloué au contenu |
 | `gate_threshold_low` | integer | 50 | Seuil gate pour tiers 5-6 |
 | `gate_threshold_high` | integer | 70 | Seuil gate pour tiers 7+ |
@@ -113,8 +113,27 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 | `emit_corrective_content` | Lot contenu | iktracker-actions (H1, H2, paragraphes existants) |
 | `emit_editorial_content` | Lot contenu | iktracker-actions (nouveaux articles, nouvelles pages) |
 
+### Gestion des erreurs graduée (v3.1, 2026-04-04)
+
+**3 niveaux de sévérité** :
+| Sévérité | Comportement | Exemples |
+|----------|-------------|----------|
+| `ignorable` | Log only, pipeline continue | generate-image, cms-push-code auto-chain, cms-push-redirect |
+| `degraded` | Phase marquée "degraded", pipeline continue | 1 action CMS sur N ratée, timeout content-architecture-advisor |
+| `critical` | Pipeline s'arrête (`break`) | Orchestrateur 500, toutes les actions CMS échouées |
+
+**Statuts de cycle** : `completed` → `degraded` → `partial` → `failed`
+- `completed` : 0 erreurs ou uniquement `ignorable`
+- `degraded` : au moins une erreur `degraded`, aucune `critical`
+- `failed` : au moins une erreur `critical`
+
+**Polling content-architecture-advisor** : 90s max (sous la limite Edge de 150s), intervalle 5s. Timeout = `degraded` (le job continue en arrière-plan).
+
+**Observabilité** : chaque cycle produit un log JSON structuré avec `event: 'cycle_complete'`, durée, nombre d'erreurs par sévérité, articles créés.
+
 ### Limites
 - Max 10 actions CMS par cycle
 - Max 4 tool calls par prompt LLM
 - 2 prompts LLM max par micro-cycle (technique + contenu)
 - 8 items max scorés par cycle (répartis entre les 2 lanes)
+- Polling async : 90s max, intervalle 5s
