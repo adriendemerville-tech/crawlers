@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Trash2, Loader2, Code2, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket } from 'lucide-react';
+import { Check, Trash2, Loader2, Code2, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -173,6 +173,37 @@ export function CtoCodeProposals() {
     }
   };
 
+  const handleSupervisorReview = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data, error } = await supabase.functions.invoke('supervisor-actions', {
+        body: { action: 'review_cto_proposal', proposal_id: id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const review = data.review;
+      if (review?.verdict === 'approve') {
+        toast.success(`✅ Supervisor approuve — Score: ${review.quality_score}/100`, {
+          description: review.issues_found?.length ? `${review.issues_found.length} points mineurs notés` : 'Aucun problème détecté',
+          duration: 6000,
+        });
+      } else {
+        toast.info(`🔧 Supervisor a créé un patch correctif`, {
+          description: review.patch_rationale?.substring(0, 100) || 'Vérifiez la nouvelle proposition',
+          duration: 8000,
+        });
+      }
+      fetchProposals();
+    } catch (e: any) {
+      console.error('Supervisor review error:', e);
+      toast.error(`Erreur revue Supervisor: ${e.message || 'Erreur inconnue'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const pendingCount = proposals.filter(p => p.status === 'pending').length;
 
   return (
@@ -323,7 +354,21 @@ export function CtoCodeProposals() {
                               onChange={(e) => setReviewNotes(prev => ({ ...prev, [proposal.id]: e.target.value }))}
                               className="text-xs h-16 resize-none"
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-xs border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
+                                onClick={() => handleSupervisorReview(proposal.id)}
+                                disabled={actionLoading === proposal.id}
+                              >
+                                {actionLoading === proposal.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Shield className="h-3.5 w-3.5" />
+                                )}
+                                Revue Supervisor
+                              </Button>
                               <Button
                                 size="sm"
                                 className="gap-1.5 text-xs"

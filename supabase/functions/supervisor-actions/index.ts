@@ -517,6 +517,162 @@ Réponds en JSON :
       return jsonOk({ success: true, target, enabled: newState })
     }
 
+    // ─── Action: Review a specific CTO code proposal ───────────
+    if (action === 'review_cto_proposal') {
+      const { proposal_id } = body
+      if (!proposal_id) return jsonError('proposal_id required', 400)
+
+      // 1. Fetch the CTO proposal
+      const { data: proposal, error: propError } = await supabase
+        .from('cto_code_proposals')
+        .select('*')
+        .eq('id', proposal_id)
+        .single()
+
+      if (propError || !proposal) {
+        return jsonError('Proposition non trouvée', 404)
+      }
+
+      // 2. Read current source of the target function
+      const currentSource = await readFunctionSource(supabase, proposal.target_function)
+
+      // 3. Build Claude prompt for code review + patch
+      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
+      const reviewPrompt = `Tu es le SUPERVISOR, un architecte logiciel senior chargé d'auditer le code produit par l'agent CTO.
+
+CONTEXTE :
+- Fonction cible : ${proposal.target_function}
+- Domaine : ${proposal.domain}
+- Type : ${proposal.proposal_type}
+- Titre CTO : ${proposal.title}
+- Description CTO : ${proposal.description || 'N/A'}
+- Confiance CTO : ${proposal.confidence_score}%
+
+CODE ORIGINAL (actuel en production) :
+\`\`\`typescript
+${(currentSource || proposal.original_code || 'Non disponible').substring(0, 8000)}
+\`\`\`
+
+CODE PROPOSÉ PAR LE CTO :
+\`\`\`typescript
+${(proposal.proposed_code || 'Non disponible').substring(0, 8000)}
+\`\`\`
+
+DIFF PREVIEW CTO :
+${(proposal.diff_preview || 'Non disponible').substring(0, 4000)}
+
+TA MISSION :
+1. Audite le code proposé par le CTO : logique, edge cases, performance, sécurité, régressions
+2. Si des problèmes sont détectés, propose un PATCH CORRECTIF (version améliorée du code CTO)
+3. Si le code est bon, indique-le clairement
+
+Réponds en JSON strict :
+{
+  "verdict": "approve" | "patch",
+  "quality_score": <0-100>,
+  "issues_found": ["issue 1", ...],
+  "security_concerns": ["concern 1", ...],
+  "edge_cases_missed": ["edge case 1", ...],
+  "performance_notes": "impact perf estimé",
+  "patch_code": "<code corrigé complet si verdict=patch, null si approve>",
+  "patch_diff_summary": "<résumé des modifications apportées au code CTO>",
+  "patch_rationale": "<justification détaillée du patch>",
+  "supervisor_confidence": <0-100>
+}`
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://crawlers.fr',
+          'X-Title': 'Crawlers Supervisor',
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3.5-sonnet',
+          messages: [
+            { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites et corriges le code produit par l\'agent CTO. Tu es rigoureux, conservateur et factuel.' },
+            { role: 'user', content: reviewPrompt },
+          ],
+          temperature: 0.1,
+          max_tokens: 8000,
+        }),
+      })
+
+      const llmData = await response.json()
+      const content = llmData.choices?.[0]?.message?.content || ''
+
+      let review: any = null
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (jsonMatch) review = JSON.parse(jsonMatch[0])
+      } catch { /* ignore */ }
+
+      if (!review) {
+        return jsonError('Échec de l\'analyse Supervisor', 500)
+      }
+
+      // 4. If verdict is "patch", create a new proposal with agent_source='supervisor'
+      if (review.verdict === 'patch' && review.patch_code) {
+        const { error: insertError } = await supabase
+          .from('cto_code_proposals')
+          .insert({
+            target_function: proposal.target_function,
+            target_url: proposal.target_url,
+            domain: proposal.domain,
+            proposal_type: 'bugfix',
+            title: `[Supervisor] Patch: ${proposal.title}`,
+            description: `Correctif Supervisor sur proposition CTO #${proposal_id.substring(0, 8)}\n\n${review.patch_rationale || ''}`,
+            diff_preview: review.patch_diff_summary || null,
+            original_code: proposal.proposed_code,
+            proposed_code: review.patch_code,
+            confidence_score: review.supervisor_confidence || 85,
+            source_diagnostic_id: proposal_id,
+            status: 'pending',
+            agent_source: 'supervisor',
+          })
+
+        if (insertError) {
+          console.error('[SUPERVISOR] Insert patch error:', insertError)
+        }
+      }
+
+      // 5. Log the review
+      await supabase.from('supervisor_logs').insert({
+        audit_id: `supervisor_review_${proposal_id}_${Date.now()}`,
+        analysis_summary: `Review CTO proposal "${proposal.title}" — Verdict: ${review.verdict}, Score: ${review.quality_score}/100`,
+        self_critique: `Issues: ${(review.issues_found || []).length}, Security: ${(review.security_concerns || []).length}`,
+        confidence_score: review.supervisor_confidence || 0,
+        decision: review.verdict === 'approve' ? 'approved' : 'needs_review',
+        cto_score: review.quality_score || 0,
+        correction_count: 1,
+        functions_audited: [proposal.target_function],
+        post_deploy_errors: 0,
+        metadata: {
+          type: 'cto_proposal_review',
+          proposal_id,
+          verdict: review.verdict,
+          issues: review.issues_found,
+          security: review.security_concerns,
+        },
+      })
+
+      return jsonOk({
+        success: true,
+        review: {
+          verdict: review.verdict,
+          quality_score: review.quality_score,
+          issues_found: review.issues_found,
+          security_concerns: review.security_concerns,
+          edge_cases_missed: review.edge_cases_missed,
+          performance_notes: review.performance_notes,
+          patch_created: review.verdict === 'patch',
+          patch_rationale: review.patch_rationale,
+          supervisor_confidence: review.supervisor_confidence,
+        },
+      })
+    }
+
     return jsonError('Unknown action', 400)
 
   } catch (error) {
@@ -529,4 +685,4 @@ Réponds en JSON :
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+}));
