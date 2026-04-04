@@ -47,7 +47,7 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[api-balances] error:', e);
     return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));
 
 // ── SerpAPI ──────────────────────────────────────────────
 // GET https://serpapi.com/account.json?api_key=XXX
