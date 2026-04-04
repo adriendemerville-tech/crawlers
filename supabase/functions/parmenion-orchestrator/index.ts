@@ -1031,6 +1031,7 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         tools,
+        tool_choice: 'required',
       }),
       signal: AbortSignal.timeout(60_000),
     });
@@ -1042,7 +1043,15 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
     }
 
     const result = await response.json();
-    const toolCalls = result.choices?.[0]?.message?.tool_calls || [];
+    const message = result.choices?.[0]?.message;
+    const toolCalls = message?.tool_calls || [];
+    
+    if (toolCalls.length === 0) {
+      // Log when LLM responds with text instead of tool calls
+      const textContent = message?.content || '';
+      console.warn(`[Parménion] ⚠️ LLM returned 0 tool calls (model: ${model}). Text response: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
+      console.warn(`[Parménion] finish_reason: ${result.choices?.[0]?.finish_reason}, tools count: ${tools.length}`);
+    }
     
     return toolCalls.map((tc: any) => ({
       name: tc.function.name,
@@ -1255,7 +1264,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
         }],
         tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
       }),
-    }));
+    });
 
     if (!response.ok) {
       const errText = await response.text();
