@@ -525,4 +525,4 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     console.error('[llm-vis] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}))
