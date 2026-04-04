@@ -697,15 +697,15 @@ export function UserManagement() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="rounded-md border overflow-hidden overflow-x-hidden">
+          <div className="rounded-md border overflow-hidden overflow-x-auto -mx-3 sm:mx-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs py-1.5">Utilisateur</TableHead>
                   <TableHead className="text-xs py-1.5">Crédits</TableHead>
-                  <TableHead className="text-xs py-1.5">Plan</TableHead>
-                  <TableHead className="text-xs py-1.5">Inscrit</TableHead>
-                  <TableHead className="text-xs py-1.5 text-right w-[80px]">Actions</TableHead>
+                  <TableHead className="text-xs py-1.5 hidden sm:table-cell">Plan</TableHead>
+                  <TableHead className="text-xs py-1.5 hidden sm:table-cell">Inscrit</TableHead>
+                  <TableHead className="text-xs py-1.5 text-right w-[60px] sm:w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
