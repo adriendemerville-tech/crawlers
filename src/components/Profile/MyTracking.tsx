@@ -546,7 +546,7 @@ export function MyTracking() {
                         >
                           {h.language === 'fr' ? 'Auditer' : h.language === 'es' ? 'Auditar' : 'Audit'}
                         </Button>
-                        {h.latestStats && (
+                        {h.latestStats && !isMobile && (
                           <Button
                             size="sm"
                             variant="outline"
