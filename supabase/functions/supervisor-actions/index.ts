@@ -715,6 +715,61 @@ Réponds en JSON strict :
       })
     }
 
+    // ─── Action: Get patch effectiveness report ───────────────
+    if (action === 'patch_effectiveness') {
+      const days = body.days || 30
+      const patches = await fetchPatchEffectiveness(supabase, days)
+      
+      const effective = patches.filter((p: any) => p.is_effective)
+      const ineffective = patches.filter((p: any) => !p.is_effective)
+      const rate = patches.length > 0 ? Math.round((effective.length / patches.length) * 100) : null
+
+      // Group by agent_source
+      const byAgent: Record<string, { total: number, effective: number }> = {}
+      for (const p of patches) {
+        const src = p.agent_source || 'unknown'
+        if (!byAgent[src]) byAgent[src] = { total: 0, effective: 0 }
+        byAgent[src].total++
+        if (p.is_effective) byAgent[src].effective++
+      }
+
+      // Group by target_function
+      const byFunction: Record<string, { total: number, effective: number }> = {}
+      for (const p of patches) {
+        const fn = p.target_function || 'unknown'
+        if (!byFunction[fn]) byFunction[fn] = { total: 0, effective: 0 }
+        byFunction[fn].total++
+        if (p.is_effective) byFunction[fn].effective++
+      }
+
+      return jsonOk({
+        success: true,
+        period_days: days,
+        total_patches: patches.length,
+        effective_count: effective.length,
+        ineffective_count: ineffective.length,
+        effectiveness_rate: rate,
+        by_agent: byAgent,
+        by_function: byFunction,
+        recent_ineffective: ineffective.slice(0, 10).map((p: any) => ({
+          target_function: p.target_function,
+          agent_source: p.agent_source,
+          errors_before: p.errors_before,
+          errors_after: p.errors_after,
+          error_reduction_pct: p.error_reduction_pct,
+          deployment_date: p.deployment_date,
+        })),
+        recent_effective: effective.slice(0, 10).map((p: any) => ({
+          target_function: p.target_function,
+          agent_source: p.agent_source,
+          errors_before: p.errors_before,
+          errors_after: p.errors_after,
+          error_reduction_pct: p.error_reduction_pct,
+          deployment_date: p.deployment_date,
+        })),
+      })
+    }
+
     return jsonError('Unknown action', 400)
 
   } catch (error) {
