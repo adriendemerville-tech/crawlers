@@ -224,7 +224,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   return (
     <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-0">
-        <div className={`grid grid-cols-3 md:grid-cols-5 gap-2.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-2.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
