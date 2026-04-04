@@ -761,7 +761,7 @@ try {
 
     // ── Call AI ──
     const resp = await callOpenRouter({
-      model: 'anthropic/claude-3.5-sonnet',
+      model: 'mistralai/mistral-large-latest',
       system: 'You are a quantitative search traffic simulator. Return only valid JSON.',
       user: prompt,
       referer: supabaseUrl,
@@ -770,8 +770,8 @@ try {
     const raw = resp.content;
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-    await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', resp.usage);
-    trackPaidApiCall('generate-prediction', 'openrouter', 'anthropic/claude-3.5-sonnet');
+    await trackTokenUsage('generate-prediction', 'mistralai/mistral-large-latest', resp.usage);
+    trackPaidApiCall('generate-prediction', 'openrouter', 'mistralai/mistral-large-latest');
 
     let prediction: any;
     try { prediction = JSON.parse(cleaned); }
