@@ -763,7 +763,7 @@ Deno.serve(async (req) => {
       seo_score_before: scoreBefore.overall,
       seo_score_after: estimatedScoreAfter,
       confidence_score: confidence,
-      status: target.type === 'blog' ? 'applied' : 'pending_review',
+      status: 'pending_review',
       model_used: 'google/gemini-2.5-flash',
       tokens_used: tokens,
     };
