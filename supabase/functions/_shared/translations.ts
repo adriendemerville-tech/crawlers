@@ -67,6 +67,13 @@ export interface GeoTranslations {
       description: string;
       recommendation: string;
     };
+    readability: {
+      name: string;
+      description: string;
+      moderate: string;
+      difficult: string;
+      lowContent: string;
+    };
   };
   details: {
     botsAllowed: (allowed: number, total: number) => string;
