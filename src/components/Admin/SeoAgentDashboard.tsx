@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { SeoCodeProposals } from './SeoCodeProposals';
 
 interface SeoLog {
   id: string;
