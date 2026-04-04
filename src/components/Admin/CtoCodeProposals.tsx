@@ -128,6 +128,32 @@ export function CtoCodeProposals() {
     }
   };
 
+  const handleDeploy = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const { data, error } = await supabase.functions.invoke('deploy-code-proposal', {
+        body: { proposal_id: id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Déployé ! Commit: ${data.commit_sha?.substring(0, 7)}`, {
+        description: 'Le build va se lancer automatiquement.',
+        duration: 8000,
+      });
+      fetchProposals();
+    } catch (e: any) {
+      console.error('Deploy error:', e);
+      toast.error(`Erreur déploiement: ${e.message || 'Erreur inconnue'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     setActionLoading(id);
     try {
