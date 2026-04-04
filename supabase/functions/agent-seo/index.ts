@@ -359,6 +359,7 @@ async function generateImprovements(
   target: PageTarget,
   score: SeoScoreV2,
   siteContext: any,
+  operationalContext?: string,
 ): Promise<{ improvements: string; confidence: number; tokens: { input: number; output: number } }> {
   const prudenceLevel = target.type === 'landing'
     ? `MODE PRUDENT : Max 10% de modification. Micro-optimisations : titres, 1-2 mots-clés, CTA. NE CHANGE PAS la structure.`
