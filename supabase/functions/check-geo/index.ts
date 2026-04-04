@@ -1272,6 +1272,50 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
       details: isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : faqResult.details
     });
 
+    // Factor 11: Readability / Lisibilité (10 points)
+    let readabilityScore = 0;
+    let readabilityDetails = '';
+    let readabilityStatus: 'good' | 'warning' | 'error' = 'error';
+    let readabilityRecommendation: string | undefined;
+    
+    if (isSPAWithLimitedContent) {
+      readabilityScore = 5;
+      readabilityDetails = '⚠️ SPA détecté — analyse de lisibilité limitée sans rendu JS';
+      readabilityStatus = 'warning';
+    } else if (readabilityResult.wordCount < 30) {
+      readabilityScore = 3;
+      readabilityDetails = `Contenu insuffisant pour évaluer la lisibilité (${readabilityResult.wordCount} mots)`;
+      readabilityStatus = 'warning';
+      readabilityRecommendation = t.factors.readability.lowContent;
+    } else {
+      const flesch = readabilityResult.fleschScore;
+      // Flesch FR: 60-100 = facile (bon pour GEO), 40-60 = moyen, <40 = difficile
+      if (flesch >= 60) {
+        readabilityScore = 10;
+        readabilityStatus = 'good';
+      } else if (flesch >= 40) {
+        readabilityScore = 6;
+        readabilityStatus = 'warning';
+        readabilityRecommendation = t.factors.readability.moderate;
+      } else {
+        readabilityScore = 2;
+        readabilityStatus = 'error';
+        readabilityRecommendation = t.factors.readability.difficult;
+      }
+      readabilityDetails = `Flesch-FR: ${flesch}/100 | Coleman-Liau: grade ${readabilityResult.colemanLiauGrade} | ARI: ${readabilityResult.ariScore} | ${readabilityResult.avgWordsPerSentence} mots/phrase | ${readabilityResult.sentenceCount} phrases`;
+    }
+    
+    factors.push({
+      id: 'readability',
+      name: t.factors.readability.name,
+      description: t.factors.readability.description,
+      score: readabilityScore,
+      maxScore: 10,
+      status: readabilityStatus,
+      recommendation: readabilityRecommendation,
+      details: readabilityDetails
+    });
+
 
     const rawTotalScore = factors.reduce((sum, f) => sum + f.score, 0);
     
