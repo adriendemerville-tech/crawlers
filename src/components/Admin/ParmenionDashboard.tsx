@@ -636,7 +636,7 @@ export function ParmenionDashboard() {
                           </p>
                         )}
                       </div>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      <span className={cn("text-[11px] text-muted-foreground whitespace-nowrap shrink-0", isMobile && "hidden")}>
                         {new Date(ev.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
