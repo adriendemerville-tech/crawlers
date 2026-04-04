@@ -433,7 +433,7 @@ export function ParmenionDashboard() {
               <p className="text-xs mt-1">Parménion n'a pas encore été invoqué</p>
             </div>
           ) : (
-            <ScrollArea className="h-[500px] pr-4">
+            <ScrollArea className={cn(isMobile ? "h-[400px]" : "h-[500px]", "pr-4")}>
               <div className="space-y-3">
                 {logs.map((log, i) => {
                   const config = statusConfig[log.status] || statusConfig.pending;
