@@ -1055,7 +1055,10 @@ try {
                       http_status: funcResponse.status,
                       result: funcResult,
                     });
-                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                    if (!funcResponse.ok || !funcResult.success) {
+                      phaseErrors.push({ phase, function: 'cms-push-draft', severity: 'degraded', message: `Draft push failed: ${funcResult.error || funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'cms-push-draft',
@@ -1063,6 +1066,7 @@ try {
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-push-draft', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
