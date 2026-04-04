@@ -601,7 +601,6 @@ Deno.serve(handleRequest(async (req) => {
   } catch (error) {
     console.error('❌ Erreur audit SEO local:', error);
     
-    return jsonError(error instanceof Error ? error.message : 'Erreur inconnue',
-        details: error instanceof Error ? error.stack : undefined, 500);
+    return jsonError(error instanceof Error ? error.message : 'Erreur inconnue', 500);
   }
 }));
