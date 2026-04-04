@@ -509,6 +509,7 @@ Réponds en JSON :
         failed_jobs: (failedJobs || []).length,
         silent_errors: marinaErrors.length,
         diagnosis,
+        llm_cost: costAcc.summary,
       })
     }
 
