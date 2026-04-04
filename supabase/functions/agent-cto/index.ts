@@ -784,7 +784,7 @@ Réponds UNIQUEMENT en JSON :
         reason: `CTO supervision disabled for ${functionName}`,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }));
+      });
     }
 
     // ─── Phase 1: Gather real evidence ──────────────────────────────
@@ -983,4 +983,4 @@ Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriq
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+}));
