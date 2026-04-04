@@ -740,6 +740,9 @@ export function CtoAgentDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* CTO Code Proposals Registry */}
+      <CtoCodeProposals />
     </div>
   );
 }
