@@ -173,6 +173,37 @@ export function CtoCodeProposals() {
     }
   };
 
+  const handleSupervisorReview = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data, error } = await supabase.functions.invoke('supervisor-actions', {
+        body: { action: 'review_cto_proposal', proposal_id: id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const review = data.review;
+      if (review?.verdict === 'approve') {
+        toast.success(`✅ Supervisor approuve — Score: ${review.quality_score}/100`, {
+          description: review.issues_found?.length ? `${review.issues_found.length} points mineurs notés` : 'Aucun problème détecté',
+          duration: 6000,
+        });
+      } else {
+        toast.info(`🔧 Supervisor a créé un patch correctif`, {
+          description: review.patch_rationale?.substring(0, 100) || 'Vérifiez la nouvelle proposition',
+          duration: 8000,
+        });
+      }
+      fetchProposals();
+    } catch (e: any) {
+      console.error('Supervisor review error:', e);
+      toast.error(`Erreur revue Supervisor: ${e.message || 'Erreur inconnue'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const pendingCount = proposals.filter(p => p.status === 'pending').length;
 
   return (
