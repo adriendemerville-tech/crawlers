@@ -225,6 +225,9 @@ function SupervisorAnalysisPanel() {
         </Button>
       </div>
 
+      {/* LLM Cost Counter */}
+      <LLMCostCounter agent="supervisor" days={30} />
+
       {/* Parménion report */}
       {parmenionReport && (
         <Card className="border-border/50">
