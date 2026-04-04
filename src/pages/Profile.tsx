@@ -1,7 +1,7 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DesktopOnlyGate } from '@/components/DesktopOnlyGate';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target } from 'lucide-react';
@@ -129,6 +129,8 @@ const translations = {
   },
 };
 
+const MOBILE_ALLOWED_TABS = ['tracking', 'gmb', 'admin'];
+
 function ProfileContent() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
@@ -139,6 +141,7 @@ function ProfileContent() {
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     supabase.from('admin_dashboard_config').select('card_order').limit(1).maybeSingle().then(({ data }) => {
@@ -204,7 +207,7 @@ function ProfileContent() {
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-2">
               <TabsList className="w-full flex my-0 py-0">
-                {isProUser && (
+                {isProUser && !isMobile && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Crown className="h-4 w-4 text-yellow-500" />
                     <span className="hidden sm:inline font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
@@ -214,29 +217,37 @@ function ProfileContent() {
                 )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.tracking}</span>
+                  <span className="text-xs sm:text-sm">{t.tracking}</span>
                 </TabsTrigger>
-                <TabsTrigger value="action-plans" className="flex-1 gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.actionPlans}</span>
-                </TabsTrigger>
-                <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
-                  <span className="hidden sm:inline">{t.correctiveCodes}</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="crawls"
-                  className="flex-1 gap-2"
-                  disabled={!isProUser}
-                >
-                  <Bug className="h-4 w-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">Crawls</span>
-                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </TabsTrigger>
-                <TabsTrigger value="drafts" className="flex-1 gap-2">
-                  <FileEdit className="h-4 w-4" />
-                  <span className="hidden sm:inline">Content</span>
-                </TabsTrigger>
-                {isProUser && (
+                {!isMobile && (
+                  <TabsTrigger value="action-plans" className="flex-1 gap-2">
+                    <CheckSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.actionPlans}</span>
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
+                    <span className="hidden sm:inline">{t.correctiveCodes}</span>
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger
+                    value="crawls"
+                    className="flex-1 gap-2"
+                    disabled={!isProUser}
+                  >
+                    <Bug className="h-4 w-4 text-muted-foreground" />
+                    <span className="hidden sm:inline">Crawls</span>
+                    {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger value="drafts" className="flex-1 gap-2">
+                    <FileEdit className="h-4 w-4" />
+                    <span className="hidden sm:inline">Content</span>
+                  </TabsTrigger>
+                )}
+                {isProUser && !isMobile && (
                   <TabsTrigger
                     value="reports-tab"
                     className="flex-1 gap-2"
@@ -245,7 +256,7 @@ function ProfileContent() {
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
-                {isProUser && (
+                {isProUser && !isMobile && (
                   <TabsTrigger value="sea-seo" className="flex-1 gap-2">
                     <Target className="h-4 w-4" />
                     <span className="hidden sm:inline">SEA→SEO</span>
@@ -256,14 +267,16 @@ function ProfileContent() {
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
                 >
                   <Store className="h-4 w-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">Google Business</span>
+                  <span className="text-xs sm:text-sm">GMB</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                <TabsTrigger value="marina" className="flex-1 gap-2">
-                  <Anchor className="h-4 w-4" />
-                  <span className="hidden sm:inline">Marina</span>
-                </TabsTrigger>
-                {isAdmin && (
+                {!isMobile && (
+                  <TabsTrigger value="marina" className="flex-1 gap-2">
+                    <Anchor className="h-4 w-4" />
+                    <span className="hidden sm:inline">Marina</span>
+                  </TabsTrigger>
+                )}
+                {isAdmin && !isMobile && (
                   <TabsTrigger
                     value="bundle"
                     className="flex-1 gap-2"
@@ -272,26 +285,28 @@ function ProfileContent() {
                     <span className="hidden sm:inline">Bundle</span>
                   </TabsTrigger>
                 )}
-                {!isProUser && (
+                {!isProUser && !isMobile && (
                   <TabsTrigger value="reports" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
-                {!isProUser && (
+                {!isProUser && !isMobile && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Wallet className="h-4 w-4" />
                     <span className="hidden sm:inline">{t.wallet}</span>
                   </TabsTrigger>
                 )}
-                <div className="ml-auto" />
-                <TabsTrigger value="settings" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                </TabsTrigger>
+                {!isMobile && <div className="ml-auto" />}
+                {!isMobile && (
+                  <TabsTrigger value="settings" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                  </TabsTrigger>
+                )}
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.creator}</span>
+                    <span className="text-xs sm:text-sm">{t.creator}</span>
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -411,10 +426,8 @@ class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError
 
 export default function Profile() {
   return (
-    <DesktopOnlyGate featureName="La Console">
-      <ProfileErrorBoundary>
-        <ProfileContent />
-      </ProfileErrorBoundary>
-    </DesktopOnlyGate>
+    <ProfileErrorBoundary>
+      <ProfileContent />
+    </ProfileErrorBoundary>
   );
 }
