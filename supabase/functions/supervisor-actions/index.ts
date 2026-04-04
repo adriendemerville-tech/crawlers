@@ -85,6 +85,42 @@ async function getPostDeployErrors(supabase: any, functionNames: string[]): Prom
   })
 }
 
+// ─── Fetch patch effectiveness data ─────────────────────────────────
+async function fetchPatchEffectiveness(supabase: any, days = 30): Promise<any[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+  const { data } = await supabase
+    .from('patch_effectiveness')
+    .select('*')
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(50)
+  return data || []
+}
+
+function buildPatchEffectivenessContext(patches: any[]): string {
+  if (!patches.length) return ''
+  const effective = patches.filter((p: any) => p.is_effective)
+  const ineffective = patches.filter((p: any) => !p.is_effective)
+  const rate = Math.round((effective.length / patches.length) * 100)
+  
+  let ctx = `\n\n## 📊 HISTORIQUE PATCH EFFECTIVENESS (${patches.length} mesurés, taux efficacité: ${rate}%)\n`
+  
+  if (ineffective.length > 0) {
+    ctx += `⚠️ Patchs INEFFICACES (${ineffective.length}) :\n`
+    for (const p of ineffective.slice(0, 8)) {
+      ctx += `  - ${p.target_function} [${p.agent_source}]: erreurs ${p.errors_before}→${p.errors_after} (${p.error_reduction_pct}%) — déployé ${p.deployment_date?.substring(0, 10) || 'N/A'}\n`
+    }
+  }
+  if (effective.length > 0) {
+    ctx += `✅ Patchs EFFICACES (${effective.length}) :\n`
+    for (const p of effective.slice(0, 5)) {
+      ctx += `  - ${p.target_function} [${p.agent_source}]: erreurs ${p.errors_before}→${p.errors_after} (${p.error_reduction_pct}%)\n`
+    }
+  }
+  return ctx
+}
+
+
 // ─── AI: Audit SAV Assistant quality ─────────────────────────────────
 async function auditAssistantQuality(supabase: any): Promise<any> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -313,17 +349,20 @@ try {
       // Extract unique function names modified by CTO
       const functionNames = [...new Set(corrections.map((c: any) => c.function_analyzed).filter(Boolean))]
 
-      // Read source code for each modified function + check post-deploy errors + enriched context
-      const [functionSources, postErrors, agentContext] = await Promise.all([
+      // Read source code for each modified function + check post-deploy errors + enriched context + patch effectiveness
+      const [functionSources, postErrors, agentContext, patchHistory] = await Promise.all([
         Promise.all(functionNames.map(async (name: string) => {
           const src = await readFunctionSource(supabase, name)
           return [name, src] as [string, string]
         })).then(entries => Object.fromEntries(entries)),
         getPostDeployErrors(supabase, functionNames as string[]),
         getAgentContext({ agent: 'supervisor', days: 7 }).catch(() => null),
+        fetchPatchEffectiveness(supabase, 30),
       ])
 
-      const analysis = await auditCorrections(corrections, functionSources, postErrors, agentContext?.promptSnippet)
+      const patchContext = buildPatchEffectivenessContext(patchHistory)
+      const fullContext = (agentContext?.promptSnippet || '') + patchContext
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({
@@ -673,6 +712,61 @@ Réponds en JSON strict :
           patch_rationale: review.patch_rationale,
           supervisor_confidence: review.supervisor_confidence,
         },
+      })
+    }
+
+    // ─── Action: Get patch effectiveness report ───────────────
+    if (action === 'patch_effectiveness') {
+      const days = body.days || 30
+      const patches = await fetchPatchEffectiveness(supabase, days)
+      
+      const effective = patches.filter((p: any) => p.is_effective)
+      const ineffective = patches.filter((p: any) => !p.is_effective)
+      const rate = patches.length > 0 ? Math.round((effective.length / patches.length) * 100) : null
+
+      // Group by agent_source
+      const byAgent: Record<string, { total: number, effective: number }> = {}
+      for (const p of patches) {
+        const src = p.agent_source || 'unknown'
+        if (!byAgent[src]) byAgent[src] = { total: 0, effective: 0 }
+        byAgent[src].total++
+        if (p.is_effective) byAgent[src].effective++
+      }
+
+      // Group by target_function
+      const byFunction: Record<string, { total: number, effective: number }> = {}
+      for (const p of patches) {
+        const fn = p.target_function || 'unknown'
+        if (!byFunction[fn]) byFunction[fn] = { total: 0, effective: 0 }
+        byFunction[fn].total++
+        if (p.is_effective) byFunction[fn].effective++
+      }
+
+      return jsonOk({
+        success: true,
+        period_days: days,
+        total_patches: patches.length,
+        effective_count: effective.length,
+        ineffective_count: ineffective.length,
+        effectiveness_rate: rate,
+        by_agent: byAgent,
+        by_function: byFunction,
+        recent_ineffective: ineffective.slice(0, 10).map((p: any) => ({
+          target_function: p.target_function,
+          agent_source: p.agent_source,
+          errors_before: p.errors_before,
+          errors_after: p.errors_after,
+          error_reduction_pct: p.error_reduction_pct,
+          deployment_date: p.deployment_date,
+        })),
+        recent_effective: effective.slice(0, 10).map((p: any) => ({
+          target_function: p.target_function,
+          agent_source: p.agent_source,
+          errors_before: p.errors_before,
+          errors_after: p.errors_after,
+          error_reduction_pct: p.error_reduction_pct,
+          deployment_date: p.deployment_date,
+        })),
       })
     }
 
