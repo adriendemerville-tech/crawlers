@@ -308,7 +308,7 @@ export function SupportManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[480px]">
+          <ScrollArea className="h-[280px] lg:h-[480px]">
             {conversations.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 px-4">
                 Aucune conversation
