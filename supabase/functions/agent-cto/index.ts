@@ -983,4 +983,4 @@ Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriq
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+}));
