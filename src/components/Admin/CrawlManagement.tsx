@@ -216,18 +216,18 @@ export function CrawlManagement() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Domaine</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Progression</TableHead>
-                    <TableHead className="text-right">Pages</TableHead>
-                    <TableHead className="text-right">Crédits</TableHead>
-                    <TableHead className="text-right">Score moy.</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-xs">Domaine</TableHead>
+                    <TableHead className="text-xs">Statut</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Progression</TableHead>
+                    <TableHead className="text-xs text-right">Pages</TableHead>
+                    <TableHead className="text-xs text-right hidden sm:table-cell">Crédits</TableHead>
+                    <TableHead className="text-xs text-right hidden sm:table-cell">Score moy.</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
