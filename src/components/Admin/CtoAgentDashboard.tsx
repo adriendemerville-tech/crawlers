@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CtoCodeProposals } from './CtoCodeProposals';
+import { LLMCostCounter } from './LLMCostCounter';
 
 interface CacheHealthReport {
   total_entries: number;
