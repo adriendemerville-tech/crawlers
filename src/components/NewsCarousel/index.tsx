@@ -26,7 +26,8 @@ const AnimatePresenceLazy = lazy(() =>
 );
 
 const AUTO_SCROLL_INTERVAL = 30000; // 30 seconds
-const CARD_WIDTH = 356; // 340px card + 16px gap
+const CARD_WIDTH_MOBILE = 256; // 240px card + 16px gap
+const CARD_WIDTH_DESKTOP = 356; // 340px card + 16px gap
 
 type CategoryFilter = 'ALL' | 'SEO' | 'LLM' | 'GEO';
 
@@ -118,7 +119,7 @@ export function NewsCarousel() {
               if (scrollLeft >= maxScroll - 10) {
                 container.scrollTo({ left: 0, behavior: 'smooth' });
               } else {
-                container.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
+                container.scrollBy({ left: window.innerWidth < 640 ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP, behavior: 'smooth' });
               }
             });
           });
@@ -182,12 +183,14 @@ export function NewsCarousel() {
     }
   };
 
+  const getCardWidth = () => window.innerWidth < 640 ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
+
   const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -CARD_WIDTH, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollBy({ left: -getCardWidth(), behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollBy({ left: getCardWidth(), behavior: 'smooth' });
   };
 
   const handleCategoryClick = (category: CategoryFilter) => {
