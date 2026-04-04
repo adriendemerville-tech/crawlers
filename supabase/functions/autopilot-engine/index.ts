@@ -17,6 +17,35 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 type AnalyticsPayload = Record<string, unknown>;
 
+// ═══ Error severity classification ═══
+type ErrorSeverity = 'ignorable' | 'degraded' | 'critical';
+
+interface ExecutionError {
+  phase: string;
+  function: string;
+  severity: ErrorSeverity;
+  message: string;
+  retryable: boolean;
+  detail?: unknown;
+}
+
+type CycleStatus = 'completed' | 'degraded' | 'partial' | 'failed';
+
+function computeCycleStatus(errors: ExecutionError[]): CycleStatus {
+  if (errors.some(e => e.severity === 'critical')) return 'failed';
+  if (errors.some(e => e.severity === 'degraded')) return 'degraded';
+  return 'completed';
+}
+
+function classifyFuncError(funcName: string, isOnlyFailure: boolean): ErrorSeverity {
+  // Ignorable: non-blocking auxiliary functions
+  if (['generate-image', 'cms-push-code'].includes(funcName)) return 'ignorable';
+  // Critical only if ALL actions in a batch failed
+  if (['iktracker-actions', 'cms-push-draft', 'cms-patch-content'].includes(funcName) && isOnlyFailure) return 'critical';
+  // Default: degraded
+  return 'degraded';
+}
+
 type IktrackerPushInput = {
   trackedSiteId: string;
   userId: string;
@@ -313,11 +342,14 @@ try {
           .eq('id', config.id);
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
+        const cycleStartTime = Date.now();
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
         // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
         const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
         let cycleSuccess = true;
+        let hasCriticalError = false;
+        const allPhaseErrors: ExecutionError[] = [];
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
         let lastDecision: any = null;
@@ -375,7 +407,7 @@ try {
 
           // ═══ Execute decided functions & capture results ═══
           let executionSuccess = true;
-          let hasCriticalError = false;
+          const phaseErrors: ExecutionError[] = [];
           const executionResults: any[] = [];
 
         // ═══ POST-AUDIT: Auto-inject audit findings into architect_workbench ═══
@@ -806,7 +838,10 @@ try {
                       result: funcResult,
                       image_generated: !!cmsAction.body?.image_url,
                     });
-                    if (!funcResponse.ok) executionSuccess = false;
+                    if (!funcResponse.ok) {
+                      phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'iktracker-actions',
@@ -815,6 +850,7 @@ try {
                       status: 'error',
                       error: actionErr instanceof Error ? actionErr.message : 'unknown',
                     });
+                    phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
@@ -865,7 +901,10 @@ try {
                     fixes_count: normalizedFixes.length,
                     result: rerouteResult,
                   });
-                  if (!rerouteResponse.ok) executionSuccess = false;
+                  if (!rerouteResponse.ok) {
+                    phaseErrors.push({ phase, function: 'generate-corrective-code', severity: 'degraded', message: 'Rerouted corrective code generation failed', retryable: true });
+                    executionSuccess = false;
+                  }
                 } else {
                   // No cms_actions AND no JS fixes → truly nothing to do
                   console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions or fixes for ${site.domain}, skipping`);
@@ -911,12 +950,12 @@ try {
                   // Poll for result (max 5 minutes, every 10s)
                   const jobId = funcResult.job_id;
                   console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
-                  const pollDeadline = Date.now() + 5 * 60 * 1000;
+                  const pollDeadline = Date.now() + 90 * 1000; // 90s max — sous la limite Edge de 150s
                   let jobResult: any = null;
                   let jobStatus = 'pending';
                   
                   while (Date.now() < pollDeadline) {
-                    await new Promise(r => setTimeout(r, 10000)); // Wait 10s
+                    await new Promise(r => setTimeout(r, 5000)); // 5s poll interval
                     
                     try {
                       const pollResp = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor?job_id=${jobId}`, {
@@ -957,8 +996,9 @@ try {
                       status: 'error',
                       http_status: jobStatus === 'failed' ? 500 : 408,
                       keyword: funcBody.keyword,
-                      result: jobResult || { error: 'Job timed out after 5 minutes' },
+                      result: jobResult || { error: 'Job timed out after 90s' },
                     });
+                    phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `content-architecture-advisor ${jobStatus === 'failed' ? 'failed' : 'timed out after 90s'}`, retryable: true });
                     executionSuccess = false;
                   }
                 } else {
@@ -970,7 +1010,10 @@ try {
                     keyword: funcBody.keyword,
                     result: funcResult,
                   });
-                  if (!funcResponse.ok) executionSuccess = false;
+                  if (!funcResponse.ok) {
+                    phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `content-architecture-advisor sync failed: HTTP ${funcResponse.status}`, retryable: true });
+                    executionSuccess = false;
+                  }
                 }
               } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
                 // ── CMS Push Draft: unified draft push for non-IKTracker CMS ──
@@ -1012,7 +1055,10 @@ try {
                       http_status: funcResponse.status,
                       result: funcResult,
                     });
-                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                    if (!funcResponse.ok || !funcResult.success) {
+                      phaseErrors.push({ phase, function: 'cms-push-draft', severity: 'degraded', message: `Draft push failed: ${funcResult.error || funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'cms-push-draft',
@@ -1020,6 +1066,7 @@ try {
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-push-draft', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
@@ -1064,13 +1111,17 @@ try {
                       patches_failed: funcResult.patches_failed,
                       result: funcResult,
                     });
-                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                    if (!funcResponse.ok || !funcResult.success) {
+                      phaseErrors.push({ phase, function: 'cms-patch-content', severity: 'degraded', message: `Patch failed: ${funcResult.error || funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'cms-patch-content',
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-patch-content', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
@@ -1114,6 +1165,7 @@ try {
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-push-redirect', severity: 'ignorable', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: false });
                     executionSuccess = false;
                   }
                 }
@@ -1211,7 +1263,10 @@ try {
                   http_status: funcResponse.status,
                   result: funcResult,
                 });
-                if (!funcResponse.ok) executionSuccess = false;
+                if (!funcResponse.ok) {
+                  phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `${funcName} failed: HTTP ${funcResponse.status}`, retryable: true });
+                  executionSuccess = false;
+                }
 
                 // ── Auto-push generated code to CMS via cms-push-code ──
                 if (funcName === 'generate-corrective-code' && funcResponse.ok && funcResult.success && funcResult.code) {
@@ -1259,13 +1314,20 @@ try {
               }
             } catch (e) {
               executionResults.push({ function: funcName, status: 'error', error: e instanceof Error ? e.message : 'unknown' });
+              phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: e instanceof Error ? e.message : 'unknown', retryable: false });
               executionSuccess = false;
             }
           }
         }
 
+          // ═══ Collect phase errors into cycle-level array ═══
+          allPhaseErrors.push(...phaseErrors);
+
           // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
-          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial';
+          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' 
+            : phaseErrors.some(e => e.severity === 'critical') ? 'failed'
+            : phaseErrors.some(e => e.severity === 'degraded') ? 'degraded'
+            : executionSuccess ? 'completed' : 'partial';
           
           await supabase
             .from('parmenion_decision_log')
@@ -1273,8 +1335,13 @@ try {
               status: phaseStatus,
               execution_started_at: new Date().toISOString(),
               execution_completed_at: new Date().toISOString(),
-              execution_results: executionResults,
-              execution_error: executionSuccess ? null : JSON.stringify(executionResults.filter(r => r.status === 'error')),
+              execution_results: {
+                actions: executionResults,
+                errors: phaseErrors,
+                degraded: phaseErrors.some(e => e.severity === 'degraded'),
+                has_ignorable: phaseErrors.some(e => e.severity === 'ignorable'),
+              },
+              execution_error: phaseErrors.length > 0 ? JSON.stringify(phaseErrors) : null,
             })
             .eq('id', lastDecisionId);
 
@@ -1291,33 +1358,61 @@ try {
             cycle_number: cycleNumber,
             description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
             diff_before: decision.tactic?.initial_scope || {},
-            diff_after: { execution: executionResults, decision: decision.prudence },
-            status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
+            diff_after: { execution: executionResults, decision: decision.prudence, errors: phaseErrors },
+            status: config.implementation_mode === 'dry_run' ? 'dry_run' : phaseStatus,
           });
 
-          if (!executionSuccess) {
-            console.warn(`[AutopilotEngine] Phase ${phase} had non-critical errors, continuing pipeline for ${site.domain}`);
-            // Non-critical errors: don't break the pipeline, just log and continue
+          if (phaseErrors.some(e => e.severity === 'critical')) {
+            console.error(`[AutopilotEngine] Phase ${phase} had CRITICAL errors, stopping pipeline for ${site.domain}`);
+            hasCriticalError = true;
+            cycleSuccess = false;
+            break;
+          } else if (phaseErrors.length > 0) {
+            console.warn(`[AutopilotEngine] Phase ${phase} had ${phaseErrors.length} non-critical errors, continuing pipeline for ${site.domain}`);
           }
 
-          console.log(`[AutopilotEngine] Phase ${phase} completed successfully for ${site.domain}`);
+          console.log(`[AutopilotEngine] Phase ${phase} completed for ${site.domain} (status: ${phaseStatus})`);
         } // end phase loop
 
         // ═══ Update config counters (once per full cycle) ═══
-        const finalCycleStatus = cycleSuccess ? 'completed' : 'partial';
+        const finalCycleStatus: CycleStatus = hasCriticalError ? 'failed' : computeCycleStatus(allPhaseErrors);
 
         await supabase
           .from('autopilot_configs')
           .update({
-            status: cycleSuccess ? 'idle' : 'error',
+            status: finalCycleStatus === 'failed' ? 'error' : 'idle',
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             // force_content_cycle stays true by default (proactive mode)
             // Only reset force_iktracker_article which is a one-shot toggle
-            force_iktracker_article: cycleSuccess ? false : config.force_iktracker_article,
+            force_iktracker_article: finalCycleStatus !== 'failed' ? false : config.force_iktracker_article,
           })
           .eq('id', config.id);
+
+        // ═══ Observability: structured cycle summary ═══
+        console.log(JSON.stringify({
+          event: 'cycle_complete',
+          domain: site.domain,
+          cycle: cycleNumber,
+          status: finalCycleStatus,
+          phases_completed: allPhaseResults.length,
+          phases: allPhaseResults.map(r => ({
+            phase: r.phase,
+            status: r.status,
+            errors: r.executionResults.filter((e: any) => e.status === 'error').length,
+          })),
+          total_errors: allPhaseErrors.length,
+          error_breakdown: {
+            critical: allPhaseErrors.filter(e => e.severity === 'critical').length,
+            degraded: allPhaseErrors.filter(e => e.severity === 'degraded').length,
+            ignorable: allPhaseErrors.filter(e => e.severity === 'ignorable').length,
+          },
+          duration_ms: Date.now() - cycleStartTime,
+          articles_created: allPhaseResults
+            .flatMap(r => r.executionResults)
+            .filter((e: any) => e.cms_action === 'create-post' && e.status === 'success').length,
+        }));
 
         // ═══ Push final event to IKtracker ═══
         await pushIktrackerEvent(supabase, {
@@ -1327,13 +1422,14 @@ try {
           cycleNumber,
           pipelinePhase: lastPipelinePhase,
           finalStatus: finalCycleStatus,
-          executionSuccess: cycleSuccess,
-          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          executionSuccess: finalCycleStatus !== 'failed',
+          message: `[Cycle #${cycleNumber} ${finalCycleStatus.toUpperCase()}] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
           targetUrl: lastDecision?.tactic?.target_url || null,
           functions: lastDecision?.action?.functions || [],
           details: {
             phases_completed: allPhaseResults.map(r => r.phase),
             decision_ids: allPhaseResults.map(r => r.decision_id),
+            errors: allPhaseErrors.length,
           },
         });
 
