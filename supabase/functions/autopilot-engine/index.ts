@@ -1165,6 +1165,7 @@ try {
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-push-redirect', severity: 'ignorable', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: false });
                     executionSuccess = false;
                   }
                 }
