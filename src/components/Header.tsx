@@ -370,14 +370,34 @@ export function Header() {
               </Button>
           )}
 
-          {/* Matrice d'audit - console only, centered between Content and user avatar */}
+          {/* Console-only shortcuts: Audit, Crawl, Comparé, Matrice */}
           {location.pathname === '/app/console' && (
-            <Link to="/matrice">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <Grid3X3 className="h-3.5 w-3.5" />
-                <span className="text-sm">Matrice</span>
-              </Button>
-            </Link>
+            <div className="flex items-center gap-0.5">
+              <Link to="/audit-expert" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isAuditExpertPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Sparkles className="h-3 w-3" />
+                  Audit
+                </Button>
+              </Link>
+              <Link to="/app/site-crawl" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isCrawlPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Bug className="h-3 w-3" />
+                  Crawl
+                </Button>
+              </Link>
+              <Link to="/app/audit-compare" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-muted-foreground hover:text-foreground`}>
+                  <Scale className="h-3 w-3" />
+                  Comparé
+                </Button>
+              </Link>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+                  <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Matrice
+                </Button>
+              </Link>
+            </div>
           )}
 
           {!loading && (
@@ -503,29 +523,31 @@ export function Header() {
         </Suspense>
       )}
     </header>
-    {/* Mobile scrollable navigation — only mobile-friendly features */}
-    <nav className="sm:hidden fixed top-14 left-0 right-0 z-40 border-b border-border bg-card/90 backdrop-blur-md overflow-x-auto" aria-label="Navigation mobile">
-      <div className="flex items-center gap-1 px-3 py-1.5 min-w-max">
-        <Link to="/audit-expert" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isAuditExpertPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
-          <Sparkles className="h-3.5 w-3.5" />
-          Audit
-        </Link>
-        <Link to="/app/site-crawl" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isCrawlPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
-          <Bug className="h-3.5 w-3.5" />
-          Crawl
-        </Link>
-        <Link to="/app/audit-compare" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${location.pathname === '/app/audit-compare' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
-          <Scale className="h-3.5 w-3.5" />
-          Comparé
-        </Link>
-        <Link to="/matrice" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isMatricePage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
-          <Grid3X3 className="h-3.5 w-3.5" />
-          Matrice
-        </Link>
-      </div>
-    </nav>
+    {/* Mobile scrollable navigation — hidden on console page (buttons are in header) */}
+    {!isProfilePage && (
+      <nav className="sm:hidden fixed top-14 left-0 right-0 z-40 border-b border-border bg-card/90 backdrop-blur-md overflow-x-auto" aria-label="Navigation mobile">
+        <div className="flex items-center gap-1 px-3 py-1.5 min-w-max">
+          <Link to="/audit-expert" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isAuditExpertPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+            <Sparkles className="h-3.5 w-3.5" />
+            Audit
+          </Link>
+          <Link to="/app/site-crawl" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isCrawlPage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+            <Bug className="h-3.5 w-3.5" />
+            Crawl
+          </Link>
+          <Link to="/app/audit-compare" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${location.pathname === '/app/audit-compare' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+            <Scale className="h-3.5 w-3.5" />
+            Comparé
+          </Link>
+          <Link to="/matrice" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${isMatricePage ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}>
+            <Grid3X3 className="h-3.5 w-3.5" />
+            Matrice
+          </Link>
+        </div>
+      </nav>
+    )}
     <div className="h-14 sm:h-20" aria-hidden="true" />
-    <div className="h-10 sm:hidden" aria-hidden="true" /> {/* Extra spacer for mobile second nav bar */}
+    {!isProfilePage && <div className="h-10 sm:hidden" aria-hidden="true" />} {/* Extra spacer for mobile second nav bar - hidden on console */}
     <>
       {isAdmin && showContentArchitect && createPortal(
         <Suspense fallback={null}>
