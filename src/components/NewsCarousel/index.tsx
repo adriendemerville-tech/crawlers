@@ -183,12 +183,14 @@ export function NewsCarousel() {
     }
   };
 
+  const getCardWidth = () => window.innerWidth < 640 ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP;
+
   const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -CARD_WIDTH, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollBy({ left: -getCardWidth(), behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollBy({ left: getCardWidth(), behavior: 'smooth' });
   };
 
   const handleCategoryClick = (category: CategoryFilter) => {

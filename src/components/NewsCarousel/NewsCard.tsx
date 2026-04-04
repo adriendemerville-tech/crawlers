@@ -103,7 +103,7 @@ Saludos`,
 
   const isInternal = article.url.startsWith('/');
   const wrapperProps = {
-    className: "flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer transition-transform duration-300 hover:-translate-y-2",
+    className: "flex-shrink-0 w-[240px] sm:w-[300px] md:w-[340px] block cursor-pointer transition-transform duration-300 hover:-translate-y-2",
     style: { 
       contain: 'layout style paint' as const,
       opacity: 0,

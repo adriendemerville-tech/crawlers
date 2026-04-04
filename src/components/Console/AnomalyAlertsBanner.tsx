@@ -188,10 +188,10 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
                   'min-w-[200px] max-w-[260px] sm:min-w-[280px] sm:max-w-[400px] transition-all duration-300'
                 )}
               >
-                <Icon className={cn('h-4 w-4 flex-shrink-0', item.textColor)} />
+                <Icon className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0', item.textColor)} />
                 <div className="flex-1 min-w-0">
-                  <p className={cn('text-xs font-semibold truncate', item.textColor)}>{item.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
+                  <p className={cn('text-[11px] sm:text-xs font-semibold truncate', item.textColor)}>{item.title}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{item.desc}</p>
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDismiss(item.id); }}
