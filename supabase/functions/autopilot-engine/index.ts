@@ -17,6 +17,35 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 type AnalyticsPayload = Record<string, unknown>;
 
+// ═══ Error severity classification ═══
+type ErrorSeverity = 'ignorable' | 'degraded' | 'critical';
+
+interface ExecutionError {
+  phase: string;
+  function: string;
+  severity: ErrorSeverity;
+  message: string;
+  retryable: boolean;
+  detail?: unknown;
+}
+
+type CycleStatus = 'completed' | 'degraded' | 'partial' | 'failed';
+
+function computeCycleStatus(errors: ExecutionError[]): CycleStatus {
+  if (errors.some(e => e.severity === 'critical')) return 'failed';
+  if (errors.some(e => e.severity === 'degraded')) return 'degraded';
+  return 'completed';
+}
+
+function classifyFuncError(funcName: string, isOnlyFailure: boolean): ErrorSeverity {
+  // Ignorable: non-blocking auxiliary functions
+  if (['generate-image', 'cms-push-code'].includes(funcName)) return 'ignorable';
+  // Critical only if ALL actions in a batch failed
+  if (['iktracker-actions', 'cms-push-draft', 'cms-patch-content'].includes(funcName) && isOnlyFailure) return 'critical';
+  // Default: degraded
+  return 'degraded';
+}
+
 type IktrackerPushInput = {
   trackedSiteId: string;
   userId: string;
