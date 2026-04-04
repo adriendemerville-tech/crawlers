@@ -850,6 +850,7 @@ Deno.serve(async (req) => {
     const jsMetaDetection = detectJsGeneratedMeta(pageHtml);
     const intentResult = analyzeDirectAnswer(contentResult.titleText, contentResult.h1Text, contentResult.first150Words, metaResult.description);
     const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
+    const readabilityResult = analyzeReadability(doc);
 
     // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
     // c'est un SPA/JS-heavy qui n'a pas été rendu correctement — appliquer scoring neutre
