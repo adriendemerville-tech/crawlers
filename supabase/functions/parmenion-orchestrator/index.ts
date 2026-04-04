@@ -1264,7 +1264,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
         }],
         tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
       }),
-    }));
+    });
 
     if (!response.ok) {
       const errText = await response.text();
