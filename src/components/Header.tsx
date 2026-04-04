@@ -374,13 +374,13 @@ export function Header() {
           {location.pathname === '/app/console' && (
             <div className="flex items-center gap-0.5">
               <Link to="/audit-expert" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isAuditExpertPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10 ${isAuditExpertPage ? 'border border-[#3b82f6]' : ''}`}>
                   <Sparkles className="h-3 w-3" />
                   Audit
                 </Button>
               </Link>
               <Link to="/app/site-crawl" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isCrawlPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
                   <Bug className="h-3 w-3" />
                   Crawl
                 </Button>
