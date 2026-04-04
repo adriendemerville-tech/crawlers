@@ -385,8 +385,8 @@ export function MyTracking() {
                 {h.currentSite && !h.showApiPanel && (
                   <div className="space-y-6">
                     {/* Site header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
                         <button
                           onClick={() => h.setShowIdentityModal(true)}
                           className="flex items-center justify-center w-9 h-9 rounded-lg border border-muted-foreground/25 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors bg-transparent"
