@@ -366,7 +366,7 @@ try {
 
       const patchContext = buildPatchEffectivenessContext(patchHistory)
       const fullContext = (agentContext?.promptSnippet || '') + patchContext
-      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext)
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext, costAcc)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({
@@ -382,6 +382,7 @@ try {
         metadata: {
           type: 'correction_audit',
           cto_score: analysis.overall_cto_score,
+          llm_cost: costAcc.summary,
         },
       })
 
@@ -391,6 +392,7 @@ try {
         correction_count: corrections.length,
         functions_audited: functionNames,
         post_deploy_errors: postErrors.length,
+        llm_cost: costAcc.summary,
       })
     }
 
