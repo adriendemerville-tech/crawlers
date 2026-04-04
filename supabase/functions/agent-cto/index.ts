@@ -784,7 +784,7 @@ Réponds UNIQUEMENT en JSON :
         reason: `CTO supervision disabled for ${functionName}`,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }));
+      });
     }
 
     // ─── Phase 1: Gather real evidence ──────────────────────────────
