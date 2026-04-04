@@ -318,4 +318,4 @@ const clientIp = getClientIp(req)
   } finally {
     releaseConcurrency('audit-matrice')
   }
-})
+}));
