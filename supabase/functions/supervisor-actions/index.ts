@@ -252,6 +252,7 @@ Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.
   })
 
   const data = await response.json()
+  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
   const content = data.choices?.[0]?.message?.content || ''
 
   try {
