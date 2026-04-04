@@ -721,6 +721,7 @@ Réponds en JSON strict :
           patch_rationale: review.patch_rationale,
           supervisor_confidence: review.supervisor_confidence,
         },
+        llm_cost: costAcc.summary,
       })
     }
 
