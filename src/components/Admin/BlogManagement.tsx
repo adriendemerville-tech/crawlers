@@ -467,7 +467,7 @@ export function BlogManagement() {
                             {statusConfig.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {formatDate(article.created_at)}

@@ -428,33 +428,33 @@ export function FinancesDashboard() {
       {/* Hero: Total Spending Since Launch */}
       <Card className="border-2 border-primary/30 bg-gradient-to-r from-card via-card to-primary/5">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-7 w-7 text-primary" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Dépenses totales depuis le lancement</p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Dépenses totales depuis le lancement</p>
+                <p className="text-xl sm:text-3xl font-bold text-foreground">
                   {grandTotalSinceLaunchEUR.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   dont ${grandTotalSinceLaunchUSD.toFixed(2)} API réel + {allTimePlatformCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ estimé (LLM + infra)
                 </p>
               </div>
             </div>
-            <div className="flex gap-6 text-center">
+            <div className="flex gap-4 sm:gap-6 text-center">
               <div>
-                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.callCount ?? 0).toLocaleString('fr-FR')}</p>
-                <p className="text-[10px] text-muted-foreground">Appels IA total</p>
+                <p className="text-base sm:text-xl font-bold text-foreground">{(allTimeTokenUsage?.callCount ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels IA</p>
               </div>
               <div>
-                <p className="text-xl font-bold text-foreground">{(allTimeTokenUsage?.paidApiCalls ?? 0).toLocaleString('fr-FR')}</p>
-                <p className="text-[10px] text-muted-foreground">Appels API total</p>
+                <p className="text-base sm:text-xl font-bold text-foreground">{(allTimeTokenUsage?.paidApiCalls ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-[10px] text-muted-foreground">Appels API</p>
               </div>
               <div>
-                <p className="text-xl font-bold text-foreground">{((allTimeTokenUsage?.totalTokens ?? 0) / 1_000_000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M</p>
-                <p className="text-[10px] text-muted-foreground">Tokens total</p>
+                <p className="text-base sm:text-xl font-bold text-foreground">{((allTimeTokenUsage?.totalTokens ?? 0) / 1_000_000).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M</p>
+                <p className="text-[10px] text-muted-foreground">Tokens</p>
               </div>
             </div>
           </div>
