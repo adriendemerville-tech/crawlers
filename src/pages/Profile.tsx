@@ -129,6 +129,8 @@ const translations = {
   },
 };
 
+const MOBILE_ALLOWED_TABS = ['tracking', 'gmb', 'admin'];
+
 function ProfileContent() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
@@ -139,6 +141,7 @@ function ProfileContent() {
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     supabase.from('admin_dashboard_config').select('card_order').limit(1).maybeSingle().then(({ data }) => {
