@@ -342,11 +342,14 @@ try {
           .eq('id', config.id);
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
+        const cycleStartTime = Date.now();
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
         // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
         const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
         let cycleSuccess = true;
+        let hasCriticalError = false;
+        const allPhaseErrors: ExecutionError[] = [];
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
         let lastDecision: any = null;
