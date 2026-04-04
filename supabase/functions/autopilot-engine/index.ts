@@ -1263,7 +1263,10 @@ try {
                   http_status: funcResponse.status,
                   result: funcResult,
                 });
-                if (!funcResponse.ok) executionSuccess = false;
+                if (!funcResponse.ok) {
+                  phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `${funcName} failed: HTTP ${funcResponse.status}`, retryable: true });
+                  executionSuccess = false;
+                }
 
                 // ── Auto-push generated code to CMS via cms-push-code ──
                 if (funcName === 'generate-corrective-code' && funcResponse.ok && funcResult.success && funcResult.code) {
