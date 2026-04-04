@@ -14,97 +14,6 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  * Returns: { scanned: number, results: [...] }
  */
 
-Deno.serve(handleRequest(async (req) => {
-try {
-    const supabase = getServiceClient()
-    const { crawl_id, tracked_site_id: providedSiteId, top_n = 10 } = await req.json()
-
-    // Fetch identity card for strategic context (competitors, sector)
-    let siteContext: any = null
-
-    if (!crawl_id) {
-      return jsonError('crawl_id required', 400)
-    }
-
-    // Look up tracked_site_id from crawl if not provided
-    let tracked_site_id = providedSiteId
-    if (!tracked_site_id) {
-      const { data: crawl } = await supabase.from('site_crawls').select('domain, user_id').eq('id', crawl_id).single()
-      if (crawl) {
-        const { data: site } = await supabase.from('tracked_sites').select('id').eq('domain', crawl.domain).eq('user_id', crawl.user_id).maybeSingle()
-        tracked_site_id = site?.id
-      }
-    }
-
-    // Load identity card once we have tracked_site_id
-    if (tracked_site_id) {
-      siteContext = await getSiteContext(supabase, { trackedSiteId: tracked_site_id })
-      if (siteContext) {
-        console.log(`[backlink-scanner] 📇 Identity: sector="${siteContext.market_sector}", competitors="${(siteContext as any).competitors || 'none'}"`)
-      }
-    }
-
-    // Auth check
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return jsonError('Unauthorized', 401)
-    }
-
-    const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN')
-    const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD')
-    if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-      return jsonError('DataForSEO credentials not configured', 500)
-    }
-
-    const dfAuth = 'Basic ' + btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`)
-
-    // 1. Get top N pages by page_authority from semantic_nodes
-    const { data: topPages, error: nodesErr } = await supabase
-      .from('semantic_nodes')
-      .select('id, url, title, page_authority')
-      .eq('tracked_site_id', tracked_site_id)
-      .order('page_authority', { ascending: false })
-      .limit(top_n)
-
-    if (nodesErr || !topPages?.length) {
-      // Fallback: get top pages from crawl_pages by seo_score
-      const { data: crawlPages } = await supabase
-        .from('crawl_pages')
-        .select('url, path, seo_score')
-        .eq('crawl_id', crawl_id)
-        .eq('http_status', 200)
-        .order('seo_score', { ascending: false })
-        .limit(top_n)
-
-      if (!crawlPages?.length) {
-        return jsonOk({ scanned: 0, results: [], message: 'No pages found' })
-      }
-
-      // Use crawl_pages as fallback
-      const results = await scanBacklinks(crawlPages.map(p => ({ url: p.url, path: p.path || '/' })), crawl_id, tracked_site_id, dfAuth, supabase)
-      return jsonOk({ scanned: results.length, results })
-    }
-
-    // Extract paths from URLs
-    const pagesWithPaths = topPages.map(p => {
-      try {
-        const u = new URL(p.url)
-        return { url: p.url, path: u.pathname, nodeId: p.id, pageAuthority: p.page_authority }
-      } catch {
-        return { url: p.url, path: '/', nodeId: p.id, pageAuthority: p.page_authority }
-      }
-    })
-
-    const results = await scanBacklinks(pagesWithPaths, crawl_id, tracked_site_id, dfAuth, supabase)
-
-    return jsonOk({ scanned: results.length, results })
-  } catch (err) {
-    console.error('[backlink-scanner] Error:', err)
-    await trackEdgeFunctionError('backlink-scanner', err instanceof Error ? err.message : String(err))
-    return jsonError(err instanceof Error ? err.message : 'Internal error', 500)
-  }
-})
-
 interface PageToScan {
   url: string
   path: string
@@ -238,3 +147,94 @@ async function scanBacklinks(
 
   return results
 }
+
+Deno.serve(handleRequest(async (req) => {
+try {
+    const supabase = getServiceClient()
+    const { crawl_id, tracked_site_id: providedSiteId, top_n = 10 } = await req.json()
+
+    // Fetch identity card for strategic context (competitors, sector)
+    let siteContext: any = null
+
+    if (!crawl_id) {
+      return jsonError('crawl_id required', 400)
+    }
+
+    // Look up tracked_site_id from crawl if not provided
+    let tracked_site_id = providedSiteId
+    if (!tracked_site_id) {
+      const { data: crawl } = await supabase.from('site_crawls').select('domain, user_id').eq('id', crawl_id).single()
+      if (crawl) {
+        const { data: site } = await supabase.from('tracked_sites').select('id').eq('domain', crawl.domain).eq('user_id', crawl.user_id).maybeSingle()
+        tracked_site_id = site?.id
+      }
+    }
+
+    // Load identity card once we have tracked_site_id
+    if (tracked_site_id) {
+      siteContext = await getSiteContext(supabase, { trackedSiteId: tracked_site_id })
+      if (siteContext) {
+        console.log(`[backlink-scanner] 📇 Identity: sector="${siteContext.market_sector}", competitors="${(siteContext as any).competitors || 'none'}"`)
+      }
+    }
+
+    // Auth check
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return jsonError('Unauthorized', 401)
+    }
+
+    const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN')
+    const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD')
+    if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
+      return jsonError('DataForSEO credentials not configured', 500)
+    }
+
+    const dfAuth = 'Basic ' + btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`)
+
+    // 1. Get top N pages by page_authority from semantic_nodes
+    const { data: topPages, error: nodesErr } = await supabase
+      .from('semantic_nodes')
+      .select('id, url, title, page_authority')
+      .eq('tracked_site_id', tracked_site_id)
+      .order('page_authority', { ascending: false })
+      .limit(top_n)
+
+    if (nodesErr || !topPages?.length) {
+      // Fallback: get top pages from crawl_pages by seo_score
+      const { data: crawlPages } = await supabase
+        .from('crawl_pages')
+        .select('url, path, seo_score')
+        .eq('crawl_id', crawl_id)
+        .eq('http_status', 200)
+        .order('seo_score', { ascending: false })
+        .limit(top_n)
+
+      if (!crawlPages?.length) {
+        return jsonOk({ scanned: 0, results: [], message: 'No pages found' })
+      }
+
+      // Use crawl_pages as fallback
+      const results = await scanBacklinks(crawlPages.map(p => ({ url: p.url, path: p.path || '/' })), crawl_id, tracked_site_id, dfAuth, supabase)
+      return jsonOk({ scanned: results.length, results })
+    }
+
+    // Extract paths from URLs
+    const pagesWithPaths = topPages.map(p => {
+      try {
+        const u = new URL(p.url)
+        return { url: p.url, path: u.pathname, nodeId: p.id, pageAuthority: p.page_authority }
+      } catch {
+        return { url: p.url, path: '/', nodeId: p.id, pageAuthority: p.page_authority }
+      }
+    })
+
+    const results = await scanBacklinks(pagesWithPaths, crawl_id, tracked_site_id, dfAuth, supabase)
+
+    return jsonOk({ scanned: results.length, results })
+  } catch (err) {
+    console.error('[backlink-scanner] Error:', err)
+    await trackEdgeFunctionError('backlink-scanner', err instanceof Error ? err.message : String(err))
+    return jsonError(err instanceof Error ? err.message : 'Internal error', 500)
+  }
+}))
