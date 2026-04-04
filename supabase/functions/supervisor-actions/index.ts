@@ -323,7 +323,7 @@ try {
         getAgentContext({ agent: 'supervisor', days: 7 }).catch(() => null),
       ])
 
-      const analysis = await auditCorrections(corrections, functionSources, postErrors)
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, agentContext?.promptSnippet)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({
