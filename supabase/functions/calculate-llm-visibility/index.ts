@@ -486,7 +486,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       await supabase.from('llm_depth_conversations').insert(convRows)
 
       return { llm_name: llm.name, score, promptDetails: promptScores, responseTexts }
-}))
+})
 
     const llmResults = await Promise.all(llmPromises)
 
