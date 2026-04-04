@@ -996,8 +996,9 @@ try {
                       status: 'error',
                       http_status: jobStatus === 'failed' ? 500 : 408,
                       keyword: funcBody.keyword,
-                      result: jobResult || { error: 'Job timed out after 5 minutes' },
+                      result: jobResult || { error: 'Job timed out after 90s' },
                     });
+                    phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `content-architecture-advisor ${jobStatus === 'failed' ? 'failed' : 'timed out after 90s'}`, retryable: true });
                     executionSuccess = false;
                   }
                 } else {
