@@ -953,16 +953,16 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
 
     const factors: GeoFactor[] = [];
 
-    // Factor 1: AI Bots Access (15 points)
-    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 15);
+    // Factor 1: AI Bots Access (10 points) — reduced from 15 to make room for readability
+    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 10);
     factors.push({
       id: 'ai-bots',
       name: t.factors.aiBots.name,
       description: t.factors.aiBots.description,
       score: aiBotScore,
-      maxScore: 15,
-      status: aiBotScore >= 13 ? 'good' : aiBotScore >= 8 ? 'warning' : 'error',
-      recommendation: aiBotScore < 15 
+      maxScore: 10,
+      status: aiBotScore >= 8 ? 'good' : aiBotScore >= 5 ? 'warning' : 'error',
+      recommendation: aiBotScore < 10 
         ? t.factors.aiBots.recommendation(aiBotsResult.blocked.join(', '))
         : undefined,
       details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
