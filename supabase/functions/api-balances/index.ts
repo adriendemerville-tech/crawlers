@@ -47,7 +47,7 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[api-balances] error:', e);
     return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));
 
 // ── SerpAPI ──────────────────────────────────────────────
 // GET https://serpapi.com/account.json?api_key=XXX
@@ -109,7 +109,7 @@ async function fetchFirecrawlBalance() {
 
   const resp = await fetch('https://api.firecrawl.dev/v1/team/credits', {
     headers: { 'Authorization': `Bearer ${apiKey}` },
-  }));
+  });
   if (!resp.ok) {
     const text = await resp.text();
     console.error('[api-balances] Firecrawl error:', resp.status, text);
