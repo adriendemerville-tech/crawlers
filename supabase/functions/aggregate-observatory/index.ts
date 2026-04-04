@@ -220,4 +220,4 @@ try {
     console.error('Observatory aggregation error:', error)
     return jsonError(error.message, 500)
   }
-})
+}));
