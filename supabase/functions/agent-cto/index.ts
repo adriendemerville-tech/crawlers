@@ -593,7 +593,7 @@ Réponds UNIQUEMENT en JSON :
 
         const { content, tokens } = await callLLM(
           'Tu es un agent CTO spécialisé en diagnostic de crashs frontend React. Sois précis et factuel.',
-          diagnosisPrompt,
+          diagnosisPrompt, costAcc,
         )
 
         trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
