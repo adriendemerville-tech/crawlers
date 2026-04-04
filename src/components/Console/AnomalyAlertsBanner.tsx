@@ -183,9 +183,9 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
               <div
                 key={`${item.id}-${idx}`}
                 className={cn(
-                  'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border',
+                  'flex-shrink-0 flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border',
                   item.bg, item.border,
-                  'min-w-[280px] max-w-[400px] transition-all duration-300'
+                  'min-w-[200px] max-w-[260px] sm:min-w-[280px] sm:max-w-[400px] transition-all duration-300'
                 )}
               >
                 <Icon className={cn('h-4 w-4 flex-shrink-0', item.textColor)} />
