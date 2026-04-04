@@ -440,7 +440,8 @@ export function ParmenionDashboard() {
                   const StatusIcon = config.icon;
                   return (
                     <div key={log.id} className={cn(
-                      "rounded-lg border p-4 transition-colors",
+                      "rounded-lg border transition-colors",
+                      isMobile ? "p-3" : "p-4",
                       log.status === 'thinking' && 'border-amber-500/40 bg-amber-500/5 animate-pulse',
                       log.status === 'executing' && 'border-blue-500/40 bg-blue-500/5',
                       log.is_error && 'border-destructive/40 bg-destructive/5',
