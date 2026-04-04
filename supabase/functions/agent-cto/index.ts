@@ -883,7 +883,7 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
 
     console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 
-    const { content, tokens } = await callLLM(systemPrompt, userPrompt)
+    const { content, tokens } = await callLLM(systemPrompt, userPrompt, costAcc)
 
     trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
 
