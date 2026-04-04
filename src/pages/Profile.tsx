@@ -267,7 +267,7 @@ function ProfileContent() {
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
                 >
                   <Store className="h-4 w-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">Google Business</span>
+                  <span className="text-xs sm:text-sm">GMB</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
                 {!isMobile && (
