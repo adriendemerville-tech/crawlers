@@ -63,6 +63,7 @@ const riskBadge = (risk: number) => {
 
 export function ParmenionDashboard() {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [logs, setLogs] = useState<DecisionLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
