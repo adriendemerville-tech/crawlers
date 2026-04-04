@@ -153,7 +153,7 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
-async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ content: string; tokens: { input: number; output: number } }> {
+async function callLLM(systemPrompt: string, userPrompt: string, costAcc?: CostAccumulator): Promise<{ content: string; tokens: { input: number; output: number } }> {
   const resp = await callOpenRouter({
     model: 'anthropic/claude-3.5-sonnet',
     system: systemPrompt,
@@ -164,12 +164,12 @@ async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ cont
   });
 
   trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet')
+  const input = resp.usage?.prompt_tokens || 0
+  const output = resp.usage?.completion_tokens || 0
+  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', input, output)
   return {
     content: resp.content,
-    tokens: {
-      input: resp.usage?.prompt_tokens || 0,
-      output: resp.usage?.completion_tokens || 0,
-    },
+    tokens: { input, output },
   }
 }
 
