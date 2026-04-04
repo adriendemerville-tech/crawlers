@@ -2995,6 +2995,72 @@ export type Database = {
         }
         Relationships: []
       }
+      cto_code_proposals: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          deployed_at: string | null
+          description: string | null
+          diff_preview: string | null
+          domain: string
+          id: string
+          original_code: string | null
+          proposal_type: string
+          proposed_code: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_diagnostic_id: string | null
+          status: string
+          target_function: string
+          target_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          description?: string | null
+          diff_preview?: string | null
+          domain: string
+          id?: string
+          original_code?: string | null
+          proposal_type?: string
+          proposed_code?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_diagnostic_id?: string | null
+          status?: string
+          target_function: string
+          target_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          description?: string | null
+          diff_preview?: string | null
+          domain?: string
+          id?: string
+          original_code?: string | null
+          proposal_type?: string
+          proposed_code?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_diagnostic_id?: string | null
+          status?: string
+          target_function?: string
+          target_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       domain_data_cache: {
         Row: {
           created_at: string

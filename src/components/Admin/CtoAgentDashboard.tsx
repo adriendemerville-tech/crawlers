@@ -11,6 +11,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { CtoCodeProposals } from './CtoCodeProposals';
 
 interface CacheHealthReport {
   total_entries: number;
@@ -739,6 +740,9 @@ export function CtoAgentDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* CTO Code Proposals Registry */}
+      <CtoCodeProposals />
     </div>
   );
 }
