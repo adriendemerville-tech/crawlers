@@ -405,6 +405,7 @@ CONTRAINTES :
 - Ton professionnel expert
 - Pas de promotionnel excessif
 - Rester factuel
+${operationalContext ? `\n${operationalContext}\nUtilise ces retours terrain pour prioriser les améliorations les plus impactantes.` : ''}
 
 Réponds UNIQUEMENT en JSON :
 {
