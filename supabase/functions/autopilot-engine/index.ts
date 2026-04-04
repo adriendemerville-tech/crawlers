@@ -1380,15 +1380,39 @@ try {
         await supabase
           .from('autopilot_configs')
           .update({
-            status: cycleSuccess ? 'idle' : 'error',
+            status: finalCycleStatus === 'failed' ? 'error' : 'idle',
             total_cycles_run: cycleNumber,
             last_cycle_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             // force_content_cycle stays true by default (proactive mode)
             // Only reset force_iktracker_article which is a one-shot toggle
-            force_iktracker_article: cycleSuccess ? false : config.force_iktracker_article,
+            force_iktracker_article: finalCycleStatus !== 'failed' ? false : config.force_iktracker_article,
           })
           .eq('id', config.id);
+
+        // ═══ Observability: structured cycle summary ═══
+        console.log(JSON.stringify({
+          event: 'cycle_complete',
+          domain: site.domain,
+          cycle: cycleNumber,
+          status: finalCycleStatus,
+          phases_completed: allPhaseResults.length,
+          phases: allPhaseResults.map(r => ({
+            phase: r.phase,
+            status: r.status,
+            errors: r.executionResults.filter((e: any) => e.status === 'error').length,
+          })),
+          total_errors: allPhaseErrors.length,
+          error_breakdown: {
+            critical: allPhaseErrors.filter(e => e.severity === 'critical').length,
+            degraded: allPhaseErrors.filter(e => e.severity === 'degraded').length,
+            ignorable: allPhaseErrors.filter(e => e.severity === 'ignorable').length,
+          },
+          duration_ms: Date.now() - cycleStartTime,
+          articles_created: allPhaseResults
+            .flatMap(r => r.executionResults)
+            .filter((e: any) => e.cms_action === 'create-post' && e.status === 'success').length,
+        }));
 
         // ═══ Push final event to IKtracker ═══
         await pushIktrackerEvent(supabase, {
@@ -1398,13 +1422,14 @@ try {
           cycleNumber,
           pipelinePhase: lastPipelinePhase,
           finalStatus: finalCycleStatus,
-          executionSuccess: cycleSuccess,
-          message: `[Cycle #${cycleNumber} COMPLET] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
+          executionSuccess: finalCycleStatus !== 'failed',
+          message: `[Cycle #${cycleNumber} ${finalCycleStatus.toUpperCase()}] ${allPhaseResults.length} phases — ${lastDecision?.summary || lastPipelinePhase}`,
           targetUrl: lastDecision?.tactic?.target_url || null,
           functions: lastDecision?.action?.functions || [],
           details: {
             phases_completed: allPhaseResults.map(r => r.phase),
             decision_ids: allPhaseResults.map(r => r.decision_id),
+            errors: allPhaseErrors.length,
           },
         });
 
