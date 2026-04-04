@@ -1031,6 +1031,7 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         tools,
+        tool_choice: 'required',
       }),
       signal: AbortSignal.timeout(60_000),
     });
