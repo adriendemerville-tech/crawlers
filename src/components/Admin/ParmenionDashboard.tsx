@@ -9,6 +9,7 @@ import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface DecisionLog {
@@ -62,6 +63,7 @@ const riskBadge = (risk: number) => {
 
 export function ParmenionDashboard() {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [logs, setLogs] = useState<DecisionLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -232,28 +234,28 @@ export function ParmenionDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", isMobile && "overflow-x-auto pb-1 -mx-1 px-1")}>
           <Button
             variant={isPaused ? 'default' : 'outline'}
             size="sm"
             onClick={handlePauseResume}
-            className="gap-2"
+            className="gap-1.5 shrink-0"
           >
             {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             {isPaused ? 'Reprendre' : 'Pause'}
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePurge} className="gap-2 text-destructive hover:text-destructive">
+          <Button variant="outline" size="sm" onClick={handlePurge} className="gap-1.5 text-destructive hover:text-destructive shrink-0">
             <Trash2 className="h-4 w-4" />
             Purge
           </Button>
-          <Button variant="default" size="sm" onClick={handleNewAction} className="gap-2">
+          <Button variant="default" size="sm" onClick={handleNewAction} className="gap-1.5 shrink-0">
             <Plus className="h-4 w-4" />
-            Nouvelle action
+            {isMobile ? 'Nouvelle' : 'Nouvelle action'}
           </Button>
           <Button
             variant={autopilotConfig?.force_iktracker_article ? 'default' : 'outline'}
             size="sm"
-            className={cn("gap-2", autopilotConfig?.force_iktracker_article && "bg-amber-500 hover:bg-amber-600 text-black")}
+            className={cn("gap-1.5 shrink-0", autopilotConfig?.force_iktracker_article && "bg-amber-500 hover:bg-amber-600 text-black")}
             disabled={!autopilotConfig?.config_id}
             onClick={async () => {
               const newVal = !autopilotConfig?.force_iktracker_article;
@@ -271,16 +273,16 @@ export function ParmenionDashboard() {
             }}
           >
             <Pencil className="h-4 w-4" />
-            {autopilotConfig?.force_iktracker_article ? '📝 Article IK : ON' : 'Article IK'}
+            {autopilotConfig?.force_iktracker_article ? '📝 IK:ON' : 'Article IK'}
           </Button>
-          <Button variant="ghost" size="icon" onClick={fetchLogs}>
+          <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+      <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-6")}>
         <Card className="py-2">
           <CardHeader className="pb-1 pt-2 px-3">
             <CardTitle className="text-xs font-medium">État</CardTitle>
@@ -431,14 +433,15 @@ export function ParmenionDashboard() {
               <p className="text-xs mt-1">Parménion n'a pas encore été invoqué</p>
             </div>
           ) : (
-            <ScrollArea className="h-[500px] pr-4">
+            <ScrollArea className={cn(isMobile ? "h-[400px]" : "h-[500px]", "pr-4")}>
               <div className="space-y-3">
                 {logs.map((log, i) => {
                   const config = statusConfig[log.status] || statusConfig.pending;
                   const StatusIcon = config.icon;
                   return (
                     <div key={log.id} className={cn(
-                      "rounded-lg border p-4 transition-colors",
+                      "rounded-lg border transition-colors",
+                      isMobile ? "p-3" : "p-4",
                       log.status === 'thinking' && 'border-amber-500/40 bg-amber-500/5 animate-pulse',
                       log.status === 'executing' && 'border-blue-500/40 bg-blue-500/5',
                       log.is_error && 'border-destructive/40 bg-destructive/5',
@@ -483,7 +486,7 @@ export function ParmenionDashboard() {
                       </div>
 
                       {/* Details grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                      <div className={cn("grid gap-2 text-xs", isMobile ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-5")}>
                         <div>
                           <span className="text-muted-foreground">Impact</span>
                           <p className="font-medium">{log.impact_level}</p>
@@ -549,7 +552,7 @@ export function ParmenionDashboard() {
       {/* IKTracker History */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className={cn("flex items-center justify-between", isMobile && "flex-col items-start gap-2")}>
             <div>
               <CardTitle className="text-base flex items-center gap-2">
                 <Globe className="h-4 w-4 text-primary" />
@@ -584,7 +587,7 @@ export function ParmenionDashboard() {
               <p className="text-sm">Aucune action IKTracker enregistrée</p>
             </div>
           ) : (
-            <ScrollArea className="h-[350px] pr-4">
+            <ScrollArea className={cn(isMobile ? "h-[280px]" : "h-[350px]", "pr-4")}>
               <div className="space-y-2">
                 {ikHistory.map((ev) => {
                   const d = ev.event_data || {};
@@ -633,7 +636,7 @@ export function ParmenionDashboard() {
                           </p>
                         )}
                       </div>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      <span className={cn("text-[11px] text-muted-foreground whitespace-nowrap shrink-0", isMobile && "hidden")}>
                         {new Date(ev.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
