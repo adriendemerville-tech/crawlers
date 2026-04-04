@@ -306,7 +306,7 @@ function ProfileContent() {
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.creator}</span>
+                    <span className="text-xs sm:text-sm">{t.creator}</span>
                   </TabsTrigger>
                 )}
               </TabsList>
