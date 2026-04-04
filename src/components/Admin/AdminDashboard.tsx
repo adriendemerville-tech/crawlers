@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const adminTranslations = {
   fr: {
