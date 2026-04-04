@@ -9,6 +9,7 @@ import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface DecisionLog {
