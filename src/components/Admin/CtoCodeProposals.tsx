@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Trash2, Loader2, Code2, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Check, Trash2, Loader2, Code2, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -123,6 +123,32 @@ export function CtoCodeProposals() {
     } catch (e) {
       console.error('Reject error:', e);
       toast.error('Erreur lors du rejet');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeploy = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const { data, error } = await supabase.functions.invoke('deploy-code-proposal', {
+        body: { proposal_id: id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Déployé ! Commit: ${data.commit_sha?.substring(0, 7)}`, {
+        description: 'Le build va se lancer automatiquement.',
+        duration: 8000,
+      });
+      fetchProposals();
+    } catch (e: any) {
+      console.error('Deploy error:', e);
+      toast.error(`Erreur déploiement: ${e.message || 'Erreur inconnue'}`);
     } finally {
       setActionLoading(null);
     }
@@ -339,6 +365,23 @@ export function CtoCodeProposals() {
                               </span>
                             )}
                           </div>
+                        )}
+
+                        {/* Deploy button for approved */}
+                        {proposal.status === 'approved' && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={() => handleDeploy(proposal.id)}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            {actionLoading === proposal.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Rocket className="h-3.5 w-3.5" />
+                            )}
+                            Déployer sur GitHub
+                          </Button>
                         )}
 
                         {/* Delete for non-pending too */}

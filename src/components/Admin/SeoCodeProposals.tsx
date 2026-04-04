@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Trash2, Loader2, Search, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Check, Trash2, Loader2, Search, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -288,6 +288,41 @@ export function SeoCodeProposals() {
                               <span className="ml-2">— {format(new Date(proposal.reviewed_at), 'dd MMM HH:mm', { locale: fr })}</span>
                             )}
                           </div>
+                        )}
+
+                        {/* Deploy button for approved */}
+                        {proposal.status === 'approved' && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={async () => {
+                              setActionLoading(proposal.id);
+                              try {
+                                const { data, error } = await supabase.functions.invoke('deploy-code-proposal', {
+                                  body: { proposal_id: proposal.id },
+                                });
+                                if (error) throw error;
+                                if (data?.error) throw new Error(data.error);
+                                toast.success(`Déployé ! Commit: ${data.commit_sha?.substring(0, 7)}`, {
+                                  description: 'Le build va se lancer automatiquement.',
+                                  duration: 8000,
+                                });
+                                fetchProposals();
+                              } catch (e: any) {
+                                toast.error(`Erreur déploiement: ${e.message || 'Erreur'}`);
+                              } finally {
+                                setActionLoading(null);
+                              }
+                            }}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            {actionLoading === proposal.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Rocket className="h-3.5 w-3.5" />
+                            )}
+                            Déployer sur GitHub
+                          </Button>
                         )}
 
                         {proposal.status !== 'pending' && (
