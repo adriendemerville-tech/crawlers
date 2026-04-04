@@ -345,5 +345,32 @@ function buildPromptSnippet(
     }
   }
 
+  // Patch effectiveness feedback — relevant for all agents
+  if (ctx.patchResults.length > 0) {
+    const effective = ctx.patchResults.filter(p => p.is_effective).length
+    const total = ctx.patchResults.length
+    const rate = Math.round((effective / total) * 100)
+    lines.push(`\n## 📊 Feedback Patchs Déployés (${total} mesurés)`)
+    lines.push(`Taux d'efficacité global : ${rate}% (${effective}/${total} patchs ont réduit les erreurs ≥20%)`)
+    
+    // Show ineffective patches so agents learn from failures
+    const failures = ctx.patchResults.filter(p => !p.is_effective)
+    if (failures.length > 0) {
+      lines.push(`⚠️ Patchs INEFFICACES (à éviter de reproduire) :`)
+      for (const f of failures.slice(0, 5)) {
+        lines.push(`  - ${f.target_function} [${f.agent_source}]: erreurs ${f.errors_before}→${f.errors_after} (${f.error_reduction_pct}%)`)
+      }
+    }
+
+    // Show effective patches as positive reinforcement
+    const successes = ctx.patchResults.filter(p => p.is_effective)
+    if (successes.length > 0) {
+      lines.push(`✅ Patchs EFFICACES (patterns à reproduire) :`)
+      for (const s of successes.slice(0, 3)) {
+        lines.push(`  - ${s.target_function} [${s.agent_source}]: erreurs ${s.errors_before}→${s.errors_after} (${s.error_reduction_pct}%)`)
+      }
+    }
+  }
+
   return lines.length > 2 ? lines.join('\n') : ''
 }
