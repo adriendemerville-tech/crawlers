@@ -159,6 +159,13 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         description: 'Présence d\'une FAQ ou d\'un résumé en haut de page (TL;DR)',
         recommendation: 'Ajoutez une section FAQ (avec balisage Schema FAQ) ou un résumé (TL;DR) en début d\'article pour faciliter l\'extraction par les IA',
       },
+      readability: {
+        name: 'Lisibilité du Contenu',
+        description: 'Indice de lisibilité Flesch-Kincaid adapté au français — un texte lisible est plus facilement cité par les IA',
+        moderate: 'Texte de complexité moyenne. Raccourcissez les phrases longues et simplifiez le vocabulaire technique pour améliorer la citabilité IA',
+        difficult: 'Texte trop complexe pour une citation IA optimale. Visez des phrases de 15-20 mots, évitez le jargon non défini et privilégiez la voix active',
+        lowContent: 'Ajoutez plus de contenu textuel pour permettre une analyse de lisibilité fiable (minimum 100 mots)',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} bots IA autorisés`,
