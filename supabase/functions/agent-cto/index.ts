@@ -714,6 +714,7 @@ Réponds UNIQUEMENT en JSON :
         success: true,
         crashes_analyzed: results.length,
         results,
+        llm_cost: costAcc.summary,
       })
     }
 
