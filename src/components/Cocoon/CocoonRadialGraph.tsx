@@ -388,13 +388,24 @@ export function CocoonRadialGraph({
     return result;
   }, [tree]);
 
-  // Initialize particles along tree edges
+  // Initialize particles along tree edges — both descending AND ascending
   useEffect(() => {
     if (!tree) { particlesRef.current = []; return; }
     const particles: typeof particlesRef.current = [];
+
+    // Build a url→RadialNode map for reverse lookups
+    const allFlat: RadialNode[] = [];
+    function collectAll(n: RadialNode) { allFlat.push(n); n.children.forEach(collectAll); }
+    collectAll(tree);
+    const radialByUrl = new Map(allFlat.map(n => [n.url, n]));
+
+    // Build set of tree edges (parent→child) to avoid duplicates
+    const treeEdgeSet = new Set<string>();
+
     function walk(node: RadialNode) {
       for (const child of node.children) {
-        // 1-2 particles per edge
+        treeEdgeSet.add(`${node.id}→${child.id}`);
+        // Descending particle: parent → child (center → outward)
         const count = 1 + Math.floor(Math.random() * 2);
         for (let i = 0; i < count; i++) {
           particles.push({
@@ -408,8 +419,34 @@ export function CocoonRadialGraph({
       }
     }
     walk(tree);
+
+    // Add ascending particles: check original semantic edges for child→parent links
+    for (const rNode of allFlat) {
+      const origNode = nodes.find(n => n.url === rNode.url);
+      if (!origNode) continue;
+      for (const edge of origNode.similarity_edges || []) {
+        const targetRadial = radialByUrl.get(edge.target_url);
+        if (!targetRadial) continue;
+        // Ascending = linking from deeper node to shallower node
+        if (rNode.depth > targetRadial.depth) {
+          const edgeKey = `${rNode.id}→${targetRadial.id}`;
+          if (treeEdgeSet.has(edgeKey)) continue; // already covered
+          treeEdgeSet.add(edgeKey);
+          const count = 1 + Math.floor(Math.random() * 2);
+          for (let i = 0; i < count; i++) {
+            particles.push({
+              fromId: rNode.id,
+              toId: targetRadial.id,
+              t: Math.random(),
+              speed: 0.002 + Math.random() * 0.004,
+            });
+          }
+        }
+      }
+    }
+
     particlesRef.current = particles;
-  }, [tree]);
+  }, [tree, nodes]);
 
   // Filter edges by visibleJuiceTypes
   const shouldShowEdge = useCallback((edgeType?: string) => {
