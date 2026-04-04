@@ -671,9 +671,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                 </Badge>
               )}
             </div>
-            {isGbpActive && gbpEmail && (
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 block mt-0.5">{gbpEmail}</span>
-            )}
             {service.available && (
               <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 {isConnecting ? (
