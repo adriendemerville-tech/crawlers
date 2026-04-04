@@ -269,6 +269,9 @@ export function SeoAgentDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* SEO Code Proposals Registry */}
+      <SeoCodeProposals />
     </div>
   );
 }
