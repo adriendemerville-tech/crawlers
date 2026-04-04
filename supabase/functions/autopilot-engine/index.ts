@@ -950,12 +950,12 @@ try {
                   // Poll for result (max 5 minutes, every 10s)
                   const jobId = funcResult.job_id;
                   console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
-                  const pollDeadline = Date.now() + 5 * 60 * 1000;
+                  const pollDeadline = Date.now() + 90 * 1000; // 90s max — sous la limite Edge de 150s
                   let jobResult: any = null;
                   let jobStatus = 'pending';
                   
                   while (Date.now() < pollDeadline) {
-                    await new Promise(r => setTimeout(r, 10000)); // Wait 10s
+                    await new Promise(r => setTimeout(r, 5000)); // 5s poll interval
                     
                     try {
                       const pollResp = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor?job_id=${jobId}`, {
