@@ -295,7 +295,7 @@ export function SupportManagement() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-auto lg:h-[600px]">
       {/* Conversations List */}
       <Card className="lg:col-span-1">
         <CardHeader className="pb-3">
@@ -308,7 +308,7 @@ export function SupportManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[480px]">
+          <ScrollArea className="h-[280px] lg:h-[480px]">
             {conversations.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 px-4">
                 Aucune conversation

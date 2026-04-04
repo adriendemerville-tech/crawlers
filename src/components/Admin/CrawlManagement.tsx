@@ -216,18 +216,18 @@ export function CrawlManagement() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Domaine</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Progression</TableHead>
-                    <TableHead className="text-right">Pages</TableHead>
-                    <TableHead className="text-right">Crédits</TableHead>
-                    <TableHead className="text-right">Score moy.</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-xs">Domaine</TableHead>
+                    <TableHead className="text-xs">Statut</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Progression</TableHead>
+                    <TableHead className="text-xs text-right">Pages</TableHead>
+                    <TableHead className="text-xs text-right hidden sm:table-cell">Crédits</TableHead>
+                    <TableHead className="text-xs text-right hidden sm:table-cell">Score moy.</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -241,26 +241,26 @@ export function CrawlManagement() {
                     return (
                       <>
                         <TableRow key={crawl.id} className={debugCrawlId === crawl.id ? 'bg-muted/50' : ''}>
-                          <TableCell className="font-medium max-w-[200px] truncate">{crawl.domain}</TableCell>
+                          <TableCell className="font-medium max-w-[120px] sm:max-w-[200px] truncate text-xs">{crawl.domain}</TableCell>
                           <TableCell>
-                            <Badge variant={cfg.variant} className="gap-1 text-xs">
-                              {cfg.icon} {cfg.label}
+                            <Badge variant={cfg.variant} className="gap-1 text-[10px] sm:text-xs">
+                              {cfg.icon} <span className="hidden sm:inline">{cfg.label}</span>
                             </Badge>
                           </TableCell>
-                          <TableCell className="min-w-[120px]">
+                          <TableCell className="min-w-[120px] hidden sm:table-cell">
                             <div className="flex items-center gap-2">
                               <Progress value={progress} className="h-2 flex-1" />
                               <span className="text-xs text-muted-foreground w-10 text-right">{progress}%</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right text-xs">
                             {crawl.crawled_pages}/{crawl.total_pages}
                           </TableCell>
-                          <TableCell className="text-right text-sm">{crawl.credits_used}</TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right text-xs hidden sm:table-cell">{crawl.credits_used}</TableCell>
+                          <TableCell className="text-right text-xs hidden sm:table-cell">
                             {crawl.avg_score ? `${Math.round(Number(crawl.avg_score))}/200` : '—'}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden sm:table-cell">
                             {new Date(crawl.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </TableCell>
                           <TableCell>

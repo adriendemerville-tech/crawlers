@@ -469,53 +469,53 @@ export function UserManagement() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
+      <CardHeader className="px-3 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Users className="h-5 w-5" />
               Gestion des Utilisateurs
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               {filteredUsers.length}/{users.length} utilisateurs{actionFilter ? ` • filtre : ${actionFilter}` : ''}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <Button
               variant="default"
               size="sm"
               onClick={() => setCreateDialogOpen(true)}
-              className="gap-1.5"
+              className="gap-1 h-7 text-xs px-2"
             >
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="h-3.5 w-3.5" />
               Créer
             </Button>
             <Button
               variant={showPayingTab ? 'default' : 'outline'}
               size="sm"
               onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); }}
-              className="gap-1.5"
+              className="gap-1 h-7 text-xs px-2"
             >
-              <Crown className="h-4 w-4" />
+              <Crown className="h-3.5 w-3.5" />
               Payants
             </Button>
             <Button
               variant={showPendingTab ? 'default' : 'outline'}
               size="sm"
               onClick={() => { setShowPendingTab(!showPendingTab); setShowPayingTab(false); if (!showPendingTab) fetchPendingUsers(); }}
-              className="gap-1.5 relative"
+              className="gap-1 h-7 text-xs px-2 relative"
             >
-              <MailWarning className="h-4 w-4" />
-              En attente
+              <MailWarning className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">En attente</span>
+              <span className="sm:hidden">Att.</span>
               {pendingUsers.length > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold px-1">
                   {pendingUsers.length}
                 </span>
               )}
             </Button>
-            <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Actualiser
+            <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="h-7 px-2">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
@@ -697,15 +697,15 @@ export function UserManagement() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="rounded-md border overflow-hidden overflow-x-hidden">
+          <div className="rounded-md border overflow-hidden overflow-x-auto -mx-3 sm:mx-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs py-1.5">Utilisateur</TableHead>
                   <TableHead className="text-xs py-1.5">Crédits</TableHead>
-                  <TableHead className="text-xs py-1.5">Plan</TableHead>
-                  <TableHead className="text-xs py-1.5">Inscrit</TableHead>
-                  <TableHead className="text-xs py-1.5 text-right w-[80px]">Actions</TableHead>
+                  <TableHead className="text-xs py-1.5 hidden sm:table-cell">Plan</TableHead>
+                  <TableHead className="text-xs py-1.5 hidden sm:table-cell">Inscrit</TableHead>
+                  <TableHead className="text-xs py-1.5 text-right w-[60px] sm:w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -740,14 +740,14 @@ export function UserManagement() {
                           {user.credits_balance}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-1.5">
+                      <TableCell className="py-1.5 hidden sm:table-cell">
                         <span className="text-[10px] text-muted-foreground">{user.plan_type === 'agency_pro' ? 'Pro' : 'Free'}</span>
                       </TableCell>
-                      <TableCell className="py-1.5">
+                      <TableCell className="py-1.5 hidden sm:table-cell">
                         <span className="text-[10px] text-muted-foreground">{new Date(user.created_at).toLocaleDateString('fr-FR')}</span>
                       </TableCell>
                       <TableCell className="py-1.5 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
