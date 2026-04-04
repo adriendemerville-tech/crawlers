@@ -1,6 +1,7 @@
 import { useState, useCallback, ElementType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -150,7 +151,7 @@ function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate whitespace-nowrap shrink-0 ${
         isActive
           ? 'bg-primary/10 text-primary border border-primary/20'
           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
@@ -223,7 +224,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   return (
     <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-0">
-        <div className={`grid grid-cols-3 md:grid-cols-5 gap-2.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-2.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
@@ -273,6 +274,7 @@ export function MyTracking() {
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
+  const isMobile = useIsMobile();
 
   // DnD sensors for sidebar reordering
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -322,11 +324,16 @@ export function MyTracking() {
               </Button>
             </div>
           ) : (
-            <div className="flex gap-4">
-              {/* Vertical site sidebar with drag-and-drop */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Site selector: horizontal scroll on mobile, vertical sidebar on desktop */}
               <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleSiteDragEnd}>
                 <SortableContext items={h.sites.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex flex-col gap-1 shrink-0 w-36">
+                  <div className={cn(
+                    "shrink-0",
+                    isMobile
+                      ? "flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide"
+                      : "flex flex-col gap-1 w-36"
+                  )}>
                     {h.sites.map(site => (
                       <SortableSiteButton
                         key={site.id}
@@ -340,28 +347,33 @@ export function MyTracking() {
                     <button
                       onClick={() => h.setShowAddModal(true)}
                       aria-label={t.addSite}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors",
+                        isMobile && "shrink-0 whitespace-nowrap"
+                      )}
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>{t.addSite}</span>
                     </button>
-                    <div className="mt-4 pt-3 border-t border-border/40">
-                      <button
-                        onClick={() => { h.setShowApiPanel(true); h.setSelectedSite(null); }}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full transition-colors",
-                          h.showApiPanel
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <Cable className="h-3.5 w-3.5" />
-                        <span>API</span>
-                        {hasAnyApiConnected && (
-                          <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
-                        )}
-                      </button>
-                    </div>
+                    {!isMobile && (
+                      <div className="mt-4 pt-3 border-t border-border/40">
+                        <button
+                          onClick={() => { h.setShowApiPanel(true); h.setSelectedSite(null); }}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full transition-colors",
+                            h.showApiPanel
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <Cable className="h-3.5 w-3.5" />
+                          <span>API</span>
+                          {hasAnyApiConnected && (
+                            <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </SortableContext>
               </DndContext>
@@ -373,8 +385,8 @@ export function MyTracking() {
                 {h.currentSite && !h.showApiPanel && (
                   <div className="space-y-6">
                     {/* Site header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
                         <button
                           onClick={() => h.setShowIdentityModal(true)}
                           className="flex items-center justify-center w-9 h-9 rounded-lg border border-muted-foreground/25 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors bg-transparent"
@@ -403,7 +415,7 @@ export function MyTracking() {
                           )}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Autopilot button */}
                         {h.isAdmin && !h.isDemoMode && (
                           <Button
@@ -513,7 +525,7 @@ export function MyTracking() {
                           </Button>
                         )}
 
-                        {!h.gscConnected && (
+                        {!h.gscConnected && !isMobile && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -534,7 +546,7 @@ export function MyTracking() {
                         >
                           {h.language === 'fr' ? 'Auditer' : h.language === 'es' ? 'Auditar' : 'Audit'}
                         </Button>
-                        {h.latestStats && (
+                        {h.latestStats && !isMobile && (
                           <Button
                             size="sm"
                             variant="outline"
