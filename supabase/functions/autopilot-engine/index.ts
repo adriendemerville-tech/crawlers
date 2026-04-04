@@ -340,9 +340,9 @@ try {
               cycle_number: cycleNumber,
               user_id: config.user_id,
               forced_phase: phase, // ← Engine drives the phase, not auto-detection
-              force_content_cycle: config.force_content_cycle || false,
-              content_budget_pct: config.content_budget_pct || 30,
-              force_iktracker_article: config.force_iktracker_article || false,
+              force_content_cycle: config.force_content_cycle ?? true,
+              content_budget_pct: config.content_budget_pct ?? 30,
+              force_iktracker_article: config.force_iktracker_article ?? false,
             }),
           });
 
@@ -362,8 +362,9 @@ try {
               status: 'failed',
             });
 
+            hasCriticalError = true;
             cycleSuccess = false;
-            break; // Stop pipeline on error but don't skip the whole site
+            break; // Critical: orchestrator failed, can't continue
           }
 
           const decision = orchestratorResult.decision;
@@ -374,6 +375,7 @@ try {
 
           // ═══ Execute decided functions & capture results ═══
           let executionSuccess = true;
+          let hasCriticalError = false;
           const executionResults: any[] = [];
 
         // ═══ POST-AUDIT: Auto-inject audit findings into architect_workbench ═══
@@ -1294,9 +1296,8 @@ try {
           });
 
           if (!executionSuccess) {
-            console.warn(`[AutopilotEngine] Phase ${phase} had errors, stopping pipeline for ${site.domain}`);
-            cycleSuccess = false;
-            break;
+            console.warn(`[AutopilotEngine] Phase ${phase} had non-critical errors, continuing pipeline for ${site.domain}`);
+            // Non-critical errors: don't break the pipeline, just log and continue
           }
 
           console.log(`[AutopilotEngine] Phase ${phase} completed successfully for ${site.domain}`);
@@ -1314,7 +1315,7 @@ try {
             updated_at: new Date().toISOString(),
             // force_content_cycle stays true by default (proactive mode)
             // Only reset force_iktracker_article which is a one-shot toggle
-            force_iktracker_article: false,
+            force_iktracker_article: cycleSuccess ? false : config.force_iktracker_article,
           })
           .eq('id', config.id);
 
