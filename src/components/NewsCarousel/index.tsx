@@ -26,7 +26,8 @@ const AnimatePresenceLazy = lazy(() =>
 );
 
 const AUTO_SCROLL_INTERVAL = 30000; // 30 seconds
-const CARD_WIDTH = 356; // 340px card + 16px gap
+const CARD_WIDTH_MOBILE = 256; // 240px card + 16px gap
+const CARD_WIDTH_DESKTOP = 356; // 340px card + 16px gap
 
 type CategoryFilter = 'ALL' | 'SEO' | 'LLM' | 'GEO';
 
