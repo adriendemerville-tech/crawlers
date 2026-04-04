@@ -207,7 +207,7 @@ function ProfileContent() {
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-2">
               <TabsList className="w-full flex my-0 py-0">
-                {isProUser && (
+                {isProUser && !isMobile && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Crown className="h-4 w-4 text-yellow-500" />
                     <span className="hidden sm:inline font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
@@ -219,27 +219,35 @@ function ProfileContent() {
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>
                 </TabsTrigger>
-                <TabsTrigger value="action-plans" className="flex-1 gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.actionPlans}</span>
-                </TabsTrigger>
-                <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
-                  <span className="hidden sm:inline">{t.correctiveCodes}</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="crawls"
-                  className="flex-1 gap-2"
-                  disabled={!isProUser}
-                >
-                  <Bug className="h-4 w-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">Crawls</span>
-                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </TabsTrigger>
-                <TabsTrigger value="drafts" className="flex-1 gap-2">
-                  <FileEdit className="h-4 w-4" />
-                  <span className="hidden sm:inline">Content</span>
-                </TabsTrigger>
-                {isProUser && (
+                {!isMobile && (
+                  <TabsTrigger value="action-plans" className="flex-1 gap-2">
+                    <CheckSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t.actionPlans}</span>
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
+                    <span className="hidden sm:inline">{t.correctiveCodes}</span>
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger
+                    value="crawls"
+                    className="flex-1 gap-2"
+                    disabled={!isProUser}
+                  >
+                    <Bug className="h-4 w-4 text-muted-foreground" />
+                    <span className="hidden sm:inline">Crawls</span>
+                    {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger value="drafts" className="flex-1 gap-2">
+                    <FileEdit className="h-4 w-4" />
+                    <span className="hidden sm:inline">Content</span>
+                  </TabsTrigger>
+                )}
+                {isProUser && !isMobile && (
                   <TabsTrigger
                     value="reports-tab"
                     className="flex-1 gap-2"
@@ -248,7 +256,7 @@ function ProfileContent() {
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
-                {isProUser && (
+                {isProUser && !isMobile && (
                   <TabsTrigger value="sea-seo" className="flex-1 gap-2">
                     <Target className="h-4 w-4" />
                     <span className="hidden sm:inline">SEA→SEO</span>
@@ -262,11 +270,13 @@ function ProfileContent() {
                   <span className="hidden sm:inline">Google Business</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                <TabsTrigger value="marina" className="flex-1 gap-2">
-                  <Anchor className="h-4 w-4" />
-                  <span className="hidden sm:inline">Marina</span>
-                </TabsTrigger>
-                {isAdmin && (
+                {!isMobile && (
+                  <TabsTrigger value="marina" className="flex-1 gap-2">
+                    <Anchor className="h-4 w-4" />
+                    <span className="hidden sm:inline">Marina</span>
+                  </TabsTrigger>
+                )}
+                {isAdmin && !isMobile && (
                   <TabsTrigger
                     value="bundle"
                     className="flex-1 gap-2"
@@ -275,22 +285,24 @@ function ProfileContent() {
                     <span className="hidden sm:inline">Bundle</span>
                   </TabsTrigger>
                 )}
-                {!isProUser && (
+                {!isProUser && !isMobile && (
                   <TabsTrigger value="reports" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">{t.myReports}</span>
                   </TabsTrigger>
                 )}
-                {!isProUser && (
+                {!isProUser && !isMobile && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Wallet className="h-4 w-4" />
                     <span className="hidden sm:inline">{t.wallet}</span>
                   </TabsTrigger>
                 )}
-                <div className="ml-auto" />
-                <TabsTrigger value="settings" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                </TabsTrigger>
+                {!isMobile && <div className="ml-auto" />}
+                {!isMobile && (
+                  <TabsTrigger value="settings" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                  </TabsTrigger>
+                )}
                 {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
