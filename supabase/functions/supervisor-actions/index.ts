@@ -543,6 +543,7 @@ Réponds en JSON :
           high_risk_actions: highRiskActions.length,
           analysis,
         },
+        llm_cost: costAcc.summary,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
