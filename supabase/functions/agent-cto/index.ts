@@ -788,10 +788,11 @@ Réponds UNIQUEMENT en JSON :
       });
     }
 
-    // ─── Phase 1: Gather real evidence ──────────────────────────────
-    const [champion, reliability] = await Promise.all([
+    // ─── Phase 1: Gather real evidence + enriched context ──────────
+    const [champion, reliability, agentContext] = await Promise.all([
       getChampionPrompt(supabase, functionName),
       getReliabilityProfile(supabase, functionName),
+      getAgentContext({ agent: 'cto', domain, days: 7 }).catch(() => null),
     ])
 
     const currentVersion = champion?.version || 0
