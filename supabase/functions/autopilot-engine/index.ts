@@ -407,7 +407,7 @@ try {
 
           // ═══ Execute decided functions & capture results ═══
           let executionSuccess = true;
-          let hasCriticalError = false;
+          const phaseErrors: ExecutionError[] = [];
           const executionResults: any[] = [];
 
         // ═══ POST-AUDIT: Auto-inject audit findings into architect_workbench ═══
