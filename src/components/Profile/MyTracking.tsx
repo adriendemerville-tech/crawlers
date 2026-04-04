@@ -415,7 +415,7 @@ export function MyTracking() {
                           )}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Autopilot button */}
                         {h.isAdmin && !h.isDemoMode && (
                           <Button
