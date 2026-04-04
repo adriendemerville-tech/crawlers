@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { LLMCostCounter } from './LLMCostCounter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -223,6 +224,9 @@ function SupervisorAnalysisPanel() {
           {analyzingParmenion ? 'Audit Parménion...' : 'Auditer Parménion'}
         </Button>
       </div>
+
+      {/* LLM Cost Counter */}
+      <LLMCostCounter agent="supervisor" days={30} />
 
       {/* Parménion report */}
       {parmenionReport && (

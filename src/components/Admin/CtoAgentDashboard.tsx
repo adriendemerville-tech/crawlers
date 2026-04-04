@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CtoCodeProposals } from './CtoCodeProposals';
+import { LLMCostCounter } from './LLMCostCounter';
 
 interface CacheHealthReport {
   total_entries: number;
@@ -417,6 +418,9 @@ export function CtoAgentDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* LLM Cost Counter */}
+      <LLMCostCounter agent="cto" days={30} />
 
       {/* Cache Health Check */}
       <Card className="border-muted">
