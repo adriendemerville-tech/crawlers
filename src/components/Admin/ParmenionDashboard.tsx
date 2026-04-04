@@ -485,7 +485,7 @@ export function ParmenionDashboard() {
                       </div>
 
                       {/* Details grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                      <div className={cn("grid gap-2 text-xs", isMobile ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-5")}>
                         <div>
                           <span className="text-muted-foreground">Impact</span>
                           <p className="font-medium">{log.impact_level}</p>
