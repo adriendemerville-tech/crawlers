@@ -736,9 +736,11 @@ Deno.serve(async (req) => {
 
     const estimatedScoreAfter = Math.min(100, scoreBefore.overall + (parsedImprovements?.estimated_score_improvement || 5));
 
-    // Persist recommendations to registry (like strategic audit)
+    // Persist recommendations to registry + create code proposals for admin approval
+    let proposalsCreated = 0;
     if (parsedImprovements?.improvements?.length > 0) {
       await persistRecommendations(supabase, target, scoreBefore, parsedImprovements);
+      proposalsCreated = await createCodeProposals(supabase, target, scoreBefore, parsedImprovements);
     }
 
     // Log to database with full scoring detail
