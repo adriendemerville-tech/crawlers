@@ -718,9 +718,10 @@ Deno.serve(async (req) => {
     const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, target.type);
     console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}`);
 
-    // Generate improvements via Lovable AI (context-enriched)
+    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies)
     const { improvements, confidence, tokens } = await generateImprovements(
       pageData.html, pageData.textContent, target, scoreBefore, siteContext,
+      agentContext?.promptSnippet,
     );
 
     // Parse improvements
