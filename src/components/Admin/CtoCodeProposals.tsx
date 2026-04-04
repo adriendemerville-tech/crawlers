@@ -354,7 +354,21 @@ export function CtoCodeProposals() {
                               onChange={(e) => setReviewNotes(prev => ({ ...prev, [proposal.id]: e.target.value }))}
                               className="text-xs h-16 resize-none"
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-xs border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
+                                onClick={() => handleSupervisorReview(proposal.id)}
+                                disabled={actionLoading === proposal.id}
+                              >
+                                {actionLoading === proposal.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Shield className="h-3.5 w-3.5" />
+                                )}
+                                Revue Supervisor
+                              </Button>
                               <Button
                                 size="sm"
                                 className="gap-1.5 text-xs"
