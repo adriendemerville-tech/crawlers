@@ -610,6 +610,53 @@ async function persistRecommendations(supabase: any, target: PageTarget, score: 
   }
 }
 
+// ─── Create code proposals for admin approval ────────────────────────
+async function createCodeProposals(supabase: any, target: PageTarget, score: SeoScoreV2, parsedImprovements: any): Promise<number> {
+  try {
+    const improvements = parsedImprovements?.improvements || [];
+    if (improvements.length === 0) return 0;
+
+    const proposals: any[] = [];
+    for (const imp of improvements) {
+      const diffLines: string[] = [];
+      if (imp.before) {
+        diffLines.push(`--- AVANT ---`);
+        diffLines.push(imp.before);
+      }
+      diffLines.push(`+++ APRÈS +++`);
+      diffLines.push(imp.after || '');
+
+      proposals.push({
+        target_function: `page:${target.slug}`,
+        target_url: target.url,
+        domain: 'crawlers.fr',
+        proposal_type: imp.type || 'content_improvement',
+        title: `[SEO] ${imp.location?.substring(0, 100) || imp.type || 'Amélioration'}`,
+        description: imp.reason || null,
+        diff_preview: diffLines.join('\n'),
+        original_code: imp.before || null,
+        proposed_code: imp.after || null,
+        confidence_score: parsedImprovements.confidence_score || 0,
+        source_diagnostic_id: `seo_agent_${target.slug}_${Date.now()}`,
+        status: 'pending',
+        agent_source: 'seo',
+      });
+    }
+
+    const { error } = await supabase.from('cto_code_proposals').insert(proposals);
+    if (error) {
+      console.error('[AGENT-SEO] Erreur insertion propositions:', error);
+      return 0;
+    }
+
+    console.log(`[AGENT-SEO] ✅ ${proposals.length} propositions de code créées (en attente d'approbation)`);
+    return proposals.length;
+  } catch (e) {
+    console.error('[AGENT-SEO] Erreur création propositions:', e);
+    return 0;
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
