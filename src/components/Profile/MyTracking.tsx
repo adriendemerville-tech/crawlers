@@ -324,11 +324,16 @@ export function MyTracking() {
               </Button>
             </div>
           ) : (
-            <div className="flex gap-4">
-              {/* Vertical site sidebar with drag-and-drop */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Site selector: horizontal scroll on mobile, vertical sidebar on desktop */}
               <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleSiteDragEnd}>
                 <SortableContext items={h.sites.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex flex-col gap-1 shrink-0 w-36">
+                  <div className={cn(
+                    "shrink-0",
+                    isMobile
+                      ? "flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide"
+                      : "flex flex-col gap-1 w-36"
+                  )}>
                     {h.sites.map(site => (
                       <SortableSiteButton
                         key={site.id}
@@ -342,28 +347,33 @@ export function MyTracking() {
                     <button
                       onClick={() => h.setShowAddModal(true)}
                       aria-label={t.addSite}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors",
+                        isMobile && "shrink-0 whitespace-nowrap"
+                      )}
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>{t.addSite}</span>
                     </button>
-                    <div className="mt-4 pt-3 border-t border-border/40">
-                      <button
-                        onClick={() => { h.setShowApiPanel(true); h.setSelectedSite(null); }}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full transition-colors",
-                          h.showApiPanel
-                            ? "bg-primary/10 text-primary font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <Cable className="h-3.5 w-3.5" />
-                        <span>API</span>
-                        {hasAnyApiConnected && (
-                          <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
-                        )}
-                      </button>
-                    </div>
+                    {!isMobile && (
+                      <div className="mt-4 pt-3 border-t border-border/40">
+                        <button
+                          onClick={() => { h.setShowApiPanel(true); h.setSelectedSite(null); }}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full transition-colors",
+                            h.showApiPanel
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <Cable className="h-3.5 w-3.5" />
+                          <span>API</span>
+                          {hasAnyApiConnected && (
+                            <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </SortableContext>
               </DndContext>
