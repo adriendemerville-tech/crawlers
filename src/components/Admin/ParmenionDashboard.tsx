@@ -551,7 +551,7 @@ export function ParmenionDashboard() {
       {/* IKTracker History */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className={cn("flex items-center justify-between", isMobile && "flex-col items-start gap-2")}>
             <div>
               <CardTitle className="text-base flex items-center gap-2">
                 <Globe className="h-4 w-4 text-primary" />
