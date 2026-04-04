@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
+import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
@@ -160,7 +161,7 @@ async function auditAssistantQuality(supabase: any): Promise<any> {
 }
 
 // ─── AI: Audit CTO corrections quality & impact ─────────────────────
-async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[], operationalContext?: string): Promise<any> {
+async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[], operationalContext?: string, costAcc?: CostAccumulator): Promise<any> {
   const systemPrompt = `Tu es le SUPERVISOR, un auditeur qualité des corrections déployées par l'Agent CTO.
 
 TON RÔLE (NOUVEAU) :
@@ -251,6 +252,7 @@ Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.
   })
 
   const data = await response.json()
+  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
   const content = data.choices?.[0]?.message?.content || ''
 
   try {
@@ -285,6 +287,8 @@ Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(handleRequest(async (req) => {
 try {
+    const costAcc = new CostAccumulator()
+
     // Check kill switch
     const enabled = await isSupervisorEnabled()
     if (!enabled) {
@@ -362,7 +366,7 @@ try {
 
       const patchContext = buildPatchEffectivenessContext(patchHistory)
       const fullContext = (agentContext?.promptSnippet || '') + patchContext
-      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext)
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext, costAcc)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({
@@ -378,6 +382,7 @@ try {
         metadata: {
           type: 'correction_audit',
           cto_score: analysis.overall_cto_score,
+          llm_cost: costAcc.summary,
         },
       })
 
@@ -387,6 +392,7 @@ try {
         correction_count: corrections.length,
         functions_audited: functionNames,
         post_deploy_errors: postErrors.length,
+        llm_cost: costAcc.summary,
       })
     }
 
@@ -500,6 +506,7 @@ Réponds en JSON :
       })
 
       const llmData = await response.json()
+      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let analysis: any = null
@@ -536,6 +543,7 @@ Réponds en JSON :
           high_risk_actions: highRiskActions.length,
           analysis,
         },
+        llm_cost: costAcc.summary,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -642,6 +650,7 @@ Réponds en JSON strict :
       })
 
       const llmData = await response.json()
+      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let review: any = null
@@ -712,6 +721,7 @@ Réponds en JSON strict :
           patch_rationale: review.patch_rationale,
           supervisor_confidence: review.supervisor_confidence,
         },
+        llm_cost: costAcc.summary,
       })
     }
 

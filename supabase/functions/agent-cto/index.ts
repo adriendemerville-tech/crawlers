@@ -6,6 +6,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
+import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -152,7 +153,7 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
-async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ content: string; tokens: { input: number; output: number } }> {
+async function callLLM(systemPrompt: string, userPrompt: string, costAcc?: CostAccumulator): Promise<{ content: string; tokens: { input: number; output: number } }> {
   const resp = await callOpenRouter({
     model: 'anthropic/claude-3.5-sonnet',
     system: systemPrompt,
@@ -163,12 +164,12 @@ async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ cont
   });
 
   trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet')
+  const input = resp.usage?.prompt_tokens || 0
+  const output = resp.usage?.completion_tokens || 0
+  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', input, output)
   return {
     content: resp.content,
-    tokens: {
-      input: resp.usage?.prompt_tokens || 0,
-      output: resp.usage?.completion_tokens || 0,
-    },
+    tokens: { input, output },
   }
 }
 
@@ -337,6 +338,7 @@ async function checkCacheHealth(supabase: any): Promise<CacheHealthReport> {
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(handleRequest(async (req) => {
 try {
+    const costAcc = new CostAccumulator()
     const enabled = await isAgentEnabled()
     if (!enabled) {
       return jsonOk({ success: false, reason: 'Agent CTO désactivé' })
@@ -476,6 +478,7 @@ Réponds en JSON :
   "auto_fixable": false,
   "summary": "Résumé en une phrase"
 }`,
+        costAcc,
       )
 
       trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
@@ -506,6 +509,7 @@ Réponds en JSON :
         failed_jobs: (failedJobs || []).length,
         silent_errors: marinaErrors.length,
         diagnosis,
+        llm_cost: costAcc.summary,
       })
     }
 
@@ -589,7 +593,7 @@ Réponds UNIQUEMENT en JSON :
 
         const { content, tokens } = await callLLM(
           'Tu es un agent CTO spécialisé en diagnostic de crashs frontend React. Sois précis et factuel.',
-          diagnosisPrompt,
+          diagnosisPrompt, costAcc,
         )
 
         trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
@@ -710,6 +714,7 @@ Réponds UNIQUEMENT en JSON :
         success: true,
         crashes_analyzed: results.length,
         results,
+        llm_cost: costAcc.summary,
       })
     }
 
@@ -878,7 +883,7 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
 
     console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 
-    const { content, tokens } = await callLLM(systemPrompt, userPrompt)
+    const { content, tokens } = await callLLM(systemPrompt, userPrompt, costAcc)
 
     trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
 
@@ -973,6 +978,7 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
         gsc_samples: reliability.snapshots_with_gsc,
       },
       version: logEntry.prompt_version_after || currentVersion,
+      llm_cost: costAcc.summary,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
