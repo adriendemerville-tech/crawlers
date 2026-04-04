@@ -63,7 +63,7 @@ function getNextPhase(lastPhase: PipelinePhase | undefined): PipelinePhase {
   return PIPELINE_PHASES[idx + 1];
 }
 
-serve(async (req: Request) => {
+Deno.serve(handleRequest(async (req: Request) => {
 try {
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
@@ -382,7 +382,7 @@ try {
     console.error('[Parménion] Error:', e);
     return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
-});
+}));
 
 // ═══════════════════════════════════════════════════════════════
 // PRESCRIBE V2: DUAL PROMPT ENGINE (tech + content in parallel)
@@ -1535,6 +1535,3 @@ Le payload doit contenir:
 IMPORTANT: C'est l'étape finale de déploiement. Tu dois déployer, pas diagnostiquer ni prescrire.`;
 }
 
-function serve(handler: (req: Request) => Promise<Response>) {
-  Deno.serve(handler);
-}
