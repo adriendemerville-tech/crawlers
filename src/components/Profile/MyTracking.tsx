@@ -151,7 +151,7 @@ function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate ${
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate whitespace-nowrap shrink-0 ${
         isActive
           ? 'bg-primary/10 text-primary border border-primary/20'
           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
