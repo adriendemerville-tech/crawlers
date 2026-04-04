@@ -586,7 +586,7 @@ export function ParmenionDashboard() {
               <p className="text-sm">Aucune action IKTracker enregistrée</p>
             </div>
           ) : (
-            <ScrollArea className="h-[350px] pr-4">
+            <ScrollArea className={cn(isMobile ? "h-[280px]" : "h-[350px]", "pr-4")}>
               <div className="space-y-2">
                 {ikHistory.map((ev) => {
                   const d = ev.event_data || {};
