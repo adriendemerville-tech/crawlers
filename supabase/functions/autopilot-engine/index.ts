@@ -901,7 +901,10 @@ try {
                     fixes_count: normalizedFixes.length,
                     result: rerouteResult,
                   });
-                  if (!rerouteResponse.ok) executionSuccess = false;
+                  if (!rerouteResponse.ok) {
+                    phaseErrors.push({ phase, function: 'generate-corrective-code', severity: 'degraded', message: 'Rerouted corrective code generation failed', retryable: true });
+                    executionSuccess = false;
+                  }
                 } else {
                   // No cms_actions AND no JS fixes → truly nothing to do
                   console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions or fixes for ${site.domain}, skipping`);
