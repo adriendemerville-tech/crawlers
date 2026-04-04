@@ -340,9 +340,9 @@ try {
               cycle_number: cycleNumber,
               user_id: config.user_id,
               forced_phase: phase, // ← Engine drives the phase, not auto-detection
-              force_content_cycle: config.force_content_cycle || false,
-              content_budget_pct: config.content_budget_pct || 30,
-              force_iktracker_article: config.force_iktracker_article || false,
+              force_content_cycle: config.force_content_cycle ?? true,
+              content_budget_pct: config.content_budget_pct ?? 30,
+              force_iktracker_article: config.force_iktracker_article ?? false,
             }),
           });
 
