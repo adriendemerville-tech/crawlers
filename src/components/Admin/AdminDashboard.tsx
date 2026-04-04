@@ -279,6 +279,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'parmenion': return <ParmenionDashboard />;
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
+      case 'prospects': return <ProspectPipelineDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
