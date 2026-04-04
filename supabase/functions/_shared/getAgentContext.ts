@@ -102,6 +102,7 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     anomalyRes,
     cocoonErrorsRes,
     silentErrorsRes,
+    patchEffectivenessRes,
   ] = await Promise.all([
     // 1. SAV conversations (recent, with message preview)
     supabase
@@ -161,6 +162,13 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(max),
+
+    // 8. Patch effectiveness (feedback loop)
+    supabase
+      .from('patch_effectiveness')
+      .select('target_function, agent_source, errors_before, errors_after, error_reduction_pct, is_effective, deployment_date')
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   // Process SAV data
@@ -228,10 +236,21 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     created_at: e.created_at,
   }))
 
+  // Process patch effectiveness
+  const patchResults = (patchEffectivenessRes.data || []).map((p: any) => ({
+    target_function: p.target_function,
+    agent_source: p.agent_source,
+    errors_before: p.errors_before,
+    errors_after: p.errors_after,
+    error_reduction_pct: p.error_reduction_pct,
+    is_effective: p.is_effective,
+    deployment_date: p.deployment_date,
+  }))
+
   // Build prompt snippet based on agent type
   const promptSnippet = buildPromptSnippet(opts.agent, {
     savIssues, technicalErrors, anomalies, cocoonErrors, silentErrors,
-    avgScore, escalationRate, days,
+    avgScore, escalationRate, days, patchResults,
   })
 
   return {
@@ -245,6 +264,9 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       anomalyCount: anomalies.length,
       cocoonErrorCount: cocoonErrors.length,
       silentErrorCount: silentErrors.length,
+      patchEffectivenessRate: patchResults.length > 0
+        ? Math.round(patchResults.filter((p: any) => p.is_effective).length / patchResults.length * 100)
+        : null,
     },
   }
 }
@@ -260,6 +282,7 @@ function buildPromptSnippet(
     avgScore: number | null
     escalationRate: number
     days: number
+    patchResults: any[]
   },
 ): string {
   const lines: string[] = []
@@ -319,6 +342,33 @@ function buildPromptSnippet(
     lines.push(`\n## 🕸️ Erreurs Cocoon (${ctx.cocoonErrors.length})`)
     for (const e of ctx.cocoonErrors.slice(0, 5)) {
       lines.push(`  - ${e.domain}: ${e.problem}`)
+    }
+  }
+
+  // Patch effectiveness feedback — relevant for all agents
+  if (ctx.patchResults.length > 0) {
+    const effective = ctx.patchResults.filter(p => p.is_effective).length
+    const total = ctx.patchResults.length
+    const rate = Math.round((effective / total) * 100)
+    lines.push(`\n## 📊 Feedback Patchs Déployés (${total} mesurés)`)
+    lines.push(`Taux d'efficacité global : ${rate}% (${effective}/${total} patchs ont réduit les erreurs ≥20%)`)
+    
+    // Show ineffective patches so agents learn from failures
+    const failures = ctx.patchResults.filter(p => !p.is_effective)
+    if (failures.length > 0) {
+      lines.push(`⚠️ Patchs INEFFICACES (à éviter de reproduire) :`)
+      for (const f of failures.slice(0, 5)) {
+        lines.push(`  - ${f.target_function} [${f.agent_source}]: erreurs ${f.errors_before}→${f.errors_after} (${f.error_reduction_pct}%)`)
+      }
+    }
+
+    // Show effective patches as positive reinforcement
+    const successes = ctx.patchResults.filter(p => p.is_effective)
+    if (successes.length > 0) {
+      lines.push(`✅ Patchs EFFICACES (patterns à reproduire) :`)
+      for (const s of successes.slice(0, 3)) {
+        lines.push(`  - ${s.target_function} [${s.agent_source}]: erreurs ${s.errors_before}→${s.errors_after} (${s.error_reduction_pct}%)`)
+      }
     }
   }
 
