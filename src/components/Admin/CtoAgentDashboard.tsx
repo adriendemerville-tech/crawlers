@@ -419,6 +419,9 @@ export function CtoAgentDashboard() {
         </Card>
       </div>
 
+      {/* LLM Cost Counter */}
+      <LLMCostCounter agent="cto" days={30} />
+
       {/* Cache Health Check */}
       <Card className="border-muted">
         <CardHeader className="pb-3">
