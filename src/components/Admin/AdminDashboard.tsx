@@ -149,6 +149,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadDocVisibility = async () => {
