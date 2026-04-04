@@ -506,6 +506,7 @@ Réponds en JSON :
       })
 
       const llmData = await response.json()
+      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let analysis: any = null
