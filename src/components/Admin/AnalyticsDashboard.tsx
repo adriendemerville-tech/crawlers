@@ -421,18 +421,18 @@ export function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       {/* Header with refresh button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <BarChart3 className="h-5 w-5 text-primary" />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Dashboard Statistiques</h3>
-            <p className="text-sm text-muted-foreground">
-              Activité des 30 derniers jours
+          <div className="min-w-0">
+            <h3 className="text-sm sm:text-lg font-semibold truncate">Dashboard Statistiques</h3>
+            <p className="text-xs text-muted-foreground truncate">
+              30 derniers jours
               {lastUpdated && (
-                <span className="ml-2 text-xs">
-                  • Mis à jour {format(lastUpdated, 'HH:mm', { locale: fr })}
+                <span className="ml-1">
+                  • {format(lastUpdated, 'HH:mm', { locale: fr })}
                 </span>
               )}
             </p>
@@ -443,10 +443,10 @@ export function AnalyticsDashboard() {
           size="sm"
           onClick={() => fetchEvents(true)}
           disabled={isRefreshing}
-          className="gap-2"
+          className="gap-1.5 shrink-0 h-7 px-2 text-xs"
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{isRefreshing ? 'Actualisation...' : 'Actualiser'}</span>
         </Button>
       </div>
 
