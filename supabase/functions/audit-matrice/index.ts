@@ -5,8 +5,8 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { detectItemType, type ItemType } from '../_shared/matriceTypeDetector.ts'
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts'
-import {
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import {
   type RobotsData, type SitemapData, type PsiData,
   checkRobots, checkSitemap, checkLlmsTxt, fetchPsi,
   computeBaliseScore, computeStructuredDataScore, computePerformanceScore,
