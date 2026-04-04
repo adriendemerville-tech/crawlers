@@ -478,6 +478,7 @@ Réponds en JSON :
   "auto_fixable": false,
   "summary": "Résumé en une phrase"
 }`,
+        costAcc,
       )
 
       trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
