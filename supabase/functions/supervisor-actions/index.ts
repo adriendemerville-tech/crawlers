@@ -685,4 +685,4 @@ Réponds en JSON strict :
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+}));
