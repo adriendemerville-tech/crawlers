@@ -162,6 +162,13 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       .gte('created_at', since)
       .order('created_at', { ascending: false })
       .limit(max),
+
+    // 8. Patch effectiveness (feedback loop)
+    supabase
+      .from('patch_effectiveness')
+      .select('target_function, agent_source, errors_before, errors_after, error_reduction_pct, is_effective, deployment_date')
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   // Process SAV data
