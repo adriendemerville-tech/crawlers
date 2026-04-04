@@ -367,6 +367,23 @@ export function CtoCodeProposals() {
                           </div>
                         )}
 
+                        {/* Deploy button for approved */}
+                        {proposal.status === 'approved' && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={() => handleDeploy(proposal.id)}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            {actionLoading === proposal.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Rocket className="h-3.5 w-3.5" />
+                            )}
+                            Déployer sur GitHub
+                          </Button>
+                        )}
+
                         {/* Delete for non-pending too */}
                         {proposal.status !== 'pending' && (
                           <Button
