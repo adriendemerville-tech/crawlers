@@ -522,13 +522,25 @@ try {
             const allCmsActions = payload.cms_actions || [];
             const allFixes = payload.fixes || [];
             
-            routedCmsActions = {
-              content: allCmsActions.filter((a: any) => a._channel === 'content_corrective' || a._channel === 'content_editorial'),
-              code: allCmsActions.filter((a: any) => a._channel === 'data'),
-              all: allCmsActions,
-            };
+            // ═══ GUARD: If V2 produced ZERO tool calls, treat as V1 fallback ═══
+            // This prevents the execute phase from being skipped when the LLM
+            // sets _prescribe_v2 but doesn't actually produce any tool calls.
+            const hasV2Output = allCmsActions.length > 0 || allFixes.length > 0;
             
-            console.log(`[AutopilotEngine] Prescribe V2: ${allFixes?.length || 0} code fixes + ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} data CMS actions`);
+            if (hasV2Output) {
+              routedCmsActions = {
+                content: allCmsActions.filter((a: any) => a._channel === 'content_corrective' || a._channel === 'content_editorial'),
+                code: allCmsActions.filter((a: any) => a._channel === 'data'),
+                all: allCmsActions,
+              };
+              
+              console.log(`[AutopilotEngine] Prescribe V2: ${allFixes?.length || 0} code fixes + ${routedCmsActions.content.length} content + ${routedCmsActions.code.length} data CMS actions`);
+            } else {
+              // V2 flag set but no output → downgrade to non-V2 so functions execute normally
+              console.warn(`[AutopilotEngine] Prescribe V2 EMPTY for ${site.domain}: _tool_calls_raw is empty, downgrading to V1 execution mode`);
+              payload._prescribe_v2 = false;
+              decision.action.payload._prescribe_v2 = false;
+            }
             
             allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
               function: 'prescribe-v2-router',
