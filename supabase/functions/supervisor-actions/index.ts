@@ -287,6 +287,8 @@ Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(handleRequest(async (req) => {
 try {
+    const costAcc = new CostAccumulator()
+
     // Check kill switch
     const enabled = await isSupervisorEnabled()
     if (!enabled) {
