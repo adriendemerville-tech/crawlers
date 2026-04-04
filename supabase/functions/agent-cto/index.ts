@@ -338,6 +338,7 @@ async function checkCacheHealth(supabase: any): Promise<CacheHealthReport> {
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(handleRequest(async (req) => {
 try {
+    const costAcc = new CostAccumulator()
     const enabled = await isAgentEnabled()
     if (!enabled) {
       return jsonOk({ success: false, reason: 'Agent CTO désactivé' })
