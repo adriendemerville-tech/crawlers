@@ -59,7 +59,7 @@ export function SeoAgentDashboard() {
       if (data?.success) {
         toast({
           title: `✅ Agent SEO — ${data.target?.slug}`,
-          description: `Score ${data.score_before} → ${data.score_after} · ${data.improvements_count} améliorations`,
+          description: `Score ${data.score_before} → ${data.score_after} · ${data.proposals_created || data.improvements_count} proposition(s) créée(s)`,
         });
         fetchLogs();
       } else {
