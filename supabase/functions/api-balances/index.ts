@@ -109,7 +109,7 @@ async function fetchFirecrawlBalance() {
 
   const resp = await fetch('https://api.firecrawl.dev/v1/team/credits', {
     headers: { 'Authorization': `Bearer ${apiKey}` },
-  }));
+  });
   if (!resp.ok) {
     const text = await resp.text();
     console.error('[api-balances] Firecrawl error:', resp.status, text);
