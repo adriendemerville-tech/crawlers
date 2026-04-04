@@ -1320,8 +1320,14 @@ try {
           }
         }
 
+          // ═══ Collect phase errors into cycle-level array ═══
+          allPhaseErrors.push(...phaseErrors);
+
           // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
-          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'completed' : 'partial';
+          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' 
+            : phaseErrors.some(e => e.severity === 'critical') ? 'failed'
+            : phaseErrors.some(e => e.severity === 'degraded') ? 'degraded'
+            : executionSuccess ? 'completed' : 'partial';
           
           await supabase
             .from('parmenion_decision_log')
@@ -1329,8 +1335,13 @@ try {
               status: phaseStatus,
               execution_started_at: new Date().toISOString(),
               execution_completed_at: new Date().toISOString(),
-              execution_results: executionResults,
-              execution_error: executionSuccess ? null : JSON.stringify(executionResults.filter(r => r.status === 'error')),
+              execution_results: {
+                actions: executionResults,
+                errors: phaseErrors,
+                degraded: phaseErrors.some(e => e.severity === 'degraded'),
+                has_ignorable: phaseErrors.some(e => e.severity === 'ignorable'),
+              },
+              execution_error: phaseErrors.length > 0 ? JSON.stringify(phaseErrors) : null,
             })
             .eq('id', lastDecisionId);
 
@@ -1347,20 +1358,24 @@ try {
             cycle_number: cycleNumber,
             description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
             diff_before: decision.tactic?.initial_scope || {},
-            diff_after: { execution: executionResults, decision: decision.prudence },
-            status: config.implementation_mode === 'dry_run' ? 'dry_run' : executionSuccess ? 'applied' : 'failed',
+            diff_after: { execution: executionResults, decision: decision.prudence, errors: phaseErrors },
+            status: config.implementation_mode === 'dry_run' ? 'dry_run' : phaseStatus,
           });
 
-          if (!executionSuccess) {
-            console.warn(`[AutopilotEngine] Phase ${phase} had non-critical errors, continuing pipeline for ${site.domain}`);
-            // Non-critical errors: don't break the pipeline, just log and continue
+          if (phaseErrors.some(e => e.severity === 'critical')) {
+            console.error(`[AutopilotEngine] Phase ${phase} had CRITICAL errors, stopping pipeline for ${site.domain}`);
+            hasCriticalError = true;
+            cycleSuccess = false;
+            break;
+          } else if (phaseErrors.length > 0) {
+            console.warn(`[AutopilotEngine] Phase ${phase} had ${phaseErrors.length} non-critical errors, continuing pipeline for ${site.domain}`);
           }
 
-          console.log(`[AutopilotEngine] Phase ${phase} completed successfully for ${site.domain}`);
+          console.log(`[AutopilotEngine] Phase ${phase} completed for ${site.domain} (status: ${phaseStatus})`);
         } // end phase loop
 
         // ═══ Update config counters (once per full cycle) ═══
-        const finalCycleStatus = cycleSuccess ? 'completed' : 'partial';
+        const finalCycleStatus: CycleStatus = hasCriticalError ? 'failed' : computeCycleStatus(allPhaseErrors);
 
         await supabase
           .from('autopilot_configs')
