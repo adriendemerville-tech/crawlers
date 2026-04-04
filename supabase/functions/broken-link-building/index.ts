@@ -173,4 +173,4 @@ try {
     console.error('[broken-link-building] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}))
