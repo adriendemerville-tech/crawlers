@@ -295,7 +295,7 @@ export function SupportManagement() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-auto lg:h-[600px]">
       {/* Conversations List */}
       <Card className="lg:col-span-1">
         <CardHeader className="pb-3">
