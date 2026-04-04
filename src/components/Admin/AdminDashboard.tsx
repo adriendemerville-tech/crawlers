@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const adminTranslations = {
   fr: {
@@ -148,6 +149,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadDocVisibility = async () => {
@@ -293,84 +295,123 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         <BrowserlessAlert />
         <ApiGatewayFallbackAlert />
 
-        <div className="flex gap-4 min-h-[600px]">
-          <nav className="w-48 shrink-0 space-y-4">
-            {navGroups.map((group) => (
-              <div key={group.label}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-2 mb-1">
-                  {group.label}
-                </p>
-                <div className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-                    const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors text-left",
-                          isActive
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate flex-1">{item.label}</span>
-                        {notifCount > 0 && (
-                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
-                            {notifCount > 99 ? '99+' : notifCount}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+        {isMobile ? (
+          /* ── Mobile: horizontal carousel nav + stacked content ── */
+          <div className="space-y-3">
+            <div className="overflow-x-auto -mx-2 px-2 pb-2">
+              <div className="flex gap-1.5 w-max">
+                {navGroups.flatMap((group) => group.items).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs whitespace-nowrap transition-colors shrink-0",
+                        isActive
+                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                          : "bg-muted/60 text-muted-foreground"
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span>{item.label}</span>
+                      {notifCount > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-none">
+                          {notifCount > 99 ? '99+' : notifCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-
-            {!readOnly && (
-              <div className="pt-2 border-t border-border/40 space-y-1">
-                <button
-                  onClick={toggleDocsVisibility}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-                >
-                  {docsHiddenForViewers ? <EyeOff className="h-3 w-3 shrink-0" /> : <Eye className="h-3 w-3 shrink-0" />}
-                  <span className="truncate">{docsHiddenForViewers ? t.hideDocsForViewers : t.showDocsForViewers}</span>
-                </button>
-                {docsHiddenForViewers && (
-                  <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
-                    Masqué
-                  </Badge>
-                )}
-                <button
-                  onClick={toggleSimulatedData}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-                >
-                  {simulatedDataEnabled ? <Eye className="h-3 w-3 shrink-0" /> : <EyeOff className="h-3 w-3 shrink-0" />}
-                  <span className="truncate">{simulatedDataEnabled ? 'Données simulées ON' : 'Données simulées OFF'}</span>
-                </button>
-                {simulatedDataEnabled && (
-                  <Badge variant="outline" className="text-[9px] mt-1 ml-2 border-orange-500/40 text-orange-500">
-                    Simulé
-                  </Badge>
-                )}
-                <button
-                  onClick={() => setShowContentArchitect(true)}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-                >
-                  <PenLine className="h-3 w-3 shrink-0" />
-                  <span className="truncate">Content Architect (crawlers.fr)</span>
-                </button>
-              </div>
-            )}
-          </nav>
-
-          <div className="flex-1 min-w-0">
-            {renderContent()}
+            </div>
+            <div className="min-w-0">
+              {renderContent()}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* ── Desktop: sidebar + content ── */
+          <div className="flex gap-4 min-h-[600px]">
+            <nav className="w-48 shrink-0 space-y-4">
+              {navGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-2 mb-1">
+                    {group.label}
+                  </p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors text-left",
+                            isActive
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate flex-1">{item.label}</span>
+                          {notifCount > 0 && (
+                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                              {notifCount > 99 ? '99+' : notifCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {!readOnly && (
+                <div className="pt-2 border-t border-border/40 space-y-1">
+                  <button
+                    onClick={toggleDocsVisibility}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                  >
+                    {docsHiddenForViewers ? <EyeOff className="h-3 w-3 shrink-0" /> : <Eye className="h-3 w-3 shrink-0" />}
+                    <span className="truncate">{docsHiddenForViewers ? t.hideDocsForViewers : t.showDocsForViewers}</span>
+                  </button>
+                  {docsHiddenForViewers && (
+                    <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
+                      Masqué
+                    </Badge>
+                  )}
+                  <button
+                    onClick={toggleSimulatedData}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                  >
+                    {simulatedDataEnabled ? <Eye className="h-3 w-3 shrink-0" /> : <EyeOff className="h-3 w-3 shrink-0" />}
+                    <span className="truncate">{simulatedDataEnabled ? 'Données simulées ON' : 'Données simulées OFF'}</span>
+                  </button>
+                  {simulatedDataEnabled && (
+                    <Badge variant="outline" className="text-[9px] mt-1 ml-2 border-orange-500/40 text-orange-500">
+                      Simulé
+                    </Badge>
+                  )}
+                  <button
+                    onClick={() => setShowContentArchitect(true)}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                  >
+                    <PenLine className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Content Architect (crawlers.fr)</span>
+                  </button>
+                </div>
+              )}
+            </nav>
+
+            <div className="flex-1 min-w-0">
+              {renderContent()}
+            </div>
+          </div>
+        )}
       </div>
       </AdminAnalyticsProvider>
     </AdminProvider>
