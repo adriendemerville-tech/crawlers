@@ -69,6 +69,7 @@ interface SupervisorAnalysis {
 function KillSwitchesPanel() {
   const [ctoEnabled, setCtoEnabled] = useState(true);
   const [supervisorEnabled, setSupervisorEnabled] = useState(true);
+  const [supervisorModel, setSupervisorModel] = useState<'sonnet' | 'haiku'>('sonnet');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,12 +77,13 @@ function KillSwitchesPanel() {
       const { data } = await supabase
         .from('system_config' as any)
         .select('key, value')
-        .in('key', ['cto_agent_enabled', 'supervisor_enabled']);
+        .in('key', ['cto_agent_enabled', 'supervisor_enabled', 'supervisor_model']);
       
       const configs = (data || []) as any[];
       for (const c of configs) {
         if (c.key === 'cto_agent_enabled') setCtoEnabled(c.value?.enabled ?? true);
         if (c.key === 'supervisor_enabled') setSupervisorEnabled(c.value?.enabled ?? true);
+        if (c.key === 'supervisor_model') setSupervisorModel(c.value?.model === 'haiku' ? 'haiku' : 'sonnet');
       }
       setLoading(false);
     })();
@@ -100,6 +102,22 @@ function KillSwitchesPanel() {
       toast.error('Erreur lors du basculement');
     } else {
       toast.success(`${target === 'cto_agent_enabled' ? 'Agent CTO' : 'Supervisor'} ${newState ? 'activé' : 'désactivé'}`);
+    }
+  };
+
+  const toggleModel = async (useSonnet: boolean) => {
+    const newModel = useSonnet ? 'sonnet' : 'haiku';
+    setSupervisorModel(newModel);
+
+    const { error } = await supabase.functions.invoke('supervisor-actions', {
+      body: { action: 'toggle_killswitch', target: 'supervisor_model', enabled: true, model: newModel },
+    });
+
+    if (error) {
+      setSupervisorModel(newModel === 'sonnet' ? 'haiku' : 'sonnet');
+      toast.error('Erreur lors du changement de modèle');
+    } else {
+      toast.success(`Supervisor → Claude ${newModel === 'sonnet' ? '3.5 Sonnet' : '3 Haiku'}`);
     }
   };
 
@@ -127,6 +145,17 @@ function KillSwitchesPanel() {
             <Label className="text-xs font-medium">Supervisor</Label>
           </div>
           <Switch checked={supervisorEnabled} onCheckedChange={(v) => toggleSwitch('supervisor_enabled', v)} />
+        </div>
+        <div className="flex items-center justify-between border-t border-border/50 pt-3">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs font-medium text-muted-foreground">
+              {supervisorModel === 'sonnet' ? '🟣 Sonnet' : '🔵 Haiku'}
+            </Label>
+            <span className="text-[10px] text-muted-foreground/60">
+              {supervisorModel === 'sonnet' ? '~$3/M tok' : '~$0.25/M tok'}
+            </span>
+          </div>
+          <Switch checked={supervisorModel === 'sonnet'} onCheckedChange={toggleModel} />
         </div>
       </CardContent>
     </Card>
