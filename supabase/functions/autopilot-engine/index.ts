@@ -1314,7 +1314,7 @@ try {
             updated_at: new Date().toISOString(),
             // force_content_cycle stays true by default (proactive mode)
             // Only reset force_iktracker_article which is a one-shot toggle
-            force_iktracker_article: false,
+            force_iktracker_article: cycleSuccess ? false : config.force_iktracker_article,
           })
           .eq('id', config.id);
 
