@@ -1314,6 +1314,7 @@ try {
               }
             } catch (e) {
               executionResults.push({ function: funcName, status: 'error', error: e instanceof Error ? e.message : 'unknown' });
+              phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: e instanceof Error ? e.message : 'unknown', retryable: false });
               executionSuccess = false;
             }
           }
