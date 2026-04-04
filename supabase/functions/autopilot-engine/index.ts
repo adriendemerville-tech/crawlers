@@ -838,7 +838,10 @@ try {
                       result: funcResult,
                       image_generated: !!cmsAction.body?.image_url,
                     });
-                    if (!funcResponse.ok) executionSuccess = false;
+                    if (!funcResponse.ok) {
+                      phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'iktracker-actions',
@@ -847,6 +850,7 @@ try {
                       status: 'error',
                       error: actionErr instanceof Error ? actionErr.message : 'unknown',
                     });
+                    phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
