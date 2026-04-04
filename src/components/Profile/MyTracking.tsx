@@ -1,6 +1,7 @@
 import { useState, useCallback, ElementType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
