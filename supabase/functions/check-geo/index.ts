@@ -850,6 +850,7 @@ Deno.serve(async (req) => {
     const jsMetaDetection = detectJsGeneratedMeta(pageHtml);
     const intentResult = analyzeDirectAnswer(contentResult.titleText, contentResult.h1Text, contentResult.first150Words, metaResult.description);
     const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
+    const readabilityResult = analyzeReadability(doc);
 
     // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
     // c'est un SPA/JS-heavy qui n'a pas été rendu correctement — appliquer scoring neutre
@@ -858,19 +859,111 @@ Deno.serve(async (req) => {
       isSPAWithLimitedContent = true;
     }
 
+// ============================================================================
+// ANALYSE DE LISIBILITÉ (Flesch-Kincaid adapté FR, Coleman-Liau, ARI)
+// ============================================================================
+
+function countSyllablesFr(word: string): number {
+  // French syllable estimation: count vowel groups, adjust for silent 'e'
+  const w = word.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/g, '');
+  if (w.length <= 2) return 1;
+  
+  let count = 0;
+  const vowels = /[aeiouyàâäéèêëïîôùûüÿœæ]/i;
+  let prevVowel = false;
+  
+  for (let i = 0; i < w.length; i++) {
+    const isVowel = vowels.test(w[i]);
+    if (isVowel && !prevVowel) count++;
+    prevVowel = isVowel;
+  }
+  
+  // Silent trailing 'e' in French (unless it's the only vowel)
+  if (w.endsWith('e') && count > 1 && !w.endsWith('ée') && !w.endsWith('ie') && !w.endsWith('ue')) {
+    count--;
+  }
+  // Common French endings that don't add syllables
+  if (w.endsWith('es') && count > 1) count--;
+  if (w.endsWith('ent') && count > 1 && w.length > 4) count--;
+  
+  return Math.max(1, count);
+}
+
+function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
+  fleschScore: number;       // 0-100 (higher = easier)
+  colemanLiauGrade: number;  // US grade level
+  ariScore: number;          // Automated Readability Index
+  avgWordsPerSentence: number;
+  avgSyllablesPerWord: number;
+  sentenceCount: number;
+  wordCount: number;
+} {
+  const defaultResult = { fleschScore: 50, colemanLiauGrade: 12, ariScore: 12, avgWordsPerSentence: 0, avgSyllablesPerWord: 0, sentenceCount: 0, wordCount: 0 };
+  if (!doc) return defaultResult;
+  
+  const body = doc.querySelector('body');
+  if (!body) return defaultResult;
+  
+  const clone = body.cloneNode(true) as Element;
+  clone.querySelectorAll('script, style, noscript, nav, header, footer, [role="navigation"]').forEach((el: Element) => el.remove());
+  const rawText = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  
+  if (rawText.length < 100) return defaultResult;
+  
+  // Split sentences (French punctuation)
+  const sentences = rawText.split(/[.!?…]+/).filter(s => s.trim().split(/\s+/).length >= 3);
+  const sentenceCount = Math.max(1, sentences.length);
+  
+  const words = rawText.split(/\s+/).filter(w => w.replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/gi, '').length >= 2);
+  const wordCount = words.length;
+  if (wordCount < 30) return defaultResult;
+  
+  const totalSyllables = words.reduce((sum, w) => sum + countSyllablesFr(w), 0);
+  const totalChars = words.reduce((sum, w) => sum + w.replace(/[^a-zàâäéèêëïîôùûüÿçœæ]/gi, '').length, 0);
+  
+  const avgWordsPerSentence = wordCount / sentenceCount;
+  const avgSyllablesPerWord = totalSyllables / wordCount;
+  const avgCharsPerWord = totalChars / wordCount;
+  
+  // Flesch-Kincaid adapted for French (Kandel & Moles, 1958)
+  // Score: 207 - 1.015 * ASL - 73.6 * ASW
+  const fleschScore = Math.round(Math.min(100, Math.max(0, 
+    207 - 1.015 * avgWordsPerSentence - 73.6 * avgSyllablesPerWord
+  )));
+  
+  // Coleman-Liau Index: 0.0588 * L - 0.296 * S - 15.8
+  // L = avg letters per 100 words, S = avg sentences per 100 words
+  const L = (avgCharsPerWord * 100);
+  const S = (sentenceCount / wordCount) * 100;
+  const colemanLiauGrade = Math.round(Math.max(0, 0.0588 * L - 0.296 * S - 15.8) * 10) / 10;
+  
+  // ARI: 4.71 * (chars/words) + 0.5 * (words/sentences) - 21.43
+  const ariScore = Math.round((4.71 * avgCharsPerWord + 0.5 * avgWordsPerSentence - 21.43) * 10) / 10;
+  
+  return {
+    fleschScore,
+    colemanLiauGrade,
+    ariScore,
+    avgWordsPerSentence: Math.round(avgWordsPerSentence * 10) / 10,
+    avgSyllablesPerWord: Math.round(avgSyllablesPerWord * 100) / 100,
+    sentenceCount,
+    wordCount,
+  };
+}
+
 
     const factors: GeoFactor[] = [];
 
-    // Factor 1: AI Bots Access (15 points)
-    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 15);
+    // Factor 1: AI Bots Access (10 points) — reduced from 15 to make room for readability
+    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 10);
     factors.push({
       id: 'ai-bots',
       name: t.factors.aiBots.name,
       description: t.factors.aiBots.description,
       score: aiBotScore,
-      maxScore: 15,
-      status: aiBotScore >= 13 ? 'good' : aiBotScore >= 8 ? 'warning' : 'error',
-      recommendation: aiBotScore < 15 
+      maxScore: 10,
+      status: aiBotScore >= 8 ? 'good' : aiBotScore >= 5 ? 'warning' : 'error',
+      recommendation: aiBotScore < 10 
         ? t.factors.aiBots.recommendation(aiBotsResult.blocked.join(', '))
         : undefined,
       details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
@@ -907,25 +1000,24 @@ Deno.serve(async (req) => {
       isJsGenerated: jsMetaDetection.isMetaDescJsGenerated || undefined
     });
 
-    // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
+    // Factor 3: Structured Data (10 points) — reduced from 15 to make room for readability
     let structuredScore = 0;
     let structuredDetails = t.details.noStructuredData;
     
     if (structuredData.hasJsonLd) {
       if (structuredData.isValid) {
-        structuredScore = 15;
+        structuredScore = 10;
         structuredDetails = t.details.foundTypes(structuredData.types.join(', '));
         if (structuredData.isJsGenerated) {
-          structuredScore = Math.max(0, structuredScore - 3);
-          console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-3)');
+          structuredScore = Math.max(0, structuredScore - 2);
+          console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-2)');
         }
       } else {
-        structuredScore = 5;
+        structuredScore = 4;
         structuredDetails = `JSON-LD détecté mais ${structuredData.parseErrors.length} erreur(s) de parsing. Types trouvés: ${structuredData.types.join(', ') || 'aucun'}`;
       }
     } else if (isSPAWithLimitedContent) {
-      // SPA sans rendu : on ne peut pas savoir si JSON-LD est injecté par JS
-      structuredScore = 8;
+      structuredScore = 5;
       structuredDetails = '⚠️ SPA détecté — les données structurées peuvent être injectées par JavaScript';
     }
 
@@ -934,9 +1026,9 @@ Deno.serve(async (req) => {
       name: t.factors.structuredData.name,
       description: t.factors.structuredData.description,
       score: structuredScore,
-      maxScore: 15,
-      status: structuredScore === 15 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
-      recommendation: structuredScore < 15 
+      maxScore: 10,
+      status: structuredScore === 10 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
+      recommendation: structuredScore < 10 
         ? (isSPAWithLimitedContent && !structuredData.hasJsonLd
           ? 'SPA détecté — vérifiez que vos données structurées sont accessibles sans JavaScript (SSR recommandé).'
           : structuredData.parseErrors.length > 0 
@@ -1178,6 +1270,50 @@ Deno.serve(async (req) => {
       status: faqStatus,
       recommendation: faqScore < 5 ? t.factors.faqOrSummary.recommendation : undefined,
       details: isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : faqResult.details
+    });
+
+    // Factor 11: Readability / Lisibilité (10 points)
+    let readabilityScore = 0;
+    let readabilityDetails = '';
+    let readabilityStatus: 'good' | 'warning' | 'error' = 'error';
+    let readabilityRecommendation: string | undefined;
+    
+    if (isSPAWithLimitedContent) {
+      readabilityScore = 5;
+      readabilityDetails = '⚠️ SPA détecté — analyse de lisibilité limitée sans rendu JS';
+      readabilityStatus = 'warning';
+    } else if (readabilityResult.wordCount < 30) {
+      readabilityScore = 3;
+      readabilityDetails = `Contenu insuffisant pour évaluer la lisibilité (${readabilityResult.wordCount} mots)`;
+      readabilityStatus = 'warning';
+      readabilityRecommendation = t.factors.readability.lowContent;
+    } else {
+      const flesch = readabilityResult.fleschScore;
+      // Flesch FR: 60-100 = facile (bon pour GEO), 40-60 = moyen, <40 = difficile
+      if (flesch >= 60) {
+        readabilityScore = 10;
+        readabilityStatus = 'good';
+      } else if (flesch >= 40) {
+        readabilityScore = 6;
+        readabilityStatus = 'warning';
+        readabilityRecommendation = t.factors.readability.moderate;
+      } else {
+        readabilityScore = 2;
+        readabilityStatus = 'error';
+        readabilityRecommendation = t.factors.readability.difficult;
+      }
+      readabilityDetails = `Flesch-FR: ${flesch}/100 | Coleman-Liau: grade ${readabilityResult.colemanLiauGrade} | ARI: ${readabilityResult.ariScore} | ${readabilityResult.avgWordsPerSentence} mots/phrase | ${readabilityResult.sentenceCount} phrases`;
+    }
+    
+    factors.push({
+      id: 'readability',
+      name: t.factors.readability.name,
+      description: t.factors.readability.description,
+      score: readabilityScore,
+      maxScore: 10,
+      status: readabilityStatus,
+      recommendation: readabilityRecommendation,
+      details: readabilityDetails
     });
 
 

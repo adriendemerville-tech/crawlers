@@ -67,6 +67,13 @@ export interface GeoTranslations {
       description: string;
       recommendation: string;
     };
+    readability: {
+      name: string;
+      description: string;
+      moderate: string;
+      difficult: string;
+      lowContent: string;
+    };
   };
   details: {
     botsAllowed: (allowed: number, total: number) => string;
@@ -152,6 +159,13 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         description: 'Présence d\'une FAQ ou d\'un résumé en haut de page (TL;DR)',
         recommendation: 'Ajoutez une section FAQ (avec balisage Schema FAQ) ou un résumé (TL;DR) en début d\'article pour faciliter l\'extraction par les IA',
       },
+      readability: {
+        name: 'Lisibilité du Contenu',
+        description: 'Indice de lisibilité Flesch-Kincaid adapté au français — un texte lisible est plus facilement cité par les IA',
+        moderate: 'Texte de complexité moyenne. Raccourcissez les phrases longues et simplifiez le vocabulaire technique pour améliorer la citabilité IA',
+        difficult: 'Texte trop complexe pour une citation IA optimale. Visez des phrases de 15-20 mots, évitez le jargon non défini et privilégiez la voix active',
+        lowContent: 'Ajoutez plus de contenu textuel pour permettre une analyse de lisibilité fiable (minimum 100 mots)',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} bots IA autorisés`,
@@ -224,6 +238,13 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         description: 'FAQ section or summary (TL;DR) at the top of the page',
         recommendation: 'Add a FAQ section (with Schema FAQ markup) or a summary (TL;DR) at the beginning of your article for easier AI extraction',
       },
+      readability: {
+        name: 'Content Readability',
+        description: 'Flesch-Kincaid readability index — readable text is more easily cited by AI engines',
+        moderate: 'Moderate complexity text. Shorten long sentences and simplify technical vocabulary to improve AI citability',
+        difficult: 'Text too complex for optimal AI citation. Aim for 15-20 word sentences, avoid undefined jargon, and prefer active voice',
+        lowContent: 'Add more text content to allow a reliable readability analysis (minimum 100 words)',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} AI bots allowed`,
@@ -295,6 +316,13 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         name: 'FAQ o Resumen al Inicio',
         description: 'Sección FAQ o resumen (TL;DR) al inicio de la página',
         recommendation: 'Agregue una sección FAQ (con marcado Schema FAQ) o un resumen (TL;DR) al inicio de su artículo para facilitar la extracción por IA',
+      },
+      readability: {
+        name: 'Legibilidad del Contenido',
+        description: 'Índice de legibilidad Flesch-Kincaid — un texto legible es más fácilmente citado por las IA',
+        moderate: 'Texto de complejidad media. Acorte las frases largas y simplifique el vocabulario técnico para mejorar la citabilidad IA',
+        difficult: 'Texto demasiado complejo para una citación IA óptima. Apunte a frases de 15-20 palabras, evite jerga no definida y prefiera la voz activa',
+        lowContent: 'Agregue más contenido textual para permitir un análisis de legibilidad confiable (mínimo 100 palabras)',
       },
     },
     details: {
