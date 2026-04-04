@@ -525,7 +525,7 @@ export function MyTracking() {
                           </Button>
                         )}
 
-                        {!h.gscConnected && (
+                        {!h.gscConnected && !isMobile && (
                           <Button
                             size="sm"
                             variant="outline"
