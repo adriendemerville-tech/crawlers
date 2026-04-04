@@ -321,4 +321,4 @@ const supabase = getServiceClient()
     await trackEdgeFunctionError('auto-measure-predictions', msg).catch(() => {})
     return jsonError(msg, 500)
   }
-})
+}));
