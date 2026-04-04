@@ -29,6 +29,7 @@ import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
+import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
@@ -244,6 +245,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
         { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
+        { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
       ],
     },
   ];
@@ -277,6 +279,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'parmenion': return <ParmenionDashboard />;
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
+      case 'prospects': return <ProspectPipelineDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };

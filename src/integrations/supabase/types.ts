@@ -5171,6 +5171,78 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_prospects: {
+        Row: {
+          company: string | null
+          created_at: string
+          first_name: string
+          id: string
+          industry: string | null
+          job_title: string | null
+          language: string
+          last_interaction_date: string | null
+          last_name: string
+          last_post_date: string | null
+          linkedin_url: string | null
+          marina_audit_id: string | null
+          marina_report_url: string | null
+          notes: string | null
+          raw_data: Json | null
+          score: number | null
+          score_details: Json | null
+          source: string | null
+          status: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          language?: string
+          last_interaction_date?: string | null
+          last_name: string
+          last_post_date?: string | null
+          linkedin_url?: string | null
+          marina_audit_id?: string | null
+          marina_report_url?: string | null
+          notes?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          score_details?: Json | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          language?: string
+          last_interaction_date?: string | null
+          last_name?: string
+          last_post_date?: string | null
+          linkedin_url?: string | null
+          marina_audit_id?: string | null
+          marina_report_url?: string | null
+          notes?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          score_details?: Json | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       marina_training_data: {
         Row: {
           broken_links_count: number | null
@@ -6477,6 +6549,56 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      prospect_outreach_queue: {
+        Row: {
+          created_at: string
+          id: string
+          message_content: string | null
+          message_language: string
+          message_type: string
+          prospect_id: string
+          replied_at: string | null
+          report_share_url: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_content?: string | null
+          message_language?: string
+          message_type?: string
+          prospect_id: string
+          replied_at?: string | null
+          report_share_url?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_content?: string | null
+          message_language?: string
+          message_type?: string
+          prospect_id?: string
+          replied_at?: string | null
+          report_share_url?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_outreach_queue_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "marina_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_questions: {
         Row: {
