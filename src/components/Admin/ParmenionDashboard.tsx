@@ -234,28 +234,28 @@ export function ParmenionDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", isMobile && "overflow-x-auto pb-1 -mx-1 px-1")}>
           <Button
             variant={isPaused ? 'default' : 'outline'}
             size="sm"
             onClick={handlePauseResume}
-            className="gap-2"
+            className="gap-1.5 shrink-0"
           >
             {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             {isPaused ? 'Reprendre' : 'Pause'}
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePurge} className="gap-2 text-destructive hover:text-destructive">
+          <Button variant="outline" size="sm" onClick={handlePurge} className="gap-1.5 text-destructive hover:text-destructive shrink-0">
             <Trash2 className="h-4 w-4" />
             Purge
           </Button>
-          <Button variant="default" size="sm" onClick={handleNewAction} className="gap-2">
+          <Button variant="default" size="sm" onClick={handleNewAction} className="gap-1.5 shrink-0">
             <Plus className="h-4 w-4" />
-            Nouvelle action
+            {isMobile ? 'Nouvelle' : 'Nouvelle action'}
           </Button>
           <Button
             variant={autopilotConfig?.force_iktracker_article ? 'default' : 'outline'}
             size="sm"
-            className={cn("gap-2", autopilotConfig?.force_iktracker_article && "bg-amber-500 hover:bg-amber-600 text-black")}
+            className={cn("gap-1.5 shrink-0", autopilotConfig?.force_iktracker_article && "bg-amber-500 hover:bg-amber-600 text-black")}
             disabled={!autopilotConfig?.config_id}
             onClick={async () => {
               const newVal = !autopilotConfig?.force_iktracker_article;
@@ -273,9 +273,9 @@ export function ParmenionDashboard() {
             }}
           >
             <Pencil className="h-4 w-4" />
-            {autopilotConfig?.force_iktracker_article ? '📝 Article IK : ON' : 'Article IK'}
+            {autopilotConfig?.force_iktracker_article ? '📝 IK:ON' : 'Article IK'}
           </Button>
-          <Button variant="ghost" size="icon" onClick={fetchLogs}>
+          <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
