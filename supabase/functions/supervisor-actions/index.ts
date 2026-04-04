@@ -190,6 +190,7 @@ ERREURS POST-DÉPLOIEMENT sur ces fonctions (7 derniers jours) :
 \`\`\`json
 ${errorsData}
 \`\`\`
+${operationalContext || ''}
 
 Audite chaque correction : logique, impact, régressions. Note chaque correction en vert/orange.
 Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.`
