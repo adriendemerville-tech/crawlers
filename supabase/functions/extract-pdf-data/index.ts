@@ -184,15 +184,15 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     }
 
     const aiResp = await callOpenRouter({
-      model: 'anthropic/claude-3.5-sonnet',
+      model: 'mistralai/mistral-large-latest',
       messages,
       referer: supabaseUrl,
     });
 
     const rawContent = aiResp.content;
 
-    await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiResp.usage, targetDomain);
-    trackPaidApiCall('extract-pdf-data', 'openrouter', 'anthropic/claude-3.5-sonnet', targetDomain);
+    await trackTokenUsage('extract-pdf-data', 'mistralai/mistral-large-latest', aiResp.usage, targetDomain);
+    trackPaidApiCall('extract-pdf-data', 'openrouter', 'mistralai/mistral-large-latest', targetDomain);
 
     // 7. Parse JSON
     const jsonMatch = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
