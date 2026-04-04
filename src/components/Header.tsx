@@ -370,14 +370,34 @@ export function Header() {
               </Button>
           )}
 
-          {/* Matrice d'audit - console only, centered between Content and user avatar */}
+          {/* Console-only shortcuts: Audit, Crawl, Comparé, Matrice */}
           {location.pathname === '/app/console' && (
-            <Link to="/matrice">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <Grid3X3 className="h-3.5 w-3.5" />
-                <span className="text-sm">Matrice</span>
-              </Button>
-            </Link>
+            <div className="flex items-center gap-0.5">
+              <Link to="/audit-expert" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isAuditExpertPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Sparkles className="h-3 w-3" />
+                  Audit
+                </Button>
+              </Link>
+              <Link to="/app/site-crawl" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${isCrawlPage ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Bug className="h-3 w-3" />
+                  Crawl
+                </Button>
+              </Link>
+              <Link to="/app/audit-compare" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${location.pathname === '/app/audit-compare' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Scale className="h-3 w-3" />
+                  Comparé
+                </Button>
+              </Link>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+                  <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Matrice
+                </Button>
+              </Link>
+            </div>
           )}
 
           {!loading && (
