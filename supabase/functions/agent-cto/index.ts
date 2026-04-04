@@ -978,6 +978,7 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
         gsc_samples: reliability.snapshots_with_gsc,
       },
       version: logEntry.prompt_version_after || currentVersion,
+      llm_cost: costAcc.summary,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
