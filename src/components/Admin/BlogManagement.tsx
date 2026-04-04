@@ -438,14 +438,14 @@ export function BlogManagement() {
               <p>Aucun article trouvé</p>
             </div>
           ) : (
-            <div className="rounded-lg border overflow-hidden">
+            <div className="rounded-lg border overflow-hidden overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Article</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-xs w-[50%] sm:w-[40%]">Article</TableHead>
+                    <TableHead className="text-xs">Statut</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
