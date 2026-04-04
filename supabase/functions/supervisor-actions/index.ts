@@ -349,17 +349,20 @@ try {
       // Extract unique function names modified by CTO
       const functionNames = [...new Set(corrections.map((c: any) => c.function_analyzed).filter(Boolean))]
 
-      // Read source code for each modified function + check post-deploy errors + enriched context
-      const [functionSources, postErrors, agentContext] = await Promise.all([
+      // Read source code for each modified function + check post-deploy errors + enriched context + patch effectiveness
+      const [functionSources, postErrors, agentContext, patchHistory] = await Promise.all([
         Promise.all(functionNames.map(async (name: string) => {
           const src = await readFunctionSource(supabase, name)
           return [name, src] as [string, string]
         })).then(entries => Object.fromEntries(entries)),
         getPostDeployErrors(supabase, functionNames as string[]),
         getAgentContext({ agent: 'supervisor', days: 7 }).catch(() => null),
+        fetchPatchEffectiveness(supabase, 30),
       ])
 
-      const analysis = await auditCorrections(corrections, functionSources, postErrors, agentContext?.promptSnippet)
+      const patchContext = buildPatchEffectivenessContext(patchHistory)
+      const fullContext = (agentContext?.promptSnippet || '') + patchContext
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, fullContext)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({
