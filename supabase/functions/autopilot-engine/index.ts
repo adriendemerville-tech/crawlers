@@ -1010,7 +1010,10 @@ try {
                     keyword: funcBody.keyword,
                     result: funcResult,
                   });
-                  if (!funcResponse.ok) executionSuccess = false;
+                  if (!funcResponse.ok) {
+                    phaseErrors.push({ phase, function: funcName, severity: 'degraded', message: `content-architecture-advisor sync failed: HTTP ${funcResponse.status}`, retryable: true });
+                    executionSuccess = false;
+                  }
                 }
               } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
                 // ── CMS Push Draft: unified draft push for non-IKTracker CMS ──
