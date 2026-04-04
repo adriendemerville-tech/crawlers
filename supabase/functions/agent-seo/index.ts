@@ -786,6 +786,7 @@ Deno.serve(async (req) => {
       confidence,
       summary,
       improvements_count: parsedImprovements?.improvements?.length || 0,
+      proposals_created: proposalsCreated,
       priority_fixes: parsedImprovements?.priority_fixes || [],
       status: logEntry.status,
     }), {
