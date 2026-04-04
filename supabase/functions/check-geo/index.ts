@@ -999,25 +999,24 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
       isJsGenerated: jsMetaDetection.isMetaDescJsGenerated || undefined
     });
 
-    // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
+    // Factor 3: Structured Data (10 points) — reduced from 15 to make room for readability
     let structuredScore = 0;
     let structuredDetails = t.details.noStructuredData;
     
     if (structuredData.hasJsonLd) {
       if (structuredData.isValid) {
-        structuredScore = 15;
+        structuredScore = 10;
         structuredDetails = t.details.foundTypes(structuredData.types.join(', '));
         if (structuredData.isJsGenerated) {
-          structuredScore = Math.max(0, structuredScore - 3);
-          console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-3)');
+          structuredScore = Math.max(0, structuredScore - 2);
+          console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-2)');
         }
       } else {
-        structuredScore = 5;
+        structuredScore = 4;
         structuredDetails = `JSON-LD détecté mais ${structuredData.parseErrors.length} erreur(s) de parsing. Types trouvés: ${structuredData.types.join(', ') || 'aucun'}`;
       }
     } else if (isSPAWithLimitedContent) {
-      // SPA sans rendu : on ne peut pas savoir si JSON-LD est injecté par JS
-      structuredScore = 8;
+      structuredScore = 5;
       structuredDetails = '⚠️ SPA détecté — les données structurées peuvent être injectées par JavaScript';
     }
 
@@ -1026,9 +1025,9 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
       name: t.factors.structuredData.name,
       description: t.factors.structuredData.description,
       score: structuredScore,
-      maxScore: 15,
-      status: structuredScore === 15 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
-      recommendation: structuredScore < 15 
+      maxScore: 10,
+      status: structuredScore === 10 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
+      recommendation: structuredScore < 10 
         ? (isSPAWithLimitedContent && !structuredData.hasJsonLd
           ? 'SPA détecté — vérifiez que vos données structurées sont accessibles sans JavaScript (SSR recommandé).'
           : structuredData.parseErrors.length > 0 
