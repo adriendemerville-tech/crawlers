@@ -1111,13 +1111,17 @@ try {
                       patches_failed: funcResult.patches_failed,
                       result: funcResult,
                     });
-                    if (!funcResponse.ok || !funcResult.success) executionSuccess = false;
+                    if (!funcResponse.ok || !funcResult.success) {
+                      phaseErrors.push({ phase, function: 'cms-patch-content', severity: 'degraded', message: `Patch failed: ${funcResult.error || funcResponse.status}`, retryable: true });
+                      executionSuccess = false;
+                    }
                   } catch (actionErr) {
                     executionResults.push({
                       function: 'cms-patch-content',
                       status: 'error',
                       detail: actionErr instanceof Error ? actionErr.message : String(actionErr),
                     });
+                    phaseErrors.push({ phase, function: 'cms-patch-content', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
                     executionSuccess = false;
                   }
                 }
