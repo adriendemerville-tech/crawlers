@@ -4,6 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
+import { getAgentContext } from '../_shared/getAgentContext.ts';
 
 /**
  * Agent SEO Autonome v2
