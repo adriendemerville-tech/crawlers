@@ -282,7 +282,7 @@ export function ParmenionDashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+      <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-6")}>
         <Card className="py-2">
           <CardHeader className="pb-1 pt-2 px-3">
             <CardTitle className="text-xs font-medium">État</CardTitle>
