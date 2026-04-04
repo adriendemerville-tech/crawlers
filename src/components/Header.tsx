@@ -386,7 +386,7 @@ export function Header() {
                 </Button>
               </Link>
               <Link to="/app/audit-compare" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs ${location.pathname === '/app/audit-compare' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-muted-foreground hover:text-foreground`}>
                   <Scale className="h-3 w-3" />
                   Comparé
                 </Button>
