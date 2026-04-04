@@ -362,8 +362,9 @@ try {
               status: 'failed',
             });
 
+            hasCriticalError = true;
             cycleSuccess = false;
-            break; // Stop pipeline on error but don't skip the whole site
+            break; // Critical: orchestrator failed, can't continue
           }
 
           const decision = orchestratorResult.decision;
