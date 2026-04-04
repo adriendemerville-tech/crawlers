@@ -5,6 +5,7 @@ import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getAgentContext } from '../_shared/getAgentContext.ts';
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -787,10 +788,11 @@ Réponds UNIQUEMENT en JSON :
       });
     }
 
-    // ─── Phase 1: Gather real evidence ──────────────────────────────
-    const [champion, reliability] = await Promise.all([
+    // ─── Phase 1: Gather real evidence + enriched context ──────────
+    const [champion, reliability, agentContext] = await Promise.all([
       getChampionPrompt(supabase, functionName),
       getReliabilityProfile(supabase, functionName),
+      getAgentContext({ agent: 'cto', domain, days: 7 }).catch(() => null),
     ])
 
     const currentVersion = champion?.version || 0
@@ -869,8 +871,10 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ---
 ${auditSummary}
 ---
+${agentContext?.promptSnippet || ''}
 
-Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}`
+Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}
+Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour prioriser tes recommandations.`
 
     console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 

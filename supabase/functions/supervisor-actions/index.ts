@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getAgentContext } from '../_shared/getAgentContext.ts';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
@@ -123,7 +124,7 @@ async function auditAssistantQuality(supabase: any): Promise<any> {
 }
 
 // ─── AI: Audit CTO corrections quality & impact ─────────────────────
-async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[]): Promise<any> {
+async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[], operationalContext?: string): Promise<any> {
   const systemPrompt = `Tu es le SUPERVISOR, un auditeur qualité des corrections déployées par l'Agent CTO.
 
 TON RÔLE (NOUVEAU) :
@@ -189,6 +190,7 @@ ERREURS POST-DÉPLOIEMENT sur ces fonctions (7 derniers jours) :
 \`\`\`json
 ${errorsData}
 \`\`\`
+${operationalContext || ''}
 
 Audite chaque correction : logique, impact, régressions. Note chaque correction en vert/orange.
 Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.`
@@ -311,16 +313,17 @@ try {
       // Extract unique function names modified by CTO
       const functionNames = [...new Set(corrections.map((c: any) => c.function_analyzed).filter(Boolean))]
 
-      // Read source code for each modified function + check post-deploy errors
-      const [functionSources, postErrors] = await Promise.all([
+      // Read source code for each modified function + check post-deploy errors + enriched context
+      const [functionSources, postErrors, agentContext] = await Promise.all([
         Promise.all(functionNames.map(async (name: string) => {
           const src = await readFunctionSource(supabase, name)
           return [name, src] as [string, string]
         })).then(entries => Object.fromEntries(entries)),
         getPostDeployErrors(supabase, functionNames as string[]),
+        getAgentContext({ agent: 'supervisor', days: 7 }).catch(() => null),
       ])
 
-      const analysis = await auditCorrections(corrections, functionSources, postErrors)
+      const analysis = await auditCorrections(corrections, functionSources, postErrors, agentContext?.promptSnippet)
 
       // Log into supervisor_logs (NOT cto_agent_logs)
       await supabase.from('supervisor_logs').insert({

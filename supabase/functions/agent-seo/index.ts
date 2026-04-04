@@ -4,6 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
+import { getAgentContext } from '../_shared/getAgentContext.ts';
 
 /**
  * Agent SEO Autonome v2
@@ -358,6 +359,7 @@ async function generateImprovements(
   target: PageTarget,
   score: SeoScoreV2,
   siteContext: any,
+  operationalContext?: string,
 ): Promise<{ improvements: string; confidence: number; tokens: { input: number; output: number } }> {
   const prudenceLevel = target.type === 'landing'
     ? `MODE PRUDENT : Max 10% de modification. Micro-optimisations : titres, 1-2 mots-clés, CTA. NE CHANGE PAS la structure.`
@@ -403,6 +405,7 @@ CONTRAINTES :
 - Ton professionnel expert
 - Pas de promotionnel excessif
 - Rester factuel
+${operationalContext ? `\n${operationalContext}\nUtilise ces retours terrain pour prioriser les améliorations les plus impactantes.` : ''}
 
 Réponds UNIQUEMENT en JSON :
 {
@@ -695,10 +698,11 @@ Deno.serve(async (req) => {
 
     console.log(`[AGENT-SEO] 🎯 Cible: ${target.type} — ${target.slug} (${target.url})`);
 
-    // Fetch site identity card (like strategic audit) + page content in parallel
-    const [siteContext, pageData] = await Promise.all([
+    // Fetch site identity card + page content + enriched context in parallel
+    const [siteContext, pageData, agentContext] = await Promise.all([
       getSiteContext(supabase, { domain: 'crawlers.fr' }).catch(() => null),
       fetchPageHtml(`${siteBaseUrl}${target.url}`),
+      getAgentContext({ agent: 'seo', domain: 'crawlers.fr', days: 7 }).catch(() => null),
     ]);
 
     if (!pageData || pageData.textContent.length < 100) {
@@ -716,9 +720,10 @@ Deno.serve(async (req) => {
     const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, target.type);
     console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}`);
 
-    // Generate improvements via Lovable AI (context-enriched)
+    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies)
     const { improvements, confidence, tokens } = await generateImprovements(
       pageData.html, pageData.textContent, target, scoreBefore, siteContext,
+      agentContext?.promptSnippet,
     );
 
     // Parse improvements
