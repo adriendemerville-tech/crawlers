@@ -2997,6 +2997,7 @@ export type Database = {
       }
       cto_code_proposals: {
         Row: {
+          agent_source: string
           confidence_score: number | null
           created_at: string
           deployed_at: string | null
@@ -3018,6 +3019,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_source?: string
           confidence_score?: number | null
           created_at?: string
           deployed_at?: string | null
@@ -3039,6 +3041,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_source?: string
           confidence_score?: number | null
           created_at?: string
           deployed_at?: string | null

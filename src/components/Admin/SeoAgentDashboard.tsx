@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { SeoCodeProposals } from './SeoCodeProposals';
 
 interface SeoLog {
   id: string;
@@ -58,7 +59,7 @@ export function SeoAgentDashboard() {
       if (data?.success) {
         toast({
           title: `✅ Agent SEO — ${data.target?.slug}`,
-          description: `Score ${data.score_before} → ${data.score_after} · ${data.improvements_count} améliorations`,
+          description: `Score ${data.score_before} → ${data.score_after} · ${data.proposals_created || data.improvements_count} proposition(s) créée(s)`,
         });
         fetchLogs();
       } else {
@@ -268,6 +269,9 @@ export function SeoAgentDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* SEO Code Proposals Registry */}
+      <SeoCodeProposals />
     </div>
   );
 }
