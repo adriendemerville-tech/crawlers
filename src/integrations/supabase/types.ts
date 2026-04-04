@@ -5865,6 +5865,60 @@ export type Database = {
           },
         ]
       }
+      patch_effectiveness: {
+        Row: {
+          agent_source: string
+          created_at: string
+          deployment_date: string
+          domain: string
+          error_reduction_pct: number | null
+          errors_after: number
+          errors_before: number
+          id: string
+          is_effective: boolean | null
+          measured_at: string
+          measurement_notes: string | null
+          proposal_id: string
+          sav_complaints_after: number | null
+          sav_complaints_before: number | null
+          target_function: string
+        }
+        Insert: {
+          agent_source?: string
+          created_at?: string
+          deployment_date: string
+          domain: string
+          error_reduction_pct?: number | null
+          errors_after?: number
+          errors_before?: number
+          id?: string
+          is_effective?: boolean | null
+          measured_at?: string
+          measurement_notes?: string | null
+          proposal_id: string
+          sav_complaints_after?: number | null
+          sav_complaints_before?: number | null
+          target_function: string
+        }
+        Update: {
+          agent_source?: string
+          created_at?: string
+          deployment_date?: string
+          domain?: string
+          error_reduction_pct?: number | null
+          errors_after?: number
+          errors_before?: number
+          id?: string
+          is_effective?: boolean | null
+          measured_at?: string
+          measurement_notes?: string | null
+          proposal_id?: string
+          sav_complaints_after?: number | null
+          sav_complaints_before?: number | null
+          target_function?: string
+        }
+        Relationships: []
+      }
       patience_cards: {
         Row: {
           card_type: string
