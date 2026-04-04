@@ -238,6 +238,13 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         description: 'FAQ section or summary (TL;DR) at the top of the page',
         recommendation: 'Add a FAQ section (with Schema FAQ markup) or a summary (TL;DR) at the beginning of your article for easier AI extraction',
       },
+      readability: {
+        name: 'Content Readability',
+        description: 'Flesch-Kincaid readability index — readable text is more easily cited by AI engines',
+        moderate: 'Moderate complexity text. Shorten long sentences and simplify technical vocabulary to improve AI citability',
+        difficult: 'Text too complex for optimal AI citation. Aim for 15-20 word sentences, avoid undefined jargon, and prefer active voice',
+        lowContent: 'Add more text content to allow a reliable readability analysis (minimum 100 words)',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} AI bots allowed`,
