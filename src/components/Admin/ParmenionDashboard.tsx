@@ -194,19 +194,28 @@ export function ParmenionDashboard() {
       return;
     }
     toast({ title: '🆕 Nouvelle action demandée', description: 'Le prochain cycle de Parménion démarrera avec un nouveau but.' });
-    const { error } = await supabase.functions.invoke('parmenion-orchestrator', {
-      body: {
-        force_new: true,
-        tracked_site_id: autopilotConfig.tracked_site_id,
-        domain: autopilotConfig.domain,
-        cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
-      },
-    });
-    if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    } else {
-      fetchLogs();
+    
+    const body = {
+      force_new: true,
+      tracked_site_id: autopilotConfig.tracked_site_id,
+      domain: autopilotConfig.domain,
+      cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
+    };
+
+    // Retry up to 2 times on network failure (common on mobile/4G)
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      if (!error) {
+        fetchLogs();
+        return;
+      }
+      lastError = error;
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+      }
     }
+    toast({ title: 'Erreur', description: lastError?.message || 'Échec après 3 tentatives', variant: 'destructive' });
   };
 
   const activeDecision = logs.find(l => ['thinking', 'executing', 'pending'].includes(l.status));
