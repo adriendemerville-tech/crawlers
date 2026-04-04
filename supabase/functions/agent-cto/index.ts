@@ -871,8 +871,10 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ---
 ${auditSummary}
 ---
+${agentContext?.promptSnippet || ''}
 
-Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}`
+Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}
+Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour prioriser tes recommandations.`
 
     console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 
