@@ -414,10 +414,8 @@ class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError
 
 export default function Profile() {
   return (
-    <DesktopOnlyGate featureName="La Console">
-      <ProfileErrorBoundary>
-        <ProfileContent />
-      </ProfileErrorBoundary>
-    </DesktopOnlyGate>
+    <ProfileErrorBoundary>
+      <ProfileContent />
+    </ProfileErrorBoundary>
   );
 }
