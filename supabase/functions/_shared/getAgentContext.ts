@@ -102,6 +102,7 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     anomalyRes,
     cocoonErrorsRes,
     silentErrorsRes,
+    patchEffectivenessRes,
   ] = await Promise.all([
     // 1. SAV conversations (recent, with message preview)
     supabase
