@@ -542,14 +542,16 @@ try {
               decision.action.payload._prescribe_v2 = false;
             }
             
-            allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
-              function: 'prescribe-v2-router',
-              status: 'success',
-              code_fixes: allFixes?.length || 0,
-              content_actions: routedCmsActions.content.length,
-              data_actions: routedCmsActions.code.length,
-              total_cms: allCmsActions.length,
-            }] });
+            if (hasV2Output) {
+              allPhaseResults.push({ phase: 'route', decision_id: lastDecisionId || 'inline', status: 'completed', executionResults: [{
+                function: 'prescribe-v2-router',
+                status: 'success',
+                code_fixes: allFixes?.length || 0,
+                content_actions: routedCmsActions!.content.length,
+                data_actions: routedCmsActions!.code.length,
+                total_cms: allCmsActions.length,
+              }] });
+            }
           } else if (payload.cms_actions) {
             // Legacy V1: route by field inspection
             routedCmsActions = routeCmsActions(payload.cms_actions, site.domain);
