@@ -243,19 +243,26 @@ export function ParmenionDashboard() {
           </p>
         </div>
 
-        <div className={cn("flex items-center gap-2", isMobile && "overflow-x-auto pb-1 -mx-1 px-1")}>
+        <div className={cn("flex items-center gap-2", isMobile && "flex-wrap")}>
           <Button
             variant={isPaused ? 'default' : 'outline'}
-            size="sm"
+            size={isMobile ? 'icon' : 'sm'}
             onClick={handlePauseResume}
-            className="gap-1.5 shrink-0"
+            className={cn(isMobile ? "h-8 w-8" : "gap-1.5")}
+            title={isPaused ? 'Reprendre' : 'Pause'}
           >
             {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-            {isPaused ? 'Reprendre' : 'Pause'}
+            {!isMobile && (isPaused ? 'Reprendre' : 'Pause')}
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePurge} className="gap-1.5 text-destructive hover:text-destructive shrink-0">
+          <Button
+            variant="outline"
+            size={isMobile ? 'icon' : 'sm'}
+            onClick={handlePurge}
+            className={cn(isMobile ? "h-8 w-8 text-destructive hover:text-destructive" : "gap-1.5 text-destructive hover:text-destructive")}
+            title="Purge"
+          >
             <Trash2 className="h-4 w-4" />
-            Purge
+            {!isMobile && 'Purge'}
           </Button>
           <Button variant="default" size="sm" onClick={handleNewAction} className="gap-1.5 shrink-0">
             <Plus className="h-4 w-4" />
@@ -282,9 +289,9 @@ export function ParmenionDashboard() {
             }}
           >
             <Pencil className="h-4 w-4" />
-            {autopilotConfig?.force_iktracker_article ? '📝 IK:ON' : 'Article IK'}
+            {isMobile ? 'IK' : (autopilotConfig?.force_iktracker_article ? '📝 IK:ON' : 'Article IK')}
           </Button>
-          <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0">
+          <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0 h-8 w-8">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
