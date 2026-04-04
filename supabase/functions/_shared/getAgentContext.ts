@@ -236,10 +236,21 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     created_at: e.created_at,
   }))
 
+  // Process patch effectiveness
+  const patchResults = (patchEffectivenessRes.data || []).map((p: any) => ({
+    target_function: p.target_function,
+    agent_source: p.agent_source,
+    errors_before: p.errors_before,
+    errors_after: p.errors_after,
+    error_reduction_pct: p.error_reduction_pct,
+    is_effective: p.is_effective,
+    deployment_date: p.deployment_date,
+  }))
+
   // Build prompt snippet based on agent type
   const promptSnippet = buildPromptSnippet(opts.agent, {
     savIssues, technicalErrors, anomalies, cocoonErrors, silentErrors,
-    avgScore, escalationRate, days,
+    avgScore, escalationRate, days, patchResults,
   })
 
   return {
@@ -253,6 +264,9 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       anomalyCount: anomalies.length,
       cocoonErrorCount: cocoonErrors.length,
       silentErrorCount: silentErrors.length,
+      patchEffectivenessRate: patchResults.length > 0
+        ? Math.round(patchResults.filter((p: any) => p.is_effective).length / patchResults.length * 100)
+        : null,
     },
   }
 }
