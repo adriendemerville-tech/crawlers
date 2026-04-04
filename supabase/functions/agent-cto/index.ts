@@ -5,6 +5,7 @@ import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getAgentContext } from '../_shared/getAgentContext.ts';
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
