@@ -274,6 +274,7 @@ export function MyTracking() {
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
+  const isMobile = useIsMobile();
 
   // DnD sensors for sidebar reordering
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
