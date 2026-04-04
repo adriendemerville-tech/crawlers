@@ -1,7 +1,7 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DesktopOnlyGate } from '@/components/DesktopOnlyGate';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target } from 'lucide-react';
