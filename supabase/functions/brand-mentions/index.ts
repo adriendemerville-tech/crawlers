@@ -228,4 +228,4 @@ try {
     console.error('[brand-mentions] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}))
