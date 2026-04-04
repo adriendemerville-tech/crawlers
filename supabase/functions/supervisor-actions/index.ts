@@ -124,7 +124,7 @@ async function auditAssistantQuality(supabase: any): Promise<any> {
 }
 
 // ─── AI: Audit CTO corrections quality & impact ─────────────────────
-async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[]): Promise<any> {
+async function auditCorrections(corrections: any[], functionSources: Record<string, string>, postErrors: any[], operationalContext?: string): Promise<any> {
   const systemPrompt = `Tu es le SUPERVISOR, un auditeur qualité des corrections déployées par l'Agent CTO.
 
 TON RÔLE (NOUVEAU) :
