@@ -217,7 +217,7 @@ function ProfileContent() {
                 )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.tracking}</span>
+                  <span className="text-xs sm:text-sm">{t.tracking}</span>
                 </TabsTrigger>
                 {!isMobile && (
                   <TabsTrigger value="action-plans" className="flex-1 gap-2">
