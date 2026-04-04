@@ -119,7 +119,7 @@ export function NewsCarousel() {
               if (scrollLeft >= maxScroll - 10) {
                 container.scrollTo({ left: 0, behavior: 'smooth' });
               } else {
-                container.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
+                container.scrollBy({ left: window.innerWidth < 640 ? CARD_WIDTH_MOBILE : CARD_WIDTH_DESKTOP, behavior: 'smooth' });
               }
             });
           });
