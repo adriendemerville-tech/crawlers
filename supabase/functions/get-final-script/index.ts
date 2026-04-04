@@ -34,9 +34,7 @@ Deno.serve(handleRequest(async (req) => {
     // 🔐 SECURITY CHECK: Verify payment status
     if (audit.payment_status !== "paid") {
       console.log(`🔒 Access denied for audit ${audit_id}: payment_status = ${audit.payment_status}`);
-      return jsonError("Payment required",
-          message: "Le paiement est requis pour accéder au script complet.",
-          payment_status: audit.payment_status, 402);
+      return jsonError("Le paiement est requis pour accéder au script complet.", 402);
     }
 
     // ✅ Payment verified - return the full script
