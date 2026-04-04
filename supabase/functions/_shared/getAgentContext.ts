@@ -282,6 +282,7 @@ function buildPromptSnippet(
     avgScore: number | null
     escalationRate: number
     days: number
+    patchResults: any[]
   },
 ): string {
   const lines: string[] = []
