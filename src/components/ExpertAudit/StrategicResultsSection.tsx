@@ -205,11 +205,6 @@ export function StrategicResultsSection({
               return <ActionPlan recommendations={recommendations} url={result.url} auditType="strategic" />;
             })()}
 
-            {/* AEO Score */}
-            {result.strategicAnalysis && (
-              <AEOScoreCard result={result} />
-            )}
-
             {/* Maillage Interne (IPR) */}
             {maillageData && (
               <MaillageIPRCard

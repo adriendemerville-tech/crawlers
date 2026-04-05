@@ -748,7 +748,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
             )}
 
             {/* Alternative Strategy (only for disadvantaged sites) */}
-            {positioning.alternative_strategy && (
+            {positioning.alternative_strategy && (positioning.alternative_strategy.what || positioning.alternative_strategy.how || positioning.alternative_strategy.estimated_cost) && (
               <div className="p-5 rounded-lg bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/30">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-1">
                   <Megaphone className="h-5 w-5 text-warning" aria-hidden="true" />
