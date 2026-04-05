@@ -11,7 +11,7 @@ import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { StrategicInsights } from './StrategicInsights';
 import { ActionPlan } from './ActionPlan';
-import { AEOScoreCard } from './AEOScoreCard';
+
 import { MaillageIPRCard, computeMaillageData, type MaillageData } from './MaillageIPRCard';
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
@@ -204,11 +204,6 @@ export function StrategicResultsSection({
               if (recommendations.length === 0) return null;
               return <ActionPlan recommendations={recommendations} url={result.url} auditType="strategic" />;
             })()}
-
-            {/* AEO Score */}
-            {result.strategicAnalysis && (
-              <AEOScoreCard result={result} />
-            )}
 
             {/* Maillage Interne (IPR) */}
             {maillageData && (
