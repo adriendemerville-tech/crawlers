@@ -188,9 +188,8 @@ export function StrategicResultsSection({
           />
         )}
 
-        {/* Protected Content Zone */}
-        <div className="relative min-h-[400px] mt-6">
-          <FreemiumAwareContent isLoggedIn={isLoggedIn}>
+        {/* Full Content Zone — always visible */}
+        <div className="space-y-6 mt-6">
             {/* Strategic Insights */}
             {result.strategicAnalysis && (
               <StrategicInsights
@@ -251,10 +250,6 @@ export function StrategicResultsSection({
                 }}
               />
             )}
-          </FreemiumAwareContent>
-
-          {/* Registration Gate — hidden in freemium open mode */}
-          <FreemiumAwareGate isLoggedIn={isLoggedIn} />
         </div>
       </motion.div>
     </StrategicErrorBoundary>
