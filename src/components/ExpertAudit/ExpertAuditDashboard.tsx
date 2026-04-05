@@ -1028,6 +1028,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           competitorCorrections: competitorCorrections || null,
           cachedContext: useCachedContext ? strategicCachedContext : null,
           lang: language,
+          async: false,
         }, 540000);
 
         rawStrategicData = syncResp?.data ?? syncResp;
