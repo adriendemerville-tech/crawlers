@@ -4,15 +4,12 @@ import { usePreviousAuditData } from './hooks/usePreviousAuditData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { FileDown } from 'lucide-react';
 import { IntroductionCard } from './IntroductionCard';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
-import { RegistrationGate } from './RegistrationGate';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { StrategicInsights } from './StrategicInsights';
-import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { ActionPlan } from './ActionPlan';
 import { AEOScoreCard } from './AEOScoreCard';
 import { MaillageIPRCard, computeMaillageData, type MaillageData } from './MaillageIPRCard';
@@ -40,34 +37,7 @@ interface Props {
   onForceRefresh: () => void;
 }
 
-function FreemiumAwareGate({ isLoggedIn }: { isLoggedIn: boolean }) {
-  const { openMode } = useFreemiumMode();
-  if (openMode || isLoggedIn) return null;
-  return (
-    <AnimatePresence>
-      <RegistrationGate />
-    </AnimatePresence>
-  );
-}
 
-function FreemiumAwareContent({ isLoggedIn, children }: { isLoggedIn: boolean; children: React.ReactNode }) {
-  const { openMode } = useFreemiumMode();
-  const isUnlocked = isLoggedIn || openMode;
-  return (
-    <motion.div
-      initial={false}
-      animate={{
-        filter: isUnlocked ? 'blur(0px)' : 'blur(8px)',
-        opacity: isUnlocked ? 1 : 0.5,
-        scale: isUnlocked ? 1 : 0.98,
-      }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={cn("space-y-6", !isUnlocked && "pointer-events-none select-none")}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 export function StrategicResultsSection({
   result, url, t, isLoggedIn, isStrategicLoading,
@@ -188,9 +158,8 @@ export function StrategicResultsSection({
           />
         )}
 
-        {/* Protected Content Zone */}
-        <div className="relative min-h-[400px] mt-6">
-          <FreemiumAwareContent isLoggedIn={isLoggedIn}>
+        {/* Full Content Zone — always visible */}
+        <div className="space-y-6 mt-6">
             {/* Strategic Insights */}
             {result.strategicAnalysis && (
               <StrategicInsights
@@ -251,10 +220,6 @@ export function StrategicResultsSection({
                 }}
               />
             )}
-          </FreemiumAwareContent>
-
-          {/* Registration Gate — hidden in freemium open mode */}
-          <FreemiumAwareGate isLoggedIn={isLoggedIn} />
         </div>
       </motion.div>
     </StrategicErrorBoundary>
