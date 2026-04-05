@@ -944,8 +944,8 @@ EXEMPLE DE TRANSFORMATION CORRECTE :
 INTERDIT ABSOLU : les mots "gap de citabilité", "gap sémantique", "cannibalisation", "maillage interne", "E-E-A-T", "cocon sémantique", "campagne de partenariats SEO", "stratégie SEO", "backlinks" ou tout jargon SEO dans le contenu destiné aux lecteurs du site.
 Le lecteur final est un UTILISATEUR du site (${parsedTargetsPrimary || 'grand public'}), PAS un expert SEO.
 
-ITEMS À TRAITER (diagnostics internes — à transformer en sujets métier) :
-${buildItemsList(contentItems)}
+ITEMS À TRAITER (opportunités éditoriales — PAS des diagnostics SEO) :
+${buildContentItemsList(contentItems, sectorName)}
 
 IDENTITÉ DU SITE (OBLIGATOIRE — guide le sujet de chaque article) :
 - Nom : ${siteName}
