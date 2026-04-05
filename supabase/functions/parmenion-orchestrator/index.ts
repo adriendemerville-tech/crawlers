@@ -763,6 +763,42 @@ async function prescribeWithDualPrompts(context: {
     ).join('\n\n');
   }
 
+  // For content items: strip SEO jargon from titles/descriptions so LLM focuses on business topics
+  const SEO_JARGON_PATTERNS = [
+    /gap\s*(de\s*)?(citabilit[ée]|s[ée]mantique|de\s*contenu)/gi,
+    /cannibalisation/gi,
+    /maillage\s*interne/gi,
+    /cocon\s*s[ée]mantique/gi,
+    /e[\-\s]?e[\-\s]?a[\-\s]?t/gi,
+    /backlink[s]?/gi,
+    /strat[ée]gie\s*seo/gi,
+    /campagne\s*de\s*partenariats?\s*(seo)?/gi,
+    /linking\s*(interne|externe)/gi,
+    /content\s*gap/gi,
+    /cluster\s*(optimization|sémantique)/gi,
+  ];
+
+  function sanitizeForContent(text: string): string {
+    let cleaned = text;
+    for (const pattern of SEO_JARGON_PATTERNS) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+    return cleaned.replace(/\s{2,}/g, ' ').trim();
+  }
+
+  function buildContentItemsList(lot: any[], sector: string): string {
+    return lot.map((it: any, i: number) => {
+      // Extract the business-relevant part: target URL and description
+      const pageUrl = it.target_url || '?';
+      const rawTitle = sanitizeForContent(it.title || '');
+      const rawDesc = sanitizeForContent((it.description || '').slice(0, 300));
+      return `${i + 1}. OPPORTUNITÉ ÉDITORIALE pour "${sector}"
+   Page concernée: ${pageUrl}
+   Thématique à couvrir: ${rawTitle || rawDesc || 'contenu à enrichir'}
+   Action: ${it.target_operation || 'create'} | Priorité: ${it.severity}`;
+    }).join('\n\n');
+  }
+
   const promises: Promise<any[]>[] = [];
 
   // ── PROMPT TECHNIQUE (tiers 0-3) ──
