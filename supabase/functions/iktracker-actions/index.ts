@@ -90,22 +90,68 @@ async function getPost(apiKey: string, slug: string) {
   return callIktracker('GET', `/posts/${slug}`, apiKey)
 }
 
+/** Normalize text for fuzzy comparison: lowercase, remove accents, strip punctuation */
+function normalizeForComparison(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Compute word-overlap similarity (Jaccard) between two strings, returns 0-1 */
+function titleSimilarity(a: string, b: string): number {
+  const wordsA = new Set(normalizeForComparison(a).split(' ').filter(w => w.length > 2))
+  const wordsB = new Set(normalizeForComparison(b).split(' ').filter(w => w.length > 2))
+  if (wordsA.size === 0 || wordsB.size === 0) return 0
+  let intersection = 0
+  for (const w of wordsA) { if (wordsB.has(w)) intersection++ }
+  return intersection / Math.max(wordsA.size, wordsB.size)
+}
+
 async function createPost(apiKey: string, body: Record<string, unknown>) {
-  // Anti-duplicate: if slug provided, check if post already exists → convert to update
   const slug = (body.slug as string) || ''
+  const title = (body.title as string) || ''
+
+  // 1) Exact slug check
   if (slug) {
     try {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
-      // callIktracker returns {status, data} — check status 200 and data exists
       if (existing && existing.status === 200 && existing.data) {
         console.log(`[iktracker-actions] Post with slug "${slug}" already exists, converting to UPDATE`)
         const updateResult = await callIktracker('PUT', `/posts/${slug}`, apiKey, body)
         return { ...updateResult, _upserted: true, _original_action: 'create-post' }
       }
     } catch (_) {
-      // 404 or error = doesn't exist, proceed with creation
+      // 404 = doesn't exist, continue
     }
   }
+
+  // 2) Semantic dedup: check if a very similar article already exists by title
+  if (title) {
+    try {
+      const listResult = await listPosts(apiKey, 100, 0)
+      const posts: Array<{ title?: string; slug?: string }> = 
+        (listResult?.data?.posts || listResult?.data || [])
+      
+      for (const post of posts) {
+        if (!post.title) continue
+        const sim = titleSimilarity(title, post.title)
+        if (sim >= 0.65) {
+          const existingSlug = post.slug || ''
+          console.log(`[iktracker-actions] Semantic duplicate detected (similarity=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
+          if (existingSlug) {
+            const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
+            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: sim }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[iktracker-actions] Semantic dedup check failed, proceeding with creation:', e)
+    }
+  }
+
   return callIktracker('POST', '/posts', apiKey, body)
 }
 
@@ -376,4 +422,4 @@ try {
     console.error('[iktracker-actions] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}))
