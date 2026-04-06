@@ -59,6 +59,7 @@ interface ChatWindowProps {
   onOnboardingConsumed?: () => void;
   autoStartCrawlersQuiz?: boolean;
   autoEnterpriseContact?: boolean;
+  initialGreeting?: string | null;
 }
 
 // NLP detection for bug/problem intent
