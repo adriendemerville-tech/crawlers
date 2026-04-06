@@ -5,8 +5,6 @@ import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
-
-Deno.serve(handleRequest(async (req) => {
 // ── Polling mode ──
   if (req.method === 'GET') {
     const url = new URL(req.url);
