@@ -145,6 +145,7 @@ const App = () => (
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
+                          <Route path="/landing/:slug" element={<LandingPage />} />
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />

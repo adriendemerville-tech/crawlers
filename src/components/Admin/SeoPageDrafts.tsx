@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FileText, Check, Trash2, Loader2, ChevronDown, ChevronRight, RefreshCw, Eye } from 'lucide-react';
+import { FileText, Check, Trash2, Loader2, ChevronDown, ChevronRight, RefreshCw, Eye, Globe, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
