@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, Unplug, MapPin, Server, Upload, Terminal, Globe, Cloud, HardDrive, FileText } from 'lucide-react';
+import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, MapPin, Server, Upload, Terminal, Globe, Cloud, HardDrive, FileText, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
