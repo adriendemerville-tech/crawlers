@@ -686,7 +686,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
       const assistantMsg: ChatMessage = {
         role: 'assistant',
-        content: data.reply || "Je transmets votre question à l'équipe.",
+        content: (data.reply || "Je transmets votre question à l'équipe.").replace(/\n{3,}/g, '\n\n'),
         timestamp: new Date().toISOString(),
       };
 
