@@ -90,6 +90,6 @@ Deno.serve(handleRequest(async (req) => {
     return jsonOk({ ok: true, processed: result.inserted, errors: result.errors });
   } catch (error) {
     console.error('[ingest-cloudflare] Error:', error);
-    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
+    return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
 }));
