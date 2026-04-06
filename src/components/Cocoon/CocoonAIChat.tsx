@@ -1394,17 +1394,61 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     try {
       const recs = parseRecommendations(content);
       
-      // Build tasks from recommendations or from graph edges
-      const tasks: Array<{ id: string; title: string; priority: 'critical' | 'important' | 'optional'; category: string; isCompleted: boolean }> = [];
-      
+      // Detect action type from content
+      const detectActionType = (text: string, rec?: any): { type: string; payload: Record<string, any> } => {
+        const lower = text.toLowerCase();
+        if (rec || lower.includes('lien') || lower.includes('link') || lower.includes('maillage') || lower.includes('ancre')) {
+          return {
+            type: 'linking',
+            payload: rec ? {
+              source_urls: rec.source_url ? [rec.source_url] : [],
+              target_urls: rec.target_url ? [rec.target_url] : [],
+              anchor_text: rec.anchor_text,
+              action: rec.action,
+            } : {},
+          };
+        }
+        if (lower.includes('contenu') || lower.includes('content') || lower.includes('article') || lower.includes('page manquante') || lower.includes('rédiger') || lower.includes('enrichir')) {
+          return {
+            type: 'content',
+            payload: { intent: lower.includes('enrichir') || lower.includes('améliorer') ? 'update' : 'create', title: text },
+          };
+        }
+        if (lower.includes('schema') || lower.includes('meta') || lower.includes('json-ld') || lower.includes('balise') || lower.includes('code') || lower.includes('technique') || lower.includes('robots') || lower.includes('canonical')) {
+          return {
+            type: 'code',
+            payload: { description: text, category: 'technical_fix' },
+          };
+        }
+        return { type: 'manual', payload: {} };
+      };
+
+      // Build cocoon_tasks entries
+      interface CocoonTaskInsert {
+        tracked_site_id: string;
+        user_id: string;
+        title: string;
+        status: string;
+        priority: string;
+        action_type: string;
+        action_payload: Record<string, any>;
+        execution_status: string;
+      }
+      const cocoonTasks: CocoonTaskInsert[] = [];
+
       if (recs.length > 0) {
         recs.forEach((rec, i) => {
-          tasks.push({
-            id: `cocoon-link-${Date.now()}-${i}`,
-            title: `${rec.action === 'add_link' ? 'Ajouter lien' : 'Modifier ancre'} : ${rec.anchor_text} → ${rec.target_url}`,
-            priority: i < 3 ? 'critical' : i < 6 ? 'important' : 'optional',
-            category: 'Maillage interne',
-            isCompleted: false,
+          const title = `${rec.action === 'add_link' ? 'Ajouter lien' : 'Modifier ancre'} : ${rec.anchor_text} → ${rec.target_url}`;
+          const detected = detectActionType(title, rec);
+          cocoonTasks.push({
+            tracked_site_id: trackedSiteId,
+            user_id: user.id,
+            title,
+            status: 'todo',
+            priority: i < 3 ? 'high' : i < 6 ? 'medium' : 'low',
+            action_type: detected.type,
+            action_payload: detected.payload,
+            execution_status: 'pending',
           });
         });
       } else {
@@ -1414,18 +1458,48 @@ Termina con un resumen ejecutivo y próximos pasos.`,
             .filter((e: any) => e.type === 'suggested' || e.score > 0.6)
             .slice(0, 2)
             .forEach((e: any, i: number) => {
-              tasks.push({
-                id: `cocoon-edge-${Date.now()}-${n.url}-${i}`,
-                title: `Ajouter lien : "${e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien'}" de ${n.url} → ${e.target_url}`,
-                priority: i === 0 ? 'important' : 'optional',
-                category: 'Maillage interne',
-                isCompleted: false,
+              const title = `Ajouter lien : "${e.anchor || n.title?.split(' ').slice(0, 4).join(' ') || 'lien'}" de ${n.url} → ${e.target_url}`;
+              cocoonTasks.push({
+                tracked_site_id: trackedSiteId,
+                user_id: user.id,
+                title,
+                status: 'todo',
+                priority: i === 0 ? 'high' : 'low',
+                action_type: 'linking',
+                action_payload: {
+                  source_urls: [n.url],
+                  target_urls: [e.target_url],
+                  anchor_text: e.anchor || n.title?.split(' ').slice(0, 4).join(' '),
+                },
+                execution_status: 'pending',
               });
             });
         });
       }
 
-      if (tasks.length === 0) {
+      // Also parse non-link recommendations from chat content
+      const lines = content.split('\n').filter(l => l.trim().startsWith('-') || l.trim().startsWith('•') || l.trim().match(/^\d+\./));
+      lines.forEach(line => {
+        const cleanLine = line.replace(/^[\s\-•\d.]+/, '').trim();
+        if (!cleanLine || cleanLine.length < 10) return;
+        // Skip if already covered by recs
+        if (recs.some(r => cleanLine.includes(r.anchor_text) || cleanLine.includes(r.target_url))) return;
+        const detected = detectActionType(cleanLine);
+        if (detected.type !== 'manual') {
+          cocoonTasks.push({
+            tracked_site_id: trackedSiteId,
+            user_id: user.id,
+            title: cleanLine.slice(0, 200),
+            status: 'todo',
+            priority: 'medium',
+            action_type: detected.type,
+            action_payload: { ...detected.payload, target_url: `https://${domain}` },
+            execution_status: 'pending',
+          });
+        }
+      });
+
+      if (cocoonTasks.length === 0) {
         sonnerToast.error(
           language === 'en' ? 'No recommendations found to add' :
           language === 'es' ? 'No se encontraron recomendaciones' :
@@ -1435,13 +1509,24 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         return;
       }
 
-      // Create or update the action plan for this domain
-      const siteUrl = `https://${domain}`;
-      const planTitle = language === 'en' ? `Cocoon — Internal linking ${domain}` :
-                        language === 'es' ? `Cocoon — Enlazado interno ${domain}` :
-                        `Cocoon — Maillage interne ${domain}`;
+      // Insert into cocoon_tasks
+      await supabase
+        .from('cocoon_tasks' as any)
+        .insert(cocoonTasks as any);
 
-      // Check if a Cocoon action plan already exists for this URL
+      // Also maintain legacy action_plans for backward compat
+      const siteUrl = `https://${domain}`;
+      const planTitle = language === 'en' ? `Cocoon — ${domain}` :
+                        language === 'es' ? `Cocoon — ${domain}` :
+                        `Cocoon — ${domain}`;
+      const legacyTasks = cocoonTasks.map((ct, i) => ({
+        id: `cocoon-${Date.now()}-${i}`,
+        title: ct.title,
+        priority: ct.priority === 'high' ? 'critical' : ct.priority === 'low' ? 'optional' : 'important',
+        category: ct.action_type === 'linking' ? 'Maillage interne' : ct.action_type === 'content' ? 'Contenu' : ct.action_type === 'code' ? 'Technique' : 'Autre',
+        isCompleted: false,
+      }));
+
       const { data: existingPlan } = await supabase
         .from('action_plans')
         .select('id, tasks')
@@ -1452,16 +1537,12 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         .maybeSingle();
 
       if (existingPlan) {
-        // Merge new tasks into existing plan (avoid duplicates)
-        const existingTasks = (existingPlan.tasks as unknown as typeof tasks) || [];
-        const mergedTasks = [...existingTasks, ...tasks];
-        
+        const existingTasks = (existingPlan.tasks as unknown as typeof legacyTasks) || [];
         await supabase
           .from('action_plans')
-          .update({ tasks: JSON.parse(JSON.stringify(mergedTasks)) })
+          .update({ tasks: JSON.parse(JSON.stringify([...existingTasks, ...legacyTasks])) })
           .eq('id', existingPlan.id);
       } else {
-        // Create new action plan
         await supabase
           .from('action_plans')
           .insert({
@@ -1469,15 +1550,15 @@ Termina con un resumen ejecutivo y próximos pasos.`,
             url: siteUrl,
             title: planTitle,
             audit_type: 'technical',
-            tasks: JSON.parse(JSON.stringify(tasks)),
+            tasks: JSON.parse(JSON.stringify(legacyTasks)),
           });
       }
 
       setDeploySuccess(true);
       sonnerToast.success(
-        language === 'en' ? `${tasks.length} tasks added to action plan` :
-        language === 'es' ? `${tasks.length} tareas añadidas al plan de acción` :
-        `${tasks.length} tâches ajoutées au plan d'action`
+        language === 'en' ? `${cocoonTasks.length} executable tasks added` :
+        language === 'es' ? `${cocoonTasks.length} tareas ejecutables añadidas` :
+        `${cocoonTasks.length} tâches exécutables ajoutées`
       );
       setTimeout(() => setDeploySuccess(false), 5000);
     } catch (e) {
