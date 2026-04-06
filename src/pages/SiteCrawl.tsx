@@ -454,7 +454,6 @@ export default function SiteCrawl() {
       return localStorage.getItem('crawl_last_url') || '';
     } catch { return ''; }
   });
-  const isAgencyPro = planType === 'agency' || planType === 'agency_pro';
   const isAgencyPlus = isAdmin || planType === 'agency_premium';
   const isPaidPlan = isAgencyPro || isAgencyPlus;
   const maxSliderCap = isAgencyPlus ? 50 : isAgencyPro ? 30 : 20;
