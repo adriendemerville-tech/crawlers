@@ -54,6 +54,7 @@ export function IntelligenceHub() {
         </TabsContent>
 
         <TabsContent value="supervisor" forceMount className="data-[state=inactive]:hidden space-y-6">
+          <FelixAgentBridgeControls />
           <AssistantPrecisionCard />
           <CtoSupervisor />
           <SupervisorErrorsRegistry />
