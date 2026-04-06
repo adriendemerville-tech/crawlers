@@ -869,6 +869,17 @@ Réponds UNIQUEMENT en JSON :
   "data_tier_used": "tier1|tier2|tier3"
 }`
 
+    // Build admin directives context for CTO
+    const pendingCtoDirectives = ctoDirectivesResp?.data || [];
+    const relevantCtoDirectives = pendingCtoDirectives.filter((d: any) =>
+      !d.target_function || d.target_function === functionName || (d.target_url && (url || '').includes(d.target_url))
+    );
+    let ctoDirectivesContext = '';
+    if (relevantCtoDirectives.length > 0) {
+      ctoDirectivesContext = `\n\nDIRECTIVES ADMIN (instructions prioritaires du créateur) :\n${relevantCtoDirectives.map((d: any, i: number) => `${i + 1}. ${d.directive_text}${d.target_function ? ` [fonction: ${d.target_function}]` : ''}${d.target_url ? ` [url: ${d.target_url}]` : ''}`).join('\n')}\n\nCes directives sont PRIORITAIRES. Intègre-les dans ton analyse.`;
+      console.log(`[AGENT-CTO] 📋 ${relevantCtoDirectives.length} directive(s) admin chargées`);
+    }
+
     const userPrompt = `FONCTION : ${functionName}
 DOMAINE : ${domain || 'N/A'}
 URL : ${url || 'N/A'}
@@ -883,7 +894,7 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ---
 ${auditSummary}
 ---
-${agentContext?.promptSnippet || ''}
+${agentContext?.promptSnippet || ''}${ctoDirectivesContext}
 
 Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}
 Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour prioriser tes recommandations.`
