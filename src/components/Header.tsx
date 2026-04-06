@@ -483,7 +483,7 @@ export function Header() {
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => {}}>
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onSelect={() => navigate('/aide')}>
                         <HelpCircle className="h-4 w-4" />
                         {t.help}
                     </DropdownMenuItem>

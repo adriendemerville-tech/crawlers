@@ -59,6 +59,7 @@ interface ChatWindowProps {
   onOnboardingConsumed?: () => void;
   autoStartCrawlersQuiz?: boolean;
   autoEnterpriseContact?: boolean;
+  initialGreeting?: string | null;
 }
 
 // NLP detection for bug/problem intent
@@ -132,7 +133,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact, initialGreeting }: ChatWindowProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
@@ -238,6 +239,20 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
       setShowEnterpriseQuiz(true);
     }
   }, [autoEnterpriseContact]);
+
+  // Initial greeting from "Nous écrire" button
+  const greetingTriggered = useRef(false);
+  useEffect(() => {
+    if (initialGreeting && !greetingTriggered.current && messages.length === 0) {
+      greetingTriggered.current = true;
+      const greetingMsg: ChatMessage = {
+        role: 'assistant',
+        content: initialGreeting,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages([greetingMsg]);
+    }
+  }, [initialGreeting]);
 
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
