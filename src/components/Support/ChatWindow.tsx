@@ -996,7 +996,6 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                           <button
                             onClick={async () => {
                               try {
-                                // Insert diagnostic into architect_workbench
                                 const diag = pendingArchitectAction.diagnostic;
                                 if (user) {
                                   const domain = diag.url ? new URL(diag.url).hostname : '';
@@ -1022,8 +1021,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                                 };
                                 setMessages(prev => [...prev, confirmMsg]);
                                 setPendingArchitectAction(null);
-                                navigate('/audit-expert?tab=content-architect');
-                                onClose();
+                                // Open Content Architect modal directly
+                                setContentArchitectDiag(diag);
+                                setShowContentArchitectModal(true);
                               } catch (e) {
                                 console.error('Architect workbench insert error:', e);
                               }
