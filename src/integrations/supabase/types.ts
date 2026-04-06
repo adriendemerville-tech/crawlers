@@ -286,6 +286,42 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_seo_directives: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          directive_text: string
+          id: string
+          status: string
+          target_slug: string | null
+          target_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          directive_text: string
+          id?: string
+          status?: string
+          target_slug?: string | null
+          target_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          directive_text?: string
+          id?: string
+          status?: string
+          target_slug?: string | null
+          target_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
