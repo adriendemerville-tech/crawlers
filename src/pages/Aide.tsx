@@ -4,7 +4,8 @@ import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { t3 } from '@/utils/i18n';
-import { Search, BookOpen, BarChart3, Wrench, CreditCard, AlertTriangle, Shield, Code, Info, ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { Search, BookOpen, BarChart3, Wrench, CreditCard, AlertTriangle, Shield, Code, Info, ChevronDown, ChevronRight, Download, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
