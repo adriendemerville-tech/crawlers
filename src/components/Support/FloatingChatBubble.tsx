@@ -65,6 +65,18 @@ export function FloatingChatBubble() {
     return () => window.removeEventListener('felix-enterprise-contact', handler);
   }, []);
 
+  // Listen for "Nous écrire" from Aide page — open Félix with greeting
+  const [felixGreeting, setFelixGreeting] = useState<string | null>(null);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setFelixGreeting(detail?.message || "Que puis-je faire pour t'aider ?");
+      setIsOpen(true);
+    };
+    window.addEventListener('felix-open-with-message', handler);
+    return () => window.removeEventListener('felix-open-with-message', handler);
+  }, []);
+
   // Listen for hallucination diagnosis suggestion (2s after modal close)
   const [showHallucinationBubble, setShowHallucinationBubble] = useState(false);
   useEffect(() => {
