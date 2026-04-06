@@ -1184,7 +1184,132 @@ ${screen_context}
       ? `\n\n# LANGUE OBLIGATOIRE\nL'utilisateur a choisi la langue "${clientLanguage === 'es' ? 'español' : 'English'}" dans l'interface. Tu DOIS répondre UNIQUEMENT dans cette langue. Ne réponds JAMAIS en français sauf si l'utilisateur écrit en français.\n`
       : '';
 
-    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt;
+    // ── Architect routing: detect fix/solve intent ──
+    let architectAction: any = null;
+    if (!isGuest && user_id && screen_context) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerFix = lastUserMsg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      
+      const fixIntentPatterns = [
+        /(?:peux[- ]tu|peut[- ]on|peux[- ]je|pourrai[st]?[- ](?:tu|on)|tu peux)\s*(?:regler|corriger|fixer|resoudre|ameliorer|optimiser|reparer|modifier|changer)/,
+        /(?:corrig(?:e|er|eons)|regl(?:e|er|ons)|fix(?:e|er)|resou(?:s|dre)|amelior(?:e|er)|optimis(?:e|er)|repar(?:e|er))\s*(?:ca|cela|cette?|ce|le|la|les|mon|ma|mes|l'|cette erreur|ce probleme|ce souci)/,
+        /(?:trouv(?:e|er))\s*(?:une solution|un correctif|un fix|comment (?:regler|corriger|resoudre))/,
+        /(?:comment)\s*(?:regler|corriger|fixer|resoudre|ameliorer|reparer)\s/,
+        /(?:il faut|on doit|je veux|je voudrais|j'aimerais)\s*(?:regler|corriger|fixer|resoudre|ameliorer|optimiser|modifier)/,
+        /(?:lance|ouvre|demarre|active)\s*(?:code architect|content architect|l'architecte|le correctif)/,
+        /(?:genere|generer|cree|creer)\s*(?:un correctif|le correctif|les correctifs|le code|du code|le contenu)/,
+      ];
+      
+      const hasFixIntent = fixIntentPatterns.some(p => p.test(lowerFix));
+      
+      if (hasFixIntent) {
+        // Classify the issue type from screen_context
+        const screenLower = (typeof screen_context === 'string' ? screen_context : JSON.stringify(screen_context)).toLowerCase();
+        
+        const contentIndicators = ['h1', 'title', 'meta description', 'faq', 'contenu', 'content', 'texte', 'paragraphe', 'heading', 'semantique', 'sémantique', 'e-e-a-t', 'eeat', 'thin content', 'page manquante', 'gap de contenu'];
+        const codeIndicators = ['json-ld', 'structured data', 'données structurées', 'schema.org', 'canonical', 'robots', 'performance', 'speed', 'pagespeed', 'core web vitals', 'cwv', 'broken link', 'redirect', '404', '500', 'sitemap', 'og:image', 'opengraph', 'accessibility', 'sécurité', 'security'];
+        
+        const contentScore = contentIndicators.filter(k => screenLower.includes(k) || lowerFix.includes(k)).length;
+        const codeScore = codeIndicators.filter(k => screenLower.includes(k) || lowerFix.includes(k)).length;
+        
+        const target = contentScore > codeScore ? 'content' : codeScore > contentScore ? 'code' : 'both';
+        
+        // Try to extract diagnostic info from screen_context
+        let diagnosticTitle = '';
+        let diagnosticDescription = '';
+        let targetUrl = '';
+        let findingCategory = 'technical_fix';
+        
+        // Extract from screen context
+        const urlMatch = (typeof screen_context === 'string' ? screen_context : '').match(/(?:URL|url|Url)\s*[:=]\s*(https?:\/\/[^\s,]+)/);
+        if (urlMatch) targetUrl = urlMatch[1];
+        
+        // If insufficient screen data, try backend lookup
+        let backendDiagnostic: any = null;
+        if (!targetUrl || contentScore + codeScore === 0) {
+          // Cascade: search backend data
+          try {
+            // Get the user's first tracked site
+            const { data: firstSite } = await sb
+              .from("tracked_sites")
+              .select("id, domain")
+              .eq("user_id", user_id)
+              .limit(1)
+              .single();
+            
+            if (firstSite) {
+              if (!targetUrl) targetUrl = `https://${firstSite.domain}`;
+              
+              // Check recent audit recommendations
+              const { data: recos } = await sb
+                .from("audit_recommendations_registry")
+                .select("title, description, category, priority, url, fix_type, fix_data")
+                .eq("domain", firstSite.domain)
+                .eq("user_id", user_id)
+                .eq("is_resolved", false)
+                .order("created_at", { ascending: false })
+                .limit(3);
+              
+              if (recos?.length) {
+                backendDiagnostic = recos;
+                diagnosticTitle = recos[0].title;
+                diagnosticDescription = recos[0].description;
+                findingCategory = recos[0].category || 'technical_fix';
+                if (recos[0].url) targetUrl = recos[0].url;
+              }
+              
+              // Also check cocoon diagnostics if no audit recos
+              if (!backendDiagnostic) {
+                const { data: cocoonDiag } = await sb
+                  .from("cocoon_diagnostic_results")
+                  .select("diagnostic_type, findings, scores")
+                  .eq("domain", firstSite.domain)
+                  .eq("user_id", user_id)
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                
+                if (cocoonDiag?.findings) {
+                  backendDiagnostic = cocoonDiag;
+                }
+              }
+            }
+          } catch (e) {
+            console.error("[sav-agent] Backend diagnostic lookup error:", e);
+          }
+        }
+        
+        architectAction = {
+          action: 'open_architect',
+          target, // 'content' | 'code' | 'both'
+          diagnostic: {
+            title: diagnosticTitle || 'Diagnostic depuis Félix',
+            description: diagnosticDescription || lastUserMsg,
+            url: targetUrl,
+            finding_category: findingCategory,
+            source_context: backendDiagnostic ? JSON.stringify(backendDiagnostic).slice(0, 500) : null,
+          },
+        };
+      }
+    }
+
+    // ── Architect routing prompt injection ──
+    let architectPrompt = "";
+    if (architectAction) {
+      const targetLabel = architectAction.target === 'content' ? 'Content Architect' : architectAction.target === 'code' ? 'Code Architect' : 'Content Architect ou Code Architect';
+      architectPrompt = `\n\n# INTENTION DE CORRECTION DÉTECTÉE
+L'utilisateur demande de résoudre un problème. Tu as détecté que la solution passe par ${targetLabel}.
+Tu DOIS proposer à l'utilisateur d'ouvrir ${targetLabel} avec le diagnostic pré-chargé.
+
+Réponds de manière concise :
+1. Confirme que tu as compris le problème (1 phrase)
+2. Propose : "Veux-tu que j'ouvre ${targetLabel} avec le diagnostic pré-chargé ?"
+
+NE lance PAS l'architecte toi-même. Attends la confirmation de l'utilisateur.
+IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTION--> (invisible pour l'utilisateur).`;
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
