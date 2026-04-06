@@ -181,7 +181,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       const { data: accessConfig } = await supabase
         .from('system_config')
         .select('value')
-        .eq('config_key', 'full_google_access_auth')
+        .eq('key', 'full_google_access_auth')
         .maybeSingle();
       const fullGoogleAccess = accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true;
       if (!fullGoogleAccess) {
