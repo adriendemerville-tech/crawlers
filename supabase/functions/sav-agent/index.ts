@@ -1509,4 +1509,4 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
     console.error("sav-agent error:", e);
     return jsonError(e instanceof Error ? e.message : "Erreur interne", 500);
   }
-}));
+});
