@@ -926,6 +926,7 @@ function CocoonContent() {
                 }}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 colorIntensity={colorIntensity}
                 nodeColors={cocoonTheme.nodeColors}
                 bgColorSlider={bgColor}
