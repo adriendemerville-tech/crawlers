@@ -246,10 +246,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     if (initialGreeting && !greetingTriggered.current && messages.length === 0) {
       greetingTriggered.current = true;
       const greetingMsg: ChatMessage = {
-        id: 'greeting-' + Date.now(),
         role: 'assistant',
         content: initialGreeting,
-        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       };
       setMessages([greetingMsg]);
     }
