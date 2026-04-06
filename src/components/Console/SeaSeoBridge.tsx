@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowRight, Search, Target, Send, Unplug, Link as LinkIcon, Info, BarChart3, TrendingUp, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, ArrowRight, Search, Target, Send, Unplug, Link as LinkIcon, Info, BarChart3, TrendingUp, Globe, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
