@@ -1411,5 +1411,25 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         </div>
       </div>
     </div>
+
+    {/* Content Architect Modal — opened from Félix action */}
+    {showContentArchitectModal && createPortal(
+      <Suspense fallback={null}>
+        <CocoonContentArchitectModal
+          isOpen={showContentArchitectModal}
+          onClose={() => {
+            setShowContentArchitectModal(false);
+            setContentArchitectDiag(null);
+          }}
+          nodes={[]}
+          domain={contentArchitectDiag?.url ? (() => { try { return new URL(contentArchitectDiag.url).hostname; } catch { return ''; } })() : ''}
+          prefillUrl={contentArchitectDiag?.url || ''}
+          isExistingPage={!!contentArchitectDiag?.url}
+          colorTheme="green"
+        />
+      </Suspense>,
+      document.body
+    )}
+    </>
   );
 }
