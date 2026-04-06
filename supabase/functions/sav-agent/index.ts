@@ -694,6 +694,74 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           console.error("CTO directive error:", e);
         }
       }
+
+      // ── Supervisor Agent directive detection (admin creator only) ──
+      const supervisorDirectiveMatch = lastUserMsg.match(/^\/supervisor\s+(.+)/is);
+      const supervisorNaturalKeywords = [
+        "agent supervisor", "dis au supervisor", "dis à supervisor",
+        "demande au supervisor", "demande à supervisor",
+        "instruction supervisor", "directive supervisor",
+        "le supervisor doit", "supervisor doit",
+      ];
+      const isSupervisorDirective = supervisorDirectiveMatch || supervisorNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isSupervisorDirective && !isCreator) {
+        return jsonOk({ reply: "⚠️ Seul l'administrateur créateur peut transmettre des directives au Supervisor.", conversation_id });
+      }
+
+      if (isSupervisorDirective && isCreator) {
+        const { data: bridgeConf3 } = await sb.from("admin_dashboard_config").select("card_order").eq("user_id", user_id).maybeSingle();
+        const bridgeConfig3 = (bridgeConf3?.card_order as any) || {};
+        if (bridgeConfig3.felix_supervisor_bridge === false) {
+          return jsonOk({ reply: "⚠️ Le pont Félix → Supervisor est actuellement **désactivé**. Vous pouvez le réactiver depuis le Hub Intelligence (admin).", conversation_id });
+        }
+        try {
+          const directiveText = supervisorDirectiveMatch
+            ? supervisorDirectiveMatch[1].trim()
+            : lastUserMsg;
+
+          const funcMatch = directiveText.match(/(?:fonction|function|edge function)\s+([a-z0-9_-]+)/i);
+          const targetFunction = funcMatch ? funcMatch[1] : null;
+          const urlMatch = directiveText.match(/(?:sur|pour|page|url)\s+(\/[^\s,]+|https?:\/\/[^\s,]+)/i);
+          const targetUrl = urlMatch ? urlMatch[1] : null;
+
+          await sb.from("agent_supervisor_directives").insert({
+            user_id,
+            directive_text: directiveText,
+            target_function: targetFunction,
+            target_url: targetUrl,
+            status: 'pending',
+          });
+
+          const confirmReply = `✅ Directive transmise au Supervisor :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}Le Supervisor intégrera cette instruction lors de son prochain audit.`;
+
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id,
+                user_email: prof?.email || null,
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save Supervisor directive conv error:", e);
+          }
+
+          return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("Supervisor directive error:", e);
+        }
+      }
       
       const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
