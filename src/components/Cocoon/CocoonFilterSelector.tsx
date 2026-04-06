@@ -123,6 +123,13 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     onFiltersChange({ ...filters, visibleJuiceTypes: next });
   };
 
+  const toggleLinkDirection = (dir: string) => {
+    const next = new Set(filters.visibleLinkDirections);
+    if (next.has(dir)) next.delete(dir);
+    else next.add(dir);
+    onFiltersChange({ ...filters, visibleLinkDirections: next });
+  };
+
   const toggleClusters = () => {
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
   };
