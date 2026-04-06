@@ -31,6 +31,7 @@ const JUICE_TYPE_LABELS: Record<string, Record<string, string>> = {
 export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
+  visibleLinkDirections: Set<string>;
   showAllClusters: boolean;
   showParticles: boolean;
 }
