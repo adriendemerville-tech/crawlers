@@ -2182,6 +2182,54 @@ export type Database = {
         }
         Relationships: []
       }
+      code_deployment_history: {
+        Row: {
+          agent_source: string
+          commit_sha: string | null
+          created_at: string
+          deployed_at: string
+          deployed_content: string
+          file_path: string
+          id: string
+          is_rolled_back: boolean
+          previous_content: string | null
+          proposal_id: string
+          rollback_commit_sha: string | null
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+        }
+        Insert: {
+          agent_source?: string
+          commit_sha?: string | null
+          created_at?: string
+          deployed_at?: string
+          deployed_content: string
+          file_path: string
+          id?: string
+          is_rolled_back?: boolean
+          previous_content?: string | null
+          proposal_id: string
+          rollback_commit_sha?: string | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+        }
+        Update: {
+          agent_source?: string
+          commit_sha?: string | null
+          created_at?: string
+          deployed_at?: string
+          deployed_content?: string
+          file_path?: string
+          id?: string
+          is_rolled_back?: boolean
+          previous_content?: string | null
+          proposal_id?: string
+          rollback_commit_sha?: string | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+        }
+        Relationships: []
+      }
       content_deploy_snapshots: {
         Row: {
           consecutive_failures: number | null
