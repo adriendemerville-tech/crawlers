@@ -186,7 +186,7 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
 - Triangle Prédictif : prédiction trafic 90j via corrélation GSC/GA4, MAPE < 15%.
 
 ## Features principales
-- [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200 points. 1/jour gratuit inscrit, illimité Pro Agency.
+- [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200 points. 1/jour gratuit inscrit, illimité Pro Agency. Mesure les Core Web Vitals complets via PageSpeed Insights : FCP (First Contentful Paint), LCP (Largest Contentful Paint), CLS (Cumulative Layout Shift), TBT (Total Blocking Time), Speed Index, TTI, TTFB — à la fois données terrain CrUX et mesures labo Lighthouse, mobile et desktop.
 - Audit Stratégique IA : scoring IAS + E-E-A-T + plan d'action. 1 crédit.
 - [Audit Comparé](https://crawlers.fr/audit-compare) : benchmark vs 3 concurrents. 4 crédits.
 - [Matrice d'audit](https://crawlers.fr/matrice) : moteur d'audit sur-mesure multi-critères (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
