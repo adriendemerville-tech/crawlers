@@ -245,6 +245,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [selectedLogService, setSelectedLogService] = useState<LogServiceButton | null>(null);
   const [logConnectorLoading, setLogConnectorLoading] = useState(false);
   const [logTrackedSiteId, setLogTrackedSiteId] = useState('');
+  const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
 
   const { isAdmin } = useAdmin();
   // Check if user has Pro Agency+ plan (admin = premium)
