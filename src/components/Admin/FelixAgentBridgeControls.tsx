@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bot, Search, Plug } from 'lucide-react';
+import { Bot, Search, Plug, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type BridgeKey = 'felix_seo_bridge' | 'felix_cto_bridge' | 'felix_supervisor_bridge';
 
 export function FelixAgentBridgeControls() {
   const [seoEnabled, setSeoEnabled] = useState(true);
   const [ctoEnabled, setCtoEnabled] = useState(true);
+  const [supervisorEnabled, setSupervisorEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export function FelixAgentBridgeControls() {
         const config = data.card_order as any;
         if (config.felix_seo_bridge === false) setSeoEnabled(false);
         if (config.felix_cto_bridge === false) setCtoEnabled(false);
+        if (config.felix_supervisor_bridge === false) setSupervisorEnabled(false);
       }
     } catch (e) {
       console.error('Load bridge config error:', e);
@@ -38,12 +42,11 @@ export function FelixAgentBridgeControls() {
     }
   };
 
-  const updateBridge = async (bridge: 'felix_seo_bridge' | 'felix_cto_bridge', enabled: boolean) => {
+  const updateBridge = async (bridge: BridgeKey, enabled: boolean) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get current config
       const { data: existing } = await supabase
         .from('admin_dashboard_config')
         .select('card_order')
@@ -64,22 +67,16 @@ export function FelixAgentBridgeControls() {
           .insert({ user_id: user.id, card_order: newConfig } as any);
       }
 
-      const label = bridge === 'felix_seo_bridge' ? 'Agent SEO' : 'Agent CTO';
-      toast.success(`Pont Félix → ${label} ${enabled ? 'activé' : 'désactivé'}`);
+      const labels: Record<BridgeKey, string> = {
+        felix_seo_bridge: 'Agent SEO',
+        felix_cto_bridge: 'Agent CTO',
+        felix_supervisor_bridge: 'Supervisor',
+      };
+      toast.success(`Pont Félix → ${labels[bridge]} ${enabled ? 'activé' : 'désactivé'}`);
     } catch (e) {
       console.error('Update bridge error:', e);
       toast.error('Erreur lors de la mise à jour');
     }
-  };
-
-  const toggleSeo = (val: boolean) => {
-    setSeoEnabled(val);
-    updateBridge('felix_seo_bridge', val);
-  };
-
-  const toggleCto = (val: boolean) => {
-    setCtoEnabled(val);
-    updateBridge('felix_cto_bridge', val);
   };
 
   if (loading) return null;
@@ -102,7 +99,7 @@ export function FelixAgentBridgeControls() {
               Félix → Agent SEO
             </Label>
           </div>
-          <Switch id="seo-bridge" checked={seoEnabled} onCheckedChange={toggleSeo} />
+          <Switch id="seo-bridge" checked={seoEnabled} onCheckedChange={(val) => { setSeoEnabled(val); updateBridge('felix_seo_bridge', val); }} />
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -111,10 +108,19 @@ export function FelixAgentBridgeControls() {
               Félix → Agent CTO
             </Label>
           </div>
-          <Switch id="cto-bridge" checked={ctoEnabled} onCheckedChange={toggleCto} />
+          <Switch id="cto-bridge" checked={ctoEnabled} onCheckedChange={(val) => { setCtoEnabled(val); updateBridge('felix_cto_bridge', val); }} />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="supervisor-bridge" className="text-sm cursor-pointer">
+              Félix → Supervisor
+            </Label>
+          </div>
+          <Switch id="supervisor-bridge" checked={supervisorEnabled} onCheckedChange={(val) => { setSupervisorEnabled(val); updateBridge('felix_supervisor_bridge', val); }} />
         </div>
         <p className="text-xs text-muted-foreground">
-          Commandes <code>/seo</code> et <code>/cto</code> dans Félix. Admin créateur uniquement.
+          Commandes <code>/seo</code>, <code>/cto</code> et <code>/supervisor</code> dans Félix. Admin créateur uniquement.
         </p>
       </CardContent>
     </Card>
