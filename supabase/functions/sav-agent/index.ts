@@ -1347,7 +1347,8 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
 
     // Extract and persist memory from LLM response
     const { cleanResponse, memories, identityUpdates } = parseMemoryExtraction(rawReply);
-    let reply = cleanResponse;
+    // Remove architect action marker from visible reply
+    let reply = cleanResponse.replace(/<!--ARCHITECT_ACTION-->/g, '').trim();
 
     // Persist extracted memory asynchronously (don't block response)
     if (!isGuest && user_id && (memories.length > 0 || identityUpdates.length > 0)) {
