@@ -185,7 +185,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         .maybeSingle();
       const fullGoogleAccess = accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true;
       if (!fullGoogleAccess) {
-        return jsonError('Google Ads access requires full Google API access to be enabled by admin', code: 'FULL_ACCESS_DISABLED', 403);
+        return jsonError('Google Ads access requires full Google API access to be enabled by admin', 403);
       }
 
       const stateValue = `${user_id}|${frontend_origin || ''}`;
