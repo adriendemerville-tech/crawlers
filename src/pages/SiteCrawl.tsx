@@ -567,6 +567,25 @@ export default function SiteCrawl() {
     })();
   }, [searchParams]);
 
+  // Auto-start crawl when redirected from Felix
+  const felixAutoStartRef = useRef(false);
+  useEffect(() => {
+    if (felixAutoStartRef.current) return;
+    const fromFelix = searchParams.get('from') === 'felix';
+    const autostart = searchParams.get('autostart') === 'true';
+    const paramUrl = searchParams.get('url');
+    if (fromFelix && autostart && paramUrl && user && !loading) {
+      felixAutoStartRef.current = true;
+      setUrl(paramUrl);
+      // Clear URL params
+      navigate('/app/site-crawl', { replace: true });
+      // Auto-submit after a short delay to let state settle
+      setTimeout(() => {
+        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+        handleSubmit(fakeEvent);
+      }, 500);
+    }
+  }, [searchParams, user, loading]);
 
   // Use a ref to track the crawl ID for polling, avoiding re-creating intervals on every crawlResult change
   const pollingCrawlIdRef = useRef<string | null>(null);
