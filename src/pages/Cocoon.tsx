@@ -841,7 +841,7 @@ function CocoonContent() {
         )}
 
         {/* Main Graph */}
-        <main className={`flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-3 sm:pt-4 lg:pt-6 min-h-0 ${isFullscreen ? 'pb-8 sm:pb-10 lg:pb-14' : 'pb-2 sm:pb-3 lg:pb-4'}`}>
+        <main className={`flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-3 sm:pt-4 lg:pt-6 min-h-0 flex flex-col ${isFullscreen ? 'pb-8 sm:pb-10 lg:pb-14' : 'pb-0'}`}>
           <div className="h-full rounded-xl overflow-hidden border relative border-[hsl(263,70%,20%)]" style={{ backgroundColor: computedBgColor, filter: `contrast(${graphContrast}%) brightness(${50 + graphContrast / 2}%)` }}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
