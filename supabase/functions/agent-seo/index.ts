@@ -913,6 +913,7 @@ Deno.serve(async (req) => {
       summary,
       improvements_count: parsedImprovements?.improvements?.length || 0,
       proposals_created: proposalsCreated,
+      page_drafts_created: pageDraftsCreated,
       priority_fixes: parsedImprovements?.priority_fixes || [],
       status: logEntry.status,
     }), {
