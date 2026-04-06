@@ -217,7 +217,7 @@ export function SeoPageDrafts() {
         </div>
 
         <div className="flex gap-1.5 mt-3">
-          {(['draft', 'approved', 'all'] as const).map(f => (
+          {(['draft', 'approved', 'published', 'all'] as const).map(f => (
             <Button
               key={f}
               variant={filter === f ? 'default' : 'outline'}
@@ -225,7 +225,7 @@ export function SeoPageDrafts() {
               className="text-xs h-7 px-2.5"
               onClick={() => setFilter(f)}
             >
-              {f === 'draft' ? 'En attente' : f === 'approved' ? 'Approuvées' : 'Toutes'}
+              {f === 'draft' ? 'En attente' : f === 'approved' ? 'Approuvées' : f === 'published' ? '🌐 Publiées' : 'Toutes'}
             </Button>
           ))}
         </div>
