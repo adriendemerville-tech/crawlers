@@ -251,16 +251,30 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check GSC & GA4 from profiles
+      // Check GSC & GA4 from profiles first
       const { data: profile } = await supabase
         .from('profiles')
         .select('gsc_refresh_token, ga4_property_id')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (profile) {
-        setGscConnected(!!profile.gsc_refresh_token);
-        setGa4Connected(!!profile.ga4_property_id);
+      
+      let gscOk = !!profile?.gsc_refresh_token;
+      let ga4Ok = !!profile?.ga4_property_id;
+
+      // Also check google_connections (primary source of truth)
+      if (!ga4Ok || !gscOk) {
+        const { data: conns } = await supabase
+          .from('google_connections')
+          .select('id, ga4_property_id, gsc_site_urls')
+          .eq('user_id', user.id);
+        if (conns && conns.length > 0) {
+          gscOk = gscOk || conns.some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0);
+          ga4Ok = ga4Ok || conns.some(c => !!c.ga4_property_id);
+        }
       }
+
+      setGscConnected(gscOk);
+      setGa4Connected(ga4Ok);
 
       // Check Google Ads
       const { data: adsData } = await (supabase as any)
