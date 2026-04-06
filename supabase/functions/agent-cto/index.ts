@@ -982,6 +982,16 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
       }
     }
 
+    // Mark consumed CTO directives
+    if (relevantCtoDirectives.length > 0) {
+      const directiveIds = relevantCtoDirectives.map((d: any) => d.id);
+      await supabase.from('agent_cto_directives')
+        .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+        .in('id', directiveIds)
+        .then(() => console.log(`[AGENT-CTO] ✅ ${directiveIds.length} directive(s) marquées comme consommées`))
+        .catch((e: any) => console.error('[AGENT-CTO] Erreur mise à jour directives:', e));
+    }
+
     const { error: logError } = await supabase.from('cto_agent_logs').insert(logEntry)
     if (logError) console.error('[AGENT-CTO v2] Erreur log:', logError)
 
