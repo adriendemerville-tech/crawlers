@@ -455,7 +455,8 @@ export default function SiteCrawl() {
     } catch { return ''; }
   });
   const isAgencyPlus = isAdmin || planType === 'agency_premium';
-  const maxSliderCap = isAgencyPlus ? 50 : 20;
+  const isPaidPlan = isAgencyPro || isAgencyPlus;
+  const maxSliderCap = isAgencyPlus ? 50 : isAgencyPro ? 30 : 20;
   const [maxPages, setMaxPages] = useState(maxSliderCap);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
@@ -1340,8 +1341,8 @@ export default function SiteCrawl() {
                         value={[maxPages]}
                         onValueChange={([val]) => setMaxPages(val)}
                         min={10}
-                        max={isAdmin ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (isAgencyPlus ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : 50) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(20, Math.max(10, totalEstimatedPages)) : 20))}
-                        step={isAdmin || isAgencyPlus ? 1 : 5}
+                        max={isPaidPlan ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : maxSliderCap) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(maxSliderCap, Math.max(10, totalEstimatedPages)) : maxSliderCap)}
+                        step={isPaidPlan ? 1 : 5}
                         disabled={isLoading}
                         className="flex-1"
                       />
