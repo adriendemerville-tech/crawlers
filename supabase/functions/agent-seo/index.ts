@@ -669,7 +669,7 @@ Deno.serve(async (req) => {
   try {
     const supabase = getServiceClient();
     const body = await req.json().catch(() => ({}));
-    const siteBaseUrl = body.base_url || 'https://crawlers.lovable.app';
+    const siteBaseUrl = body.base_url || 'https://crawlers.fr';
 
     // Pick target page
     const targetSlug = body.target_slug || null;

@@ -53,7 +53,7 @@ export function SeoAgentDashboard() {
     setRunning(true);
     try {
       const { data, error } = await supabase.functions.invoke('agent-seo', {
-        body: { base_url: 'https://crawlers.lovable.app' },
+        body: { base_url: 'https://crawlers.fr' },
       });
       if (error) throw error;
       if (data?.success) {
