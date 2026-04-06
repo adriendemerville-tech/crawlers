@@ -258,6 +258,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [felixMuted, setFelixMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const [pendingArchitectAction, setPendingArchitectAction] = useState<any>(null);
+  const [showContentArchitectModal, setShowContentArchitectModal] = useState(false);
+  const [contentArchitectDiag, setContentArchitectDiag] = useState<any>(null);
 
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
