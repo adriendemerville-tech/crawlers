@@ -1295,7 +1295,7 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
+                  <Button type="submit" disabled={isLoading || !url || isDetectingPages || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
                   </Button>
