@@ -338,7 +338,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       const { data } = await (supabase as any)
         .from('system_config')
         .select('value')
-        .eq('config_key', 'full_google_access_auth')
+        .eq('key', 'full_google_access_auth')
         .maybeSingle();
       if (data?.value && typeof data.value === 'object' && data.value.active === true) {
         setFullGoogleAccess(true);
