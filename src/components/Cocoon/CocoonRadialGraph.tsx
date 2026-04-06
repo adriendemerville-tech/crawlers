@@ -336,6 +336,7 @@ export function CocoonRadialGraph({
   onNodeSelect,
   showClusters = true,
   visibleJuiceTypes,
+  visibleLinkDirections,
   colorIntensity = 5,
   nodeColors,
   bgColorSlider = 0,

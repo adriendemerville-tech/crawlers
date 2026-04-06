@@ -133,6 +133,7 @@ export function CocoonForceGraph({
   nodeColors: nodeColorsProp,
   particleColors: particleColorsProp,
   visibleJuiceTypes,
+  visibleLinkDirections,
   showClusters,
   colorIntensity = 100,
 }: CocoonForceGraphProps) {
