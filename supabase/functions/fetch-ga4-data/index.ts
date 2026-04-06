@@ -78,8 +78,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       }
 
       if (!resolvedPropertyId) {
-        return jsonError('No GA4 property found. Use list_properties to find and save one.',
-          needs_property_selection: true, 404)
+        return jsonError('No GA4 property found. Use list_properties to find and save one.', 404)
       }
 
       const endD = end_date || new Date().toISOString().split('T')[0]
