@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
+import { checkDailyCostCap } from '../_shared/dailyCostGuard.ts';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
