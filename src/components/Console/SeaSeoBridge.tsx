@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { SIMULATED_OPPORTUNITIES, SIMULATED_SUMMARY } from '@/data/seaSeoSimulatedData';
 
 interface Opportunity {
@@ -54,6 +55,7 @@ const typeConfig: Record<string, { label: string; color: string; icon: typeof Tr
 
 export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const { language } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(false);
   const [injecting, setInjecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -62,43 +64,30 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [filterType, setFilterType] = useState<string | null>(null);
   const [adsConnected, setAdsConnected] = useState<boolean | null>(null);
-  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
 
-  // Check Google Ads connection status & simulated data flag
+  // Check Google Ads connection status
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check ads connection
       const { data: ads } = await (supabase as any)
         .from('google_ads_connections')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       setAdsConnected(!!ads);
-
-      // Check simulated data flag from admin config
-      const { data: config } = await supabase
-        .from('admin_dashboard_config')
-        .select('card_order')
-        .limit(1)
-        .maybeSingle();
-      if (config?.card_order) {
-        const co = config.card_order as Record<string, unknown>;
-        setSimulatedDataEnabled(co.simulated_data_enabled !== false);
-      }
     };
     check();
   }, []);
 
-  // Auto-load simulated data when enabled and no live data
+  // Auto-load simulated data when demo mode is enabled and no live data
   useEffect(() => {
-    if (simulatedDataEnabled && !adsConnected && !summary) {
+    if (isDemoMode && !adsConnected && !summary) {
       setSummary(SIMULATED_SUMMARY);
       setOpportunities(SIMULATED_OPPORTUNITIES);
     }
-  }, [simulatedDataEnabled, adsConnected, summary]);
+  }, [isDemoMode, adsConnected, summary]);
 
   const analyze = async () => {
     setLoading(true);
@@ -222,7 +211,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
               {t3(language, 'Déconnecter Google Ads', 'Disconnect Google Ads', 'Desconectar Google Ads')}
             </Button>
           )}
-          <Button onClick={analyze} disabled={loading || (!adsConnected && !simulatedDataEnabled)} size="sm">
+          <Button onClick={analyze} disabled={loading || (!adsConnected && !isDemoMode)} size="sm">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
             {loading ? 'Analyse…' : 'Analyser'}
           </Button>
@@ -394,7 +383,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       )}
 
       {/* Empty state — Google Ads NOT connected */}
-      {!loading && opportunities.length === 0 && !summary && adsConnected === false && !simulatedDataEnabled && (
+      {!loading && opportunities.length === 0 && !summary && adsConnected === false && !isDemoMode && (
         <Card className="border-dashed border-2 border-primary/20">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

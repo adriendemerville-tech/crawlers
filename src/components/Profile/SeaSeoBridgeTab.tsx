@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SeaSeoBridge } from '@/components/Console/SeaSeoBridge';
 import { Loader2, Info } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 interface Site {
   id: string;
@@ -22,6 +23,7 @@ const t3 = (lang: string, fr: string, en: string, es: string) =>
 
 export function SeaSeoBridgeTab() {
   const { language } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -106,10 +108,10 @@ export function SeaSeoBridgeTab() {
     );
   }
 
-  const hasAnyReadySite = Object.values(readiness).some(r => r.hasTechnical && r.hasStrategic && r.hasCocoon);
+  const hasAnyReadySite = isDemoMode || Object.values(readiness).some(r => r.hasTechnical && r.hasStrategic && r.hasCocoon);
   const selectedSite = sites.find(s => s.id === selectedSiteId);
   const selectedReadiness = selectedSiteId ? readiness[selectedSiteId] : null;
-  const selectedIsReady = selectedReadiness?.hasTechnical && selectedReadiness?.hasStrategic && selectedReadiness?.hasCocoon;
+  const selectedIsReady = isDemoMode || (selectedReadiness?.hasTechnical && selectedReadiness?.hasStrategic && selectedReadiness?.hasCocoon);
 
   return (
     <div className="space-y-4">
