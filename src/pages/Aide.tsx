@@ -732,14 +732,30 @@ export default function Aide() {
       <Header />
       <main className="flex-1 pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          {/* Hero */}
+          {/* Hero with Félix */}
           <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[hsl(var(--primary)/0.1)] mb-4">
+              <MessageCircle className="h-8 w-8 text-primary" />
+            </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
               Centre d'aide
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-2">
               Documentation complète de la plateforme Crawlers.fr — audits SEO, GEO Score, visibilité IA, crédits et intégration technique.
             </p>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-6">
+              <strong className="text-foreground">Félix</strong>, notre assistant IA, est disponible 24h/24 pour répondre à toutes vos questions, diagnostiquer vos problèmes SEO et vous guider dans l'utilisation de la plateforme.
+            </p>
+            <Button
+              size="lg"
+              className="gap-2"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('felix-open-with-message', { detail: { message: "Que puis-je faire pour t'aider ?" } }));
+              }}
+            >
+              <MessageCircle className="h-4 w-4" />
+              Nous écrire
+            </Button>
           </div>
 
           {/* Search */}
