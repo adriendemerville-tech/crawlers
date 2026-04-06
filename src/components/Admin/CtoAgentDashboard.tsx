@@ -748,6 +748,9 @@ export function CtoAgentDashboard() {
 
       {/* CTO Code Proposals Registry */}
       <CtoCodeProposals />
+
+      {/* Deployment History with Rollback */}
+      <DeploymentHistory />
     </div>
   );
 }
