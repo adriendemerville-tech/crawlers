@@ -1819,7 +1819,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
       }
 
       if (!conversation_id && savedConvId) {
-        return jsonOk({ reply, conversation_id: savedConvId, ...(architectAction ? { architect_action: architectAction } : {}) });
+        return jsonOk({ reply, conversation_id: savedConvId, ...(architectAction ? { architect_action: architectAction } : {}), ...(navigationAction ? { navigation_action: navigationAction } : {}) });
       }
     } catch (e) {
       console.error("Save conversation error:", e);
