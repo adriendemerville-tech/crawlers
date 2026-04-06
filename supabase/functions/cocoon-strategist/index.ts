@@ -42,6 +42,7 @@ type ActionType =
   | 'create_content'
   | 'rewrite_content'
   | 'delete_content'
+  | 'publish_draft'
   | 'add_internal_link'
   | 'remove_internal_link'
   | 'add_backlink_target'
