@@ -54,7 +54,7 @@ const typeConfig: Record<string, { label: string; color: string; icon: typeof Tr
 };
 
 export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
-  const { language } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(false);
   const [injecting, setInjecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -63,7 +63,6 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [filterType, setFilterType] = useState<string | null>(null);
   const [adsConnected, setAdsConnected] = useState<boolean | null>(null);
-  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
 
   // Check Google Ads connection status & simulated data flag
   useEffect(() => {
