@@ -82,8 +82,64 @@ async function deletePage(apiKey: string, pageKey: string) {
   return callIktracker('DELETE', `/pages/${pageKey}`, apiKey)
 }
 
-async function listPosts(apiKey: string, limit = 50, offset = 0) {
-  return callIktracker('GET', `/posts?limit=${limit}&offset=${offset}`, apiKey)
+type IktrackerPostSummary = {
+  slug?: string
+  status?: string | null
+  title?: string
+}
+
+async function listPosts(apiKey: string, limit = 50, offset = 0, includeAll = false) {
+  const search = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  })
+
+  if (includeAll) {
+    search.set('all', 'true')
+  }
+
+  return callIktracker('GET', `/posts?${search.toString()}`, apiKey)
+}
+
+function extractPostSummaries(data: unknown): IktrackerPostSummary[] {
+  if (Array.isArray(data)) {
+    return data as IktrackerPostSummary[]
+  }
+
+  if (data && typeof data === 'object') {
+    const payload = data as { data?: unknown; posts?: unknown }
+    if (Array.isArray(payload.posts)) {
+      return payload.posts as IktrackerPostSummary[]
+    }
+    if (Array.isArray(payload.data)) {
+      return payload.data as IktrackerPostSummary[]
+    }
+  }
+
+  return []
+}
+
+async function listPostsForDedup(apiKey: string, maxPosts = 300) {
+  const pageSize = 100
+  const postsBySlug = new Map<string, IktrackerPostSummary>()
+
+  for (let offset = 0; offset < maxPosts; offset += pageSize) {
+    const result = await listPosts(apiKey, Math.min(pageSize, maxPosts - offset), offset, true)
+    const pagePosts = extractPostSummaries(result.data)
+
+    for (const post of pagePosts) {
+      const dedupKey = post.slug || `${normalizeForComparison(post.title || '')}:${post.status || 'unknown'}`
+      if (!postsBySlug.has(dedupKey)) {
+        postsBySlug.set(dedupKey, post)
+      }
+    }
+
+    if (pagePosts.length < pageSize) {
+      break
+    }
+  }
+
+  return Array.from(postsBySlug.values())
 }
 
 async function getPost(apiKey: string, slug: string) {
@@ -131,9 +187,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
   // 2) Semantic dedup: check if a very similar article already exists by title
   if (title) {
     try {
-      const listResult = await listPosts(apiKey, 100, 0)
-      const posts: Array<{ title?: string; slug?: string }> = 
-        (listResult?.data?.posts || listResult?.data || [])
+      const posts = await listPostsForDedup(apiKey)
       
       for (const post of posts) {
         if (!post.title) continue
