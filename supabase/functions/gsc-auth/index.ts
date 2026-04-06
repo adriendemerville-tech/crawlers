@@ -431,8 +431,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           console.log(`[gsc-auth] Resolved "${requestedSite}" → "${resolvedSiteUrl}"`);
         } else {
           console.log(`[gsc-auth] No matching property found for "${bareDomain}". Available: ${allSites.map(s => s.siteUrl).join(', ')}`);
-          return jsonError('Site not found in Search Console',
-            available_sites: allSites.map(s => s.siteUrl), 404);
+          return jsonError(`Site not found in Search Console. Available: ${allSites.map(s => s.siteUrl).join(', ')}`, 404);
         }
       } else {
         await sitesResp.text();
