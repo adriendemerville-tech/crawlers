@@ -1027,7 +1027,7 @@ export function CocoonForceGraph({
         style={{ width: dimensions.width, height: dimensions.height }}
         onMouseMove={(e) => { handleMouseMove(e); handleDrag(e); }}
         onClick={handleClick}
-        onWheel={handleWheel}
+        
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
