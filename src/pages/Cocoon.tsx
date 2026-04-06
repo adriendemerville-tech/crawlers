@@ -950,6 +950,7 @@ function CocoonContent() {
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 showClusters={cocoonFilters.showAllClusters}
                 colorIntensity={colorIntensity}
               />
