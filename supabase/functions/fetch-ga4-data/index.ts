@@ -88,21 +88,29 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       const metrics = await fetchGA4Metrics(accessToken, resolvedPropertyId, startD, endD)
       trackPaidApiCall('fetch-ga4-data', 'google-ga4', 'runReport')
 
-      // Persist revenue data if a tracked_site is linked
-      if (metrics.daily_series?.length > 0) {
-        // Find tracked_site_id for this user + domain
-        const domainForLookup = domain || ''
-        if (domainForLookup) {
-          const { data: site } = await supabase
-            .from('tracked_sites')
-            .select('id')
-            .eq('user_id', user_id)
-            .ilike('domain', `%${domainForLookup.replace(/^www\./, '')}%`)
-            .limit(1)
-            .single()
-          if (site) {
-            await persistGA4Revenue(supabase, user_id, site.id, metrics.daily_series)
-          }
+      // Persist all GA4 data if a tracked_site is linked
+      const domainForLookup = domain || ''
+      let trackedSiteId: string | null = null
+      if (domainForLookup) {
+        const { data: site } = await supabase
+          .from('tracked_sites')
+          .select('id')
+          .eq('user_id', user_id)
+          .ilike('domain', `%${domainForLookup.replace(/^www\./, '')}%`)
+          .limit(1)
+          .single()
+        trackedSiteId = site?.id || null
+      }
+
+      if (trackedSiteId) {
+        // Persist daily metrics
+        if (metrics.daily_series?.length > 0) {
+          await persistGA4DailyMetrics(supabase, user_id, trackedSiteId, metrics.daily_series)
+          await persistGA4Revenue(supabase, user_id, trackedSiteId, metrics.daily_series)
+        }
+        // Persist top pages
+        if (metrics.top_pages?.length > 0) {
+          await persistGA4TopPages(supabase, user_id, trackedSiteId, startD, endD, metrics.top_pages)
         }
       }
 
