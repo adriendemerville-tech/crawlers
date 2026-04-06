@@ -3,6 +3,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -1573,6 +1574,12 @@ Quand tu crées un article pour combler un gap de contenu:
 - Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus quand c'est pertinent
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
+
+## INVENTAIRE CMS — CONTENU EXISTANT (brouillons + publié)
+⚠️ AVANT DE CRÉER UN ARTICLE, vérifie dans cet inventaire si un brouillon similaire existe déjà.
+Si oui, utilise "update-post" pour l'enrichir/modifier au lieu de "create-post".
+L'inventaire sera injecté dans le contexte ci-dessous sous la clé CMS_INVENTORY.
+
 - Catégories suggérées: "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels", "FAQ", "Décryptages"
 - Tags pertinents: "indemnités kilométriques", "frais réels", "barème IK", "déclaration impôts", "auto-entrepreneur", "trajets professionnels"`;
 }
