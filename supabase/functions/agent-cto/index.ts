@@ -793,11 +793,18 @@ Réponds UNIQUEMENT en JSON :
       });
     }
 
-    // ─── Phase 1: Gather real evidence + enriched context ──────────
-    const [champion, reliability, agentContext] = await Promise.all([
+    // ─── Phase 1: Gather real evidence + enriched context + admin directives ──
+    const [champion, reliability, agentContext, ctoDirectivesResp] = await Promise.all([
       getChampionPrompt(supabase, functionName),
       getReliabilityProfile(supabase, functionName),
       getAgentContext({ agent: 'cto', domain, days: 7 }).catch(() => null),
+      supabase.from('agent_cto_directives')
+        .select('id, directive_text, target_function, target_url')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .limit(10)
+        .then((r: any) => r)
+        .catch(() => ({ data: null })),
     ])
 
     const currentVersion = champion?.version || 0
