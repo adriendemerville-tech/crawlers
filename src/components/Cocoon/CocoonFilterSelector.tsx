@@ -139,8 +139,8 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
   };
 
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 2;
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 2; // 3 link directions + clusters + particles
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
