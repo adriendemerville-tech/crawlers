@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,11 @@ import { SeoQuiz } from './SeoQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
+import { createPortal } from 'react-dom';
+
+const CocoonContentArchitectModal = lazy(() =>
+  import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
