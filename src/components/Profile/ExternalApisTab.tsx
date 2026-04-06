@@ -1165,20 +1165,51 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             )}
           </div>
 
-          <DialogFooter>
-            <Button
-              onClick={handleLogConnectorCreate}
-              disabled={logConnectorLoading || !logTrackedSiteId}
-              className="w-full"
-            >
-              {logConnectorLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-              )}
-              {language === 'fr' ? 'Créer le connecteur' : language === 'es' ? 'Crear conector' : 'Create connector'}
-            </Button>
-          </DialogFooter>
+          {generatedApiKey ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+                <p className="text-xs font-medium text-foreground">
+                  {language === 'fr' ? 'Votre clé API (à copier maintenant, elle ne sera plus affichée) :' : 'Your API key (copy now, it won\'t be shown again):'}
+                </p>
+                <code className="block w-full p-2 rounded bg-background border border-border text-xs font-mono break-all select-all text-foreground">
+                  {generatedApiKey}
+                </code>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedApiKey).then(() => {
+                    toast.success(language === 'fr' ? 'Clé copiée !' : 'Key copied!');
+                  }).catch(() => {});
+                }}
+              >
+                {language === 'fr' ? 'Copier la clé' : 'Copy key'}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => { setGeneratedApiKey(null); setLogConnectorDialogOpen(false); }}
+              >
+                {language === 'fr' ? 'Fermer' : 'Close'}
+              </Button>
+            </div>
+          ) : (
+            <DialogFooter>
+              <Button
+                onClick={handleLogConnectorCreate}
+                disabled={logConnectorLoading || !logTrackedSiteId}
+                className="w-full"
+              >
+                {logConnectorLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                {language === 'fr' ? 'Créer le connecteur' : language === 'es' ? 'Crear conector' : 'Create connector'}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
