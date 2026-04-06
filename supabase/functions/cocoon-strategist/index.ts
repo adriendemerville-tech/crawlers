@@ -1057,7 +1057,7 @@ try {
     console.error('Strategist error:', err);
     return jsonError(err.message, 500);
   }
-});
+}));
 
 // ═══════════════════════════════════════════════════════════════
 // MAPPING: Finding → Strategic Task(s)
