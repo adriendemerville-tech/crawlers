@@ -1070,7 +1070,7 @@ async function fetchGA4Referrals(
         limit: 20,
       }),
       signal: controller.signal,
-    }));
+    });
 
     clearTimeout(timeout);
 
