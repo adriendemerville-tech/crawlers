@@ -220,7 +220,7 @@ function CocoonContent() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
@@ -245,7 +245,7 @@ function CocoonContent() {
   // Reset filters when site changes
   useEffect(() => {
     setFiltersInitialized(false);
-    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
   }, [selectedSiteId]);
 
   // Initialize filters when nodes change — always re-init on new node set
@@ -274,7 +274,7 @@ function CocoonContent() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true, showParticles: true });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
       setFiltersInitialized(true);
     } else {
       setFiltersInitialized(false);
@@ -905,6 +905,7 @@ function CocoonContent() {
                 haloColors={cocoonTheme.haloColors}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 isDayMode={false}
                 colorIntensity={colorIntensity}
                 bgWarmth={bgWarmth}
@@ -925,6 +926,7 @@ function CocoonContent() {
                 }}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 colorIntensity={colorIntensity}
                 nodeColors={cocoonTheme.nodeColors}
                 bgColorSlider={bgColor}
@@ -948,6 +950,7 @@ function CocoonContent() {
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 showClusters={cocoonFilters.showAllClusters}
                 colorIntensity={colorIntensity}
               />

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Filter, Sparkles, FileText, Layers } from 'lucide-react';
+import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -31,6 +31,7 @@ const JUICE_TYPE_LABELS: Record<string, Record<string, string>> = {
 export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
+  visibleLinkDirections: Set<string>;
   showAllClusters: boolean;
   showParticles: boolean;
 }
@@ -43,10 +44,22 @@ interface CocoonFilterSelectorProps {
   theme?: CocoonTheme;
 }
 
+const LINK_DIRECTION_LABELS: Record<string, Record<string, string>> = {
+  descending: { fr: 'Liens descendants', en: 'Downstream links', es: 'Enlaces descendentes' },
+  ascending: { fr: 'Liens ascendants', en: 'Upstream links', es: 'Enlaces ascendentes' },
+  lateral: { fr: 'Liens latéraux', en: 'Lateral links', es: 'Enlaces laterales' },
+};
+
+const LINK_DIRECTION_COLORS: Record<string, string> = {
+  descending: '#fbbf24',
+  ascending: '#60a5fa',
+  lateral: '#7864dc',
+};
+
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
@@ -110,6 +123,13 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     onFiltersChange({ ...filters, visibleJuiceTypes: next });
   };
 
+  const toggleLinkDirection = (dir: string) => {
+    const next = new Set(filters.visibleLinkDirections);
+    if (next.has(dir)) next.delete(dir);
+    else next.add(dir);
+    onFiltersChange({ ...filters, visibleLinkDirections: next });
+  };
+
   const toggleClusters = () => {
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
   };
@@ -119,8 +139,8 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
   };
 
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 2;
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 2; // 3 link directions + clusters + particles
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
@@ -209,6 +229,40 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
                     tabIndex={-1}
                   />
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                  <span className="text-xs text-white/70 group-hover:text-white transition-colors">{label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <Separator className="bg-white/5 my-1" />
+
+        {/* Link Directions */}
+        <div className="px-3 py-1">
+          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+            <ArrowDown className="w-3 h-3" />
+            {t.linkDirections}
+          </p>
+          <div className="space-y-1.5">
+            {(['descending', 'ascending', 'lateral'] as const).map(dir => {
+              const labels = LINK_DIRECTION_LABELS[dir];
+              const label = labels[language] || labels.fr;
+              const color = LINK_DIRECTION_COLORS[dir];
+              const checked = filters.visibleLinkDirections.has(dir);
+              const DirIcon = dir === 'descending' ? ArrowDown : dir === 'ascending' ? ArrowUp : ArrowLeftRight;
+              return (
+                <label
+                  key={dir}
+                  className="flex items-center gap-2 cursor-pointer group"
+                  onClick={() => toggleLinkDirection(dir)}
+                >
+                  <Checkbox
+                    checked={checked}
+                    className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                    tabIndex={-1}
+                  />
+                  <DirIcon className="w-3 h-3 shrink-0" style={{ color }} />
                   <span className="text-xs text-white/70 group-hover:text-white transition-colors">{label}</span>
                 </label>
               );

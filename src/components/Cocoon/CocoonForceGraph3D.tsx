@@ -100,6 +100,7 @@ interface CocoonForceGraph3DProps {
   haloColors?: string[];
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   isDayMode?: boolean;
   colorIntensity?: number;
   bgWarmth?: number;
@@ -868,6 +869,7 @@ export function CocoonForceGraph3D({
   haloColors = DEFAULT_HALO_COLORS,
   showClusters = true,
   visibleJuiceTypes,
+  visibleLinkDirections,
   isDayMode = false,
   colorIntensity = 5,
   bgWarmth = 0,
@@ -1019,14 +1021,17 @@ export function CocoonForceGraph3D({
 
     simulate3D(gNodes, gLinks, 400);
 
-    // Filter links by visible juice types
-    const filteredLinks = visibleJuiceTypes && visibleJuiceTypes.size > 0
+    // Filter links by visible juice types and link directions
+    let filteredLinks = visibleJuiceTypes && visibleJuiceTypes.size > 0
       ? gLinks.filter(l => visibleJuiceTypes.has(l.juiceType))
       : gLinks;
+    if (visibleLinkDirections && visibleLinkDirections.size < 3) {
+      filteredLinks = filteredLinks.filter(l => visibleLinkDirections.has(l.direction));
+    }
 
     const nMap = new Map(gNodes.map((n) => [n.id, n]));
     return { graphNodes: gNodes, graphLinks: filteredLinks, nodeMap: nMap };
-  }, [nodes, visibleJuiceTypes]);
+  }, [nodes, visibleJuiceTypes, visibleLinkDirections]);
 
   // Zoom handler: dispatches wheel events to the canvas to trigger OrbitControls zoom
   const handleZoom = useCallback((direction: "in" | "out") => {

@@ -117,6 +117,7 @@ interface CocoonForceGraphProps {
   nodeColors?: Record<string, string>;
   particleColors?: Record<string, string>;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   showClusters?: boolean;
   colorIntensity?: number;
 }
@@ -132,6 +133,7 @@ export function CocoonForceGraph({
   nodeColors: nodeColorsProp,
   particleColors: particleColorsProp,
   visibleJuiceTypes,
+  visibleLinkDirections,
   showClusters,
   colorIntensity = 100,
 }: CocoonForceGraphProps) {
@@ -523,8 +525,9 @@ export function CocoonForceGraph({
         const source = link.source as GraphNode;
         const target = link.target as GraphNode;
         if (!source.x || !source.y || !target.x || !target.y) continue;
-        // Filter by visible juice types
+        // Filter by visible juice types and link directions
         if (visibleJuiceTypes && !visibleJuiceTypes.has(link.juiceType)) continue;
+        if (visibleLinkDirections && visibleLinkDirections.size < 3 && !visibleLinkDirections.has(link.direction || 'lateral')) continue;
 
         const isSelectedLink = selectedNodeId && (source.id === selectedNodeId || target.id === selectedNodeId);
         const baseAlpha = link.strength * 0.4;
@@ -578,6 +581,7 @@ export function CocoonForceGraph({
           const link = gLinks[p.linkIdx];
           if (!link) continue;
           if (visibleJuiceTypes && !visibleJuiceTypes.has(p.juiceType)) continue;
+          if (visibleLinkDirections && visibleLinkDirections.size < 3 && !visibleLinkDirections.has(link.direction || 'lateral')) continue;
           const source = link.source as GraphNode;
           const target = link.target as GraphNode;
           if (!source.x || !source.y || !target.x || !target.y) continue;

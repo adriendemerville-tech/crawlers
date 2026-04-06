@@ -59,6 +59,7 @@ interface CocoonRadialGraphProps {
   onNodeSelect: (node: SemanticNode | null) => void;
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   colorIntensity?: number;
   nodeColors?: Record<string, string>;
   bgColorSlider?: number;
@@ -335,6 +336,7 @@ export function CocoonRadialGraph({
   onNodeSelect,
   showClusters = true,
   visibleJuiceTypes,
+  visibleLinkDirections,
   colorIntensity = 5,
   nodeColors,
   bgColorSlider = 0,
@@ -448,11 +450,12 @@ export function CocoonRadialGraph({
     particlesRef.current = particles;
   }, [tree, nodes]);
 
-  // Filter edges by visibleJuiceTypes
-  const shouldShowEdge = useCallback((edgeType?: string) => {
-    if (!visibleJuiceTypes || visibleJuiceTypes.size === 0) return true;
-    return visibleJuiceTypes.has(edgeType || 'semantic');
-  }, [visibleJuiceTypes]);
+  // Filter edges by visibleJuiceTypes and visibleLinkDirections
+  const shouldShowEdge = useCallback((edgeType?: string, direction?: string) => {
+    if (visibleJuiceTypes && visibleJuiceTypes.size > 0 && !visibleJuiceTypes.has(edgeType || 'semantic')) return false;
+    if (visibleLinkDirections && visibleLinkDirections.size < 3 && direction && !visibleLinkDirections.has(direction)) return false;
+    return true;
+  }, [visibleJuiceTypes, visibleLinkDirections]);
 
   // Resize observer
   useEffect(() => {
@@ -530,7 +533,11 @@ export function CocoonRadialGraph({
         // Find the original edge to check type
         const origNode = nodes.find(n => n.url === node.url);
         const edge = origNode?.similarity_edges?.find(e => e.target_url === child.url);
-        if (!shouldShowEdge(edge?.type)) {
+        const srcDepth = origNode?.crawl_depth ?? origNode?.depth ?? 0;
+        const tgtNode = nodes.find(n => n.url === child.url);
+        const tgtDepth = tgtNode?.crawl_depth ?? tgtNode?.depth ?? 0;
+        const edgeDir = srcDepth < tgtDepth ? 'descending' : srcDepth > tgtDepth ? 'ascending' : 'lateral';
+        if (!shouldShowEdge(edge?.type, edgeDir)) {
           drawLinks(child);
           continue;
         }
