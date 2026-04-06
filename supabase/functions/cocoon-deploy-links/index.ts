@@ -96,7 +96,7 @@ try {
     console.error('[cocoon-deploy-links] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}));
 
 // ── IKtracker deployment ──
 async function deployViaIktracker(
