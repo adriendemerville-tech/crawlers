@@ -1669,8 +1669,8 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
 
     // Extract and persist memory from LLM response
     const { cleanResponse, memories, identityUpdates } = parseMemoryExtraction(rawReply);
-    // Remove architect action marker from visible reply
-    let reply = cleanResponse.replace(/<!--ARCHITECT_ACTION-->/g, '').trim();
+    // Remove architect/navigation action markers from visible reply
+    let reply = cleanResponse.replace(/<!--ARCHITECT_ACTION-->/g, '').replace(/<!--NAV_ACTION-->/g, '').trim();
 
     // Persist extracted memory asynchronously (don't block response)
     if (!isGuest && user_id && (memories.length > 0 || identityUpdates.length > 0)) {
