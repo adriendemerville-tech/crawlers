@@ -121,7 +121,8 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
     console.error('[fetch-ga4-data] Error:', err)
     return jsonError(err.message, 500)
   }
-})
+}))
+
 
 // ═══════════════════════════════════════════════════════════════════════
 // Helpers
