@@ -488,6 +488,14 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
 
+    // If already connected → open disconnect dialog
+    const isConnected = getServiceConnected(service.id);
+    if (isConnected) {
+      setDisconnectTarget({ id: service.id, name: service.name });
+      setDisconnectStep('ask');
+      return;
+    }
+
     if (service.id === 'gsc' || service.id === 'ga4') {
       setConnectingId(service.id);
       try {
