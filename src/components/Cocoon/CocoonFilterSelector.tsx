@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Filter, Sparkles, FileText, Layers } from 'lucide-react';
+import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
