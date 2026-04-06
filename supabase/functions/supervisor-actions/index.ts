@@ -296,6 +296,13 @@ try {
       return jsonOk({ success: false, reason: 'Supervisor désactivé' })
     }
 
+    // ─── Daily cost cap (1€/jour max) ────────────────────────────
+    const costGuard = await checkDailyCostCap('supervisor', 1.0)
+    if (!costGuard.allowed) {
+      console.warn(`[SUPERVISOR] 🚫 ${costGuard.reason}`)
+      return jsonOk({ success: false, reason: costGuard.reason, spent_today_eur: costGuard.spent_today_eur })
+    }
+
     // Auth check - admin only
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {

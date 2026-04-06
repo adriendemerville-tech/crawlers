@@ -345,6 +345,13 @@ try {
       return jsonOk({ success: false, reason: 'Agent CTO désactivé' })
     }
 
+    // ─── Daily cost cap (1€/jour max) ────────────────────────────
+    const costGuard = await checkDailyCostCap('cto', 1.0)
+    if (!costGuard.allowed) {
+      console.warn(`[AGENT-CTO] 🚫 ${costGuard.reason}`)
+      return jsonOk({ success: false, reason: costGuard.reason, spent_today_eur: costGuard.spent_today_eur })
+    }
+
     const body = await req.json()
 
     // ─── Mode: Cache Health Check ─────────────────────────────────
