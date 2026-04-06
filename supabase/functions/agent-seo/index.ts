@@ -477,6 +477,19 @@ Analyse et propose des améliorations SEO incrémentales ciblées.`;
               confidence_score: { type: 'number' },
               priority_fixes: { type: 'array', items: { type: 'string' } },
               summary: { type: 'string' },
+              new_pages: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['landing', 'article'] },
+                    title: { type: 'string' },
+                    keyword: { type: 'string' },
+                    directive: { type: 'string' },
+                  },
+                  required: ['type', 'title', 'keyword'],
+                },
+              },
             },
             required: ['improvements', 'estimated_score_improvement', 'confidence_score', 'summary'],
             additionalProperties: false,
