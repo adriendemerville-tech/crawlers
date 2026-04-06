@@ -465,17 +465,12 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       if (error) throw error;
 
       setLogConnectedTypes(prev => new Set([...prev, selectedLogService.type]));
-      setLogConnectorDialogOpen(false);
 
       if (plainApiKey) {
-        toast.success(
-          language === 'fr'
-            ? `Connecteur créé ! Clé API copiée dans le presse-papier.`
-            : `Connector created! API Key copied to clipboard.`,
-          { duration: 10000 }
-        );
-        navigator.clipboard.writeText(plainApiKey).catch(() => {});
+        setGeneratedApiKey(plainApiKey);
+        toast.success(language === 'fr' ? 'Connecteur créé !' : 'Connector created!');
       } else {
+        setLogConnectorDialogOpen(false);
         toast.success(language === 'fr' ? 'Connecteur créé !' : 'Connector created!');
       }
     } catch (err: any) {
