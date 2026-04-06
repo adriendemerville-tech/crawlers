@@ -103,6 +103,32 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         }
       } catch (_) { /* best effort */ }
 
+      // Auto-detect GA4 properties accessible with this token
+      let ga4PropertyId: string | null = null;
+      try {
+        const ga4Resp = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (ga4Resp.ok) {
+          const ga4Data = await ga4Resp.json();
+          const summaries = ga4Data.accountSummaries || [];
+          // Pick the first property found (most users have 1-2)
+          for (const account of summaries) {
+            const props = account.propertySummaries || [];
+            if (props.length > 0) {
+              // property format: "properties/123456789"
+              ga4PropertyId = props[0].property || null;
+              console.log(`[gsc-auth] Auto-detected GA4 property: ${ga4PropertyId} for ${googleEmail}`);
+              break;
+            }
+          }
+        } else {
+          console.log(`[gsc-auth] GA4 Admin API returned ${ga4Resp.status} — scope may not be granted`);
+        }
+      } catch (e) {
+        console.log('[gsc-auth] GA4 auto-detect failed (best effort):', e);
+      }
+
       // Upsert into google_connections (multi-account support)
       await supabase.from('google_connections').upsert({
         user_id: userId,
@@ -111,6 +137,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         refresh_token: tokens.refresh_token || null,
         token_expiry: expiresAt,
         gsc_site_urls: gscSiteUrls,
+        ga4_property_id: ga4PropertyId,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,google_email' });
 
@@ -119,6 +146,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         gsc_access_token: tokens.access_token,
         gsc_refresh_token: tokens.refresh_token || null,
         gsc_token_expiry: expiresAt,
+        ga4_property_id: ga4PropertyId,
       }).eq('user_id', userId);
 
       // Auto-link tracked sites to this connection
