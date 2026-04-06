@@ -227,6 +227,11 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
 
+  // Disconnect confirmation dialog state
+  const [disconnectTarget, setDisconnectTarget] = useState<{ id: string; name: string } | null>(null);
+  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm'>('ask');
+  const [disconnecting, setDisconnecting] = useState(false);
+
   // Matomo state
   const [matomoDialogOpen, setMatomoDialogOpen] = useState(false);
   const [matomoLoading, setMatomoLoading] = useState(false);
