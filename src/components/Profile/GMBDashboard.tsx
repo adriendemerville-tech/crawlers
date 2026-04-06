@@ -725,17 +725,29 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
     }
   }, [language]);
 
-  // Check GBP connection status & fetch real locations for Pro users
+  // Simulated mode always wins; otherwise fetch real GBP locations for Pro users
   useEffect(() => {
     if (isGated) return;
+
+    if (simulatedDataEnabled) {
+      setGbpConnected(false);
+      setGbpEmail(null);
+      setOrderedLocations(SIMULATED_LOCATIONS);
+      setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+      setLocationsLoading(false);
+      return;
+    }
+
+    setLocationsLoading(true);
+
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          if (simulatedDataEnabled) {
-            setOrderedLocations(SIMULATED_LOCATIONS);
-            setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
-          }
+          setGbpConnected(false);
+          setGbpEmail(null);
+          setOrderedLocations([]);
+          setSelectedLocationId(null);
           setLocationsLoading(false);
           return;
         }
@@ -748,19 +760,21 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
           if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
             setOrderedLocations(data.locations);
             setSelectedLocationId(data.locations[0]?.id || null);
-          } else if (simulatedDataEnabled) {
-            setOrderedLocations(SIMULATED_LOCATIONS);
-            setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+          } else {
+            setOrderedLocations([]);
+            setSelectedLocationId(null);
           }
-        } else if (simulatedDataEnabled) {
-          setOrderedLocations(SIMULATED_LOCATIONS);
-          setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+        } else {
+          setGbpConnected(false);
+          setGbpEmail(null);
+          setOrderedLocations([]);
+          setSelectedLocationId(null);
         }
       } catch (_) {
-        if (simulatedDataEnabled) {
-          setOrderedLocations(SIMULATED_LOCATIONS);
-          setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
-        }
+        setGbpConnected(false);
+        setGbpEmail(null);
+        setOrderedLocations([]);
+        setSelectedLocationId(null);
       }
       setLocationsLoading(false);
     })();
