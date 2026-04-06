@@ -1851,7 +1851,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                     key="action-plan"
                     onClick={() => handleAddToActionPlan(lastOptContent)}
                     disabled={isDeploying || deploySuccess}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                    className={`w-[70%] mx-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
                       deploySuccess
                         ? 'border border-emerald-500/40 text-emerald-300 bg-transparent shadow-[0_0_12px_2px_rgba(16,185,129,0.25)]'
                         : isDeploying
