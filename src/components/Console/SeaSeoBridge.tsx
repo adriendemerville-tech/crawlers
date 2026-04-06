@@ -3,13 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, TrendingDown, ArrowRight, Zap, AlertTriangle, Search, DollarSign, Target, Send, Unplug, Link as LinkIcon } from 'lucide-react';
+import { Loader2, ArrowRight, Search, Target, Send, Unplug, Link as LinkIcon, Info, BarChart3, TrendingUp, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useDemoMode } from '@/contexts/DemoModeContext';
-import { SIMULATED_OPPORTUNITIES, SIMULATED_SUMMARY } from '@/data/seaSeoSimulatedData';
+import { SIMULATED_OPPORTUNITIES, SIMULATED_SUMMARY, type SimulatedOpportunity } from '@/data/seaSeoSimulatedData';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Opportunity {
   keyword: string;
@@ -26,6 +27,10 @@ interface Opportunity {
   opportunity_score: number;
   opportunity_type: 'no_organic' | 'low_organic' | 'high_potential' | 'cannibalisation_risk';
   monthly_savings_potential: number;
+  serp_volume?: number;
+  serp_difficulty?: number;
+  serp_competition?: number;
+  serp_cpc_market?: number;
 }
 
 interface Summary {
@@ -46,11 +51,23 @@ interface SeaSeoBridgeProps {
 const t3 = (lang: string, fr: string, en: string, es: string) =>
   lang === 'es' ? es : lang === 'en' ? en : fr;
 
-const typeConfig: Record<string, { label: string; color: string; icon: typeof TrendingUp }> = {
-  no_organic: { label: 'Sans présence SEO', color: 'bg-red-500/10 text-red-500 border-red-500/30', icon: AlertTriangle },
-  low_organic: { label: 'SEO faible', color: 'bg-orange-500/10 text-orange-500 border-orange-500/30', icon: TrendingDown },
-  high_potential: { label: 'Fort potentiel', color: 'bg-blue-500/10 text-blue-500 border-blue-500/30', icon: TrendingUp },
-  cannibalisation_risk: { label: 'Cannibalisation SEA/SEO', color: 'bg-purple-500/10 text-purple-500 border-purple-500/30', icon: Zap },
+const typeLabels: Record<string, { label: string; description: string }> = {
+  no_organic: {
+    label: 'Sans présence SEO',
+    description: 'Ce mot-clé génère du trafic payant mais n\'a aucune position organique. Créer du contenu SEO permettrait de capter ce trafic gratuitement.',
+  },
+  low_organic: {
+    label: 'SEO faible',
+    description: 'Vous êtes positionné au-delà de la page 1 en organique. Optimiser le contenu existant pourrait réduire la dépendance au SEA.',
+  },
+  high_potential: {
+    label: 'Fort potentiel',
+    description: 'La position organique est correcte et le mot-clé convertit bien en SEA. Renforcer le SEO pourrait amplifier les résultats.',
+  },
+  cannibalisation_risk: {
+    label: 'Cannibalisation',
+    description: 'Vous payez du trafic SEA pour un mot-clé où vous êtes déjà bien positionné en organique. Réduire le budget SEA est envisageable.',
+  },
 };
 
 export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
@@ -64,13 +81,12 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [filterType, setFilterType] = useState<string | null>(null);
   const [adsConnected, setAdsConnected] = useState<boolean | null>(null);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  // Check Google Ads connection status
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data: ads } = await (supabase as any)
         .from('google_ads_connections')
         .select('id')
@@ -81,11 +97,10 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
     check();
   }, []);
 
-  // Auto-load simulated data when demo mode is enabled and no live data
   useEffect(() => {
     if (isDemoMode && !adsConnected && !summary) {
       setSummary(SIMULATED_SUMMARY);
-      setOpportunities(SIMULATED_OPPORTUNITIES);
+      setOpportunities(SIMULATED_OPPORTUNITIES as Opportunity[]);
     }
   }, [isDemoMode, adsConnected, summary]);
 
@@ -94,14 +109,11 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase.functions.invoke('sea-seo-bridge', {
         body: { action: 'analyze', user_id: user.id, domain, tracked_site_id: trackedSiteId },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       setSummary(data.summary);
       setOpportunities(data.opportunities || []);
       setSelectedIds(new Set());
@@ -126,7 +138,6 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-
       const selected = Array.from(selectedIds).map(i => opportunities[i]);
       const { data, error } = await supabase.functions.invoke('sea-seo-bridge', {
         body: {
@@ -137,7 +148,6 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
           opportunity_ids: selected,
         },
       });
-
       if (error) throw error;
       toast.success(`${data?.injected_count || 0} opportunités injectées dans le workbench`);
     } catch (err: any) {
@@ -187,8 +197,11 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
     ? opportunities.filter(o => o.opportunity_type === filterType)
     : opportunities;
 
+  const getDifficultyLabel = (d: number) =>
+    d >= 70 ? 'Élevée' : d >= 40 ? 'Moyenne' : 'Faible';
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -198,20 +211,20 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             {t3(language,
-              'Croisez vos données Google Ads, GA4 et les gaps Cocoon pour trouver des opportunités SEO inexploitées.',
-              'Cross-reference your Google Ads, GA4 and Cocoon gaps data to find untapped SEO opportunities.',
-              'Cruce sus datos de Google Ads, GA4 y gaps Cocoon para encontrar oportunidades SEO sin explotar.'
+              'Identifiez les mots-clés payants que vous pourriez capter en SEO pour réduire vos coûts publicitaires.',
+              'Identify paid keywords you could capture organically to reduce ad spend.',
+              'Identifique palabras clave pagas que podría capturar orgánicamente.'
             )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {adsConnected && (
-            <Button variant="outline" size="sm" onClick={disconnectAds} disabled={disconnecting} className="text-destructive border-destructive/30 hover:bg-destructive/10">
+            <Button variant="outline" size="sm" onClick={disconnectAds} disabled={disconnecting} className="text-muted-foreground border-border/50 hover:bg-muted/50">
               {disconnecting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Unplug className="h-4 w-4 mr-1" />}
-              {t3(language, 'Déconnecter Google Ads', 'Disconnect Google Ads', 'Desconectar Google Ads')}
+              Déconnecter
             </Button>
           )}
-          <Button onClick={analyze} disabled={loading || (!adsConnected && !isDemoMode)} size="sm">
+          <Button onClick={analyze} disabled={loading || (!adsConnected && !isDemoMode)} size="sm" variant="outline" className="border-border/50">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
             {loading ? 'Analyse…' : 'Analyser'}
           </Button>
@@ -220,163 +233,278 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="border-border/50">
-            <CardContent className="p-4">
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="border border-border/40 rounded-lg p-4">
               <div className="text-2xl font-bold">{summary.total_keywords}</div>
-              <div className="text-xs text-muted-foreground">Mots-clés SEA analysés</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-500">{summary.total_sea_cost_eur.toFixed(0)}€</div>
-              <div className="text-xs text-muted-foreground">Dépense SEA / 30j</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4">
+              <div className="text-xs text-muted-foreground">Mots-clés analysés</div>
+            </div>
+            <div className="border border-border/40 rounded-lg p-4">
+              <div className="text-2xl font-bold">{summary.total_sea_cost_eur.toFixed(0)}€</div>
+              <div className="text-xs text-muted-foreground">Budget SEA / 30j</div>
+            </div>
+            <div className="border border-border/40 rounded-lg p-4">
               <div className="text-2xl font-bold text-emerald-500">{summary.potential_monthly_savings_eur.toFixed(0)}€</div>
               <div className="text-xs text-muted-foreground">Économie potentielle / mois</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-500">{summary.cocoon_aligned_count}</div>
-              <div className="text-xs text-muted-foreground">Alignés avec gaps Cocoon</div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="border border-border/40 rounded-lg p-4">
+              <div className="text-2xl font-bold">{summary.cocoon_aligned_count}</div>
+              <div className="text-xs text-muted-foreground">Alignés gaps Cocoon</div>
+            </div>
+          </div>
+
           {summary.data_source === 'simulated' && (
-            <div className="col-span-full">
-              <Badge variant="outline" className="border-orange-500/40 text-orange-500 text-xs">
-                ⚠️ {t3(language,
-                  'Données simulées — Connectez Google Ads pour des données réelles',
-                  'Simulated data — Connect Google Ads for real data',
-                  'Datos simulados — Conecte Google Ads para datos reales'
-                )}
-              </Badge>
+            <div className="text-xs text-muted-foreground/60 flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5" />
+              Données simulées — Connectez Google Ads pour des résultats réels
             </div>
           )}
+        </>
+      )}
+
+      {/* Legend */}
+      {opportunities.length > 0 && (
+        <div className="border border-border/30 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Info className="h-4 w-4" />
+            Comment lire ce tableau
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <span className="w-8 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">92</span>
+              <span><strong className="text-foreground">Score d'opportunité</strong> — De 0 à 100, mesure le potentiel d'économie en remplaçant le trafic payant par du trafic organique. Plus il est élevé, plus l'action SEO est rentable.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <BarChart3 className="h-4 w-4 shrink-0 mt-0.5" />
+              <span><strong className="text-foreground">Vol. SERP</strong> — Volume de recherche mensuel estimé (DataForSEO). Indique la taille du marché disponible en organique.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Globe className="h-4 w-4 shrink-0 mt-0.5" />
+              <span><strong className="text-foreground">KD%</strong> — Keyword Difficulty. Estime la difficulté de se positionner en page 1 pour ce mot-clé.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <TrendingUp className="h-4 w-4 shrink-0 mt-0.5" />
+              <span><strong className="text-foreground">Économie</strong> — Réduction estimée du budget SEA si vous captez ce trafic en organique.</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Filter pills */}
+      {/* Filter pills + actions */}
       {opportunities.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            variant={filterType === null ? 'default' : 'outline'}
-            className="cursor-pointer"
-            onClick={() => setFilterType(null)}
-          >
-            Tous ({opportunities.length})
-          </Badge>
-          {Object.entries(typeConfig).map(([type, cfg]) => {
-            const count = opportunities.filter(o => o.opportunity_type === type).length;
-            if (count === 0) return null;
-            return (
-              <Badge
-                key={type}
-                variant={filterType === type ? 'default' : 'outline'}
-                className={cn('cursor-pointer', filterType !== type && cfg.color)}
-                onClick={() => setFilterType(filterType === type ? null : type)}
-              >
-                {cfg.label} ({count})
-              </Badge>
-            );
-          })}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant={filterType === null ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setFilterType(null)}
+            >
+              Tous ({opportunities.length})
+            </Button>
+            {Object.entries(typeLabels).map(([type, cfg]) => {
+              const count = opportunities.filter(o => o.opportunity_type === type).length;
+              if (count === 0) return null;
+              return (
+                <TooltipProvider key={type}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={filterType === type ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setFilterType(filterType === type ? null : type)}
+                      >
+                        {cfg.label} ({count})
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                      {cfg.description}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={selectAll}>
+              {selectedIds.size === filteredOpportunities.length ? 'Désélectionner' : 'Tout sélectionner'}
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              disabled={selectedIds.size === 0 || injecting || summary?.data_source === 'simulated'}
+              onClick={injectSelected}
+            >
+              {injecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+              Injecter {selectedIds.size > 0 ? `(${selectedIds.size})` : ''}
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Action bar */}
-      {opportunities.length > 0 && (
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={selectAll}>
-            {selectedIds.size === filteredOpportunities.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-          </Button>
-          <Button
-            size="sm"
-            disabled={selectedIds.size === 0 || injecting || summary?.data_source === 'simulated'}
-            onClick={injectSelected}
-            className="gap-2"
-          >
-            {injecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-            Injecter {selectedIds.size > 0 ? `(${selectedIds.size})` : ''} dans le Workbench
-          </Button>
+      {/* Table header */}
+      {filteredOpportunities.length > 0 && (
+        <div className="hidden md:grid grid-cols-[40px_44px_1fr_90px_90px_70px_100px_100px_32px] gap-2 items-center px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium border-b border-border/20">
+          <div></div>
+          <div>Score</div>
+          <div>Mot-clé</div>
+          <div className="text-right">CPC SEA</div>
+          <div className="text-right">Clics SEA</div>
+          <div className="text-right">Pos. SEO</div>
+          <div className="text-right">Vol. SERP</div>
+          <div className="text-right">Économie</div>
+          <div></div>
         </div>
       )}
 
       {/* Opportunities list */}
       {filteredOpportunities.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {filteredOpportunities.map((opp, idx) => {
             const realIdx = opportunities.indexOf(opp);
-            const config = typeConfig[opp.opportunity_type] || typeConfig.high_potential;
-            const Icon = config.icon;
             const isSelected = selectedIds.has(realIdx);
+            const isExpanded = expandedIdx === realIdx;
+            const typeInfo = typeLabels[opp.opportunity_type] || typeLabels.high_potential;
 
             return (
-              <Card
-                key={realIdx}
-                className={cn(
-                  'cursor-pointer transition-all border',
-                  isSelected ? 'border-primary bg-primary/5' : 'border-border/50 hover:border-border'
-                )}
-                onClick={() => toggleSelect(realIdx)}
-              >
-                <CardContent className="p-3 flex items-center gap-3">
+              <div key={realIdx} className="group">
+                {/* Main row */}
+                <div
+                  className={cn(
+                    'grid grid-cols-[40px_44px_1fr_90px_90px_70px_100px_100px_32px] gap-2 items-center px-3 py-2.5 rounded-lg cursor-pointer transition-colors',
+                    isSelected ? 'bg-primary/5 border border-primary/20' : 'border border-transparent hover:bg-muted/30'
+                  )}
+                  onClick={() => toggleSelect(realIdx)}
+                >
                   {/* Checkbox */}
                   <div className={cn(
-                    'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                    isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30'
+                    'w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors',
+                    isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/20'
                   )}>
-                    {isSelected && <span className="text-xs">✓</span>}
+                    {isSelected && <span className="text-[10px]">✓</span>}
                   </div>
 
                   {/* Score */}
-                  <div className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0',
-                    opp.opportunity_score >= 80 ? 'bg-red-500/10 text-red-500' :
-                    opp.opportunity_score >= 60 ? 'bg-orange-500/10 text-orange-500' :
-                    'bg-blue-500/10 text-blue-500'
-                  )}>
-                    {opp.opportunity_score}
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className={cn(
+                          'w-9 h-9 rounded flex items-center justify-center text-sm font-bold shrink-0 tabular-nums',
+                          opp.opportunity_score >= 85 ? 'bg-foreground/10 text-foreground' :
+                          opp.opportunity_score >= 65 ? 'bg-muted text-muted-foreground' :
+                          'bg-muted/50 text-muted-foreground/70'
+                        )}>
+                          {opp.opportunity_score}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="text-xs max-w-[200px]">
+                        Score d'opportunité SEO. Plus il est élevé, plus le potentiel d'économie est important.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
                   {/* Keyword + type */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm truncate">{opp.keyword}</span>
-                      <Badge variant="outline" className={cn('text-[10px] shrink-0', config.color)}>
-                        <Icon className="h-3 w-3 mr-1" />
-                        {config.label}
-                      </Badge>
+                      <span className="text-[10px] text-muted-foreground/50 shrink-0">{typeInfo.label}</span>
                       {opp.has_cocoon_gap && (
-                        <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 shrink-0">
-                          Cocoon ✓
-                        </Badge>
+                        <span className="text-[10px] text-emerald-500/70 shrink-0">Cocoon ✓</span>
                       )}
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-[11px] text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        CPC {opp.sea_cpc.toFixed(2)}€
-                      </span>
-                      <span>{opp.sea_clicks} clics SEA</span>
-                      <span>{opp.sea_conversions} conv.</span>
-                      {opp.organic_position && (
-                        <span className="flex items-center gap-1">
-                          <Search className="h-3 w-3" />
-                          Pos. {opp.organic_position.toFixed(0)}
-                        </span>
-                      )}
-                      <span className="text-emerald-500 font-medium">
-                        -{opp.monthly_savings_potential.toFixed(0)}€/mois
-                      </span>
                     </div>
                   </div>
 
-                  <ArrowRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                </CardContent>
-              </Card>
+                  {/* CPC SEA */}
+                  <div className="text-right text-sm tabular-nums">{opp.sea_cpc.toFixed(2)}€</div>
+
+                  {/* Clics SEA */}
+                  <div className="text-right text-sm tabular-nums text-muted-foreground">{opp.sea_clicks}</div>
+
+                  {/* Pos SEO */}
+                  <div className="text-right text-sm tabular-nums">
+                    {opp.organic_position ? opp.organic_position.toFixed(0) : <span className="text-muted-foreground/30">—</span>}
+                  </div>
+
+                  {/* Vol. SERP */}
+                  <div className="text-right text-sm tabular-nums">
+                    {opp.serp_volume ? opp.serp_volume.toLocaleString('fr-FR') : <span className="text-muted-foreground/30">—</span>}
+                  </div>
+
+                  {/* Économie */}
+                  <div className="text-right text-sm tabular-nums text-emerald-500 font-medium">
+                    -{opp.monthly_savings_potential.toFixed(0)}€<span className="text-muted-foreground/40 font-normal">/m</span>
+                  </div>
+
+                  {/* Expand */}
+                  <button
+                    className="p-1 rounded hover:bg-muted/50 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedIdx(isExpanded ? null : realIdx);
+                    }}
+                  >
+                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/50" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                  </button>
+                </div>
+
+                {/* Expanded detail */}
+                {isExpanded && (
+                  <div className="ml-[84px] mr-8 py-3 px-4 mb-2 border border-border/20 rounded-lg bg-muted/10 text-xs space-y-3">
+                    <p className="text-muted-foreground">{typeInfo.description}</p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <div className="text-muted-foreground/60 mb-0.5">Campagne SEA</div>
+                        <div className="font-medium">{opp.sea_campaign}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground/60 mb-0.5">Conversions SEA</div>
+                        <div className="font-medium">{opp.sea_conversions}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground/60 mb-0.5">Coût total SEA / 30j</div>
+                        <div className="font-medium">{opp.sea_cost.toFixed(2)}€</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground/60 mb-0.5">Clics organiques</div>
+                        <div className="font-medium">{opp.organic_clicks}</div>
+                      </div>
+                    </div>
+
+                    {/* DataForSEO SERP data */}
+                    {(opp.serp_volume || opp.serp_difficulty) && (
+                      <div className="border-t border-border/20 pt-3">
+                        <div className="text-muted-foreground/60 mb-2 flex items-center gap-1.5">
+                          <BarChart3 className="h-3 w-3" />
+                          Données SERP (DataForSEO)
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <div className="text-muted-foreground/60 mb-0.5">Volume mensuel</div>
+                            <div className="font-medium">{opp.serp_volume?.toLocaleString('fr-FR') || '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground/60 mb-0.5">Keyword Difficulty</div>
+                            <div className="font-medium">
+                              {opp.serp_difficulty}% — {getDifficultyLabel(opp.serp_difficulty!)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground/60 mb-0.5">CPC marché</div>
+                            <div className="font-medium">{opp.serp_cpc_market?.toFixed(2)}€</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground/60 mb-0.5">Compétition</div>
+                            <div className="font-medium">{((opp.serp_competition || 0) * 100).toFixed(0)}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -384,10 +512,10 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
 
       {/* Empty state — Google Ads NOT connected */}
       {!loading && opportunities.length === 0 && !summary && adsConnected === false && !isDemoMode && (
-        <Card className="border-dashed border-2 border-primary/20">
+        <Card className="border-dashed border-2 border-border/20">
           <CardContent className="p-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <LinkIcon className="h-8 w-8 text-primary" />
+            <div className="mx-auto w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
+              <LinkIcon className="h-8 w-8 text-muted-foreground/50" />
             </div>
             <div>
               <h3 className="font-semibold text-lg">
@@ -408,12 +536,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
               </Button>
             </Link>
             <p className="text-[11px] text-muted-foreground/50">
-              {t3(language,
-                'Accès en lecture seule uniquement.',
-                'Read-only access only.',
-                'Acceso de solo lectura.'
-              )}
-              {' '}
+              {t3(language, 'Accès en lecture seule uniquement.', 'Read-only access only.', 'Acceso de solo lectura.')}{' '}
               <Link to="/api-integrations#google-ads" className="underline hover:text-muted-foreground">
                 {t3(language, 'Politique de confidentialité', 'Privacy policy', 'Política de privacidad')}
               </Link>
@@ -424,28 +547,22 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
 
       {/* Empty state — Google Ads connected but no analysis yet */}
       {!loading && opportunities.length === 0 && !summary && adsConnected === true && (
-        <Card className="border-dashed">
-          <CardContent className="p-8 text-center">
-            <Target className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">
-              {t3(language,
-                'Google Ads connecté ✓ — Lancez l\'analyse pour croiser vos données SEA avec vos positions organiques et les gaps Cocoon.',
-                'Google Ads connected ✓ — Run the analysis to cross-reference your SEA data with organic positions and Cocoon gaps.',
-                'Google Ads conectado ✓ — Ejecute el análisis para cruzar sus datos SEA con posiciones orgánicas y gaps Cocoon.'
-              )}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="border border-dashed border-border/30 rounded-lg p-8 text-center">
+          <Target className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">
+            {t3(language,
+              'Google Ads connecté ✓ — Lancez l\'analyse pour croiser vos données SEA avec vos positions organiques.',
+              'Google Ads connected ✓ — Run the analysis to cross-reference your SEA data with organic positions.',
+              'Google Ads conectado ✓ — Ejecute el análisis.'
+            )}
+          </p>
+        </div>
       )}
 
       {/* Privacy link footer */}
       <div className="text-center pt-2">
         <Link to="/api-integrations#google-ads" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors underline">
-          {t3(language,
-            'Politique de confidentialité Google Ads',
-            'Google Ads Privacy Policy',
-            'Política de privacidad Google Ads'
-          )}
+          {t3(language, 'Politique de confidentialité Google Ads', 'Google Ads Privacy Policy', 'Política de privacidad Google Ads')}
         </Link>
       </div>
     </div>
