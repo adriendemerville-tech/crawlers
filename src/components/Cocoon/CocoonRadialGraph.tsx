@@ -533,7 +533,11 @@ export function CocoonRadialGraph({
         // Find the original edge to check type
         const origNode = nodes.find(n => n.url === node.url);
         const edge = origNode?.similarity_edges?.find(e => e.target_url === child.url);
-        if (!shouldShowEdge(edge?.type)) {
+        const srcDepth = origNode?.crawl_depth ?? origNode?.depth ?? 0;
+        const tgtNode = nodes.find(n => n.url === child.url);
+        const tgtDepth = tgtNode?.crawl_depth ?? tgtNode?.depth ?? 0;
+        const edgeDir = srcDepth < tgtDepth ? 'descending' : srcDepth > tgtDepth ? 'ascending' : 'lateral';
+        if (!shouldShowEdge(edge?.type, edgeDir)) {
           drawLinks(child);
           continue;
         }
