@@ -905,6 +905,7 @@ function CocoonContent() {
                 haloColors={cocoonTheme.haloColors}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                visibleLinkDirections={cocoonFilters.visibleLinkDirections}
                 isDayMode={false}
                 colorIntensity={colorIntensity}
                 bgWarmth={bgWarmth}
