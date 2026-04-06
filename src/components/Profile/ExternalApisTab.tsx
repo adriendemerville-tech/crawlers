@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, Unplug, MapPin, Server, Upload, Terminal, Globe, Cloud, HardDrive, FileText } from 'lucide-react';
+import { ExternalLink, Loader2, ShieldCheck, CheckCircle2, BarChart3, MapPin, Server, Upload, Terminal, Globe, Cloud, HardDrive, FileText, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
@@ -226,6 +226,11 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const [gbpConnected, setGbpConnected] = useState(false);
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
+
+  // Disconnect confirmation dialog state
+  const [disconnectTarget, setDisconnectTarget] = useState<{ id: string; name: string } | null>(null);
+  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm'>('ask');
+  const [disconnecting, setDisconnecting] = useState(false);
 
   // Matomo state
   const [matomoDialogOpen, setMatomoDialogOpen] = useState(false);
@@ -483,6 +488,14 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const handleServiceClick = async (service: ServiceButton) => {
     if (!service.available || connectingId) return;
 
+    // If already connected → open disconnect dialog
+    const isConnected = getServiceConnected(service.id);
+    if (isConnected) {
+      setDisconnectTarget({ id: service.id, name: service.name });
+      setDisconnectStep('ask');
+      return;
+    }
+
     if (service.id === 'gsc' || service.id === 'ga4') {
       setConnectingId(service.id);
       try {
@@ -655,8 +668,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
   const renderServiceCard = (service: ServiceButton) => {
     const isConnecting = connectingId === service.id;
-    const isGbp = service.id === 'gmb';
-    const isGbpActive = isGbp && gbpConnected;
     const isActive = getServiceConnected(service.id);
 
     return (
@@ -695,7 +706,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                 ) : isActive ? (
                   <>
                     <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    {isGbpActive ? (language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect') : t.configure}
+                    {t.connected}
                   </>
                 ) : (
                   <>
@@ -707,18 +718,85 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             )}
           </div>
         </button>
-        {isGbpActive && (
-          <button
-            onClick={(e) => { e.stopPropagation(); handleGbpDisconnect(); }}
-            disabled={gbpDisconnecting}
-            className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title={language === 'fr' ? 'Déconnecter GBP' : 'Disconnect GBP'}
-          >
-            {gbpDisconnecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unplug className="w-3.5 h-3.5" />}
-          </button>
-        )}
       </div>
     );
+  };
+
+  const getDisconnectWarning = (id: string): string => {
+    const warnings: Record<string, Record<string, string>> = {
+      gsc: {
+        fr: 'La déconnexion supprimera les données Search Console importées et les tokens OAuth associés.',
+        en: 'Disconnecting will remove imported Search Console data and associated OAuth tokens.',
+        es: 'La desconexión eliminará los datos importados de Search Console y los tokens OAuth asociados.',
+      },
+      ga4: {
+        fr: 'La déconnexion supprimera les données Analytics importées et les tokens OAuth associés.',
+        en: 'Disconnecting will remove imported Analytics data and associated OAuth tokens.',
+        es: 'La desconexión eliminará los datos importados de Analytics y los tokens OAuth asociados.',
+      },
+      'google-ads': {
+        fr: 'La déconnexion supprimera les données Google Ads (mots-clés, CPC, campagnes) et révoquera l\'accès OAuth.',
+        en: 'Disconnecting will remove Google Ads data (keywords, CPC, campaigns) and revoke OAuth access.',
+        es: 'La desconexión eliminará los datos de Google Ads (palabras clave, CPC, campañas) y revocará el acceso OAuth.',
+      },
+      gmb: {
+        fr: 'La déconnexion supprimera les données Google Business Profile (avis, statistiques, fiches) et révoquera l\'accès OAuth.',
+        en: 'Disconnecting will remove Google Business Profile data (reviews, stats, listings) and revoke OAuth access.',
+        es: 'La desconexión eliminará los datos de Google Business Profile (reseñas, estadísticas, fichas) y revocará el acceso OAuth.',
+      },
+      matomo: {
+        fr: 'La déconnexion supprimera la connexion Matomo et les métriques de trafic associées.',
+        en: 'Disconnecting will remove the Matomo connection and associated traffic metrics.',
+        es: 'La desconexión eliminará la conexión Matomo y las métricas de tráfico asociadas.',
+      },
+    };
+    return warnings[id]?.[language] || warnings[id]?.fr || (language === 'fr' ? 'Cette action est irréversible.' : 'This action is irreversible.');
+  };
+
+  const handleDisconnectConfirm = async () => {
+    if (!disconnectTarget) return;
+    setDisconnecting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      if (disconnectTarget.id === 'gsc' || disconnectTarget.id === 'ga4') {
+        const { error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'disconnect', user_id: user.id, service: disconnectTarget.id },
+        });
+        if (error) throw error;
+        if (disconnectTarget.id === 'gsc') setGscConnected(false);
+        else setGa4Connected(false);
+      } else if (disconnectTarget.id === 'google-ads') {
+        const { error } = await supabase.functions.invoke('google-ads-connector', {
+          body: { action: 'disconnect', user_id: user.id },
+        });
+        if (error) throw error;
+        setAdsConnected(false);
+      } else if (disconnectTarget.id === 'gmb') {
+        const { error } = await supabase.functions.invoke('gbp-auth', {
+          body: { action: 'disconnect', user_id: user.id },
+        });
+        if (error) throw error;
+        setGbpConnected(false);
+        setGbpEmail(null);
+      } else if (disconnectTarget.id === 'matomo') {
+        await supabase.from('matomo_connections').update({ is_active: false } as any).eq('user_id', user.id);
+        setMatomoConnected(false);
+      }
+
+      toast.success(
+        language === 'fr' ? `${disconnectTarget.name} déconnecté` :
+        language === 'es' ? `${disconnectTarget.name} desconectado` :
+        `${disconnectTarget.name} disconnected`
+      );
+      setDisconnectTarget(null);
+    } catch (err) {
+      console.error('[ExternalApis] Disconnect error:', err);
+      toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
+    } finally {
+      setDisconnecting(false);
+    }
   };
 
   return (
@@ -1196,6 +1274,46 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               <ShieldCheck className="h-4 w-4" />
               {language === 'fr' ? 'J\'ai compris, continuer' : language === 'es' ? 'Entendido, continuar' : 'I understand, continue'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ── Disconnect Confirmation Dialog ── */}
+      <Dialog open={!!disconnectTarget} onOpenChange={(open) => { if (!open) { setDisconnectTarget(null); setDisconnectStep('ask'); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {language === 'fr' ? `Êtes-vous sûr de vouloir déconnecter l'API ${disconnectTarget?.name} ?` :
+               language === 'es' ? `¿Está seguro de querer desconectar la API ${disconnectTarget?.name}?` :
+               `Are you sure you want to disconnect the ${disconnectTarget?.name} API?`}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                {disconnectTarget && getDisconnectWarning(disconnectTarget.id)}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            {disconnectStep === 'ask' ? (
+              <>
+                <Button variant="outline" onClick={() => { setDisconnectTarget(null); setDisconnectStep('ask'); }}>
+                  {language === 'fr' ? 'Non' : language === 'es' ? 'No' : 'No'}
+                </Button>
+                <Button variant="destructive" onClick={() => setDisconnectStep('confirm')}>
+                  {language === 'fr' ? 'Oui, déconnecter' : language === 'es' ? 'Sí, desconectar' : 'Yes, disconnect'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={handleDisconnectConfirm}
+                disabled={disconnecting}
+                className="w-full"
+              >
+                {disconnecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {language === 'fr' ? 'Confirmer la déconnexion' : language === 'es' ? 'Confirmar desconexión' : 'Confirm disconnect'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
