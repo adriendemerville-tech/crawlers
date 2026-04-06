@@ -7525,6 +7525,80 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_page_drafts: {
+        Row: {
+          content: string
+          created_at: string
+          domain: string | null
+          generation_context: Json | null
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          page_type: string
+          published_at: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          slug: string
+          status: string
+          target_keyword: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          domain?: string | null
+          generation_context?: Json | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          page_type?: string
+          published_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug: string
+          status?: string
+          target_keyword?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          domain?: string | null
+          generation_context?: Json | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          page_type?: string
+          published_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug?: string
+          status?: string
+          target_keyword?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_page_drafts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "content_prompt_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serp_geo_correlations: {
         Row: {
           best_lag_engagement: number | null
