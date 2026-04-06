@@ -30,7 +30,7 @@ Deno.serve(handleRequest(async (req) => {
       .single();
 
     if (connError || !connector) {
-      return jsonError('Invalid secret', code: 'INVALID_SECRET', 401);
+      return jsonError('Invalid secret', 401);
     }
 
     // Parse body: supports NDJSON (Logpush) and JSON array (CF Worker)
