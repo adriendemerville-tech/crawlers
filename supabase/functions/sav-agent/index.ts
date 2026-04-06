@@ -1619,7 +1619,19 @@ NE lance PAS l'architecte toi-même. Attends la confirmation de l'utilisateur.
 IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTION--> (invisible pour l'utilisateur).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt;
+    // ── Navigation prompt injection ──
+    let navigationPrompt = "";
+    if (navigationAction) {
+      const actionLabel = navigationAction.action === 'crawl' ? 'crawl multi-pages' : 'audit expert SEO';
+      const autoLabel = navigationAction.autostart ? "L'action sera lancée automatiquement." : "L'URL sera pré-remplie, l'utilisateur n'aura qu'à cliquer sur Démarrer.";
+      navigationPrompt = `\n\n# ACTION DE NAVIGATION DÉTECTÉE
+L'utilisateur demande de lancer un ${actionLabel} sur ${navigationAction.url}.
+${autoLabel}
+Confirme en 1-2 phrases que tu lances l'action et que tu le rediriges vers la page appropriée.
+IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> (invisible pour l'utilisateur).`;
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
