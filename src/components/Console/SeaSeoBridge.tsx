@@ -211,7 +211,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
               {t3(language, 'Déconnecter Google Ads', 'Disconnect Google Ads', 'Desconectar Google Ads')}
             </Button>
           )}
-          <Button onClick={analyze} disabled={loading || (!adsConnected && !simulatedDataEnabled)} size="sm">
+          <Button onClick={analyze} disabled={loading || (!adsConnected && !isDemoMode)} size="sm">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
             {loading ? 'Analyse…' : 'Analyser'}
           </Button>
