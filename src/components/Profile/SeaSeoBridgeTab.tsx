@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SeaSeoBridge } from '@/components/Console/SeaSeoBridge';
 import { Loader2, Info } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 interface Site {
   id: string;
