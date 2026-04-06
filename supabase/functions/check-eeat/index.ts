@@ -7,7 +7,6 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
 Deno.serve(handleRequest(async (req) => {
-// ── Polling mode ──
   if (req.method === 'GET') {
     const url = new URL(req.url);
     const jobId = url.searchParams.get('job_id');
@@ -206,7 +205,7 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[check-eeat]', e);
     return new Response(JSON.stringify({ success: false, error: e instanceof Error ? e.message : String(e), score: 0 }), { status: 500, headers: HEADERS });
   }
-});
+}));
 
 // ══════════════════════════════════════════════════════
 // Fair use check for E-E-A-T audits
@@ -1072,7 +1071,7 @@ async function fetchGA4Referrals(
         limit: 20,
       }),
       signal: controller.signal,
-    }));
+    });
 
     clearTimeout(timeout);
 
