@@ -1299,7 +1299,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                 <Button variant="outline" onClick={() => { setDisconnectTarget(null); setDisconnectStep('ask'); }}>
                   {language === 'fr' ? 'Non' : language === 'es' ? 'No' : 'No'}
                 </Button>
-                <Button variant="destructive" onClick={() => setDisconnectStep('confirm')}>
+                <Button variant="outline" onClick={() => setDisconnectStep('confirm')}>
                   {language === 'fr' ? 'Oui, déconnecter' : language === 'es' ? 'Sí, desconectar' : 'Yes, disconnect'}
                 </Button>
               </>
