@@ -44,10 +44,22 @@ interface CocoonFilterSelectorProps {
   theme?: CocoonTheme;
 }
 
+const LINK_DIRECTION_LABELS: Record<string, Record<string, string>> = {
+  descending: { fr: 'Liens descendants', en: 'Downstream links', es: 'Enlaces descendentes' },
+  ascending: { fr: 'Liens ascendants', en: 'Upstream links', es: 'Enlaces ascendentes' },
+  lateral: { fr: 'Liens latéraux', en: 'Lateral links', es: 'Enlaces laterales' },
+};
+
+const LINK_DIRECTION_COLORS: Record<string, string> = {
+  descending: '#fbbf24',
+  ascending: '#60a5fa',
+  lateral: '#7864dc',
+};
+
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
