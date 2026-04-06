@@ -8,6 +8,7 @@ import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
 import { AssistantPrecisionCard } from './AssistantPrecisionCard';
 import { RecettageTab } from './RecettageTab';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
+import { FelixAgentBridgeControls } from './FelixAgentBridgeControls';
 
 export function IntelligenceHub() {
   return (
@@ -53,6 +54,7 @@ export function IntelligenceHub() {
         </TabsContent>
 
         <TabsContent value="supervisor" forceMount className="data-[state=inactive]:hidden space-y-6">
+          <FelixAgentBridgeControls />
           <AssistantPrecisionCard />
           <CtoSupervisor />
           <SupervisorErrorsRegistry />
