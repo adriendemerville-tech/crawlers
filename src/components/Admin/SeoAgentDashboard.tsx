@@ -274,6 +274,12 @@ export function SeoAgentDashboard() {
 
       {/* SEO Code Proposals Registry */}
       <SeoCodeProposals />
+
+      {/* Page Drafts from Agent SEO */}
+      <SeoPageDrafts />
+
+      {/* Page Templates Editor */}
+      <PageTemplatesAdmin />
     </div>
   );
 }
