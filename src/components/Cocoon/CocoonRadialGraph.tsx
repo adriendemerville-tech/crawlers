@@ -898,7 +898,7 @@ export function CocoonRadialGraph({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
-        onWheel={handleWheel}
+        
       />
 
       {/* Zoom controls — LEFT side */}
