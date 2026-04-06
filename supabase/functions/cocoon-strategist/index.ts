@@ -1463,7 +1463,7 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
           is_destructive: false,
           depends_on: [],
           estimated_impact: impact,
-        }));
+        });
       }
       break;
   }
