@@ -100,6 +100,7 @@ interface CocoonForceGraph3DProps {
   haloColors?: string[];
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   isDayMode?: boolean;
   colorIntensity?: number;
   bgWarmth?: number;
