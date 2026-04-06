@@ -58,7 +58,7 @@ try {
       scriptType: 'cocoon_links',
       payloadPreview: JSON.stringify(recommendations.slice(0, 3)),
       ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
-    }));
+    });
 
     if (!ownershipCheck.allowed) {
       return jsonError(ownershipCheck.reason || 'Forbidden', 403)
@@ -96,7 +96,7 @@ try {
     console.error('[cocoon-deploy-links] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}));
 
 // ── IKtracker deployment ──
 async function deployViaIktracker(
