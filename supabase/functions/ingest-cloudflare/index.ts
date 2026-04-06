@@ -33,9 +33,23 @@ Deno.serve(handleRequest(async (req) => {
       return jsonError('Invalid secret', code: 'INVALID_SECRET', 401);
     }
 
-    // Parse NDJSON body
+    // Parse body: supports NDJSON (Logpush) and JSON array (CF Worker)
     const body = await req.text();
-    const lines = body.split('\n').filter(l => l.trim());
+    const isFromWorker = req.headers.get('X-Source') === 'cf-worker';
+    let lines: string[];
+
+    // Try JSON array first (Worker format)
+    try {
+      const parsed = JSON.parse(body.trim());
+      if (Array.isArray(parsed)) {
+        lines = parsed.map(obj => JSON.stringify(obj));
+      } else {
+        lines = body.split('\n').filter(l => l.trim());
+      }
+    } catch {
+      // NDJSON format (Logpush)
+      lines = body.split('\n').filter(l => l.trim());
+    }
 
     const entries = lines.map(line => {
       const parsed = parseJSONLogFormat(line);
