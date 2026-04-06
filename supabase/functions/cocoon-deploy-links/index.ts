@@ -58,7 +58,7 @@ try {
       scriptType: 'cocoon_links',
       payloadPreview: JSON.stringify(recommendations.slice(0, 3)),
       ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || undefined,
-    }));
+    });
 
     if (!ownershipCheck.allowed) {
       return jsonError(ownershipCheck.reason || 'Forbidden', 403)
