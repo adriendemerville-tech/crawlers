@@ -1,7 +1,7 @@
 ---
 title: "Instructions Agent SAV Crawlers.fr — Limova"
-version: "1.0"
-date: "2026-03-21"
+version: "1.1"
+date: "2026-04-07"
 usage: "System prompt enrichi agent Limova"
 confidentialite: "Interne — ne pas publier"
 ---
