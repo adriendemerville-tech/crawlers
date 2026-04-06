@@ -65,41 +65,29 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [adsConnected, setAdsConnected] = useState<boolean | null>(null);
 
-  // Check Google Ads connection status & simulated data flag
+  // Check Google Ads connection status
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check ads connection
       const { data: ads } = await (supabase as any)
         .from('google_ads_connections')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       setAdsConnected(!!ads);
-
-      // Check simulated data flag from admin config
-      const { data: config } = await supabase
-        .from('admin_dashboard_config')
-        .select('card_order')
-        .limit(1)
-        .maybeSingle();
-      if (config?.card_order) {
-        const co = config.card_order as Record<string, unknown>;
-        setSimulatedDataEnabled(co.simulated_data_enabled !== false);
-      }
     };
     check();
   }, []);
 
-  // Auto-load simulated data when enabled and no live data
+  // Auto-load simulated data when demo mode is enabled and no live data
   useEffect(() => {
-    if (simulatedDataEnabled && !adsConnected && !summary) {
+    if (isDemoMode && !adsConnected && !summary) {
       setSummary(SIMULATED_SUMMARY);
       setOpportunities(SIMULATED_OPPORTUNITIES);
     }
-  }, [simulatedDataEnabled, adsConnected, summary]);
+  }, [isDemoMode, adsConnected, summary]);
 
   const analyze = async () => {
     setLoading(true);
