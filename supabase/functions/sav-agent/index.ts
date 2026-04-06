@@ -1433,6 +1433,67 @@ ${screen_context}
       ? `\n\n# LANGUE OBLIGATOIRE\nL'utilisateur a choisi la langue "${clientLanguage === 'es' ? 'español' : 'English'}" dans l'interface. Tu DOIS répondre UNIQUEMENT dans cette langue. Ne réponds JAMAIS en français sauf si l'utilisateur écrit en français.\n`
       : '';
 
+    // ── Navigation action: detect crawl/audit intent ──
+    let navigationAction: any = null;
+    if (!isGuest && user_id) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerNav = lastUserMsg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      const crawlIntentPatterns = [
+        /(?:lance|lancer|demarre|demarrer|fais|faire)\s*(?:un |le |mon )?crawl/,
+        /(?:crawl(?:e|er)?)\s*(?:mon |le |ce )?(?:site|domaine|url)/,
+        /(?:scanne|scanner|analyse|analyser)\s*(?:toutes? les? pages?|le site|mon site)/,
+        /(?:crawl)\s+(?:https?:\/\/|www\.|[a-z0-9-]+\.)/,
+      ];
+      const auditIntentPatterns = [
+        /(?:lance|lancer|demarre|demarrer|fais|faire)\s*(?:un |l'|mon )?audit/,
+        /(?:audit(?:e|er)?)\s*(?:mon |le |ce )?(?:site|domaine|url|page)/,
+        /(?:audit expert|audit technique|audit seo|audit geo)/,
+        /(?:analyse seo|analyse technique|check.?up seo)/,
+      ];
+
+      const hasCrawlIntent = crawlIntentPatterns.some(p => p.test(lowerNav));
+      const hasAuditIntent = auditIntentPatterns.some(p => p.test(lowerNav));
+
+      if (hasCrawlIntent || hasAuditIntent) {
+        // Extract URL from message
+        const urlPatterns = [
+          /(?:https?:\/\/[^\s,)]+)/,
+          /(?:www\.[a-z0-9-]+\.[a-z]{2,}[^\s,)]*)/i,
+          /(?:(?:de|pour|sur|du site|le site|mon site)\s+)([a-z0-9-]+\.[a-z]{2,})/i,
+        ];
+        let extractedUrl = '';
+        for (const p of urlPatterns) {
+          const m = lowerNav.match(p);
+          if (m) { extractedUrl = m[1] || m[0]; break; }
+        }
+
+        // Fallback: get domain from user's first tracked site
+        if (!extractedUrl) {
+          try {
+            const { data: firstSite } = await sb
+              .from("tracked_sites")
+              .select("domain")
+              .eq("user_id", user_id)
+              .limit(1)
+              .single();
+            if (firstSite?.domain) extractedUrl = firstSite.domain;
+          } catch {}
+        }
+
+        if (extractedUrl) {
+          if (!extractedUrl.startsWith('http')) extractedUrl = `https://${extractedUrl}`;
+          const actionType = hasCrawlIntent ? 'crawl' : 'audit';
+          navigationAction = {
+            action: actionType,
+            url: extractedUrl,
+            // Crawl = auto-start, Audit = pre-fill only (more costly)
+            autostart: actionType === 'crawl',
+          };
+        }
+      }
+    }
+
     // ── Architect routing: detect fix/solve intent ──
     let architectAction: any = null;
     if (!isGuest && user_id && screen_context) {
