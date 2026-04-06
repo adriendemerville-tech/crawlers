@@ -293,6 +293,12 @@ Deno.serve(handleRequest(async (req) => {
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      if (err.message === 'timeout') {
+        return new Response(
+          JSON.stringify({ success: false, error: 'timeout', message: 'Le site est trop lent pour être analysé (timeout 120s).' }),
+          { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       throw err;
     }
 
