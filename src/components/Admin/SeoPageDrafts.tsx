@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FileText, Check, Trash2, Loader2, ChevronDown, ChevronRight, RefreshCw, Eye } from 'lucide-react';
+import { FileText, Check, Trash2, Loader2, ChevronDown, ChevronRight, RefreshCw, Eye, Globe, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -39,7 +39,7 @@ export function SeoPageDrafts() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'draft' | 'approved' | 'all'>('draft');
+  const [filter, setFilter] = useState<'draft' | 'approved' | 'published' | 'all'>('draft');
 
   const fetchDrafts = useCallback(async () => {
     setLoading(true);
@@ -91,7 +91,7 @@ export function SeoPageDrafts() {
   const handlePublish = async (draft: PageDraft) => {
     setActionLoading(draft.id);
     try {
-      // Publish to blog_articles or landing pages based on type
+      // For articles, also insert into blog_articles
       if (draft.page_type === 'article') {
         const { error } = await supabase.from('blog_articles').insert({
           title: draft.title,
@@ -103,7 +103,7 @@ export function SeoPageDrafts() {
         });
         if (error) throw error;
       }
-      // For landing pages, just mark as published (manual deployment needed)
+      // For landings, the route /landing/[slug] reads directly from seo_page_drafts
 
       await supabase
         .from('seo_page_drafts' as any)
@@ -113,11 +113,41 @@ export function SeoPageDrafts() {
         } as any)
         .eq('id', draft.id);
 
-      toast.success(`${draft.page_type === 'article' ? 'Article publié sur /blog/' + draft.slug : 'Landing marquée comme publiée'}`);
+      const url = draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`;
+      toast.success(`Publié sur ${url}`, { description: 'Page indexable et accessible.' });
       fetchDrafts();
     } catch (e: any) {
       console.error('Publish error:', e);
       toast.error(`Erreur publication: ${e.message || 'Erreur'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnpublish = async (draft: PageDraft) => {
+    setActionLoading(draft.id);
+    try {
+      await supabase
+        .from('seo_page_drafts' as any)
+        .update({
+          status: 'approved',
+          published_at: null,
+        } as any)
+        .eq('id', draft.id);
+
+      // If article, also unpublish from blog_articles
+      if (draft.page_type === 'article') {
+        await supabase
+          .from('blog_articles')
+          .update({ status: 'draft' })
+          .eq('slug', draft.slug);
+      }
+
+      toast.success('Page dépubliée');
+      fetchDrafts();
+    } catch (e) {
+      console.error('Unpublish error:', e);
+      toast.error("Erreur lors de la dépublication");
     } finally {
       setActionLoading(null);
     }
@@ -187,7 +217,7 @@ export function SeoPageDrafts() {
         </div>
 
         <div className="flex gap-1.5 mt-3">
-          {(['draft', 'approved', 'all'] as const).map(f => (
+          {(['draft', 'approved', 'published', 'all'] as const).map(f => (
             <Button
               key={f}
               variant={filter === f ? 'default' : 'outline'}
@@ -195,7 +225,7 @@ export function SeoPageDrafts() {
               className="text-xs h-7 px-2.5"
               onClick={() => setFilter(f)}
             >
-              {f === 'draft' ? 'En attente' : f === 'approved' ? 'Approuvées' : 'Toutes'}
+              {f === 'draft' ? 'En attente' : f === 'approved' ? 'Approuvées' : f === 'published' ? '🌐 Publiées' : 'Toutes'}
             </Button>
           ))}
         </div>
@@ -329,9 +359,33 @@ export function SeoPageDrafts() {
                             onClick={() => handlePublish(draft)}
                             disabled={actionLoading === draft.id}
                           >
-                            {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
-                            {draft.page_type === 'article' ? 'Publier sur /blog' : 'Marquer comme publiée'}
+                            {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
+                            Publier sur {draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`}
                           </Button>
+                        )}
+
+                        {/* Unpublish button for published */}
+                        {draft.status === 'published' && (
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary underline"
+                            >
+                              🔗 Voir la page publiée
+                            </a>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-xs text-destructive border-destructive/30"
+                              onClick={() => handleUnpublish(draft)}
+                              disabled={actionLoading === draft.id}
+                            >
+                              {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <EyeOff className="h-3.5 w-3.5" />}
+                              Dépublier
+                            </Button>
+                          </div>
                         )}
 
                         {draft.review_note && draft.status !== 'draft' && (

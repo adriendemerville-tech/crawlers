@@ -431,11 +431,87 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Landing page route: /landing/<slug> ──
+    const landingMatch = route.match(/^\/landing\/([a-z0-9_-]+)$/);
+    if (landingMatch) {
+      const slug = landingMatch[1];
+
+      const { data: landing, error: landingError } = await supabase
+        .from("seo_page_drafts")
+        .select("title, slug, meta_title, meta_description, content, target_keyword, published_at")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .eq("page_type", "landing")
+        .single();
+
+      if (landingError || !landing) {
+        return new Response(JSON.stringify({ error: "Landing not found", slug }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const fullUrl = `${baseUrl}/landing/${landing.slug}`;
+      const landingHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(landing.meta_title || landing.title)}</title>
+  <meta name="description" content="${escapeHtml(landing.meta_description || '')}">
+  <link rel="canonical" href="${fullUrl}">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="${escapeHtml(landing.meta_title || landing.title)}">
+  <meta property="og:description" content="${escapeHtml(landing.meta_description || '')}">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:type" content="website">
+  <script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": landing.title,
+    "description": landing.meta_description || "",
+    "url": fullUrl,
+    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl },
+    ...(landing.published_at ? { "datePublished": landing.published_at } : {}),
+  })}</script>
+</head>
+<body>
+  <main>
+    <article>
+      <h1>${escapeHtml(landing.title)}</h1>
+      ${markdownToHtml(landing.content || '')}
+    </article>
+  </main>
+  <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
+</body>
+</html>`;
+
+      // Cache 24h
+      await supabase.from("prerender_cache").upsert({
+        route,
+        html_content: landingHtml,
+        content_hash: "",
+        meta_title: landing.meta_title || landing.title,
+        meta_description: landing.meta_description || "",
+        rendered_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }, { onConflict: "route" });
+
+      if (format === "json") {
+        return new Response(JSON.stringify({ route, title: landing.title, description: landing.meta_description }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(landingHtml, {
+        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "fresh" },
+      });
+    }
+
     // ── Static routes ──
     const meta = PUBLIC_ROUTES[route];
     if (!meta) {
       return new Response(
-        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>"] }),
+        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>"] }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
