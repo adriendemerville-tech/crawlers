@@ -3,830 +3,580 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Minus, ExternalLink, Target, Users, Wallet, Zap, Brain, BarChart3 } from 'lucide-react';
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  Check, X, ExternalLink, Target, Users, Wallet, Zap, Brain,
+  BarChart3, Shield, Bot, FileCode, Network, Gauge, Layers,
+  ArrowRight, HelpCircle, Cpu, Globe, FileText, Rocket,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const SITE_URL = 'https://crawlers.fr';
 
+/* ─── Structured Data ─── */
+
+const articleSD = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Crawlers.fr vs Semrush : Comparatif Complet 2026",
+  "description": "Comparaison détaillée entre Crawlers.fr et Semrush : 25+ critères, tarifs, fonctionnalités SEO, GEO, IA, agences. Guide pour choisir l'outil adapté.",
+  "author": { "@type": "Person", "name": "Adrien de Volontat", "url": `${SITE_URL}/a-propos` },
+  "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": SITE_URL },
+  "datePublished": "2026-02-03",
+  "dateModified": "2026-04-06",
+  "wordCount": 3200,
+  "mainEntityOfPage": { "@type": "WebPage", "@id": `${SITE_URL}/comparatif-crawlers-semrush` },
+};
+
+const breadcrumbSD = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": SITE_URL },
+    { "@type": "ListItem", "position": 2, "name": "Comparatifs", "item": `${SITE_URL}/comparatif-crawlers-semrush` },
+    { "@type": "ListItem", "position": 3, "name": "Crawlers.fr vs Semrush", "item": `${SITE_URL}/comparatif-crawlers-semrush` },
+  ],
+};
+
+const faqItems = [
+  {
+    q: "Quelle est la différence principale entre Crawlers.fr et Semrush ?",
+    a: "Semrush est une suite SEO complète axée sur le référencement Google (mots-clés, backlinks, positions). Crawlers.fr est une plateforme Identity-First qui combine SEO technique, GEO (visibilité IA) et génération de contenu/code correctif. Les deux sont complémentaires.",
+  },
+  {
+    q: "Semrush est-il meilleur que Crawlers.fr pour le SEO ?",
+    a: "Pour la recherche de mots-clés, l'analyse de backlinks et le suivi de positions Google, Semrush est supérieur. Pour l'audit technique avec code correctif, l'optimisation GEO (ChatGPT, Perplexity, Gemini), le cocon sémantique 3D et la génération de contenu IA, Crawlers.fr est plus avancé.",
+  },
+  {
+    q: "Combien coûte Crawlers.fr par rapport à Semrush ?",
+    a: "Semrush Pro démarre à 139,95$/mois (~130€). Crawlers.fr propose des audits gratuits, des crédits à partir de 5€, et des abonnements Pro Agency à 59€/mois ou Pro Agency+ à 99€/mois avec tout illimité. Soit 2 à 20 fois moins cher selon l'usage.",
+  },
+  {
+    q: "Crawlers.fr remplace-t-il Semrush ?",
+    a: "Non. Les deux outils répondent à des besoins différents. Beaucoup de nos utilisateurs Pro utilisent les deux : Semrush pour le suivi de positions et l'analyse concurrentielle, Crawlers.fr pour l'audit technique automatisé, le GEO, le Content Architect et le déploiement CMS direct.",
+  },
+  {
+    q: "Puis-je utiliser Crawlers.fr en marque blanche pour mes clients ?",
+    a: "Oui. Le plan Pro Agency (59€/mois) inclut la marque blanche avec logo, couleurs et rapports personnalisés + 2 comptes collaborateurs. Le plan Pro Agency+ (99€/mois) ajoute l'API Marina en marque blanche complète + 3 comptes.",
+  },
+  {
+    q: "Crawlers.fr peut-il déployer les corrections directement sur mon site ?",
+    a: "Oui. Crawlers.fr se connecte à WordPress, Shopify, Wix et PrestaShop via des connecteurs CMS natifs. Code Architect génère le code correctif et peut le déployer directement sur votre site, sans intervention manuelle.",
+  },
+  {
+    q: "Qu'est-ce que le Score GEO et pourquoi Semrush ne le propose pas ?",
+    a: "Le Score GEO mesure la capacité de votre site à être cité par les IA génératives (ChatGPT, Gemini, Perplexity, Claude). Il analyse la structure sémantique, les données JSON-LD, l'accessibilité aux crawlers IA et la cohérence E-E-A-T. Semrush se concentre sur le SEO Google traditionnel et n'évalue pas cette dimension.",
+  },
+  {
+    q: "Crawlers.fr analyse-t-il les Core Web Vitals comme Semrush ?",
+    a: "Oui. L'audit technique SEO de Crawlers.fr intègre les données terrain CrUX (Chrome UX Report) et les mesures labo Lighthouse/PageSpeed Insights : LCP, FCP, CLS, TBT, Speed Index, TTFB. Le tout avec un code correctif généré automatiquement.",
+  },
+];
+
+const faqSD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map(({ q, a }) => ({
+    "@type": "Question",
+    "name": q,
+    "acceptedAnswer": { "@type": "Answer", "text": a },
+  })),
+};
+
+/* ─── Comparison table data ─── */
+
+type Row = {
+  cat: string;
+  criteria: string;
+  crawlers: string;
+  semrush: string;
+  cWin: boolean | null;
+  sWin: boolean | null;
+};
+
+const comparisonData: Row[] = [
+  // Tarifs & Accès
+  { cat: "Tarifs", criteria: "Prix d'entrée", crawlers: "Gratuit (audits de base)", semrush: "139,95 $/mois (~130€)", cWin: true, sWin: false },
+  { cat: "Tarifs", criteria: "Abonnement agence", crawlers: "59€/mois (Pro Agency) ou 99€/mois (Pro Agency+)", semrush: "~230€/mois (Guru) + add-ons", cWin: true, sWin: false },
+  { cat: "Tarifs", criteria: "Inscription obligatoire", crawlers: "Non (audits immédiats)", semrush: "Oui + CB souvent requise", cWin: true, sWin: false },
+  // SEO Technique
+  { cat: "SEO Technique", criteria: "Audit technique (PageSpeed, CWV)", crawlers: "Oui (CrUX + Lighthouse, 4 catégories)", semrush: "Oui (Site Audit)", cWin: null, sWin: null },
+  { cat: "SEO Technique", criteria: "Crawl de site (liens, structure)", crawlers: "Oui (jusqu'à 50 000 pages/mois Pro+)", semrush: "Oui (jusqu'à 100 000 pages)", cWin: null, sWin: null },
+  { cat: "SEO Technique", criteria: "Génération de code correctif", crawlers: "Oui (JSON-LD, meta, scripts injectables)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "SEO Technique", criteria: "Déploiement CMS direct", crawlers: "Oui (WordPress, Shopify, Wix, PrestaShop)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "SEO Technique", criteria: "Analyse des logs serveur", crawlers: "Oui (Pro Agency+)", semrush: "Oui (add-on Log File Analyzer)", cWin: null, sWin: null },
+  // GEO & IA
+  { cat: "GEO & IA", criteria: "Score GEO (citabilité IA)", crawlers: "Oui (métrique propriétaire)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "GEO & IA", criteria: "Benchmark LLM (ChatGPT, Gemini, Claude…)", crawlers: "Oui (test multi-providers en temps réel)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "GEO & IA", criteria: "Profondeur LLM (analyse des sources citées)", crawlers: "Oui", semrush: "Non", cWin: true, sWin: false },
+  { cat: "GEO & IA", criteria: "Audit robots.txt pour crawlers IA", crawlers: "Oui (GPTBot, ClaudeBot, PerplexityBot…)", semrush: "Partiel (focus Googlebot)", cWin: true, sWin: false },
+  { cat: "GEO & IA", criteria: "Audit E-E-A-T complet", crawlers: "Oui (168 critères, scoring multi-axes)", semrush: "Partiel (recommandations génériques)", cWin: true, sWin: false },
+  // Contenu & Stratégie
+  { cat: "Contenu", criteria: "Recherche de mots-clés", crawlers: "Non", semrush: "Oui (26 milliards de mots-clés)", cWin: false, sWin: true },
+  { cat: "Contenu", criteria: "Génération de contenu IA (Content Architect)", crawlers: "Oui (pages complètes SEO+GEO optimisées)", semrush: "Partiel (SEO Writing Assistant)", cWin: true, sWin: false },
+  { cat: "Contenu", criteria: "Cocon sémantique 3D (Cocoon)", crawlers: "Oui (graphe interactif, clusters, maillage)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "Contenu", criteria: "Analyse concurrentielle", crawlers: "Audit comparé multi-sites", semrush: "Avancée (trafic, mots-clés, pubs)", cWin: false, sWin: true },
+  // Backlinks & Positionnement
+  { cat: "Tracking", criteria: "Analyse backlinks", crawlers: "Oui (snapshots hebdomadaires)", semrush: "Oui (43T+ liens indexés)", cWin: false, sWin: true },
+  { cat: "Tracking", criteria: "Suivi de positionnement Google", crawlers: "Non", semrush: "Oui (jusqu'à 5 000 mots-clés)", cWin: false, sWin: true },
+  { cat: "Tracking", criteria: "Suivi GSC/GA4 intégré", crawlers: "Oui (connexion directe, observatoire)", semrush: "Oui", cWin: null, sWin: null },
+  // Agence
+  { cat: "Agence", criteria: "Marque blanche (White Label)", crawlers: "Oui (logo, couleurs, rapports, API)", semrush: "Non (branding Semrush imposé)", cWin: true, sWin: false },
+  { cat: "Agence", criteria: "Dashboard multi-clients", crawlers: "Oui (inclus dès 59€/mois)", semrush: "Oui (add-on payant)", cWin: true, sWin: false },
+  { cat: "Agence", criteria: "Plans d'action pilotables", crawlers: "Oui (tâches, suivi, export)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "Agence", criteria: "Autopilote SEO (Parménion)", crawlers: "Oui (maintenance prédictive automatisée)", semrush: "Non", cWin: true, sWin: false },
+  // Divers
+  { cat: "Divers", criteria: "API disponible", crawlers: "Oui (API Marina, Pro Agency+)", semrush: "Oui (API complète)", cWin: null, sWin: null },
+  { cat: "Divers", criteria: "SEA → SEO Bridge", crawlers: "Oui (identification mots-clés Ads capturables)", semrush: "Partiel (données PPC)", cWin: true, sWin: false },
+  { cat: "Divers", criteria: "Support en français natif", crawlers: "Oui (chat IA + équipe FR)", semrush: "Oui (traduit)", cWin: null, sWin: null },
+  { cat: "Divers", criteria: "Courbe d'apprentissage", crawlers: "Faible (30 secondes pour un audit)", semrush: "Élevée (formation requise)", cWin: true, sWin: false },
+];
+
+/* ─── Helpers ─── */
+
+const StatusIcon = ({ win }: { win: boolean | null }) => {
+  if (win === true) return <Check className="h-4 w-4 text-emerald-500 shrink-0" />;
+  if (win === false) return <X className="h-4 w-4 text-red-400 shrink-0" />;
+  return <span className="h-4 w-4 rounded-full bg-muted-foreground/30 block shrink-0" />;
+};
+
+/* ─── Component ─── */
+
 const ComparatifCrawlersSemrush = () => {
-  const { language } = useLanguage();
   useCanonicalHreflang('/comparatif-crawlers-semrush');
-  const articleStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "Crawlers.fr vs Semrush : Comparatif Honnête 2026",
-    "description": "Comparaison objective entre Crawlers.fr et Semrush. Fonctionnalités, tarifs, cibles. Quel outil choisir selon votre profil ?",
-    "author": {
-      "@type": "Organization",
-      "name": "Crawlers.fr",
-      "url": SITE_URL
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Crawlers.fr",
-      "url": SITE_URL
-    },
-    "datePublished": "2026-02-03",
-    "dateModified": "2026-02-03",
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `${SITE_URL}/comparatif-crawlers-semrush`
-    }
-  };
 
-  const comparisonStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "Table",
-    "about": "Comparaison Crawlers.fr vs Semrush",
-    "description": "Tableau comparatif des fonctionnalités, tarifs et cibles entre Crawlers.fr et Semrush pour le SEO et GEO en 2026"
-  };
-
-  const breadcrumbStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Accueil",
-        "item": SITE_URL
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": "Crawlers.fr vs Semrush",
-        "item": `${SITE_URL}/comparatif-crawlers-semrush`
-      }
-    ]
-  };
-
-  const faqStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Quelle est la différence principale entre Crawlers.fr et Semrush ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Crawlers.fr se spécialise dans le GEO (Generative Engine Optimization) pour optimiser la visibilité sur les IA comme ChatGPT et Perplexity. Semrush est une suite SEO complète axée sur le référencement Google traditionnel avec des outils d'analyse concurrentielle avancés."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Semrush est-il meilleur que Crawlers.fr ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Semrush est plus puissant et complet pour le SEO traditionnel. Crawlers.fr est plus adapté aux TPE/PME qui veulent se préparer à l'ère des moteurs de réponse IA sans investir 130€/mois. Les deux outils répondent à des besoins différents."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Combien coûte Crawlers.fr par rapport à Semrush ?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Crawlers.fr propose des audits gratuits et un système de crédits à partir de 5€. Semrush démarre à 129,95$/mois (plan Pro). Crawlers.fr est environ 20 à 50 fois moins cher pour des besoins ponctuels."
-        }
-      }
-    ]
-  };
-
-  const comparisonData = [
-    {
-      criteria: "Spécialisation principale",
-      crawlers: "GEO (Generative Engine Optimization)",
-      semrush: "SEO traditionnel (Google, Bing)",
-      crawlersNote: "Focus IA",
-      semrushNote: "Focus moteurs classiques"
-    },
-    {
-      criteria: "Cible utilisateur",
-      crawlers: "TPE, PME, freelances, blogueurs",
-      semrush: "Agences, grandes entreprises, experts SEO",
-      crawlersNote: "Accessible",
-      semrushNote: "Professionnel"
-    },
-    {
-      criteria: "Prix d'entrée",
-      crawlers: "Gratuit (audits de base)",
-      semrush: "129,95 $/mois",
-      crawlersNote: "À partir de 0€",
-      semrushNote: "~120€/mois"
-    },
-    {
-      criteria: "Analyse des crawlers IA",
-      crawlers: "Oui (GPTBot, ClaudeBot, Perplexity...)",
-      semrush: "Non",
-      crawlersWin: true,
-      semrushWin: false
-    },
-    {
-      criteria: "Audit robots.txt pour LLM",
-      crawlers: "Oui (détection blocages IA)",
-      semrush: "Partiel (focus Googlebot)",
-      crawlersWin: true,
-      semrushWin: false
-    },
-    {
-      criteria: "Recherche de mots-clés",
-      crawlers: "Non",
-      semrush: "Oui (base de 26 milliards)",
-      crawlersWin: false,
-      semrushWin: true
-    },
-    {
-      criteria: "Analyse backlinks",
-      crawlers: "Non",
-      semrush: "Oui (43T+ liens indexés)",
-      crawlersWin: false,
-      semrushWin: true
-    },
-    {
-      criteria: "Audit technique SEO",
-      crawlers: "Oui (PageSpeed, Core Web Vitals)",
-      semrush: "Oui (Site Audit complet)",
-      crawlersWin: null,
-      semrushWin: null
-    },
-    {
-      criteria: "Suivi de positionnement",
-      crawlers: "Non",
-      semrush: "Oui (jusqu'à 5000 mots-clés)",
-      crawlersWin: false,
-      semrushWin: true
-    },
-    {
-      criteria: "Génération de code correctif",
-      crawlers: "Oui (JSON-LD, meta tags automatiques)",
-      semrush: "Non",
-      crawlersWin: true,
-      semrushWin: false
-    },
-    {
-      criteria: "Marque Blanche (White Label)",
-      crawlers: "Oui (logo, couleurs, rapports personnalisés)",
-      semrush: "Non (branding Semrush imposé)",
-      crawlersWin: true,
-      semrushWin: false
-    },
-    {
-      criteria: "Dashboard Agence multi-clients",
-      crawlers: "Oui (gestion clients, dossiers, suivi)",
-      semrush: "Oui (Client Manager, add-on payant)",
-      crawlersWin: null,
-      semrushWin: null
-    },
-    {
-      criteria: "Analyse concurrentielle",
-      crawlers: "Limitée (focus visibilité IA)",
-      semrush: "Avancée (trafic, mots-clés, pubs)",
-      crawlersWin: false,
-      semrushWin: true
-    },
-    {
-      criteria: "Courbe d'apprentissage",
-      crawlers: "Faible (interface simple)",
-      semrush: "Élevée (outil complexe)",
-      crawlersNote: "5 min",
-      semrushNote: "Plusieurs heures"
-    },
-    {
-      criteria: "Support en français",
-      crawlers: "Oui (natif)",
-      semrush: "Oui (traduit)",
-      crawlersWin: null,
-      semrushWin: null
-    },
-    {
-      criteria: "API disponible",
-      crawlers: "Non",
-      semrush: "Oui (API complète)",
-      crawlersWin: false,
-      semrushWin: true
-    }
-  ];
-
-  const renderStatus = (win: boolean | null | undefined) => {
-    if (win === true) return <Check className="h-5 w-5 text-emerald-500" />;
-    if (win === false) return <X className="h-5 w-5 text-red-400" />;
-    return <Minus className="h-5 w-5 text-muted-foreground" />;
-  };
+  const categories = [...new Set(comparisonData.map(r => r.cat))];
 
   return (
     <>
       <Helmet>
-        <title>Crawlers.fr vs Semrush : Comparatif Honnête 2026 | Quel Outil Choisir ?</title>
-        <meta 
-          name="description" 
-          content="Comparaison objective Crawlers.fr vs Semrush : fonctionnalités, tarifs, cibles. Semrush est plus puissant, Crawlers.fr plus accessible. Guide pour bien choisir." 
-        />
+        <title>Crawlers.fr vs Semrush : Comparatif Complet 2026 — 28 Critères</title>
+        <meta name="description" content="Comparaison détaillée Crawlers.fr vs Semrush : 28 critères, tarifs (gratuit vs 130€/mois), GEO, Content Architect, Cocoon 3D, marque blanche. Guide pour choisir." />
         <link rel="canonical" href={`${SITE_URL}/comparatif-crawlers-semrush`} />
-        
-        <meta property="og:title" content="Crawlers.fr vs Semrush : Le Comparatif Honnête" />
-        <meta property="og:description" content="Semrush est plus puissant pour le SEO. Crawlers.fr est spécialisé GEO et 20x moins cher. Découvrez quel outil correspond à vos besoins." />
+        <meta property="og:title" content="Crawlers.fr vs Semrush : Comparatif 2026 — 28 Critères" />
+        <meta property="og:description" content="Semrush domine le SEO classique. Crawlers.fr innove en GEO, audit IA et génération de code. Tableau comparatif complet + FAQ." />
         <meta property="og:url" content={`${SITE_URL}/comparatif-crawlers-semrush`} />
         <meta property="og:type" content="article" />
         <meta property="og:locale" content="fr_FR" />
-        
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Crawlers.fr vs Semrush : Comparatif 2026" />
-        <meta name="twitter:description" content="Comparaison honnête entre un outil GEO accessible et une suite SEO professionnelle." />
-        
         <meta name="robots" content="index, follow" />
-        <meta name="author" content="Crawlers.fr" />
-        
-        <script type="application/ld+json">{JSON.stringify(articleStructuredData)}</script>
-        <script type="application/ld+json">{JSON.stringify(comparisonStructuredData)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbStructuredData)}</script>
+        <meta name="author" content="Adrien de Volontat" />
+        <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqSD)}</script>
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        
+
         <main className="flex-1">
-          {/* Hero Section */}
-          <section className="py-8 md:py-12 lg:py-16 bg-gradient-to-b from-primary/5 to-background">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto text-center">
-                <Badge variant="outline" className="mb-3 md:mb-4 text-xs md:text-sm">Comparatif 2026</Badge>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-foreground leading-tight px-2">
-                  Crawlers.fr et Semrush, deux outils aux fonctionnalités bien différentes
-                </h1>
-                <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
-                  Deux outils, deux philosophies. Semrush est une référence mondiale du SEO. 
-                  Crawlers.fr est un nouvel acteur spécialisé GEO. Voici une comparaison factuelle 
-                  pour vous aider à choisir selon <strong>vos vrais besoins</strong>.
-                </p>
-              </div>
+          {/* ═══ Hero ═══ */}
+          <section className="py-10 md:py-16 bg-gradient-to-b from-primary/5 to-background">
+            <div className="container mx-auto px-4 max-w-4xl text-center">
+              <Badge variant="outline" className="mb-4 text-xs md:text-sm">Comparatif mis à jour — Avril 2026</Badge>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-5 text-foreground leading-tight">
+                Crawlers.fr vs Semrush : Le Comparatif Complet 2026
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
+                28 critères analysés objectivement. Semrush reste la référence du SEO traditionnel.
+                Crawlers.fr innove avec le <strong className="text-primary">GEO</strong>, le <strong>Content Architect</strong>, le <strong>Cocoon 3D</strong> et le déploiement CMS direct.
+                Voici comment choisir selon vos vrais besoins.
+              </p>
             </div>
           </section>
 
-          {/* Fair Play Summary Table */}
-          <section className="py-8 md:py-10 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-xl md:text-2xl font-bold text-center mb-2 text-foreground">
-                  L'Approche "Fair Play" en 30 Secondes
-                </h2>
-                <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base">
-                  Comparaison honnête sans langue de bois
-                </p>
-                
-                <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm -mx-2 md:mx-0">
-                  <table className="w-full text-xs sm:text-sm min-w-[480px]" aria-label="Comparatif synthétique Semrush vs Crawlers.fr">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/50">
-                        <th className="px-2 md:px-4 py-2 md:py-3 text-left font-semibold text-foreground">Critère</th>
-                        <th className="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-foreground">
-                          <span className="inline-flex items-center gap-1">
-                            <img src="https://www.semrush.com/favicon.ico" alt="" className="h-3 w-3 md:h-4 md:w-4" />
-                            Semrush
-                          </span>
-                        </th>
-                        <th className="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-primary">
-                          <span className="inline-flex items-center gap-1 md:gap-1.5">
-                            <img src="/favicon.svg" alt="" className="h-4 w-4 md:h-5 md:w-5" />
-                            Crawlers.fr
-                          </span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-border/50">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Prix de départ</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">~130$/mois</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-[10px] md:text-xs">0€ (Gratuit)</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Inscription requise</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Obligatoire + CB souvent</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Aucune (Immédiat)</span>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Focus Principal</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Mots-clés & Backlinks (Google)</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-primary font-medium text-[10px] md:text-sm">Technique & Visibilité IA (ChatGPT)</span>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Score GEO (IA)</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Audit stratégique</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Disponible</span>
-                        </td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Disponible</span>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Plans d'action pilotables</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Génération de &lt;script&gt; correctif</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Marque Blanche (White Label)</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Pro Agency</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Dashboard Agence multi-clients</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Add-on payant</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Inclus (59€/mois)</Badge>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Complexité</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Usine à gaz (Expert requis)</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Simple & Rapide (30 sec)</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Public Idéal</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Grosses Agences & E-commerce</td>
-                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <span className="text-primary font-medium text-[10px] md:text-sm">Freelances, PME & Indie Hackers</span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+          {/* ═══ Résumé à puces ═══ */}
+          <section className="py-8 md:py-10 bg-muted/30" aria-labelledby="resume">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 id="resume" className="text-xl md:text-2xl font-bold mb-6 text-foreground flex items-center gap-2">
+                <Layers className="h-5 w-5 text-primary" />
+                En résumé : ce qu'il faut retenir
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <img src="https://www.semrush.com/favicon.ico" alt="" className="h-4 w-4" />
+                    Les forces de Semrush
+                  </h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" /> Base de 26 milliards de mots-clés avec volumes et CPC</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" /> 43 trillions de backlinks indexés</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" /> Suivi de positionnement Google (5 000 mots-clés)</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" /> Analyse concurrentielle avancée (trafic, pubs)</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" /> Écosystème mature (10M+ utilisateurs, depuis 2008)</li>
+                  </ul>
                 </div>
-
-                <p className="text-center text-[10px] md:text-xs text-muted-foreground mt-3 md:mt-4">
-                  💡 Ce tableau n'est pas un jugement de valeur — chaque outil a ses forces selon votre contexte.
-                </p>
+                <div className="bg-card rounded-xl border border-primary/30 p-5">
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <img src="/favicon.svg" alt="" className="h-5 w-5" />
+                    Les forces de Crawlers.fr
+                  </h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Audits gratuits sans inscription (technique, GEO, crawlers IA)</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Score GEO + Benchmark LLM (ChatGPT, Gemini, Claude, Perplexity)</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Content Architect : génération de pages complètes SEO+GEO</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Code Architect : code correctif injectable + déploiement CMS</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Cocoon 3D, marque blanche, Autopilote Parménion</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> À partir de 0€ — Pro Agency dès 59€/mois</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Introduction */}
-          <section className="py-8 md:py-12 bg-background">
-            <div className="container mx-auto px-4">
-              <article className="max-w-4xl mx-auto prose prose-sm md:prose-lg dark:prose-invert">
-                <p className="text-base md:text-lg leading-relaxed">
-                  Soyons honnêtes dès le départ : <strong>Semrush est un outil plus complet et plus puissant que Crawlers.fr</strong>. 
-                  Avec plus de 10 millions d'utilisateurs, une base de données de 26 milliards de mots-clés et 43 trillions 
-                  de backlinks indexés, Semrush s'est imposé comme <em>la</em> référence mondiale pour les professionnels du SEO.
-                </p>
-                
-                <p className="text-base md:text-lg leading-relaxed">
-                  Alors pourquoi créer ce comparatif ? Parce que <strong>tout le monde n'a pas besoin d'un outil aussi puissant</strong>. 
-                  Et surtout, tout le monde n'a pas un budget de 130€ par mois à consacrer au référencement. 
-                  Ce guide s'adresse à ceux qui cherchent la solution adaptée à leur situation réelle, 
-                  pas forcément l'outil le plus impressionnant du marché.
-                </p>
-
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <Target className="h-5 w-5" />
+          {/* ═══ H2 : Deux visions du référencement ═══ */}
+          <section className="py-10 md:py-14 bg-background">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <article className="prose prose-sm md:prose-lg dark:prose-invert max-w-none">
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Target className="h-5 w-5 text-primary" />
                   Deux visions du référencement en 2026
-                </h3>
-                
-                <p className="leading-relaxed">
-                  Le paysage du référencement a profondément changé. D'un côté, le SEO traditionnel reste crucial : 
-                  Google traite encore{' '}
-                  <a 
-                    href="https://www.internetlivestats.com/google-search-statistics/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    8,5 milliards de recherches par jour
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  . De l'autre, les moteurs de réponse IA comme{' '}
-                  <a 
-                    href="https://chat.openai.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    ChatGPT
-                  </a>
-                  ,{' '}
-                  <a 
-                    href="https://www.perplexity.ai/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Perplexity
-                  </a>
-                  {' '}et{' '}
-                  <a 
-                    href="https://gemini.google.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Google Gemini
-                  </a>
-                  {' '}captent une part croissante des requêtes informationnelles.
+                </h2>
+                <p>
+                  Le paysage du référencement a profondément changé. Google traite encore{' '}
+                  <a href="https://www.internetlivestats.com/google-search-statistics/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                    8,5 milliards de recherches par jour <ExternalLink className="h-3 w-3" />
+                  </a>, mais les moteurs de réponse IA — ChatGPT, Perplexity, Google Gemini, Claude — captent une part croissante des requêtes informationnelles. Selon{' '}
+                  <a href="https://www.gartner.com/en/newsroom/press-releases/2024-02-19-gartner-predicts-search-engine-volume-will-drop-25-percent-by-2026" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                    Gartner <ExternalLink className="h-3 w-3" />
+                  </a>, le volume de recherche traditionnel pourrait baisser de 25% d'ici fin 2026.
+                </p>
+                <p>
+                  <strong>Semrush</strong> excelle dans le SEO classique : mots-clés, positionnement, backlinks, veille concurrentielle. C'est l'outil de référence pour les agences SEO et les grandes entreprises depuis 2008.
+                </p>
+                <p>
+                  <strong>Crawlers.fr</strong> adopte une approche <strong className="text-primary">Identity-First</strong> : construire la carte d'identité numérique de votre site, auditer les 168 critères techniques et sémantiques, mesurer le Score GEO, et livrer le code correctif prêt à déployer. Un angle mort que Semrush n'adresse pas.
                 </p>
 
-                <p className="leading-relaxed">
-                  <strong>Semrush</strong> excelle dans le SEO classique : analyse de mots-clés, suivi de positionnement, 
-                  audit de backlinks, veille concurrentielle. C'est l'outil idéal pour les agences SEO et les entreprises 
-                  qui investissent massivement dans leur stratégie de contenu.
-                </p>
-
-                <p className="leading-relaxed">
-                  <strong>Crawlers.fr</strong> se positionne différemment. Notre spécialité, c'est le{' '}
-                  <strong className="text-primary">GEO (Generative Engine Optimization)</strong>
-                  {' '}: s'assurer que votre site est correctement lu, compris et cité par les intelligences artificielles 
-                  génératives. Un angle mort que la plupart des outils SEO traditionnels n'adressent pas encore.
-                </p>
-
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <Users className="h-4 w-4 md:h-5 md:w-5" />
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 text-primary">
+                  <Users className="h-5 w-5" />
                   À qui s'adresse chaque outil ?
                 </h3>
 
-                <p className="leading-relaxed">
-                  <strong>Choisissez Semrush si vous êtes :</strong>
-                </p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Une agence SEO gérant plusieurs clients</li>
-                  <li>Une entreprise avec un budget marketing conséquent (5000€+/mois)</li>
-                  <li>Un expert SEO cherchant des données de marché exhaustives</li>
-                  <li>Un e-commerce nécessitant un suivi de positionnement quotidien sur des milliers de mots-clés</li>
-                </ul>
+                <div className="grid md:grid-cols-2 gap-4 not-prose my-6">
+                  <div className="bg-muted/30 rounded-lg p-5 border-l-4 border-muted-foreground">
+                    <p className="font-semibold text-foreground mb-2">Choisissez Semrush si :</p>
+                    <ul className="text-sm text-muted-foreground space-y-1.5">
+                      <li>• Vous êtes une agence SEO gérant 10+ clients</li>
+                      <li>• Vous avez un budget marketing de 5 000€+/mois</li>
+                      <li>• Vous avez besoin de suivi de positionnement quotidien</li>
+                      <li>• L'analyse concurrentielle détaillée est critique</li>
+                    </ul>
+                  </div>
+                  <div className="bg-primary/5 rounded-lg p-5 border-l-4 border-primary">
+                    <p className="font-semibold text-foreground mb-2">Choisissez Crawlers.fr si :</p>
+                    <ul className="text-sm text-muted-foreground space-y-1.5">
+                      <li>• Vous voulez auditer et corriger votre site rapidement</li>
+                      <li>• Vous visez la visibilité IA (ChatGPT, Gemini, Perplexity)</li>
+                      <li>• Vous êtes freelance, PME ou consultant</li>
+                      <li>• Vous avez besoin de marque blanche et dashboard agence</li>
+                      <li>• Vous voulez générer du contenu SEO+GEO optimisé</li>
+                    </ul>
+                  </div>
+                </div>
 
-                <p className="leading-relaxed mt-4">
-                  <strong>Choisissez Crawlers.fr si vous êtes :</strong>
-                </p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Une TPE ou PME avec un budget limité</li>
-                  <li>Un freelance ou consultant indépendant</li>
-                  <li>Un blogueur ou créateur de contenu</li>
-                  <li>Quelqu'un qui veut préparer son site pour l'ère des IA génératives</li>
-                  <li>Un professionnel qui a besoin d'audits ponctuels, pas d'un abonnement mensuel</li>
-                </ul>
+                {/* ═══ H2 : Tarifs ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Wallet className="h-5 w-5 text-primary" />
+                  Comparatif des tarifs : 0€ vs 130€/mois
+                </h2>
 
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <Wallet className="h-4 w-4 md:h-5 md:w-5" />
-                  La question du prix : l'éléphant dans la pièce
-                </h3>
-
-                <p className="leading-relaxed">
-                  Parlons argent. C'est souvent le critère décisif, et c'est normal. Voici les tarifs au 1er février 2026 
-                  selon les{' '}
-                  <a 
-                    href="https://www.semrush.com/prices/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    données officielles Semrush
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  :
-                </p>
-
-                <div className="bg-muted/50 rounded-lg p-6 my-6">
-                  <p className="font-semibold mb-3">Tarification Semrush :</p>
-                  <ul className="space-y-2 text-sm">
-                    <li>• <strong>Pro</strong> : 129,95 $/mois (~120€) — 5 projets, 500 mots-clés suivis</li>
-                    <li>• <strong>Guru</strong> : 249,95 $/mois (~230€) — 15 projets, 1500 mots-clés</li>
-                    <li>• <strong>Business</strong> : 499,95 $/mois (~460€) — 40 projets, 5000 mots-clés</li>
+                <h3 className="text-lg font-semibold text-primary">Tarification Semrush (avril 2026)</h3>
+                <div className="bg-muted/50 rounded-lg p-5 my-4 not-prose">
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• <strong className="text-foreground">Pro</strong> : 139,95 $/mois (~130€) — 5 projets, 500 mots-clés</li>
+                    <li>• <strong className="text-foreground">Guru</strong> : 249,95 $/mois (~230€) — 15 projets, 1 500 mots-clés</li>
+                    <li>• <strong className="text-foreground">Business</strong> : 499,95 $/mois (~460€) — 40 projets, 5 000 mots-clés</li>
                   </ul>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    * Engagement annuel recommandé pour -17%. Essai gratuit 7 jours disponible.
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-3">* -17% en engagement annuel. Essai gratuit 7 jours disponible.</p>
                 </div>
 
-                <div className="bg-primary/5 rounded-lg p-6 my-6 border border-primary/20">
-                  <p className="font-semibold mb-3">Tarification Crawlers.fr :</p>
-                  <ul className="space-y-2 text-sm">
-                    <li>• <strong>Audits de base</strong> : Gratuits (Crawlers IA, PageSpeed, Score GEO)</li>
-                    <li>• <strong>Audit expert SEO</strong> : Gratuit avec inscription</li>
-                    <li>• <strong>Audit stratégique IA</strong> : 2 crédits par audit</li>
-                    <li>• <strong>Pack Essentiel</strong> : 10 crédits pour 5€</li>
-                    <li>• <strong>Pack Lite</strong> : 50 crédits pour 19€</li>
-                    <li>• <strong>Pack Premium</strong> : 150 crédits pour 45€</li>
-                    <li>• <strong>Pro Agency</strong> : 59€/mois — illimité, marque blanche, dashboard agence</li>
+                <h3 className="text-lg font-semibold text-primary">Tarification Crawlers.fr (avril 2026)</h3>
+                <div className="bg-primary/5 rounded-lg p-5 my-4 border border-primary/20 not-prose">
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• <strong className="text-foreground">Audits gratuits</strong> : Crawlers IA, PageSpeed, Score GEO — sans inscription</li>
+                    <li>• <strong className="text-foreground">Audit Expert</strong> : Gratuit avec inscription (168 critères)</li>
+                    <li>• <strong className="text-foreground">Crédits</strong> : Pack Essentiel 10 crédits (5€), Lite 50 crédits (19€), Premium 150 crédits (45€), Ultime 500 crédits (99€)</li>
+                    <li>• <strong className="text-foreground">Pro Agency</strong> : 59€/mois — 5 000 pages crawlées, 100 pages Content Architect, marque blanche + 2 comptes</li>
+                    <li>• <strong className="text-foreground">Pro Agency+</strong> : 99€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
+                    <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti</li>
                   </ul>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    * Pas d'abonnement obligatoire pour les packs. Les crédits n'expirent pas.
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-3">* Sans engagement, résiliable à tout moment. 25 crédits offerts à l'inscription.</p>
                 </div>
 
-                <p className="leading-relaxed">
-                  Le calcul est simple : un an de Semrush Pro coûte environ <strong>1 440€</strong>. 
-                  Avec ce budget sur Crawlers.fr, vous pourriez réaliser plus de <strong>4 800 audits stratégiques</strong>. 
-                  Évidemment, la comparaison s'arrête là car les fonctionnalités ne sont pas identiques.
+                <p>
+                  Le calcul est éloquent : un an de Semrush Pro coûte environ <strong>1 560€</strong>.
+                  Un an de Crawlers.fr Pro Agency coûte <strong>708€</strong> avec des fonctionnalités que Semrush ne propose tout simplement pas (code correctif, Content Architect, Cocoon 3D, marque blanche incluse).
                 </p>
 
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <Zap className="h-4 w-4 md:h-5 md:w-5" />
-                  Ce que Semrush fait mieux (beaucoup mieux)
-                </h3>
-
-                <p className="leading-relaxed">
-                  Reconnaissons les forces de Semrush. C'est un outil mature, développé depuis 2008, avec des ressources 
-                  considérables. Voici ce qu'il fait objectivement mieux :
+                {/* ═══ H2 : Ce que Semrush fait mieux ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Ce que Semrush fait mieux (et beaucoup mieux)
+                </h2>
+                <p>
+                  Semrush est un outil mature, développé depuis 2008, avec des ressources considérables. Voici ses avantages objectifs :
                 </p>
-
-                <ul className="list-disc pl-6 space-y-3">
-                  <li>
-                    <strong>Recherche de mots-clés</strong> : Base de données de 26 milliards de mots-clés avec volume de recherche, 
-                    difficulté, CPC, tendances. Crawlers.fr ne propose pas cette fonctionnalité.
-                  </li>
-                  <li>
-                    <strong>Analyse de backlinks</strong> : 43 trillions de liens indexés. Vous pouvez espionner le profil de liens 
-                    de n'importe quel concurrent. Crawlers.fr n'analyse pas les backlinks.
-                  </li>
-                  <li>
-                    <strong>Suivi de positionnement</strong> : Suivez jusqu'à 5000 mots-clés quotidiennement. 
-                    Crawlers.fr ne propose pas de rank tracking.
-                  </li>
-                  <li>
-                    <strong>Analyse concurrentielle</strong> : Estimez le trafic, les mots-clés et les dépenses publicitaires 
-                    de vos concurrents. Une mine d'or pour la stratégie.
-                  </li>
-                  <li>
-                    <strong>Outils de Content Marketing</strong> : SEO Writing Assistant, Topic Research, Brand Monitoring... 
-                    Une suite complète pour les équipes marketing.
-                  </li>
+                <ul>
+                  <li><strong>Recherche de mots-clés</strong> : 26 milliards de mots-clés avec volume, difficulté, CPC, tendances. Crawlers.fr ne propose pas cette fonctionnalité.</li>
+                  <li><strong>Analyse de backlinks</strong> : 43 trillions de liens indexés. Profil de liens de n'importe quel concurrent.</li>
+                  <li><strong>Suivi de positionnement</strong> : Jusqu'à 5 000 mots-clés quotidiennement.</li>
+                  <li><strong>Analyse concurrentielle</strong> : Estimation du trafic, des mots-clés et dépenses publicitaires des concurrents.</li>
+                  <li><strong>Content Marketing Suite</strong> : SEO Writing Assistant, Topic Research, Brand Monitoring.</li>
                 </ul>
-
-                <p className="leading-relaxed mt-4 italic text-muted-foreground">
-                  Si vous avez besoin de ces fonctionnalités, Semrush est probablement le meilleur choix. 
-                  Nous ne prétendons pas le remplacer sur ces points.
+                <p className="italic text-muted-foreground">
+                  Si ces fonctionnalités sont votre priorité, Semrush est le meilleur choix. Nous ne prétendons pas le remplacer sur ces points.
                 </p>
 
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <Brain className="h-4 w-4 md:h-5 md:w-5" />
-                  Ce que Crawlers.fr fait différemment
+                {/* ═══ H2 : Ce que Crawlers.fr fait que Semrush ne fait pas ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Brain className="h-5 w-5 text-primary" />
+                  Ce que Crawlers.fr fait que Semrush ne fait pas
+                </h2>
+
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <Bot className="h-4 w-4" /> GEO : visibilité dans les moteurs IA
                 </h3>
-
-                <p className="leading-relaxed">
-                  Notre valeur ajoutée se situe ailleurs. Nous avons construit Crawlers.fr pour répondre à une question 
-                  que beaucoup se posent en 2026 : <em>« Mon site est-il visible pour ChatGPT et les autres IA ? »</em>
+                <p>
+                  Crawlers.fr est la seule plateforme à proposer un <Link to="/methodologie" className="text-primary hover:underline font-medium">Score GEO</Link> mesurant la capacité de votre site à être cité par ChatGPT, Gemini, Perplexity et Claude. Le <Link to="/llm-benchmark" className="text-primary hover:underline font-medium">Benchmark LLM</Link> teste votre visibilité en temps réel auprès de chaque provider IA. La <strong>Profondeur LLM</strong> analyse les sources que les IA citent et votre position dans ce paysage.
                 </p>
 
-                <ul className="list-disc pl-6 space-y-3">
-                  <li>
-                    <strong>Analyse des crawlers IA</strong> : Nous testons spécifiquement GPTBot (OpenAI), ClaudeBot (Anthropic), 
-                    Google-Extended (Gemini), PerplexityBot et Applebot-Extended. Semrush se concentre sur Googlebot.
-                  </li>
-                  <li>
-                    <strong>Audit robots.txt orienté LLM</strong> : Nous vérifions si votre fichier robots.txt bloque 
-                    involontairement les crawlers d'IA générative. Un problème fréquent et invisible.
-                  </li>
-                  <li>
-                    <strong>Score GEO</strong> : Un indicateur unique mesurant votre « citabilité » par les modèles de langage. 
-                    Données structurées, hiérarchie sémantique, contenu parsable...
-                  </li>
-                  <li>
-                    <strong>Génération de code correctif</strong> : Nous générons automatiquement le code JSON-LD, 
-                    les balises meta et les correctifs à implémenter. Pas juste un diagnostic, une solution.
-                  </li>
-                  <li>
-                    <strong>Accessibilité financière</strong> : Un freelance peut auditer son site pour 0€. 
-                    Une TPE peut obtenir un audit stratégique complet pour moins de 2€.
-                  </li>
-                  <li>
-                    <strong>Marque Blanche (White Label)</strong> : L'offre{' '}
-                    <Link to="/pro-agency" className="text-primary hover:underline font-medium">Pro Agency</Link>
-                    {' '}à 59€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
-                    vos couleurs et votre nom de marque. Idéal pour les consultants et agences qui veulent 
-                    présenter des livrables professionnels sous leur propre identité à leurs clients finaux.
-                  </li>
-                  <li>
-                    <strong>Dashboard Agence dédié</strong> : Gestion multi-clients avec dossiers, suivi 
-                    de l'évolution technique, export PDF personnalisé et plans d'action pilotables — 
-                    le tout inclus dans l'abonnement Pro Agency, sans add-on payant supplémentaire.
-                  </li>
-                </ul>
-
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
-                  Cas d'usage concrets
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <FileCode className="h-4 w-4" /> Code Architect : du diagnostic au déploiement
                 </h3>
-
-                <p className="leading-relaxed">
-                  Pour mieux comprendre, voici trois profils types et l'outil qui leur correspond :
+                <p>
+                  Là où Semrush se limite à lister les problèmes, Crawlers.fr génère le <strong>code correctif</strong> : JSON-LD, meta tags, scripts d'optimisation LCP, balises OpenGraph. Via les <Link to="/connexion-cms" className="text-primary hover:underline font-medium">connecteurs CMS</Link> (WordPress, Shopify, Wix, PrestaShop), ce code peut être déployé directement sur votre site sans intervention manuelle.
                 </p>
 
-                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-primary">
-                  <p className="font-semibold">Marie, consultante en communication</p>
-                  <p className="text-sm mt-2">
-                    Budget marketing : 200€/mois. Elle veut s'assurer que son site personnel apparaît 
-                    quand ses prospects demandent des recommandations à ChatGPT. 
-                    <strong className="text-primary"> → Crawlers.fr</strong> (audits ponctuels, pas d'abonnement)
-                  </p>
-                </div>
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <FileText className="h-4 w-4" /> Content Architect : génération de contenu IA
+                </h3>
+                <p>
+                  <Link to="/content-architect" className="text-primary hover:underline font-medium">Content Architect</Link> génère des pages complètes, optimisées simultanément pour le SEO et le GEO : hiérarchie sémantique, données structurées, maillage interne, signaux E-E-A-T. Jusqu'à 100 pages/mois (Pro) ou 150 pages/mois (Pro+).
+                </p>
 
-                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-muted-foreground">
-                  <p className="font-semibold text-sm md:text-base">Alexandre, responsable SEO d'une agence</p>
-                  <p className="text-xs md:text-sm mt-2">
-                    Gère 15 clients avec des rapports mensuels. A besoin de suivre les positions, 
-                    analyser les backlinks et surveiller la concurrence. 
-                    <strong> → Semrush</strong> (fonctionnalités avancées indispensables)
-                  </p>
-                </div>
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <Network className="h-4 w-4" /> Cocoon 3D : cocon sémantique intelligent
+                </h3>
+                <p>
+                  Le <Link to="/features/cocoon" className="text-primary hover:underline font-medium">Cocoon 3D</Link> construit un graphe sémantique interactif de votre site : clusters thématiques, maillage interne, détection de cannibalisation. Un outil unique que Semrush ne propose pas.
+                </p>
 
-                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-primary">
-                  <p className="font-semibold text-sm md:text-base">Sophie, artisan boulanger</p>
-                  <p className="text-xs md:text-sm mt-2">
-                    Veut que sa boulangerie apparaisse quand quelqu'un demande « meilleure boulangerie à Lyon » 
-                    à Perplexity ou Google. Budget quasi nul. 
-                    <strong className="text-primary"> → Crawlers.fr</strong> (audit gratuit + optimisation locale)
-                  </p>
-                </div>
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <Cpu className="h-4 w-4" /> Autopilote Parménion : maintenance SEO prédictive
+                </h3>
+                <p>
+                  L'<strong>Autopilote Parménion</strong> surveille automatiquement votre site, détecte les anomalies (chute de performance, erreurs techniques, nouvelles opportunités) et lance les diagnostics et corrections de manière autonome. Semrush n'offre rien d'équivalent.
+                </p>
 
-                {/* Mid-article CTA */}
-                <div className="my-8 p-6 rounded-xl bg-primary/5 border border-primary/20 text-center">
-                  <p className="text-lg font-semibold text-foreground mb-2">
-                    Curieux de votre visibilité IA ?
-                  </p>
-                  <p className="text-sm text-foreground/70 mb-4">
-                    Découvrez gratuitement si votre site est cité par ChatGPT, Gemini et Perplexity.
-                  </p>
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <Globe className="h-4 w-4" /> SEA → SEO Bridge
+                </h3>
+                <p>
+                  Le <Link to="/sea-seo-bridge" className="text-primary hover:underline font-medium">SEA → SEO Bridge</Link> identifie vos mots-clés Google Ads capturables en SEO organique et calcule vos économies mensuelles potentielles. Une fonctionnalité exclusive incluse dans Pro Agency+.
+                </p>
+
+                {/* ═══ CTA mid-article ═══ */}
+                <div className="my-8 p-6 rounded-xl bg-primary/5 border border-primary/20 text-center not-prose">
+                  <p className="text-lg font-semibold text-foreground mb-2">Curieux de votre visibilité IA ?</p>
+                  <p className="text-sm text-muted-foreground mb-4">Lancez un audit gratuit en 30 secondes — aucune carte bancaire requise.</p>
                   <Button asChild size="lg" variant="hero">
                     <Link to="/audit-expert">
+                      <Rocket className="h-4 w-4 mr-2" />
                       Lancer mon audit GEO gratuit
                     </Link>
                   </Button>
                 </div>
 
-                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary">
+                {/* ═══ H2 : Cas d'usage ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Cas d'usage concrets : quel outil pour quel profil ?
+                </h2>
+              </article>
+
+              <div className="grid md:grid-cols-2 gap-4 my-6">
+                {[
+                  { name: "Marie, consultante en communication", desc: "Budget limité. Veut être citée quand ses prospects interrogent ChatGPT.", tool: "Crawlers.fr", reason: "Audit gratuit + Content Architect", primary: true },
+                  { name: "Alexandre, responsable SEO en agence", desc: "Gère 15 clients, besoin de suivi de positions et backlinks.", tool: "Semrush", reason: "Rank tracking + analyse concurrentielle", primary: false },
+                  { name: "Sophie, artisan boulanger", desc: "Veut apparaître quand on demande « meilleure boulangerie Lyon » à Perplexity.", tool: "Crawlers.fr", reason: "Audit gratuit + GEO local", primary: true },
+                  { name: "Thomas, freelance SEO/GEO", desc: "Gère 5 clients, a besoin de rapports marque blanche et de contenu IA.", tool: "Crawlers.fr Pro Agency", reason: "59€/mois tout inclus vs 230€+ chez Semrush", primary: true },
+                ].map((c, i) => (
+                  <div key={i} className={`bg-muted/30 rounded-lg p-5 border-l-4 ${c.primary ? 'border-primary' : 'border-muted-foreground'}`}>
+                    <p className="font-semibold text-foreground text-sm">{c.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{c.desc}</p>
+                    <p className="text-xs mt-2">
+                      <strong className={c.primary ? 'text-primary' : 'text-foreground'}>→ {c.tool}</strong>
+                      <span className="text-muted-foreground"> — {c.reason}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <article className="prose prose-sm md:prose-lg dark:prose-invert max-w-none">
+                {/* ═══ H2 : Complémentarité ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Shield className="h-5 w-5 text-primary" />
                   Notre position : complémentarité, pas concurrence
-                </h3>
-
-                <p className="leading-relaxed">
-                  Nous ne cherchons pas à remplacer Semrush. D'ailleurs, certains de nos utilisateurs les plus actifs 
-                  utilisent les deux outils. Semrush pour leur stratégie SEO long terme, Crawlers.fr pour s'assurer 
-                  qu'ils ne sont pas invisibles dans l'écosystème IA émergent.
+                </h2>
+                <p>
+                  Nous ne cherchons pas à remplacer Semrush. Certains de nos utilisateurs Pro les plus actifs utilisent les deux : Semrush pour le suivi de positions et l'analyse concurrentielle, Crawlers.fr pour l'audit technique automatisé, le GEO, le Content Architect et le déploiement CMS direct.
                 </p>
-
-                <p className="leading-relaxed">
-                  Le référencement de demain sera hybride. Ignorer le SEO traditionnel serait une erreur. 
-                  Ignorer le GEO en serait une autre. Selon{' '}
-                  <a 
-                    href="https://www.gartner.com/en/newsroom/press-releases/2024-02-19-gartner-predicts-search-engine-volume-will-drop-25-percent-by-2026"
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    Gartner
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  , le volume de recherche sur les moteurs traditionnels pourrait baisser de 25% d'ici 2026 
-                  au profit des assistants IA.
-                </p>
-
-                <p className="leading-relaxed">
-                  La question n'est plus « Semrush ou Crawlers.fr ? » mais « Comment couvrir les deux fronts ? ». 
-                  Pour les entreprises avec les moyens, la réponse est simple : les deux. 
-                  Pour les autres, Crawlers.fr offre un point d'entrée accessible vers l'optimisation GEO.
+                <p>
+                  La <strong>stack idéale en 2026</strong> combine un outil SEO traditionnel (Semrush ou Ahrefs) pour le tracking Google, et Crawlers.fr pour la dimension Identity-First, GEO, la génération de contenu et la maintenance automatisée via l'Autopilote Parménion.
                 </p>
               </article>
             </div>
           </section>
 
-          {/* Comparison Table */}
-          <section className="py-8 md:py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-5xl mx-auto">
-                <Card className="overflow-hidden border">
-                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-3 md:py-5 px-3 md:px-6">
-                    <CardTitle className="text-lg md:text-xl lg:text-2xl text-center">
-                      Tableau Comparatif Complet
-                    </CardTitle>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">
-                      14 critères analysés objectivement — Données mises à jour février 2026
-                    </p>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto -mx-px">
-                      <table className="w-full text-xs sm:text-sm border-collapse min-w-[550px]" role="table" aria-label="Comparaison Crawlers.fr vs Semrush">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/50">
-                            <th className="text-left p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] border-r border-border">
-                              Critère
-                            </th>
-                            <th className="text-center p-2 md:p-3 font-semibold min-w-[130px] md:min-w-[200px] border-r border-border bg-primary/5">
-                              <div className="flex items-center justify-center gap-1 md:gap-2">
-                                <span className="text-primary font-bold">Crawlers.fr</span>
-                              </div>
-                            </th>
-                            <th className="text-center p-2 md:p-3 font-semibold min-w-[130px] md:min-w-[200px]">
-                              <div className="flex items-center justify-center gap-1 md:gap-2">
-                                <span>Semrush</span>
-                              </div>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {comparisonData.map((row, idx) => (
-                            <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
-                              <td className="p-3 font-medium border-r border-border bg-card">
-                                {row.criteria}
-                              </td>
-                              <td className="p-3 text-center border-r border-border bg-primary/5">
-                                <div className="flex flex-col items-center gap-1">
-                                  <div className="flex items-center gap-2">
-                                    {row.crawlersWin !== undefined && renderStatus(row.crawlersWin)}
-                                    <span className="text-xs">{row.crawlers}</span>
-                                  </div>
-                                  {row.crawlersNote && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                      {row.crawlersNote}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3 text-center">
-                                <div className="flex flex-col items-center gap-1">
-                                  <div className="flex items-center gap-2">
-                                    {row.semrushWin !== undefined && renderStatus(row.semrushWin)}
-                                    <span className="text-xs">{row.semrush}</span>
-                                  </div>
-                                  {row.semrushNote && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                      {row.semrushNote}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
+          {/* ═══ Tableau comparatif complet ═══ */}
+          <section className="py-10 md:py-14 bg-muted/30" aria-labelledby="tableau">
+            <div className="container mx-auto px-4 max-w-5xl">
+              <h2 id="tableau" className="text-xl md:text-2xl font-bold text-center mb-2 text-foreground">
+                Tableau Comparatif Complet — 28 Critères
+              </h2>
+              <p className="text-sm text-muted-foreground text-center mb-6">
+                Données mises à jour avril 2026 • Sources : semrush.com, documentation officielle, tests internes
+              </p>
 
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  Sources : semrush.com/prices, documentation officielle Semrush, tests internes Crawlers.fr. 
-                  Dernière vérification : 03/02/2026.
-                </p>
+              <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+                <table className="w-full text-xs sm:text-sm min-w-[580px]" role="table" aria-label="Comparaison 28 critères Crawlers.fr vs Semrush">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-3 font-semibold text-foreground min-w-[160px] border-r border-border">Critère</th>
+                      <th className="text-center p-3 font-semibold min-w-[180px] border-r border-border bg-primary/5">
+                        <span className="inline-flex items-center gap-1.5">
+                          <img src="/favicon.svg" alt="" className="h-4 w-4" /> Crawlers.fr
+                        </span>
+                      </th>
+                      <th className="text-center p-3 font-semibold min-w-[180px]">
+                        <span className="inline-flex items-center gap-1.5">
+                          <img src="https://www.semrush.com/favicon.ico" alt="" className="h-3.5 w-3.5" /> Semrush
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map(cat => (
+                      <>
+                        <tr key={`cat-${cat}`} className="bg-muted/60">
+                          <td colSpan={3} className="px-3 py-2 font-semibold text-xs text-foreground uppercase tracking-wider">{cat}</td>
+                        </tr>
+                        {comparisonData.filter(r => r.cat === cat).map((row, idx) => (
+                          <tr key={`${cat}-${idx}`} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                            <td className="p-3 font-medium text-foreground border-r border-border">{row.criteria}</td>
+                            <td className="p-3 border-r border-border bg-primary/5">
+                              <div className="flex items-center gap-2 justify-center">
+                                <StatusIcon win={row.cWin} />
+                                <span className="text-xs text-muted-foreground">{row.crawlers}</span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2 justify-center">
+                                <StatusIcon win={row.sWin} />
+                                <span className="text-xs text-muted-foreground">{row.semrush}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-4">
+                💡 Ce tableau est une comparaison factuelle — chaque outil a ses forces selon votre contexte et vos objectifs.
+              </p>
+            </div>
+          </section>
+
+          {/* ═══ FAQ ═══ */}
+          <section className="py-10 md:py-14 bg-background" aria-labelledby="faq-heading">
+            <div className="container mx-auto px-4 max-w-3xl">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground mb-4">
+                  <HelpCircle className="h-4 w-4 text-primary" />
+                  <span>Questions fréquentes</span>
+                </div>
+                <h2 id="faq-heading" className="text-xl md:text-2xl font-bold text-foreground">
+                  FAQ : Crawlers.fr vs Semrush
+                </h2>
+              </div>
+
+              <Accordion type="single" collapsible className="space-y-3">
+                {faqItems.map((item, i) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80">
+                    <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
+                      <h3 className="text-sm md:text-base font-medium">{item.q}</h3>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-sm pb-4">
+                      {item.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </section>
+
+          {/* ═══ Maillage interne ═══ */}
+          <section className="py-8 md:py-10 bg-muted/20">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 className="text-lg md:text-xl font-bold mb-4 text-foreground">
+                Pour aller plus loin
+              </h2>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { to: "/audit-expert", label: "Audit Expert SEO+GEO", desc: "168 critères analysés gratuitement" },
+                  { to: "/methodologie", label: "Notre méthodologie", desc: "Comment nous auditons votre site" },
+                  { to: "/guide-audit-seo", label: "Guide Audit SEO 2026", desc: "Guide complet pour auditer votre site" },
+                  { to: "/content-architect", label: "Content Architect", desc: "Créez du contenu IA optimisé" },
+                  { to: "/features/cocoon", label: "Cocoon 3D", desc: "Cocon sémantique interactif" },
+                  { to: "/pro-agency", label: "Plans Pro Agency", desc: "Offres agences dès 59€/mois" },
+                  { to: "/sea-seo-bridge", label: "SEA → SEO Bridge", desc: "Économies Google Ads calculées" },
+                  { to: "/tarifs", label: "Tous les tarifs", desc: "Crédits, packs et abonnements" },
+                  { to: "/analyse-site-web-gratuit", label: "Analyse de site gratuite", desc: "Lancez un audit en 30 secondes" },
+                ].map(link => (
+                  <Link key={link.to} to={link.to} className="group flex items-start gap-2 p-3 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors">
+                    <ArrowRight className="h-4 w-4 text-primary shrink-0 mt-0.5 group-hover:translate-x-0.5 transition-transform" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{link.label}</p>
+                      <p className="text-xs text-muted-foreground">{link.desc}</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           </section>
 
-          {/* CTA Section */}
+          {/* ═══ CTA final ═══ */}
           <section className="py-10 md:py-16 bg-gradient-to-b from-background to-primary/5">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 md:mb-6 px-2">
-                  Prêt à tester Crawlers.fr gratuitement ?
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8 px-2">
-                  Lancez un audit de votre site en 30 secondes. Aucune carte bancaire requise. 
-                  Découvrez si votre site est visible pour les IA génératives.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-                  <Button asChild size="lg" variant="hero">
-                    <Link to="/audit-expert">
-                      Lancer un Audit Gratuit
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link to="/tarifs">
-                      Voir les Tarifs
-                    </Link>
-                  </Button>
-                </div>
-                <p className="text-[10px] md:text-xs text-muted-foreground mt-4 md:mt-6 px-2">
-                  Semrush reste un excellent choix pour le SEO avancé.{' '}
-                  <a 
-                    href="https://www.semrush.com/signup/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Essayez leur version d'essai gratuite →
-                  </a>
-                </p>
+            <div className="container mx-auto px-4 max-w-3xl text-center">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">
+                Prêt à tester Crawlers.fr gratuitement ?
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground mb-6">
+                Lancez un audit de votre site en 30 secondes. Aucune carte bancaire requise.
+                Découvrez si votre site est visible pour les IA génératives.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button asChild size="lg" variant="hero">
+                  <Link to="/audit-expert">Lancer un Audit Gratuit</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link to="/tarifs">Voir les Tarifs</Link>
+                </Button>
               </div>
+              <p className="text-[10px] md:text-xs text-muted-foreground mt-5">
+                Semrush reste un excellent choix pour le SEO avancé.{' '}
+                <a href="https://www.semrush.com/signup/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  Essayez leur version d'essai gratuite →
+                </a>
+              </p>
             </div>
           </section>
         </main>
