@@ -720,18 +720,85 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             )}
           </div>
         </button>
-        {isGbpActive && (
-          <button
-            onClick={(e) => { e.stopPropagation(); handleGbpDisconnect(); }}
-            disabled={gbpDisconnecting}
-            className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title={language === 'fr' ? 'Déconnecter GBP' : 'Disconnect GBP'}
-          >
-            {gbpDisconnecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unplug className="w-3.5 h-3.5" />}
-          </button>
-        )}
       </div>
     );
+  };
+
+  const getDisconnectWarning = (id: string): string => {
+    const warnings: Record<string, Record<string, string>> = {
+      gsc: {
+        fr: 'La déconnexion supprimera les données Search Console importées et les tokens OAuth associés.',
+        en: 'Disconnecting will remove imported Search Console data and associated OAuth tokens.',
+        es: 'La desconexión eliminará los datos importados de Search Console y los tokens OAuth asociados.',
+      },
+      ga4: {
+        fr: 'La déconnexion supprimera les données Analytics importées et les tokens OAuth associés.',
+        en: 'Disconnecting will remove imported Analytics data and associated OAuth tokens.',
+        es: 'La desconexión eliminará los datos importados de Analytics y los tokens OAuth asociados.',
+      },
+      'google-ads': {
+        fr: 'La déconnexion supprimera les données Google Ads (mots-clés, CPC, campagnes) et révoquera l\'accès OAuth.',
+        en: 'Disconnecting will remove Google Ads data (keywords, CPC, campaigns) and revoke OAuth access.',
+        es: 'La desconexión eliminará los datos de Google Ads (palabras clave, CPC, campañas) y revocará el acceso OAuth.',
+      },
+      gmb: {
+        fr: 'La déconnexion supprimera les données Google Business Profile (avis, statistiques, fiches) et révoquera l\'accès OAuth.',
+        en: 'Disconnecting will remove Google Business Profile data (reviews, stats, listings) and revoke OAuth access.',
+        es: 'La desconexión eliminará los datos de Google Business Profile (reseñas, estadísticas, fichas) y revocará el acceso OAuth.',
+      },
+      matomo: {
+        fr: 'La déconnexion supprimera la connexion Matomo et les métriques de trafic associées.',
+        en: 'Disconnecting will remove the Matomo connection and associated traffic metrics.',
+        es: 'La desconexión eliminará la conexión Matomo y las métricas de tráfico asociadas.',
+      },
+    };
+    return warnings[id]?.[language] || warnings[id]?.fr || (language === 'fr' ? 'Cette action est irréversible.' : 'This action is irreversible.');
+  };
+
+  const handleDisconnectConfirm = async () => {
+    if (!disconnectTarget) return;
+    setDisconnecting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      if (disconnectTarget.id === 'gsc' || disconnectTarget.id === 'ga4') {
+        const { error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'disconnect', user_id: user.id, service: disconnectTarget.id },
+        });
+        if (error) throw error;
+        if (disconnectTarget.id === 'gsc') setGscConnected(false);
+        else setGa4Connected(false);
+      } else if (disconnectTarget.id === 'google-ads') {
+        const { error } = await supabase.functions.invoke('google-ads-connector', {
+          body: { action: 'disconnect', user_id: user.id },
+        });
+        if (error) throw error;
+        setAdsConnected(false);
+      } else if (disconnectTarget.id === 'gmb') {
+        const { error } = await supabase.functions.invoke('gbp-auth', {
+          body: { action: 'disconnect', user_id: user.id },
+        });
+        if (error) throw error;
+        setGbpConnected(false);
+        setGbpEmail(null);
+      } else if (disconnectTarget.id === 'matomo') {
+        await supabase.from('matomo_connections').update({ is_active: false } as any).eq('user_id', user.id);
+        setMatomoConnected(false);
+      }
+
+      toast.success(
+        language === 'fr' ? `${disconnectTarget.name} déconnecté` :
+        language === 'es' ? `${disconnectTarget.name} desconectado` :
+        `${disconnectTarget.name} disconnected`
+      );
+      setDisconnectTarget(null);
+    } catch (err) {
+      console.error('[ExternalApis] Disconnect error:', err);
+      toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
+    } finally {
+      setDisconnecting(false);
+    }
   };
 
   return (
