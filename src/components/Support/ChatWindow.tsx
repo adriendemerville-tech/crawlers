@@ -693,6 +693,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
       setMessages(prev => [...prev, assistantMsg]);
 
+      // Store architect action for confirmation flow
+      if (data.architect_action) {
+        setPendingArchitectAction(data.architect_action);
+      }
+
       if (data.conversation_id && !conversationId) {
         setConversationId(data.conversation_id);
       }
