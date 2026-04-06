@@ -383,7 +383,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       )}
 
       {/* Empty state — Google Ads NOT connected */}
-      {!loading && opportunities.length === 0 && !summary && adsConnected === false && !simulatedDataEnabled && (
+      {!loading && opportunities.length === 0 && !summary && adsConnected === false && !isDemoMode && (
         <Card className="border-dashed border-2 border-primary/20">
           <CardContent className="p-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
