@@ -11,7 +11,7 @@ Deno.serve(handleRequest(async (req) => {
   try {
     const cfSecret = req.headers.get('CF-Logpush-Secret') || req.headers.get('cf-logpush-secret');
     if (!cfSecret) {
-      return jsonError('Missing CF-Logpush-Secret header', code: 'MISSING_SECRET', 401);
+      return jsonError('Missing CF-Logpush-Secret header', 401);
     }
 
     // Hash the incoming secret to match against stored hash
