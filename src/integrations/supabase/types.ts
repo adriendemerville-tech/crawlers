@@ -2139,8 +2139,13 @@ export type Database = {
       }
       cocoon_tasks: {
         Row: {
+          action_payload: Json | null
+          action_type: string | null
           created_at: string
           description: string | null
+          executed_at: string | null
+          execution_result: Json | null
+          execution_status: string | null
           id: string
           priority: string
           source_recommendation_id: string | null
@@ -2151,8 +2156,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          action_payload?: Json | null
+          action_type?: string | null
           created_at?: string
           description?: string | null
+          executed_at?: string | null
+          execution_result?: Json | null
+          execution_status?: string | null
           id?: string
           priority?: string
           source_recommendation_id?: string | null
@@ -2163,8 +2173,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          action_payload?: Json | null
+          action_type?: string | null
           created_at?: string
           description?: string | null
+          executed_at?: string | null
+          execution_result?: Json | null
+          execution_status?: string | null
           id?: string
           priority?: string
           source_recommendation_id?: string | null
