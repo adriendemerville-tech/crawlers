@@ -481,7 +481,7 @@ Deno.serve(async (req) => {
       ${markdownToHtml(landing.content || '')}
     </article>
   </main>
-  ${generateFooterHTML()}
+  <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
 </body>
 </html>`;
 
