@@ -1,0 +1,1 @@
+UPDATE log_connectors SET api_key_hash = '5bc7b78eabc6251f954661568e86efcd23cee6f019136c55cea57d0325d914d0' WHERE id = '3dcdad80-2ca9-4b88-ae79-270e1e0d1ae9';
