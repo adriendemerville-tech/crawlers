@@ -1147,6 +1147,7 @@ async function askParmenionLLM(context: {
   siteKeywords: string[];
   siteInfo: any;
   scoredWorkbenchItems: any[];
+  cmsInventory?: CmsContentInventory | null;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -1230,6 +1231,12 @@ Phase pipeline: ${context.currentPhase.toUpperCase()}
 Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
 CMS cible: ${context.isIktracker ? 'IKtracker (API Supabase)' : 'WordPress (wpsync)'}
 ${siteIdentityBlock}${keywordsBlock}
+${context.cmsInventory && context.cmsInventory.items.length > 0 ? `
+CMS_INVENTORY (${context.cmsInventory.items.length} contenus existants, ${context.cmsInventory.drafts.length} brouillons):
+${context.cmsInventory.drafts.map(d => `- [BROUILLON] "${d.title}" (slug: ${d.slug}, plateforme: ${d.platform})`).join('\n')}
+${context.cmsInventory.published.slice(0, 20).map(d => `- [PUBLIÉ] "${d.title}" (slug: ${d.slug})`).join('\n')}
+⚠️ Si tu veux créer un article sur un sujet déjà couvert par un brouillon ci-dessus, utilise "update-post" avec le slug du brouillon au lieu de "create-post".
+` : ''}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
