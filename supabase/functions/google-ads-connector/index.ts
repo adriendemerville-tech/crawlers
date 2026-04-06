@@ -190,7 +190,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
       const stateValue = `${user_id}|${frontend_origin || ''}`;
       const scopes = [
-        'https://www.googleapis.com/auth/adwords.readonly',
+        'https://www.googleapis.com/auth/adwords',
         'https://www.googleapis.com/auth/userinfo.email',
       ];
 
