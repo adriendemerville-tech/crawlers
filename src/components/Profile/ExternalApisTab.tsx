@@ -668,8 +668,6 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
   const renderServiceCard = (service: ServiceButton) => {
     const isConnecting = connectingId === service.id;
-    const isGbp = service.id === 'gmb';
-    const isGbpActive = isGbp && gbpConnected;
     const isActive = getServiceConnected(service.id);
 
     return (
