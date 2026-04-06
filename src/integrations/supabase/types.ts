@@ -9233,6 +9233,7 @@ export type Database = {
         | "audit_strategic"
         | "cocoon"
         | "proactive_scan"
+        | "felix"
       log_connector_type:
         | "cloudflare"
         | "agent"
@@ -9430,6 +9431,7 @@ export const Constants = {
         "audit_strategic",
         "cocoon",
         "proactive_scan",
+        "felix",
       ],
       log_connector_type: [
         "cloudflare",

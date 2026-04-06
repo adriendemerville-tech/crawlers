@@ -1,0 +1,1 @@
+ALTER TYPE public.diagnostic_source_type ADD VALUE IF NOT EXISTS 'felix';
