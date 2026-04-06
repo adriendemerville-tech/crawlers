@@ -8,6 +8,7 @@ import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
 import { AssistantPrecisionCard } from './AssistantPrecisionCard';
 import { RecettageTab } from './RecettageTab';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
+import { FelixAgentBridgeControls } from './FelixAgentBridgeControls';
 
 export function IntelligenceHub() {
   return (
