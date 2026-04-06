@@ -869,6 +869,7 @@ export function CocoonForceGraph3D({
   haloColors = DEFAULT_HALO_COLORS,
   showClusters = true,
   visibleJuiceTypes,
+  visibleLinkDirections,
   isDayMode = false,
   colorIntensity = 5,
   bgWarmth = 0,
