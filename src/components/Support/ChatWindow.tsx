@@ -705,6 +705,19 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         setPendingArchitectAction(data.architect_action);
       }
 
+      // Handle navigation action: redirect user to the target page
+      if (data.navigation_action) {
+        const nav = data.navigation_action;
+        const encodedUrl = encodeURIComponent(nav.url);
+        setTimeout(() => {
+          if (nav.action === 'crawl') {
+            navigate(`/app/site-crawl?url=${encodedUrl}&from=felix&autostart=true`);
+          } else if (nav.action === 'audit') {
+            navigate(`/audit-expert?url=${encodedUrl}&from=felix`);
+          }
+        }, 1500); // Small delay so user sees Felix's confirmation message
+      }
+
       if (data.conversation_id && !conversationId) {
         setConversationId(data.conversation_id);
       }
