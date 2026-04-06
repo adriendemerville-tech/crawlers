@@ -725,9 +725,19 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
     }
   }, [language]);
 
-  // Check GBP connection status & fetch real locations for Pro users
+  // Simulated mode always wins; otherwise fetch real GBP locations for Pro users
   useEffect(() => {
     if (isGated) return;
+
+    if (simulatedDataEnabled) {
+      setOrderedLocations(SIMULATED_LOCATIONS);
+      setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+      setLocationsLoading(false);
+      return;
+    }
+
+    setLocationsLoading(true);
+
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();

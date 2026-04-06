@@ -139,9 +139,10 @@ interface AdminDashboardProps {
   canSeeUsers?: boolean;
   canSeeIntelligence?: boolean;
   isAuditor?: boolean;
+  onSimulatedDataChange?: (enabled: boolean) => void;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
@@ -153,11 +154,16 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
 
   useEffect(() => {
     const loadDocVisibility = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data } = await supabase
         .from('admin_dashboard_config')
         .select('card_order')
+        .eq('user_id', user.id)
         .limit(1)
         .maybeSingle();
+
       if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
         const config = data.card_order as Record<string, unknown>;
         setDocsHiddenForViewers(!!config.docs_hidden_for_viewers);
@@ -168,11 +174,16 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   }, []);
 
   const updateAdminConfig = async (patch: Record<string, unknown>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { data: existing } = await supabase
       .from('admin_dashboard_config')
       .select('id, card_order')
+      .eq('user_id', user.id)
       .limit(1)
       .maybeSingle();
+
     if (existing) {
       const currentConfig = (typeof existing.card_order === 'object' && !Array.isArray(existing.card_order))
         ? existing.card_order as Record<string, unknown>
@@ -181,7 +192,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         .from('admin_dashboard_config')
         .update({ card_order: { ...currentConfig, ...patch } as Record<string, unknown> as any })
         .eq('id', existing.id);
+      return;
     }
+
+    await supabase
+      .from('admin_dashboard_config')
+      .insert({ user_id: user.id, card_order: patch as Record<string, unknown> as any });
   };
 
   const toggleDocsVisibility = async () => {
@@ -193,6 +209,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const toggleSimulatedData = async () => {
     const newValue = !simulatedDataEnabled;
     setSimulatedDataEnabled(newValue);
+    onSimulatedDataChange?.(newValue);
     await updateAdminConfig({ simulated_data_enabled: newValue });
   };
 

@@ -140,16 +140,28 @@ function ProfileContent() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
-  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(false);
+  const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    supabase.from('admin_dashboard_config').select('card_order').limit(1).maybeSingle().then(({ data }) => {
-      if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
-        setSimulatedDataEnabled(!!(data.card_order as Record<string, unknown>).simulated_data_enabled);
-      }
-    });
-  }, []);
+    if (!user) return;
+
+    supabase
+      .from('admin_dashboard_config')
+      .select('card_order')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
+          const config = data.card_order as Record<string, unknown>;
+          setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+          return;
+        }
+
+        setSimulatedDataEnabled(true);
+      });
+  }, [user]);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
@@ -374,7 +386,7 @@ function ProfileContent() {
 
                 {hasAdminAccess && (
                   <TabsContent value="admin">
-                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} />
+                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} onSimulatedDataChange={setSimulatedDataEnabled} />
                   </TabsContent>
                 )}
               </Suspense>
