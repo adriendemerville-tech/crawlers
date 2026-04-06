@@ -906,6 +906,17 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
           .map(r => r.value)
           .filter(Boolean) as PageAnalysis[];
 
+        // Track failed/null URLs for gap explanation
+        if (!failedUrlsByJob.has(job.id)) failedUrlsByJob.set(job.id, []);
+        const jobFailedUrls = failedUrlsByJob.get(job.id)!;
+        settled.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            jobFailedUrls.push({ url: batch[i], reason: r.reason?.message || 'fetch_error' });
+          } else if (r.status === 'fulfilled' && r.value === null) {
+            jobFailedUrls.push({ url: batch[i], reason: 'empty_content' });
+          }
+        });
+
         const failedCount = settled.filter(r => r.status === 'rejected').length;
         if (failedCount > 0) console.warn(`[Worker] ${failedCount} pages failed in batch`);
 
