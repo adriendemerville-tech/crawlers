@@ -1063,7 +1063,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                                 };
                                 setMessages(prev => [...prev, confirmMsg]);
                                 setPendingArchitectAction(null);
-                                navigate('/audit-expert?tab=code-architect');
+                                // Navigate to Code Architect page
+                                navigate('/architecte-generatif');
                                 onClose();
                               } catch (e) {
                                 console.error('Architect workbench insert error:', e);
