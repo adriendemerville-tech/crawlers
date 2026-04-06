@@ -445,6 +445,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
 
     const fromSites = searchParams.get('from') === 'sites';
     const isFromCocoon = searchParams.get('from') === 'cocoon';
+    const isFromFelix = searchParams.get('from') === 'felix';
     const isNewAudit = searchParams.get('new') === '1';
 
     // Track cocoon origin for return button
@@ -479,11 +480,11 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
       return;
     }
 
-    // Priority: URL from "Mes sites" (highest) > URL from query params > cached URL from home > saved session
+    // Priority: URL from Felix/Mes sites (highest) > URL from query params > cached URL from home > saved session
     if (urlFromParams) {
       setUrl(urlFromParams);
-      // When coming from "Mes sites", override localStorage to prevent conflict
-      if (fromSites) {
+      // When coming from "Mes sites" or Felix, override localStorage and auto-launch
+      if (fromSites || isFromFelix) {
         localStorage.setItem('crawlers_last_url', urlFromParams);
         // Reset any prior audit session for a clean start
         sessionStorage.removeItem('audit_url');

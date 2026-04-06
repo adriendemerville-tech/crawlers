@@ -1433,6 +1433,67 @@ ${screen_context}
       ? `\n\n# LANGUE OBLIGATOIRE\nL'utilisateur a choisi la langue "${clientLanguage === 'es' ? 'español' : 'English'}" dans l'interface. Tu DOIS répondre UNIQUEMENT dans cette langue. Ne réponds JAMAIS en français sauf si l'utilisateur écrit en français.\n`
       : '';
 
+    // ── Navigation action: detect crawl/audit intent ──
+    let navigationAction: any = null;
+    if (!isGuest && user_id) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerNav = lastUserMsg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      const crawlIntentPatterns = [
+        /(?:lance|lancer|demarre|demarrer|fais|faire)\s*(?:un |le |mon )?crawl/,
+        /(?:crawl(?:e|er)?)\s*(?:mon |le |ce )?(?:site|domaine|url)/,
+        /(?:scanne|scanner|analyse|analyser)\s*(?:toutes? les? pages?|le site|mon site)/,
+        /(?:crawl)\s+(?:https?:\/\/|www\.|[a-z0-9-]+\.)/,
+      ];
+      const auditIntentPatterns = [
+        /(?:lance|lancer|demarre|demarrer|fais|faire)\s*(?:un |l'|mon )?audit/,
+        /(?:audit(?:e|er)?)\s*(?:mon |le |ce )?(?:site|domaine|url|page)/,
+        /(?:audit expert|audit technique|audit seo|audit geo)/,
+        /(?:analyse seo|analyse technique|check.?up seo)/,
+      ];
+
+      const hasCrawlIntent = crawlIntentPatterns.some(p => p.test(lowerNav));
+      const hasAuditIntent = auditIntentPatterns.some(p => p.test(lowerNav));
+
+      if (hasCrawlIntent || hasAuditIntent) {
+        // Extract URL from message
+        const urlPatterns = [
+          /(?:https?:\/\/[^\s,)]+)/,
+          /(?:www\.[a-z0-9-]+\.[a-z]{2,}[^\s,)]*)/i,
+          /(?:(?:de|pour|sur|du site|le site|mon site)\s+)([a-z0-9-]+\.[a-z]{2,})/i,
+        ];
+        let extractedUrl = '';
+        for (const p of urlPatterns) {
+          const m = lowerNav.match(p);
+          if (m) { extractedUrl = m[1] || m[0]; break; }
+        }
+
+        // Fallback: get domain from user's first tracked site
+        if (!extractedUrl) {
+          try {
+            const { data: firstSite } = await sb
+              .from("tracked_sites")
+              .select("domain")
+              .eq("user_id", user_id)
+              .limit(1)
+              .single();
+            if (firstSite?.domain) extractedUrl = firstSite.domain;
+          } catch {}
+        }
+
+        if (extractedUrl) {
+          if (!extractedUrl.startsWith('http')) extractedUrl = `https://${extractedUrl}`;
+          const actionType = hasCrawlIntent ? 'crawl' : 'audit';
+          navigationAction = {
+            action: actionType,
+            url: extractedUrl,
+            // Crawl = auto-start, Audit = pre-fill only (more costly)
+            autostart: actionType === 'crawl',
+          };
+        }
+      }
+    }
+
     // ── Architect routing: detect fix/solve intent ──
     let architectAction: any = null;
     if (!isGuest && user_id && screen_context) {
@@ -1558,7 +1619,19 @@ NE lance PAS l'architecte toi-même. Attends la confirmation de l'utilisateur.
 IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTION--> (invisible pour l'utilisateur).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt;
+    // ── Navigation prompt injection ──
+    let navigationPrompt = "";
+    if (navigationAction) {
+      const actionLabel = navigationAction.action === 'crawl' ? 'crawl multi-pages' : 'audit expert SEO';
+      const autoLabel = navigationAction.autostart ? "L'action sera lancée automatiquement." : "L'URL sera pré-remplie, l'utilisateur n'aura qu'à cliquer sur Démarrer.";
+      navigationPrompt = `\n\n# ACTION DE NAVIGATION DÉTECTÉE
+L'utilisateur demande de lancer un ${actionLabel} sur ${navigationAction.url}.
+${autoLabel}
+Confirme en 1-2 phrases que tu lances l'action et que tu le rediriges vers la page appropriée.
+IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> (invisible pour l'utilisateur).`;
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
@@ -1596,8 +1669,8 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
 
     // Extract and persist memory from LLM response
     const { cleanResponse, memories, identityUpdates } = parseMemoryExtraction(rawReply);
-    // Remove architect action marker from visible reply
-    let reply = cleanResponse.replace(/<!--ARCHITECT_ACTION-->/g, '').trim();
+    // Remove architect/navigation action markers from visible reply
+    let reply = cleanResponse.replace(/<!--ARCHITECT_ACTION-->/g, '').replace(/<!--NAV_ACTION-->/g, '').trim();
 
     // Persist extracted memory asynchronously (don't block response)
     if (!isGuest && user_id && (memories.length > 0 || identityUpdates.length > 0)) {
@@ -1746,14 +1819,14 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
       }
 
       if (!conversation_id && savedConvId) {
-        return jsonOk({ reply, conversation_id: savedConvId, ...(architectAction ? { architect_action: architectAction } : {}) });
+        return jsonOk({ reply, conversation_id: savedConvId, ...(architectAction ? { architect_action: architectAction } : {}), ...(navigationAction ? { navigation_action: navigationAction } : {}) });
       }
     } catch (e) {
       console.error("Save conversation error:", e);
     }
     } // end if (!isGuest)
 
-    return jsonOk({ reply, conversation_id, ...(architectAction ? { architect_action: architectAction } : {}) });
+    return jsonOk({ reply, conversation_id, ...(architectAction ? { architect_action: architectAction } : {}), ...(navigationAction ? { navigation_action: navigationAction } : {}) });
   } catch (e) {
     console.error("sav-agent error:", e);
     return jsonError(e instanceof Error ? e.message : "Erreur interne", 500);
