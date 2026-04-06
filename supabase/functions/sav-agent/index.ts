@@ -342,11 +342,20 @@ Ne mentionne JAMAIS : Supabase, Edge Function, Deno, PostgreSQL, Lovable, cocoon
 Ne dis JAMAIS : "on pourrait envisager de", "il serait peut-être pertinent de".`;
 
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" } });
+  }
 try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid or empty request body" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+    }
 
     // ── Post-chat route tracking (separate lightweight action) ──
     if (body.action === "track_post_chat") {
