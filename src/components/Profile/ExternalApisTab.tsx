@@ -1279,6 +1279,46 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* ── Disconnect Confirmation Dialog ── */}
+      <Dialog open={!!disconnectTarget} onOpenChange={(open) => { if (!open) { setDisconnectTarget(null); setDisconnectStep('ask'); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {language === 'fr' ? `Êtes-vous sûr de vouloir déconnecter l'API ${disconnectTarget?.name} ?` :
+               language === 'es' ? `¿Está seguro de querer desconectar la API ${disconnectTarget?.name}?` :
+               `Are you sure you want to disconnect the ${disconnectTarget?.name} API?`}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                {disconnectTarget && getDisconnectWarning(disconnectTarget.id)}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            {disconnectStep === 'ask' ? (
+              <>
+                <Button variant="outline" onClick={() => { setDisconnectTarget(null); setDisconnectStep('ask'); }}>
+                  {language === 'fr' ? 'Non' : language === 'es' ? 'No' : 'No'}
+                </Button>
+                <Button variant="destructive" onClick={() => setDisconnectStep('confirm')}>
+                  {language === 'fr' ? 'Oui, déconnecter' : language === 'es' ? 'Sí, desconectar' : 'Yes, disconnect'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={handleDisconnectConfirm}
+                disabled={disconnecting}
+                className="w-full"
+              >
+                {disconnecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {language === 'fr' ? 'Confirmer la déconnexion' : language === 'es' ? 'Confirmar desconexión' : 'Confirm disconnect'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
