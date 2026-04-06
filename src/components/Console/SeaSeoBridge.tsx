@@ -348,7 +348,27 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       {filteredOpportunities.length > 0 && (
         <div className="hidden md:grid grid-cols-[40px_44px_1fr_90px_90px_70px_100px_100px_32px] gap-2 items-center px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium border-b border-border/20">
           <div></div>
-          <div>Score</div>
+          <div className="flex items-center gap-0.5">
+            Score
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground/40 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-[280px] leading-relaxed">
+                  <p className="font-semibold mb-1">Score d'opportunité (0-100)</p>
+                  <p>Mesure l'intérêt de basculer un mot-clé payant vers le SEO naturel :</p>
+                  <ul className="mt-1 space-y-0.5 list-disc pl-3">
+                    <li><strong>90-100</strong> — Aucune présence organique, fort trafic SEA</li>
+                    <li><strong>60-90</strong> — Position organique faible (&gt;10), marge de progression</li>
+                    <li><strong>50-70</strong> — Haut potentiel de conversion</li>
+                    <li><strong>40-70</strong> — Cannibalisation (déjà top 5 + SEA actif)</li>
+                  </ul>
+                  <p className="mt-1">+15 pts si aligné avec un gap du cocon sémantique.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div>Mot-clé</div>
           <div className="text-right">CPC SEA</div>
           <div className="text-right">Clics SEA</div>
