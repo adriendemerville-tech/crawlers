@@ -205,7 +205,7 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[check-eeat]', e);
     return new Response(JSON.stringify({ success: false, error: e instanceof Error ? e.message : String(e), score: 0 }), { status: 500, headers: HEADERS });
   }
-});
+}));
 
 // ══════════════════════════════════════════════════════
 // Fair use check for E-E-A-T audits
