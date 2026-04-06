@@ -35,213 +35,6 @@ interface PageBackup {
   platform: string
 }
 
-Deno.serve(handleRequest(async (req) => {
-const ip = getClientIp(req)
-  const rateCheck = checkIpRate(ip, 'cocoon-batch-deploy', 5, 60_000)
-  if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs)
-
-  try {
-    // ── Auth ──
-    const authHeader = req.headers.get('Authorization') || ''
-    const userClient = getUserClient(authHeader)
-    const { data: { user }, error: authError } = await userClient.auth.getUser()
-    if (authError || !user) {
-      return json({ error: 'Unauthorized' }, 401)
-    }
-
-    const body = await req.json()
-    const { tracked_site_id, cluster_id, node_ids, mode = 'dry_run', batch_operation_id } = body
-
-    if (!tracked_site_id) {
-      return json({ error: 'tracked_site_id required' }, 400)
-    }
-
-    const supabase = getServiceClient()
-
-    // ── Rollback shortcut ──
-    if (mode === 'rollback' && batch_operation_id) {
-      return await handleRollback(supabase, user.id, batch_operation_id)
-    }
-
-    // ── Fetch site ──
-    const { data: site, error: siteError } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id')
-      .eq('id', tracked_site_id)
-      .single()
-
-    if (siteError || !site) {
-      return json({ error: 'Site not found' }, 404)
-    }
-
-    // ── Ownership check ──
-    const ownership = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
-      scriptType: 'cocoon_batch',
-      ipAddress: req.headers.get('x-forwarded-for') || undefined,
-    })
-    if (!ownership.allowed) {
-      return json({ error: ownership.reason || 'Forbidden' }, 403)
-    }
-
-    // ── Fetch semantic nodes for cluster ──
-    let nodesQuery = supabase
-      .from('semantic_nodes' as any)
-      .select('id, url, title, intent, cluster_id, similarity_edges, internal_links_in, internal_links_out, page_authority, geo_score, content_gap_score')
-      .eq('tracked_site_id', tracked_site_id)
-      .eq('user_id', user.id)
-
-    if (node_ids && Array.isArray(node_ids) && node_ids.length > 0) {
-      nodesQuery = nodesQuery.in('id', node_ids)
-    } else if (cluster_id) {
-      nodesQuery = nodesQuery.eq('cluster_id', cluster_id)
-    }
-
-    const { data: nodes, error: nodesError } = await nodesQuery.limit(100)
-
-    if (nodesError || !nodes || nodes.length < 2) {
-      return json({ error: 'Need at least 2 semantic nodes to compute maillage' }, 400)
-    }
-
-    // ── Compute optimal link graph ──
-    const recommendations = computeOptimalLinks(nodes as any[])
-
-    if (recommendations.length === 0) {
-      return json({ success: true, mode, message: 'No link changes needed', recommendations: [] })
-    }
-
-    // ── Dry run: return preview ──
-    if (mode === 'dry_run') {
-      // Create batch operation record
-      const { data: batchOp } = await supabase
-        .from('cocoon_batch_operations' as any)
-        .insert({
-          user_id: user.id,
-          tracked_site_id,
-          domain: site.domain,
-          cluster_id: cluster_id || null,
-          operation_type: 'batch_deploy',
-          mode: 'dry_run',
-          status: 'preview',
-          total_pages: new Set(recommendations.map(r => r.source_url)).size,
-          recommendations: recommendations,
-        })
-        .select('id')
-        .single()
-
-      return json({
-        success: true,
-        mode: 'dry_run',
-        batch_operation_id: batchOp?.id,
-        total_links: recommendations.length,
-        total_pages: new Set(recommendations.map(r => r.source_url)).size,
-        recommendations,
-        graph_summary: buildGraphSummary(nodes as any[], recommendations),
-      })
-    }
-
-    // ── Deploy mode ──
-    // Check for CMS connection
-    const { data: cmsConn } = await supabase
-      .from('cms_connections')
-      .select('*')
-      .eq('tracked_site_id', tracked_site_id)
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle()
-
-    const deployMethod = cmsConn ? `cms:${cmsConn.platform}` : 'widget'
-
-    // Create or update batch operation
-    let batchOpId = batch_operation_id
-    if (batchOpId) {
-      await supabase
-        .from('cocoon_batch_operations' as any)
-        .update({
-          mode: 'deploy',
-          status: 'in_progress',
-          started_at: new Date().toISOString(),
-          recommendations,
-        })
-        .eq('id', batchOpId)
-        .eq('user_id', user.id)
-    } else {
-      const { data: newOp } = await supabase
-        .from('cocoon_batch_operations' as any)
-        .insert({
-          user_id: user.id,
-          tracked_site_id,
-          domain: site.domain,
-          cluster_id: cluster_id || null,
-          operation_type: 'batch_deploy',
-          mode: 'deploy',
-          status: 'in_progress',
-          total_pages: new Set(recommendations.map(r => r.source_url)).size,
-          recommendations,
-          started_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single()
-      batchOpId = newOp?.id
-    }
-
-    let results: any
-    let pagesBackup: PageBackup[] = []
-
-    if (cmsConn) {
-      const deployResult = await deployViaCms(supabase, cmsConn, recommendations)
-      results = deployResult.results
-      pagesBackup = deployResult.backups
-    } else {
-      results = await deployViaWidget(supabase, site, user.id, recommendations)
-    }
-
-    const failedCount = results.filter((r: any) => r.status === 'error').length
-
-    // Update batch operation with results
-    await supabase
-      .from('cocoon_batch_operations' as any)
-      .update({
-        status: failedCount > 0 ? 'partial' : 'completed',
-        processed_pages: results.length - failedCount,
-        failed_pages: failedCount,
-        deploy_results: results,
-        pages_backup: pagesBackup.length > 0 ? pagesBackup : null,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', batchOpId)
-
-    // Log analytics
-    await supabase.from('analytics_events').insert({
-      user_id: user.id,
-      event_type: 'cocoon:batch_deploy',
-      event_data: {
-        tracked_site_id,
-        cluster_id,
-        deploy_method: deployMethod,
-        total_links: recommendations.length,
-        total_pages: results.length,
-        failed: failedCount,
-      },
-    })
-
-    return json({
-      success: true,
-      mode: 'deploy',
-      batch_operation_id: batchOpId,
-      deploy_method: deployMethod,
-      total_links: recommendations.length,
-      total_pages: results.length,
-      failed_pages: failedCount,
-      can_rollback: pagesBackup.length > 0,
-      results,
-    })
-  } catch (error) {
-    console.error('[cocoon-batch-deploy] Error:', error)
-    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
-  }
-})
-
 // ── Helper: JSON response ──
 function json(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -250,12 +43,70 @@ function json(data: any, status = 200) {
   })
 }
 
+// ── Utilities ──
+function groupBySource(recommendations: LinkRecommendation[]): Map<string, LinkRecommendation[]> {
+  const map = new Map<string, LinkRecommendation[]>()
+  for (const rec of recommendations) {
+    if (!map.has(rec.source_url)) map.set(rec.source_url, [])
+    map.get(rec.source_url)!.push(rec)
+  }
+  return map
+}
+
+function extractSlug(url: string): string | null {
+  try {
+    const parts = new URL(url).pathname.split('/').filter(Boolean)
+    return parts[parts.length - 1] || null
+  } catch { return null }
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function generateLinkInjectionScript(links: Array<{ source: string; target: string; anchor: string; action: string }>): string {
+  return [
+    '(function(){',
+    '"use strict";',
+    'var links=' + JSON.stringify(links) + ';',
+    'var cp=window.location.pathname;',
+    'links.forEach(function(l){',
+    'try{',
+    'var sp=new URL(l.source,window.location.origin).pathname;',
+    'if(sp!==cp)return;',
+    'if(l.action==="add_link"){',
+    'var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false);',
+    'var n;var re=new RegExp(l.anchor.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g,"\\\\\\\\$&"),"i");',
+    'while(n=w.nextNode()){',
+    'if(n.parentElement&&n.parentElement.tagName==="A")continue;',
+    'if(re.test(n.textContent||"")){',
+    'var s=document.createElement("span");',
+    's.innerHTML=(n.textContent||"").replace(re,\'<a href="\'+l.target+\'" style="color:inherit;text-decoration:underline">\'+l.anchor+"</a>");',
+    'n.parentNode.replaceChild(s,n);break;',
+    '}}}',
+    '}catch(e){}',
+    '});',
+    '})();',
+  ].join('\n')
+}
+
+function generateAnchor(title: string, intent: string): string {
+  if (!title) return 'En savoir plus'
+  const clean = title.split(/[|–—-]/)[0].trim()
+  if (clean.length <= 60) return clean
+  return clean.substring(0, 57) + '...'
+}
+
+function hasExistingInternalLink(node: any, targetUrl: string): boolean {
+  const edges = node.similarity_edges || []
+  return edges.some((e: any) => e.target_url === targetUrl && e.type === 'internal_link')
+}
+
 // ── Compute optimal internal links using PageRank + semantic proximity ──
 function computeOptimalLinks(nodes: any[]): LinkRecommendation[] {
   const recommendations: LinkRecommendation[] = []
   const existingLinks = new Set<string>()
 
-  // Map existing links
   for (const node of nodes) {
     const edges = node.similarity_edges || []
     for (const edge of edges) {
@@ -263,10 +114,8 @@ function computeOptimalLinks(nodes: any[]): LinkRecommendation[] {
     }
   }
 
-  // Build URL → node map
   const nodeByUrl = new Map(nodes.map(n => [n.url, n]))
 
-  // For each pair, check if a link should exist based on semantic proximity
   for (const source of nodes) {
     const sourceEdges = source.similarity_edges || []
 
@@ -277,9 +126,7 @@ function computeOptimalLinks(nodes: any[]): LinkRecommendation[] {
       const linkKey = `${source.url}→${target.url}`
       const score = edge.score || 0
 
-      // High similarity but no existing internal link → recommend adding
       if (score >= 0.3 && !hasExistingInternalLink(source, target.url)) {
-        // Generate anchor from target title
         const anchor = generateAnchor(target.title, target.intent)
         recommendations.push({
           source_url: source.url,
@@ -294,10 +141,8 @@ function computeOptimalLinks(nodes: any[]): LinkRecommendation[] {
     }
   }
 
-  // Sort by score descending, limit to avoid over-linking
   recommendations.sort((a, b) => b.score - a.score)
 
-  // Max 3 new links per page to avoid stuffing
   const linksPerPage = new Map<string, number>()
   return recommendations.filter(rec => {
     const count = linksPerPage.get(rec.source_url) || 0
@@ -307,21 +152,20 @@ function computeOptimalLinks(nodes: any[]): LinkRecommendation[] {
   })
 }
 
-function hasExistingInternalLink(node: any, targetUrl: string): boolean {
-  // Check internal_links_out if available
-  const outLinks = node.internal_links_out || 0
-  // We can't check exact targets from count alone, rely on similarity_edges
-  const edges = node.similarity_edges || []
-  return edges.some((e: any) => e.target_url === targetUrl && e.type === 'internal_link')
-}
+// ── Build graph summary for dry_run preview ──
+function buildGraphSummary(nodes: any[], recommendations: LinkRecommendation[]) {
+  const sourcePages = new Set(recommendations.map(r => r.source_url))
+  const targetPages = new Set(recommendations.map(r => r.target_url))
 
-function generateAnchor(title: string, intent: string): string {
-  if (!title) return 'En savoir plus'
-  // Use first meaningful segment of title (before | or -)
-  const clean = title.split(/[|–—-]/)[0].trim()
-  // Limit to ~60 chars
-  if (clean.length <= 60) return clean
-  return clean.substring(0, 57) + '...'
+  return {
+    total_nodes: nodes.length,
+    pages_modified: sourcePages.size,
+    pages_targeted: targetPages.size,
+    links_added: recommendations.filter(r => r.action === 'add_link').length,
+    links_updated: recommendations.filter(r => r.action === 'update_anchor').length,
+    links_removed: recommendations.filter(r => r.action === 'remove_link').length,
+    avg_score: Math.round(recommendations.reduce((s, r) => s + r.score, 0) / recommendations.length * 100) / 100,
+  }
 }
 
 // ── Deploy via CMS API (WordPress, Shopify, Drupal) ──
@@ -333,7 +177,6 @@ async function deployViaCms(
   const results: any[] = []
   const backups: PageBackup[] = []
 
-  // Group by source page
   const bySource = groupBySource(recommendations)
 
   for (const [sourceUrl, recs] of bySource) {
@@ -342,9 +185,6 @@ async function deployViaCms(
         const result = await deployToWordPress(conn, sourceUrl, recs, backups)
         results.push(result)
       } else if (['shopify', 'drupal', 'wix', 'prestashop', 'webflow'].includes(conn.platform)) {
-        // Delegate to unified cms-push-draft for non-WordPress CMS
-        // For batch link injection, we still use widget injection as link patching
-        // requires reading existing content first (cms-push-draft is for new content creation)
         results.push({ url: sourceUrl, status: 'skipped', detail: `CMS ${conn.platform}: link injection requires widget mode. Use cms-push-draft for new content.` })
       } else {
         results.push({ url: sourceUrl, status: 'skipped', detail: `CMS ${conn.platform} not supported for batch link injection` })
@@ -372,13 +212,11 @@ async function deployToWordPress(
     headers['Authorization'] = `Bearer ${conn.api_key}`
   }
 
-  // Find the post by URL slug
   const slug = extractSlug(sourceUrl)
   if (!slug) {
     return { url: sourceUrl, status: 'error', detail: 'Cannot extract slug' }
   }
 
-  // Search for the post
   const searchResp = await fetch(`${wpUrl}/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_fields=id,content,title`, {
     headers,
   })
@@ -390,7 +228,6 @@ async function deployToWordPress(
 
   const posts = await searchResp.json()
   
-  // Try pages if no post found
   let post = posts[0]
   if (!post) {
     const pageResp = await fetch(`${wpUrl}/wp-json/wp/v2/pages?slug=${encodeURIComponent(slug)}&_fields=id,content,title`, {
@@ -408,7 +245,6 @@ async function deployToWordPress(
 
   const originalContent = post.content?.rendered || post.content?.raw || ''
 
-  // Backup original content
   backups.push({
     url: sourceUrl,
     post_id: post.id,
@@ -416,7 +252,6 @@ async function deployToWordPress(
     platform: 'wordpress',
   })
 
-  // Apply link modifications
   let content = originalContent
   let appliedCount = 0
 
@@ -445,7 +280,6 @@ async function deployToWordPress(
     return { url: sourceUrl, status: 'skipped', detail: 'No anchor text matches found in content' }
   }
 
-  // Update the post
   const postType = post.type === 'page' ? 'pages' : 'posts'
   const updateResp = await fetch(`${wpUrl}/wp-json/wp/v2/${postType}/${post.id}`, {
     method: 'POST',
@@ -458,7 +292,7 @@ async function deployToWordPress(
     return { url: sourceUrl, status: 'error', detail: `WP update failed [${updateResp.status}]: ${errText.substring(0, 200)}` }
   }
 
-  await updateResp.text() // consume body
+  await updateResp.text()
 
   return {
     url: sourceUrl,
@@ -488,7 +322,6 @@ async function deployViaWidget(
 
     const injectionScript = generateLinkInjectionScript(linksPayload)
 
-    // Upsert rule for this source URL
     const urlPattern = new URL(sourceUrl).pathname
 
     const { data: existing } = await supabase
@@ -551,7 +384,6 @@ async function handleRollback(supabase: any, userId: string, batchOpId: string) 
 
   const backups: PageBackup[] = op.pages_backup || []
   if (backups.length === 0) {
-    // Widget-based: deactivate rules
     const recommendations = op.recommendations || []
     const sourceUrls = [...new Set(recommendations.map((r: any) => r.source_url))]
 
@@ -576,7 +408,6 @@ async function handleRollback(supabase: any, userId: string, batchOpId: string) 
     return json({ success: true, method: 'widget_deactivated', pages: sourceUrls.length })
   }
 
-  // CMS rollback: restore original content
   const { data: cmsConn } = await supabase
     .from('cms_connections')
     .select('*')
@@ -625,65 +456,197 @@ async function handleRollback(supabase: any, userId: string, batchOpId: string) 
   return json({ success: true, method: 'cms_restored', results: rollbackResults })
 }
 
-// ── Build graph summary for dry_run preview ──
-function buildGraphSummary(nodes: any[], recommendations: LinkRecommendation[]) {
-  const sourcePages = new Set(recommendations.map(r => r.source_url))
-  const targetPages = new Set(recommendations.map(r => r.target_url))
+// ── Main handler ──
+Deno.serve(handleRequest(async (req) => {
+  const ip = getClientIp(req)
+  const rateCheck = checkIpRate(ip, 'cocoon-batch-deploy', 5, 60_000)
+  if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs)
 
-  return {
-    total_nodes: nodes.length,
-    pages_modified: sourcePages.size,
-    pages_targeted: targetPages.size,
-    links_added: recommendations.filter(r => r.action === 'add_link').length,
-    links_updated: recommendations.filter(r => r.action === 'update_anchor').length,
-    links_removed: recommendations.filter(r => r.action === 'remove_link').length,
-    avg_score: Math.round(recommendations.reduce((s, r) => s + r.score, 0) / recommendations.length * 100) / 100,
-  }
-}
-
-// ── Utilities ──
-function groupBySource(recommendations: LinkRecommendation[]): Map<string, LinkRecommendation[]> {
-  const map = new Map<string, LinkRecommendation[]>()
-  for (const rec of recommendations) {
-    if (!map.has(rec.source_url)) map.set(rec.source_url, [])
-    map.get(rec.source_url)!.push(rec)
-  }
-  return map
-}
-
-function extractSlug(url: string): string | null {
   try {
-    const parts = new URL(url).pathname.split('/').filter(Boolean)
-    return parts[parts.length - 1] || null
-  } catch { return null }
-}
+    const authHeader = req.headers.get('Authorization') || ''
+    const userClient = getUserClient(authHeader)
+    const { data: { user }, error: authError } = await userClient.auth.getUser()
+    if (authError || !user) {
+      return json({ error: 'Unauthorized' }, 401)
+    }
 
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+    const body = await req.json()
+    const { tracked_site_id, cluster_id, node_ids, mode = 'dry_run', batch_operation_id } = body
 
-function generateLinkInjectionScript(links: Array<{ source: string; target: string; anchor: string; action: string }>): string {
-  return [
-    '(function(){',
-    '"use strict";',
-    'var links=' + JSON.stringify(links) + ';',
-    'var cp=window.location.pathname;',
-    'links.forEach(function(l){',
-    'try{',
-    'var sp=new URL(l.source,window.location.origin).pathname;',
-    'if(sp!==cp)return;',
-    'if(l.action==="add_link"){',
-    'var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false);',
-    'var n;var re=new RegExp(l.anchor.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g,"\\\\\\\\$&"),"i");',
-    'while(n=w.nextNode()){',
-    'if(n.parentElement&&n.parentElement.tagName==="A")continue;',
-    'if(re.test(n.textContent||"")){',
-    'var s=document.createElement("span");',
-    's.innerHTML=(n.textContent||"").replace(re,\'<a href="\'+l.target+\'" style="color:inherit;text-decoration:underline">\'+l.anchor+"</a>");',
-    'n.parentNode.replaceChild(s,n);break;',
-    '}}}',
-    '}catch(e){}',
-    '});',
-    '})();',
-  ].join('\n')
-}
+    if (!tracked_site_id) {
+      return json({ error: 'tracked_site_id required' }, 400)
+    }
+
+    const supabase = getServiceClient()
+
+    if (mode === 'rollback' && batch_operation_id) {
+      return await handleRollback(supabase, user.id, batch_operation_id)
+    }
+
+    const { data: site, error: siteError } = await supabase
+      .from('tracked_sites')
+      .select('id, domain, user_id')
+      .eq('id', tracked_site_id)
+      .single()
+
+    if (siteError || !site) {
+      return json({ error: 'Site not found' }, 404)
+    }
+
+    const ownership = await verifyInjectionOwnership(supabase, user.id, tracked_site_id, {
+      scriptType: 'cocoon_batch',
+      ipAddress: req.headers.get('x-forwarded-for') || undefined,
+    })
+    if (!ownership.allowed) {
+      return json({ error: ownership.reason || 'Forbidden' }, 403)
+    }
+
+    let nodesQuery = supabase
+      .from('semantic_nodes' as any)
+      .select('id, url, title, intent, cluster_id, similarity_edges, internal_links_in, internal_links_out, page_authority, geo_score, content_gap_score')
+      .eq('tracked_site_id', tracked_site_id)
+      .eq('user_id', user.id)
+
+    if (node_ids && Array.isArray(node_ids) && node_ids.length > 0) {
+      nodesQuery = nodesQuery.in('id', node_ids)
+    } else if (cluster_id) {
+      nodesQuery = nodesQuery.eq('cluster_id', cluster_id)
+    }
+
+    const { data: nodes, error: nodesError } = await nodesQuery.limit(100)
+
+    if (nodesError || !nodes || nodes.length < 2) {
+      return json({ error: 'Need at least 2 semantic nodes to compute maillage' }, 400)
+    }
+
+    const recommendations = computeOptimalLinks(nodes as any[])
+
+    if (recommendations.length === 0) {
+      return json({ success: true, mode, message: 'No link changes needed', recommendations: [] })
+    }
+
+    if (mode === 'dry_run') {
+      const { data: batchOp } = await supabase
+        .from('cocoon_batch_operations' as any)
+        .insert({
+          user_id: user.id,
+          tracked_site_id,
+          domain: site.domain,
+          cluster_id: cluster_id || null,
+          operation_type: 'batch_deploy',
+          mode: 'dry_run',
+          status: 'preview',
+          total_pages: new Set(recommendations.map(r => r.source_url)).size,
+          recommendations: recommendations,
+        })
+        .select('id')
+        .single()
+
+      return json({
+        success: true,
+        mode: 'dry_run',
+        batch_operation_id: batchOp?.id,
+        total_links: recommendations.length,
+        total_pages: new Set(recommendations.map(r => r.source_url)).size,
+        recommendations,
+        graph_summary: buildGraphSummary(nodes as any[], recommendations),
+      })
+    }
+
+    const { data: cmsConn } = await supabase
+      .from('cms_connections')
+      .select('*')
+      .eq('tracked_site_id', tracked_site_id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+
+    const deployMethod = cmsConn ? `cms:${cmsConn.platform}` : 'widget'
+
+    let batchOpId = batch_operation_id
+    if (batchOpId) {
+      await supabase
+        .from('cocoon_batch_operations' as any)
+        .update({
+          mode: 'deploy',
+          status: 'in_progress',
+          started_at: new Date().toISOString(),
+          recommendations,
+        })
+        .eq('id', batchOpId)
+        .eq('user_id', user.id)
+    } else {
+      const { data: newOp } = await supabase
+        .from('cocoon_batch_operations' as any)
+        .insert({
+          user_id: user.id,
+          tracked_site_id,
+          domain: site.domain,
+          cluster_id: cluster_id || null,
+          operation_type: 'batch_deploy',
+          mode: 'deploy',
+          status: 'in_progress',
+          total_pages: new Set(recommendations.map(r => r.source_url)).size,
+          recommendations,
+          started_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single()
+      batchOpId = newOp?.id
+    }
+
+    let results: any
+    let pagesBackup: PageBackup[] = []
+
+    if (cmsConn) {
+      const deployResult = await deployViaCms(supabase, cmsConn, recommendations)
+      results = deployResult.results
+      pagesBackup = deployResult.backups
+    } else {
+      results = await deployViaWidget(supabase, site, user.id, recommendations)
+    }
+
+    const failedCount = results.filter((r: any) => r.status === 'error').length
+
+    await supabase
+      .from('cocoon_batch_operations' as any)
+      .update({
+        status: failedCount > 0 ? 'partial' : 'completed',
+        processed_pages: results.length - failedCount,
+        failed_pages: failedCount,
+        deploy_results: results,
+        pages_backup: pagesBackup.length > 0 ? pagesBackup : null,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', batchOpId)
+
+    await supabase.from('analytics_events').insert({
+      user_id: user.id,
+      event_type: 'cocoon:batch_deploy',
+      event_data: {
+        tracked_site_id,
+        cluster_id,
+        deploy_method: deployMethod,
+        total_links: recommendations.length,
+        total_pages: results.length,
+        failed: failedCount,
+      },
+    })
+
+    return json({
+      success: true,
+      mode: 'deploy',
+      batch_operation_id: batchOpId,
+      deploy_method: deployMethod,
+      total_links: recommendations.length,
+      total_pages: results.length,
+      failed_pages: failedCount,
+      can_rollback: pagesBackup.length > 0,
+      results,
+    })
+  } catch (error) {
+    console.error('[cocoon-batch-deploy] Error:', error)
+    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
+  }
+}))
