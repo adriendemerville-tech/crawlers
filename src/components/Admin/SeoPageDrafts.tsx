@@ -91,7 +91,7 @@ export function SeoPageDrafts() {
   const handlePublish = async (draft: PageDraft) => {
     setActionLoading(draft.id);
     try {
-      // Publish to blog_articles or landing pages based on type
+      // For articles, also insert into blog_articles
       if (draft.page_type === 'article') {
         const { error } = await supabase.from('blog_articles').insert({
           title: draft.title,
@@ -103,7 +103,7 @@ export function SeoPageDrafts() {
         });
         if (error) throw error;
       }
-      // For landing pages, just mark as published (manual deployment needed)
+      // For landings, the route /landing/[slug] reads directly from seo_page_drafts
 
       await supabase
         .from('seo_page_drafts' as any)
@@ -113,11 +113,41 @@ export function SeoPageDrafts() {
         } as any)
         .eq('id', draft.id);
 
-      toast.success(`${draft.page_type === 'article' ? 'Article publié sur /blog/' + draft.slug : 'Landing marquée comme publiée'}`);
+      const url = draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`;
+      toast.success(`Publié sur ${url}`, { description: 'Page indexable et accessible.' });
       fetchDrafts();
     } catch (e: any) {
       console.error('Publish error:', e);
       toast.error(`Erreur publication: ${e.message || 'Erreur'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnpublish = async (draft: PageDraft) => {
+    setActionLoading(draft.id);
+    try {
+      await supabase
+        .from('seo_page_drafts' as any)
+        .update({
+          status: 'approved',
+          published_at: null,
+        } as any)
+        .eq('id', draft.id);
+
+      // If article, also unpublish from blog_articles
+      if (draft.page_type === 'article') {
+        await supabase
+          .from('blog_articles')
+          .update({ status: 'draft' })
+          .eq('slug', draft.slug);
+      }
+
+      toast.success('Page dépubliée');
+      fetchDrafts();
+    } catch (e) {
+      console.error('Unpublish error:', e);
+      toast.error("Erreur lors de la dépublication");
     } finally {
       setActionLoading(null);
     }
