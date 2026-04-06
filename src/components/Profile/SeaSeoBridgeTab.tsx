@@ -108,10 +108,10 @@ export function SeaSeoBridgeTab() {
     );
   }
 
-  const hasAnyReadySite = Object.values(readiness).some(r => r.hasTechnical && r.hasStrategic && r.hasCocoon);
+  const hasAnyReadySite = isDemoMode || Object.values(readiness).some(r => r.hasTechnical && r.hasStrategic && r.hasCocoon);
   const selectedSite = sites.find(s => s.id === selectedSiteId);
   const selectedReadiness = selectedSiteId ? readiness[selectedSiteId] : null;
-  const selectedIsReady = selectedReadiness?.hasTechnical && selectedReadiness?.hasStrategic && selectedReadiness?.hasCocoon;
+  const selectedIsReady = isDemoMode || (selectedReadiness?.hasTechnical && selectedReadiness?.hasStrategic && selectedReadiness?.hasCocoon);
 
   return (
     <div className="space-y-4">
