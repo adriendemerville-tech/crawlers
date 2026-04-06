@@ -127,7 +127,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token || null,
         token_expiry: expiresAt,
-        scopes: ['https://www.googleapis.com/auth/adwords.readonly'],
+        scopes: ['https://www.googleapis.com/auth/adwords'],
         status: customerId ? 'active' : 'pending_setup',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' } as any);
@@ -142,7 +142,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token || null,
           token_expiry: expiresAt,
-          scopes: ['https://www.googleapis.com/auth/adwords.readonly'],
+          scopes: ['https://www.googleapis.com/auth/adwords'],
           status: customerId ? 'active' : 'pending_setup',
         });
       }
@@ -190,7 +190,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
       const stateValue = `${user_id}|${frontend_origin || ''}`;
       const scopes = [
-        'https://www.googleapis.com/auth/adwords.readonly',
+        'https://www.googleapis.com/auth/adwords',
         'https://www.googleapis.com/auth/userinfo.email',
       ];
 
