@@ -864,6 +864,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   }
 
   return (
+    <>
     <div className={cn("fixed bottom-20 z-[110] flex w-[17.5rem] sm:w-[22rem] flex-col overflow-hidden overscroll-contain rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg", quizData ? "h-[63vh] max-h-[63vh]" : "h-[55vh] max-h-[55vh]")} style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
