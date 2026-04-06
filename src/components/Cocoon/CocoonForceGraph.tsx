@@ -918,8 +918,9 @@ export function CocoonForceGraph({
     [getNodeAtPos, nodes, onNodeSelect, dimensions],
   );
 
-  // Zoom toward mouse cursor position
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  // Zoom toward mouse cursor position — use native event for { passive: false }
+  const handleWheelRef = useRef<((e: WheelEvent) => void) | null>(null);
+  handleWheelRef.current = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const canvas = canvasRef.current;
@@ -931,7 +932,6 @@ export function CocoonForceGraph({
     setTransform((t) => {
       const newK = Math.max(0.15, Math.min(8, t.k * factor));
       const ratio = newK / t.k;
-      // Adjust pan so the point under cursor stays fixed
       const cx = dimensions.width / 2;
       const cy = dimensions.height / 2;
       return {
@@ -940,7 +940,15 @@ export function CocoonForceGraph({
         k: newK,
       };
     });
-  }, [dimensions]);
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handler = (e: WheelEvent) => handleWheelRef.current?.(e);
+    canvas.addEventListener('wheel', handler, { passive: false });
+    return () => canvas.removeEventListener('wheel', handler);
+  }, []);
 
   // Zoom buttons center on last clicked point or canvas center
 
