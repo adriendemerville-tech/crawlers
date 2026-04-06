@@ -23,6 +23,7 @@ const t3 = (lang: string, fr: string, en: string, es: string) =>
 
 export function SeaSeoBridgeTab() {
   const { language } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [loading, setLoading] = useState(true);
