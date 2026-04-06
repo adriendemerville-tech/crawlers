@@ -613,6 +613,67 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           // Fall through to normal flow
         }
       }
+
+      // ── CTO Agent directive detection ──
+      const ctoDirectiveMatch = lastUserMsg.match(/^\/cto\s+(.+)/is);
+      const ctoNaturalKeywords = [
+        "agent cto", "dis à l'agent cto", "dis a l'agent cto",
+        "demande à l'agent cto", "demande a l'agent cto",
+        "instruction cto", "directive cto",
+        "l'agent cto doit", "agent cto doit",
+      ];
+      const isCtoDirective = ctoDirectiveMatch || ctoNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isCtoDirective) {
+        try {
+          const directiveText = ctoDirectiveMatch
+            ? ctoDirectiveMatch[1].trim()
+            : lastUserMsg;
+
+          // Extract target function if mentioned
+          const funcMatch = directiveText.match(/(?:fonction|function|edge function)\s+([a-z0-9_-]+)/i);
+          const targetFunction = funcMatch ? funcMatch[1] : null;
+          const urlMatch = directiveText.match(/(?:sur|pour|page|url)\s+(\/[^\s,]+|https?:\/\/[^\s,]+)/i);
+          const targetUrl = urlMatch ? urlMatch[1] : null;
+
+          await sb.from("agent_cto_directives").insert({
+            user_id,
+            directive_text: directiveText,
+            target_function: targetFunction,
+            target_url: targetUrl,
+            status: 'pending',
+          });
+
+          const confirmReply = `✅ Directive transmise à l'Agent CTO :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent CTO intégrera cette instruction lors de sa prochaine analyse.`;
+
+          // Save conversation
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id,
+                user_email: prof?.email || null,
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save CTO directive conv error:", e);
+          }
+
+          return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("CTO directive error:", e);
+        }
+      }
       
       const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
