@@ -553,7 +553,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         }
       }
 
-      // ── SEO Agent directive detection ──
+      // ── SEO Agent directive detection (admin creator only) ──
       const seoDirectiveMatch = lastUserMsg.match(/^\/seo\s+(.+)/is);
       const seoNaturalKeywords = [
         "agent seo", "dis à l'agent seo", "dis a l'agent seo",
@@ -563,7 +563,17 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
       ];
       const isSeoDirective = seoDirectiveMatch || seoNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
 
-      if (isSeoDirective) {
+      if (isSeoDirective && !isCreator) {
+        return jsonOk({ reply: "⚠️ Seul l'administrateur créateur peut transmettre des directives à l'Agent SEO.", conversation_id });
+      }
+
+      if (isSeoDirective && isCreator) {
+        // Check if Felix→SEO bridge is enabled
+        const { data: bridgeConf } = await sb.from("admin_dashboard_config").select("card_order").eq("user_id", user_id).maybeSingle();
+        const bridgeConfig = (bridgeConf?.card_order as any) || {};
+        if (bridgeConfig.felix_seo_bridge === false) {
+          return jsonOk({ reply: "⚠️ Le pont Félix → Agent SEO est actuellement **désactivé**. Vous pouvez le réactiver depuis le Hub Intelligence (admin).", conversation_id });
+        }
         try {
           const directiveText = seoDirectiveMatch
             ? seoDirectiveMatch[1].trim()
