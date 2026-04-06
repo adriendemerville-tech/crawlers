@@ -89,58 +89,110 @@ function extractCruxData(loadingExperience: any): { metrics: PageSpeedResult; av
   };
 }
 
-// Fetch PSI for a single strategy and produce final result
-async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey: string): Promise<{
-  scores: PageSpeedResult;
-  dataSource: 'field' | 'lab';
-} | null> {
-  const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
+// Fetch a single PSI category with its own timeout
+async function fetchSingleCategory(
+  normalizedUrl: string,
+  strategy: string,
+  category: string,
+  apiKey: string,
+  timeoutMs = 90_000,
+): Promise<any | null> {
+  const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=${category}&key=${apiKey}`;
 
-  // Timeout 120s pour laisser Google analyser les sites lents
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120_000);
-  let response: Response;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    response = await fetch(googleApiUrl, { signal: controller.signal });
+    const response = await fetch(googleApiUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.warn(`[PSI:${strategy}:${category}] API error ${response.status}:`, errorData?.error?.message);
+      if (response.status === 429 || errorData?.error?.status === 'RESOURCE_EXHAUSTED') {
+        throw new Error('quota_exceeded');
+      }
+      return null;
+    }
+    return await response.json();
   } catch (err: any) {
     clearTimeout(timeout);
     if (err.name === 'AbortError') {
-      console.error(`[PSI:${strategy}] ⏱️ Timeout 120s dépassé pour ${normalizedUrl}`);
-      throw new Error('timeout');
+      console.warn(`[PSI:${strategy}:${category}] ⏱️ Timeout ${timeoutMs}ms dépassé pour ${normalizedUrl}`);
+      return null; // On ne throw pas — les autres catégories continuent
     }
-    throw err;
+    if (err.message === 'quota_exceeded') throw err;
+    console.warn(`[PSI:${strategy}:${category}] Fetch error:`, err.message);
+    return null;
   }
-  clearTimeout(timeout);
+}
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error(`[PSI:${strategy}] API error ${response.status}:`, errorData?.error?.message);
-    
-    if (response.status === 429 || errorData?.error?.status === 'RESOURCE_EXHAUSTED') {
-      throw new Error('quota_exceeded');
+// Fetch PSI for a single strategy — 4 appels indépendants par catégorie
+async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey: string): Promise<{
+  scores: PageSpeedResult;
+  dataSource: 'field' | 'lab';
+  partial: boolean;
+} | null> {
+  const categories = ['PERFORMANCE', 'ACCESSIBILITY', 'BEST_PRACTICES', 'SEO'] as const;
+
+  // Lancer les 4 catégories en parallèle, chacune avec son propre timeout de 90s
+  const results = await Promise.allSettled(
+    categories.map(cat => fetchSingleCategory(normalizedUrl, strategy, cat, apiKey, 90_000))
+  );
+
+  // Collecter les résultats réussis
+  const categoryData: Record<string, any> = {};
+  let quotaExceeded = false;
+
+  for (let i = 0; i < categories.length; i++) {
+    const r = results[i];
+    if (r.status === 'fulfilled' && r.value) {
+      categoryData[categories[i]] = r.value;
+    } else if (r.status === 'rejected' && r.reason?.message === 'quota_exceeded') {
+      quotaExceeded = true;
     }
+  }
+
+  if (quotaExceeded && Object.keys(categoryData).length === 0) {
+    throw new Error('quota_exceeded');
+  }
+
+  // Si aucune catégorie n'a répondu, échec total
+  if (Object.keys(categoryData).length === 0) {
+    console.error(`[PSI:${strategy}] ❌ Aucune catégorie n'a répondu pour ${normalizedUrl}`);
     return null;
   }
 
-  const data = await response.json();
+  const partial = Object.keys(categoryData).length < 4;
+  if (partial) {
+    const missing = categories.filter(c => !categoryData[c]);
+    console.warn(`[PSI:${strategy}] ⚠️ Résultat partiel — catégories manquantes: ${missing.join(', ')}`);
+  }
 
-  const categories = data.lighthouseResult?.categories || {};
-  const audits = data.lighthouseResult?.audits || {};
+  // Extraire les scores de chaque catégorie
+  const perfData = categoryData['PERFORMANCE'];
+  const a11yData = categoryData['ACCESSIBILITY'];
+  const bpData = categoryData['BEST_PRACTICES'];
+  const seoData = categoryData['SEO'];
+
+  const perfCats = perfData?.lighthouseResult?.categories || {};
+  const perfAudits = perfData?.lighthouseResult?.audits || {};
 
   const lighthouseResult: PageSpeedResult = {
-    performance: Math.round((categories.performance?.score || 0) * 100),
-    accessibility: Math.round((categories.accessibility?.score || 0) * 100),
-    bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
-    seo: Math.round((categories.seo?.score || 0) * 100),
-    fcp: formatTime(audits['first-contentful-paint']?.numericValue || 0),
-    lcp: formatTime(audits['largest-contentful-paint']?.numericValue || 0),
-    cls: (audits['cumulative-layout-shift']?.numericValue || 0).toFixed(3),
-    tbt: formatTime(audits['total-blocking-time']?.numericValue || 0),
-    speedIndex: formatTime(audits['speed-index']?.numericValue || 0),
-    tti: formatTime(audits['interactive']?.numericValue || 0),
+    performance: Math.round((perfCats.performance?.score || 0) * 100),
+    accessibility: Math.round((a11yData?.lighthouseResult?.categories?.accessibility?.score || 0) * 100),
+    bestPractices: Math.round((bpData?.lighthouseResult?.categories?.['best-practices']?.score || 0) * 100),
+    seo: Math.round((seoData?.lighthouseResult?.categories?.seo?.score || 0) * 100),
+    fcp: formatTime(perfAudits['first-contentful-paint']?.numericValue || 0),
+    lcp: formatTime(perfAudits['largest-contentful-paint']?.numericValue || 0),
+    cls: (perfAudits['cumulative-layout-shift']?.numericValue || 0).toFixed(3),
+    tbt: formatTime(perfAudits['total-blocking-time']?.numericValue || 0),
+    speedIndex: formatTime(perfAudits['speed-index']?.numericValue || 0),
+    tti: formatTime(perfAudits['interactive']?.numericValue || 0),
   };
 
-  const crux = extractCruxData(data.loadingExperience);
+  // CrUX field data (disponible dans n'importe quelle réponse de catégorie)
+  const anyData = perfData || a11yData || bpData || seoData;
+  const crux = extractCruxData(anyData?.loadingExperience);
 
   let finalResult: PageSpeedResult;
   let dataSource: 'field' | 'lab';
@@ -166,7 +218,7 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
     finalResult = lighthouseResult;
   }
 
-  return { scores: finalResult, dataSource };
+  return { scores: finalResult, dataSource, partial };
 }
 
 Deno.serve(handleRequest(async (req) => {
