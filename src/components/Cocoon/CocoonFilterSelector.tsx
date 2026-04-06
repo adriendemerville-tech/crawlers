@@ -238,6 +238,40 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
 
         <Separator className="bg-white/5 my-1" />
 
+        {/* Link Directions */}
+        <div className="px-3 py-1">
+          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+            <ArrowDown className="w-3 h-3" />
+            {t.linkDirections}
+          </p>
+          <div className="space-y-1.5">
+            {(['descending', 'ascending', 'lateral'] as const).map(dir => {
+              const labels = LINK_DIRECTION_LABELS[dir];
+              const label = labels[language] || labels.fr;
+              const color = LINK_DIRECTION_COLORS[dir];
+              const checked = filters.visibleLinkDirections.has(dir);
+              const DirIcon = dir === 'descending' ? ArrowDown : dir === 'ascending' ? ArrowUp : ArrowLeftRight;
+              return (
+                <label
+                  key={dir}
+                  className="flex items-center gap-2 cursor-pointer group"
+                  onClick={() => toggleLinkDirection(dir)}
+                >
+                  <Checkbox
+                    checked={checked}
+                    className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                    tabIndex={-1}
+                  />
+                  <DirIcon className="w-3 h-3 shrink-0" style={{ color }} />
+                  <span className="text-xs text-white/70 group-hover:text-white transition-colors">{label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <Separator className="bg-white/5 my-1" />
+
         {/* Show All Clusters */}
         <div className="px-3 py-2 space-y-1.5">
           <label
