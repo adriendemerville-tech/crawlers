@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
+import { checkDailyCostCap } from '../_shared/dailyCostGuard.ts';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
@@ -293,6 +294,13 @@ try {
     const enabled = await isSupervisorEnabled()
     if (!enabled) {
       return jsonOk({ success: false, reason: 'Supervisor désactivé' })
+    }
+
+    // ─── Daily cost cap (1€/jour max) ────────────────────────────
+    const costGuard = await checkDailyCostCap('supervisor', 1.0)
+    if (!costGuard.allowed) {
+      console.warn(`[SUPERVISOR] 🚫 ${costGuard.reason}`)
+      return jsonOk({ success: false, reason: costGuard.reason, spent_today_eur: costGuard.spent_today_eur })
     }
 
     // Auth check - admin only

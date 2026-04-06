@@ -7,6 +7,7 @@ import { callOpenRouter } from '../_shared/openRouterAI.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
+import { checkDailyCostCap } from '../_shared/dailyCostGuard.ts';
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -342,6 +343,13 @@ try {
     const enabled = await isAgentEnabled()
     if (!enabled) {
       return jsonOk({ success: false, reason: 'Agent CTO désactivé' })
+    }
+
+    // ─── Daily cost cap (1€/jour max) ────────────────────────────
+    const costGuard = await checkDailyCostCap('cto', 1.0)
+    if (!costGuard.allowed) {
+      console.warn(`[AGENT-CTO] 🚫 ${costGuard.reason}`)
+      return jsonOk({ success: false, reason: costGuard.reason, spent_today_eur: costGuard.spent_today_eur })
     }
 
     const body = await req.json()
