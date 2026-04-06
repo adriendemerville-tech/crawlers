@@ -13,6 +13,11 @@ export interface SimulatedOpportunity {
   opportunity_score: number;
   opportunity_type: 'no_organic' | 'low_organic' | 'high_potential' | 'cannibalisation_risk';
   monthly_savings_potential: number;
+  // DataForSEO SERP data
+  serp_volume: number;
+  serp_difficulty: number;
+  serp_competition: number;
+  serp_cpc_market: number;
 }
 
 export interface SimulatedSummary {
@@ -41,6 +46,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 92,
     opportunity_type: 'no_organic',
     monthly_savings_potential: 837.90,
+    serp_volume: 4400,
+    serp_difficulty: 42,
+    serp_competition: 0.78,
+    serp_cpc_market: 2.80,
   },
   {
     keyword: 'optimisation site internet',
@@ -57,6 +66,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 85,
     opportunity_type: 'low_organic',
     monthly_savings_potential: 450.00,
+    serp_volume: 2900,
+    serp_difficulty: 55,
+    serp_competition: 0.65,
+    serp_cpc_market: 3.40,
   },
   {
     keyword: 'crawler seo en ligne',
@@ -73,6 +86,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 78,
     opportunity_type: 'cannibalisation_risk',
     monthly_savings_potential: 748.80,
+    serp_volume: 1600,
+    serp_difficulty: 38,
+    serp_competition: 0.52,
+    serp_cpc_market: 5.10,
   },
   {
     keyword: 'analyse maillage interne',
@@ -89,6 +106,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 74,
     opportunity_type: 'low_organic',
     monthly_savings_potential: 155.00,
+    serp_volume: 880,
+    serp_difficulty: 31,
+    serp_competition: 0.41,
+    serp_cpc_market: 2.20,
   },
   {
     keyword: 'outil seo ia',
@@ -105,6 +126,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 88,
     opportunity_type: 'no_organic',
     monthly_savings_potential: 1435.20,
+    serp_volume: 6600,
+    serp_difficulty: 61,
+    serp_competition: 0.89,
+    serp_cpc_market: 5.80,
   },
   {
     keyword: 'référencement naturel prix',
@@ -121,6 +146,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 81,
     opportunity_type: 'high_potential',
     monthly_savings_potential: 390.00,
+    serp_volume: 3600,
+    serp_difficulty: 48,
+    serp_competition: 0.72,
+    serp_cpc_market: 3.10,
   },
   {
     keyword: 'crawlers seo',
@@ -137,6 +166,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 95,
     opportunity_type: 'cannibalisation_risk',
     monthly_savings_potential: 1820.00,
+    serp_volume: 8100,
+    serp_difficulty: 35,
+    serp_competition: 0.44,
+    serp_cpc_market: 3.90,
   },
   {
     keyword: 'geo seo optimisation',
@@ -153,6 +186,10 @@ export const SIMULATED_OPPORTUNITIES: SimulatedOpportunity[] = [
     opportunity_score: 68,
     opportunity_type: 'no_organic',
     monthly_savings_potential: 120.60,
+    serp_volume: 720,
+    serp_difficulty: 22,
+    serp_competition: 0.33,
+    serp_cpc_market: 1.95,
   },
 ];
 
