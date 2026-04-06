@@ -1305,7 +1305,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               </>
             ) : (
               <Button
-                variant="destructive"
+                variant="outline"
                 onClick={handleDisconnectConfirm}
                 disabled={disconnecting}
                 className="w-full"
