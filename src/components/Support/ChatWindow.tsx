@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,11 @@ import { SeoQuiz } from './SeoQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
+import { createPortal } from 'react-dom';
+
+const CocoonContentArchitectModal = lazy(() =>
+  import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -253,6 +258,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [felixMuted, setFelixMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const [pendingArchitectAction, setPendingArchitectAction] = useState<any>(null);
+  const [showContentArchitectModal, setShowContentArchitectModal] = useState(false);
+  const [contentArchitectDiag, setContentArchitectDiag] = useState<any>(null);
 
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
@@ -857,6 +864,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   }
 
   return (
+    <>
     <div className={cn("fixed bottom-20 z-[110] flex w-[17.5rem] sm:w-[22rem] flex-col overflow-hidden overscroll-contain rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg", quizData ? "h-[63vh] max-h-[63vh]" : "h-[55vh] max-h-[55vh]")} style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/30 px-3 py-2 shrink-0">
@@ -989,7 +997,6 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                           <button
                             onClick={async () => {
                               try {
-                                // Insert diagnostic into architect_workbench
                                 const diag = pendingArchitectAction.diagnostic;
                                 if (user) {
                                   const domain = diag.url ? new URL(diag.url).hostname : '';
@@ -1015,8 +1022,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                                 };
                                 setMessages(prev => [...prev, confirmMsg]);
                                 setPendingArchitectAction(null);
-                                navigate('/audit-expert?tab=content-architect');
-                                onClose();
+                                // Open Content Architect modal directly
+                                setContentArchitectDiag(diag);
+                                setShowContentArchitectModal(true);
                               } catch (e) {
                                 console.error('Architect workbench insert error:', e);
                               }
@@ -1056,7 +1064,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                                 };
                                 setMessages(prev => [...prev, confirmMsg]);
                                 setPendingArchitectAction(null);
-                                navigate('/audit-expert?tab=code-architect');
+                                // Navigate to Code Architect page
+                                navigate('/architecte-generatif');
                                 onClose();
                               } catch (e) {
                                 console.error('Architect workbench insert error:', e);
@@ -1403,5 +1412,25 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         </div>
       </div>
     </div>
+
+    {/* Content Architect Modal — opened from Félix action */}
+    {showContentArchitectModal && createPortal(
+      <Suspense fallback={null}>
+        <CocoonContentArchitectModal
+          isOpen={showContentArchitectModal}
+          onClose={() => {
+            setShowContentArchitectModal(false);
+            setContentArchitectDiag(null);
+          }}
+          nodes={[]}
+          domain={contentArchitectDiag?.url ? (() => { try { return new URL(contentArchitectDiag.url).hostname; } catch { return ''; } })() : ''}
+          prefillUrl={contentArchitectDiag?.url || ''}
+          isExistingPage={!!contentArchitectDiag?.url}
+          colorTheme="green"
+        />
+      </Suspense>,
+      document.body
+    )}
+    </>
   );
 }
