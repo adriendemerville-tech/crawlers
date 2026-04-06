@@ -59,6 +59,7 @@ interface CocoonRadialGraphProps {
   onNodeSelect: (node: SemanticNode | null) => void;
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   colorIntensity?: number;
   nodeColors?: Record<string, string>;
   bgColorSlider?: number;

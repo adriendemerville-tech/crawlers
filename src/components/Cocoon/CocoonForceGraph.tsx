@@ -117,6 +117,7 @@ interface CocoonForceGraphProps {
   nodeColors?: Record<string, string>;
   particleColors?: Record<string, string>;
   visibleJuiceTypes?: Set<string>;
+  visibleLinkDirections?: Set<string>;
   showClusters?: boolean;
   colorIntensity?: number;
 }
