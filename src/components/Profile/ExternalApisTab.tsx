@@ -410,6 +410,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
   const handleLogServiceClick = (service: LogServiceButton) => {
     setSelectedLogService(service);
     setLogTrackedSiteId('');
+    setGeneratedApiKey(null);
     setLogConnectorDialogOpen(true);
   };
 
