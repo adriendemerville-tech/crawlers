@@ -552,6 +552,67 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           // Fall through to normal flow
         }
       }
+
+      // ── SEO Agent directive detection ──
+      const seoDirectiveMatch = lastUserMsg.match(/^\/seo\s+(.+)/is);
+      const seoNaturalKeywords = [
+        "agent seo", "dis à l'agent seo", "dis a l'agent seo",
+        "demande à l'agent seo", "demande a l'agent seo",
+        "instruction seo", "directive seo",
+        "l'agent seo doit", "agent seo doit",
+      ];
+      const isSeoDirective = seoDirectiveMatch || seoNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isSeoDirective) {
+        try {
+          const directiveText = seoDirectiveMatch
+            ? seoDirectiveMatch[1].trim()
+            : lastUserMsg;
+
+          // Extract target URL/slug if mentioned
+          const urlMatch = directiveText.match(/(?:sur|pour|page|url)\s+(\/[^\s,]+|https?:\/\/[^\s,]+)/i);
+          const targetUrl = urlMatch ? urlMatch[1] : null;
+          const targetSlug = targetUrl ? targetUrl.replace(/^\/blog\//, '').replace(/^\//, '').replace(/\/$/, '') : null;
+
+          await sb.from("agent_seo_directives").insert({
+            user_id,
+            directive_text: directiveText,
+            target_url: targetUrl,
+            target_slug: targetSlug,
+            status: 'pending',
+          });
+
+          const confirmReply = `✅ Directive transmise à l'Agent SEO :\n\n> ${directiveText}\n\n${targetUrl ? `Cible : \`${targetUrl}\`\n` : ''}L'Agent SEO appliquera cette instruction lors de son prochain cycle d'analyse.`;
+
+          // Save conversation
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id,
+                user_email: prof?.email || null,
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save SEO directive conv error:", e);
+          }
+
+          return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("SEO directive error:", e);
+          // Fall through to normal flow
+        }
+      }
       
       const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
