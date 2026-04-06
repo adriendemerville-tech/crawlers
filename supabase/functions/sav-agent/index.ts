@@ -186,9 +186,38 @@ Plateforme SaaS française lancée mars 2026. Premier outil francophone couvrant
 - Triangle Prédictif : prédiction trafic 90j via corrélation GSC/GA4, MAPE < 15%.
 
 ## Features principales
-- [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200 points. 1/jour gratuit inscrit, illimité Pro Agency. Mesure les Core Web Vitals complets via PageSpeed Insights : FCP (First Contentful Paint), LCP (Largest Contentful Paint), CLS (Cumulative Layout Shift), TBT (Total Blocking Time), Speed Index, TTI, TTFB — à la fois données terrain CrUX et mesures labo Lighthouse, mobile et desktop.
-- Audit Stratégique IA : scoring IAS + E-E-A-T + plan d'action. 1 crédit.
+- [Audit Expert SEO](https://crawlers.fr/audit-expert) : 200+ points de contrôle. 1/jour gratuit inscrit, illimité Pro Agency.
+  **Performance (PageSpeed Insights — CrUX terrain + Lighthouse labo, mobile & desktop)** :
+  FCP (First Contentful Paint), LCP (Largest Contentful Paint), CLS (Cumulative Layout Shift), TBT (Total Blocking Time), Speed Index, TTI (Time to Interactive), TTFB (Time to First Byte), INP (Interaction to Next Paint, terrain CrUX). Score Performance, Score Accessibilité, Score Bonnes Pratiques, Score SEO Lighthouse.
+  **Technique** :
+  HTTPS actif, Safe Browsing Google, robots.txt (existence, contenu, permissivité), sitemap.xml (existence, déclaration dans robots.txt, cohérence noindex/sitemap, sitemap HTTP vs HTTPS), canonical (présence, auto-référencement, cohérence), viewport meta, hreflang, langue déclarée, favicon, liens cassés (nombre, URLs), redirections (chaînes, boucles), temps de réponse serveur, taille DOM (Ko), nombre de requêtes HTTP, fichiers CSS/JS (nombre), compression (gzip/brotli).
+  **Sémantique & Contenu** :
+  Title (présence, longueur, contenu), Meta Description (présence, longueur, contenu), H1 (présence, unicité, contenu), hiérarchie Hn (H2, H3, H4-H6 — nombre, contenu, cohérence), nombre de mots, ratio texte/HTML (densité de contenu), cohérence sémantique Title↔H1 (% similarité), images totales, images sans alt, Open Graph (og:title, og:description, og:image, og:type), Twitter Card.
+  **IA & Données Structurées** :
+  JSON-LD (présence, validité, types détectés : Organization, LocalBusiness, Person, WebSite, Article/BlogPosting, FAQPage, Product, BreadcrumbList, Review, HowTo), erreurs Schema.org, bots IA (GPTBot, ClaudeBot, Google-Extended, CCBot, Applebot-Extended, PerplexityBot — statut allowed/blocked, source du blocage).
+  **Sécurité** :
+  HTTPS, Safe Browsing, en-têtes de sécurité (CSP, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Referrer-Policy, Permissions-Policy).
+  **Métriques avancées (Audit Expert)** :
+  Dark Social Readiness (og:title, og:description, og:image, twitter:card), Signaux de Fraîcheur (Last-Modified, mention année courante), Friction de Conversion (formulaires, champs visibles, CTA above fold), Quotabilité (phrases citables par les LLMs), Résilience au Résumé (H1 vs résumé LLM), Empreinte Lexicale (ratio jargon, ratio concret, distance jargon cible), Sentiment d'Expertise (note 1-5, preuve sociale), Red Team (failles du contenu).
+
+- [Audit Stratégique IA](https://crawlers.fr/audit-expert) : scoring IAS + plan d'action. 1 crédit.
+  **Items contrôlés** :
+  Score IAS (Indice d'Alignement Stratégique, 23 variables, 4 axes), Autorité de marque (thought leadership score, entity strength), Paysage concurrentiel (4 concurrents classifiés : Goliath, Concurrent Direct, Challenger, Inspiration — avec URL, analyse, facteur d'autorité), Citabilité GEO (score 0-100, niveau de maturité), Visibilité LLM (probabilité de citation, breakdown en 8 sous-scores : présence SERP, qualité données structurées, quotabilité, autorité marque, fraîcheur, intention business, auto-citation, signaux Knowledge Graph), Intention Conversationnelle (ratio, questions détectées), Risque Zéro-Clic (mots-clés à risque, score global), Positionnement Mots-Clés (keywords principaux, quick wins, gaps de contenu, termes manquants, densité sémantique vs concurrents), Roadmap Exécutive (4+ recommandations priorisées par ROI), Cibles Clients (primaires, secondaires, inexploitées — B2B/B2C avec segments détaillés), Quotabilité, Résilience au Résumé, Empreinte Lexicale, Sentiment d'Expertise, Red Team.
+
 - [Audit Comparé](https://crawlers.fr/audit-compare) : benchmark vs 3 concurrents. 4 crédits.
+  **Items comparés pour chaque site** :
+  Performance Mobile PageSpeed (score 0-100), Performance Desktop PageSpeed (score 0-100), FCP (ms), LCP (ms), CLS, TTFB (ms), Profondeur de contenu (nombre de mots, H2, H3), JSON-LD (présence), Open Graph (présence), FAQ Schema (présence), Liens internes/externes (nombre), Images (total, sans alt), Couleur de marque, Backlinks (DataForSEO : domaines référents, backlinks totaux, Domain Rank, distribution d'ancres), SERP Battlefield (mots-clés croisés, positions réelles), Mots-clés différenciants (IA), Radar Chart multi-axes.
+
+- [Audit E-E-A-T](https://crawlers.fr/audit-expert) : scoring complet Experience, Expertise, Authoritativeness, Trustworthiness.
+  **Items contrôlés** :
+  Pré-crawl multi-pages (jusqu'à 10 pages clés), Auteur identifié (par page), Schema.org (types détectés, richesse : blocs JSON-LD, types uniques, @graph, sameAs, auteur dans JSON-LD, entités Organization/LocalBusiness/Person/WebSite/Article/FAQPage/Product/BreadcrumbList/Review), Page À Propos, Page Contact, Mentions Légales, CGV/CGU, Blog/Actualités, Témoignages/Avis, HTTPS, Sitemap (URLs totales), Mots total et moyens par page, Liens internes/externes moyens par page, Backlinks réels (DataForSEO : domaines référents, backlinks totaux, Domain Rank, IPs référentes, sous-réseaux, top ancres), Backlinks vivants (GA4 Referrals si connecté), Données Google Business Profile (note moyenne, avis, catégorie) si connecté. Score global 0-100 + 4 sous-scores E-E-A-T.
+
+- [Crawl Multi-Pages](https://crawlers.fr/site-crawl) : jusqu'à 5000 pages. Pro Agency.
+  **Données collectées par page** :
+  URL, chemin, titre, H1, nombre H2/H3/H4-H6, Meta Description, URL canonique, nombre de mots, score SEO, liens internes (nombre + ancres), liens externes (nombre), liens cassés (liste), images totales, images sans alt, taille HTML (octets), hash de contenu, profondeur de crawl, type de page, statut HTTP, temps de réponse (ms), is_indexable, has_noindex, has_nofollow, has_canonical, has_og (Open Graph), has_schema_org (+ types), has_hreflang, redirections (URL cible), body_text_truncated (texte brut tronqué), custom_extraction, index_source (sitemap/crawl/ga4).
+  **Métriques agrégées** :
+  Nombre total de pages, pages indexables, pages en erreur (4xx, 5xx), pages orphelines, distribution des profondeurs, distribution des types de pages, taxonomie automatique des répertoires, temps de chargement moyen, TTFB moyen, FCP moyen, LCP moyen, CLS moyen, score SEO moyen, images sans alt moyen, nombre moyen de mots, taux HTTPS, taux Schema.org, taux hreflang, liens cassés totaux.
+
 - [Matrice d'audit](https://crawlers.fr/matrice) : moteur d'audit sur-mesure multi-critères (balises, données structurées, performance, sécurité, prompts LLM, métriques combinées).
   **Comment l'utiliser :**
   1. Importer un fichier (CSV, XLSX, DOCX) OU saisir des critères manuellement OU charger un template pré-défini.
