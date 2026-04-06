@@ -6,8 +6,8 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import {
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import {
   generateNaturalPrompts,
   buildBrandPatterns,
   detectCitationInText,
