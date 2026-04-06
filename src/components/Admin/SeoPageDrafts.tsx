@@ -359,9 +359,33 @@ export function SeoPageDrafts() {
                             onClick={() => handlePublish(draft)}
                             disabled={actionLoading === draft.id}
                           >
-                            {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
-                            {draft.page_type === 'article' ? 'Publier sur /blog' : 'Marquer comme publiée'}
+                            {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
+                            Publier sur {draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`}
                           </Button>
+                        )}
+
+                        {/* Unpublish button for published */}
+                        {draft.status === 'published' && (
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={draft.page_type === 'article' ? `/blog/${draft.slug}` : `/landing/${draft.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary underline"
+                            >
+                              🔗 Voir la page publiée
+                            </a>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-xs text-destructive border-destructive/30"
+                              onClick={() => handleUnpublish(draft)}
+                              disabled={actionLoading === draft.id}
+                            >
+                              {actionLoading === draft.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <EyeOff className="h-3.5 w-3.5" />}
+                              Dépublier
+                            </Button>
+                          </div>
                         )}
 
                         {draft.review_note && draft.status !== 'draft' && (
