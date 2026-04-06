@@ -1031,7 +1031,7 @@ export function CocoonForceGraph3D({
 
     const nMap = new Map(gNodes.map((n) => [n.id, n]));
     return { graphNodes: gNodes, graphLinks: filteredLinks, nodeMap: nMap };
-  }, [nodes, visibleJuiceTypes]);
+  }, [nodes, visibleJuiceTypes, visibleLinkDirections]);
 
   // Zoom handler: dispatches wheel events to the canvas to trigger OrbitControls zoom
   const handleZoom = useCallback((direction: "in" | "out") => {
