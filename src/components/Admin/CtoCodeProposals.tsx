@@ -60,6 +60,7 @@ export function CtoCodeProposals() {
       let query = supabase
         .from('cto_code_proposals' as any)
         .select('*')
+        .or('agent_source.is.null,agent_source.neq.seo')
         .order('created_at', { ascending: false })
         .limit(50);
 
