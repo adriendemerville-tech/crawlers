@@ -143,7 +143,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 3: Mark proposal as deployed
+    // Step 3: Save deployment history (with previous content for rollback)
+    let previousContent: string | null = null;
+    if (fileSha && getFileRes.ok) {
+      // Re-fetch to get the content before our change
+      try {
+        const prevRes = await fetch(
+          `${GITHUB_API}/repos/${GITHUB_REPO}/contents/${targetFile}?ref=${putData.commit?.parents?.[0]?.sha || 'main'}`,
+          { headers: ghHeaders }
+        );
+        if (prevRes.ok) {
+          const prevData = await prevRes.json();
+          previousContent = prevData.content ? decodeURIComponent(escape(atob(prevData.content.replace(/\n/g, '')))) : null;
+        } else {
+          await prevRes.text();
+        }
+      } catch (e) {
+        console.warn("Could not fetch previous content:", e);
+      }
+    }
+
+    await supabase.from("code_deployment_history").insert({
+      proposal_id: proposal_id,
+      agent_source: agentSource,
+      file_path: targetFile,
+      previous_content: previousContent,
+      deployed_content: proposedCode,
+      commit_sha: putData.commit?.sha || null,
+      deployed_at: new Date().toISOString(),
+    });
+
+    // Step 4: Mark proposal as deployed
     await supabase
       .from("cto_code_proposals")
       .update({
