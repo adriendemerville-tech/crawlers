@@ -1497,7 +1497,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
       }
 
       if (!conversation_id && savedConvId) {
-        return jsonOk({ reply, conversation_id: savedConvId });
+        return jsonOk({ reply, conversation_id: savedConvId, ...(architectAction ? { architect_action: architectAction } : {}) });
       }
     } catch (e) {
       console.error("Save conversation error:", e);
