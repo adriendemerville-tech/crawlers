@@ -419,11 +419,21 @@ Réponds UNIQUEMENT en JSON :
       "reason": "Pourquoi cette modification améliore le SEO"
     }
   ],
+  "new_pages": [
+    {
+      "type": "landing|article",
+      "title": "Titre de la nouvelle page",
+      "keyword": "mot-clé cible principal",
+      "directive": "instruction admin à l'origine (si applicable)"
+    }
+  ],
   "estimated_score_improvement": 5-15,
   "confidence_score": 0-100,
   "priority_fixes": ["Liste des 3 corrections les plus impactantes"],
   "summary": "Résumé en 2-3 phrases"
-}`;
+}
+
+Note : "new_pages" est OPTIONNEL. N'inclus ce champ QUE si une directive admin le demande explicitement (ex: "crée un article sur...", "ajoute une landing page pour...") ou si un content gap majeur est identifié.`;
 
   const userPrompt = `PAGE : ${target.type === 'blog' ? 'Article de blog' : 'Landing page'} — ${target.slug}
 URL : ${target.url}
@@ -467,6 +477,19 @@ Analyse et propose des améliorations SEO incrémentales ciblées.`;
               confidence_score: { type: 'number' },
               priority_fixes: { type: 'array', items: { type: 'string' } },
               summary: { type: 'string' },
+              new_pages: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['landing', 'article'] },
+                    title: { type: 'string' },
+                    keyword: { type: 'string' },
+                    directive: { type: 'string' },
+                  },
+                  required: ['type', 'title', 'keyword'],
+                },
+              },
             },
             required: ['improvements', 'estimated_score_improvement', 'confidence_score', 'summary'],
             additionalProperties: false,
@@ -778,6 +801,74 @@ Deno.serve(async (req) => {
       proposalsCreated = await createCodeProposals(supabase, target, scoreBefore, parsedImprovements);
     }
 
+    // ── Page creation drafts (from directives or content gaps) ──
+    let pageDraftsCreated = 0;
+    if (parsedImprovements?.new_pages?.length > 0) {
+      try {
+        for (const newPage of parsedImprovements.new_pages) {
+          const pageType = newPage.type || 'article';
+          // Fetch template for this page type
+          const { data: template } = await supabase
+            .from('content_prompt_templates')
+            .select('id, structure_template, seo_rules, geo_rules, tone_guidelines, system_prompt')
+            .eq('page_type', pageType)
+            .eq('is_active', true)
+            .order('version', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!template) {
+            console.warn(`[AGENT-SEO] Pas de template actif pour type="${pageType}", skip`);
+            continue;
+          }
+
+          // Generate page content using template
+          const pagePrompt = `${template.system_prompt}\n\n## Structure attendue\n${template.structure_template}\n\n## Règles SEO\n${template.seo_rules}\n\n## Règles GEO\n${template.geo_rules}\n\n## Ton éditorial\n${template.tone_guidelines}\n\n## Instructions\nCrée une page complète de type "${pageType}" sur le sujet: "${newPage.title || newPage.keyword}"\nMot-clé cible: ${newPage.keyword || newPage.title}\nDate du jour: ${new Date().toISOString().split('T')[0]}\n\nRéponds en JSON avec: { "title", "slug", "meta_title", "meta_description", "content" (markdown complet) }`;
+
+          const pageResp = await callLovableAI({
+            messages: [{ role: 'user', content: pagePrompt }],
+            model: 'google/gemini-2.5-flash',
+            temperature: 0.7,
+            max_tokens: 8000,
+          });
+
+          const pageContent = pageResp?.content || '';
+          let pageParsed: any = null;
+          try {
+            const jsonMatch = pageContent.match(/\{[\s\S]*\}/);
+            if (jsonMatch) pageParsed = JSON.parse(jsonMatch[0]);
+          } catch { /* ignore */ }
+
+          if (pageParsed?.title && pageParsed?.content) {
+            await supabase.from('seo_page_drafts').insert({
+              user_id: '00000000-0000-0000-0000-000000000000',
+              page_type: pageType,
+              template_id: template.id,
+              domain: 'crawlers.fr',
+              target_keyword: newPage.keyword || newPage.title,
+              title: pageParsed.title,
+              slug: pageParsed.slug || pageParsed.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+              meta_title: pageParsed.meta_title || pageParsed.title,
+              meta_description: pageParsed.meta_description || '',
+              content: pageParsed.content,
+              generation_context: {
+                source: 'agent-seo',
+                template_id: template.id,
+                keyword: newPage.keyword,
+                directive: newPage.directive || null,
+                score_context: { overall: scoreBefore.overall },
+              },
+              status: 'draft',
+            });
+            pageDraftsCreated++;
+            console.log(`[AGENT-SEO] 📄 Brouillon créé: "${pageParsed.title}" (${pageType})`);
+          }
+        }
+      } catch (e) {
+        console.error('[AGENT-SEO] Erreur création brouillons:', e);
+      }
+    }
+
     // Log to database with full scoring detail
     const logEntry = {
       page_type: target.type,
@@ -822,6 +913,7 @@ Deno.serve(async (req) => {
       summary,
       improvements_count: parsedImprovements?.improvements?.length || 0,
       proposals_created: proposalsCreated,
+      page_drafts_created: pageDraftsCreated,
       priority_fixes: parsedImprovements?.priority_fixes || [],
       status: logEntry.status,
     }), {

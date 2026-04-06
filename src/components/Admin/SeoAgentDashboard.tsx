@@ -9,6 +9,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SeoCodeProposals } from './SeoCodeProposals';
+import { SeoPageDrafts } from './SeoPageDrafts';
+import { PageTemplatesAdmin } from './PageTemplatesAdmin';
 
 interface SeoLog {
   id: string;
@@ -272,6 +274,12 @@ export function SeoAgentDashboard() {
 
       {/* SEO Code Proposals Registry */}
       <SeoCodeProposals />
+
+      {/* Page Drafts from Agent SEO */}
+      <SeoPageDrafts />
+
+      {/* Page Templates Editor */}
+      <PageTemplatesAdmin />
     </div>
   );
 }
