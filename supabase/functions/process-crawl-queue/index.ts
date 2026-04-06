@@ -775,6 +775,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 
     console.log(`[Worker] Found ${jobs.length} active jobs`);
     let globalPagesProcessed = 0;
+    const failedUrlsByJob = new Map<string, Array<{ url: string; reason: string }>>();
 
     for (const job of jobs) {
       if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT || isTimeUp()) {
@@ -820,7 +821,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       }
 
       if (remaining.length === 0) {
-        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey);
+        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey, failedUrlsByJob.get(job.id) || []);
         continue;
       }
 
@@ -905,6 +906,17 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
           .map(r => r.value)
           .filter(Boolean) as PageAnalysis[];
 
+        // Track failed/null URLs for gap explanation
+        if (!failedUrlsByJob.has(job.id)) failedUrlsByJob.set(job.id, []);
+        const jobFailedUrls = failedUrlsByJob.get(job.id)!;
+        settled.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            jobFailedUrls.push({ url: batch[i], reason: r.reason?.message || 'fetch_error' });
+          } else if (r.status === 'fulfilled' && r.value === null) {
+            jobFailedUrls.push({ url: batch[i], reason: 'empty_content' });
+          }
+        });
+
         const failedCount = settled.filter(r => r.status === 'rejected').length;
         if (failedCount > 0) console.warn(`[Worker] ${failedCount} pages failed in batch`);
 
@@ -939,7 +951,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       }
 
       if (alreadyProcessed >= job.total_count) {
-        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey);
+        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey, failedUrlsByJob.get(job.id) || []);
       }
     }
 
@@ -958,12 +970,12 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       error: error instanceof Error ? error.message : 'Worker error',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+}));
 
 /**
  * Finalize a completed job: compute scores, detect duplicates (title+meta+content hash), AI summary
  */
-async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
+async function finalizeJob(supabase: any, job: any, _firecrawlKey: string, failedUrls: Array<{ url: string; reason: string }> = []) {
   console.log(`[Worker] Finalizing job ${job.id}...`);
 
   await supabase.from('crawl_jobs').update({ status: 'analyzing' }).eq('id', job.id);
@@ -1066,6 +1078,49 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     const homePath = normalizeUrl(`https://${job.domain}/`);
     const orphanCount = inboundCount.get(homePath) === 0 ? Math.max(0, trueOrphanCount - 1) : trueOrphanCount;
 
+    // ── Gap analysis: compute why some URLs weren't crawled ──
+    const urlsRequested = (job.urls_to_process as string[] || []).length;
+    const gapCount = Math.max(0, urlsRequested - pages.length);
+    let gapContext = '';
+    if (gapCount > 0 || failedUrls.length > 0) {
+      const reasonCounts: Record<string, number> = {};
+      // Count reasons from tracked failures
+      for (const f of failedUrls) {
+        const reason = f.reason.includes('timeout') ? 'timeout' :
+          f.reason.includes('404') ? 'http_404' :
+          f.reason.includes('403') || f.reason.includes('401') ? 'auth_blocked' :
+          f.reason.includes('redirect') ? 'redirect' :
+          f.reason.includes('empty_content') ? 'empty_content' :
+          'fetch_error';
+        reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+      }
+      // Also count pages with non-200 status from crawled pages
+      const redirectPages = pages.filter((p: any) => p.redirect_url).length;
+      const errorStatusPages = pages.filter((p: any) => p.http_status >= 400).length;
+
+      const reasonLabels: Record<string, string> = {
+        timeout: 'timeout de connexion',
+        http_404: 'erreur 404 (page introuvable)',
+        auth_blocked: 'accès bloqué (401/403)',
+        redirect: 'redirection',
+        empty_content: 'contenu vide ou inaccessible (SPA/JS)',
+        fetch_error: 'erreur de récupération',
+      };
+
+      const reasonLines = Object.entries(reasonCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([reason, count]) => `  - ${count} ${reasonLabels[reason] || reason}`)
+        .join('\n');
+
+      gapContext = `
+ÉCART DE CRAWL:
+- ${urlsRequested} URLs soumises au crawl, ${pages.length} pages effectivement analysées (${gapCount} URLs non récupérées)
+${reasonLines ? `Raisons des échecs:\n${reasonLines}` : ''}
+${redirectPages > 0 ? `- ${redirectPages} pages avec redirection détectée parmi les pages crawlées` : ''}
+${errorStatusPages > 0 ? `- ${errorStatusPages} pages avec erreur HTTP (4xx/5xx) parmi les pages crawlées` : ''}
+IMPORTANT: Dans ta synthèse, explique brièvement cet écart de manière contextualisée pour ce site (1 à 3 phrases). Par exemple: redirections d'anciennes URLs, pages protégées, contenu dynamique JavaScript non rendu, etc.`;
+    }
+
     const prompt = `Tu es un expert SEO senior. Analyse ce crawl de ${job.domain} (${pages.length} pages, score moyen: ${avgScore}/200).
 
 PROBLÈMES DÉTECTÉS:
@@ -1076,7 +1131,7 @@ ${bestPages.map((p: any) => `- ${p.path} (${p.seo_score}/200)`).join('\n')}
 
 PIRES PAGES:
 ${worstPages.map((p: any) => `- ${p.path} (${p.seo_score}/200) — Problèmes: ${(p.issues || []).join(', ')}`).join('\n')}
-
+${gapContext}
 STATS DÉTAILLÉES:
 - Pages avec Schema.org: ${schemaPages.length}/${pages.length}
 - Pages avec Schema.org valide (sans erreurs): ${schemaPages.length - schemaErrorPages.length}/${pages.length}
@@ -1097,10 +1152,11 @@ ${avgResponseTime ? `- Temps de réponse moyen: ${avgResponseTime}ms` : ''}
 
 Réponds en JSON STRICT:
 {
-  "summary": "Synthèse narrative en 3-4 phrases (en français), couvrant les forces et faiblesses du site.",
+  "summary": "Synthèse narrative en 3-4 phrases (en français), couvrant les forces et faiblesses du site.${gapCount > 0 ? ' Inclure une explication contextualisée de l\'écart entre les pages détectées et celles effectivement crawlées.' : ''}",
   "recommendations": [
     {"priority": "critical|high|medium", "title": "Titre court", "description": "Détail actionnable", "affected_pages": 12}
-  ]
+  ]${gapCount > 0 ? `,
+  "crawl_gap_explanation": "Explication en 1-3 phrases de pourquoi ${gapCount} pages n'ont pas pu être analysées, contextualisée pour ce site spécifique."` : ''}
 }
 Donne 5-8 recommandations max, classées par impact.`;
 
@@ -1121,14 +1177,17 @@ Donne 5-8 recommandations max, classées par impact.`;
           temperature: 0.3,
         }),
         signal: aiController.signal,
-      }));
+      });
       clearTimeout(aiTimeout);
 
       const aiData = await aiRes.json();
       const aiContent = aiData.choices?.[0]?.message?.content || '';
       const parsed = JSON.parse(aiContent);
       aiSummary = parsed.summary || '';
-      aiRecommendations = (parsed.recommendations || []).slice(0, 10); // #5: cap to 10 max
+      if (parsed.crawl_gap_explanation) {
+        aiSummary += '\n\n📊 ' + parsed.crawl_gap_explanation;
+      }
+      aiRecommendations = (parsed.recommendations || []).slice(0, 10);
     } catch (e) {
       console.warn(`[Worker] AI summary failed:`, e);
       aiSummary = `Crawl terminé: ${pages.length} pages analysées, score moyen ${avgScore}/200.`;
