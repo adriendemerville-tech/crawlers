@@ -722,9 +722,32 @@ Deno.serve(async (req) => {
     console.log(`[AGENT-SEO] 🎯 Cible: ${target.type} — ${target.slug} (${target.url})`);
 
     // Fetch site identity card + page content + enriched context + admin directives in parallel
+    // For blog pages, read content from DB (SPA won't render for server-side fetch)
+    const fetchContent = async (): Promise<{ html: string; textContent: string } | null> => {
+      if (target!.type === 'blog') {
+        const { data: article } = await supabase
+          .from('blog_articles')
+          .select('content, title, excerpt')
+          .eq('slug', target!.slug)
+          .single();
+        if (article?.content) {
+          const textContent = (article.content as string)
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          return {
+            html: `<h1>${article.title || ''}</h1>${article.content}`,
+            textContent: textContent.substring(0, 20000),
+          };
+        }
+      }
+      // Fallback: fetch rendered HTML (works for static/landing pages)
+      return fetchPageHtml(`${siteBaseUrl}${target!.url}`);
+    };
+
     const [siteContext, pageData, agentContext, directivesResp] = await Promise.all([
       getSiteContext(supabase, { domain: 'crawlers.fr' }).catch(() => null),
-      fetchPageHtml(`${siteBaseUrl}${target.url}`),
+      fetchContent(),
       getAgentContext({ agent: 'seo', domain: 'crawlers.fr', days: 7 }).catch(() => null),
       supabase.from('agent_seo_directives')
         .select('id, directive_text, target_url, target_slug')
