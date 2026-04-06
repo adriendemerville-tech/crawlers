@@ -731,7 +731,14 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLocationsLoading(false); return; }
+        if (!user) {
+          if (simulatedDataEnabled) {
+            setOrderedLocations(SIMULATED_LOCATIONS);
+            setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+          }
+          setLocationsLoading(false);
+          return;
+        }
         const { data } = await supabase.functions.invoke('gbp-auth', {
           body: { action: 'status', user_id: user.id },
         });
@@ -741,13 +748,20 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
           if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
             setOrderedLocations(data.locations);
             setSelectedLocationId(data.locations[0]?.id || null);
+          } else if (simulatedDataEnabled) {
+            setOrderedLocations(SIMULATED_LOCATIONS);
+            setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
           }
         } else if (simulatedDataEnabled) {
-          // Not connected but simulated data enabled — show demo locations
           setOrderedLocations(SIMULATED_LOCATIONS);
           setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
         }
-      } catch (_) { /* ignore */ }
+      } catch (_) {
+        if (simulatedDataEnabled) {
+          setOrderedLocations(SIMULATED_LOCATIONS);
+          setSelectedLocationId(SIMULATED_LOCATIONS[0]?.id || null);
+        }
+      }
       setLocationsLoading(false);
     })();
   }, [isGated, simulatedDataEnabled]);
