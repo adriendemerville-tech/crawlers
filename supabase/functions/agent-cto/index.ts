@@ -793,11 +793,18 @@ Réponds UNIQUEMENT en JSON :
       });
     }
 
-    // ─── Phase 1: Gather real evidence + enriched context ──────────
-    const [champion, reliability, agentContext] = await Promise.all([
+    // ─── Phase 1: Gather real evidence + enriched context + admin directives ──
+    const [champion, reliability, agentContext, ctoDirectivesResp] = await Promise.all([
       getChampionPrompt(supabase, functionName),
       getReliabilityProfile(supabase, functionName),
       getAgentContext({ agent: 'cto', domain, days: 7 }).catch(() => null),
+      supabase.from('agent_cto_directives')
+        .select('id, directive_text, target_function, target_url')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .limit(10)
+        .then((r: any) => r)
+        .catch(() => ({ data: null })),
     ])
 
     const currentVersion = champion?.version || 0
@@ -862,6 +869,17 @@ Réponds UNIQUEMENT en JSON :
   "data_tier_used": "tier1|tier2|tier3"
 }`
 
+    // Build admin directives context for CTO
+    const pendingCtoDirectives = ctoDirectivesResp?.data || [];
+    const relevantCtoDirectives = pendingCtoDirectives.filter((d: any) =>
+      !d.target_function || d.target_function === functionName || (d.target_url && (url || '').includes(d.target_url))
+    );
+    let ctoDirectivesContext = '';
+    if (relevantCtoDirectives.length > 0) {
+      ctoDirectivesContext = `\n\nDIRECTIVES ADMIN (instructions prioritaires du créateur) :\n${relevantCtoDirectives.map((d: any, i: number) => `${i + 1}. ${d.directive_text}${d.target_function ? ` [fonction: ${d.target_function}]` : ''}${d.target_url ? ` [url: ${d.target_url}]` : ''}`).join('\n')}\n\nCes directives sont PRIORITAIRES. Intègre-les dans ton analyse.`;
+      console.log(`[AGENT-CTO] 📋 ${relevantCtoDirectives.length} directive(s) admin chargées`);
+    }
+
     const userPrompt = `FONCTION : ${functionName}
 DOMAINE : ${domain || 'N/A'}
 URL : ${url || 'N/A'}
@@ -876,7 +894,7 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ---
 ${auditSummary}
 ---
-${agentContext?.promptSnippet || ''}
+${agentContext?.promptSnippet || ''}${ctoDirectivesContext}
 
 Analyse cet audit en utilisant les données disponibles. ${hasGSC ? 'Les métriques GSC constituent la vérité terrain principale.' : 'Sans GSC connectée, base ton évaluation sur les données techniques Crawlers (crawl, PageSpeed, scores d\'audit, SERP).'}${hasGA4 ? ' Les données GA4 enrichissent l\'analyse comportementale.' : ''}
 Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour prioriser tes recommandations.`
@@ -962,6 +980,16 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
         logEntry.prompt_version_after = newVersion
         console.log(`[AGENT-CTO v2] ✅ Nouveau prompt champion v${newVersion} pour ${functionName} (evidence: real_data)`)
       }
+    }
+
+    // Mark consumed CTO directives
+    if (relevantCtoDirectives.length > 0) {
+      const directiveIds = relevantCtoDirectives.map((d: any) => d.id);
+      await supabase.from('agent_cto_directives')
+        .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+        .in('id', directiveIds)
+        .then(() => console.log(`[AGENT-CTO] ✅ ${directiveIds.length} directive(s) marquées comme consommées`))
+        .catch((e: any) => console.error('[AGENT-CTO] Erreur mise à jour directives:', e));
     }
 
     const { error: logError } = await supabase.from('cto_agent_logs').insert(logEntry)
