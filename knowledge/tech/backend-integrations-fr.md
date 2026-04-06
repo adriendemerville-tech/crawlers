@@ -1,11 +1,15 @@
 # Memory: tech/backend-integrations-fr
+Updated: 2026-04-07
 
 ## Intégrations API tierces préparées (backend ready, pas encore connectées)
 
 ### Google Ads
 - Edge function : `google-ads-connector`
 - Table : `google_ads_connections` (customer_id, access_token, refresh_token, tracked_site_id)
-- OAuth2 flow préparé, scopes : `https://www.googleapis.com/auth/adwords.readonly`
+- OAuth2 flow connecté, scope : `https://www.googleapis.com/auth/adwords` (scope standard Google, pas de scope read-only disponible)
+- **Important** : L'API Google Ads ne propose pas de scope `readonly`. Le scope `adwords` est le seul disponible. L'application n'effectue que des opérations de consultation (rapports, métriques, mots-clés).
+- Prérequis : l'API "Google Ads API" doit être activée dans la Google Cloud Console du projet
+- Feature : SEA to SEO Bridge (onglet dans /console) — analyse les campagnes Google Ads pour identifier les mots-clés SEA rentables à convertir en opportunités SEO organiques
 
 ### Rank Math SEO (WordPress)
 - Edge function : `rankmath-connector`
@@ -69,3 +73,6 @@
 - Table : `bundle_subscriptions` (user_id, selected_apis, api_count, monthly_price_cents)
 - Tarification : 1€ × nombre d'APIs sélectionnées
 - Accès admin uniquement pour l'instant (onglet Console → Bundle Option, icône Lego)
+
+## Gouvernance des Agents IA
+- **Budget tokens** : Les agents Supervisor et CTO sont limités à 1€/jour maximum en tokens Anthropic. Le contrôle est appliqué dans les edge functions respectives via un compteur quotidien.
