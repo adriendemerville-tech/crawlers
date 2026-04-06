@@ -288,6 +288,19 @@ try {
       });
     } else {
       // Non-prescribe phases or empty workbench without forced content: single LLM call
+      // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
+      let cmsInventory: CmsContentInventory | null = null;
+      if (currentPhase === 'execute') {
+        try {
+          const authUserId2 = authUserId || bodyUserId || tracked_site_id;
+          cmsInventory = await scanCmsContent(tracked_site_id, authUserId2);
+          if (cmsInventory.items.length > 0) {
+            console.log(`[Parménion] 📦 CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
+          }
+        } catch (e) {
+          console.warn('[Parménion] CMS scan failed (non-blocking):', e);
+        }
+      }
       decision = await askParmenionLLM({
         domain,
         cycle_number,
@@ -304,6 +317,7 @@ try {
         siteKeywords,
         siteInfo,
         scoredWorkbenchItems,
+        cmsInventory,
       });
     }
 
