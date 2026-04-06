@@ -96,7 +96,21 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
 } | null> {
   const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
 
-  const response = await fetch(googleApiUrl);
+  // Timeout 120s pour laisser Google analyser les sites lents
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000);
+  let response: Response;
+  try {
+    response = await fetch(googleApiUrl, { signal: controller.signal });
+  } catch (err: any) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      console.error(`[PSI:${strategy}] ⏱️ Timeout 120s dépassé pour ${normalizedUrl}`);
+      throw new Error('timeout');
+    }
+    throw err;
+  }
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -204,13 +218,18 @@ Deno.serve(handleRequest(async (req) => {
         fetchForStrategy(normalizedUrl, 'desktop', apiKey),
       ]);
 
-      // Check for quota errors
+      // Check for quota/timeout errors
       for (const r of [mobileResult, desktopResult]) {
-        if (r.status === 'rejected' && r.reason?.message === 'quota_exceeded') {
-          return new Response(
-            JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+        if (r.status === 'rejected') {
+          if (r.reason?.message === 'quota_exceeded') {
+            return new Response(
+              JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          if (r.reason?.message === 'timeout') {
+            console.warn(`[PSI:dual] ⏱️ Timeout sur une stratégie pour ${normalizedUrl}`);
+          }
         }
       }
 
@@ -272,6 +291,12 @@ Deno.serve(handleRequest(async (req) => {
         return new Response(
           JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (err.message === 'timeout') {
+        return new Response(
+          JSON.stringify({ success: false, error: 'timeout', message: 'Le site est trop lent pour être analysé (timeout 120s).' }),
+          { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       throw err;
