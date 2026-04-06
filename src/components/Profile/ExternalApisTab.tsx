@@ -1281,14 +1281,14 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       <Dialog open={!!disconnectTarget} onOpenChange={(open) => { if (!open) { setDisconnectTarget(null); setDisconnectStep('ask'); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-5 w-5 text-muted-foreground" />
               {language === 'fr' ? `Êtes-vous sûr de vouloir déconnecter l'API ${disconnectTarget?.name} ?` :
                language === 'es' ? `¿Está seguro de querer desconectar la API ${disconnectTarget?.name}?` :
                `Are you sure you want to disconnect the ${disconnectTarget?.name} API?`}
             </DialogTitle>
             <DialogDescription className="pt-2">
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
                 {disconnectTarget && getDisconnectWarning(disconnectTarget.id)}
               </div>
             </DialogDescription>
