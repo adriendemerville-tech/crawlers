@@ -1,0 +1,1 @@
+DELETE FROM log_connectors WHERE id = '03dd83a4-8991-4496-ac53-a16b5ad0b584';

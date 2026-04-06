@@ -422,7 +422,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const needsApiKey = ['agent', 'upload', 'wordpress_plugin'].includes(selectedLogService.type);
+      const needsApiKey = ['agent', 'upload', 'wordpress_plugin', 'cloudflare', 'vercel'].includes(selectedLogService.type);
       let apiKeyHash: string | null = null;
       let plainApiKey: string | null = null;
 
