@@ -11,7 +11,7 @@ Deno.serve(handleRequest(async (req) => {
   try {
     const cfSecret = req.headers.get('CF-Logpush-Secret') || req.headers.get('cf-logpush-secret');
     if (!cfSecret) {
-      return jsonError('Missing CF-Logpush-Secret header', code: 'MISSING_SECRET', 401);
+      return jsonError('Missing CF-Logpush-Secret header', 401);
     }
 
     // Hash the incoming secret to match against stored hash
@@ -30,12 +30,26 @@ Deno.serve(handleRequest(async (req) => {
       .single();
 
     if (connError || !connector) {
-      return jsonError('Invalid secret', code: 'INVALID_SECRET', 401);
+      return jsonError('Invalid secret', 401);
     }
 
-    // Parse NDJSON body
+    // Parse body: supports NDJSON (Logpush) and JSON array (CF Worker)
     const body = await req.text();
-    const lines = body.split('\n').filter(l => l.trim());
+    const isFromWorker = req.headers.get('X-Source') === 'cf-worker';
+    let lines: string[];
+
+    // Try JSON array first (Worker format)
+    try {
+      const parsed = JSON.parse(body.trim());
+      if (Array.isArray(parsed)) {
+        lines = parsed.map(obj => JSON.stringify(obj));
+      } else {
+        lines = body.split('\n').filter(l => l.trim());
+      }
+    } catch {
+      // NDJSON format (Logpush)
+      lines = body.split('\n').filter(l => l.trim());
+    }
 
     const entries = lines.map(line => {
       const parsed = parseJSONLogFormat(line);
@@ -76,6 +90,6 @@ Deno.serve(handleRequest(async (req) => {
     return jsonOk({ ok: true, processed: result.inserted, errors: result.errors });
   } catch (error) {
     console.error('[ingest-cloudflare] Error:', error);
-    return jsonError(error instanceof Error ? error.message : 'Internal error', code: 'INTERNAL_ERROR', 500);
+    return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
 }));
