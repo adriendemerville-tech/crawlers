@@ -581,6 +581,7 @@ export function CocoonForceGraph({
           const link = gLinks[p.linkIdx];
           if (!link) continue;
           if (visibleJuiceTypes && !visibleJuiceTypes.has(p.juiceType)) continue;
+          if (visibleLinkDirections && visibleLinkDirections.size < 3 && !visibleLinkDirections.has(link.direction || 'lateral')) continue;
           const source = link.source as GraphNode;
           const target = link.target as GraphNode;
           if (!source.x || !source.y || !target.x || !target.y) continue;
