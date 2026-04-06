@@ -775,6 +775,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 
     console.log(`[Worker] Found ${jobs.length} active jobs`);
     let globalPagesProcessed = 0;
+    const failedUrlsByJob = new Map<string, Array<{ url: string; reason: string }>>();
 
     for (const job of jobs) {
       if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT || isTimeUp()) {
