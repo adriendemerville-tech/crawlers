@@ -841,9 +841,13 @@ export function CocoonRadialGraph({
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
+  // Zoom — native event for { passive: false }
+  const handleWheelRef = useRef<((e: WheelEvent) => void) | null>(null);
+  handleWheelRef.current = (e: WheelEvent) => {
     e.preventDefault();
-    const pos = getMousePos(e);
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const factor = e.deltaY < 0 ? 1.1 : 0.9;
     const newZoom = Math.max(0.2, Math.min(5, zoom * factor));
     const ratio = newZoom / zoom;
@@ -854,6 +858,14 @@ export function CocoonRadialGraph({
     }));
     setZoom(newZoom);
   };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handler = (e: WheelEvent) => handleWheelRef.current?.(e);
+    canvas.addEventListener('wheel', handler, { passive: false });
+    return () => canvas.removeEventListener('wheel', handler);
+  }, []);
 
   // Zoom centered on home node (center of graph)
   const zoomToHome = useCallback((factor: number) => {
@@ -886,7 +898,7 @@ export function CocoonRadialGraph({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
-        onWheel={handleWheel}
+        
       />
 
       {/* Zoom controls — LEFT side */}
