@@ -3631,6 +3631,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ga4_daily_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_date: string
+          pageviews: number | null
+          revenue: number | null
+          sessions: number | null
+          total_users: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_date: string
+          pageviews?: number | null
+          revenue?: number | null
+          sessions?: number | null
+          total_users?: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_date?: string
+          pageviews?: number | null
+          revenue?: number | null
+          sessions?: number | null
+          total_users?: number | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_daily_metrics_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ga4_history_log: {
         Row: {
           avg_session_duration: number
@@ -3680,6 +3724,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ga4_history_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ga4_top_pages: {
+        Row: {
+          avg_duration: number | null
+          bounce_rate: number | null
+          created_at: string
+          id: string
+          page_path: string
+          pageviews: number | null
+          period_end: string
+          period_start: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          avg_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string
+          id?: string
+          page_path: string
+          pageviews?: number | null
+          period_end: string
+          period_start: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          avg_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string
+          id?: string
+          page_path?: string
+          pageviews?: number | null
+          period_end?: string
+          period_start?: string
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_top_pages_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
