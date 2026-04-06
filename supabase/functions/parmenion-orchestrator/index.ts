@@ -3,6 +3,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -287,6 +288,19 @@ try {
       });
     } else {
       // Non-prescribe phases or empty workbench without forced content: single LLM call
+      // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
+      let cmsInventory: CmsContentInventory | null = null;
+      if (currentPhase === 'execute') {
+        try {
+          const authUserId2 = authUserId || bodyUserId || tracked_site_id;
+          cmsInventory = await scanCmsContent(tracked_site_id, authUserId2);
+          if (cmsInventory.items.length > 0) {
+            console.log(`[Parménion] 📦 CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
+          }
+        } catch (e) {
+          console.warn('[Parménion] CMS scan failed (non-blocking):', e);
+        }
+      }
       decision = await askParmenionLLM({
         domain,
         cycle_number,
@@ -303,6 +317,7 @@ try {
         siteKeywords,
         siteInfo,
         scoredWorkbenchItems,
+        cmsInventory,
       });
     }
 
@@ -1146,6 +1161,7 @@ async function askParmenionLLM(context: {
   siteKeywords: string[];
   siteInfo: any;
   scoredWorkbenchItems: any[];
+  cmsInventory?: CmsContentInventory | null;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -1229,6 +1245,12 @@ Phase pipeline: ${context.currentPhase.toUpperCase()}
 Mode conservateur: ${context.conservativeMode ? 'OUI' : 'NON'}
 CMS cible: ${context.isIktracker ? 'IKtracker (API Supabase)' : 'WordPress (wpsync)'}
 ${siteIdentityBlock}${keywordsBlock}
+${context.cmsInventory && context.cmsInventory.items.length > 0 ? `
+CMS_INVENTORY (${context.cmsInventory.items.length} contenus existants, ${context.cmsInventory.drafts.length} brouillons):
+${context.cmsInventory.drafts.map(d => `- [BROUILLON] "${d.title}" (slug: ${d.slug}, plateforme: ${d.platform})`).join('\n')}
+${context.cmsInventory.published.slice(0, 20).map(d => `- [PUBLIÉ] "${d.title}" (slug: ${d.slug})`).join('\n')}
+⚠️ Si tu veux créer un article sur un sujet déjà couvert par un brouillon ci-dessus, utilise "update-post" avec le slug du brouillon au lieu de "create-post".
+` : ''}
 
 DIAGNOSTICS DISPONIBLES:
 ${JSON.stringify(context.diagnostics.map(d => ({ type: d.diagnostic_type, scores: d.scores })), null, 2)}
@@ -1573,6 +1595,12 @@ Quand tu crées un article pour combler un gap de contenu:
 - Diversifie les actions: mélange modifications de pages existantes ET création de nouveaux contenus quand c'est pertinent
 - INTERDIT: supprimer des pages/articles, modifier du contenu qui fonctionne déjà bien
 - INTERDIT: publier directement un article (toujours draft)
+
+## INVENTAIRE CMS — CONTENU EXISTANT (brouillons + publié)
+⚠️ AVANT DE CRÉER UN ARTICLE, vérifie dans cet inventaire si un brouillon similaire existe déjà.
+Si oui, utilise "update-post" pour l'enrichir/modifier au lieu de "create-post".
+L'inventaire sera injecté dans le contexte ci-dessous sous la clé CMS_INVENTORY.
+
 - Catégories suggérées: "Actualités", "Conseils fiscaux", "Comparatifs", "Tutoriels", "FAQ", "Décryptages"
 - Tags pertinents: "indemnités kilométriques", "frais réels", "barème IK", "déclaration impôts", "auto-entrepreneur", "trajets professionnels"`;
 }

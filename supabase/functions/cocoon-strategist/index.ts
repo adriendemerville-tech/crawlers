@@ -3,6 +3,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { scanCmsContent, findMatchingContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
@@ -41,6 +42,7 @@ type ActionType =
   | 'create_content'
   | 'rewrite_content'
   | 'delete_content'
+  | 'publish_draft'
   | 'add_internal_link'
   | 'remove_internal_link'
   | 'add_backlink_target'
@@ -686,6 +688,19 @@ try {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 2c-ter: Scan CMS for existing content (drafts + published)
+    // ═══════════════════════════════════════════════════════════
+    let cmsInventory: CmsContentInventory | null = null;
+    try {
+      cmsInventory = await scanCmsContent(tracked_site_id, auth.userId);
+      if (cmsInventory.items.length > 0) {
+        console.log(`[strategist] 📦 CMS inventory: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts) from ${cmsInventory.scanned_platforms.join(', ')}`);
+      }
+    } catch (e) {
+      console.warn('[strategist] CMS scan failed (non-blocking):', e);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 2c: Inject keyword cloud as reference universe
     // ═══════════════════════════════════════════════════════════
     if (keywordCloud.length > 0) {
@@ -718,7 +733,7 @@ try {
     const sectorForImages = siteIdentityData?.market_sector || strategicSerpData?.market_sector || null;
 
     for (const finding of activeFindings) {
-      const tasks = findingToTasks(finding, lang, taskCounter, sectorForImages);
+      const tasks = findingToTasks(finding, lang, taskCounter, sectorForImages, cmsInventory);
       for (const task of tasks) {
         // Auto-inject image recommendation for content_architect tasks
         if (task.execution_mode === 'content_architect' && !task.image_recommendation) {
@@ -1028,6 +1043,12 @@ try {
       conflicts_resolved: conflicts,
       feedback: feedbackAnalysis,
       development_axes: matchingAxes,
+      cms_inventory_summary: cmsInventory ? {
+        total: cmsInventory.items.length,
+        drafts: cmsInventory.drafts.length,
+        published: cmsInventory.published.length,
+        platforms: cmsInventory.scanned_platforms,
+      } : null,
       site_memory_context: siteMemoryContext ? true : false,
       lang,
     });
@@ -1036,12 +1057,12 @@ try {
     console.error('Strategist error:', err);
     return jsonError(err.message, 500);
   }
-});
+}));
 
 // ═══════════════════════════════════════════════════════════════
 // MAPPING: Finding → Strategic Task(s)
 // ═══════════════════════════════════════════════════════════════
-function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null): StrategicTask[] {
+function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null, cmsInventory?: CmsContentInventory | null): StrategicTask[] {
   const tasks: StrategicTask[] = [];
   const baseId = `strat_${counter}`;
   const cat = finding.category || '';
@@ -1171,6 +1192,56 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       // Create new content for semantic gaps
       const gaps = finding.data?.top_gaps || [];
       if (gaps.length > 0) {
+        // Check if any gap topic already exists as a draft in the CMS
+        const gapTasksFromDrafts: StrategicTask[] = [];
+        const genuineNewGaps: string[] = [];
+
+        if (cmsInventory && cmsInventory.drafts.length > 0) {
+          for (const gap of gaps.slice(0, 5) as string[]) {
+            const matches = findMatchingContent(
+              { ...cmsInventory, items: cmsInventory.drafts } as CmsContentInventory,
+              gap,
+              0.4,
+            );
+            if (matches.length > 0) {
+              const best = matches[0];
+              gapTasksFromDrafts.push({
+                id: `${baseId}_draft_${gapTasksFromDrafts.length}`,
+                action_type: 'publish_draft',
+                priority: 0,
+                title: lang === 'fr'
+                  ? `Publier le brouillon existant : "${best.title}"`
+                  : `Publish existing draft: "${best.title}"`,
+                description: lang === 'fr'
+                  ? `Un brouillon couvrant "${gap}" existe déjà dans votre CMS (${best.platform}, slug: ${best.slug}, similarité: ${Math.round(best.similarity * 100)}%). Relisez-le et publiez-le plutôt que d'en créer un nouveau.`
+                  : `A draft covering "${gap}" already exists in your CMS (${best.platform}, slug: ${best.slug}, similarity: ${Math.round(best.similarity * 100)}%). Review and publish it instead of creating a new one.`,
+                affected_urls: best.url ? [best.url] : [],
+                source_diagnostics: [sourceType],
+                execution_mode: 'content_architect',
+                is_destructive: false,
+                depends_on: [],
+                estimated_impact: 'high',
+                metadata: {
+                  existing_draft_slug: best.slug,
+                  existing_draft_platform: best.platform,
+                  existing_draft_title: best.title,
+                  similarity: best.similarity,
+                  target_keyword: gap,
+                },
+              });
+            } else {
+              genuineNewGaps.push(gap);
+            }
+          }
+        } else {
+          genuineNewGaps.push(...(gaps.slice(0, 5) as string[]));
+        }
+
+        // Add draft-publish tasks
+        tasks.push(...gapTasksFromDrafts);
+
+        // Create new content only for gaps without existing drafts
+        if (genuineNewGaps.length > 0) {
         tasks.push({
           id: `${baseId}_gap`,
           action_type: 'create_content',
@@ -1184,11 +1255,12 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
           depends_on: [],
           estimated_impact: 'high',
           metadata: {
-            target_keywords: gaps.slice(0, 5),
+            target_keywords: genuineNewGaps,
             // Inject strategic audit SERP context if available
             ...(finding.data?.strategic_serp_context || {}),
           },
         });
+        }
       }
       break;
 
@@ -1391,7 +1463,7 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
           is_destructive: false,
           depends_on: [],
           estimated_impact: impact,
-        }));
+        });
       }
       break;
   }
