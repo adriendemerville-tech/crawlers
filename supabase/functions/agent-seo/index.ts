@@ -698,11 +698,18 @@ Deno.serve(async (req) => {
 
     console.log(`[AGENT-SEO] 🎯 Cible: ${target.type} — ${target.slug} (${target.url})`);
 
-    // Fetch site identity card + page content + enriched context in parallel
-    const [siteContext, pageData, agentContext] = await Promise.all([
+    // Fetch site identity card + page content + enriched context + admin directives in parallel
+    const [siteContext, pageData, agentContext, directivesResp] = await Promise.all([
       getSiteContext(supabase, { domain: 'crawlers.fr' }).catch(() => null),
       fetchPageHtml(`${siteBaseUrl}${target.url}`),
       getAgentContext({ agent: 'seo', domain: 'crawlers.fr', days: 7 }).catch(() => null),
+      supabase.from('agent_seo_directives')
+        .select('id, directive_text, target_url, target_slug')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .limit(10)
+        .then((r: any) => r)
+        .catch(() => ({ data: null })),
     ]);
 
     if (!pageData || pageData.textContent.length < 100) {
