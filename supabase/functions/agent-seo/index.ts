@@ -727,11 +727,34 @@ Deno.serve(async (req) => {
     const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, target.type);
     console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}`);
 
-    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies)
+    // Build admin directives context
+    const pendingDirectives = directivesResp?.data || [];
+    let directivesContext = '';
+    // Filter directives relevant to this target (or global)
+    const relevantDirectives = pendingDirectives.filter((d: any) =>
+      !d.target_slug || d.target_slug === target.slug || (d.target_url && target.url.includes(d.target_url))
+    );
+    if (relevantDirectives.length > 0) {
+      directivesContext = `\n\nDIRECTIVES ADMIN (instructions prioritaires du créateur) :\n${relevantDirectives.map((d: any, i: number) => `${i + 1}. ${d.directive_text}${d.target_url ? ` [cible: ${d.target_url}]` : ''}`).join('\n')}\n\nCes directives sont PRIORITAIRES. Intègre-les dans tes améliorations.`;
+      console.log(`[AGENT-SEO] 📋 ${relevantDirectives.length} directive(s) admin chargées`);
+    }
+
+    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives)
+    const operationalCtx = [agentContext?.promptSnippet, directivesContext].filter(Boolean).join('\n');
     const { improvements, confidence, tokens } = await generateImprovements(
       pageData.html, pageData.textContent, target, scoreBefore, siteContext,
-      agentContext?.promptSnippet,
+      operationalCtx || undefined,
     );
+
+    // Mark consumed directives
+    if (relevantDirectives.length > 0) {
+      const directiveIds = relevantDirectives.map((d: any) => d.id);
+      await supabase.from('agent_seo_directives')
+        .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+        .in('id', directiveIds)
+        .then(() => console.log(`[AGENT-SEO] ✅ ${directiveIds.length} directive(s) marquées comme consommées`))
+        .catch((e: any) => console.error('[AGENT-SEO] Erreur mise à jour directives:', e));
+    }
 
     // Parse improvements
     let parsedImprovements: any = null;
